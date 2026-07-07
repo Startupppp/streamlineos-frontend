@@ -76,7 +76,7 @@ export function AppSheet({
         {footer && (
           <div
             className={cn(
-              "shrink-0 flex items-center justify-end gap-2 border-t border-border/60 bg-muted/30",
+              "shrink-0 flex w-full gap-2 border-t border-border/60 bg-muted/30",
               resolvedSide === "bottom" ? "px-5 py-3" : "px-6 py-4",
             )}
           >

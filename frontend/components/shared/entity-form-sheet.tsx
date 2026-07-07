@@ -83,6 +83,7 @@ export function EntityFormSheet<
           <Button
             type="button"
             variant="outline"
+            className="flex-1"
             onClick={handleCancel}
             disabled={isSubmitting}
           >
@@ -91,8 +92,9 @@ export function EntityFormSheet<
           <Button
             type="submit"
             form="entity-form"
+            variant="default"
+            className="flex-1"
             disabled={isSubmitting}
-            className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
           >
             {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             {submitLabel}

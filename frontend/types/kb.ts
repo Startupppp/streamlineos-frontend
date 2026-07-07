@@ -185,6 +185,7 @@ export interface KbAskResponse {
   answer: string;
   citations: KbAskCitation[];
   hasContext: boolean;
+  conversationId: number;
 }
 
 export interface KbSearchParams {
@@ -197,6 +198,7 @@ export interface KbSearchParams {
 export interface KbAskInput {
   question: string;
   spaceId?: number;
+  conversationId?: number;
 }
 
 export interface KbAnalyticsTopArticle {

@@ -216,18 +216,18 @@ const PageTreeItem = memo(function PageTreeItemInner({
 
   return (
     <>
-      <div>
+      <div className="min-w-0 overflow-hidden">
         <div
           role="button"
           tabIndex={0}
           aria-current={isActive ? "page" : undefined}
           className={cn(
-            "group relative flex items-center gap-1 py-1 rounded-md cursor-pointer text-sm transition-colors select-none",
+            "group relative flex min-w-0 items-center gap-1 overflow-hidden py-1 rounded-md cursor-pointer text-sm transition-colors select-none",
             isActive
               ? "bg-muted text-foreground font-medium"
               : "text-foreground/80 hover:bg-muted",
           )}
-          style={{ paddingLeft: 8 + depth * 16, paddingRight: 4 }}
+          style={{ paddingLeft: depth * 16, paddingRight: 4 }}
           onClick={handleNavigate}
           onKeyDown={handleKeyDown}
           {...animatedNavHoverHandlers}
@@ -281,7 +281,9 @@ const PageTreeItem = memo(function PageTreeItemInner({
               className="flex-1 h-6 text-sm py-0 px-1 min-w-0"
             />
           ) : (
-            <span className="flex-1 truncate min-w-0">{node.title || "Untitled"}</span>
+            <span className="min-w-0 flex-1 line-clamp-1 break-all overflow-hidden">
+              {node.title || "Untitled"}
+            </span>
           )}
 
           {!renaming && (
@@ -337,6 +339,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
         <AnimatePresence initial={false}>
           {expanded && children.length > 0 && (
             <motion.div
+              className="min-w-0 overflow-hidden"
               initial={{ opacity: 0, y: shouldReduceMotion ? 0 : -4 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: shouldReduceMotion ? 0 : -4 }}

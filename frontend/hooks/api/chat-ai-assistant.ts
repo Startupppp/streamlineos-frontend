@@ -22,6 +22,18 @@ export interface AskAiHistoryPage {
   nextCursor: number | null;
 }
 
+export interface AiConversation {
+  id: number;
+  title: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AiConversationListPage {
+  conversations: AiConversation[];
+  nextCursor: number | null;
+}
+
 const HISTORY_PAGE_SIZE = 30;
 
 export function useAskAiHistory(enabled: boolean) {
@@ -50,12 +62,85 @@ export function useClearAskAiHistory() {
   });
 }
 
+export function useAiConversations(enabled: boolean) {
+  return useInfiniteQuery({
+    queryKey: queryKeys.aiChat.conversations(),
+    queryFn: ({ pageParam }) => {
+      const params: Record<string, unknown> = { limit: HISTORY_PAGE_SIZE };
+      if (pageParam) params.cursor = pageParam;
+      return apiClient.get<AiConversationListPage>("/chat/conversations", params);
+    },
+    initialPageParam: undefined as number | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    enabled,
+    staleTime: 30_000,
+  });
+}
+
+export function useCreateAiConversation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["aiChat", "conversations", "create"],
+    mutationFn: (input: { title?: string }) =>
+      apiClient.post<AiConversation>("/chat/conversations", input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.aiChat.conversations() });
+    },
+  });
+}
+
+export function useRenameAiConversation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["aiChat", "conversations", "rename"],
+    mutationFn: ({ id, title }: { id: number; title: string }) =>
+      apiClient.patch<AiConversation>(`/chat/conversations/${id}`, { title }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.aiChat.conversations() });
+    },
+  });
+}
+
+export function useDeleteAiConversation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["aiChat", "conversations", "delete"],
+    mutationFn: (id: number) =>
+      apiClient.delete<{ success: boolean }>(`/chat/conversations/${id}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.aiChat.conversations() });
+    },
+  });
+}
+
+export function useAiConversationMessages(conversationId: number | null, enabled: boolean) {
+  return useInfiniteQuery({
+    queryKey: queryKeys.aiChat.conversationMessages(conversationId ?? 0),
+    queryFn: ({ pageParam }) => {
+      const params: Record<string, unknown> = { limit: HISTORY_PAGE_SIZE };
+      if (pageParam) params.cursor = pageParam;
+      return apiClient.get<AskAiHistoryPage>(
+        `/chat/conversations/${conversationId}/messages`,
+        params,
+      );
+    },
+    initialPageParam: undefined as number | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    enabled: enabled && conversationId !== null,
+    staleTime: 30_000,
+  });
+}
+
 export function useAskAI() {
   const [isStreaming, setIsStreaming] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
 
   const sendMessage = useCallback(
-    async (messages: AskAIMessage[], onToken: (token: string) => void): Promise<void> => {
+    async (
+      messages: AskAIMessage[],
+      onToken: (token: string) => void,
+      conversationId?: number,
+    ): Promise<void> => {
       const controller = new AbortController();
       abortRef.current = controller;
       setIsStreaming(true);
@@ -66,7 +151,10 @@ export function useAskAI() {
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ messages }),
+            body: JSON.stringify({
+              messages,
+              ...(conversationId !== undefined && { conversationId }),
+            }),
             signal: controller.signal,
           },
           true,

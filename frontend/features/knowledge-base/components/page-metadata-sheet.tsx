@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { UserCombobox } from "@/components/ui/user-combobox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
@@ -32,11 +32,8 @@ import {
   useMarkStaleKbPage,
 } from "@/hooks/api/kb/pages";
 import { PageRecordLinks } from "./page-record-links";
-import { apiClient } from "@/lib/api-client";
 import { KbInfoIcon } from "@/features/knowledge-base/lib/kb-icons";
 import type { KbPageDetail } from "@/hooks/api/kb/pages";
-
-type OrgUser = { id: string; name: string; email: string };
 
 const STATUS_OPTIONS: Array<{ value: "draft" | "in_review" | "published" | "archived"; label: string }> = [
   { value: "draft", label: "Draft" },
@@ -46,8 +43,10 @@ const STATUS_OPTIONS: Array<{ value: "draft" | "in_review" | "published" | "arch
 ];
 
 const FIELD_CLASS = "h-9 w-full text-[13px] bg-card border-border shadow-xs";
-const ACTION_BTN_CLASS =
-  "h-9 w-full text-[13px] bg-card border border-border shadow-xs hover:bg-muted/50";
+const ACTION_BTN_BASE = "h-9 w-full text-[13px]";
+const ACTION_BTN_NEUTRAL = `${ACTION_BTN_BASE} bg-card border border-border shadow-xs hover:bg-muted/50`;
+const ACTION_BTN_DANGER = `${ACTION_BTN_BASE} text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive`;
+const ACTION_BTN_WARNING = `${ACTION_BTN_BASE} text-amber-700 border-amber-200 hover:bg-amber-50 hover:text-amber-700`;
 
 const CONTENT_TYPE_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "note", label: "Note" },
@@ -102,7 +101,6 @@ export default function PageMetadataSheet({
   onOpenChange,
 }: PageMetadataSheetProps) {
   const canManage = useCan("kb:pages:manage");
-  const [ownerSearch, setOwnerSearch] = useState("");
   const [intervalDays, setIntervalDays] = useState<string>("");
   const [verifyFormOpen, setVerifyFormOpen] = useState(false);
 
@@ -113,21 +111,7 @@ export default function PageMetadataSheet({
   const verifyPage = useVerifyKbPage();
   const markStalePage = useMarkStaleKbPage();
 
-  const { data: orgUsers = [] } = useQuery({
-    queryKey: ["chat", "orgUsers"],
-    queryFn: () => apiClient.get<OrgUser[]>("/chat/users"),
-    staleTime: 120_000,
-  });
-
   const { data: spaces = [] } = useKbSpaces();
-
-  const filteredUsers = ownerSearch.trim()
-    ? orgUsers.filter(
-        (u) =>
-          u.name.toLowerCase().includes(ownerSearch.toLowerCase()) ||
-          u.email.toLowerCase().includes(ownerSearch.toLowerCase())
-      )
-    : orgUsers;
 
   function handleSpaceChange(value: string) {
     updatePage.mutate(
@@ -152,7 +136,7 @@ export default function PageMetadataSheet({
 
   function handleOwnerChange(value: string) {
     updatePage.mutate(
-      { pageId, ownerUserId: value === "__unassigned__" ? null : value },
+      { pageId, ownerUserId: value || null },
       { onError: () => toast.error("Failed to update owner") }
     );
   }
@@ -185,10 +169,6 @@ export default function PageMetadataSheet({
 
   function handleIntervalDaysChange(e: React.ChangeEvent<HTMLInputElement>) {
     setIntervalDays(e.target.value);
-  }
-
-  function handleOwnerSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setOwnerSearch(e.target.value);
   }
 
   function handleConfirmVerify() {
@@ -229,13 +209,13 @@ export default function PageMetadataSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="gap-0 sm:max-w-md p-0 flex flex-col bg-muted/30">
+      <SheetContent side="right" className="gap-0 sm:max-w-md p-0 flex flex-col bg-background">
         <SheetHeader className="px-5 py-4 border-b shrink-0 bg-background">
           <SheetTitle className="text-sm">Page settings</SheetTitle>
         </SheetHeader>
 
         <ScrollArea className="flex-1 min-h-0">
-          <div className="px-5 py-4 space-y-5">
+          <div className="min-h-full px-5 py-4 space-y-5 bg-muted">
             <div className="space-y-2">
               <p className="text-[13px] font-medium text-foreground">Space</p>
               <Select
@@ -280,8 +260,7 @@ export default function PageMetadataSheet({
                 >
                   {showPublish && (
                     <Button
-                      variant="outline"
-                      className={ACTION_BTN_CLASS}
+                      className={ACTION_BTN_BASE}
                       onClick={handlePublish}
                       disabled={publishPage.isPending}
                     >
@@ -291,7 +270,7 @@ export default function PageMetadataSheet({
                   {status !== "archived" ? (
                     <Button
                       variant="outline"
-                      className={ACTION_BTN_CLASS}
+                      className={ACTION_BTN_DANGER}
                       onClick={handleArchive}
                       disabled={archivePage.isPending}
                     >
@@ -299,8 +278,7 @@ export default function PageMetadataSheet({
                     </Button>
                   ) : (
                     <Button
-                      variant="outline"
-                      className={ACTION_BTN_CLASS}
+                      className={ACTION_BTN_BASE}
                       onClick={handleUnarchive}
                       disabled={unarchivePage.isPending}
                     >
@@ -329,30 +307,13 @@ export default function PageMetadataSheet({
 
             <div className="space-y-2">
               <p className="text-[13px] font-medium text-foreground">Owner</p>
-              <Input
-                placeholder="Search users..."
-                value={ownerSearch}
-                onChange={handleOwnerSearchChange}
+              <UserCombobox
+                value={page.ownerUserId ?? ""}
+                onChange={handleOwnerChange}
+                placeholder="Select owner…"
+                allowUnassigned
                 className={FIELD_CLASS}
               />
-              <Select
-                value={page.ownerUserId ?? "__unassigned__"}
-                onValueChange={handleOwnerChange}
-              >
-                <SelectTrigger className={FIELD_CLASS}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__unassigned__" className="text-[13px]">
-                    Unassigned
-                  </SelectItem>
-                  {filteredUsers.map((u) => (
-                    <SelectItem key={u.id} value={u.id} className="text-[13px]">
-                      {u.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
 
             {canManage && (
@@ -392,15 +353,14 @@ export default function PageMetadataSheet({
                 {!verifyFormOpen ? (
                   <div className="grid grid-cols-2 gap-2">
                     <Button
-                      variant="outline"
-                      className={ACTION_BTN_CLASS}
+                      className={ACTION_BTN_BASE}
                       onClick={handleOpenVerifyForm}
                     >
                       Verify
                     </Button>
                     <Button
                       variant="outline"
-                      className={ACTION_BTN_CLASS}
+                      className={ACTION_BTN_WARNING}
                       onClick={handleMarkStale}
                       disabled={markStalePage.isPending}
                     >
@@ -419,7 +379,7 @@ export default function PageMetadataSheet({
                     />
                     <div className="grid grid-cols-2 gap-2">
                       <Button
-                        className="h-9 w-full text-[13px]"
+                        className={ACTION_BTN_BASE}
                         onClick={handleConfirmVerify}
                         disabled={verifyPage.isPending}
                       >
@@ -427,7 +387,7 @@ export default function PageMetadataSheet({
                       </Button>
                       <Button
                         variant="outline"
-                        className={ACTION_BTN_CLASS}
+                        className={ACTION_BTN_NEUTRAL}
                         onClick={handleCancelVerify}
                       >
                         Cancel

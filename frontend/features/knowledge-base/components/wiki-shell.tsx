@@ -101,8 +101,8 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
 
     return (
       <>
-        <ScrollArea className="flex-1 min-h-0">
-          <div className={isCollapsedView ? "pb-2" : "px-0 pb-2"}>
+        <ScrollArea className="flex-1 min-h-0 min-w-0">
+          <div className={isCollapsedView ? "min-w-0 overflow-hidden pb-2" : "min-w-0 overflow-hidden px-0 pb-2"}>
             <WikiSidebarNav isCollapsed={isCollapsedView} {...navProps} />
             {!isCollapsedView && favorites.length > 0 && (
               <div className="mb-2 px-2">
@@ -126,7 +126,7 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
               </div>
             )}
             {!isCollapsedView && (
-              <div className="px-2">
+              <div className="min-w-0 overflow-hidden pr-2 pl-0">
                 <PageTree
                   nodes={treeNodes}
                   isLoading={treeLoading}
@@ -172,7 +172,7 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
             collapsed ? "w-10" : "w-[260px]"
           }`}
         >
-          <div className="flex flex-col h-full">
+          <div className="flex h-full min-w-0 flex-col">
             <div
               className={`flex shrink-0 items-center py-2 ${
                 collapsed ? "flex-col gap-1 px-0" : "justify-between px-3"

@@ -8,17 +8,29 @@ interface UserComboboxProps {
   onChange: (value: string) => void;
   placeholder?: string;
   disabled?: boolean;
+  allowUnassigned?: boolean;
   className?: string;
 }
 
-export function UserCombobox({ value, onChange, placeholder = "Select member…", disabled, className }: UserComboboxProps) {
+export function UserCombobox({
+  value,
+  onChange,
+  placeholder = "Select member…",
+  disabled,
+  allowUnassigned = false,
+  className,
+}: UserComboboxProps) {
   const { data } = useOrgMembers(1, 200);
 
-  const options = (data?.data ?? []).map((m) => ({
+  const memberOptions = (data?.data ?? []).map((m) => ({
     value: m.userId,
     label: m.name ?? m.email,
     sublabel: m.email,
   }));
+
+  const options = allowUnassigned
+    ? [{ value: "", label: "Unassigned" }, ...memberOptions]
+    : memberOptions;
 
   return (
     <Combobox

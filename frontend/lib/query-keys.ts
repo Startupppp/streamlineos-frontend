@@ -276,6 +276,8 @@ export const queryKeys = {
   aiChat: {
     all: [...base, "aiChat"] as const,
     history: () => [...base, "aiChat", "history"] as const,
+    conversations: () => [...base, "aiChat", "conversations"] as const,
+    conversationMessages: (id: number) => [...base, "aiChat", "conversations", id, "messages"] as const,
   },
 
   dashboard: {
@@ -588,6 +590,8 @@ export const queryKeys = {
         : ([...base, "kb", "search", params] as const),
     ask: () => [...base, "kb", "ask"] as const,
     chatHistory: () => [...base, "kb", "chatHistory"] as const,
+    chatConversations: () => [...base, "kb", "chatConversations"] as const,
+    chatConversationMessages: (id: number) => [...base, "kb", "chatConversations", id, "messages"] as const,
     analyticsOverview: (range?: Record<string, unknown>) =>
       range === undefined
         ? ([...base, "kb", "analyticsOverview"] as const)
