@@ -27,9 +27,6 @@ const views = [
 ];
 
 export const ViewSwitcher = memo(function ViewSwitcher({ activeView, onViewChange }: ViewSwitcherProps) {
-  const active = views.find((v) => v.value === activeView);
-  const ActiveIcon = active?.icon ?? LayoutGrid;
-
   function handleViewChange(value: string) {
     if (
       value === "board" ||
@@ -46,10 +43,7 @@ export const ViewSwitcher = memo(function ViewSwitcher({ activeView, onViewChang
   return (
     <Select value={activeView} onValueChange={handleViewChange}>
       <SelectTrigger className="h-8 w-[128px] shrink-0 bg-card text-xs" aria-label="Select view">
-        <span className="flex items-center gap-1.5">
-          <ActiveIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-          <SelectValue />
-        </span>
+        <SelectValue />
       </SelectTrigger>
       <SelectContent>
         {views.map((v) => (

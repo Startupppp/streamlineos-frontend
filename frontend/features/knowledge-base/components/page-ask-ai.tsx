@@ -95,7 +95,7 @@ export default function PageAskAi({ spaceId, onNavigate }: PageAskAiProps) {
                   </button>
                 ) : (
                   <div
-                    key={`article-${citation.articleId}-${index}`}
+                    key={`${citation.kind}-${index}`}
                     className="truncate px-1 py-0.5 text-xs text-muted-foreground"
                   >
                     {citation.title || "Untitled"}
