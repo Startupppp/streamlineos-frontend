@@ -7,6 +7,7 @@ import type {
   KbAnalyticsOverview,
   KbAnalyticsRange,
   KbNoResultRow,
+  KbVerificationItem,
   KbPageAnalyticsRow,
   KbGapRow,
 } from "@/types/kb";
@@ -26,6 +27,14 @@ export function useKbNoResults(range?: KbAnalyticsRange) {
     queryKey: queryKeys.kb.noResults(queryParams),
     queryFn: () => apiClient.get<KbNoResultRow[]>("/kb/analytics/no-results", queryParams),
     staleTime: 5 * 60_000,
+  });
+}
+
+export function useKbVerificationQueue() {
+  return useQuery({
+    queryKey: queryKeys.kb.verificationQueue(),
+    queryFn: () => apiClient.get<KbVerificationItem[]>("/kb/verification/queue"),
+    staleTime: 60_000,
   });
 }
 
