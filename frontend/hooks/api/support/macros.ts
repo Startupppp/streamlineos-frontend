@@ -43,6 +43,8 @@ export interface MacroUsage {
   usageCount: number;
 }
 
+export type AssignmentMode = "static" | "round_robin" | "load_balanced" | "skill_based" | "availability_based";
+
 export interface SupportRoutingRule {
   id: number;
   orgId: string;
@@ -50,11 +52,37 @@ export interface SupportRoutingRule {
   conditions: RoutingCondition[];
   assigneeId: string | null;
   setPriority: TicketPriority | null;
+  assignmentMode: AssignmentMode;
+  candidateAgentIds: string[];
+  requiredSkills: string[];
   isEnabled: boolean;
   sortOrder: number;
   createdBy: string | null;
   createdAt: string | null;
   updatedAt: string | null;
+}
+
+export interface SupportAgentSkill {
+  id: number;
+  orgId: string;
+  userId: string;
+  skill: string;
+  createdAt: string | null;
+}
+
+export interface SupportAgentAvailability {
+  id: number;
+  orgId: string;
+  userId: string;
+  isAvailable: boolean;
+  updatedAt: string | null;
+}
+
+export interface SupportVipClient {
+  id: number;
+  orgId: string;
+  clientId: number;
+  createdAt: string | null;
 }
 
 interface MacrosParams {
@@ -103,6 +131,9 @@ interface CreateRoutingRuleInput {
   conditions: RoutingCondition[];
   assigneeId?: string;
   setPriority?: TicketPriority;
+  assignmentMode?: AssignmentMode;
+  candidateAgentIds?: string[];
+  requiredSkills?: string[];
   isEnabled?: boolean;
   sortOrder?: number;
 }
@@ -112,6 +143,9 @@ interface UpdateRoutingRuleInput {
   conditions?: RoutingCondition[];
   assigneeId?: string | null;
   setPriority?: TicketPriority | null;
+  assignmentMode?: AssignmentMode;
+  candidateAgentIds?: string[];
+  requiredSkills?: string[];
   isEnabled?: boolean;
   sortOrder?: number;
 }
@@ -213,5 +247,69 @@ export function useDeleteRoutingRule() {
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/support/routing-rules/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportRouting.all }),
+  });
+}
+
+export function useAgentSkills() {
+  return useQuery({
+    queryKey: queryKeys.supportAgentSkills.list(),
+    queryFn: () => apiClient.get<SupportAgentSkill[]>("/support/agent-skills"),
+    staleTime: 60_000,
+  });
+}
+
+export function useSetAgentSkills() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["supportAgentSkills", "set"],
+    mutationFn: ({ userId, skills }: { userId: string; skills: string[] }) =>
+      apiClient.put<{ success: boolean; skills: string[] }>(`/support/agent-skills/${userId}`, { skills }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportAgentSkills.all }),
+  });
+}
+
+export function useAgentAvailability() {
+  return useQuery({
+    queryKey: queryKeys.supportAgentAvailability.list(),
+    queryFn: () => apiClient.get<SupportAgentAvailability[]>("/support/agent-availability"),
+    staleTime: 30_000,
+  });
+}
+
+export function useSetMyAvailability() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["supportAgentAvailability", "setMine"],
+    mutationFn: (isAvailable: boolean) =>
+      apiClient.put<SupportAgentAvailability>("/support/agent-availability/me", { isAvailable }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportAgentAvailability.all }),
+  });
+}
+
+export function useVipClients() {
+  return useQuery({
+    queryKey: queryKeys.supportVipClients.list(),
+    queryFn: () => apiClient.get<SupportVipClient[]>("/support/vip-clients"),
+    staleTime: 60_000,
+  });
+}
+
+export function useAddVipClient() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["supportVipClients", "add"],
+    mutationFn: (clientId: number) =>
+      apiClient.post<{ success: boolean }>("/support/vip-clients", { clientId }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportVipClients.all }),
+  });
+}
+
+export function useRemoveVipClient() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["supportVipClients", "remove"],
+    mutationFn: (clientId: number) =>
+      apiClient.delete<{ success: boolean }>(`/support/vip-clients/${clientId}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.supportVipClients.all }),
   });
 }

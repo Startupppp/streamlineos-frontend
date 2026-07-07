@@ -1253,6 +1253,18 @@ export const NAV_GROUPS: NavGroup[] = [
             href: "/support/settings/channels",
             requiredPermission: "support:channels:manage",
           },
+          {
+            label: "Custom Fields",
+            icon: ListChecks,
+            href: "/support/settings/custom-fields",
+            requiredPermission: "support:settings:manage",
+          },
+          {
+            label: "Audit Log",
+            icon: History,
+            href: "/support/settings/audit-log",
+            requiredPermission: "support:settings:manage",
+          },
         ],
       },
     ],

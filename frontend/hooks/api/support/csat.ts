@@ -4,11 +4,30 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
-export interface CsatReport {
+export interface CsatSourceReport {
   totalRequests: number;
   totalResponses: number;
   responseRate: number;
   averageScore: number | null;
+}
+
+export interface CrmCampaignCsat {
+  totalSurveys: number;
+  totalResponses: number;
+  averageScore: number | null;
+}
+
+export interface GeneralSurveysCsatNote {
+  excluded: true;
+  reason: string;
+}
+
+export interface CsatReport extends CsatSourceReport {
+  sources: {
+    ticket: CsatSourceReport;
+    crmCampaigns: CrmCampaignCsat | null;
+    generalSurveys: GeneralSurveysCsatNote;
+  };
 }
 
 export interface PublicCsatSurvey {

@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
 import { useCreatePortalTicket } from "@/hooks/api/support/portal";
+import { usePortalActiveCustomFields } from "@/hooks/api/support/custom-fields";
 import { PORTAL_CATEGORY_OPTIONS } from "./portal-ticket-constants";
 import type { SupportMessageAttachment } from "@/types/support";
 
@@ -61,8 +62,15 @@ interface NewTicketSheetProps {
 export function NewTicketSheet({ open, onOpenChange }: NewTicketSheetProps) {
   const [pendingFiles, setPendingFiles] = useState<SupportMessageAttachment[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [customFieldValues, setCustomFieldValues] = useState<Record<number, string>>({});
+  const [customFieldError, setCustomFieldError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const createTicket = useCreatePortalTicket();
+  const { data: customFields } = usePortalActiveCustomFields();
+
+  const handleCustomFieldChange = useCallback((fieldId: number, value: string) => {
+    setCustomFieldValues((prev) => ({ ...prev, [fieldId]: value }));
+  }, []);
 
   const form = useForm<NewTicketFormValues>({
     resolver: zodResolver(newTicketSchema),
@@ -72,6 +80,8 @@ export function NewTicketSheet({ open, onOpenChange }: NewTicketSheetProps) {
   const resetAll = useCallback(() => {
     form.reset({ title: "", category: "general", description: "" });
     setPendingFiles([]);
+    setCustomFieldValues({});
+    setCustomFieldError(null);
   }, [form]);
 
   const handleOpenChange = useCallback(
@@ -135,12 +145,24 @@ export function NewTicketSheet({ open, onOpenChange }: NewTicketSheetProps) {
   );
 
   const handleSubmit = form.handleSubmit((values) => {
+    const missingRequired = (customFields ?? []).find(
+      (f) => f.required && !customFieldValues[f.id]?.trim(),
+    );
+    if (missingRequired) {
+      setCustomFieldError(`"${missingRequired.label}" is required`);
+      return;
+    }
+    setCustomFieldError(null);
+
     createTicket.mutate(
       {
         title: values.title,
         category: values.category,
         description: values.description,
         attachments: pendingFiles.length > 0 ? pendingFiles : undefined,
+        customFields: (customFields ?? [])
+          .filter((f) => customFieldValues[f.id]?.trim())
+          .map((f) => ({ fieldId: f.id, value: customFieldValues[f.id] })),
       },
       {
         onSuccess: () => {
@@ -209,6 +231,51 @@ export function NewTicketSheet({ open, onOpenChange }: NewTicketSheetProps) {
                 <p className="text-xs text-destructive">{form.formState.errors.description.message}</p>
               )}
             </div>
+
+            {(customFields ?? []).map((field) => (
+              <div key={field.id} className="space-y-1.5">
+                <Label className="text-xs">
+                  {field.label} {field.required && <span className="text-destructive">*</span>}
+                </Label>
+                {field.fieldType === "select" ? (
+                  <Select
+                    value={customFieldValues[field.id] ?? ""}
+                    onValueChange={(v) => handleCustomFieldChange(field.id, v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(field.options ?? []).map((opt) => (
+                        <SelectItem key={opt} value={opt}>
+                          {opt}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : field.fieldType === "checkbox" ? (
+                  <Select
+                    value={customFieldValues[field.id] ?? "false"}
+                    onValueChange={(v) => handleCustomFieldChange(field.id, v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="true">Yes</SelectItem>
+                      <SelectItem value="false">No</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input
+                    type={field.fieldType === "number" ? "number" : field.fieldType === "date" ? "date" : "text"}
+                    value={customFieldValues[field.id] ?? ""}
+                    onChange={(e) => handleCustomFieldChange(field.id, e.target.value)}
+                  />
+                )}
+              </div>
+            ))}
+            {customFieldError && <p className="text-xs text-destructive">{customFieldError}</p>}
 
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">

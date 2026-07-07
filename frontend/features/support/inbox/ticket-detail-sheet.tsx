@@ -7,6 +7,7 @@ import { useSupportRealtime } from "@/hooks/api/support/realtime";
 import { TicketDetailHeader } from "./ticket-detail-header";
 import { TicketDetailTimeline } from "./ticket-detail-timeline";
 import { TicketDetailRelations } from "./ticket-detail-relations";
+import { TicketExternalLinksSection } from "./ticket-external-links-section";
 import { TicketReplyComposer } from "./ticket-reply-composer";
 import { KbDeflectionPanel } from "./ticket-kb-deflection-panel";
 import { TicketAiPanel } from "./ticket-ai-panel";
@@ -42,8 +43,9 @@ export function TicketDetailSheet({ ticketId, onBack }: TicketDetailSheetProps) 
       <TicketDetailHeader ticket={ticket} onBack={onBack} />
       <TicketDetailTimeline ticket={ticket} />
       <TicketDetailRelations ticketId={ticket.id} />
+      <TicketExternalLinksSection ticketId={ticket.id} />
       <TicketAiPanel ticketId={ticket.id} onInsertReply={handleInsertReply} />
-      <TicketReplyComposer ticketId={ticket.id} />
+      <TicketReplyComposer key={ticket.id} ticketId={ticket.id} />
       <KbDeflectionPanel ticketId={ticket.id} ticketTitle={ticket.title} />
     </div>
   );

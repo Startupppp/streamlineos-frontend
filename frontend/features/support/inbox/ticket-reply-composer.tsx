@@ -28,6 +28,12 @@ import {
   useApplyMacro,
   type SupportMacro,
 } from "@/hooks/api/support/macros";
+import { dispatchTicketTyping } from "@/features/support/inbox/ticket-presence";
+import {
+  useTicketDraft,
+  useUpsertTicketDraft,
+  useDeleteTicketDraft,
+} from "@/hooks/api/support/productivity";
 import {
   SUPPORT_FOCUS_REPLY_EVENT,
   SUPPORT_INSERT_REPLY_DRAFT_EVENT,
@@ -64,11 +70,16 @@ export function TicketReplyComposer({ ticketId }: TicketReplyComposerProps) {
   const [previewBody, setPreviewBody] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const hasHydratedDraft = useRef(false);
+  const draftSaveTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const addMessage = useAddSupportMessage();
   const { data: macros } = useSupportMacros();
   const previewMacroMutation = usePreviewMacro();
   const applyMacro = useApplyMacro();
+  const { data: draft } = useTicketDraft(ticketId);
+  const upsertDraft = useUpsertTicketDraft();
+  const deleteDraft = useDeleteTicketDraft();
 
   const filteredMacros = useMemo(() => {
     const term = macroSearch.trim().toLowerCase();
@@ -100,6 +111,31 @@ export function TicketReplyComposer({ ticketId }: TicketReplyComposerProps) {
     window.addEventListener(SUPPORT_INSERT_REPLY_DRAFT_EVENT, handleInsertReplyDraft);
     return () => window.removeEventListener(SUPPORT_INSERT_REPLY_DRAFT_EVENT, handleInsertReplyDraft);
   }, []);
+
+  useEffect(() => {
+    if (hasHydratedDraft.current || !draft) return;
+    hasHydratedDraft.current = true;
+    setReplyText(draft.body);
+    setIsInternal(draft.isInternal);
+  }, [draft]);
+
+  const draftAutoSaveRef = useRef({ draft, upsertDraft, deleteDraft });
+  draftAutoSaveRef.current = { draft, upsertDraft, deleteDraft };
+
+  useEffect(() => {
+    if (draftSaveTimeout.current) clearTimeout(draftSaveTimeout.current);
+    draftSaveTimeout.current = setTimeout(() => {
+      const { draft: currentDraft, upsertDraft: currentUpsert, deleteDraft: currentDelete } = draftAutoSaveRef.current;
+      if (replyText.trim()) {
+        currentUpsert.mutate({ ticketId, body: replyText, isInternal });
+      } else if (currentDraft) {
+        currentDelete.mutate(ticketId);
+      }
+    }, 1500);
+    return () => {
+      if (draftSaveTimeout.current) clearTimeout(draftSaveTimeout.current);
+    };
+  }, [replyText, isInternal, ticketId]);
 
   const handleMacroSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => setMacroSearch(e.target.value),
@@ -194,6 +230,9 @@ export function TicketReplyComposer({ ticketId }: TicketReplyComposerProps) {
         onSuccess: () => {
           setReplyText("");
           setPendingFiles([]);
+          if (draftAutoSaveRef.current.draft) {
+            draftAutoSaveRef.current.deleteDraft.mutate(ticketId);
+          }
           toast.success("Reply sent");
         },
       },
@@ -203,8 +242,11 @@ export function TicketReplyComposer({ ticketId }: TicketReplyComposerProps) {
   const handleToggleInternal = useCallback(() => setIsInternal((v) => !v), []);
 
   const handleReplyChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => setReplyText(e.target.value),
-    [],
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setReplyText(e.target.value);
+      dispatchTicketTyping(ticketId);
+    },
+    [ticketId],
   );
 
   const handleKeyDown = useCallback(
@@ -306,7 +348,7 @@ export function TicketReplyComposer({ ticketId }: TicketReplyComposerProps) {
           ref={textareaRef}
           value={replyText}
           onChange={handleReplyChange}
-          placeholder={isInternal ? "Add internal note..." : "Type your reply..."}
+          placeholder={isInternal ? "Add internal note... (type @name to notify a teammate)" : "Type your reply..."}
           className={cn(
             "min-h-[60px] max-h-[120px] text-sm resize-none",
             isInternal && "bg-amber-50/50 dark:bg-amber-950/10 border-amber-200 dark:border-amber-800/40",

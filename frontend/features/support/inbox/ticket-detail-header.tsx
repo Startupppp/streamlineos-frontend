@@ -20,6 +20,8 @@ import { useUpdateSupportTicket } from "@/hooks/api/support";
 import { useSupportQueues } from "@/hooks/api/support/queues";
 import { useSupportWatchers, useFollowTicket, useUnfollowTicket } from "@/hooks/api/support/watchers";
 import { TicketRiskBadge } from "@/features/support/inbox/ticket-risk-badge";
+import { TicketPresence } from "@/features/support/inbox/ticket-presence";
+import { TicketSnoozeControl } from "@/features/support/inbox/ticket-snooze-control";
 import type { SupportTicket, SupportTicketStatus } from "@/types/support";
 
 const PRIORITY_COLORS: Record<string, string> = {
@@ -126,6 +128,7 @@ export function TicketDetailHeader({ ticket, onBack }: TicketDetailHeaderProps) 
             {ticket.priority}
           </Badge>
           <TicketRiskBadge ticketId={ticket.id} />
+          <TicketSnoozeControl ticketId={ticket.id} snoozedUntil={ticket.snoozedUntil} />
           {isBreached && (
             <Badge variant="destructive" className="text-xs">
               SLA Breached
@@ -158,6 +161,7 @@ export function TicketDetailHeader({ ticket, onBack }: TicketDetailHeaderProps) 
           </Select>
         </div>
       </div>
+      <TicketPresence ticketId={ticket.id} />
     </div>
   );
 }

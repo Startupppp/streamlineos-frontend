@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { ChevronDown, Tag as TagIcon, Link2, GitMerge, X, Plus } from "lucide-react";
+import { ChevronDown, Tag as TagIcon, Link2, GitMerge, Split, X, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -22,6 +23,7 @@ import {
   useMergeTicket,
   type TicketLinkRelation,
 } from "@/hooks/api/support/links";
+import { useSplitTicket } from "@/hooks/api/support/productivity";
 
 interface TicketDetailRelationsProps {
   ticketId: number;
@@ -33,6 +35,8 @@ export function TicketDetailRelations({ ticketId }: TicketDetailRelationsProps) 
   const [linkedTicketId, setLinkedTicketId] = useState("");
   const [linkRelation, setLinkRelation] = useState<TicketLinkRelation>("related");
   const [mergeTargetId, setMergeTargetId] = useState("");
+  const [splitTitle, setSplitTitle] = useState("");
+  const [splitDescription, setSplitDescription] = useState("");
 
   const { data: allTags } = useSupportTags();
   const { data: ticketTags } = useTicketTags(ticketId);
@@ -41,6 +45,7 @@ export function TicketDetailRelations({ ticketId }: TicketDetailRelationsProps) 
   const detachTag = useDetachTag();
   const addLink = useAddTicketLink();
   const mergeTicket = useMergeTicket();
+  const splitTicket = useSplitTicket();
 
   const handleToggle = useCallback(() => setOpen((v) => !v), []);
   const handleTagSelectChange = useCallback((v: string) => setSelectedTagId(v), []);
@@ -51,6 +56,14 @@ export function TicketDetailRelations({ ticketId }: TicketDetailRelationsProps) 
   const handleLinkRelationChange = useCallback((v: string) => setLinkRelation(v as TicketLinkRelation), []);
   const handleMergeTargetChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => setMergeTargetId(e.target.value),
+    [],
+  );
+  const handleSplitTitleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setSplitTitle(e.target.value),
+    [],
+  );
+  const handleSplitDescriptionChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => setSplitDescription(e.target.value),
     [],
   );
 
@@ -110,6 +123,24 @@ export function TicketDetailRelations({ ticketId }: TicketDetailRelationsProps) 
       },
     );
   }, [mergeTargetId, ticketId, mergeTicket]);
+
+  const handleSplit = useCallback(() => {
+    if (splitTitle.trim().length < 5) {
+      toast.error("Enter a title of at least 5 characters for the new ticket");
+      return;
+    }
+    splitTicket.mutate(
+      { ticketId, title: splitTitle.trim(), description: splitDescription.trim() || undefined },
+      {
+        onSuccess: (newTicket) => {
+          setSplitTitle("");
+          setSplitDescription("");
+          toast.success(`Split into new ticket #${newTicket.id}`);
+        },
+        onError: (err) => toast.error(getErrorMessage(err)),
+      },
+    );
+  }, [splitTitle, splitDescription, ticketId, splitTicket]);
 
   const attachedTagIds = new Set((ticketTags ?? []).map((t) => t.id));
   const availableTags = (allTags ?? []).filter((t) => !attachedTagIds.has(t.id));
@@ -241,6 +272,36 @@ export function TicketDetailRelations({ ticketId }: TicketDetailRelationsProps) 
                 onClick={handleMerge}
               >
                 Merge
+              </Button>
+            </div>
+          </div>
+
+          <div>
+            <p className="text-[11px] font-medium text-muted-foreground mb-1.5 flex items-center gap-1">
+              <Split className="h-3 w-3" /> Split into a new ticket
+            </p>
+            <div className="space-y-1.5">
+              <Input
+                value={splitTitle}
+                onChange={handleSplitTitleChange}
+                placeholder="New ticket title"
+                className="h-7 text-xs"
+              />
+              <Textarea
+                value={splitDescription}
+                onChange={handleSplitDescriptionChange}
+                placeholder="Description (optional)"
+                className="text-xs min-h-16"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs"
+                disabled={splitTicket.isPending}
+                onClick={handleSplit}
+              >
+                Split Ticket
               </Button>
             </div>
           </div>

@@ -24,6 +24,7 @@ import { CreateTicketDialog } from "@/features/support/inbox/create-ticket-dialo
 import { QueueViewRail } from "@/features/support/inbox/queue-view-rail";
 import { SupportAblyProvider } from "@/features/support/inbox/support-ably-provider";
 import { useInboxShortcuts } from "@/features/support/inbox/use-inbox-shortcuts";
+import { AgentAvailabilityToggle } from "@/features/support/inbox/agent-availability-toggle";
 
 const TICKET_STATUSES: readonly SupportTicketStatus[] = ["OPEN", "IN_PROGRESS", "WAITING", "RESOLVED", "CLOSED"];
 const TICKET_PRIORITIES: readonly SupportTicketPriority[] = ["LOW", "MEDIUM", "HIGH", "URGENT"];
@@ -59,6 +60,7 @@ function InboxContent() {
   const queueIdFilter = searchParams.get("queueId");
   const assigneeIdFilter = searchParams.get("assigneeId");
   const channelFilter = searchParams.get("channel");
+  const snoozedFilter = searchParams.get("snoozed") === "true";
 
   const updateFilter = useCallback(
     (key: string, value: string) => {
@@ -78,6 +80,7 @@ function InboxContent() {
     ...(queueIdFilter ? { queueId: Number(queueIdFilter) } : {}),
     ...(assigneeIdFilter ? { assigneeId: assigneeIdFilter } : {}),
     ...(channelFilter ? { channel: channelFilter } : {}),
+    ...(snoozedFilter ? { snoozed: true } : {}),
   });
   const { data: stats, isLoading: statsLoading } = useSupportStats();
 
@@ -99,6 +102,11 @@ function InboxContent() {
     [updateFilter]
   );
   const handleBackFromTicket = useCallback(() => setSelectedTicketId(null), []);
+
+  const handleToggleSnoozed = useCallback(
+    () => updateFilter("snoozed", snoozedFilter ? "all" : "true"),
+    [updateFilter, snoozedFilter],
+  );
 
   const handleSelectQueue = useCallback(
     (queueId: number | null) => updateFilter("queueId", queueId ? String(queueId) : "all"),
@@ -139,9 +147,12 @@ function InboxContent() {
               }`
         }
         actions={
-          <Button onClick={handleOpenCreate} size="sm" className="gap-1.5">
-            <Plus className="h-3.5 w-3.5" /> New Ticket
-          </Button>
+          <div className="flex items-center gap-2">
+            <AgentAvailabilityToggle />
+            <Button onClick={handleOpenCreate} size="sm" className="gap-1.5">
+              <Plus className="h-3.5 w-3.5" /> New Ticket
+            </Button>
+          </div>
         }
         filters={
           <>
@@ -180,6 +191,8 @@ function InboxContent() {
             activeQueueId={queueIdFilter ? Number(queueIdFilter) : null}
             onSelectQueue={handleSelectQueue}
             onApplyView={handleApplyView}
+            snoozedActive={snoozedFilter}
+            onToggleSnoozed={handleToggleSnoozed}
           />
         </div>
 

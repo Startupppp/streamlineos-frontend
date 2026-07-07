@@ -25,6 +25,7 @@ interface SupportFilters {
   assigneeId?: string;
   queueId?: number;
   channel?: string;
+  snoozed?: boolean;
   page?: number;
   limit?: number;
 }
@@ -74,6 +75,7 @@ export const useSupportTickets = (
         ...(filters?.assigneeId ? { assigneeId: filters.assigneeId } : {}),
         ...(filters?.queueId ? { queueId: String(filters.queueId) } : {}),
         ...(filters?.channel ? { channel: filters.channel } : {}),
+        ...(filters?.snoozed !== undefined ? { snoozed: String(filters.snoozed) } : {}),
         ...(filters?.page ? { page: String(filters.page) } : {}),
         ...(filters?.limit ? { limit: String(filters.limit) } : {}),
       }),

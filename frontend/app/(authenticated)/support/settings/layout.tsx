@@ -9,6 +9,9 @@ const TABS = [
   { label: "SLA Policies", href: "/support/settings/sla" },
   { label: "Business Hours", href: "/support/settings/business-hours" },
   { label: "Channels", href: "/support/settings/channels" },
+  { label: "Custom Fields", href: "/support/settings/custom-fields" },
+  { label: "Agents & VIPs", href: "/support/settings/agent-routing" },
+  { label: "Audit Log", href: "/support/settings/audit-log" },
 ] as const;
 
 export default function SupportSettingsLayout({

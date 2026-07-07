@@ -36,6 +36,8 @@ export interface SupportTicket {
   assigneeId: string | null;
   queueId: number | null;
   mergedIntoTicketId: number | null;
+  snoozedUntil: Date | null;
+  snoozedBy: string | null;
   createdBy: string;
   slaDeadline: Date | null;
   firstResponseDueAt: Date | null;

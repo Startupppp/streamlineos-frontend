@@ -13,7 +13,9 @@ export type AiSuggestionType =
   | "reply"
   | "macro"
   | "kb_article"
-  | "duplicate";
+  | "duplicate"
+  | "handoff_summary"
+  | "root_cause_cluster";
 
 export type AiSuggestionStatus = "pending" | "accepted" | "rejected";
 export type AiSuggestionFeedback = "helpful" | "not_helpful";
@@ -56,6 +58,18 @@ export interface AiKbArticlePayload {
 export interface AiDuplicatePayload {
   candidateTicketId: number;
   title: string;
+}
+
+export interface AiHandoffSummaryPayload {
+  summary: string;
+  keyPoints: string[];
+  suggestedNextStep: string;
+}
+
+export interface AiRootCauseClusterPayload {
+  relatedTicketIds: number[];
+  rootCause: string;
+  summary: string;
 }
 
 interface AiSuggestionBase {
@@ -115,6 +129,16 @@ export interface AiDuplicateSuggestion extends AiSuggestionBase {
   payload: AiDuplicatePayload;
 }
 
+export interface AiHandoffSummarySuggestion extends AiSuggestionBase {
+  type: "handoff_summary";
+  payload: AiHandoffSummaryPayload;
+}
+
+export interface AiRootCauseClusterSuggestion extends AiSuggestionBase {
+  type: "root_cause_cluster";
+  payload: AiRootCauseClusterPayload;
+}
+
 export type AiSuggestion =
   | AiSummarySuggestion
   | AiSentimentSuggestion
@@ -124,7 +148,14 @@ export type AiSuggestion =
   | AiReplySuggestion
   | AiMacroSuggestion
   | AiKbArticleSuggestion
-  | AiDuplicateSuggestion;
+  | AiDuplicateSuggestion
+  | AiHandoffSummarySuggestion
+  | AiRootCauseClusterSuggestion;
+
+export interface TranslateMessageResult {
+  translatedText: string;
+  detectedSourceLanguage: string;
+}
 
 interface ResolveAiSuggestionInput {
   suggestionId: number;
@@ -187,6 +218,35 @@ export function useSuggestMacro(ticketId: number) {
     mutationKey: ["supportAiSuggestions", "suggest-macro", ticketId],
     mutationFn: () => apiClient.post<AiSuggestion | null>(`/support/${ticketId}/ai/suggest-macro`),
     onSuccess: () => invalidateSuggestions(qc, ticketId),
+  });
+}
+
+export function useGenerateHandoffSummary(ticketId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["supportAiSuggestions", "handoff-summary", ticketId],
+    mutationFn: () => apiClient.post<AiSuggestion | null>(`/support/${ticketId}/ai/handoff-summary`),
+    onSuccess: () => invalidateSuggestions(qc, ticketId),
+  });
+}
+
+export function useFindRootCauseCluster(ticketId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["supportAiSuggestions", "root-cause-cluster", ticketId],
+    mutationFn: () => apiClient.post<AiSuggestion | null>(`/support/${ticketId}/ai/root-cause-cluster`),
+    onSuccess: () => invalidateSuggestions(qc, ticketId),
+  });
+}
+
+export function useTranslateMessage(ticketId: number) {
+  return useMutation({
+    mutationKey: ["supportAi", "translate", ticketId],
+    mutationFn: ({ messageId, targetLanguage }: { messageId: number; targetLanguage: string }) =>
+      apiClient.post<TranslateMessageResult | null>(`/support/${ticketId}/ai/translate`, {
+        messageId,
+        targetLanguage,
+      }),
   });
 }
 

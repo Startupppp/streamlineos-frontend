@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
-import { useForm, useFieldArray, type Control } from "react-hook-form";
+import { useCallback, useMemo, useState, type ChangeEvent, type KeyboardEvent } from "react";
+import { useForm, useFieldArray, useWatch, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Sheet,
   SheetContent,
@@ -54,6 +55,7 @@ import {
   useDeleteRoutingRule,
   type SupportRoutingRule,
   type TicketPriority,
+  type AssignmentMode,
 } from "@/hooks/api/support/macros";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { getApiError } from "@/lib/api-client";
@@ -67,6 +69,7 @@ const FIELDS = [
   { value: "category", label: "Category" },
   { value: "description", label: "Description" },
   { value: "priority", label: "Priority" },
+  { value: "isVip", label: "VIP Client" },
 ];
 
 const OPERATORS = [
@@ -76,6 +79,14 @@ const OPERATORS = [
 ];
 
 const PRIORITIES: TicketPriority[] = ["LOW", "MEDIUM", "HIGH", "URGENT"];
+
+const ASSIGNMENT_MODES: { value: AssignmentMode; label: string; description: string }[] = [
+  { value: "static", label: "Static", description: "Always assign to one specific agent" },
+  { value: "round_robin", label: "Round Robin", description: "Rotate evenly across candidate agents" },
+  { value: "load_balanced", label: "Load Balanced", description: "Assign to the candidate with the fewest open tickets" },
+  { value: "skill_based", label: "Skill Based", description: "Assign to a qualified, load-balanced candidate" },
+  { value: "availability_based", label: "Availability Based", description: "Assign to an available, load-balanced candidate" },
+];
 
 const conditionSchema = z.object({
   field: z.string().min(1, "Field required"),
@@ -88,6 +99,9 @@ const ruleSchema = z.object({
   conditions: z.array(conditionSchema).min(1, "At least one condition required"),
   assigneeId: z.string(),
   setPriority: z.string(),
+  assignmentMode: z.enum(["static", "round_robin", "load_balanced", "skill_based", "availability_based"]),
+  candidateAgentIds: z.array(z.string()),
+  requiredSkills: z.array(z.string()),
   isEnabled: z.boolean(),
 });
 type RuleForm = z.infer<typeof ruleSchema>;
@@ -101,6 +115,8 @@ interface ConditionRowProps {
 
 function ConditionRow({ index, control, showRemove, onRemove }: ConditionRowProps) {
   const handleRemove = useCallback(() => onRemove(index), [index, onRemove]);
+  const selectedField = useWatch({ control, name: `conditions.${index}.field` });
+  const isVipCondition = selectedField === "isVip";
   return (
     <div className="flex flex-wrap items-start gap-2 rounded-lg border border-border/60 p-2 sm:border-0 sm:p-0">
       <FormField
@@ -155,7 +171,19 @@ function ConditionRow({ index, control, showRemove, onRemove }: ConditionRowProp
         render={({ field }) => (
           <FormItem className="flex-1 min-w-[140px]">
             <FormControl>
-              <Input {...field} className="h-8 text-xs" placeholder="Value" />
+              {isVipCondition ? (
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="Value" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="true">VIP</SelectItem>
+                    <SelectItem value="false">Not VIP</SelectItem>
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input {...field} className="h-8 text-xs" placeholder="Value" />
+              )}
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -174,6 +202,46 @@ function ConditionRow({ index, control, showRemove, onRemove }: ConditionRowProp
         </Button>
       )}
     </div>
+  );
+}
+
+interface CandidateCheckboxProps {
+  userId: string;
+  label: string;
+  checked: boolean;
+  onToggle: (userId: string, checked: boolean) => void;
+}
+
+function CandidateCheckbox({ userId, label, checked, onToggle }: CandidateCheckboxProps) {
+  const handleCheckedChange = useCallback(
+    (value: boolean | "indeterminate") => onToggle(userId, value === true),
+    [userId, onToggle],
+  );
+  return (
+    <label
+      htmlFor={`candidate-${userId}`}
+      className="flex items-center gap-2 text-sm cursor-pointer"
+    >
+      <Checkbox id={`candidate-${userId}`} checked={checked} onCheckedChange={handleCheckedChange} />
+      {label}
+    </label>
+  );
+}
+
+interface SkillBadgeProps {
+  skill: string;
+  onRemove: (skill: string) => void;
+}
+
+function SkillBadge({ skill, onRemove }: SkillBadgeProps) {
+  const handleRemove = useCallback(() => onRemove(skill), [skill, onRemove]);
+  return (
+    <Badge variant="secondary" className="text-[10px] gap-1">
+      {skill}
+      <button type="button" aria-label={`Remove ${skill}`} onClick={handleRemove}>
+        <Trash2 className="h-2.5 w-2.5" />
+      </button>
+    </Badge>
   );
 }
 
@@ -199,9 +267,65 @@ function RuleSheet({ rule, members, onClose }: RuleSheetProps) {
           : [{ field: "title", op: "contains", value: "" }],
       assigneeId: rule?.assigneeId ?? NO_ASSIGNEE,
       setPriority: rule?.setPriority ?? NO_PRIORITY,
+      assignmentMode: rule?.assignmentMode ?? "static",
+      candidateAgentIds: rule?.candidateAgentIds ?? [],
+      requiredSkills: rule?.requiredSkills ?? [],
       isEnabled: rule?.isEnabled ?? true,
     },
   });
+
+  const assignmentMode = useWatch({ control: form.control, name: "assignmentMode" });
+  const requiredSkills = useWatch({ control: form.control, name: "requiredSkills" });
+  const [skillDraft, setSkillDraft] = useState("");
+
+  const handleAddSkill = useCallback(() => {
+    const value = skillDraft.trim();
+    if (!value) return;
+    const current = form.getValues("requiredSkills");
+    if (!current.includes(value)) {
+      form.setValue("requiredSkills", [...current, value], { shouldDirty: true });
+    }
+    setSkillDraft("");
+  }, [skillDraft, form]);
+
+  const handleRemoveSkill = useCallback(
+    (skill: string) => {
+      const current = form.getValues("requiredSkills");
+      form.setValue(
+        "requiredSkills",
+        current.filter((s) => s !== skill),
+        { shouldDirty: true },
+      );
+    },
+    [form],
+  );
+
+  const handleSkillDraftChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => setSkillDraft(e.target.value),
+    [],
+  );
+
+  const handleSkillKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        handleAddSkill();
+      }
+    },
+    [handleAddSkill],
+  );
+
+  const handleToggleCandidate = useCallback(
+    (userId: string, checked: boolean) => {
+      const current = form.getValues("candidateAgentIds");
+      form.setValue(
+        "candidateAgentIds",
+        checked ? [...current, userId] : current.filter((id) => id !== userId),
+        { shouldDirty: true },
+      );
+    },
+    [form],
+  );
 
   const { fields, append, remove } = useFieldArray({ control: form.control, name: "conditions" });
 
@@ -222,6 +346,9 @@ function RuleSheet({ rule, members, onClose }: RuleSheetProps) {
             conditions: data.conditions,
             assigneeId: assigneeId ?? null,
             setPriority: setPriority ?? null,
+            assignmentMode: data.assignmentMode,
+            candidateAgentIds: data.candidateAgentIds,
+            requiredSkills: data.requiredSkills,
             isEnabled: data.isEnabled,
           },
           {
@@ -239,6 +366,9 @@ function RuleSheet({ rule, members, onClose }: RuleSheetProps) {
             conditions: data.conditions,
             assigneeId,
             setPriority,
+            assignmentMode: data.assignmentMode,
+            candidateAgentIds: data.candidateAgentIds,
+            requiredSkills: data.requiredSkills,
             isEnabled: data.isEnabled,
           },
           {
@@ -306,29 +436,106 @@ function RuleSheet({ rule, members, onClose }: RuleSheetProps) {
 
               <FormField
                 control={form.control}
-                name="assigneeId"
+                name="assignmentMode"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Assign To</FormLabel>
+                    <FormLabel>Assignment Mode</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="No assignee" />
+                          <SelectValue placeholder="Assignment mode" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value={NO_ASSIGNEE}>No assignee</SelectItem>
-                        {members.map((m) => (
-                          <SelectItem key={m.userId} value={m.userId}>
-                            {m.name ?? m.email}
+                        {ASSIGNMENT_MODES.map((m) => (
+                          <SelectItem key={m.value} value={m.value}>
+                            {m.label}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
+                    <p className="text-xs text-muted-foreground">
+                      {ASSIGNMENT_MODES.find((m) => m.value === field.value)?.description}
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
+              {assignmentMode === "static" ? (
+                <FormField
+                  control={form.control}
+                  name="assigneeId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Assign To</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="No assignee" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value={NO_ASSIGNEE}>No assignee</SelectItem>
+                          {members.map((m) => (
+                            <SelectItem key={m.userId} value={m.userId}>
+                              {m.name ?? m.email}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ) : (
+                <FormField
+                  control={form.control}
+                  name="candidateAgentIds"
+                  render={() => (
+                    <FormItem>
+                      <FormLabel>Candidate Agents</FormLabel>
+                      <div className="max-h-40 overflow-y-auto rounded-lg border border-border/60 p-2 space-y-1.5">
+                        {members.map((m) => (
+                          <CandidateCheckbox
+                            key={m.userId}
+                            userId={m.userId}
+                            label={m.name ?? m.email}
+                            checked={form.watch("candidateAgentIds").includes(m.userId)}
+                            onToggle={handleToggleCandidate}
+                          />
+                        ))}
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
+              {assignmentMode === "skill_based" && (
+                <FormItem>
+                  <FormLabel>Required Skills</FormLabel>
+                  <div className="flex gap-2">
+                    <Input
+                      value={skillDraft}
+                      onChange={handleSkillDraftChange}
+                      onKeyDown={handleSkillKeyDown}
+                      placeholder="e.g. billing"
+                      className="h-9"
+                    />
+                    <Button type="button" variant="outline" size="sm" onClick={handleAddSkill}>
+                      Add
+                    </Button>
+                  </div>
+                  {requiredSkills.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-1.5">
+                      {requiredSkills.map((skill) => (
+                        <SkillBadge key={skill} skill={skill} onRemove={handleRemoveSkill} />
+                      ))}
+                    </div>
+                  )}
+                </FormItem>
+              )}
 
               <FormField
                 control={form.control}
@@ -446,9 +653,21 @@ function RuleCard({
                   → {rule.setPriority}
                 </Badge>
               )}
-              {assigneeName && (
+              {rule.assignmentMode === "static" && assigneeName && (
                 <Badge variant="outline" className="text-[10px]">
                   → {assigneeName}
+                </Badge>
+              )}
+              {rule.assignmentMode !== "static" && (
+                <Badge variant="outline" className="text-[10px]">
+                  {ASSIGNMENT_MODES.find((m) => m.value === rule.assignmentMode)?.label ?? rule.assignmentMode}
+                  {" · "}
+                  {rule.candidateAgentIds.length} agent{rule.candidateAgentIds.length === 1 ? "" : "s"}
+                </Badge>
+              )}
+              {rule.requiredSkills.length > 0 && (
+                <Badge variant="outline" className="text-[10px]">
+                  Skills: {rule.requiredSkills.join(", ")}
                 </Badge>
               )}
             </div>
