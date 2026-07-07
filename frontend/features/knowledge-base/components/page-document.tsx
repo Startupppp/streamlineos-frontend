@@ -96,6 +96,11 @@ export default function PageDocument({ pageId }: PageDocumentProps) {
     [router]
   );
 
+  const handleUploadFile = useCallback(
+    (file: File) => uploadKbMedia(file, pageId),
+    [pageId]
+  );
+
   function scheduleAutosave(patch: {
     title?: string;
     content?: unknown;
@@ -226,7 +231,7 @@ export default function PageDocument({ pageId }: PageDocumentProps) {
             fetchMentionUsers={fetchMentionUsers}
             fetchPageLinks={fetchPageLinks}
             onNavigateToPage={handleNavigateToPage}
-            uploadFile={isEditable ? uploadKbMedia : undefined}
+            uploadFile={isEditable ? handleUploadFile : undefined}
           />
         </div>
 

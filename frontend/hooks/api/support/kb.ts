@@ -152,11 +152,12 @@ interface SubmitKbFeedbackInput {
   visitorId?: string;
 }
 
-export function useKbCategories() {
+export function useKbCategories(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: queryKeys.kb.categories(),
     queryFn: () => apiClient.get<KbCategory[]>("/support/kb/categories"),
     staleTime: 60_000,
+    enabled: options?.enabled ?? true,
   });
 }
 
@@ -193,12 +194,13 @@ export function useDeleteKbCategory() {
   });
 }
 
-export function useKbArticles(params?: KbArticlesParams) {
+export function useKbArticles(params?: KbArticlesParams, options?: { enabled?: boolean }) {
   const queryParams: Record<string, unknown> = { ...params };
   return useQuery({
     queryKey: queryKeys.kb.articles(queryParams),
     queryFn: () => apiClient.get<KbArticleListItem[]>("/support/kb/articles", queryParams),
     staleTime: 30_000,
+    enabled: options?.enabled ?? true,
   });
 }
 

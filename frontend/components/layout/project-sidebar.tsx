@@ -154,6 +154,20 @@ function useIsActive(baseUrl: string) {
 
 const SIDEBAR_COLLAPSED_KEY = "streamlineos:project-sidebar:collapsed";
 
+function getProjectInitials(projectKey: string | undefined, projectName: string): string {
+  const key = projectKey?.trim();
+  if (key) return key.substring(0, 2).toUpperCase();
+  const name = projectName.trim();
+  if (!name) return "P";
+  const words = name.split(/\s+/).filter((word) => word.length > 0);
+  if (words.length >= 2) {
+    const first = words[0]?.[0];
+    const second = words[1]?.[0];
+    if (first && second) return `${first}${second}`.toUpperCase();
+  }
+  return name.substring(0, 2).toUpperCase();
+}
+
 function DesktopSidebar({
   projectId,
   projectName,
@@ -196,7 +210,7 @@ function DesktopSidebar({
         </Link>
         <div className={cn("flex items-center", isCollapsed ? "flex-col gap-1.5" : "gap-2")}>
           <div className="h-7 w-7 rounded bg-primary/10 flex items-center justify-center text-primary text-[11px] font-bold shrink-0">
-            {(projectKey || "??").substring(0, 2).toUpperCase()}
+            {getProjectInitials(projectKey, projectName)}
           </div>
           {!isCollapsed && (
             <span className="text-sm font-semibold truncate flex-1 min-w-0">{projectName}</span>
@@ -318,7 +332,7 @@ function MobileProjectNav({
               </Link>
               <div className="flex items-center gap-2">
                 <div className="h-7 w-7 rounded bg-primary/10 flex items-center justify-center text-primary text-[11px] font-bold shrink-0">
-                  {(projectKey || "??").substring(0, 2).toUpperCase()}
+                  {getProjectInitials(projectKey, projectName)}
                 </div>
                 <span className="text-sm font-semibold truncate">{projectName}</span>
               </div>

@@ -39,6 +39,16 @@ function buildUrl(path: string, params?: Record<string, unknown>): string {
   return url.toString();
 }
 
+function unwrapResponse<T>(body: unknown): T {
+  if (body !== null && typeof body === "object" && "success" in body) {
+    const envelope = body as Record<string, unknown>;
+    if (envelope.success === true && "data" in envelope) {
+      return envelope.data as T;
+    }
+  }
+  return body as T;
+}
+
 async function request<T>(method: string, path: string, body?: unknown, params?: Record<string, unknown>): Promise<T> {
   const token = await mintBackendToken();
   if (!token) throw new Error("Unauthorized: no backend session");
@@ -48,8 +58,8 @@ async function request<T>(method: string, path: string, body?: unknown, params?:
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     data: body,
   };
-  const res = await axios<T>(config);
-  return res.data;
+  const res = await axios(config);
+  return unwrapResponse<T>(res.data);
 }
 
 export const serverApiClient = {
@@ -67,8 +77,8 @@ async function publicRequest<T>(method: string, path: string, body?: unknown, pa
     headers: { "Content-Type": "application/json" },
     data: body,
   };
-  const res = await axios<T>(config);
-  return res.data;
+  const res = await axios(config);
+  return unwrapResponse<T>(res.data);
 }
 
 export const serverPublicFetch = {

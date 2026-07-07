@@ -49,7 +49,7 @@ export default async function ProjectLayout({
       <ProjectSidebar
         projectId={projectId}
         projectName={project.name}
-        projectKey={project.key ?? ""}
+        projectKey={project.key}
       />
       <div className="flex-1 min-w-0 min-h-0 flex flex-col overflow-y-auto">
         {children}

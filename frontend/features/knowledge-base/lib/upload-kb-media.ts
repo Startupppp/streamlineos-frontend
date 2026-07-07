@@ -64,7 +64,7 @@ function getValidationError(file: File): string | null {
   return `Unsupported file type: ${file.type || 'unknown'}`;
 }
 
-export async function uploadKbMedia(file: File): Promise<UploadedKbMedia> {
+export async function uploadKbMedia(file: File, pageId?: number): Promise<UploadedKbMedia> {
   const error = getValidationError(file);
   if (error) {
     toast.error(error);
@@ -72,5 +72,6 @@ export async function uploadKbMedia(file: File): Promise<UploadedKbMedia> {
   }
   const fd = new FormData();
   fd.append('file', file);
+  if (pageId != null) fd.append('pageId', String(pageId));
   return apiClient.upload<UploadedKbMedia>('/kb/media', fd);
 }

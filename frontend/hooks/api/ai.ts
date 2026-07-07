@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+import { useAccess } from "@/hooks/api/access";
 import type {
   LeadScoreResult, EmailTone, GeneratedEmail, DealPredictionResult,
   NextActionResult, ChurnRiskResult, LeadEnrichmentResult,
@@ -326,8 +327,12 @@ export interface AiUsageData {
 }
 
 export function useAiUsage() {
+  const { data: access } = useAccess();
+  const canView = Boolean(access?.isOrgOwner || access?.isPlatformAdmin);
   return useQuery({
     queryKey: queryKeys.settings.aiUsage(),
     queryFn: () => apiClient.get<AiUsageData>("/settings/ai-usage"),
+    enabled: canView,
+    staleTime: 5 * 60_000,
   });
 }

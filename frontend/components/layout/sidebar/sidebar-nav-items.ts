@@ -1121,20 +1121,18 @@ export const NAV_GROUPS: NavGroup[] = [
         href: "/projects",
         isProjectsList: true,
         requiredPermission: "projects:view",
-        children: [
-          {
-            label: "Templates",
-            icon: LayoutTemplate,
-            href: "/projects/templates",
-            requiredPermission: "projects:create",
-          },
-          {
-            label: "Resource Allocation",
-            icon: Users,
-            href: "/projects/resource-allocation",
-            requiredPermission: "projects:update",
-          },
-        ],
+      },
+      {
+        label: "Templates",
+        icon: LayoutTemplate,
+        href: "/projects/templates",
+        requiredPermission: "projects:create",
+      },
+      {
+        label: "Resource Allocation",
+        icon: Users,
+        href: "/projects/resource-allocation",
+        requiredPermission: "projects:update",
       },
       {
         label: "Whiteboards",

@@ -49,6 +49,7 @@ import {
   type KbCategory,
 } from "@/hooks/api/support/kb";
 import { useReindexAllKb } from "@/hooks/api/support/kb-rag";
+import { useAccess } from "@/hooks/api/access";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { getApiError } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
@@ -84,7 +85,12 @@ export function KbManagerContent() {
   );
   const [deleteArticle, setDeleteArticle] = useState<KbArticleListItem | null>(null);
 
-  const categoriesQuery = useKbCategories();
+  const { data: access } = useAccess();
+  const supportEnabled = Boolean(
+    access?.isOrgOwner || access?.isPlatformAdmin || access?.modules?.support,
+  );
+
+  const categoriesQuery = useKbCategories({ enabled: supportEnabled });
   const categories = useMemo(() => categoriesQuery.data ?? [], [categoriesQuery.data]);
 
   const articleParams = useMemo(
@@ -97,7 +103,7 @@ export function KbManagerContent() {
     [statusParam, visibilityParam, categoryParam, debouncedSearch],
   );
 
-  const articlesQuery = useKbArticles(articleParams);
+  const articlesQuery = useKbArticles(articleParams, { enabled: supportEnabled });
   const articles = useMemo(() => articlesQuery.data ?? [], [articlesQuery.data]);
 
   const deleteCategoryMutation = useDeleteKbCategory();
