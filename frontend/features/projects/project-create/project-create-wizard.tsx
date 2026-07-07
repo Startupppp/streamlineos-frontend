@@ -11,7 +11,11 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useProjectCreate, TOTAL_STEPS, STEP_LABELS } from "./use-project-create";
+import {
+  useProjectCreate,
+  TOTAL_STEPS,
+  STEP_LABELS,
+} from "./use-project-create";
 import type { StepSharedProps } from "./use-project-create";
 import { useProjectProvisioning } from "./use-project-provisioning";
 import { StepBasics } from "./steps/step-basics";
@@ -30,15 +34,22 @@ interface ProjectCreateWizardProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function ProjectCreateWizard({ open, onOpenChange }: ProjectCreateWizardProps) {
-  const { step, direction, draft, updateDraft, goNext, goBack, reset } = useProjectCreate();
+export function ProjectCreateWizard({
+  open,
+  onOpenChange,
+}: ProjectCreateWizardProps) {
+  const { step, direction, draft, updateDraft, goNext, goBack, reset } =
+    useProjectCreate();
   const basicsRef = useRef<BasicsHandle>(null);
   const shouldReduceMotion = useReducedMotion();
 
   const sharedProps: StepSharedProps = { draft, updateDraft };
 
   const stepVariants = {
-    initial: (d: number) => ({ opacity: 0, x: shouldReduceMotion ? 0 : d * 24 }),
+    initial: (d: number) => ({
+      opacity: 0,
+      x: shouldReduceMotion ? 0 : d * 24,
+    }),
     animate: { opacity: 1, x: 0 },
     exit: (d: number) => ({ opacity: 0, x: shouldReduceMotion ? 0 : d * -24 }),
   };
@@ -72,7 +83,10 @@ export function ProjectCreateWizard({ open, onOpenChange }: ProjectCreateWizardP
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-[600px] p-0 flex flex-col overflow-hidden">
+      <SheetContent
+        side="right"
+        className="w-full sm:max-w-[600px] p-0 flex flex-col overflow-hidden"
+      >
         <SheetHeader className="shrink-0 px-6 pt-5 pb-4 border-b text-left">
           <div className="flex gap-1 mb-3">
             {Array.from({ length: TOTAL_STEPS }, (_, i) => (
@@ -80,13 +94,17 @@ export function ProjectCreateWizard({ open, onOpenChange }: ProjectCreateWizardP
                 key={i}
                 className={cn(
                   "flex-1 h-1 rounded-full transition-colors duration-300",
-                  i + 1 <= step ? "bg-primary" : "bg-border/60"
+                  i + 1 <= step ? "bg-primary" : "bg-border/60",
                 )}
               />
             ))}
           </div>
-          <p className="text-xs text-muted-foreground mb-0.5">Step {step} of {TOTAL_STEPS}</p>
-          <SheetTitle className="text-lg font-semibold">{currentLabel}</SheetTitle>
+          <p className="text-xs text-muted-foreground mb-0.5">
+            Step {step} of {TOTAL_STEPS}
+          </p>
+          <SheetTitle className="text-lg font-semibold">
+            {currentLabel}
+          </SheetTitle>
           <SheetDescription className="sr-only">
             Project creation wizard — step {step} of {TOTAL_STEPS}
           </SheetDescription>
@@ -102,7 +120,7 @@ export function ProjectCreateWizard({ open, onOpenChange }: ProjectCreateWizardP
               animate="animate"
               exit="exit"
               transition={{ duration: 0.22, ease: "easeOut" }}
-              className="p-6"
+              className="px-6"
             >
               {step === 1 && <StepBasics ref={basicsRef} {...sharedProps} />}
               {step === 2 && <StepType {...sharedProps} />}
@@ -118,17 +136,31 @@ export function ProjectCreateWizard({ open, onOpenChange }: ProjectCreateWizardP
         <div className="shrink-0 border-t px-6 py-4 flex gap-2 bg-background">
           {step === 1 && (
             <>
-              <Button type="button" variant="outline" className="flex-1" onClick={handleClose}>
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={handleClose}
+              >
                 Cancel
               </Button>
-              <Button type="button" className="flex-1" onClick={handleNextFromBasics}>
+              <Button
+                type="button"
+                className="flex-1"
+                onClick={handleNextFromBasics}
+              >
                 Next →
               </Button>
             </>
           )}
           {step > 1 && step < 7 && (
             <>
-              <Button type="button" variant="outline" className="flex-1" onClick={goBack}>
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={goBack}
+              >
                 ← Back
               </Button>
               <Button type="button" className="flex-1" onClick={goNext}>
@@ -138,7 +170,12 @@ export function ProjectCreateWizard({ open, onOpenChange }: ProjectCreateWizardP
           )}
           {step === 7 && (
             <>
-              <Button type="button" variant="outline" className="flex-1" onClick={goBack}>
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={goBack}
+              >
                 ← Back
               </Button>
               <motion.div className="flex-1" whileTap={{ scale: 0.97 }}>

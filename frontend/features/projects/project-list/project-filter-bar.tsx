@@ -10,10 +10,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
+import { ViewToggle, type ViewOption } from "@/components/ui/view-toggle";
 
 type ViewMode = "grid" | "list";
 type StatusFilter = "ALL" | "ACTIVE" | "COMPLETED" | "ARCHIVED";
+
+const VIEW_OPTIONS: ViewOption<ViewMode>[] = [
+  { value: "grid", icon: LayoutGrid, label: "Grid view" },
+  { value: "list", icon: List, label: "List view" },
+];
 
 interface ProjectFilterBarProps {
   search: string;
@@ -56,16 +61,6 @@ export function ProjectFilterBar({
     [onStatusChange],
   );
 
-  const handleGridViewClick = useCallback(
-    () => onViewModeChange("grid"),
-    [onViewModeChange],
-  );
-
-  const handleListViewClick = useCallback(
-    () => onViewModeChange("list"),
-    [onViewModeChange],
-  );
-
   return (
     <div className="flex w-full min-w-0 flex-wrap items-center gap-2">
       <div className="relative min-w-0 flex-1 sm:max-w-[240px]">
@@ -100,32 +95,12 @@ export function ProjectFilterBar({
         </SelectContent>
       </Select>
 
-      <div className="flex items-center rounded-md border bg-muted/50 p-0.5 ml-auto shrink-0">
-        <button
-          onClick={handleGridViewClick}
-          className={cn(
-            "inline-flex items-center justify-center rounded px-2 py-1 transition-all",
-            viewMode === "grid"
-              ? "bg-background text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground",
-          )}
-          aria-label="Grid view"
-        >
-          <LayoutGrid className="h-3.5 w-3.5" />
-        </button>
-        <button
-          onClick={handleListViewClick}
-          className={cn(
-            "inline-flex items-center justify-center rounded px-2 py-1 transition-all",
-            viewMode === "list"
-              ? "bg-background text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground",
-          )}
-          aria-label="List view"
-        >
-          <List className="h-3.5 w-3.5" />
-        </button>
-      </div>
+      <ViewToggle
+        value={viewMode}
+        options={VIEW_OPTIONS}
+        onChange={onViewModeChange}
+        className="ml-auto shrink-0"
+      />
     </div>
   );
 }

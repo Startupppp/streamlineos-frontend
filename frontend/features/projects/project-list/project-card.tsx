@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Calendar, MoreHorizontal, Pencil, Archive, Trash2, RotateCcw } from "lucide-react";
+import { Calendar, MoreHorizontal, Pencil, Archive, Trash2, RotateCcw, Ticket } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AvatarStack } from "@/components/ui/avatar-stack";
@@ -35,6 +35,22 @@ import { useDeleteProject, useArchiveProject } from "@/hooks/api/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { EditProjectSheet } from "./edit-project-sheet";
 import { useCan } from "@/hooks/api/access";
+
+const statusAccentBar: Record<string, string> = {
+  ACTIVE: "bg-emerald-500",
+  PLANNING: "bg-blue-500",
+  COMPLETED: "bg-slate-400",
+  ON_HOLD: "bg-amber-500",
+  ARCHIVED: "bg-slate-300 dark:bg-slate-600",
+};
+
+const statusDotColors: Record<string, string> = {
+  ACTIVE: "bg-emerald-500",
+  PLANNING: "bg-blue-500",
+  COMPLETED: "bg-slate-400",
+  ON_HOLD: "bg-amber-500",
+  ARCHIVED: "bg-slate-400",
+};
 
 interface ProjectCardProps {
   project: {
@@ -72,9 +88,12 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
   const isArchived = status === "ARCHIVED";
   const displayLabel = projectStatusDisplayLabels[status] ?? status;
   const statusColor = getColorSafe(projectStatusColors, status);
+  const accentBar = getColorSafe(statusAccentBar, status);
+  const statusDot = getColorSafe(statusDotColors, status);
   const dateStr = project.startDate ? format(new Date(project.startDate), "MMM d") : null;
   const progressValue = project.progress.total > 0 ? project.progress.percentage : 0;
   const hasTickets = project.progress.total > 0;
+  const isComplete = progressValue >= 100;
 
   const handleCardClick = useCallback(() => {
     router.push(`/projects/${project.id}`);
@@ -82,7 +101,10 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
 
   const handleCardKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (e.key === "Enter") handleCardClick();
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        handleCardClick();
+      }
     },
     [handleCardClick],
   );
@@ -141,9 +163,10 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
     <>
       <div
         className={cn(
-          "relative overflow-hidden rounded-lg border border-border bg-card p-3 shadow-sm",
-          "flex h-full flex-col group cursor-pointer",
-          "transition-all duration-200 hover:shadow-md hover:-translate-y-px",
+          "group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-xl border border-border bg-card p-3 shadow-sm",
+          "transition-[border-color,box-shadow] duration-200 ease-out motion-reduce:transition-none",
+          "hover:border-blue-500/40 hover:shadow-md",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         )}
         role="listitem"
         onClick={handleCardClick}
@@ -151,18 +174,24 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
         onKeyDown={handleCardKeyDown}
         aria-label={`${project.name} — ${displayLabel}. Press Enter to open.`}
       >
+        <div
+          className={cn("absolute inset-x-0 top-0 h-0.5", accentBar)}
+          aria-hidden="true"
+        />
+
         <div className="mb-2 flex items-center justify-between gap-2">
-          <span className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-[10px] font-semibold text-muted-foreground">
+          <span className="rounded-md border border-border/60 bg-muted/60 px-1.5 py-0.5 font-mono text-[10px] font-semibold tracking-wide text-foreground/70">
             {project.key}
           </span>
           <div className="flex items-center gap-1">
             <Badge
               variant="secondary"
               className={cn(
-                "rounded-full border-0 px-2 py-0 text-[9px] font-semibold uppercase tracking-wide",
+                "gap-1 rounded-full border-0 px-2 py-0 text-[9px] font-semibold uppercase tracking-wide",
                 statusColor,
               )}
             >
+              <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", statusDot)} aria-hidden="true" />
               {displayLabel}
             </Badge>
             {(canUpdate || canDelete) && (
@@ -171,7 +200,7 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted"
+                    className="h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-muted"
                     aria-label="Project actions"
                     onClick={handleStopPropagation}
                   >
@@ -181,16 +210,22 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
                 <DropdownMenuContent align="end" className="w-44" onClick={handleStopPropagation}>
                   {canUpdate && (
                     <DropdownMenuItem onClick={handleEditClick}>
-                      <Pencil className="h-3.5 w-3.5 mr-2" />
+                      <Pencil className="mr-2 h-3.5 w-3.5" />
                       Edit project
                     </DropdownMenuItem>
                   )}
                   {canUpdate && (
                     <DropdownMenuItem onClick={handleArchiveClick}>
                       {isArchived ? (
-                        <><RotateCcw className="h-3.5 w-3.5 mr-2" />Restore project</>
+                        <>
+                          <RotateCcw className="mr-2 h-3.5 w-3.5" />
+                          Restore project
+                        </>
                       ) : (
-                        <><Archive className="h-3.5 w-3.5 mr-2" />Archive project</>
+                        <>
+                          <Archive className="mr-2 h-3.5 w-3.5" />
+                          Archive project
+                        </>
                       )}
                     </DropdownMenuItem>
                   )}
@@ -201,7 +236,7 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
                         onClick={handleDeleteClick}
                         className="text-destructive focus:text-destructive"
                       >
-                        <Trash2 className="h-3.5 w-3.5 mr-2" />
+                        <Trash2 className="mr-2 h-3.5 w-3.5" />
                         Delete project
                       </DropdownMenuItem>
                     </>
@@ -212,51 +247,57 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
           </div>
         </div>
 
-        <h3 className="mb-0.5 line-clamp-1 text-sm font-bold text-foreground">
+        <h3 className="mb-0.5 line-clamp-1 text-sm font-semibold text-foreground transition-colors group-hover:text-blue-600">
           {project.name}
         </h3>
 
         {project.description ? (
-          <p className="mb-2 line-clamp-1 text-[11px] text-muted-foreground">
+          <p className="mb-2 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">
             {project.description}
           </p>
         ) : (
-          <p className="mb-2 line-clamp-1 text-[10px] italic text-muted-foreground/45">
-            No description
+          <p className="mb-2 line-clamp-1 text-[11px] text-muted-foreground/50">
+            No description provided
           </p>
         )}
 
-        <div className="mt-auto border-t border-border pt-2">
+        <div className="mt-auto border-t border-border/80 pt-2.5">
           {hasTickets ? (
-            <>
-              <div className="mb-1 flex items-center justify-between text-[10px] text-muted-foreground">
-                <span className="font-medium">Progress</span>
-                <span className="tabular-nums font-medium">
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-[10px]">
+                <span className="font-medium text-muted-foreground">Progress</span>
+                <span className="tabular-nums font-semibold text-foreground">
                   {project.progress.done}/{project.progress.total}
+                  <span className="ml-1 font-normal text-muted-foreground">
+                    ({progressValue}%)
+                  </span>
                 </span>
               </div>
               <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
                 <div
                   className={cn(
-                    "h-full rounded-full",
-                    progressValue >= 100 ? "bg-emerald-500" : "bg-primary",
+                    "h-full rounded-full transition-[width] duration-500 ease-out",
+                    isComplete ? "bg-emerald-500" : "bg-blue-500",
                   )}
                   style={{ width: `${progressValue}%` }}
                 />
               </div>
-            </>
+            </div>
           ) : (
-            <p className="text-[10px] italic text-muted-foreground/60">No tickets yet</p>
+            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground/55">
+              <Ticket className="h-3 w-3 shrink-0" aria-hidden="true" />
+              <span>No tickets yet</span>
+            </div>
           )}
 
-          <div className="mt-2 flex items-center justify-between">
+          <div className="mt-2.5 flex items-center justify-between gap-2">
             <AvatarStack
               users={project.members}
               limit={4}
               className="[&>div]:h-5 [&>div]:w-5"
             />
             {dateStr && (
-              <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+              <div className="flex shrink-0 items-center gap-1 text-[10px] text-muted-foreground">
                 <Calendar className="h-3 w-3 shrink-0" aria-hidden="true" />
                 {dateStr}
               </div>

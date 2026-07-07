@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useTransition } from "react";
+import { useCallback, useState, useTransition } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { useProjects } from "@/hooks/api/projects";
@@ -27,6 +27,26 @@ export default function ProjectsPage() {
   const router = useRouter();
   const pathname = usePathname();
   const [, startTransition] = useTransition();
+  const createFromUrl = searchParams.get("create") === "1";
+  const [manualCreateOpen, setManualCreateOpen] = useState(false);
+  const createOpen = createFromUrl || manualCreateOpen;
+
+  const handleCreateOpenChange = useCallback(
+    (open: boolean) => {
+      setManualCreateOpen(open);
+      if (!open && searchParams.get("create")) {
+        const params = new URLSearchParams(searchParams.toString());
+        params.delete("create");
+        const query = params.toString();
+        startTransition(() => {
+          router.replace(query ? `${pathname}?${query}` : pathname, {
+            scroll: false,
+          });
+        });
+      }
+    },
+    [searchParams, router, pathname],
+  );
 
   const search = searchParams.get("q") || "";
   const status = (searchParams.get("status") as StatusFilter) || "ALL";
@@ -96,7 +116,9 @@ export default function ProjectsPage() {
       eyebrow="Projects"
       subtitle="Browse and manage every project in your workspace"
       badge={pagination?.total ? String(pagination.total) : undefined}
-      actions={<NewProjectDialog />}
+      actions={
+        <NewProjectDialog open={createOpen} onOpenChange={handleCreateOpenChange} />
+      }
       filters={
         <ProjectFilterBar
           search={search}

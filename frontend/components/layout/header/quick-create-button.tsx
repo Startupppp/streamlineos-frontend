@@ -52,7 +52,7 @@ const PRODUCT_ACTIONS: Record<string, CreateAction[]> = {
     { label: "Leave Request", href: "/hr/leave?create=1", icon: FileText },
   ],
   projects: [
-    { label: "New Project", href: "/projects?create=1", icon: FolderPlus },
+    { label: "New Project", href: "/projects/all?create=1", icon: FolderPlus },
     { label: "New Task", href: "/projects/tasks?create=1", icon: FileText },
   ],
   helpdesk: [

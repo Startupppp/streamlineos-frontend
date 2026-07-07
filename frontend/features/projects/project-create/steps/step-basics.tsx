@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useImperativeHandle } from "react";
+import { forwardRef, useImperativeHandle, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -11,6 +11,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -22,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { useSimpleClientsList } from "@/hooks/api/crm/clients";
+import { generateProjectKey } from "../generate-project-key";
 import { basicsSchema } from "../project-create-schema";
 import type { BasicsValues } from "../project-create-schema";
 import type { StepSharedProps } from "../use-project-create";
@@ -52,6 +54,12 @@ export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
       },
     });
 
+    const keyManuallyEditedRef = useRef(
+      draft.key.length > 0 && draft.key !== generateProjectKey(draft.name),
+    );
+
+    const watchedStartDate = form.watch("startDate");
+
     useImperativeHandle(ref, () => ({
       async validate(): Promise<boolean> {
         const ok = await form.trigger();
@@ -75,16 +83,25 @@ export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
       e.preventDefault();
     }
 
-    function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) {
-      const name = e.target.value;
-      form.setValue("name", name);
-      const key = name.replace(/[^a-zA-Z0-9]/g, "").substring(0, 4).toUpperCase();
-      if (key) form.setValue("key", key);
+    function handleNameChange(
+      name: string,
+      onChange: (value: string) => void,
+    ) {
+      onChange(name);
+      if (keyManuallyEditedRef.current) {
+        return;
+      }
+      const generated = generateProjectKey(name);
+      form.setValue("key", generated, { shouldValidate: false });
     }
 
-    function handleKeyChange(e: React.ChangeEvent<HTMLInputElement>) {
-      const val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
-      form.setValue("key", val);
+    function handleKeyChange(
+      value: string,
+      onChange: (value: string) => void,
+    ) {
+      keyManuallyEditedRef.current = true;
+      const sanitized = value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+      onChange(sanitized);
     }
 
     function handleManagerChange(value: string) {
@@ -103,12 +120,14 @@ export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Project Name</FormLabel>
+                <FormLabel>
+                  Project Name <span className="text-destructive">*</span>
+                </FormLabel>
                 <FormControl>
                   <Input
                     placeholder="e.g. Website Redesign"
                     {...field}
-                    onChange={handleNameChange}
+                    onChange={(e) => handleNameChange(e.target.value, field.onChange)}
                   />
                 </FormControl>
                 <FormMessage />
@@ -121,12 +140,14 @@ export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
             name="key"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Project Key</FormLabel>
+                <FormLabel>
+                  Project Key <span className="text-destructive">*</span>
+                </FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="e.g. WEBR"
+                    placeholder="e.g. WR"
                     {...field}
-                    onChange={handleKeyChange}
+                    onChange={(e) => handleKeyChange(e.target.value, field.onChange)}
                   />
                 </FormControl>
                 <FormMessage />
@@ -227,7 +248,12 @@ export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
                 <FormItem>
                   <FormLabel>Start Date</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <DatePicker
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Start date"
+                      dateFormat="dd/MM/yyyy"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -240,7 +266,17 @@ export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
                 <FormItem>
                   <FormLabel>End Date</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <DatePicker
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="End date"
+                      dateFormat="dd/MM/yyyy"
+                      fromDate={
+                        watchedStartDate
+                          ? new Date(watchedStartDate)
+                          : undefined
+                      }
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

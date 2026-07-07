@@ -30,13 +30,11 @@ export function NewProjectDialog({ trigger, open: controlledOpen, onOpenChange }
 
   return (
     <>
-      {!isControlled && (
-        trigger ?? (
-          <Button size="sm" className="gap-1.5" onClick={handleTriggerClick}>
-            <Plus className="h-3.5 w-3.5" />
-            New Project
-          </Button>
-        )
+      {trigger ?? (
+        <Button size="sm" className="gap-1.5" onClick={handleTriggerClick}>
+          <Plus className="h-3.5 w-3.5" />
+          New Project
+        </Button>
       )}
       <ProjectCreateWizard open={open} onOpenChange={handleOpenChange} />
     </>

@@ -1147,12 +1147,6 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "projects:goals:view",
       },
       {
-        label: "Portfolio",
-        icon: LayoutGrid,
-        href: "/projects/portfolio",
-        requiredPermission: "projects:view",
-      },
-      {
         label: "Portfolios",
         icon: LayoutGrid,
         href: "/projects/portfolios",
@@ -1237,9 +1231,15 @@ export const NAV_GROUPS: NavGroup[] = [
     requiredPermission: ["kb:pages:view"],
     routes: [
       {
-        label: "Wiki",
+        label: "Knowledge Base",
         icon: NotebookPen,
         href: "/knowledge",
+        requiredPermission: "kb:pages:view",
+      },
+      {
+        label: "Ask AI",
+        icon: MessageSquareText,
+        href: "/knowledge/ask",
         requiredPermission: "kb:pages:view",
       },
     ],
@@ -1599,7 +1599,7 @@ export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
   { key: "inventory", label: "Inventory", href: "/inventory", icon: Package },
   { key: "finance", label: "Finance", href: "/accounting", icon: Calculator },
   { key: "helpdesk", label: "Helpdesk", href: "/support", icon: LifeBuoy },
-  { key: "documents", label: "Documents", href: "/support/kb", icon: Library },
+  { key: "documents", label: "Documents", href: "/knowledge", icon: Library },
   { key: "surveys", label: "Surveys", href: "/surveys", icon: ClipboardList },
   {
     key: "administration",
@@ -1745,14 +1745,14 @@ export function getNavGroupsForProduct(
     const documentRoutes = [
       {
         label: "Knowledge Base",
-        icon: BookOpen,
-        href: "/support/kb",
-        requiredPermission: "support:kb:view",
-      },
-      {
-        label: "Wiki",
         icon: NotebookPen,
         href: "/knowledge",
+        requiredPermission: "kb:pages:view",
+      },
+      {
+        label: "Ask AI",
+        icon: MessageSquareText,
+        href: "/knowledge/ask",
         requiredPermission: "kb:pages:view",
       },
     ];

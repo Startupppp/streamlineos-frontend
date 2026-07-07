@@ -56,8 +56,8 @@ export function ViewToggle<T extends string = string>({
               h,
               showLabel ? labelPad : pad,
               isActive
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted",
+                ? "bg-foreground text-background shadow-sm"
+                : "bg-background text-muted-foreground hover:text-foreground",
             )}
           >
             <Icon className={iconSize} />
