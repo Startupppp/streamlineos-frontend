@@ -60,6 +60,7 @@ function InboxContent() {
   const queueIdFilter = searchParams.get("queueId");
   const assigneeIdFilter = searchParams.get("assigneeId");
   const channelFilter = searchParams.get("channel");
+  const snoozedFilter = searchParams.get("snoozed") === "true";
 
   const updateFilter = useCallback(
     (key: string, value: string) => {
@@ -79,6 +80,7 @@ function InboxContent() {
     ...(queueIdFilter ? { queueId: Number(queueIdFilter) } : {}),
     ...(assigneeIdFilter ? { assigneeId: assigneeIdFilter } : {}),
     ...(channelFilter ? { channel: channelFilter } : {}),
+    ...(snoozedFilter ? { snoozed: true } : {}),
   });
   const { data: stats, isLoading: statsLoading } = useSupportStats();
 
@@ -100,6 +102,11 @@ function InboxContent() {
     [updateFilter]
   );
   const handleBackFromTicket = useCallback(() => setSelectedTicketId(null), []);
+
+  const handleToggleSnoozed = useCallback(
+    () => updateFilter("snoozed", snoozedFilter ? "all" : "true"),
+    [updateFilter, snoozedFilter],
+  );
 
   const handleSelectQueue = useCallback(
     (queueId: number | null) => updateFilter("queueId", queueId ? String(queueId) : "all"),
@@ -184,6 +191,8 @@ function InboxContent() {
             activeQueueId={queueIdFilter ? Number(queueIdFilter) : null}
             onSelectQueue={handleSelectQueue}
             onApplyView={handleApplyView}
+            snoozedActive={snoozedFilter}
+            onToggleSnoozed={handleToggleSnoozed}
           />
         </div>
 

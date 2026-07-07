@@ -43,7 +43,7 @@ export function TicketDetailSheet({ ticketId, onBack }: TicketDetailSheetProps) 
       <TicketDetailTimeline ticket={ticket} />
       <TicketDetailRelations ticketId={ticket.id} />
       <TicketAiPanel ticketId={ticket.id} onInsertReply={handleInsertReply} />
-      <TicketReplyComposer ticketId={ticket.id} />
+      <TicketReplyComposer key={ticket.id} ticketId={ticket.id} />
       <KbDeflectionPanel ticketId={ticket.id} ticketTitle={ticket.title} />
     </div>
   );

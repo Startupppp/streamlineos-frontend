@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { Inbox, Layers, Bookmark } from "lucide-react";
+import { Inbox, Layers, Bookmark, Clock } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useSupportQueues } from "@/hooks/api/support/queues";
@@ -11,9 +11,17 @@ interface QueueViewRailProps {
   activeQueueId: number | null;
   onSelectQueue: (queueId: number | null) => void;
   onApplyView: (filter: Record<string, unknown>) => void;
+  snoozedActive: boolean;
+  onToggleSnoozed: () => void;
 }
 
-export function QueueViewRail({ activeQueueId, onSelectQueue, onApplyView }: QueueViewRailProps) {
+export function QueueViewRail({
+  activeQueueId,
+  onSelectQueue,
+  onApplyView,
+  snoozedActive,
+  onToggleSnoozed,
+}: QueueViewRailProps) {
   const { data: queues, isLoading: queuesLoading } = useSupportQueues();
   const { data: views, isLoading: viewsLoading } = useSupportSavedViews();
 
@@ -36,6 +44,17 @@ export function QueueViewRail({ activeQueueId, onSelectQueue, onApplyView }: Que
           >
             <Inbox className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
             All tickets
+          </button>
+          <button
+            type="button"
+            onClick={onToggleSnoozed}
+            className={cn(
+              "w-full flex items-center gap-2 text-left text-[13px] rounded-md px-2 py-1.5 hover:bg-muted/50 transition-colors",
+              snoozedActive && "bg-muted/60 font-medium",
+            )}
+          >
+            <Clock className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+            Snoozed
           </button>
           {queuesLoading ? (
             <div className="space-y-1.5 mt-1.5 px-2">
