@@ -38,7 +38,7 @@ export function LabelPicker({
 }: LabelPickerProps) {
   const [open, setOpen] = useState(false);
   const [newLabelName, setNewLabelName] = useState("");
-  const [selectedColor, setSelectedColor] = useState(DEFAULT_LABEL_COLOR);
+  const [selectedColor, setSelectedColor] = useState<string>(DEFAULT_LABEL_COLOR);
   const queryClient = useQueryClient();
 
   const { data: allLabels } = useLabels();

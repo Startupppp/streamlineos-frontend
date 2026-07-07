@@ -172,23 +172,21 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
         <div className="flex shrink-0 items-center gap-2">
           {rightPanelCollapsed && (
             <Button
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+              size="icon-sm"
+              variant="outline"
               onClick={handleToggleRightPanel}
               aria-label="Expand details panel"
             >
-              <PanelRightOpen className="h-4 w-4" />
+              <PanelRightOpen />
             </Button>
           )}
           <Button
-            size="icon"
+            size="icon-sm"
             variant="outline"
-            className="h-8 w-8"
             onClick={handleShare}
             aria-label="Copy share link"
           >
-            <Share2 className="h-3.5 w-3.5" />
+            <Share2 />
           </Button>
           <TicketDetailActions
             onDelete={handleDelete}

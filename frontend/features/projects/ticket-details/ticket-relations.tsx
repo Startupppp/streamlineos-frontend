@@ -111,7 +111,7 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
         </h4>
         <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
           <PopoverTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-6 text-xs px-2">
+            <Button variant="outline" size="sm" className="h-6 text-xs px-2 bg-muted/50 hover:bg-muted">
               <Plus className="h-3 w-3 mr-1" />Add
             </Button>
           </PopoverTrigger>

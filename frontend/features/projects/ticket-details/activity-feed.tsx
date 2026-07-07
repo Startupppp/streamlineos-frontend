@@ -197,9 +197,9 @@ export function ActivityFeed({
   }, [comments]);
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:gap-3">
-        <h4 className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium flex items-center gap-1.5 shrink-0 sm:pt-2.5">
+    <div className="w-full space-y-4">
+      <div className="flex w-full flex-1 min-w-0 flex-col gap-2">
+        <h4 className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium flex items-center gap-1.5">
           <MessageSquare className="h-3.5 w-3.5" />
           Activity
           {comments.length > 0 && (
@@ -207,29 +207,30 @@ export function ActivityFeed({
           )}
         </h4>
 
-        <div className="space-y-2 flex-1 min-w-0">
-          <MentionTextarea
-            value={newComment}
-            onChange={setNewComment}
-            onKeyDown={handleTopKeyDown}
-            placeholder="Write a comment... (Ctrl+Enter to send)"
-            className="min-h-[80px] text-sm"
-            users={members}
-          />
-          <div className="flex justify-end">
-            <Button
-              size="sm"
-              onClick={handleSubmit}
-              disabled={!newComment.trim() || addComment.isPending}
-            >
-              {addComment.isPending ? (
-                <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
-              ) : (
-                <Send className="h-3.5 w-3.5 mr-1" />
-              )}
-              Comment
-            </Button>
+        <div className="flex w-full flex-row items-end gap-2 flex-1 min-w-0">
+          <div className="flex min-w-0 flex-1">
+            <MentionTextarea
+              value={newComment}
+              onChange={setNewComment}
+              onKeyDown={handleTopKeyDown}
+              placeholder="Write a comment... (Ctrl+Enter to send)"
+              className="min-h-[80px] w-full text-sm"
+              users={members}
+            />
           </div>
+          <Button
+            type="button"
+            size="icon-sm"
+            onClick={handleSubmit}
+            disabled={!newComment.trim() || addComment.isPending}
+            aria-label="Post comment"
+          >
+            {addComment.isPending ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Send className="h-3.5 w-3.5" />
+            )}
+          </Button>
         </div>
       </div>
 

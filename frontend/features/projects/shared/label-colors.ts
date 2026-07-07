@@ -9,4 +9,6 @@ export const LABEL_COLORS = [
   "#06b6d4",
 ] as const;
 
-export const DEFAULT_LABEL_COLOR = LABEL_COLORS[0];
+export type LabelColor = (typeof LABEL_COLORS)[number];
+
+export const DEFAULT_LABEL_COLOR: LabelColor = LABEL_COLORS[0];

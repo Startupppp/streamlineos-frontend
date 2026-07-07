@@ -32,10 +32,10 @@ import { DEFAULT_LABEL_COLOR } from "../shared/label-colors";
 export function LabelsSettings() {
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState("");
-  const [color, setColor] = useState(DEFAULT_LABEL_COLOR);
+  const [color, setColor] = useState<string>(DEFAULT_LABEL_COLOR);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editName, setEditName] = useState("");
-  const [editColor, setEditColor] = useState(DEFAULT_LABEL_COLOR);
+  const [editColor, setEditColor] = useState<string>(DEFAULT_LABEL_COLOR);
 
   const { data: labels = [], isLoading } = useOrgLabels();
   const createLabel = useCreateLabel();

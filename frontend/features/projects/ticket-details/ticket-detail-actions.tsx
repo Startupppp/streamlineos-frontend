@@ -30,12 +30,12 @@ export function TicketDetailActions({ onDelete, isDeleting }: TicketDetailAction
     <Popover open={deleteOpen} onOpenChange={setDeleteOpen}>
       <PopoverTrigger asChild>
         <Button
-          size="icon"
+          size="icon-sm"
           variant="outline"
-          className="h-8 w-8 text-destructive hover:text-destructive"
+          className="text-destructive hover:text-destructive"
           aria-label="Delete ticket"
         >
-          <Trash2 className="h-3.5 w-3.5" />
+          <Trash2 />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-64 p-3" align="end">
