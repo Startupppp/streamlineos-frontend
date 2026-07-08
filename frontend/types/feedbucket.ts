@@ -1,4 +1,4 @@
-export type FeedbucketSubmissionType = "bug" | "idea" | "question" | "praise" | "other";
+export type FeedbucketSubmissionType = "bug" | "idea" | "feature" | "question" | "praise" | "other";
 export type FeedbucketSubmissionStatus = "open" | "in_progress" | "resolved" | "archived";
 export type FeedbucketSubmissionPriority = "low" | "medium" | "high" | "urgent";
 

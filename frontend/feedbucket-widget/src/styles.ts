@@ -47,20 +47,51 @@ export function getStyles(): string {
 .launcher-btn:active { transform: scale(0.92); }
 .launcher-btn svg { width: 19px; height: 19px; }
 .launcher-divider { width: 22px; height: 1px; background: #eef1f5; margin: 2px 0; }
-.drag-handle {
+.launcher-logo {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 38px;
-  height: 22px;
-  color: #94a3b8;
+  height: 38px;
+  border-radius: 11px;
+  color: #6366f1;
   cursor: grab;
   touch-action: none;
-  border-radius: 8px;
 }
-.drag-handle:hover { color: #475569; background: #f1f5f9; }
-.drag-handle:active { cursor: grabbing; }
-.drag-handle svg { width: 16px; height: 16px; }
+.launcher-logo:hover { background: #f1f5f9; }
+.launcher-logo:active { cursor: grabbing; }
+.launcher-logo svg { width: 20px; height: 20px; transition: opacity 120ms ease; }
+.launcher-logo .grip-overlay {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  color: #475569;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.launcher-logo:hover svg:first-child { opacity: 0; }
+.launcher-logo:hover .grip-overlay { opacity: 1; }
+.recording-badge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #4338ca;
+}
+.recording-remove {
+  background: none;
+  border: none;
+  color: #6366f1;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
 
 .panel {
   position: absolute;

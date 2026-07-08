@@ -12,6 +12,7 @@ export interface SubmitOptions {
   metadata: Metadata;
   consoleLogs: LogEntry[];
   screenshot: Blob | null;
+  recording?: Blob | null;
 }
 
 export async function submitFeedback(opts: SubmitOptions): Promise<void> {
@@ -33,11 +34,14 @@ export async function submitFeedback(opts: SubmitOptions): Promise<void> {
   if (opts.screenshot) {
     form.append("screenshot", opts.screenshot, "screenshot.png");
   }
+  if (opts.recording) {
+    form.append("recording", opts.recording, "recording.webm");
+  }
 
-  const res = await fetch(
-    `${opts.apiBase}/public/feedbucket/${opts.key}`,
-    { method: "POST", body: form }
-  );
+  const res = await fetch(`${opts.apiBase}/public/feedbucket/${opts.key}`, {
+    method: "POST",
+    body: form,
+  });
 
   if (!res.ok) {
     throw new Error("Submission failed");

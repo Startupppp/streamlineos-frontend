@@ -10,7 +10,7 @@ export function FeedbucketEmbed() {
   return (
     <Script
       id="feedbucket-widget"
-      src="/feedbucket-widget.js?v=2"
+      src="/feedbucket-widget.js?v=3"
       data-key={WIDGET_KEY}
       data-api={apiBase}
       strategy="afterInteractive"

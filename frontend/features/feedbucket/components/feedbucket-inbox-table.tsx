@@ -23,6 +23,7 @@ import type {
 const TYPE_LABELS: Record<FeedbucketSubmissionType, string> = {
   bug: "Bug",
   idea: "Idea",
+  feature: "Feature",
   question: "Question",
   praise: "Praise",
   other: "Other",
@@ -31,6 +32,7 @@ const TYPE_LABELS: Record<FeedbucketSubmissionType, string> = {
 const TYPE_VARIANTS: Record<FeedbucketSubmissionType, "default" | "secondary" | "outline" | "destructive"> = {
   bug: "destructive",
   idea: "default",
+  feature: "secondary",
   question: "secondary",
   praise: "default",
   other: "outline",

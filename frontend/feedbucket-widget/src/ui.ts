@@ -3,13 +3,16 @@ import { collectMetadata, getPageUrl } from "./metadata";
 import { getConsoleBuffer } from "./console-capture";
 import { submitFeedback } from "./api";
 import { getStyles } from "./styles";
+import { Annotator, type AnnotationResult } from "./annotator";
+import { ScreenRecorder } from "./recorder";
 
-type FeedbackType = "bug" | "idea" | "question" | "other";
+type FeedbackType = "bug" | "idea" | "feature" | "question" | "other";
 type ViewState = "form" | "success" | "error";
 
 const FEEDBACK_TYPES: ReadonlyArray<{ readonly value: FeedbackType; readonly label: string }> = [
   { value: "bug", label: "Bug" },
   { value: "idea", label: "Idea" },
+  { value: "feature", label: "Feature" },
   { value: "question", label: "Question" },
   { value: "other", label: "Other" },
 ];
@@ -64,8 +67,10 @@ class FeedbucketWidget {
   private selectedType: FeedbackType = "bug";
   private screenshot: Blob | null = null;
   private screenshotUrl: string | null = null;
+  private recording: Blob | null = null;
   private capturing = false;
   private submitting = false;
+  private busy = false;
   private viewState: ViewState = "form";
 
   private dragging = false;
@@ -75,7 +80,7 @@ class FeedbucketWidget {
   private activePointerId: number | null = null;
 
   private readonly container: HTMLDivElement;
-  private readonly dragHandle: HTMLDivElement;
+  private readonly logo: HTMLDivElement;
   private readonly panel: HTMLDivElement;
   private readonly formView: HTMLDivElement;
   private readonly successView: HTMLDivElement;
@@ -87,14 +92,17 @@ class FeedbucketWidget {
   private readonly captureBtnLabel: HTMLSpanElement;
   private readonly previewWrap: HTMLDivElement;
   private readonly previewImg: HTMLImageElement;
+  private readonly recordingBadge: HTMLDivElement;
   private readonly submitBtn: HTMLButtonElement;
   private readonly typeButtons: HTMLButtonElement[] = [];
 
   private readonly handleScreenshotLauncher = (): void => {
-    this.openPanel("bug");
-    void this.handleCaptureClick();
+    void this.runScreenshotFlow();
   };
-  private readonly handleFeedbackLauncher = (): void => this.openPanel("other");
+  private readonly handleRecordLauncher = (): void => {
+    void this.runRecordFlow();
+  };
+  private readonly handleCommentLauncher = (): void => this.openPanel("other");
   private readonly handleHelpLauncher = (): void => this.openPanel("question");
 
   private readonly handleCloseClick = (): void => {
@@ -106,7 +114,7 @@ class FeedbucketWidget {
     const btn = event.currentTarget;
     if (!(btn instanceof HTMLButtonElement)) return;
     const type = btn.dataset["type"];
-    if (type === "bug" || type === "idea" || type === "question" || type === "other") {
+    if (type === "bug" || type === "idea" || type === "feature" || type === "question" || type === "other") {
       this.setSelectedType(type);
     }
   };
@@ -120,14 +128,7 @@ class FeedbucketWidget {
     this.capturing = false;
     this.captureBtn.disabled = false;
     this.captureBtnLabel.textContent = "Capture screenshot";
-    if (blob) {
-      if (this.screenshotUrl) URL.revokeObjectURL(this.screenshotUrl);
-      this.screenshot = blob;
-      this.screenshotUrl = URL.createObjectURL(blob);
-      this.previewImg.src = this.screenshotUrl;
-      this.previewWrap.hidden = false;
-      this.captureBtn.style.display = "none";
-    }
+    if (blob) this.setScreenshot(blob);
   };
 
   private readonly handleRemoveScreenshot = (): void => {
@@ -143,7 +144,7 @@ class FeedbucketWidget {
 
   private readonly handleSubmitClick = async (): Promise<void> => {
     const message = this.messageInput.value.trim();
-    if (!message || this.submitting) return;
+    if ((!message && !this.recording) || this.submitting) return;
     this.submitting = true;
     this.submitBtn.disabled = true;
     this.submitBtn.textContent = "Sending…";
@@ -152,13 +153,14 @@ class FeedbucketWidget {
         apiBase: this.apiBase,
         key: this.embedKey,
         type: this.selectedType,
-        message,
+        message: message || "Screen recording",
         pageUrl: getPageUrl(),
         reporterName: this.nameInput.value,
         reporterEmail: this.emailInput.value,
         metadata: collectMetadata(),
         consoleLogs: getConsoleBuffer(),
         screenshot: this.screenshot,
+        recording: this.recording,
       });
       this.showView("success");
     } catch {
@@ -190,7 +192,7 @@ class FeedbucketWidget {
     const rect = this.container.getBoundingClientRect();
     this.dragOffsetX = event.clientX - rect.left;
     this.dragOffsetY = event.clientY - rect.top;
-    this.dragHandle.setPointerCapture(event.pointerId);
+    this.logo.setPointerCapture(event.pointerId);
     this.container.classList.add("dragging");
     event.preventDefault();
   };
@@ -233,15 +235,44 @@ class FeedbucketWidget {
     launcher.setAttribute("role", "toolbar");
     launcher.setAttribute("aria-label", "Feedback");
 
+    this.logo = document.createElement("div");
+    this.logo.className = "launcher-logo";
+    this.logo.title = "Drag to move";
+    this.logo.setAttribute("aria-label", "Feedbucket — drag to move");
+    this.logo.appendChild(
+      svgIcon({ size: 20, paths: ["M4 4h16v11a2 2 0 0 1-2 2H9l-5 4z"], stroke: true }),
+    );
+    const gripOverlay = svgIcon({
+      size: 16,
+      circles: [[9, 6, 1], [15, 6, 1], [9, 12, 1], [15, 12, 1], [9, 18, 1], [15, 18, 1]],
+    });
+    gripOverlay.classList.add("grip-overlay");
+    this.logo.appendChild(gripOverlay);
+    this.logo.addEventListener("pointerdown", this.handleDragPointerDown);
+    this.logo.addEventListener("pointermove", this.handleDragPointerMove);
+    this.logo.addEventListener("pointerup", this.handleDragPointerUp);
+    this.logo.addEventListener("pointercancel", this.handleDragPointerUp);
+    launcher.appendChild(this.logo);
+
+    const divider = document.createElement("div");
+    divider.className = "launcher-divider";
+    launcher.appendChild(divider);
+
     launcher.appendChild(
-      this.launcherButton("Capture screenshot", this.handleScreenshotLauncher, {
+      this.launcherButton("Screenshot & annotate", this.handleScreenshotLauncher, {
         paths: ["M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"],
         circles: [[12, 13, 4]],
         stroke: true,
       }),
     );
     launcher.appendChild(
-      this.launcherButton("Send feedback", this.handleFeedbackLauncher, {
+      this.launcherButton("Record screen", this.handleRecordLauncher, {
+        paths: ["M23 7l-7 5 7 5V7z", "M14 5H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"],
+        stroke: true,
+      }),
+    );
+    launcher.appendChild(
+      this.launcherButton("Send feedback", this.handleCommentLauncher, {
         paths: ["M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"],
         stroke: true,
       }),
@@ -253,33 +284,6 @@ class FeedbucketWidget {
         stroke: true,
       }),
     );
-
-    const divider = document.createElement("div");
-    divider.className = "launcher-divider";
-    launcher.appendChild(divider);
-
-    this.dragHandle = document.createElement("div");
-    this.dragHandle.className = "drag-handle";
-    this.dragHandle.setAttribute("aria-label", "Drag to move");
-    this.dragHandle.title = "Drag to move";
-    this.dragHandle.appendChild(
-      svgIcon({
-        size: 16,
-        circles: [
-          [9, 6, 1],
-          [15, 6, 1],
-          [9, 12, 1],
-          [15, 12, 1],
-          [9, 18, 1],
-          [15, 18, 1],
-        ],
-      }),
-    );
-    this.dragHandle.addEventListener("pointerdown", this.handleDragPointerDown);
-    this.dragHandle.addEventListener("pointermove", this.handleDragPointerMove);
-    this.dragHandle.addEventListener("pointerup", this.handleDragPointerUp);
-    this.dragHandle.addEventListener("pointercancel", this.handleDragPointerUp);
-    launcher.appendChild(this.dragHandle);
     this.container.appendChild(launcher);
 
     this.panel = document.createElement("div");
@@ -329,6 +333,21 @@ class FeedbucketWidget {
     this.messageInput.placeholder = "Describe what you found or want to say…";
     this.messageInput.rows = 4;
     this.formView.appendChild(this.messageInput);
+
+    this.recordingBadge = document.createElement("div");
+    this.recordingBadge.className = "recording-badge";
+    this.recordingBadge.hidden = true;
+    const badgeText = document.createElement("span");
+    badgeText.textContent = "Screen recording attached";
+    const badgeRemove = document.createElement("button");
+    badgeRemove.type = "button";
+    badgeRemove.className = "recording-remove";
+    badgeRemove.textContent = "×";
+    badgeRemove.setAttribute("aria-label", "Remove recording");
+    badgeRemove.addEventListener("click", this.handleRemoveRecording);
+    this.recordingBadge.appendChild(badgeText);
+    this.recordingBadge.appendChild(badgeRemove);
+    this.formView.appendChild(this.recordingBadge);
 
     const screenshotSection = document.createElement("div");
     screenshotSection.className = "screenshot-section";
@@ -405,6 +424,11 @@ class FeedbucketWidget {
     this.restorePosition();
   }
 
+  private readonly handleRemoveRecording = (): void => {
+    this.recording = null;
+    this.recordingBadge.hidden = true;
+  };
+
   private launcherButton(label: string, handler: () => void, icon: IconSpec): HTMLButtonElement {
     const btn = document.createElement("button");
     btn.className = "launcher-btn";
@@ -445,6 +469,73 @@ class FeedbucketWidget {
     view.appendChild(sub);
     view.appendChild(btn);
     return view;
+  }
+
+  private async runScreenshotFlow(): Promise<void> {
+    if (this.busy) return;
+    this.busy = true;
+    try {
+      const shot = await captureScreenshot(this.hostEl);
+      if (!shot) {
+        this.openPanel("bug");
+        return;
+      }
+      const annotator = new Annotator();
+      const result = await annotator.run(shot);
+      if (result) await this.submitAnnotated(result);
+    } finally {
+      this.busy = false;
+    }
+  }
+
+  private async submitAnnotated(result: AnnotationResult): Promise<void> {
+    const message = result.description ? `${result.title}\n\n${result.description}` : result.title;
+    try {
+      await submitFeedback({
+        apiBase: this.apiBase,
+        key: this.embedKey,
+        type: result.type,
+        message: message || "Visual feedback",
+        pageUrl: getPageUrl(),
+        reporterName: "",
+        reporterEmail: "",
+        metadata: collectMetadata(),
+        consoleLogs: getConsoleBuffer(),
+        screenshot: result.image,
+        recording: null,
+      });
+      this.isOpen = true;
+      this.showView("success");
+      this.syncPanel();
+    } catch {
+      this.isOpen = true;
+      this.showView("error");
+      this.syncPanel();
+    }
+  }
+
+  private async runRecordFlow(): Promise<void> {
+    if (this.busy) return;
+    this.busy = true;
+    try {
+      const recorder = new ScreenRecorder();
+      const video = await recorder.run();
+      if (!video) return;
+      this.recording = video;
+      this.recordingBadge.hidden = false;
+      this.openPanel("bug");
+    } finally {
+      this.busy = false;
+    }
+  }
+
+  private setScreenshot(blob: Blob): void {
+    if (this.screenshotUrl) URL.revokeObjectURL(this.screenshotUrl);
+    this.screenshot = blob;
+    this.screenshotUrl = URL.createObjectURL(blob);
+    this.previewImg.src = this.screenshotUrl;
+    this.previewWrap.hidden = false;
+    this.captureBtn.style.display = "none";
   }
 
   private openPanel(type: FeedbackType): void {
@@ -497,6 +588,8 @@ class FeedbucketWidget {
     this.nameInput.value = "";
     this.emailInput.value = "";
     this.handleRemoveScreenshot();
+    this.recording = null;
+    this.recordingBadge.hidden = true;
     this.setSelectedType("bug");
   }
 
@@ -538,7 +631,7 @@ class FeedbucketWidget {
         const left = (parsed as { left: number }).left;
         const top = (parsed as { top: number }).top;
         const w = this.container.offsetWidth || 52;
-        const h = this.container.offsetHeight || 160;
+        const h = this.container.offsetHeight || 200;
         this.setPosition(
           Math.max(8, Math.min(left, window.innerWidth - w - 8)),
           Math.max(8, Math.min(top, window.innerHeight - h - 8)),
