@@ -7,14 +7,14 @@ export const metadata: Metadata = { title: "Edit post" };
 export default async function EditPostPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ postId: string }>;
 }) {
-  const { id } = await params;
+  const { postId } = await params;
 
   return (
     <div>
       <h1 className="mb-6 text-2xl font-bold tracking-tight">Edit post</h1>
-      <BlogPostForm mode="edit" postId={id} categories={[]} />
+      <BlogPostForm mode="edit" postId={postId} categories={[]} />
     </div>
   );
 }

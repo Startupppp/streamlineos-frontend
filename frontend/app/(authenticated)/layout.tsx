@@ -2,6 +2,7 @@ import { auth } from "../../lib/auth";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { DashboardShell } from "../../components/layout/dashboard-shell";
+import { FeedbucketEmbed } from "../../components/feedbucket/feedbucket-embed";
 
 export default async function DashboardLayout({
   children,
@@ -21,12 +22,15 @@ export default async function DashboardLayout({
   const defaultCollapsed = cookieStore.get("sidebar-collapsed")?.value === "true";
 
   return (
-    <DashboardShell
-      userId={session.user.id}
-      hasDashboardAccess={hasDashboardAccess}
-      defaultCollapsed={defaultCollapsed}
-    >
-      {children}
-    </DashboardShell>
+    <>
+      <DashboardShell
+        userId={session.user.id}
+        hasDashboardAccess={hasDashboardAccess}
+        defaultCollapsed={defaultCollapsed}
+      >
+        {children}
+      </DashboardShell>
+      <FeedbucketEmbed />
+    </>
   );
 }

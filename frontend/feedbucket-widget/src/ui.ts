@@ -4,55 +4,54 @@ import { getConsoleBuffer } from "./console-capture";
 import { submitFeedback } from "./api";
 import { getStyles } from "./styles";
 
-type FeedbackType = "BUG" | "IDEA" | "QUESTION" | "OTHER";
+type FeedbackType = "bug" | "idea" | "question" | "other";
 type ViewState = "form" | "success" | "error";
 
 const FEEDBACK_TYPES: ReadonlyArray<{ readonly value: FeedbackType; readonly label: string }> = [
-  { value: "BUG", label: "Bug" },
-  { value: "IDEA", label: "Idea" },
-  { value: "QUESTION", label: "Question" },
-  { value: "OTHER", label: "Other" },
+  { value: "bug", label: "Bug" },
+  { value: "idea", label: "Idea" },
+  { value: "question", label: "Question" },
+  { value: "other", label: "Other" },
 ];
 
-function isFeedbackType(v: string | undefined): v is FeedbackType {
-  return v === "BUG" || v === "IDEA" || v === "QUESTION" || v === "OTHER";
+const POSITION_KEY = "feedbucket:pos";
+const NS = "http://www.w3.org/2000/svg";
+
+interface IconSpec {
+  readonly paths?: ReadonlyArray<string>;
+  readonly circles?: ReadonlyArray<readonly [number, number, number]>;
+  readonly stroke?: boolean;
+  readonly size?: number;
 }
 
-function createIcon(
-  viewBox: string,
-  pathData: string,
-  extra?: { stroke?: string; circle?: [number, number, number] }
-): SVGSVGElement {
-  const ns = "http://www.w3.org/2000/svg";
-  const svg = document.createElementNS(ns, "svg");
-  svg.setAttribute("width", "14");
-  svg.setAttribute("height", "14");
-  svg.setAttribute("viewBox", viewBox);
+function svgIcon(spec: IconSpec): SVGSVGElement {
+  const svg = document.createElementNS(NS, "svg");
+  const size = spec.size ?? 20;
+  svg.setAttribute("width", String(size));
+  svg.setAttribute("height", String(size));
+  svg.setAttribute("viewBox", "0 0 24 24");
   svg.setAttribute("aria-hidden", "true");
-
-  if (extra?.stroke) {
+  if (spec.stroke) {
     svg.setAttribute("fill", "none");
-    svg.setAttribute("stroke", extra.stroke);
+    svg.setAttribute("stroke", "currentColor");
     svg.setAttribute("stroke-width", "2");
     svg.setAttribute("stroke-linecap", "round");
     svg.setAttribute("stroke-linejoin", "round");
   } else {
     svg.setAttribute("fill", "currentColor");
   }
-
-  const path = document.createElementNS(ns, "path");
-  path.setAttribute("d", pathData);
-  svg.appendChild(path);
-
-  if (extra?.circle) {
-    const [cx, cy, r] = extra.circle;
-    const circle = document.createElementNS(ns, "circle");
+  for (const d of spec.paths ?? []) {
+    const path = document.createElementNS(NS, "path");
+    path.setAttribute("d", d);
+    svg.appendChild(path);
+  }
+  for (const [cx, cy, r] of spec.circles ?? []) {
+    const circle = document.createElementNS(NS, "circle");
     circle.setAttribute("cx", String(cx));
     circle.setAttribute("cy", String(cy));
     circle.setAttribute("r", String(r));
     svg.appendChild(circle);
   }
-
   return svg;
 }
 
@@ -62,13 +61,21 @@ class FeedbucketWidget {
   private readonly embedKey: string;
 
   private isOpen = false;
-  private selectedType: FeedbackType = "BUG";
+  private selectedType: FeedbackType = "bug";
   private screenshot: Blob | null = null;
   private screenshotUrl: string | null = null;
   private capturing = false;
   private submitting = false;
   private viewState: ViewState = "form";
 
+  private dragging = false;
+  private dragOffsetX = 0;
+  private dragOffsetY = 0;
+  private dragMoved = false;
+  private activePointerId: number | null = null;
+
+  private readonly container: HTMLDivElement;
+  private readonly dragHandle: HTMLDivElement;
   private readonly panel: HTMLDivElement;
   private readonly formView: HTMLDivElement;
   private readonly successView: HTMLDivElement;
@@ -81,18 +88,16 @@ class FeedbucketWidget {
   private readonly previewWrap: HTMLDivElement;
   private readonly previewImg: HTMLImageElement;
   private readonly submitBtn: HTMLButtonElement;
+  private readonly typeButtons: HTMLButtonElement[] = [];
 
-  private readonly handleTriggerClick = (): void => {
-    this.isOpen = !this.isOpen;
-    this.syncPanel();
+  private readonly handleScreenshotLauncher = (): void => {
+    this.openPanel("bug");
+    void this.handleCaptureClick();
   };
+  private readonly handleFeedbackLauncher = (): void => this.openPanel("other");
+  private readonly handleHelpLauncher = (): void => this.openPanel("question");
 
   private readonly handleCloseClick = (): void => {
-    this.isOpen = false;
-    this.syncPanel();
-  };
-
-  private readonly handleCancelClick = (): void => {
     this.isOpen = false;
     this.syncPanel();
   };
@@ -101,14 +106,8 @@ class FeedbucketWidget {
     const btn = event.currentTarget;
     if (!(btn instanceof HTMLButtonElement)) return;
     const type = btn.dataset["type"];
-    if (!isFeedbackType(type)) return;
-    this.selectedType = type;
-    const siblings = btn.parentElement?.querySelectorAll(".type-btn");
-    if (!siblings) return;
-    for (const sibling of siblings) {
-      const isSelected = (sibling as HTMLElement).dataset["type"] === type;
-      sibling.classList.toggle("selected", isSelected);
-      sibling.setAttribute("aria-pressed", isSelected ? "true" : "false");
+    if (type === "bug" || type === "idea" || type === "question" || type === "other") {
+      this.setSelectedType(type);
     }
   };
 
@@ -117,12 +116,10 @@ class FeedbucketWidget {
     this.capturing = true;
     this.captureBtn.disabled = true;
     this.captureBtnLabel.textContent = "Capturing…";
-
     const blob = await captureScreenshot(this.hostEl);
     this.capturing = false;
     this.captureBtn.disabled = false;
     this.captureBtnLabel.textContent = "Capture screenshot";
-
     if (blob) {
       if (this.screenshotUrl) URL.revokeObjectURL(this.screenshotUrl);
       this.screenshot = blob;
@@ -150,7 +147,6 @@ class FeedbucketWidget {
     this.submitting = true;
     this.submitBtn.disabled = true;
     this.submitBtn.textContent = "Sending…";
-
     try {
       await submitFeedback({
         apiBase: this.apiBase,
@@ -174,10 +170,7 @@ class FeedbucketWidget {
     }
   };
 
-  private readonly handleRetryClick = (): void => {
-    this.showView("form");
-  };
-
+  private readonly handleRetryClick = (): void => this.showView("form");
   private readonly handleDoneClick = (): void => {
     this.isOpen = false;
     this.syncPanel();
@@ -190,35 +183,104 @@ class FeedbucketWidget {
     }
   };
 
+  private readonly handleDragPointerDown = (event: PointerEvent): void => {
+    this.dragging = true;
+    this.dragMoved = false;
+    this.activePointerId = event.pointerId;
+    const rect = this.container.getBoundingClientRect();
+    this.dragOffsetX = event.clientX - rect.left;
+    this.dragOffsetY = event.clientY - rect.top;
+    this.dragHandle.setPointerCapture(event.pointerId);
+    this.container.classList.add("dragging");
+    event.preventDefault();
+  };
+
+  private readonly handleDragPointerMove = (event: PointerEvent): void => {
+    if (!this.dragging || event.pointerId !== this.activePointerId) return;
+    this.dragMoved = true;
+    const w = this.container.offsetWidth;
+    const h = this.container.offsetHeight;
+    const left = Math.max(8, Math.min(event.clientX - this.dragOffsetX, window.innerWidth - w - 8));
+    const top = Math.max(8, Math.min(event.clientY - this.dragOffsetY, window.innerHeight - h - 8));
+    this.setPosition(left, top);
+    if (this.isOpen) this.positionPanel();
+  };
+
+  private readonly handleDragPointerUp = (event: PointerEvent): void => {
+    if (!this.dragging || event.pointerId !== this.activePointerId) return;
+    this.dragging = false;
+    this.activePointerId = null;
+    this.container.classList.remove("dragging");
+    if (this.dragMoved) this.persistPosition();
+  };
+
   constructor(hostEl: HTMLElement, apiBase: string, embedKey: string) {
     this.hostEl = hostEl;
     this.apiBase = apiBase;
     this.embedKey = embedKey;
 
     const shadow = hostEl.attachShadow({ mode: "open" });
-
     const style = document.createElement("style");
     style.textContent = getStyles();
     shadow.appendChild(style);
 
-    const container = document.createElement("div");
-    container.className = "widget";
-    shadow.appendChild(container);
+    this.container = document.createElement("div");
+    this.container.className = "widget";
+    shadow.appendChild(this.container);
 
-    const triggerBtn = document.createElement("button");
-    triggerBtn.className = "trigger-btn";
-    triggerBtn.setAttribute("aria-label", "Open feedback panel");
-    triggerBtn.setAttribute("aria-expanded", "false");
-    const msgIcon = createIcon(
-      "0 0 24 24",
-      "M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"
+    const launcher = document.createElement("div");
+    launcher.className = "launcher";
+    launcher.setAttribute("role", "toolbar");
+    launcher.setAttribute("aria-label", "Feedback");
+
+    launcher.appendChild(
+      this.launcherButton("Capture screenshot", this.handleScreenshotLauncher, {
+        paths: ["M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"],
+        circles: [[12, 13, 4]],
+        stroke: true,
+      }),
     );
-    const triggerLabel = document.createElement("span");
-    triggerLabel.textContent = "Feedback";
-    triggerBtn.appendChild(msgIcon);
-    triggerBtn.appendChild(triggerLabel);
-    triggerBtn.addEventListener("click", this.handleTriggerClick);
-    container.appendChild(triggerBtn);
+    launcher.appendChild(
+      this.launcherButton("Send feedback", this.handleFeedbackLauncher, {
+        paths: ["M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"],
+        stroke: true,
+      }),
+    );
+    launcher.appendChild(
+      this.launcherButton("Ask a question", this.handleHelpLauncher, {
+        circles: [[12, 12, 10]],
+        paths: ["M9.09 9a3 3 0 0 1 5.82 1c0 2-3 3-3 3", "M12 17h.01"],
+        stroke: true,
+      }),
+    );
+
+    const divider = document.createElement("div");
+    divider.className = "launcher-divider";
+    launcher.appendChild(divider);
+
+    this.dragHandle = document.createElement("div");
+    this.dragHandle.className = "drag-handle";
+    this.dragHandle.setAttribute("aria-label", "Drag to move");
+    this.dragHandle.title = "Drag to move";
+    this.dragHandle.appendChild(
+      svgIcon({
+        size: 16,
+        circles: [
+          [9, 6, 1],
+          [15, 6, 1],
+          [9, 12, 1],
+          [15, 12, 1],
+          [9, 18, 1],
+          [15, 18, 1],
+        ],
+      }),
+    );
+    this.dragHandle.addEventListener("pointerdown", this.handleDragPointerDown);
+    this.dragHandle.addEventListener("pointermove", this.handleDragPointerMove);
+    this.dragHandle.addEventListener("pointerup", this.handleDragPointerUp);
+    this.dragHandle.addEventListener("pointercancel", this.handleDragPointerUp);
+    launcher.appendChild(this.dragHandle);
+    this.container.appendChild(launcher);
 
     this.panel = document.createElement("div");
     this.panel.className = "panel";
@@ -226,11 +288,11 @@ class FeedbucketWidget {
     this.panel.setAttribute("aria-modal", "false");
     this.panel.setAttribute("aria-label", "Feedback panel");
     this.panel.setAttribute("aria-hidden", "true");
-    container.appendChild(this.panel);
+    this.container.appendChild(this.panel);
 
     const header = document.createElement("div");
     header.className = "panel-header";
-    const title = document.createElement("h2");
+    const title = document.createElement("span");
     title.className = "panel-title";
     title.textContent = "Share Feedback";
     const closeBtn = document.createElement("button");
@@ -251,12 +313,13 @@ class FeedbucketWidget {
     typeGroup.setAttribute("aria-label", "Feedback type");
     for (const item of FEEDBACK_TYPES) {
       const btn = document.createElement("button");
-      btn.className = "type-btn" + (item.value === "BUG" ? " selected" : "");
+      btn.className = "type-btn" + (item.value === "bug" ? " selected" : "");
       btn.textContent = item.label;
       btn.dataset["type"] = item.value;
-      btn.setAttribute("aria-pressed", item.value === "BUG" ? "true" : "false");
+      btn.setAttribute("aria-pressed", item.value === "bug" ? "true" : "false");
       btn.addEventListener("click", this.handleTypeSelect);
       typeGroup.appendChild(btn);
+      this.typeButtons.push(btn);
     }
     this.formView.appendChild(typeGroup);
 
@@ -269,17 +332,19 @@ class FeedbucketWidget {
 
     const screenshotSection = document.createElement("div");
     screenshotSection.className = "screenshot-section";
-
     this.captureBtn = document.createElement("button");
     this.captureBtn.className = "capture-btn";
-    const camIcon = createIcon(
-      "0 0 24 24",
-      "M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z",
-      { stroke: "currentColor", circle: [12, 13, 4] }
+    this.captureBtn.type = "button";
+    this.captureBtn.appendChild(
+      svgIcon({
+        size: 16,
+        paths: ["M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"],
+        circles: [[12, 13, 4]],
+        stroke: true,
+      }),
     );
     this.captureBtnLabel = document.createElement("span");
     this.captureBtnLabel.textContent = "Capture screenshot";
-    this.captureBtn.appendChild(camIcon);
     this.captureBtn.appendChild(this.captureBtnLabel);
     this.captureBtn.addEventListener("click", this.handleCaptureClick);
     screenshotSection.appendChild(this.captureBtn);
@@ -321,7 +386,7 @@ class FeedbucketWidget {
     const cancelBtn = document.createElement("button");
     cancelBtn.className = "cancel-btn";
     cancelBtn.textContent = "Cancel";
-    cancelBtn.addEventListener("click", this.handleCancelClick);
+    cancelBtn.addEventListener("click", this.handleCloseClick);
     this.submitBtn = document.createElement("button");
     this.submitBtn.className = "submit-btn";
     this.submitBtn.textContent = "Send Feedback";
@@ -331,59 +396,92 @@ class FeedbucketWidget {
     this.formView.appendChild(actionsRow);
     this.panel.appendChild(this.formView);
 
-    this.successView = document.createElement("div");
-    this.successView.className = "result-view";
-    this.successView.hidden = true;
-    const successIcon = document.createElement("div");
-    successIcon.className = "result-icon success-icon";
-    successIcon.textContent = "✓";
-    const successTitle = document.createElement("p");
-    successTitle.className = "result-title";
-    successTitle.textContent = "Thanks for your feedback!";
-    const successSub = document.createElement("p");
-    successSub.className = "result-subtitle";
-    successSub.textContent = "We received your message and will look into it.";
-    const doneBtn = document.createElement("button");
-    doneBtn.className = "done-btn";
-    doneBtn.textContent = "Done";
-    doneBtn.addEventListener("click", this.handleDoneClick);
-    this.successView.appendChild(successIcon);
-    this.successView.appendChild(successTitle);
-    this.successView.appendChild(successSub);
-    this.successView.appendChild(doneBtn);
+    this.successView = this.resultView("success", "✓", "Thanks for your feedback!", "We received your message and will look into it.", "Done", this.handleDoneClick);
     this.panel.appendChild(this.successView);
-
-    this.errorView = document.createElement("div");
-    this.errorView.className = "result-view";
-    this.errorView.hidden = true;
-    const errorIcon = document.createElement("div");
-    errorIcon.className = "result-icon error-icon";
-    errorIcon.textContent = "!";
-    const errorTitle = document.createElement("p");
-    errorTitle.className = "result-title";
-    errorTitle.textContent = "Something went wrong";
-    const errorSub = document.createElement("p");
-    errorSub.className = "result-subtitle";
-    errorSub.textContent = "Your feedback could not be submitted. Please try again.";
-    const retryBtn = document.createElement("button");
-    retryBtn.className = "retry-btn";
-    retryBtn.textContent = "Try again";
-    retryBtn.addEventListener("click", this.handleRetryClick);
-    this.errorView.appendChild(errorIcon);
-    this.errorView.appendChild(errorTitle);
-    this.errorView.appendChild(errorSub);
-    this.errorView.appendChild(retryBtn);
+    this.errorView = this.resultView("error", "!", "Something went wrong", "Your feedback could not be submitted. Please try again.", "Try again", this.handleRetryClick);
     this.panel.appendChild(this.errorView);
 
     document.addEventListener("keydown", this.handleKeydown);
+    this.restorePosition();
+  }
+
+  private launcherButton(label: string, handler: () => void, icon: IconSpec): HTMLButtonElement {
+    const btn = document.createElement("button");
+    btn.className = "launcher-btn";
+    btn.type = "button";
+    btn.setAttribute("aria-label", label);
+    btn.title = label;
+    btn.appendChild(svgIcon(icon));
+    btn.addEventListener("click", handler);
+    return btn;
+  }
+
+  private resultView(
+    kind: "success" | "error",
+    iconText: string,
+    titleText: string,
+    subText: string,
+    btnText: string,
+    handler: () => void,
+  ): HTMLDivElement {
+    const view = document.createElement("div");
+    view.className = "result-view";
+    view.hidden = true;
+    const icon = document.createElement("div");
+    icon.className = `result-icon ${kind}-icon`;
+    icon.textContent = iconText;
+    const title = document.createElement("p");
+    title.className = "result-title";
+    title.textContent = titleText;
+    const sub = document.createElement("p");
+    sub.className = "result-subtitle";
+    sub.textContent = subText;
+    const btn = document.createElement("button");
+    btn.className = kind === "success" ? "done-btn" : "retry-btn";
+    btn.textContent = btnText;
+    btn.addEventListener("click", handler);
+    view.appendChild(icon);
+    view.appendChild(title);
+    view.appendChild(sub);
+    view.appendChild(btn);
+    return view;
+  }
+
+  private openPanel(type: FeedbackType): void {
+    this.setSelectedType(type);
+    if (this.viewState !== "form") this.showView("form");
+    this.isOpen = true;
+    this.syncPanel();
   }
 
   private syncPanel(): void {
-    const hidden = !this.isOpen;
-    this.panel.setAttribute("aria-hidden", hidden ? "true" : "false");
-    if (this.isOpen && this.viewState === "success") {
+    this.panel.setAttribute("aria-hidden", this.isOpen ? "false" : "true");
+    if (this.isOpen) {
+      this.positionPanel();
+    } else if (this.viewState === "success") {
       this.resetForm();
       this.showView("form");
+    }
+  }
+
+  private positionPanel(): void {
+    const rect = this.container.getBoundingClientRect();
+    this.panel.classList.toggle("flip-left", rect.left < window.innerWidth / 2);
+    if (rect.top > window.innerHeight / 2) {
+      this.panel.style.top = "auto";
+      this.panel.style.bottom = "0";
+    } else {
+      this.panel.style.top = "0";
+      this.panel.style.bottom = "auto";
+    }
+  }
+
+  private setSelectedType(type: FeedbackType): void {
+    this.selectedType = type;
+    for (const btn of this.typeButtons) {
+      const isSelected = btn.dataset["type"] === type;
+      btn.classList.toggle("selected", isSelected);
+      btn.setAttribute("aria-pressed", isSelected ? "true" : "false");
     }
   }
 
@@ -399,21 +497,59 @@ class FeedbucketWidget {
     this.nameInput.value = "";
     this.emailInput.value = "";
     this.handleRemoveScreenshot();
-    this.selectedType = "BUG";
-    const buttons = this.formView.querySelectorAll(".type-btn");
-    for (const btn of buttons) {
-      const el = btn as HTMLElement;
-      const isSelected = el.dataset["type"] === "BUG";
-      btn.classList.toggle("selected", isSelected);
-      btn.setAttribute("aria-pressed", isSelected ? "true" : "false");
+    this.setSelectedType("bug");
+  }
+
+  private setPosition(left: number, top: number): void {
+    this.container.classList.add("positioned");
+    this.container.style.left = `${left}px`;
+    this.container.style.top = `${top}px`;
+    this.container.style.right = "auto";
+    this.container.style.bottom = "auto";
+  }
+
+  private persistPosition(): void {
+    try {
+      const rect = this.container.getBoundingClientRect();
+      window.localStorage.setItem(POSITION_KEY, JSON.stringify({ left: rect.left, top: rect.top }));
+    } catch {
+      return;
+    }
+  }
+
+  private restorePosition(): void {
+    let raw: string | null = null;
+    try {
+      raw = window.localStorage.getItem(POSITION_KEY);
+    } catch {
+      return;
+    }
+    if (!raw) return;
+    try {
+      const parsed: unknown = JSON.parse(raw);
+      if (
+        typeof parsed === "object" &&
+        parsed !== null &&
+        "left" in parsed &&
+        "top" in parsed &&
+        typeof (parsed as { left: unknown }).left === "number" &&
+        typeof (parsed as { top: unknown }).top === "number"
+      ) {
+        const left = (parsed as { left: number }).left;
+        const top = (parsed as { top: number }).top;
+        const w = this.container.offsetWidth || 52;
+        const h = this.container.offsetHeight || 160;
+        this.setPosition(
+          Math.max(8, Math.min(left, window.innerWidth - w - 8)),
+          Math.max(8, Math.min(top, window.innerHeight - h - 8)),
+        );
+      }
+    } catch {
+      return;
     }
   }
 }
 
-export function mountWidget(
-  hostEl: HTMLElement,
-  apiBase: string,
-  embedKey: string
-): void {
+export function mountWidget(hostEl: HTMLElement, apiBase: string, embedKey: string): void {
   new FeedbucketWidget(hostEl, apiBase, embedKey);
 }

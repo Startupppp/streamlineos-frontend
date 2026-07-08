@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Bot } from "lucide-react";
 import { AnimatedLogo } from "@/features/landing/components/animated-logo";
 import { MarkdownContent } from "@/components/markdown/markdown-content";
 import type { AskAiHistoryMessage } from "@/hooks/api/chat-ai-assistant";
@@ -56,9 +55,9 @@ export function EmptyAskOs({
 }) {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-4 py-6 text-center">
-      <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-        <Bot className="h-6 w-6" />
-      </span>
+      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-accent/10">
+        <AnimatedLogo size={28} gradient className="rounded-xl" />
+      </div>
       <div>
         <p className="text-sm font-semibold text-foreground">How can I help?</p>
         <p className="mx-auto mt-1 max-w-[16rem] text-xs text-muted-foreground">
