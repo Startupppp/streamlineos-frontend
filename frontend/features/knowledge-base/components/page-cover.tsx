@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { toast } from "sonner";
+import { MoveVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { KbImageIcon, KbXIcon } from "@/features/knowledge-base/lib/kb-icons";
@@ -19,17 +20,37 @@ const GRADIENT_PRESETS = [
   { key: "dark", css: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)" },
 ] as const;
 
-function getCoverStyle(coverImage: string | null): React.CSSProperties {
-  if (!coverImage) return {};
+interface ParsedCover {
+  url: string;
+  posY: number;
+  isGradient: boolean;
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+function parseCover(coverImage: string): ParsedCover {
   if (coverImage.startsWith("gradient:")) {
-    const key = coverImage.slice(9);
+    return { url: coverImage, posY: 50, isGradient: true };
+  }
+  const marker = coverImage.indexOf("#y=");
+  if (marker === -1) return { url: coverImage, posY: 50, isGradient: false };
+  const raw = Number(coverImage.slice(marker + 3));
+  const posY = Number.isFinite(raw) ? clamp(raw, 0, 100) : 50;
+  return { url: coverImage.slice(0, marker), posY, isGradient: false };
+}
+
+function getCoverStyle(parsed: ParsedCover, displayPosY: number): React.CSSProperties {
+  if (parsed.isGradient) {
+    const key = parsed.url.slice(9);
     const preset = GRADIENT_PRESETS.find((p) => p.key === key);
     return preset ? { background: preset.css } : {};
   }
   return {
-    backgroundImage: `url(${coverImage})`,
+    backgroundImage: `url(${parsed.url})`,
     backgroundSize: "cover",
-    backgroundPosition: "center",
+    backgroundPosition: `center ${displayPosY}%`,
   };
 }
 
@@ -67,7 +88,10 @@ export default function PageCover({
 }: PageCoverProps) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [repositioning, setRepositioning] = useState(false);
+  const [posY, setPosY] = useState(50);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dragRef = useRef<{ startY: number; startPos: number } | null>(null);
 
   function handleGradientSelect(e: React.MouseEvent<HTMLButtonElement>) {
     const key = e.currentTarget.dataset.gradientKey;
@@ -99,6 +123,47 @@ export default function PageCover({
     } finally {
       setUploading(false);
     }
+  }
+
+  function handleStartReposition() {
+    if (!coverImage) return;
+    setPosY(parseCover(coverImage).posY);
+    setRepositioning(true);
+    setPickerOpen(false);
+  }
+
+  function handleCancelReposition() {
+    dragRef.current = null;
+    setRepositioning(false);
+  }
+
+  function handleSaveReposition() {
+    if (!coverImage) return;
+    const parsed = parseCover(coverImage);
+    onCoverChange(`${parsed.url}#y=${Math.round(posY)}`);
+    dragRef.current = null;
+    setRepositioning(false);
+  }
+
+  function handlePointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    if (!repositioning) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    dragRef.current = { startY: e.clientY, startPos: posY };
+  }
+
+  function handlePointerMove(e: React.PointerEvent<HTMLDivElement>) {
+    if (!repositioning || !dragRef.current) return;
+    const height = e.currentTarget.clientHeight || 160;
+    const delta = e.clientY - dragRef.current.startY;
+    setPosY(clamp(dragRef.current.startPos - (delta / height) * 100, 0, 100));
+  }
+
+  function handlePointerUp() {
+    dragRef.current = null;
+  }
+
+  function stopPointer(e: React.PointerEvent) {
+    e.stopPropagation();
   }
 
   const fileInput = (
@@ -150,11 +215,55 @@ export default function PageCover({
     );
   }
 
+  const parsed = parseCover(coverImage);
+  const displayPosY = repositioning ? posY : parsed.posY;
+
   return (
-    <div className="group relative h-40 w-full" style={getCoverStyle(coverImage)}>
-      {isEditable && (
-        <div className="absolute bottom-3 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+    <div
+      className={`group relative h-40 w-full ${repositioning ? "cursor-grab select-none active:cursor-grabbing" : ""}`}
+      style={getCoverStyle(parsed, displayPosY)}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+    >
+      {isEditable && repositioning && (
+        <>
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <span className="rounded-full bg-black/50 px-3 py-1 text-xs font-medium text-white shadow-sm">
+              Drag image up or down to reposition
+            </span>
+          </div>
+          <div className="absolute bottom-3 right-4 flex gap-2" onPointerDown={stopPointer}>
+            <Button
+              size="sm"
+              variant="secondary"
+              className="h-7 text-xs"
+              onClick={handleCancelReposition}
+            >
+              Cancel
+            </Button>
+            <Button size="sm" className="h-7 text-xs" onClick={handleSaveReposition}>
+              Save position
+            </Button>
+          </div>
+        </>
+      )}
+
+      {isEditable && !repositioning && (
+        <div className="absolute bottom-3 right-4 flex gap-2 opacity-0 transition-opacity group-hover:opacity-100">
           {fileInput}
+          {!parsed.isGradient && (
+            <Button
+              size="sm"
+              variant="secondary"
+              className="h-7 text-xs"
+              onClick={handleStartReposition}
+            >
+              <MoveVertical className="mr-1 h-3 w-3" />
+              Reposition
+            </Button>
+          )}
           <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
             <PopoverTrigger asChild>
               <Button size="sm" variant="secondary" className="text-xs h-7">

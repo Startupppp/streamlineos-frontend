@@ -409,7 +409,7 @@ export default function PageMetadataSheet({
         </ScrollArea>
 
         <SheetFooter className="px-5 py-4 border-t shrink-0 bg-background">
-          <Button variant="outline" className={ACTION_BTN_CLASS} onClick={handleClose}>
+          <Button variant="outline" className={ACTION_BTN_NEUTRAL} onClick={handleClose}>
             Close
           </Button>
         </SheetFooter>

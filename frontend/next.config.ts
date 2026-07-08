@@ -26,6 +26,29 @@ function shouldSendStrictTransportSecurity(): boolean {
   return true;
 }
 
+function buildContentSecurityPolicy(): string {
+  const isDev = process.env.NODE_ENV === "development";
+  const scriptSrc = [
+    "'self'",
+    ...(isDev ? ["'unsafe-inline'", "'unsafe-eval'"] : []),
+    "https://accounts.google.com",
+    "https://checkout.razorpay.com",
+  ].join(" ");
+
+  return [
+    "default-src 'self'",
+    `script-src ${scriptSrc}`,
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com",
+    "img-src 'self' data: blob: https://api.dicebear.com https://*.r2.dev https://*.r2.cloudflarestorage.com https://images.unsplash.com https://lh3.googleusercontent.com https://streamlineos.app",
+    "connect-src 'self' https://accounts.google.com https://*.upstash.io wss:// https://api.razorpay.com https://checkout.razorpay.com",
+    "frame-src 'self' https://accounts.google.com https://checkout.razorpay.com https://api.razorpay.com",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+  ].join("; ");
+}
+
 const nextConfig: NextConfig = {
   productionBrowserSourceMaps: false,
   experimental: {
@@ -98,18 +121,7 @@ const nextConfig: NextConfig = {
         { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
         {
           key: "Content-Security-Policy",
-          value: [
-            "default-src 'self'",
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://checkout.razorpay.com",
-            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-            "font-src 'self' https://fonts.gstatic.com",
-            "img-src 'self' data: blob: https://api.dicebear.com https://*.r2.dev https://*.r2.cloudflarestorage.com https://images.unsplash.com https://lh3.googleusercontent.com https://streamlineos.app",
-            "connect-src 'self' https://accounts.google.com https://*.upstash.io wss:// https://api.razorpay.com https://checkout.razorpay.com",
-            "frame-src 'self' https://accounts.google.com https://checkout.razorpay.com https://api.razorpay.com",
-            "object-src 'none'",
-            "base-uri 'self'",
-            "form-action 'self'",
-          ].join("; "),
+          value: buildContentSecurityPolicy(),
         },
       ],
     },
