@@ -74,6 +74,7 @@ const TOOL_ICONS: Record<Tool | "undo" | "close", () => SVGSVGElement> = {
 export class Annotator {
   private readonly overlay: HTMLDivElement;
   private readonly shadow: ShadowRoot;
+  private readonly rootEl: HTMLDivElement;
   private readonly canvas: HTMLCanvasElement;
   private readonly ctx: CanvasRenderingContext2D;
   private readonly pinLayer: HTMLDivElement;
@@ -102,6 +103,7 @@ export class Annotator {
 
     const root = document.createElement("div");
     root.className = "an-root";
+    this.rootEl = root;
 
     this.canvas = document.createElement("canvas");
     this.canvas.className = "an-canvas";
@@ -277,8 +279,6 @@ export class Annotator {
     if (this.commentBox) this.commentBox.remove();
     const box = document.createElement("div");
     box.className = "an-comment-box";
-    box.style.left = `${Math.min(pin.x * this.scale + 16, (this.baseImage.naturalWidth * this.scale) - 300)}px`;
-    box.style.top = `${pin.y * this.scale + 16}px`;
 
     const typeRow = document.createElement("div");
     typeRow.className = "an-type-row";
@@ -325,9 +325,27 @@ export class Annotator {
     footer.appendChild(submit);
     box.appendChild(footer);
 
-    this.pinLayer.appendChild(box);
+    this.rootEl.appendChild(box);
     this.commentBox = box;
+    this.positionCommentBox(box, pin);
     title.focus();
+  }
+
+  private positionCommentBox(box: HTMLDivElement, pin: Pin): void {
+    const canvasRect = this.canvas.getBoundingClientRect();
+    const px = canvasRect.left + pin.x * this.scale;
+    const py = canvasRect.top + pin.y * this.scale;
+    const bw = box.offsetWidth || 288;
+    const bh = box.offsetHeight || 240;
+    const m = 12;
+    let left = px + 16;
+    if (left + bw > window.innerWidth - m) left = px - bw - 16;
+    left = Math.max(m, Math.min(left, window.innerWidth - bw - m));
+    let top = py + 16;
+    if (top + bh > window.innerHeight - m) top = py - bh - 16;
+    top = Math.max(m, Math.min(top, window.innerHeight - bh - m));
+    box.style.left = `${left}px`;
+    box.style.top = `${top}px`;
   }
 
   private async finish(title: string, description: string): Promise<void> {
@@ -448,8 +466,8 @@ export class Annotator {
 .an-tool.active { background: #6366f1; color: #fff; }
 .an-close { color: #64748b; }
 .an-comment-box {
-  position: absolute; width: 288px; background: #fff; border-radius: 12px; box-shadow: 0 10px 36px rgba(11,18,32,0.28);
-  padding: 12px; display: flex; flex-direction: column; gap: 8px; pointer-events: auto; z-index: 5;
+  position: fixed; width: 288px; background: #fff; border-radius: 12px; box-shadow: 0 10px 36px rgba(11,18,32,0.28);
+  padding: 12px; display: flex; flex-direction: column; gap: 8px; pointer-events: auto; z-index: 10;
 }
 .an-type-row { display: flex; flex-wrap: wrap; gap: 4px; }
 .an-chip {

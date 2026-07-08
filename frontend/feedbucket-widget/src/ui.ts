@@ -5,6 +5,7 @@ import { submitFeedback } from "./api";
 import { getStyles } from "./styles";
 import { Annotator, type AnnotationResult } from "./annotator";
 import { ScreenRecorder } from "./recorder";
+import { LOGO_SVG } from "./logo";
 
 type FeedbackType = "bug" | "idea" | "feature" | "question" | "other";
 type ViewState = "form" | "success" | "error";
@@ -104,7 +105,6 @@ class FeedbucketWidget {
     void this.runRecordFlow();
   };
   private readonly handleCommentLauncher = (): void => this.openPanel("other");
-  private readonly handleHelpLauncher = (): void => this.openPanel("question");
 
   private readonly handleCloseClick = (): void => {
     this.isOpen = false;
@@ -240,9 +240,7 @@ class FeedbucketWidget {
     this.logo.className = "launcher-logo";
     this.logo.title = "Drag to move";
     this.logo.setAttribute("aria-label", "Feedbucket — drag to move");
-    this.logo.appendChild(
-      svgIcon({ size: 20, paths: ["M4 4h16v11a2 2 0 0 1-2 2H9l-5 4z"], stroke: true }),
-    );
+    this.logo.appendChild(this.buildLogoMark());
     const gripOverlay = svgIcon({
       size: 16,
       circles: [[9, 6, 1], [15, 6, 1], [9, 12, 1], [15, 12, 1], [9, 18, 1], [15, 18, 1]],
@@ -275,13 +273,6 @@ class FeedbucketWidget {
     launcher.appendChild(
       this.launcherButton("Send feedback", this.handleCommentLauncher, {
         paths: ["M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"],
-        stroke: true,
-      }),
-    );
-    launcher.appendChild(
-      this.launcherButton("Ask a question", this.handleHelpLauncher, {
-        circles: [[12, 12, 10]],
-        paths: ["M9.09 9a3 3 0 0 1 5.82 1c0 2-3 3-3 3", "M12 17h.01"],
         stroke: true,
       }),
     );
@@ -440,6 +431,18 @@ class FeedbucketWidget {
     btn.appendChild(svgIcon(icon));
     btn.addEventListener("click", handler);
     return btn;
+  }
+
+  private buildLogoMark(): Element {
+    const parsed = new DOMParser().parseFromString(LOGO_SVG, "image/svg+xml").documentElement;
+    const node = document.importNode(parsed, true);
+    if (node instanceof Element) {
+      node.setAttribute("width", "24");
+      node.setAttribute("height", "24");
+      node.classList.add("logo-mark");
+      return node;
+    }
+    return document.createElement("span");
   }
 
   private resultView(
