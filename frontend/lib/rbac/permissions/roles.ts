@@ -5,6 +5,7 @@ import { SUPPORT_PERMISSIONS } from "./support";
 import { KB_PERMISSIONS } from "./kb";
 import { INVENTORY_PERMISSIONS } from "./inventory";
 import { SURVEYS_PERMISSIONS } from "./surveys";
+import { FEEDBUCKET_PERMISSIONS } from "./feedbucket";
 import { ROLES } from "@/lib/constants/roles";
 
 export const PERMISSIONS = [
@@ -15,6 +16,7 @@ export const PERMISSIONS = [
   ...KB_PERMISSIONS,
   ...INVENTORY_PERMISSIONS,
   ...SURVEYS_PERMISSIONS,
+  ...FEEDBUCKET_PERMISSIONS,
 ];
 
 const EMPLOYEE_SELF_SERVICE = [
@@ -96,6 +98,11 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
 
   CUSTOMER_SUPPORT: [
     ...EMPLOYEE_SELF_SERVICE,
+    "feedbucket:submissions:view",
+    "feedbucket:submissions:update",
+    "feedbucket:submissions:assign",
+    "feedbucket:submissions:manage",
+    "feedbucket:widgets:view",
     "dashboard:support:view",
     "support:kb:view",
     "support:kb:manage",
@@ -122,6 +129,15 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
 
   ENGINEERING: [
     ...EMPLOYEE_SELF_SERVICE,
+    "feedbucket:submissions:view",
+    "feedbucket:submissions:update",
+    "feedbucket:submissions:assign",
+    "feedbucket:submissions:manage",
+    "feedbucket:widgets:view",
+    "feedbucket:widgets:create",
+    "feedbucket:widgets:update",
+    "feedbucket:widgets:delete",
+    "feedbucket:widgets:manage",
     "projects:view",
     "projects:tickets:view",
     "projects:tickets:create",

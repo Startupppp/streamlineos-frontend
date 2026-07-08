@@ -1,0 +1,82 @@
+"use client";
+
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
+import type {
+  FeedbucketSubmission,
+  PaginatedFeedbucketSubmissions,
+  ListFeedbucketSubmissionsQuery,
+  UpdateFeedbucketSubmissionInput,
+} from "@/types/feedbucket";
+
+export function useFeedbucketSubmissions(params?: ListFeedbucketSubmissionsQuery) {
+  return useQuery({
+    queryKey: queryKeys.feedbucket.submissions(params as Record<string, unknown>),
+    queryFn: () =>
+      apiClient.get<PaginatedFeedbucketSubmissions>(
+        "/feedbucket/submissions",
+        params as Record<string, unknown>,
+      ),
+    staleTime: 30_000,
+  });
+}
+
+export function useFeedbucketSubmission(submissionId: number) {
+  return useQuery({
+    queryKey: queryKeys.feedbucket.submission(submissionId),
+    queryFn: () =>
+      apiClient.get<FeedbucketSubmission>(`/feedbucket/submissions/${submissionId}`),
+    staleTime: 30_000,
+    enabled: submissionId > 0,
+  });
+}
+
+export function useUpdateFeedbucketSubmission() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["feedbucket", "submissions", "update"],
+    mutationFn: ({
+      submissionId,
+      input,
+    }: {
+      submissionId: number;
+      input: UpdateFeedbucketSubmissionInput;
+    }) =>
+      apiClient.patch<FeedbucketSubmission>(
+        `/feedbucket/submissions/${submissionId}`,
+        input,
+      ),
+    onSuccess: (_, { submissionId }) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.feedbucket.submission(submissionId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.feedbucket.all });
+    },
+  });
+}
+
+export function useDeleteFeedbucketSubmission() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["feedbucket", "submissions", "delete"],
+    mutationFn: (submissionId: number) =>
+      apiClient.delete<{ success: boolean }>(`/feedbucket/submissions/${submissionId}`),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.feedbucket.all });
+    },
+  });
+}
+
+export function useConvertFeedbucketToTicket() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["feedbucket", "submissions", "convert-to-ticket"],
+    mutationFn: (submissionId: number) =>
+      apiClient.post<{ ticketId: number }>(
+        `/feedbucket/submissions/${submissionId}/convert-to-ticket`,
+      ),
+    onSuccess: (_, submissionId) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.feedbucket.submission(submissionId) });
+      void qc.invalidateQueries({ queryKey: queryKeys.feedbucket.all });
+    },
+  });
+}

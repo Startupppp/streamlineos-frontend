@@ -55,6 +55,7 @@ const PRODUCT_DESCRIPTIONS: Record<ProductKey, string> = {
   surveys: "Surveys & feedback",
   administration: "Settings & access",
   payroll: "Runs, payslips & compliance",
+  feedbucket: "Embedded feedback widget",
 };
 
 interface ProductTileProps {

@@ -1,5 +1,7 @@
 # StreamlineOS PRD (v1 · Implementation-Grade)
-## Website Feedback Widget — embeddable visual feedback that creates tickets (Feedbucket/Marker.io-class)
+## Feedbucket — embeddable website feedback widget that creates tickets (Feedbucket/Marker.io-class)
+
+> **Canonical naming (product = "Feedbucket")**: module key `feedbucket` · backend module `modules/feedbucket/` · tables `feedbucket_widgets` / `feedbucket_submissions` / `feedbucket_comments` / `feedbucket_attachments` · enums `feedbucket_submission_{type,status,priority}` · schema `db/schema/feedbucket.ts` · RBAC `feedbucket:widgets:*` + `feedbucket:submissions:*` · authed routes `/feedbucket/*` · public routes `/public/feedbucket/*` · frontend `features/feedbucket/`, `hooks/api/feedbucket/`, `types/feedbucket.ts`, routes `app/(authenticated)/feedbucket/*` · widget bundle `frontend/feedbucket-widget/` → `public/feedbucket-widget.js` · rate tiers `feedbucket:widget-submit` / `feedbucket:widget-config`. Gated by **RBAC only** (no `@RequireModule`, to avoid the KB module-guard mismatch); registered as a **core** module in `MODULE_CATALOG`. Where the body below says "feedback" as an identifier, read "feedbucket".
 
 **Owner (PM)**: StreamlineOS Platform
 **Owner (Eng)**: Projects / Collaboration

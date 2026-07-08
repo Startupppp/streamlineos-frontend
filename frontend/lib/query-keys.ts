@@ -1032,4 +1032,13 @@ export const queryKeys = {
     runInputs: (runId: number, params?: Record<string, unknown>) => [...base, "payroll", "run-inputs", runId, "list", params] as const,
   },
 
+  feedbucket: {
+    all: [...base, "feedbucket"] as const,
+    widgets: () => [...base, "feedbucket", "widgets"] as const,
+    widget: (id: number) => [...base, "feedbucket", "widgets", id] as const,
+    submissions: (params?: Record<string, unknown>) => [...base, "feedbucket", "submissions", params] as const,
+    submission: (id: number) => [...base, "feedbucket", "submissions", id] as const,
+    stats: () => [...base, "feedbucket", "stats"] as const,
+  },
+
 } as const;

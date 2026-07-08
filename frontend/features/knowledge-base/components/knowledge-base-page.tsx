@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { motion, useReducedMotion } from "framer-motion";
 import { type InfiniteData, useQueryClient } from "@tanstack/react-query";
@@ -48,6 +48,7 @@ export default function KnowledgeBasePage() {
   const router = useRouter();
   const reduce = useReducedMotion();
   const qc = useQueryClient();
+  const pathname = usePathname();
 
   const [input, setInput] = useState("");
   const [pending, setPending] = useState<Pending | null>(null);
@@ -65,6 +66,7 @@ export default function KnowledgeBasePage() {
   const loadingOlderRef = useRef(false);
   const isNearBottomRef = useRef(true);
   const tempIdRef = useRef(0);
+  const initializedRef = useRef(false);
 
   const ask = useKbAsk();
   const conversationMessages = useKbConversationMessages(activeConversationId, true);
@@ -145,6 +147,29 @@ export default function KnowledgeBasePage() {
     isNearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
   }
 
+  const setConversation = useCallback(
+    (id: number | null) => {
+      setActiveConversationId(id);
+      if (typeof window === "undefined") return;
+      const params = new URLSearchParams(window.location.search);
+      if (id === null) params.delete("conversation");
+      else params.set("conversation", String(id));
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [router, pathname],
+  );
+
+  useEffect(() => {
+    if (initializedRef.current) return;
+    initializedRef.current = true;
+    if (typeof window === "undefined") return;
+    const raw = new URLSearchParams(window.location.search).get("conversation");
+    if (!raw) return;
+    const id = Number(raw);
+    if (Number.isFinite(id) && id > 0) setActiveConversationId(id);
+  }, []);
+
   function sendMessage(text: string) {
     const trimmed = text.trim();
     if (!trimmed || ask.isPending) return;
@@ -165,7 +190,7 @@ export default function KnowledgeBasePage() {
             }
             return { ...old, pages: old.pages.map((page, i) => i === 0 ? { ...page, messages: [assistantMsg, userMsg, ...page.messages] } : page) };
           });
-          if (activeConversationId === null) setActiveConversationId(data.conversationId);
+          if (activeConversationId === null) setConversation(data.conversationId);
           void qc.invalidateQueries({ queryKey: queryKeys.kb.chatConversations() });
           setPending(null);
         },
@@ -191,14 +216,14 @@ export default function KnowledgeBasePage() {
     setConversationsOpen((prev) => { if (prev) setConversationsSearch(""); return !prev; });
   }
   function handleConversationsSearchChange(v: string) { setConversationsSearch(v); }
-  function handleSelectConversation(id: number) { setActiveConversationId(id); setConversationsOpen(false); }
-  function handleNewChat() { setActiveConversationId(null); setConversationsOpen(false); setPending(null); }
+  function handleSelectConversation(id: number) { setConversation(id); setConversationsOpen(false); }
+  function handleNewChat() { setConversation(null); setConversationsOpen(false); setPending(null); }
   function handleLoadMoreConversations() { void conversationsQuery.fetchNextPage(); }
 
   function handleDeleteConversation(id: number) {
     deleteConversation.mutate(id, {
       onSuccess: () => {
-        if (id === activeConversationId) setActiveConversationId(null);
+        if (id === activeConversationId) setConversation(null);
         void qc.invalidateQueries({ queryKey: queryKeys.kb.chatConversations() });
       },
       onError: (error) => toast.error("Couldn't delete conversation", { description: getErrorMessage(error) }),
@@ -276,13 +301,11 @@ export default function KnowledgeBasePage() {
           ) : (
             <>
               <div ref={scrollRef} onScroll={handleScroll} className="flex-1 min-h-0 space-y-4 overflow-y-auto scrollbar-hide p-4">
-                {activeConversationId === null ? (
-                  <EmptyChat onSuggestion={handleSuggestion} />
-                ) : isLoading ? (
+                {isLoading ? (
                   <div className="flex h-full items-center justify-center">
                     <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                   </div>
-                ) : persisted.length === 0 && !pending ? (
+                ) : rows.length === 0 && !pending ? (
                   <EmptyChat onSuggestion={handleSuggestion} />
                 ) : (
                   <>

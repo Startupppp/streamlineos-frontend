@@ -57,6 +57,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 const CONDITION_FIELDS = ["status", "priority", "assignee", "label", "type"];
 const CONDITION_OPERATORS = ["equals", "not_equals", "contains", "is_empty", "is_not_empty"] as const;
+const FIELD_CLASS = "h-8 text-sm";
 
 function getTriggerLabel(event: string) {
   return TRIGGER_EVENTS.find(t => t.value === event)?.label ?? event;
@@ -328,30 +329,30 @@ export default function AutomationsPage({ params }: PageProps) {
       </div>
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent className="flex flex-col p-0 w-full sm:max-w-lg overflow-hidden">
-          <SheetHeader className="px-6 pt-5 pb-3 border-b shrink-0">
-            <SheetTitle>{editingAutomation ? "Edit Automation" : "New Automation"}</SheetTitle>
+        <SheetContent className="flex flex-col gap-0 p-0 w-full sm:max-w-lg overflow-hidden">
+          <SheetHeader className="px-4 py-3 border-b shrink-0">
+            <SheetTitle className="text-base">{editingAutomation ? "Edit Automation" : "New Automation"}</SheetTitle>
           </SheetHeader>
 
-          <div className="flex-1 overflow-y-auto px-6 py-4">
+          <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3">
             <Form {...form}>
-              <form id="automation-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5">
+              <form id="automation-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3">
                 <FormField control={form.control} name="name" render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="gap-1">
                     <FormLabel className="text-xs">Automation Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g. Auto-assign bugs to QA" className="h-8 text-sm" {...field} />
+                      <Input placeholder="e.g. Auto-assign bugs to QA" className={FIELD_CLASS} {...field} />
                     </FormControl>
                     <FormMessage className="text-xs" />
                   </FormItem>
                 )} />
 
                 <FormField control={form.control} name="triggerEvent" render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="gap-1">
                     <FormLabel className="text-xs">When this happens (Trigger)</FormLabel>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
-                        <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Select a trigger..." /></SelectTrigger>
+                        <SelectTrigger className={FIELD_CLASS}><SelectValue placeholder="Select a trigger..." /></SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {TRIGGER_EVENTS.map(t => (
@@ -363,28 +364,28 @@ export default function AutomationsPage({ params }: PageProps) {
                   </FormItem>
                 )} />
 
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-medium text-slate-700">Conditions (optional)</label>
-                    <Button type="button" variant="ghost" size="sm" className="h-6 text-xs gap-1 text-foreground hover:text-foreground" onClick={handleAppendCondition}>
+                    <Button type="button" variant="ghost" size="sm" className="h-7 text-xs gap-1 text-foreground hover:text-foreground" onClick={handleAppendCondition}>
                       <Plus className="h-3 w-3" />Add Condition
                     </Button>
                   </div>
                   {conditionFields.map((f, idx) => (
-                    <div key={f.id} className="flex items-center gap-2 p-2.5 rounded-lg border border-border bg-muted/40">
+                    <div key={f.id} className="flex items-center gap-1.5 p-2 rounded-lg border border-border bg-muted/40">
                       <Select value={form.watch(`conditions.${idx}.field`)} onValueChange={v => form.setValue(`conditions.${idx}.field`, v)}>
-                        <SelectTrigger className="h-7 text-xs flex-1"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className={cn(FIELD_CLASS, "flex-1")}><SelectValue /></SelectTrigger>
                         <SelectContent>
                           {CONDITION_FIELDS.map(cf => (
-                            <SelectItem key={cf} value={cf} className="text-xs capitalize">{cf}</SelectItem>
+                            <SelectItem key={cf} value={cf} className="text-sm capitalize">{cf}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                       <Select value={form.watch(`conditions.${idx}.operator`)} onValueChange={v => form.setValue(`conditions.${idx}.operator`, v as AutomationCondition["operator"])}>
-                        <SelectTrigger className="h-7 text-xs w-28"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className={cn(FIELD_CLASS, "w-28")}><SelectValue /></SelectTrigger>
                         <SelectContent>
                           {CONDITION_OPERATORS.map(o => (
-                            <SelectItem key={o} value={o} className="text-xs">{o.replace(/_/g, " ")}</SelectItem>
+                            <SelectItem key={o} value={o} className="text-sm">{o.replace(/_/g, " ")}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -393,7 +394,7 @@ export default function AutomationsPage({ params }: PageProps) {
                           value={form.watch(`conditions.${idx}.value`) ?? ""}
                           onChange={e => form.setValue(`conditions.${idx}.value`, e.target.value)}
                           placeholder="value"
-                          className="h-7 text-xs w-24"
+                          className={cn(FIELD_CLASS, "w-24")}
                         />
                       )}
                       <RemoveButton onClick={makeRemoveConditionHandler(idx)} />
@@ -401,22 +402,22 @@ export default function AutomationsPage({ params }: PageProps) {
                   ))}
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-medium text-slate-700">
                       Actions <span className="text-red-500">*</span>
                     </label>
-                    <Button type="button" variant="ghost" size="sm" className="h-6 text-xs gap-1 text-foreground hover:text-foreground" onClick={handleAppendAction}>
+                    <Button type="button" variant="ghost" size="sm" className="h-7 text-xs gap-1 text-foreground hover:text-foreground" onClick={handleAppendAction}>
                       <Plus className="h-3 w-3" />Add Action
                     </Button>
                   </div>
                   {actionFields.map((f, idx) => (
-                    <div key={f.id} className="flex items-center gap-2 p-2.5 rounded-lg border border-border bg-muted/40">
+                    <div key={f.id} className="flex items-center gap-1.5 p-2 rounded-lg border border-border bg-muted/40">
                       <Select value={form.watch(`actions.${idx}.type`)} onValueChange={v => form.setValue(`actions.${idx}.type`, v as AutomationAction["type"])}>
-                        <SelectTrigger className="h-7 text-xs flex-1"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className={cn(FIELD_CLASS, "flex-1")}><SelectValue /></SelectTrigger>
                         <SelectContent>
                           {ACTION_TYPES.map(a => (
-                            <SelectItem key={a.value} value={a.value} className="text-xs">{a.label}</SelectItem>
+                            <SelectItem key={a.value} value={a.value} className="text-sm">{a.label}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -424,7 +425,7 @@ export default function AutomationsPage({ params }: PageProps) {
                         value={form.watch(`actions.${idx}.value`)}
                         onChange={e => form.setValue(`actions.${idx}.value`, e.target.value)}
                         placeholder="value"
-                        className="h-7 text-xs flex-1"
+                        className={cn(FIELD_CLASS, "flex-1")}
                       />
                       <RemoveButton onClick={makeRemoveActionHandler(idx)} />
                     </div>
@@ -437,18 +438,25 @@ export default function AutomationsPage({ params }: PageProps) {
             </Form>
           </div>
 
-          <SheetFooter className="px-6 py-4 border-t shrink-0 flex-row gap-2">
+          <SheetFooter className="px-4 py-3 border-t shrink-0 flex-row gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleCloseSheet}
+              className={cn(FIELD_CLASS, "flex-1")}
+            >
+              Cancel
+            </Button>
             <Button
               form="automation-form"
               type="submit"
               disabled={createAutomation.isPending || updateAutomation.isPending}
-              className="h-8 text-xs flex-1"
+              className={cn(FIELD_CLASS, "flex-1")}
             >
               {(createAutomation.isPending || updateAutomation.isPending)
                 ? "Saving..."
                 : editingAutomation ? "Save Changes" : "Create Automation"}
             </Button>
-            <Button type="button" variant="ghost" onClick={handleCloseSheet} className="h-8 text-xs">Cancel</Button>
           </SheetFooter>
         </SheetContent>
       </Sheet>

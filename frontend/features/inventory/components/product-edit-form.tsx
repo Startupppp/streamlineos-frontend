@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -22,8 +23,12 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useUpdateProduct, useCategories, useUom } from "@/hooks/api/inventory";
+import { useUpdateProduct } from "@/hooks/api/inventory";
 import { getErrorMessage } from "@/lib/get-error-message";
+import {
+  CategorySelect,
+  UomSelect,
+} from "@/features/inventory/components/product-field-selects";
 
 interface ProductForEdit {
   name: string;
@@ -31,41 +36,68 @@ interface ProductForEdit {
   description?: string | null;
   categoryId?: number | null;
   uomId?: number | null;
+  purchaseUomId?: number | null;
+  salesUomId?: number | null;
   costPrice?: string | number | null;
   sellingPrice?: string | number | null;
   reorderPoint?: number | string | null;
+  standardCost?: string | null;
   status?: "ACTIVE" | "INACTIVE" | "DISCONTINUED";
   isActive?: boolean;
+  productType?: "STOCKABLE" | "CONSUMABLE" | "SERVICE" | null;
+  trackingMethod?: "NONE" | "LOT" | "SERIAL" | null;
+  costingMethod?: "STANDARD" | "WEIGHTED_AVERAGE" | "FIFO" | null;
+  reorderEnabled?: boolean;
 }
 
+const SKU_PATTERN = /^[A-Z0-9][A-Z0-9_-]*$/;
+const DECIMAL_PATTERN = /^\d+(\.\d{1,4})?$/;
+
 const editSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  sku: z.string().min(1, "SKU is required"),
-  description: z.string().optional(),
+  name: z.string().min(1, "Name is required").max(255, "Name must be 255 characters or fewer"),
+  sku: z
+    .string()
+    .min(1, "SKU is required")
+    .max(100, "SKU must be 100 characters or fewer")
+    .regex(SKU_PATTERN, "SKU must be uppercase letters, digits, hyphens, or underscores"),
+  description: z.string().max(2000, "Description must be 2000 characters or fewer").optional(),
   categoryId: z.string().optional(),
   uomId: z.string().optional(),
+  purchaseUomId: z.string().optional(),
+  salesUomId: z.string().optional(),
   costPrice: z
     .string()
     .optional()
     .refine(
       (v) => !v || (Number.isFinite(Number(v)) && Number(v) >= 0),
-      "Must be a non-negative number"
+      "Must be a non-negative number",
     ),
   sellingPrice: z
     .string()
     .optional()
     .refine(
       (v) => !v || (Number.isFinite(Number(v)) && Number(v) >= 0),
-      "Must be a non-negative number"
+      "Must be a non-negative number",
     ),
   reorderPoint: z
     .string()
     .optional()
     .refine(
       (v) => !v || (Number.isFinite(Number(v)) && Number(v) >= 0),
-      "Must be a non-negative number"
+      "Must be a non-negative number",
+    ),
+  standardCost: z
+    .string()
+    .optional()
+    .refine(
+      (v) => !v || DECIMAL_PATTERN.test(v),
+      "Enter a number with up to 4 decimal places",
     ),
   isActive: z.string(),
+  productType: z.enum(["STOCKABLE", "CONSUMABLE", "SERVICE"]).optional(),
+  trackingMethod: z.enum(["NONE", "LOT", "SERIAL"]).optional(),
+  costingMethod: z.enum(["STANDARD", "WEIGHTED_AVERAGE", "FIFO"]).optional(),
+  reorderEnabled: z.boolean().optional(),
 });
 
 type EditFormValues = z.infer<typeof editSchema>;
@@ -78,11 +110,6 @@ interface ProductEditFormProps {
 
 export function ProductEditForm({ product, productId, onDone }: ProductEditFormProps) {
   const updateMutation = useUpdateProduct();
-  const categoriesQuery = useCategories();
-  const uomQuery = useUom();
-
-  const categories = categoriesQuery.data ?? [];
-  const uomOptions = uomQuery.data ?? [];
 
   const form = useForm<EditFormValues>({
     resolver: zodResolver(editSchema),
@@ -90,14 +117,25 @@ export function ProductEditForm({ product, productId, onDone }: ProductEditFormP
       name: product.name,
       sku: product.sku,
       description: product.description ?? "",
-      categoryId: product.categoryId ? String(product.categoryId) : "",
-      uomId: product.uomId ? String(product.uomId) : "",
+      categoryId: product.categoryId != null ? String(product.categoryId) : "",
+      uomId: product.uomId != null ? String(product.uomId) : "",
+      purchaseUomId: product.purchaseUomId != null ? String(product.purchaseUomId) : "",
+      salesUomId: product.salesUomId != null ? String(product.salesUomId) : "",
       costPrice: product.costPrice != null ? String(product.costPrice) : "",
       sellingPrice: product.sellingPrice != null ? String(product.sellingPrice) : "",
       reorderPoint: product.reorderPoint != null ? String(product.reorderPoint) : "",
+      standardCost: product.standardCost ?? "",
       isActive: (product.isActive ?? product.status === "ACTIVE") ? "true" : "false",
+      productType: product.productType ?? "STOCKABLE",
+      trackingMethod: product.trackingMethod ?? "NONE",
+      costingMethod: product.costingMethod ?? "WEIGHTED_AVERAGE",
+      reorderEnabled: product.reorderEnabled ?? false,
     },
   });
+
+  const costingMethod = form.watch("costingMethod");
+  const reorderEnabled = form.watch("reorderEnabled");
+  const baseUomValue = form.watch("uomId");
 
   async function onSubmit(values: EditFormValues): Promise<void> {
     try {
@@ -108,10 +146,17 @@ export function ProductEditForm({ product, productId, onDone }: ProductEditFormP
         description: values.description || undefined,
         categoryId: values.categoryId ? Number(values.categoryId) : undefined,
         uomId: values.uomId ? Number(values.uomId) : undefined,
+        purchaseUomId: values.purchaseUomId ? Number(values.purchaseUomId) : undefined,
+        salesUomId: values.salesUomId ? Number(values.salesUomId) : undefined,
         costPrice: values.costPrice ? Number(values.costPrice) : undefined,
         sellingPrice: values.sellingPrice ? Number(values.sellingPrice) : undefined,
         reorderPoint: values.reorderPoint ? Number(values.reorderPoint) : undefined,
+        standardCost: values.standardCost || undefined,
         status: values.isActive !== "false" ? "ACTIVE" : "INACTIVE",
+        productType: values.productType,
+        trackingMethod: values.trackingMethod,
+        costingMethod: values.costingMethod,
+        reorderEnabled: values.reorderEnabled,
       });
       toast.success("Product updated");
       onDone();
@@ -122,160 +167,342 @@ export function ProductEditForm({ product, productId, onDone }: ProductEditFormP
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Name</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="sku"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>SKU</FormLabel>
-                <FormControl>
-                  <Input className="font-mono" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="categoryId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Category</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat.id} value={String(cat.id)}>
-                        {cat.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="uomId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Unit of Measure</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select UOM" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {uomOptions.map((uom) => (
-                      <SelectItem key={uom.id} value={String(uom.id)}>
-                        {uom.name} ({uom.abbreviation})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <div className="sm:col-span-2">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <div>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+            Basic Information
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <FormField
               control={form.control}
-              name="description"
+              name="name"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
+                <FormItem className="min-w-0">
+                  <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Textarea rows={3} {...field} />
+                    <Input maxLength={255} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="sku"
+              render={({ field }) => (
+                <FormItem className="min-w-0">
+                  <FormLabel>SKU</FormLabel>
+                  <FormControl>
+                    <Input
+                      className="font-mono"
+                      maxLength={100}
+                      {...field}
+                      onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="categoryId"
+              render={({ field }) => (
+                <FormItem className="min-w-0">
+                  <FormLabel>Category</FormLabel>
+                  <CategorySelect value={field.value ?? ""} onChange={field.onChange} />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="isActive"
+              render={({ field }) => (
+                <FormItem className="min-w-0">
+                  <FormLabel>Status</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="true">Active</SelectItem>
+                      <SelectItem value="false">Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <div className="sm:col-span-2">
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea rows={3} maxLength={2000} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+            Classification
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="productType"
+              render={({ field }) => (
+                <FormItem className="min-w-0">
+                  <FormLabel>Product Type</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="STOCKABLE">Stockable</SelectItem>
+                      <SelectItem value="CONSUMABLE">Consumable</SelectItem>
+                      <SelectItem value="SERVICE">Service</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="trackingMethod"
+              render={({ field }) => (
+                <FormItem className="min-w-0">
+                  <FormLabel>Tracking Method</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="NONE">None</SelectItem>
+                      <SelectItem value="LOT">Lot / Batch</SelectItem>
+                      <SelectItem value="SERIAL">Serial</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    Cannot change once stock exists
+                  </p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+
+        <div>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+            Costing & Pricing
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="costingMethod"
+              render={({ field }) => (
+                <FormItem className="min-w-0">
+                  <FormLabel>Costing Method</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="STANDARD">Standard</SelectItem>
+                      <SelectItem value="WEIGHTED_AVERAGE">Weighted Average</SelectItem>
+                      <SelectItem value="FIFO">FIFO</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    Cannot change once stock exists
+                  </p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {costingMethod === "STANDARD" && (
+              <FormField
+                control={form.control}
+                name="standardCost"
+                render={({ field }) => (
+                  <FormItem className="min-w-0">
+                    <FormLabel>Standard Cost</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.0001"
+                        min="0"
+                        className="tabular-nums"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+            <FormField
+              control={form.control}
+              name="costPrice"
+              render={({ field }) => (
+                <FormItem className="min-w-0">
+                  <FormLabel>Cost Price</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      className="tabular-nums"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="sellingPrice"
+              render={({ field }) => (
+                <FormItem className="min-w-0">
+                  <FormLabel>Selling Price</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      className="tabular-nums"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
           </div>
-          <FormField
-            control={form.control}
-            name="costPrice"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Cost Price</FormLabel>
-                <FormControl>
-                  <Input type="number" step="0.01" min="0" className="tabular-nums" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="sellingPrice"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Selling Price</FormLabel>
-                <FormControl>
-                  <Input type="number" step="0.01" min="0" className="tabular-nums" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="reorderPoint"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Reorder Point</FormLabel>
-                <FormControl>
-                  <Input type="number" step="1" min="0" className="tabular-nums" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="isActive"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Status</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="true">Active</SelectItem>
-                    <SelectItem value="false">Inactive</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
         </div>
 
-        <div className="flex justify-end gap-2">
+        <div>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+            Units of Measure
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <FormField
+              control={form.control}
+              name="uomId"
+              render={({ field }) => (
+                <FormItem className="min-w-0">
+                  <FormLabel>Base UOM</FormLabel>
+                  <UomSelect
+                    value={field.value ?? ""}
+                    onChange={(val) => {
+                      field.onChange(val);
+                      if (!val) {
+                        form.setValue("purchaseUomId", "");
+                        form.setValue("salesUomId", "");
+                      }
+                    }}
+                    placeholder="Select base UOM"
+                  />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="purchaseUomId"
+              render={({ field }) => (
+                <FormItem className="min-w-0">
+                  <FormLabel>Purchase UOM</FormLabel>
+                  <UomSelect
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    placeholder="Same as base"
+                    disabled={!baseUomValue}
+                  />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="salesUomId"
+              render={({ field }) => (
+                <FormItem className="min-w-0">
+                  <FormLabel>Sales UOM</FormLabel>
+                  <UomSelect
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    placeholder="Same as base"
+                    disabled={!baseUomValue}
+                  />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+
+        <div>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+            Reorder
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="reorderEnabled"
+              render={({ field }) => (
+                <FormItem className="flex items-center justify-between rounded-md border p-3">
+                  <FormLabel className="cursor-pointer">Enable Auto-Reorder</FormLabel>
+                  <FormControl>
+                    <Switch checked={field.value ?? false} onCheckedChange={field.onChange} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="reorderPoint"
+              render={({ field }) => (
+                <FormItem className="min-w-0">
+                  <FormLabel>Reorder Point</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="1"
+                      min="0"
+                      className="tabular-nums"
+                      disabled={!reorderEnabled}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2 pt-2 border-t">
           <Button
             type="button"
             variant="outline"

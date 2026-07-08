@@ -1302,6 +1302,24 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    label: "Feedbucket",
+    requiredPermission: "feedbucket:submissions:view",
+    routes: [
+      {
+        label: "Inbox",
+        icon: Inbox,
+        href: "/feedbucket",
+        requiredPermission: "feedbucket:submissions:view",
+      },
+      {
+        label: "Widgets",
+        icon: MessageSquareText,
+        href: "/feedbucket/widgets",
+        requiredPermission: "feedbucket:widgets:view",
+      },
+    ],
+  },
+  {
     label: "Organization",
     module: "hrms",
     requiredPermission: ["settings:manage", "settings:view"],
@@ -1625,7 +1643,8 @@ export type ProductKey =
   | "documents"
   | "surveys"
   | "administration"
-  | "payroll";
+  | "payroll"
+  | "feedbucket";
 
 export interface ProductDefinition {
   key: ProductKey;
@@ -1661,6 +1680,12 @@ export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
     label: "Payroll",
     href: "/payroll",
     icon: IndianRupee,
+  },
+  {
+    key: "feedbucket",
+    label: "Feedbucket",
+    href: "/feedbucket",
+    icon: MessageSquareText,
   },
 ];
 
@@ -1744,6 +1769,12 @@ export const MODULE_ACCENTS: Record<ProductKey, ModuleAccent> = {
     indicator: "bg-teal-600 dark:bg-teal-500",
     border: "border-teal-600 dark:border-teal-500",
   },
+  feedbucket: {
+    text: "!text-orange-600 dark:!text-orange-400",
+    bg: "bg-orange-50 dark:bg-orange-950/40",
+    indicator: "bg-orange-600 dark:bg-orange-500",
+    border: "border-orange-600 dark:border-orange-500",
+  },
 };
 
 const PRODUCT_NAV_GROUP_LABELS: Record<ProductKey, string[]> = {
@@ -1767,6 +1798,7 @@ const PRODUCT_NAV_GROUP_LABELS: Record<ProductKey, string[]> = {
     "Developer",
   ],
   payroll: ["Payroll"],
+  feedbucket: ["Feedbucket"],
 };
 
 export function getNavGroupsForProduct(
@@ -1867,6 +1899,7 @@ export function getProductFromPathname(pathname: string): ProductKey {
   if (pathname.startsWith("/knowledge")) return "documents";
   if (pathname.startsWith("/surveys")) return "surveys";
   if (pathname.startsWith("/payroll")) return "payroll";
+  if (pathname.startsWith("/feedbucket")) return "feedbucket";
   if (
     pathname.startsWith("/organization") ||
     pathname.startsWith("/users") ||

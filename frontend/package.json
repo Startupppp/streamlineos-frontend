@@ -20,7 +20,8 @@
     "load-test:hr": "bash scripts/load-tests/run.sh scripts/load-tests/hr-modules.js",
     "load-test:recruitment": "bash scripts/load-tests/run.sh scripts/load-tests/recruitment-hub.js",
     "load-test:chat": "bash scripts/load-tests/run.sh scripts/load-tests/chat.js",
-    "load-test:all": "bash scripts/load-tests/run.sh scripts/load-tests/all.js"
+    "load-test:all": "bash scripts/load-tests/run.sh scripts/load-tests/all.js",
+    "build:widget": "node feedbucket-widget/build.mjs"
   },
   "dependencies": {
     "@animateicons/react": "^0.3.4",
@@ -163,6 +164,8 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "esbuild": "^0.25.0",
+    "modern-screenshot": "^4.4.39",
     "@tailwindcss/typography": "^0.5.20",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",

@@ -35,7 +35,7 @@ import {
 } from "@/hooks/api/kb";
 import { useCan } from "@/hooks/api/access";
 import type { KbPageTreeNode } from "@/hooks/api/kb/pages";
-import { pageHref } from "@/features/knowledge-base/lib/knowledge-routes";
+import { KNOWLEDGE_BASE, pageHref } from "@/features/knowledge-base/lib/knowledge-routes";
 import {
   KbChevronRightIcon,
   KbChevronDownIcon,
@@ -145,7 +145,10 @@ const PageTreeItem = memo(function PageTreeItemInner({
 
   function handleConfirmDelete() {
     deletePage.mutate(node.id, {
-      onSuccess: () => toast.success("Page moved to trash"),
+      onSuccess: () => {
+        toast.success("Page moved to trash");
+        if (isActive) router.push(KNOWLEDGE_BASE);
+      },
       onError: () => toast.error("Failed to delete page"),
     });
   }

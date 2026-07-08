@@ -1,17 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { toast } from "sonner";
-import { X, UserPlus, Check } from "lucide-react";
+import { Check, Users } from "lucide-react";
 import { useAddAttendee, useRemoveAttendee } from "@/hooks/api/projects";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { EmptyState } from "@/components/ui/empty-state";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Combobox } from "@/components/ui/combobox";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { resolveImageUrl } from "@/lib/utils";
+import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
 import type { MeetingAttendee, ProjectMember } from "@/types/projects";
 
-const NONE_SENTINEL = "__none__";
+const FIELD_CLASS = "h-8 w-full text-xs bg-card border-border shadow-xs";
 
 interface AttendeesSectionProps {
   projectId: number;
@@ -21,108 +22,140 @@ interface AttendeesSectionProps {
   canManage: boolean;
 }
 
+function findMember(members: ProjectMember[], userId: string): ProjectMember | undefined {
+  return members.find((m) => m.userId === userId);
+}
+
 export function AttendeesSection({
   projectId, meetingId, attendees, projectMembers, canManage,
 }: AttendeesSectionProps) {
-  const [selectedUserId, setSelectedUserId] = useState(NONE_SENTINEL);
+  const [selectedUserId, setSelectedUserId] = useState("");
 
   const addAttendee = useAddAttendee(projectId, meetingId);
   const removeAttendee = useRemoveAttendee(projectId, meetingId);
 
-  const attendeeIds = new Set(attendees.map((a) => a.userId));
-  const available = projectMembers.filter((m) => !attendeeIds.has(m.userId));
+  const attendeeIds = useMemo(() => new Set(attendees.map((a) => a.userId)), [attendees]);
 
-  function memberName(userId: string): string {
-    const m = projectMembers.find((p) => p.userId === userId);
-    return m?.user?.name ?? m?.user?.email ?? userId;
-  }
+  const availableMembers = useMemo(
+    () => projectMembers.filter((m) => !attendeeIds.has(m.userId)),
+    [projectMembers, attendeeIds],
+  );
 
-  function handleAddAttendee() {
-    if (selectedUserId === NONE_SENTINEL) return;
-    addAttendee.mutate(
-      { userId: selectedUserId },
-      {
-        onSuccess: () => {
-          toast.success("Attendee added");
-          setSelectedUserId(NONE_SENTINEL);
+  const comboboxOptions = useMemo(
+    () =>
+      availableMembers.map((m) => ({
+        value: m.userId,
+        label: getUserDisplayName(m.user),
+        sublabel: m.user?.email ?? undefined,
+      })),
+    [availableMembers],
+  );
+
+  const handleSelectMember = useCallback(
+    (userId: string) => {
+      if (!userId) {
+        setSelectedUserId("");
+        return;
+      }
+      setSelectedUserId(userId);
+      addAttendee.mutate(
+        { userId },
+        {
+          onSuccess: () => {
+            toast.success("Attendee added");
+            setSelectedUserId("");
+          },
+          onError: (e) => {
+            toast.error(getErrorMessage(e));
+            setSelectedUserId("");
+          },
         },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      },
-    );
-  }
+      );
+    },
+    [addAttendee],
+  );
 
-  function handleRemoveAttendee(userId: string) {
-    removeAttendee.mutate(userId, {
-      onSuccess: () => toast.success("Attendee removed"),
-      onError: (e) => toast.error(getErrorMessage(e)),
-    });
-  }
+  const handleRemoveAttendee = useCallback(
+    (userId: string) => {
+      removeAttendee.mutate(userId, {
+        onSuccess: () => toast.success("Attendee removed"),
+        onError: (e) => toast.error(getErrorMessage(e)),
+      });
+    },
+    [removeAttendee],
+  );
 
   return (
-    <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-foreground">Attendees</h3>
+    <div className="space-y-2.5">
+      <div className="flex items-center gap-2">
+        <Users className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+        <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+          Attendees
+        </span>
+        {attendees.length > 0 && (
+          <Badge variant="secondary" className="text-[10px] h-4 px-1.5">
+            {attendees.length}
+          </Badge>
+        )}
+      </div>
 
-      {attendees.length === 0 ? (
-        <EmptyState
-          compact
-          title="No attendees"
-          description="Add project members as attendees."
-        />
-      ) : (
-        <div className="flex flex-wrap gap-2">
-          {attendees.map((attendee) => (
-            <div
-              key={attendee.userId}
-              className="flex items-center gap-1.5 rounded-full border bg-card px-2.5 py-1 text-sm"
-            >
-              {attendee.attended && <Check className="h-3 w-3 text-emerald-600 shrink-0" />}
-              <span className="text-foreground">{memberName(attendee.userId)}</span>
-              {attendee.attended && (
-                <Badge variant="outline" className="text-[9px] px-1 py-0 text-emerald-600 border-emerald-200 ml-0.5">
-                  Attended
-                </Badge>
-              )}
-              {canManage && (
-                <button
-                  onClick={() => handleRemoveAttendee(attendee.userId)}
-                  className="ml-0.5 rounded-full text-muted-foreground hover:text-destructive transition-colors"
-                  aria-label={`Remove ${memberName(attendee.userId)}`}
-                  disabled={removeAttendee.isPending}
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              )}
-            </div>
-          ))}
+      {attendees.length > 0 ? (
+        <div className="flex flex-wrap gap-1.5">
+          {attendees.map((attendee) => {
+            const member = findMember(projectMembers, attendee.userId);
+            const displayName = getUserDisplayName(member?.user);
+            return (
+              <Badge
+                key={attendee.userId}
+                variant="user"
+                className="gap-1.5 pl-0.5 pr-1.5 py-0.5"
+              >
+                <Avatar className="h-5 w-5 shrink-0">
+                  <AvatarImage src={resolveImageUrl(member?.user?.image)} />
+                  <AvatarFallback className="text-[7px]">
+                    {getUserInitials(member?.user)}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="truncate max-w-[140px] text-[11px]">{displayName}</span>
+                {attendee.attended && (
+                  <Check className="h-3 w-3 text-emerald-600 shrink-0" aria-hidden />
+                )}
+                {canManage && (
+                  <button
+                    type="button"
+                    className="text-accent/70 hover:text-destructive transition-colors leading-none"
+                    onClick={() => handleRemoveAttendee(attendee.userId)}
+                    aria-label={`Remove ${displayName}`}
+                    disabled={removeAttendee.isPending}
+                  >
+                    <span className="text-xs font-bold">&times;</span>
+                  </button>
+                )}
+              </Badge>
+            );
+          })}
         </div>
+      ) : (
+        <p className="text-xs text-muted-foreground">
+          No attendees yet. Add project members below.
+        </p>
       )}
 
-      {canManage && available.length > 0 && (
-        <div className="flex items-center gap-2 pt-1">
-          <Select value={selectedUserId} onValueChange={setSelectedUserId}>
-            <SelectTrigger className="h-8 text-xs w-52">
-              <SelectValue placeholder="Add attendee…" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={NONE_SENTINEL}>Select member…</SelectItem>
-              {available.map((m) => (
-                <SelectItem key={m.userId} value={m.userId}>
-                  {m.user?.name ?? m.user?.email ?? m.userId}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-8 text-xs gap-1.5"
-            onClick={handleAddAttendee}
-            disabled={selectedUserId === NONE_SENTINEL || addAttendee.isPending}
-          >
-            <UserPlus className="h-3.5 w-3.5" />
-            Add
-          </Button>
-        </div>
+      {canManage && availableMembers.length > 0 && (
+        <Combobox
+          options={comboboxOptions}
+          value={selectedUserId}
+          onChange={handleSelectMember}
+          placeholder="+ Add attendee…"
+          searchPlaceholder="Search project members…"
+          emptyText="No members available."
+          disabled={addAttendee.isPending}
+          className={FIELD_CLASS}
+        />
+      )}
+
+      {canManage && availableMembers.length === 0 && attendees.length > 0 && (
+        <p className="text-[11px] text-muted-foreground">All project members are attending.</p>
       )}
     </div>
   );

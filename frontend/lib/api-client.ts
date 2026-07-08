@@ -159,6 +159,7 @@ const MIGRATED_PREFIXES = [
   "/users",
   "/payroll",
   "/timesheets",
+  "/feedbucket",
 ] as const;
 
 const PUBLIC_AUTH_PATHS = new Set([

@@ -322,4 +322,14 @@ export type PermissionKey =
   | "projects:programs:view"
   | "projects:programs:manage"
   | "projects:workflow:view"
-  | "projects:workflow:manage";
+  | "projects:workflow:manage"
+  | "feedbucket:widgets:view"
+  | "feedbucket:widgets:create"
+  | "feedbucket:widgets:update"
+  | "feedbucket:widgets:delete"
+  | "feedbucket:widgets:manage"
+  | "feedbucket:submissions:view"
+  | "feedbucket:submissions:update"
+  | "feedbucket:submissions:delete"
+  | "feedbucket:submissions:manage"
+  | "feedbucket:submissions:assign";

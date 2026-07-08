@@ -28,62 +28,68 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { LoadingState, ErrorState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useCategories, useUom, useCreateProduct } from "@/hooks/api/inventory";
+import { useCreateProduct } from "@/hooks/api/inventory";
+import {
+  CategorySelect,
+  UomSelect,
+} from "@/features/inventory/components/product-field-selects";
 
-interface Category {
-  id: number;
-  name: string;
-}
-
-interface UomOption {
-  id: number;
-  name: string;
-  abbreviation: string;
-}
+const SKU_PATTERN = /^[A-Z0-9][A-Z0-9_-]*$/;
+const DECIMAL_PATTERN = /^\d+(\.\d{1,4})?$/;
 
 const productSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  sku: z.string().min(1, "SKU is required"),
-  description: z.string().optional(),
+  name: z.string().min(1, "Name is required").max(255, "Name must be 255 characters or fewer"),
+  sku: z
+    .string()
+    .min(1, "SKU is required")
+    .max(100, "SKU must be 100 characters or fewer")
+    .regex(SKU_PATTERN, "SKU must be uppercase letters, digits, hyphens, or underscores"),
+  description: z.string().max(2000, "Description must be 2000 characters or fewer").optional(),
   categoryId: z.string().optional(),
   isActive: z.string().optional(),
   productType: z.enum(["STOCKABLE", "CONSUMABLE", "SERVICE"]),
   trackingMethod: z.enum(["NONE", "LOT", "SERIAL"]),
   costingMethod: z.enum(["STANDARD", "WEIGHTED_AVERAGE", "FIFO"]),
-  standardCost: z.string().optional().refine(
-    (v) => !v || (Number.isFinite(Number(v)) && Number(v) >= 0),
-    "Must be a non-negative number",
-  ),
-  costPrice: z.string().optional().refine(
-    (v) => !v || (Number.isFinite(Number(v)) && Number(v) >= 0),
-    "Must be a non-negative number",
-  ),
-  sellingPrice: z.string().optional().refine(
-    (v) => !v || (Number.isFinite(Number(v)) && Number(v) >= 0),
-    "Must be a non-negative number",
-  ),
+  standardCost: z
+    .string()
+    .optional()
+    .refine(
+      (v) => !v || DECIMAL_PATTERN.test(v),
+      "Enter a number with up to 4 decimal places",
+    ),
+  costPrice: z
+    .string()
+    .optional()
+    .refine(
+      (v) => !v || (Number.isFinite(Number(v)) && Number(v) >= 0),
+      "Must be a non-negative number",
+    ),
+  sellingPrice: z
+    .string()
+    .optional()
+    .refine(
+      (v) => !v || (Number.isFinite(Number(v)) && Number(v) >= 0),
+      "Must be a non-negative number",
+    ),
   uomId: z.string().optional(),
   purchaseUomId: z.string().optional(),
   salesUomId: z.string().optional(),
   reorderEnabled: z.boolean(),
-  reorderPoint: z.string().optional().refine(
-    (v) => !v || (Number.isFinite(Number(v)) && Number(v) >= 0),
-    "Must be a non-negative number",
-  ),
+  reorderPoint: z
+    .string()
+    .optional()
+    .refine(
+      (v) => !v || (Number.isFinite(Number(v)) && Number(v) >= 0),
+      "Must be a non-negative number",
+    ),
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
 
 export default function NewProductPage() {
   const router = useRouter();
-  const categoriesQuery = useCategories();
-  const uomQuery = useUom();
   const createMutation = useCreateProduct();
-
-  const categories: Category[] = categoriesQuery.data ?? [];
-  const uomOptions: UomOption[] = uomQuery.data ?? [];
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
@@ -108,6 +114,8 @@ export default function NewProductPage() {
   });
 
   const costingMethod = form.watch("costingMethod");
+  const reorderEnabled = form.watch("reorderEnabled");
+  const baseUomValue = form.watch("uomId");
 
   async function onSubmit(values: ProductFormValues): Promise<void> {
     try {
@@ -140,16 +148,6 @@ export default function NewProductPage() {
     router.push("/inventory/products");
   }
 
-  if (categoriesQuery.isLoading || uomQuery.isLoading) {
-    return <LoadingState variant="form" rows={6} />;
-  }
-
-  if (categoriesQuery.error || uomQuery.error) {
-    const errorMessage =
-      categoriesQuery.error?.message ?? uomQuery.error?.message ?? "Could not load required data.";
-    return <ErrorState title="Failed to load form data" description={errorMessage} />;
-  }
-
   return (
     <PageWrapper
       eyebrow="Inventory · Products"
@@ -165,7 +163,7 @@ export default function NewProductPage() {
       }
     >
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pb-24">
           <Card className="p-4">
             <h2 className="text-sm font-semibold text-foreground mb-4">Basic Information</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -173,10 +171,10 @@ export default function NewProductPage() {
                 control={form.control}
                 name="name"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="min-w-0">
                     <FormLabel>Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Product name" {...field} />
+                      <Input placeholder="Product name" maxLength={255} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -186,10 +184,16 @@ export default function NewProductPage() {
                 control={form.control}
                 name="sku"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="min-w-0">
                     <FormLabel>SKU</FormLabel>
                     <FormControl>
-                      <Input placeholder="Unique stock-keeping unit" className="font-mono" {...field} />
+                      <Input
+                        placeholder="PROD-001"
+                        className="font-mono"
+                        maxLength={100}
+                        {...field}
+                        onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -199,18 +203,9 @@ export default function NewProductPage() {
                 control={form.control}
                 name="categoryId"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="min-w-0">
                     <FormLabel>Category</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {categories.map((cat) => (
-                          <SelectItem key={cat.id} value={String(cat.id)}>{cat.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <CategorySelect value={field.value ?? ""} onChange={field.onChange} />
                     <FormMessage />
                   </FormItem>
                 )}
@@ -219,11 +214,13 @@ export default function NewProductPage() {
                 control={form.control}
                 name="isActive"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="min-w-0">
                     <FormLabel>Status</FormLabel>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="true">Active</SelectItem>
@@ -242,7 +239,12 @@ export default function NewProductPage() {
                     <FormItem>
                       <FormLabel>Description</FormLabel>
                       <FormControl>
-                        <Textarea placeholder="Optional product description" rows={3} {...field} />
+                        <Textarea
+                          placeholder="Optional product description"
+                          rows={3}
+                          maxLength={2000}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -259,11 +261,13 @@ export default function NewProductPage() {
                 control={form.control}
                 name="productType"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="min-w-0">
                     <FormLabel>Product Type</FormLabel>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="STOCKABLE">Stockable</SelectItem>
@@ -279,11 +283,13 @@ export default function NewProductPage() {
                 control={form.control}
                 name="trackingMethod"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="min-w-0">
                     <FormLabel>Tracking Method</FormLabel>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="NONE">None</SelectItem>
@@ -291,7 +297,9 @@ export default function NewProductPage() {
                         <SelectItem value="SERIAL">Serial</SelectItem>
                       </SelectContent>
                     </Select>
-                    <p className="text-[10px] text-muted-foreground mt-1">Cannot change once stock exists</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      Cannot change once stock exists
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -306,11 +314,13 @@ export default function NewProductPage() {
                 control={form.control}
                 name="costingMethod"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="min-w-0">
                     <FormLabel>Costing Method</FormLabel>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="STANDARD">Standard</SelectItem>
@@ -318,7 +328,9 @@ export default function NewProductPage() {
                         <SelectItem value="FIFO">FIFO</SelectItem>
                       </SelectContent>
                     </Select>
-                    <p className="text-[10px] text-muted-foreground mt-1">Cannot change once stock exists</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      Cannot change once stock exists
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -328,10 +340,17 @@ export default function NewProductPage() {
                   control={form.control}
                   name="standardCost"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="min-w-0">
                       <FormLabel>Standard Cost</FormLabel>
                       <FormControl>
-                        <Input type="number" step="0.01" min="0" placeholder="0.00" className="tabular-nums" {...field} />
+                        <Input
+                          type="number"
+                          step="0.0001"
+                          min="0"
+                          placeholder="0.00"
+                          className="tabular-nums"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -348,10 +367,17 @@ export default function NewProductPage() {
                 control={form.control}
                 name="costPrice"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="min-w-0">
                     <FormLabel>Cost Price</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.01" min="0" placeholder="0.00" className="tabular-nums" {...field} />
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="0.00"
+                        className="tabular-nums"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -361,10 +387,17 @@ export default function NewProductPage() {
                 control={form.control}
                 name="sellingPrice"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="min-w-0">
                     <FormLabel>Selling Price</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.01" min="0" placeholder="0.00" className="tabular-nums" {...field} />
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="0.00"
+                        className="tabular-nums"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -380,20 +413,19 @@ export default function NewProductPage() {
                 control={form.control}
                 name="uomId"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="min-w-0">
                     <FormLabel>Base UOM</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger><SelectValue placeholder="Select UOM" /></SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {uomOptions.map((uom) => (
-                          <SelectItem key={uom.id} value={String(uom.id)}>
-                            {uom.name} ({uom.abbreviation})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <UomSelect
+                      value={field.value ?? ""}
+                      onChange={(val) => {
+                        field.onChange(val);
+                        if (!val) {
+                          form.setValue("purchaseUomId", "");
+                          form.setValue("salesUomId", "");
+                        }
+                      }}
+                      placeholder="Select base UOM"
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
@@ -402,20 +434,14 @@ export default function NewProductPage() {
                 control={form.control}
                 name="purchaseUomId"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="min-w-0">
                     <FormLabel>Purchase UOM</FormLabel>
-                    <Select value={field.value ?? ""} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger><SelectValue placeholder="Same as base" /></SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {uomOptions.map((uom) => (
-                          <SelectItem key={uom.id} value={String(uom.id)}>
-                            {uom.name} ({uom.abbreviation})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <UomSelect
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                      placeholder="Same as base"
+                      disabled={!baseUomValue}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
@@ -424,20 +450,14 @@ export default function NewProductPage() {
                 control={form.control}
                 name="salesUomId"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="min-w-0">
                     <FormLabel>Sales UOM</FormLabel>
-                    <Select value={field.value ?? ""} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger><SelectValue placeholder="Same as base" /></SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {uomOptions.map((uom) => (
-                          <SelectItem key={uom.id} value={String(uom.id)}>
-                            {uom.name} ({uom.abbreviation})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <UomSelect
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                      placeholder="Same as base"
+                      disabled={!baseUomValue}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
@@ -464,10 +484,18 @@ export default function NewProductPage() {
                 control={form.control}
                 name="reorderPoint"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="min-w-0">
                     <FormLabel>Reorder Point</FormLabel>
                     <FormControl>
-                      <Input type="number" step="1" min="0" placeholder="Min qty before reorder" className="tabular-nums" {...field} />
+                      <Input
+                        type="number"
+                        step="1"
+                        min="0"
+                        placeholder="Min qty before reorder"
+                        className="tabular-nums"
+                        disabled={!reorderEnabled}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -477,7 +505,12 @@ export default function NewProductPage() {
           </Card>
 
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={handleCancel} disabled={createMutation.isPending}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleCancel}
+              disabled={createMutation.isPending}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={createMutation.isPending}>

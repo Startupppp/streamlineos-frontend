@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import type { ActionItem, CreateActionItemInput, UpdateActionItemInput, ProjectMember } from "@/types/projects";
@@ -154,16 +155,24 @@ export function ActionItemFormSheet({
               <FormField control={form.control} name="dueDate" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Due Date (optional)</FormLabel>
-                  <FormControl><Input {...field} type="date" className="h-8 text-sm" /></FormControl>
+                  <FormControl>
+                    <DatePicker value={field.value} onChange={field.onChange} placeholder="Select due date" className="h-8 text-sm" />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
             </div>
-            <SheetFooter className="px-6 py-4 border-t shrink-0">
-              <Button type="button" variant="outline" size="sm" onClick={() => onOpenChange(false)} disabled={isPending}>
+            <SheetFooter className="shrink-0 flex w-full gap-2 px-6 py-4 border-t">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={() => onOpenChange(false)}
+                disabled={isPending}
+              >
                 Cancel
               </Button>
-              <Button type="submit" size="sm" disabled={isPending}>
+              <Button type="submit" variant="default" className="flex-1" disabled={isPending}>
                 {isPending ? "Saving…" : mode === "edit" ? "Save Changes" : "Add Item"}
               </Button>
             </SheetFooter>

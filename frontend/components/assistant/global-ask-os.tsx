@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { usePathname } from "next/navigation";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { type InfiniteData, useQueryClient } from "@tanstack/react-query";
 import {
@@ -39,6 +39,7 @@ import {
 } from "@/hooks/api";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useHydrated } from "@/hooks/common/use-hydrated";
 import { AskOsConversationList } from "./ask-os-conversation-list";
 import {
   AskOsBubble,
@@ -50,29 +51,15 @@ import {
 
 const CONTEXT_WINDOW = 24;
 
-function normalizePathname(pathname: string): string {
-  if (!pathname) return "";
-  if (pathname.length > 1 && pathname.endsWith("/"))
-    return pathname.slice(0, -1);
-  return pathname;
-}
-
-function hasBottomComposer(pathname: string): boolean {
-  const path = normalizePathname(pathname);
-  if (path === "/chat" || path.startsWith("/chat/")) return true;
-  return /^\/projects\/[^/]+\/chat(?:\/|$)/.test(path);
-}
-
 interface Draft {
   user: string;
   assistant: string;
 }
 
 export function GlobalAskOs() {
-  const pathname = usePathname();
   const reduce = useReducedMotion();
+  const hydrated = useHydrated();
   const qc = useQueryClient();
-  const composerRoute = hasBottomComposer(pathname);
 
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
@@ -362,16 +349,16 @@ export function GlobalAskOs() {
     : { duration: 0.25, ease: "easeOut" as const };
   const btnCls =
     "rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted";
+  const anchorClassName = cn(
+    "fixed right-0 bottom-[env(safe-area-inset-bottom,0px)] z-50 flex flex-col items-stretch",
+    open ? "w-[min(100vw,400px)]" : "w-[min(100vw,130px)]",
+  );
 
-  return (
+  if (!hydrated) return null;
+
+  return createPortal(
     <div
-      className={cn(
-        "fixed right-0 z-50 flex flex-col items-stretch",
-        composerRoute
-          ? "bottom-[calc(11rem+4rem+env(safe-area-inset-bottom,0px))] md:bottom-44"
-          : "bottom-[calc(4rem+env(safe-area-inset-bottom,0px))] md:bottom-0",
-        open ? "w-[min(100vw,400px)]" : "w-[min(100vw,130px)]",
-      )}
+      className={anchorClassName}
       role="complementary"
       aria-label="Ask OS assistant"
     >
@@ -639,6 +626,7 @@ export function GlobalAskOs() {
           aria-hidden
         />
       </motion.button>
-    </div>
+    </div>,
+    document.body,
   );
 }
