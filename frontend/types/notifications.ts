@@ -48,6 +48,12 @@ export interface Notification {
   priority: NotificationPriority;
   category: NotificationCategory;
   sourceModule: string | null;
+  eventKey?: string | null;
+  entityType?: string | null;
+  entityId?: string | null;
+  actorUserId?: string | null;
+  groupKey?: string | null;
+  reason?: string | null;
   title: string;
   message: string | null;
   link: string | null;

@@ -17,12 +17,15 @@ import {
   useBulkDelete,
   useApproveNotification,
   useRejectNotification,
+  useSnoozeNotification,
+  useUnarchiveNotification,
 } from "@/hooks/api/notifications";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { NotificationCard } from "@/features/notifications/notification-card";
+import { NotificationDetailDrawer } from "@/features/notifications/notification-detail-drawer";
 import { NotificationFilterBar } from "@/features/notifications/notification-filter-bar";
 import { NotificationListSkeleton } from "@/features/notifications/notification-list-skeleton";
 import { ErrorState } from "@/components/shared/error-state";
@@ -39,6 +42,7 @@ export default function NotificationsPage() {
   const [activeCategory, setActiveCategory] = useState<NotificationCategory | undefined>(undefined);
   const [activePriority, setActivePriority] = useState<NotificationPriority | undefined>(undefined);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [detailId, setDetailId] = useState<number | null>(null);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
@@ -76,17 +80,43 @@ export default function NotificationsPage() {
   const bulkDelete = useBulkDelete();
   const approve = useApproveNotification();
   const reject = useRejectNotification();
+  const snooze = useSnoozeNotification();
+  const unarchive = useUnarchiveNotification();
 
   const unreadCount = unreadData?.count ?? 0;
   const items = useMemo(() => notifications ?? [], [notifications]);
+  const detailNotif = useMemo(
+    () => (detailId !== null ? items.find((n) => n.id === detailId) ?? null : null),
+    [detailId, items],
+  );
 
   const handleNotificationClick = useCallback(
     (notification: { id: number; isRead: boolean; link: string | null }) => {
+      setDetailId(notification.id);
       if (!notification.isRead) markRead.mutate(notification.id);
-      if (notification.link) router.push(notification.link);
     },
-    [markRead, router],
+    [markRead],
   );
+
+  const handleDrawerOpenChange = useCallback((open: boolean) => {
+    if (!open) setDetailId(null);
+  }, []);
+
+  const handleOpenLink = useCallback((link: string) => {
+    router.push(link);
+  }, [router]);
+
+  const handleMarkReadOne = useCallback((id: number) => {
+    markRead.mutate(id);
+  }, [markRead]);
+
+  const handleUnarchive = useCallback((id: number) => {
+    unarchive.mutate(id);
+  }, [unarchive]);
+
+  const handleSnooze = useCallback((id: number, snoozedUntil: string) => {
+    snooze.mutate({ id, snoozedUntil });
+  }, [snooze]);
 
   const handleMarkAllRead = useCallback(() => {
     markAllRead.mutate(undefined);
@@ -334,6 +364,19 @@ export default function NotificationsPage() {
           </div>
         )}
       </div>
+
+      <NotificationDetailDrawer
+        notification={detailNotif}
+        open={detailNotif !== null}
+        onOpenChange={handleDrawerOpenChange}
+        onOpenLink={handleOpenLink}
+        onMarkRead={handleMarkReadOne}
+        onArchive={handleArchive}
+        onUnarchive={handleUnarchive}
+        onPin={handlePin}
+        onSnooze={handleSnooze}
+        onDelete={handleDelete}
+      />
     </PageWrapper>
   );
 }

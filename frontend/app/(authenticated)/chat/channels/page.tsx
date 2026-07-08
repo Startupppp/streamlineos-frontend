@@ -1,15 +1,14 @@
 "use client";
 
 import { ChannelsDiscoveryPage } from "@/features/chat/channels-discovery-page";
-import { ChatTopNav } from "@/features/chat/chat-top-nav";
+import { ChatShell } from "@/features/chat/chat-shell";
 
 export default function ChatChannelsPage() {
   return (
     <div className="flex flex-col h-full">
-      <ChatTopNav />
-      <div className="flex flex-1 overflow-hidden bg-background">
+      <ChatShell compactMobileSidebar>
         <ChannelsDiscoveryPage />
-      </div>
+      </ChatShell>
     </div>
   );
 }

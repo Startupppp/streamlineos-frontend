@@ -176,9 +176,9 @@ export function MessageList({
   const handleFetchNextPage = useCallback(() => fetchNextPage(), [fetchNextPage]);
 
   return (
-    <div className="flex-1 min-h-0 relative flex flex-col">
+    <div className="flex-1 min-h-0 min-w-0 relative flex flex-col overflow-hidden">
       <div
-        className="flex-1 min-h-0 overflow-y-auto overscroll-contain"
+        className="flex-1 min-h-0 min-w-0 overflow-y-auto overscroll-contain scrollbar-hide"
         style={{
           backgroundImage:
             "radial-gradient(circle at 50% 50%, hsl(var(--muted) / 0.3) 0%, transparent 70%)",
@@ -187,7 +187,7 @@ export function MessageList({
         onScroll={onScroll}
       >
         {isLoading ? (
-          <div className="py-4 px-3 sm:px-5 max-w-[900px] mx-auto space-y-5">
+          <div className="py-4 px-3 sm:px-5 max-w-[900px] mx-auto w-full min-w-0 space-y-5">
             {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className={`flex items-start gap-3 ${i % 3 === 2 ? "flex-row-reverse" : ""}`}>
                 <div className="h-8 w-8 rounded-full bg-muted animate-pulse shrink-0" />
@@ -201,7 +201,7 @@ export function MessageList({
         ) : (
           <div
             className={cn(
-              "min-h-full flex flex-col py-2 px-3 sm:px-5 max-w-[900px] mx-auto",
+              "min-h-full flex flex-col py-2 px-3 sm:px-5 max-w-[900px] mx-auto w-full min-w-0",
               messages.length > 0 ? "justify-end" : "justify-center",
             )}
           >

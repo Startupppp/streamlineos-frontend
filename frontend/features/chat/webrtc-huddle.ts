@@ -7,6 +7,7 @@ import type { InboundMessage } from "ably";
 import { useSendHuddleSignal } from "@/hooks/api/chat-huddles";
 import type { HuddleParticipant } from "@/types/chat";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useAblyConnection } from "./use-ably-connection";
 
 function getIceServers(): RTCIceServer[] {
   const servers: RTCIceServer[] = [
@@ -40,8 +41,9 @@ export function useWebRTCHuddle(
   deviceIds?: { audioInput?: string; videoInput?: string; audioOutput?: string },
 ) {
   const ably = useAbly();
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const orgId = session?.orgId;
+  const { isConnected: isAblyConnected, connectionError: ablyConnectionError } = useAblyConnection();
   const sendSignalMutation = useSendHuddleSignal();
 
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
@@ -50,6 +52,7 @@ export function useWebRTCHuddle(
   const [screenStream, setScreenStream] = useState<MediaStream | null>(null);
   const [isSharingScreen, setIsSharingScreen] = useState(false);
   const [micError, setMicError] = useState<string | null>(null);
+  const [realtimeError, setRealtimeError] = useState<string | null>(null);
 
   const peerConnections = useRef<Map<string, RTCPeerConnection>>(new Map());
   const localStreamRef = useRef<MediaStream | null>(null);
@@ -193,6 +196,7 @@ export function useWebRTCHuddle(
 
   useEffect(() => {
     if (!orgId || !channelId || channelId <= 0 || !huddleId) return;
+    if (sessionStatus !== "authenticated" || !isAblyConnected) return;
 
     const signalChannelName = `huddle-signal:${orgId}:${channelId}:${currentUserId}`;
     const ablyChannel = ably.channels.get(signalChannelName);
@@ -201,46 +205,59 @@ export function useWebRTCHuddle(
       const signal = msg.data as IncomingSignalData;
       if (!signal) return;
 
-      if (signal.type === "offer") {
-        const fromUserId = signal.fromUserId;
-        let pc = peerConnections.current.get(fromUserId);
-        if (!pc) {
-          pc = createPeerConnection(fromUserId);
-        }
-        await pc.setRemoteDescription(
-          new RTCSessionDescription({ type: "offer", sdp: signal.payload.sdp ?? "" }),
-        );
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
-        sendSignalRef.current({
-          huddleId,
-          type: "answer",
-          targetUserId: fromUserId,
-          payload: { sdp: answer.sdp, fromUserId: currentUserId },
-        });
-      } else if (signal.type === "answer") {
-        const fromUserId = signal.fromUserId;
-        const pc = peerConnections.current.get(fromUserId);
-        if (pc && pc.signalingState !== "stable") {
+      try {
+        if (signal.type === "offer") {
+          const fromUserId = signal.fromUserId;
+          let pc = peerConnections.current.get(fromUserId);
+          if (!pc) {
+            pc = createPeerConnection(fromUserId);
+          }
           await pc.setRemoteDescription(
-            new RTCSessionDescription({ type: "answer", sdp: signal.payload.sdp ?? "" }),
+            new RTCSessionDescription({ type: "offer", sdp: signal.payload.sdp ?? "" }),
           );
+          const answer = await pc.createAnswer();
+          await pc.setLocalDescription(answer);
+          sendSignalRef.current({
+            huddleId,
+            type: "answer",
+            targetUserId: fromUserId,
+            payload: { sdp: answer.sdp, fromUserId: currentUserId },
+          });
+        } else if (signal.type === "answer") {
+          const fromUserId = signal.fromUserId;
+          const pc = peerConnections.current.get(fromUserId);
+          if (pc && pc.signalingState !== "stable") {
+            await pc.setRemoteDescription(
+              new RTCSessionDescription({ type: "answer", sdp: signal.payload.sdp ?? "" }),
+            );
+          }
+        } else if (signal.type === "ice-candidate") {
+          const fromUserId = signal.fromUserId;
+          const pc = peerConnections.current.get(fromUserId);
+          if (pc && signal.payload.candidate) {
+            await pc.addIceCandidate(new RTCIceCandidate(signal.payload.candidate));
+          }
         }
-      } else if (signal.type === "ice-candidate") {
-        const fromUserId = signal.fromUserId;
-        const pc = peerConnections.current.get(fromUserId);
-        if (pc && signal.payload.candidate) {
-          await pc.addIceCandidate(new RTCIceCandidate(signal.payload.candidate));
-        }
-      }
+      } catch {}
     };
 
-    ablyChannel.subscribe("signal", handleSignal);
+    void ablyChannel.subscribe("signal", handleSignal).catch((err: unknown) => {
+      setRealtimeError(getErrorMessage(err));
+    });
 
     return () => {
       ablyChannel.unsubscribe("signal", handleSignal);
     };
-  }, [ably, channelId, orgId, huddleId, currentUserId, createPeerConnection]);
+  }, [
+    ably,
+    channelId,
+    orgId,
+    huddleId,
+    currentUserId,
+    createPeerConnection,
+    isAblyConnected,
+    sessionStatus,
+  ]);
 
   useEffect(() => {
     if (!huddleId || !streamReady.current) return;
@@ -381,6 +398,7 @@ export function useWebRTCHuddle(
     setScreenStream(null);
     setIsSharingScreen(false);
     setMicError(null);
+    setRealtimeError(null);
   }, [closePeerConnection]);
 
   useEffect(() => {
@@ -394,6 +412,7 @@ export function useWebRTCHuddle(
     isMuted,
     isSharingScreen,
     micError,
+    realtimeError: realtimeError ?? ablyConnectionError,
     toggleMute,
     switchAudioDevice,
     getPeerConnection,

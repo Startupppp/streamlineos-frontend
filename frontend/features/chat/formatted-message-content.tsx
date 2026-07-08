@@ -14,8 +14,8 @@ function renderInlinePart(part: string, key: number, isOwn: boolean): React.Reac
       <code
         key={key}
         className={cn(
-          "font-mono text-[12px] px-1.5 py-0.5 rounded",
-          isOwn ? "bg-black/20 text-white/90" : "bg-muted",
+          "font-mono text-[12px] px-1.5 py-0.5 rounded break-all",
+          isOwn ? "bg-primary-foreground/15 text-primary-foreground" : "bg-muted",
         )}
       >
         {part.slice(1, -1)}
@@ -27,15 +27,19 @@ function renderInlinePart(part: string, key: number, isOwn: boolean): React.Reac
       <span
         key={key}
         className={cn(
-          "font-semibold rounded px-0.5",
-          isOwn ? "bg-white/25 text-white" : "bg-blue-500/15 text-blue-600",
+          "font-semibold rounded px-0.5 break-all",
+          isOwn ? "bg-primary-foreground/20 text-primary-foreground" : "bg-blue-500/15 text-blue-600",
         )}
       >
         {part}
       </span>
     );
   }
-  return <span key={key}>{part}</span>;
+  return (
+    <span key={key} className="break-words break-all">
+      {part}
+    </span>
+  );
 }
 
 export function renderFormattedContent(content: string, isOwn: boolean): React.ReactNode {
@@ -55,8 +59,8 @@ export function renderFormattedContent(content: string, isOwn: boolean): React.R
         <pre
           key={i}
           className={cn(
-            "font-mono text-[12px] rounded-lg p-2.5 mt-1.5 overflow-x-auto whitespace-pre",
-            isOwn ? "bg-black/20 text-white/90" : "bg-muted text-foreground",
+            "font-mono text-[12px] rounded-lg p-2.5 mt-1.5 max-w-full overflow-x-auto whitespace-pre scrollbar-hide",
+            isOwn ? "bg-primary-foreground/15 text-primary-foreground" : "bg-muted text-foreground",
           )}
         >
           {codeLines.join("\n")}
@@ -65,7 +69,7 @@ export function renderFormattedContent(content: string, isOwn: boolean): React.R
     } else {
       const parts = line.split(INLINE_TOKEN_PATTERN);
       result.push(
-        <span key={i} className="block">
+        <span key={i} className="block break-words break-all">
           {parts.map((part, j) => renderInlinePart(part, j, isOwn))}
         </span>,
       );

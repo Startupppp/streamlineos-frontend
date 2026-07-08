@@ -16,6 +16,7 @@ import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { useNetworkQuality } from "./use-network-quality";
 import { HuddleChatPanel } from "./huddle-chat-panel";
+import { useAblyConnection } from "./use-ably-connection";
 
 interface AudioLevelMap {
   [userId: string]: number;
@@ -137,8 +138,9 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
   const setDeafenMutation = useSetHuddleDeafen();
   const inviteToHuddle = useInviteToHuddle();
   const ably = useAbly();
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const orgId = (session as { orgId?: string } | null)?.orgId;
+  const { isConnected: isAblyConnected } = useAblyConnection();
   const elapsed = useElapsedTime(huddle.startedAt);
 
   const { selectedAudioInput } = useMediaDevices();
@@ -147,7 +149,7 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
   const isHandRaised = myParticipant?.handRaised ?? false;
   const isHost = huddle.startedBy === currentUserId;
 
-  const { localStream, remoteStreams, screenStream, isMuted, isSharingScreen, micError, toggleMute, switchAudioDevice, getPeerConnection, startScreenShare, stopScreenShare, pauseScreenShare, resumeScreenShare, cleanup } = useWebRTCHuddle(
+  const { localStream, remoteStreams, screenStream, isMuted, isSharingScreen, micError, realtimeError, toggleMute, switchAudioDevice, getPeerConnection, startScreenShare, stopScreenShare, pauseScreenShare, resumeScreenShare, cleanup } = useWebRTCHuddle(
     huddle.id,
     channelId,
     huddle.participants,
@@ -164,7 +166,7 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
   const audioLevels = useAudioLevels(remoteStreams, localStream, currentUserId);
 
   useEffect(() => {
-    if (!orgId) return;
+    if (!orgId || sessionStatus !== "authenticated" || !isAblyConnected) return;
     const ch = ably.channels.get(`huddle:${orgId}:${channelId}`);
 
     const handleJoined = (msg: InboundMessage) => {
@@ -197,7 +199,7 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
       ch.unsubscribe("huddle:user_left", handleLeft);
       userCh.unsubscribe("huddle:kicked", handleKicked);
     };
-  }, [ably, orgId, channelId, currentUserId, huddle.participants, huddle.id, cleanup, leaveHuddle]);
+  }, [ably, orgId, channelId, currentUserId, huddle.participants, huddle.id, cleanup, leaveHuddle, isAblyConnected, sessionStatus]);
 
   const handleLeave = useCallback(() => {
     cleanup();
@@ -242,11 +244,11 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
   }, [isDeafened, setDeafenMutation, huddle.id, channelId]);
 
   const sendReaction = useCallback(async (emoji: string) => {
-    if (!orgId) return;
+    if (!orgId || !isAblyConnected) return;
     setShowEmojiPicker(false);
     const ch = ably.channels.get(`huddle:${orgId}:${channelId}`);
-    await ch.publish("huddle:reaction", { userId: currentUserId, emoji });
-  }, [ably, channelId, orgId, currentUserId]);
+    await ch.publish("huddle:reaction", { userId: currentUserId, emoji }).catch(() => {});
+  }, [ably, channelId, orgId, currentUserId, isAblyConnected]);
 
   const participantCount = huddle.participants.length;
 
@@ -283,6 +285,12 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
             <div className="px-3 py-2 text-[11px] text-red-500 bg-red-500/10 rounded-lg mb-2 flex items-center gap-2">
               <MicOff className="h-3.5 w-3.5 shrink-0" />
               <span className="flex-1">{micError}</span>
+            </div>
+          )}
+
+          {realtimeError && (
+            <div className="px-3 py-2 text-[11px] text-amber-600 bg-amber-500/10 rounded-lg mb-2">
+              {realtimeError}
             </div>
           )}
 

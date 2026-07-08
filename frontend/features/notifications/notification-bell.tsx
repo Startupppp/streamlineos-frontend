@@ -104,12 +104,12 @@ export function NotificationBell() {
 
   useNotificationEvents();
   const { data: unreadData } = useUnreadNotificationCount();
-  const { data: notifications, isLoading } = useNotifications({ section: "ALL", limit: 10 });
+  const { data: notifications, isLoading, isError } = useNotifications({ section: "UNREAD", limit: 10 });
   const markRead = useMarkNotificationRead();
   const markAllRead = useMarkAllNotificationsRead();
 
   const unreadCount = unreadData?.count ?? 0;
-  const recentNotifications = notifications?.slice(0, 5) ?? [];
+  const recentNotifications = notifications?.slice(0, 6) ?? [];
 
   const handleOpenChange = useCallback((next: boolean) => {
     setOpen(next);
@@ -207,11 +207,19 @@ export function NotificationBell() {
         <div className="max-h-[360px] overflow-y-auto py-1 px-1">
           {isLoading ? (
             <PopoverSkeleton />
+          ) : isError ? (
+            <div className="flex flex-col items-center justify-center py-8 text-center px-4">
+              <Inbox className="h-8 w-8 text-muted-foreground/30 mb-2" />
+              <p className="text-sm font-medium text-foreground">Couldn&apos;t load notifications</p>
+              <Link href="/notifications" className="text-xs text-accent hover:underline mt-0.5">
+                Open the notification center
+              </Link>
+            </div>
           ) : recentNotifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center px-4">
               <Inbox className="h-8 w-8 text-muted-foreground/30 mb-2" />
               <p className="text-sm font-medium text-foreground">You&apos;re all caught up</p>
-              <p className="text-xs text-muted-foreground mt-0.5">No new notifications</p>
+              <p className="text-xs text-muted-foreground mt-0.5">No unread notifications</p>
             </div>
           ) : (
             recentNotifications.map((notification) => (

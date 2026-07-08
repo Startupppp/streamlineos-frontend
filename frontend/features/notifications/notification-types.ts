@@ -177,6 +177,7 @@ export const SECTION_TABS: Array<{ value: NotificationSection; label: string }> 
   { value: "ASSIGNED_TO_ME", label: "Assigned to Me" },
   { value: "APPROVALS", label: "Approvals" },
   { value: "BROADCASTS", label: "Broadcasts" },
+  { value: "PINNED", label: "Pinned" },
   { value: "ARCHIVED", label: "Archived" },
   { value: "SYSTEM", label: "System" },
 ];

@@ -14,20 +14,7 @@ import { EmptyChatState } from "@/features/chat/empty-chat-state";
 import { NewDMDialog } from "@/features/chat/new-dm-dialog";
 import { NewGroupDialog } from "@/features/chat/new-group-dialog";
 import { ChatAblyProvider } from "@/features/chat/ably-provider";
-import { ChatTopNav } from "@/features/chat/chat-top-nav";
-
-const CHAT_SIDEBAR_COOKIE = "chat-sidebar-collapsed";
-
-function readChatSidebarCookie(): boolean {
-  if (typeof document === "undefined") return false;
-  return document.cookie
-    .split("; ")
-    .some((entry) => entry === `${CHAT_SIDEBAR_COOKIE}=true`);
-}
-
-function setChatSidebarCookie(collapsed: boolean) {
-  document.cookie = `${CHAT_SIDEBAR_COOKIE}=${collapsed}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
-}
+import { useChatSidebarCollapse } from "@/features/chat/chat-shell";
 
 function ChatNotifications({
   activeChannelId,
@@ -60,7 +47,7 @@ export default function ChatPage() {
   const [emptyDMOpen, setEmptyDMOpen] = useState(false);
   const [emptyGroupOpen, setEmptyGroupOpen] = useState(false);
   const [showSearchFocus, setShowSearchFocus] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(readChatSidebarCookie);
+  const { sidebarCollapsed, handleToggleSidebar } = useChatSidebarCollapse();
 
   const heartbeat = useChatHeartbeat();
   const heartbeatRef = useRef(heartbeat);
@@ -98,13 +85,6 @@ export default function ChatPage() {
   }, [searchParams, router]);
 
   const handleSearchFocused = useCallback(() => setShowSearchFocus(false), []);
-  const handleToggleSidebar = useCallback(() => {
-    setSidebarCollapsed((prev) => {
-      const next = !prev;
-      setChatSidebarCookie(next);
-      return next;
-    });
-  }, []);
   const handleBack = useCallback(() => setShowMobileList(true), []);
   const handleToggleInfo = useCallback(() => setShowInfoPanel((p) => !p), []);
   const handleNewDM = useCallback(() => setEmptyDMOpen(true), []);
@@ -150,11 +130,10 @@ export default function ChatPage() {
         currentUserId={currentUserId}
       />
       <div className="flex flex-col h-full">
-        <ChatTopNav />
-        <div className="flex flex-1 overflow-hidden bg-background">
+        <div className="flex flex-1 min-h-0 min-w-0 bg-background">
         <div
           className={cn(
-            "relative flex flex-col shrink-0 border-r border-border/40 bg-card/50 transition-[width] duration-300 ease-in-out overflow-visible",
+            "relative z-0 flex flex-col shrink-0 border-r border-border/40 bg-card/50 transition-[width] duration-300 ease-in-out overflow-hidden",
             "w-full",
             sidebarCollapsed ? "md:w-[3.5rem]" : "md:w-[300px] lg:w-[340px]",
             !showMobileList && "hidden md:flex",
@@ -174,7 +153,7 @@ export default function ChatPage() {
 
         <div
           className={cn(
-            "flex-1 flex flex-col min-w-0 relative",
+            "relative z-10 flex-1 flex flex-col min-w-0",
             showMobileList && "hidden md:flex",
           )}
         >

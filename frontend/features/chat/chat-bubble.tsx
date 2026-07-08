@@ -299,7 +299,7 @@ export function ChatBubble({
 
   if (message.isDeleted) {
     return (
-      <div className={cn("flex mb-[2px]", isOwn ? "justify-end" : "justify-start", !isOwn && "ml-9")}>
+      <div className={cn("flex mb-[2px] w-full min-w-0", isOwn ? "justify-end" : "justify-start", !isOwn && "ml-9")}>
         <div className="px-3 py-1 rounded-xl bg-muted/20 border border-border/15">
           <p className="text-[11px] text-muted-foreground/40 italic flex items-center gap-1.5">
             <Trash2 className="h-2.5 w-2.5" />
@@ -313,7 +313,7 @@ export function ChatBubble({
   return (
     <div
       className={cn(
-        "group flex gap-2",
+        "group flex gap-2 w-full min-w-0",
         isOwn ? "justify-end" : "justify-start",
         showSender ? "mt-3 mb-0.5" : "mb-[2px]"
       )}
@@ -332,7 +332,7 @@ export function ChatBubble({
         </div>
       )}
 
-      <div className={cn("max-w-[75%] sm:max-w-[65%] relative flex flex-col", isOwn ? "items-end" : "items-start")}>
+      <div className={cn("min-w-0 max-w-[75%] sm:max-w-[65%] relative flex flex-col", isOwn ? "items-end" : "items-start")}>
         {showSender && !isOwn && (
           <p className="text-[11px] font-bold text-blue mb-1 px-1 ml-1">
             {message.sender?.name}
@@ -342,16 +342,16 @@ export function ChatBubble({
         {message.replyTo && (
           <div
             className={cn(
-              "mx-1 mb-0.5 px-2.5 py-1.5 rounded-lg border text-[11px]",
+              "mx-1 mb-0.5 min-w-0 max-w-full px-2.5 py-1.5 rounded-lg border text-[11px]",
               isOwn
-                ? "bg-blue-500/5 border-blue-500/15"
-                : "bg-blue/5 border-blue/10"
+                ? "bg-primary-foreground/10 border-primary-foreground/15"
+                : "bg-muted/50 border-border/40",
             )}
           >
-            <p className={cn("font-bold", isOwn ? "text-blue-600" : "text-blue")}>
+            <p className={cn("font-bold truncate", isOwn ? "text-primary-foreground" : "text-foreground")}>
               {message.replyTo.sender?.name}
             </p>
-            <p className="text-muted-foreground truncate">
+            <p className={cn("truncate", isOwn ? "text-primary-foreground/70" : "text-muted-foreground")}>
               {message.replyTo.content
                 ? renderFormattedContent(message.replyTo.content, isOwn)
                 : null}
@@ -380,17 +380,17 @@ export function ChatBubble({
         ) : (
           <div
             className={cn(
-              "relative px-3.5 py-2 shadow-sm",
+              "relative min-w-0 max-w-full px-3.5 py-2 shadow-sm",
               isOwn
-                ? "bg-gradient-to-br from-blue-500 to-amber-700 text-white rounded-2xl rounded-br-md"
-                : "bg-card border border-border/40 text-foreground rounded-2xl rounded-bl-md"
+                ? "bg-primary text-primary-foreground rounded-2xl rounded-br-sm"
+                : "bg-background border border-border text-foreground rounded-2xl rounded-bl-sm",
             )}
           >
             {forwardLabel && (
               <div
                 className={cn(
                   "flex items-center gap-1 mb-1.5 text-[11px] font-medium italic",
-                  isOwn ? "text-white/85" : "text-muted-foreground",
+                  isOwn ? "text-primary-foreground/85" : "text-muted-foreground",
                 )}
               >
                 <Forward className="h-3 w-3 shrink-0" />
@@ -399,7 +399,7 @@ export function ChatBubble({
             )}
 
             {displayContent && (
-              <div className={cn("text-[14px] leading-[1.55] break-words", isOwn ? "text-white" : "text-foreground")}>
+              <div className="min-w-0 text-[14px] leading-[1.55] break-words break-all">
                 {renderFormattedContent(displayContent, isOwn)}
               </div>
             )}
@@ -460,31 +460,31 @@ export function ChatBubble({
                         target="_blank"
                         rel="noopener noreferrer"
                         className={cn(
-                          "flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-colors",
+                          "flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-colors min-w-0 max-w-full",
                           isOwn
-                            ? "bg-white/10 border-white/15 hover:bg-white/20"
+                            ? "bg-primary-foreground/10 border-primary-foreground/15 hover:bg-primary-foreground/15"
                             : "bg-background border-border/50 hover:bg-muted/30 shadow-sm"
                         )}
                       >
                         <div className={cn(
                           "h-10 w-10 rounded-lg flex flex-col items-center justify-center shrink-0",
-                          isOwn ? "bg-white/15" : colors.bg
+                          isOwn ? "bg-primary-foreground/15" : colors.bg
                         )}>
-                          <FileText className={cn("h-4 w-4", isOwn ? "text-white/80" : colors.text)} />
+                          <FileText className={cn("h-4 w-4", isOwn ? "text-primary-foreground/80" : colors.text)} />
                           <span className={cn(
-                            "text-[6px] font-bold text-white px-1 rounded mt-0.5",
-                            isOwn ? "bg-white/30" : colors.badge
+                            "text-[6px] font-bold px-1 rounded mt-0.5",
+                            isOwn ? "bg-primary-foreground/25 text-primary-foreground" : cn("text-white", colors.badge)
                           )}>
                             {getFileExt(att.fileName)}
                           </span>
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="text-[12px] font-semibold truncate max-w-[180px]">{att.fileName}</p>
-                          <p className={cn("text-[10px] mt-0.5", isOwn ? "text-white/60" : "text-muted-foreground")}>
+                          <p className={cn("text-[10px] mt-0.5", isOwn ? "text-primary-foreground/60" : "text-muted-foreground")}>
                             {formatFileSize(att.fileSize)} · {getFileExt(att.fileName)}
                           </p>
                         </div>
-                        <ArrowDown className={cn("h-4 w-4 shrink-0", isOwn ? "text-white/50" : "text-muted-foreground/50")} />
+                        <ArrowDown className={cn("h-4 w-4 shrink-0", isOwn ? "text-primary-foreground/50" : "text-muted-foreground/50")} />
                       </a>
                     );
                   })();
@@ -494,17 +494,17 @@ export function ChatBubble({
 
             <div className={cn("flex items-center gap-1.5 mt-1", isOwn ? "justify-end" : "justify-start")}>
               <span
-                className={cn("text-[11px] font-medium", isOwn ? "text-white/80" : "text-muted-foreground")}
+                className={cn("text-[11px] font-medium", isOwn ? "text-primary-foreground/80" : "text-muted-foreground")}
                 title={formatMessageTimeFull(message.createdAt)}
               >
                 {formatMessageTime(message.createdAt)}
               </span>
               {message.isEdited && (
-                <span className={cn("text-[11px]", isOwn ? "text-white/60" : "text-muted-foreground/70")}>
+                <span className={cn("text-[11px]", isOwn ? "text-primary-foreground/60" : "text-muted-foreground/70")}>
                   edited
                 </span>
               )}
-              {isOwn && <CheckCheck className={cn("h-3.5 w-3.5", "text-white/70")} />}
+              {isOwn && <CheckCheck className="h-3.5 w-3.5 text-primary-foreground/70" />}
             </div>
           </div>
         )}
@@ -576,11 +576,11 @@ export function ChatBubble({
         {!isEditing && (
           <div
             className={cn(
-              "absolute -top-3 opacity-0 group-hover:opacity-100 transition-all z-10",
-              isOwn ? "left-0" : "right-0"
+              "absolute -top-3 opacity-0 group-hover:opacity-100 transition-all z-50 pointer-events-none group-hover:pointer-events-auto",
+              isOwn ? "right-0" : "left-0",
             )}
           >
-            <div className="relative flex items-center bg-background border border-border/60 rounded-lg shadow-md overflow-visible">
+            <div className="relative flex items-center bg-background border border-border/60 rounded-lg shadow-md overflow-visible pointer-events-auto">
               <button onClick={onReply} className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground" title="Reply" aria-label="Reply">
                 <Reply className="h-3.5 w-3.5" />
               </button>

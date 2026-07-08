@@ -32,6 +32,7 @@ import { ChannelItem } from "./channel-item";
 import { NewDMDialog } from "./new-dm-dialog";
 import { NewGroupDialog } from "./new-group-dialog";
 import { ChatSearchDialog } from "./chat-search-dialog";
+import { ChatSidebarNav } from "./chat-sidebar-nav";
 
 interface ChannelListEntryProps {
   channel: Channel;
@@ -245,7 +246,9 @@ export function ChannelSidebar({
   return (
     <TooltipProvider>
       <div className="relative flex flex-col h-full overflow-visible">
-        <div className={cn("px-4 pt-4 pb-2", isCollapsed && "md:hidden")}>
+        <ChatSidebarNav isCollapsed={isCollapsed} />
+
+        <div className={cn("px-4 pt-3 pb-2", isCollapsed && "md:hidden")}>
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2.5">
               <div className="h-9 w-9 rounded-xl bg-blue-500 flex items-center justify-center shadow-sm">
@@ -306,20 +309,10 @@ export function ChannelSidebar({
 
         <div
           className={cn(
-            "relative z-20 hidden flex-col items-center gap-2 px-1.5 pt-4 pb-2 shrink-0",
+            "relative z-20 hidden flex-col items-center gap-2 px-1.5 pt-2 pb-2 shrink-0",
             isCollapsed && "md:flex",
           )}
         >
-          <Tooltip delayDuration={0}>
-            <TooltipTrigger asChild>
-              <div className="h-9 w-9 rounded-xl bg-blue-500 flex items-center justify-center shadow-sm">
-                <MessageSquareText className="h-4 w-4 text-white" />
-              </div>
-            </TooltipTrigger>
-            <TooltipContent side="right" sideOffset={10} className="text-xs font-medium">
-              Messages
-            </TooltipContent>
-          </Tooltip>
           <div className="flex flex-col items-center gap-0.5">
             {renderCompactActionButton("Search", <Search className="h-3.5 w-3.5" />, handleOpenChatSearch)}
             {renderCompactActionButton("Browse Channels", <Compass className="h-3.5 w-3.5" />, handleOpenBrowse)}

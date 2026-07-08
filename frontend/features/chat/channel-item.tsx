@@ -73,8 +73,10 @@ export function ChannelItem({
               onClick={onClick}
               aria-label={displayName}
               className={cn(
-                "relative flex items-center justify-center rounded-xl p-1 transition-all duration-100",
-                isActive ? "bg-blue-500/10 shadow-sm" : "hover:bg-muted/40",
+                "relative flex items-center justify-center rounded-xl p-1 transition-colors duration-100",
+                isActive
+                  ? "bg-muted text-foreground"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
               )}
             >
               <ChannelAvatar
@@ -89,7 +91,7 @@ export function ChannelItem({
                 <span className="absolute bottom-0.5 right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-background" />
               )}
               {hasUnread && (
-                <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-blue-500 border-2 border-background" />
+                <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-primary border-2 border-background" />
               )}
             </button>
           </TooltipTrigger>
@@ -106,13 +108,15 @@ export function ChannelItem({
     : null;
 
   return (
-    <div className="relative group/item">
+    <div className="relative group/item min-w-0">
       <button
         type="button"
         onClick={onClick}
         className={cn(
-          "w-full flex items-center gap-2.5 px-2 py-2 rounded-xl text-left transition-colors duration-100",
-          isActive ? "bg-blue-500/10 shadow-sm" : "hover:bg-muted/40",
+          "w-full min-w-0 overflow-hidden flex items-center gap-2.5 px-2 py-2 rounded-xl text-left transition-colors duration-100",
+          isActive
+            ? "bg-muted text-foreground"
+            : "text-muted-foreground hover:bg-muted hover:text-foreground",
           hasUnread && !isActive && "text-foreground",
         )}
       >
@@ -154,14 +158,14 @@ export function ChannelItem({
             )}
           </div>
 
-          <div className="flex items-center justify-between gap-1.5 mt-0.5">
-            <p className="text-[11px] text-muted-foreground/60 truncate leading-tight">
+          <div className="flex items-center justify-between gap-1.5 mt-0.5 min-w-0">
+            <p className="min-w-0 flex-1 text-[11px] text-muted-foreground/60 line-clamp-1 break-all break-words leading-tight">
               {channel.lastMessage?.content
                 ? `${channel.type === "GROUP" ? `${channel.lastMessage.senderName?.split(" ")[0]}: ` : ""}${channel.lastMessage.content}`
                 : "No messages yet"}
             </p>
             {hasUnread && (
-              <span className="h-[18px] min-w-[18px] flex items-center justify-center bg-blue-500 text-white text-[10px] font-bold rounded-full px-1 shrink-0 transition-opacity duration-150 group-hover/item:opacity-0">
+              <span className="h-[18px] min-w-[18px] flex items-center justify-center bg-primary text-primary-foreground text-[10px] font-bold rounded-full px-1 shrink-0 transition-opacity duration-150 group-hover/item:opacity-0">
                 {channel.unreadCount > 99 ? "99+" : channel.unreadCount}
               </span>
             )}
