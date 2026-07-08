@@ -16,7 +16,7 @@ import type { ChatOrgSettings } from "@/types/chat";
 
 const TABS = [
   { value: "settings", label: "Settings", icon: HardDrive },
-  { value: "voice-video", label: "Voice", icon: Mic },
+  { value: "voice-video", label: "Huddle", icon: Mic },
 ] as const;
 
 type TabValue = (typeof TABS)[number]["value"];
@@ -142,7 +142,7 @@ export function ChatConfigurationPage() {
         ) : (
           <div className="space-y-5">
             <div>
-              <h2 className="text-[15px] font-bold mb-1">Voice</h2>
+              <h2 className="text-[15px] font-bold mb-1">Huddle</h2>
               <p className="text-[12px] text-muted-foreground">
                 Limits for huddles across your organization.
               </p>
