@@ -10,6 +10,7 @@ import { PriorityBadge } from "../shared/priority-badge";
 import type { KanbanTicket } from "../shared/types";
 import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
 import { motion } from "framer-motion";
+import { TicketQuickActions } from "./ticket-quick-actions";
 
 function getDueState(dueDate?: string | null): "overdue" | "soon" | "future" | null {
   if (!dueDate) return null;
@@ -26,6 +27,7 @@ function getDueState(dueDate?: string | null): "overdue" | "soon" | "future" | n
 
 interface KanbanTicketCardProps {
   ticket: KanbanTicket;
+  projectId?: number;
   projectKey?: string;
   isDragging: boolean;
   dragStartRef: React.MutableRefObject<{ x: number; y: number } | null>;
@@ -34,6 +36,7 @@ interface KanbanTicketCardProps {
 
 export const KanbanTicketCard = memo(function KanbanTicketCard({
   ticket,
+  projectId,
   projectKey,
   isDragging,
   dragStartRef,
@@ -80,7 +83,7 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
     <motion.div
       layoutId={`ticket-${ticket.id}`}
       className={cn(
-        "rounded-lg border bg-card px-3 py-2.5 transition-shadow",
+        "group rounded-lg border bg-card px-3 py-2.5 transition-shadow",
         "cursor-grab active:cursor-grabbing",
         "hover:shadow-md hover:border-border/80",
         isDragging && "shadow-xl ring-1 ring-primary/20 scale-[1.02]"
@@ -94,6 +97,14 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
         <p className="text-[13px] font-medium leading-snug line-clamp-2 flex-1">
           {ticket.title}
         </p>
+        <TicketQuickActions
+          ticketId={ticket.id}
+          projectId={projectId}
+          currentStatus={ticket.status}
+          currentPriority={ticket.priority}
+          currentAssigneeId={ticket.assigneeId ?? ticket.assignees?.[0]?.user?.id ?? ticket.assignee?.id}
+          className="opacity-0 group-hover:opacity-100 transition-opacity -mt-0.5 -mr-1"
+        />
       </div>
 
       <div className="mt-2 flex items-center justify-between">

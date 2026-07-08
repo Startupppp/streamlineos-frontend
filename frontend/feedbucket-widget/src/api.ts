@@ -32,7 +32,7 @@ export async function submitFeedback(opts: SubmitOptions): Promise<void> {
   form.append("consoleLogs", JSON.stringify(opts.consoleLogs));
 
   if (opts.screenshot) {
-    form.append("screenshot", opts.screenshot, "screenshot.png");
+    form.append("screenshot", opts.screenshot, "screenshot.jpg");
   }
   if (opts.recording) {
     form.append("recording", opts.recording, "recording.webm");

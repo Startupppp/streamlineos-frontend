@@ -53,7 +53,10 @@ export class ScreenRecorder {
       return null;
     }
     try {
-      this.displayStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+      this.displayStream = await navigator.mediaDevices.getDisplayMedia({
+        video: { frameRate: 15 },
+        audio: true,
+      });
     } catch {
       return null;
     }
@@ -70,7 +73,11 @@ export class ScreenRecorder {
     const combined = new MediaStream(tracks);
 
     this.mime = pickMime();
-    this.recorder = new MediaRecorder(combined, { mimeType: this.mime });
+    this.recorder = new MediaRecorder(combined, {
+      mimeType: this.mime,
+      videoBitsPerSecond: 1_200_000,
+      audioBitsPerSecond: 96_000,
+    });
     this.chunks = [];
     this.recorder.ondataavailable = (e: BlobEvent) => {
       if (e.data.size > 0) this.chunks.push(e.data);

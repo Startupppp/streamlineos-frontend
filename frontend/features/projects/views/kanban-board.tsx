@@ -280,6 +280,7 @@ export function KanbanBoard({
                             >
                               <KanbanTicketCard
                                 ticket={ticket}
+                                projectId={projectId}
                                 projectKey={projectKey}
                                 isDragging={draggableSnapshot.isDragging}
                                 dragStartRef={dragStartRef}

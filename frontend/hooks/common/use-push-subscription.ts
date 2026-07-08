@@ -5,6 +5,12 @@ import { apiClient } from "@/lib/api-client";
 export function usePushSubscription(userId: string | undefined) {
   useEffect(() => {
     if (!userId) return;
+    if (typeof window === "undefined") return;
+
+    if ("Notification" in window && Notification.permission === "default") {
+      void Notification.requestPermission().catch(() => undefined);
+    }
+
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
 
     navigator.serviceWorker

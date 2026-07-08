@@ -366,7 +366,7 @@ export class Annotator {
   private exportImage(): Promise<Blob | null> {
     this.renderPinsToCanvas();
     return new Promise((resolve) => {
-      this.canvas.toBlob((b) => resolve(b), "image/png");
+      this.canvas.toBlob((b) => resolve(b), "image/jpeg", 0.82);
     });
   }
 

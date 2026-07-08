@@ -5,8 +5,10 @@ export async function captureScreenshot(hideElement?: HTMLElement): Promise<Blob
   if (hideElement) hideElement.style.display = "none";
   try {
     const blob = await domToBlob(document.documentElement, {
-      scale: Math.min(window.devicePixelRatio || 1, 2),
+      scale: 1,
       backgroundColor: "#ffffff",
+      type: "image/jpeg",
+      quality: 0.82,
     });
     return blob;
   } catch {

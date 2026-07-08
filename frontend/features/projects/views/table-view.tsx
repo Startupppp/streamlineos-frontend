@@ -10,6 +10,7 @@ import { StatusBadge } from "../shared/status-badge";
 import { formatTicketKey } from "../shared/format-ticket-key";
 import { resolveImageUrl, cn } from "@/lib/utils";
 import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
+import { TicketQuickActions } from "./ticket-quick-actions";
 
 interface Ticket {
   id: number;
@@ -29,6 +30,7 @@ interface TableViewProps {
   tickets: Ticket[];
   onTicketClick: (ticketId: number) => void;
   projectKey?: string | null;
+  projectId?: number;
 }
 
 function isOverdue(ticket: Ticket): boolean {
@@ -40,7 +42,7 @@ function isOverdue(ticket: Ticket): boolean {
   return due < today;
 }
 
-export const TableView = memo(function TableView({ tickets, onTicketClick, projectKey }: TableViewProps) {
+export const TableView = memo(function TableView({ tickets, onTicketClick, projectKey, projectId }: TableViewProps) {
   function handleRowClick(e: MouseEvent<HTMLTableRowElement>) {
     const id = Number(e.currentTarget.dataset.ticketId);
     if (id) onTicketClick(id);
@@ -61,6 +63,7 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
               <TableHead className="w-20 hidden lg:table-cell text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Points</TableHead>
               <TableHead className="w-32 hidden md:table-cell text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Assignee</TableHead>
               <TableHead className="w-28 hidden sm:table-cell text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Due Date</TableHead>
+              <TableHead className="w-10 px-2 py-1.5" />
             </TableRow>
           </TableHeader>
           <TableBody>
