@@ -38,12 +38,24 @@ export async function submitFeedback(opts: SubmitOptions): Promise<void> {
     form.append("recording", opts.recording, "recording.webm");
   }
 
-  const res = await fetch(`${opts.apiBase}/public/feedbucket/${opts.key}`, {
-    method: "POST",
-    body: form,
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${opts.apiBase}/public/feedbucket/${opts.key}`, {
+      method: "POST",
+      body: form,
+    });
+  } catch (err) {
+    const reason = err instanceof Error ? err.message : "network error";
+    throw new Error(`Could not reach the server (${reason})`);
+  }
 
   if (!res.ok) {
-    throw new Error("Submission failed");
+    let detail = "";
+    try {
+      detail = (await res.text()).slice(0, 160);
+    } catch {
+      detail = "";
+    }
+    throw new Error(`Submission failed (HTTP ${res.status})${detail ? `: ${detail}` : ""}`);
   }
 }

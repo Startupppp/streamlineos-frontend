@@ -1,26 +1,17 @@
-import html2canvas from "html2canvas";
+import { domToBlob } from "modern-screenshot";
 
-export async function captureScreenshot(
-  hideElement?: HTMLElement
-): Promise<Blob | null> {
-  const originalDisplay = hideElement?.style.display;
+export async function captureScreenshot(hideElement?: HTMLElement): Promise<Blob | null> {
+  const previous = hideElement ? hideElement.style.display : "";
   if (hideElement) hideElement.style.display = "none";
-
   try {
-    const canvas = await html2canvas(document.documentElement, {
-      useCORS: true,
-      logging: false,
+    const blob = await domToBlob(document.documentElement, {
       scale: Math.min(window.devicePixelRatio || 1, 2),
+      backgroundColor: "#ffffff",
     });
-
-    return new Promise<Blob | null>((resolve) => {
-      canvas.toBlob((blob) => resolve(blob), "image/png", 0.85);
-    });
+    return blob;
   } catch {
     return null;
   } finally {
-    if (hideElement && originalDisplay !== undefined) {
-      hideElement.style.display = originalDisplay;
-    }
+    if (hideElement) hideElement.style.display = previous;
   }
 }

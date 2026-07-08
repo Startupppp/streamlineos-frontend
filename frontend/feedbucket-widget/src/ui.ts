@@ -72,6 +72,7 @@ class FeedbucketWidget {
   private submitting = false;
   private busy = false;
   private viewState: ViewState = "form";
+  private errorSubtitle: HTMLElement | null = null;
 
   private dragging = false;
   private dragOffsetX = 0;
@@ -163,8 +164,8 @@ class FeedbucketWidget {
         recording: this.recording,
       });
       this.showView("success");
-    } catch {
-      this.showView("error");
+    } catch (error) {
+      this.showError(error);
     } finally {
       this.submitting = false;
       this.submitBtn.disabled = false;
@@ -418,6 +419,7 @@ class FeedbucketWidget {
     this.successView = this.resultView("success", "✓", "Thanks for your feedback!", "We received your message and will look into it.", "Done", this.handleDoneClick);
     this.panel.appendChild(this.successView);
     this.errorView = this.resultView("error", "!", "Something went wrong", "Your feedback could not be submitted. Please try again.", "Try again", this.handleRetryClick);
+    this.errorSubtitle = this.errorView.querySelector(".result-subtitle");
     this.panel.appendChild(this.errorView);
 
     document.addEventListener("keydown", this.handleKeydown);
@@ -507,11 +509,19 @@ class FeedbucketWidget {
       this.isOpen = true;
       this.showView("success");
       this.syncPanel();
-    } catch {
+    } catch (error) {
       this.isOpen = true;
-      this.showView("error");
+      this.showError(error);
       this.syncPanel();
     }
+  }
+
+  private showError(err: unknown): void {
+    const msg = err instanceof Error && err.message
+      ? err.message
+      : "Your feedback could not be submitted. Please try again.";
+    if (this.errorSubtitle) this.errorSubtitle.textContent = msg.slice(0, 200);
+    this.showView("error");
   }
 
   private async runRecordFlow(): Promise<void> {
