@@ -19,10 +19,9 @@ export default function ProjectReportsPage({
 
   return (
     <PageWrapper
-      eyebrow="Projects"
+      eyebrow="Project"
       title="Agile Reports"
       subtitle="Velocity, burnup, and cumulative flow for this project"
-      backHref={`/projects/${projectIdStr}`}
     >
       <div className="space-y-3">
         <div className="grid gap-3 lg:grid-cols-2">

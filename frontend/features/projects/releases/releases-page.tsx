@@ -177,6 +177,7 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
   return (
     <PageWrapper
       title="Releases"
+      eyebrow="Project"
       subtitle="Track versions and shipped features"
       actions={
         <Button size="sm" onClick={handleOpenCreate}>

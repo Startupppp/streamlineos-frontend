@@ -254,10 +254,9 @@ export default function AutomationsPage({ params }: PageProps) {
 
   return (
     <PageWrapper
-      eyebrow="Projects"
+      eyebrow="Project"
       title="Automations"
       subtitle="Automate repetitive actions with if-then rules"
-      backHref={`/projects/${projectId}`}
       actions={
         <Button size="sm" onClick={handleOpenNew}>
           <Plus className="h-3.5 w-3.5 mr-1" />New Automation

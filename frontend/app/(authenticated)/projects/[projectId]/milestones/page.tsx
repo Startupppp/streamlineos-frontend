@@ -260,7 +260,6 @@ export default function MilestonesPage({ params }: { params: Promise<{ projectId
     <PageWrapper
       title="Milestones"
       subtitle="Key checkpoints and target dates for this project"
-      backHref={`/projects/${projectId}`}
       actions={
         <Button
           size="sm"

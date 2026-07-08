@@ -353,8 +353,8 @@ All reconciled (hook URLs↔routes, chat signatures, PermissionKeys). Build not 
 > 2026-07-03 — full UI/UX conformance pass (all 24 pages): PageWrapper + URL-synced filters everywhere, DataTable/condensed table density, StatCard adoption, semantic badges, skeleton/empty/error states with themed illustrations, sheet 3-zone anatomy, gradients/violet removed, mutationKeys + calibrated staleTimes, dashboard client moved to `features/inventory` and de-cast (2 redundant queries dropped), dead assets deleted. tsc green.
 - [x] `/inventory` — Inventory overview
 - [x] `/inventory/products` — Products list
-- [x] `/inventory/products/new` — New product
-- [x] `/inventory/products/[productId]` — Product detail
+- [x] `/inventory/products/new` — New product (2026-07-08: SKU format enforcement + char limits, inline category/UOM create dialogs, UOM dependency, reorder gating, pb-24 widget clearance, status field fix)
+- [x] `/inventory/products/[productId]` — Product detail (2026-07-08: edit form expanded with productType/trackingMethod/costingMethod/standardCost/purchaseUomId/salesUomId/reorderEnabled + inline create selects)
 - [x] `/inventory/products/categories` — Product categories
 - [x] `/inventory/products/uom` — Units of measure
 - [x] `/inventory/stock` — Stock levels

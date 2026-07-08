@@ -40,7 +40,7 @@ interface ChannelListEntryProps {
   onlineUserIds: Set<string>;
   onSelectChannel: (id: number) => void;
   compact?: boolean;
-  onStartCall?: (channelId: number, type: "huddle" | "video") => void;
+  onStartCall?: (channelId: number, type: "huddle") => void;
   onOpenSettings?: (channelId: number) => void;
 }
 
@@ -76,7 +76,7 @@ interface ChannelSidebarProps {
   autoFocusSearch?: boolean;
   onSearchFocused?: () => void;
   isCollapsed?: boolean;
-  onStartCall?: (channelId: number, type: "huddle" | "video") => void;
+  onStartCall?: (channelId: number, type: "huddle") => void;
   onOpenSettings?: (channelId: number) => void;
 }
 

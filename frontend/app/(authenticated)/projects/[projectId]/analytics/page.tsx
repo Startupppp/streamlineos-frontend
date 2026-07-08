@@ -164,7 +164,7 @@ export default function AnalyticsPage({
 
   if (isLoading) {
     return (
-      <PageWrapper title="Analytics" eyebrow="Projects" backHref={`/projects/${projectId}`}>
+      <PageWrapper title="Analytics" eyebrow="Project" subtitle="Project health, velocity, and performance charts">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="h-56 w-full" />
@@ -176,7 +176,7 @@ export default function AnalyticsPage({
 
   if (!analytics) {
     return (
-      <PageWrapper title="Analytics" eyebrow="Projects" backHref={`/projects/${projectId}`}>
+      <PageWrapper title="Analytics" eyebrow="Project" subtitle="Project health, velocity, and performance charts">
         <EmptyState
           illustrationPreset="chart"
           title="No data yet"
@@ -188,7 +188,7 @@ export default function AnalyticsPage({
   }
 
   return (
-    <PageWrapper title="Analytics" eyebrow="Projects" backHref={`/projects/${projectId}`}>
+    <PageWrapper title="Analytics" eyebrow="Project" subtitle="Project health, velocity, and performance charts">
       <ProjectStats
         healthScore={healthScore}
         healthStatus={healthStatus}

@@ -70,7 +70,7 @@ export default function WorkloadPage({ params }: PageProps) {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Workload">
+      <PageWrapper title="Workload" subtitle="Team capacity and ticket distribution">
         <div className="space-y-3">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {Array.from({ length: 4 }).map((_, i) => (

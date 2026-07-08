@@ -70,7 +70,7 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
 
   if (isLoading) {
     return (
-      <PageWrapper title="Incident" eyebrow="Quality" backHref={`/projects/${projectId}/incidents`}>
+      <PageWrapper title="Incident" eyebrow="Project" backHref={`/projects/${projectId}/incidents`}>
         <div className="px-4 pb-4 space-y-4">
           <div className="flex gap-2">
             <Skeleton className="h-5 w-20 rounded-full" />
@@ -85,7 +85,7 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
 
   if (isError || !incident) {
     return (
-      <PageWrapper title="Incident" eyebrow="Quality" backHref={`/projects/${projectId}/incidents`}>
+      <PageWrapper title="Incident" eyebrow="Project" backHref={`/projects/${projectId}/incidents`}>
         <div className="px-4 pb-4">
           <ErrorState onRetry={() => void refetch()} />
         </div>

@@ -165,7 +165,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
     <PageWrapper
       title="Decisions Log"
       eyebrow="Project"
-      subtitle={`${displayed.length} decision${displayed.length === 1 ? "" : "s"}`}
+      subtitle="Log and track key project decisions for accountability and audit"
       actions={
         canManage ? (
           <Button size="sm" className="h-8 text-xs gap-1.5" onClick={() => setSheetOpen(true)}>

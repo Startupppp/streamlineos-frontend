@@ -95,7 +95,7 @@ export function ProgramDetailPage({ programId }: Props) {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Program" backHref="/projects/programs">
+      <PageWrapper title="Program" eyebrow="Program" backHref="/projects/programs">
         <div className="px-4 pb-4"><SkeletonTable rows={4} columns={3} /></div>
       </PageWrapper>
     );
@@ -103,7 +103,7 @@ export function ProgramDetailPage({ programId }: Props) {
 
   if (isError || !data) {
     return (
-      <PageWrapper title="Program" backHref="/projects/programs">
+      <PageWrapper title="Program" eyebrow="Program" backHref="/projects/programs">
         <ErrorState className="flex-1" onRetry={() => void refetch()} />
       </PageWrapper>
     );

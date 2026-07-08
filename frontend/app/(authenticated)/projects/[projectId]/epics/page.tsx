@@ -82,7 +82,7 @@ export default function EpicsPage({ params }: PageProps) {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Epics" backHref={`/projects/${projectId}`}>
+      <PageWrapper title="Epics" subtitle="Loading...">
         <div className="space-y-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
             {Array.from({ length: 4 }).map((_, i) => (
@@ -102,8 +102,7 @@ export default function EpicsPage({ params }: PageProps) {
   return (
     <PageWrapper
       title="Epics"
-      subtitle={`${epics.length} epic${epics.length !== 1 ? "s" : ""} — ${stories.length} stories, ${tickets.filter(t => t.status === "DONE").length} completed`}
-      backHref={`/projects/${projectId}`}
+      subtitle="Organize related stories and tasks into larger themes"
       actions={<CreateEpicDialog projectId={projectId} />}
     >
       <div className="space-y-4" aria-live="polite" aria-atomic="true">

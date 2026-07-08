@@ -6,7 +6,7 @@ export default function SprintsLoading() {
   return (
     <PageWrapper
       title="Sprints"
-      subtitle="Loading sprints..."
+      subtitle="Plan and track time-boxed iterations"
       actions={<Skeleton className="h-8 w-32 rounded-md" />}
     >
       <div className="space-y-6">

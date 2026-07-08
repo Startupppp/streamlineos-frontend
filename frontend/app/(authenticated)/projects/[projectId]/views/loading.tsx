@@ -6,6 +6,7 @@ export default function ViewsLoading() {
   return (
     <PageWrapper
       title="Views"
+      subtitle="Saved filters and layouts for this project"
       actions={<Skeleton className="h-8 w-28 rounded-md" />}
     >
       <div className="space-y-6">

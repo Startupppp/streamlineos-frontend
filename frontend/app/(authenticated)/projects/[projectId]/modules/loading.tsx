@@ -6,6 +6,8 @@ export default function ModulesLoading() {
   return (
     <PageWrapper
       title="Modules"
+      eyebrow="Project"
+      subtitle="Organize work into feature groups and track module progress"
       actions={<Skeleton className="h-8 w-32 rounded-md" />}
     >
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

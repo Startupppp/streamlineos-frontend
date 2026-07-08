@@ -1,17 +1,22 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 
 export default function WhiteboardLoading() {
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-4 py-2.5 border-b bg-white/80">
-        <Skeleton className="h-5 w-32" />
-        <div className="flex gap-2">
-          <Skeleton className="h-7 w-7 rounded-lg" />
-          <Skeleton className="h-7 w-7 rounded-lg" />
-          <Skeleton className="h-7 w-7 rounded-lg" />
+    <PageWrapper
+      title="Whiteboard"
+      eyebrow="Project"
+      noInternalScroll
+      contentClassName="flex min-h-0"
+    >
+      <div className="flex flex-1 min-h-0">
+        <div className="w-48 shrink-0 border-r border-border pr-3 hidden md:flex md:flex-col gap-1 py-1">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-8 w-full rounded-md" />
+          ))}
         </div>
+        <Skeleton className="flex-1 rounded-none" />
       </div>
-      <Skeleton className="flex-1 rounded-none" />
-    </div>
+    </PageWrapper>
   );
 }

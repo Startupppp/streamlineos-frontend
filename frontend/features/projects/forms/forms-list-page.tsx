@@ -175,7 +175,7 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
     <PageWrapper
       title="Forms"
       eyebrow="Project"
-      subtitle={data ? `${filtered.length} form${filtered.length === 1 ? "" : "s"}` : undefined}
+      subtitle="Build and manage data collection forms for your project"
       filters={filtersBar}
       actions={
         canManage ? (

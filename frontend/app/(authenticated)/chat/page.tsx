@@ -55,7 +55,7 @@ export default function ChatPage() {
   const [showInfoPanel, setShowInfoPanel] = useState(false);
   const [pendingCallAction, setPendingCallAction] = useState<{
     channelId: number;
-    type: "huddle" | "video";
+    type: "huddle";
   } | null>(null);
   const [emptyDMOpen, setEmptyDMOpen] = useState(false);
   const [emptyGroupOpen, setEmptyGroupOpen] = useState(false);
@@ -133,7 +133,7 @@ export default function ChatPage() {
   }, []);
 
   const handleStartCallFromSidebar = useCallback(
-    (channelId: number, type: "huddle" | "video") => {
+    (channelId: number, type: "huddle") => {
       setActiveChannelId(channelId);
       setShowMobileList(false);
       setPendingCallAction({ channelId, type });

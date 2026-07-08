@@ -149,7 +149,7 @@ export default function BacklogPage({ params }: PageProps) {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Backlog" subtitle="Loading..." backHref={`/projects/${projectId}`}>
+      <PageWrapper title="Backlog" subtitle="Loading...">
         <div className="rounded-lg border border-border overflow-hidden">
           <div className="h-8 bg-muted/40 border-b flex items-center px-2 gap-2">
             <Skeleton className="h-4 w-4" />
@@ -176,8 +176,7 @@ export default function BacklogPage({ params }: PageProps) {
   return (
     <PageWrapper
       title="Backlog"
-      subtitle={`${tickets.length} ticket${tickets.length !== 1 ? "s" : ""}`}
-      backHref={`/projects/${projectId}`}
+      subtitle="Manage and prioritize unscheduled work"
       actions={<CreateTicketDialog projectId={projectId} />}
       filters={<TicketFilterBar members={members} showSprintFilter={false} />}
     >

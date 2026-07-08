@@ -300,7 +300,7 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
     <PageWrapper
       title="Approvals"
       eyebrow="Project"
-      subtitle={`${items.length} approval${items.length === 1 ? "" : "s"}`}
+      subtitle="Review and manage approval requests for this project"
       filters={filtersBar}
       actions={
         canRequest ? (

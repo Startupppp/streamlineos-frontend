@@ -102,7 +102,7 @@ export default function ModulesPage({
 
   if (isLoading) {
     return (
-      <PageWrapper title="Modules" backHref={`/projects/${projectId}`}>
+      <PageWrapper title="Modules" eyebrow="Project" subtitle="Organize work into feature groups and track module progress">
         <div className="space-y-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {Array.from({ length: 4 }).map((_, i) => (
@@ -122,7 +122,8 @@ export default function ModulesPage({
   return (
     <PageWrapper
       title="Modules"
-      backHref={`/projects/${projectId}`}
+      eyebrow="Project"
+      subtitle="Organize work into feature groups and track module progress"
       actions={
         <Sheet open={createOpen} onOpenChange={setCreateOpen}>
           <SheetTrigger asChild>

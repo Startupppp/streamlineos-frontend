@@ -213,7 +213,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
 
   return (
     <PageWrapper
-      eyebrow="Quality"
+      eyebrow="Project"
       title="Incidents"
       subtitle="Track incidents and SLA compliance"
       filters={filtersBar}

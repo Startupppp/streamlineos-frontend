@@ -72,7 +72,7 @@ export function PortalDashboardPage({ projectId }: PortalDashboardPageProps) {
 
   if (isLoading) {
     return (
-      <PageWrapper variant="display" title="Loading..." backHref="/projects/portal">
+      <PageWrapper title="Project" backHref="/projects/portal">
         <DashboardSkeleton />
       </PageWrapper>
     );
@@ -80,7 +80,7 @@ export function PortalDashboardPage({ projectId }: PortalDashboardPageProps) {
 
   if (isError || !overview) {
     return (
-      <PageWrapper variant="display" title="Project Dashboard" backHref="/projects/portal">
+      <PageWrapper title="Project Dashboard" backHref="/projects/portal">
         <div className="px-4 pb-4">
           <ErrorState onRetry={() => { refetchOverview(); refetchCrs(); }} />
         </div>
@@ -92,7 +92,6 @@ export function PortalDashboardPage({ projectId }: PortalDashboardPageProps) {
 
   return (
     <PageWrapper
-      variant="display"
       title={project.name}
       eyebrow={project.key}
       backHref="/projects/portal"

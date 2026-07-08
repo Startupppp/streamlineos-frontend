@@ -6,7 +6,7 @@ export default function EpicsLoading() {
   return (
     <PageWrapper
       title="Epics"
-      subtitle="Loading epics..."
+      subtitle="Organize related stories and tasks into larger themes"
       actions={<Skeleton className="h-8 w-28 rounded-md" />}
     >
       <div className="space-y-8">

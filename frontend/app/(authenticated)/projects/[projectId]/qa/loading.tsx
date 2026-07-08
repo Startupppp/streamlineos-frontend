@@ -3,7 +3,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 
 export default function QaLoading() {
   return (
-    <PageWrapper eyebrow="Quality" title="QA / Tests" subtitle="Loading...">
+    <PageWrapper eyebrow="Quality" title="QA / Tests" subtitle="Test cases and runs">
       <div className="px-4 pb-4 space-y-3">
         <div className="flex items-center gap-2">
           <Skeleton className="h-7 w-24 rounded-md" />

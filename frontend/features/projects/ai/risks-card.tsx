@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback } from "react";
-import { Sparkles, Loader2, ShieldAlert } from "lucide-react";
+import { ShieldAlert, RotateCcw, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { Plan } from "@/lib/billing/feature-gates";
 import type { AiSeverity } from "@/types/projects/ai";
@@ -27,67 +27,103 @@ export function RisksCard({ projectId, featureEnabled, requiredPlan }: RisksCard
   const result = mutation.data;
 
   const handleRun = useCallback(() => {
-    if (!featureEnabled) {
-      toast.error(`AI Project Manager requires the ${requiredPlan ?? "PROFESSIONAL"} plan.`);
-      return;
-    }
-    mutation.mutate(undefined, {
-      onError: (e) => toast.error(getErrorMessage(e)),
-    });
-  }, [featureEnabled, requiredPlan, mutation]);
+    mutation.mutate(undefined);
+  }, [mutation]);
+
+  const isIdle = !result && !mutation.isPending && !mutation.isError;
 
   return (
-    <div className="bg-card border border-border rounded-xl shadow-sm p-4 space-y-3">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
+    <div className="bg-card border border-border rounded-xl shadow-sm p-4 flex flex-col gap-3 h-full">
+      <div className="flex items-start gap-3">
+        <div className="shrink-0 flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 border border-amber-100">
+          <ShieldAlert className="h-4 w-4 text-amber-500" />
+        </div>
+        <div className="min-w-0 flex-1">
           <h3 className="text-sm font-semibold text-foreground">Risk Detection</h3>
           <p className="text-[12px] text-muted-foreground mt-0.5">Identify blockers and threats early</p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleRun}
-          disabled={mutation.isPending || !featureEnabled}
-          className="shrink-0 h-8 gap-1.5 text-xs"
-        >
-          {mutation.isPending ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <Sparkles className="h-3.5 w-3.5 text-blue-600" />
-          )}
-          {mutation.isPending ? "Scanning…" : "Detect Risks"}
-        </Button>
       </div>
 
-      {result && (
-        <div className="space-y-3 pt-3 border-t border-border/60">
-          {result.risks.length === 0 ? (
-            <p className="text-[13px] text-muted-foreground">No significant risks detected.</p>
-          ) : (
-            <ul className="space-y-3">
-              {result.risks.map((risk, i) => (
-                <li key={i} className="space-y-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <ShieldAlert className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                    <span className="text-[13px] font-medium text-foreground">{risk.title}</span>
-                    <span
-                      className={`inline-flex items-center px-1.5 py-0.5 rounded border text-[10px] font-semibold uppercase tracking-wide ${severityClasses(risk.severity)}`}
-                    >
-                      {risk.severity}
-                    </span>
-                  </div>
-                  <p className="text-[12px] text-muted-foreground pl-5">{risk.rationale}</p>
-                  <p className="text-[12px] text-foreground/80 pl-5">
-                    <span className="font-medium">Mitigation: </span>
-                    {risk.mitigation}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          )}
-          <EvidenceStrip evidence={result.evidence} />
-        </div>
-      )}
+      <div className="flex-1">
+        {isIdle && (
+          <Button
+            size="sm"
+            onClick={handleRun}
+            disabled={!featureEnabled}
+            className="h-8 gap-1.5 text-xs"
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            {featureEnabled ? "Detect Risks" : `Requires ${requiredPlan ?? "PROFESSIONAL"} plan`}
+          </Button>
+        )}
+
+        {mutation.isPending && (
+          <div className="space-y-3 py-1">
+            {[0, 1].map((i) => (
+              <div key={i} className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-3.5 w-3.5 rounded shrink-0" />
+                  <Skeleton className="h-3.5 w-32 rounded" />
+                  <Skeleton className="h-4 w-12 rounded" />
+                </div>
+                <Skeleton className="h-3 w-full rounded" />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {mutation.isError && (
+          <div className="space-y-2.5">
+            <p className="text-[13px] text-destructive leading-snug">
+              {getErrorMessage(mutation.error)}
+            </p>
+            <Button variant="outline" size="sm" onClick={handleRun} className="h-8 gap-1.5 text-xs">
+              <RotateCcw className="h-3.5 w-3.5" />
+              Retry
+            </Button>
+          </div>
+        )}
+
+        {result && (
+          <div className="space-y-3">
+            {result.risks.length === 0 ? (
+              <p className="text-[13px] text-muted-foreground">No significant risks detected.</p>
+            ) : (
+              <ul className="space-y-3">
+                {result.risks.map((risk, i) => (
+                  <li key={i} className="space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <ShieldAlert className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <span className="text-[13px] font-medium text-foreground">{risk.title}</span>
+                      <span
+                        className={`inline-flex items-center px-1.5 py-0.5 rounded border text-[10px] font-semibold uppercase tracking-wide ${severityClasses(risk.severity)}`}
+                      >
+                        {risk.severity}
+                      </span>
+                    </div>
+                    <p className="text-[12px] text-muted-foreground pl-5">{risk.rationale}</p>
+                    <p className="text-[12px] text-foreground/80 pl-5">
+                      <span className="font-medium">Mitigation: </span>
+                      {risk.mitigation}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <EvidenceStrip evidence={result.evidence} />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleRun}
+              disabled={mutation.isPending}
+              className="h-7 gap-1.5 text-xs text-muted-foreground hover:text-foreground -ml-2"
+            >
+              <RotateCcw className="h-3 w-3" />
+              Regenerate
+            </Button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

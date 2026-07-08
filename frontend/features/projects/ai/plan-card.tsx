@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import { Sparkles, Loader2 } from "lucide-react";
+import { ListChecks, Sparkles, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { Plan } from "@/lib/billing/feature-gates";
 import { usePlanFromPrompt } from "@/hooks/api/projects/ai";
@@ -23,19 +23,9 @@ export function PlanCard({ projectId, featureEnabled, requiredPlan }: PlanCardPr
   const result = mutation.data;
 
   const handleRun = useCallback(() => {
-    if (!featureEnabled) {
-      toast.error(`AI Project Manager requires the ${requiredPlan ?? "PROFESSIONAL"} plan.`);
-      return;
-    }
-    if (!prompt.trim()) {
-      toast.error("Please enter a prompt describing what you want to plan.");
-      return;
-    }
-    mutation.mutate(
-      { prompt: prompt.trim() },
-      { onError: (e) => toast.error(getErrorMessage(e)) },
-    );
-  }, [featureEnabled, requiredPlan, prompt, mutation]);
+    if (!prompt.trim()) return;
+    mutation.mutate({ prompt: prompt.trim() });
+  }, [prompt, mutation]);
 
   const handlePromptChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setPrompt(e.target.value);
@@ -54,44 +44,68 @@ export function PlanCard({ projectId, featureEnabled, requiredPlan }: PlanCardPr
   }, [result]);
 
   return (
-    <div className="bg-card border border-border rounded-xl shadow-sm p-4 space-y-3">
-      <div className="min-w-0">
-        <h3 className="text-sm font-semibold text-foreground">Plan from Prompt</h3>
-        <p className="text-[12px] text-muted-foreground mt-0.5">Generate milestones and tasks from a goal</p>
+    <div className="bg-card border border-border rounded-xl shadow-sm p-4 flex flex-col gap-3 h-full">
+      <div className="flex items-start gap-3">
+        <div className="shrink-0 flex h-8 w-8 items-center justify-center rounded-lg bg-violet-50 border border-violet-100">
+          <ListChecks className="h-4 w-4 text-violet-500" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <h3 className="text-sm font-semibold text-foreground">Plan from Prompt</h3>
+          <p className="text-[12px] text-muted-foreground mt-0.5">Generate milestones and tasks from a goal</p>
+        </div>
       </div>
 
-      <div className="space-y-2">
+      <div className="flex-1 space-y-2.5">
         <Textarea
           value={prompt}
           onChange={handlePromptChange}
           placeholder="e.g. Build a mobile checkout flow with payment integration by end of Q3"
           className="text-[13px] min-h-[72px] resize-none"
           disabled={mutation.isPending}
+          aria-label="Describe what you want to plan"
         />
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleRun}
-          disabled={mutation.isPending || !featureEnabled || !prompt.trim()}
-          className="h-8 gap-1.5 text-xs"
-        >
-          {mutation.isPending ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <Sparkles className="h-3.5 w-3.5 text-blue-600" />
-          )}
-          {mutation.isPending ? "Planning…" : "Generate Plan"}
-        </Button>
-      </div>
 
-      {result && (
-        <div className="space-y-3 pt-3 border-t border-border/60">
-          {result.summary && (
-            <p className="text-[13px] text-muted-foreground leading-relaxed">{result.summary}</p>
-          )}
-          <SuggestedTaskList items={flatItems} projectId={projectId} />
-        </div>
-      )}
+        {!mutation.isPending && (
+          <Button
+            size="sm"
+            onClick={handleRun}
+            disabled={!featureEnabled || !prompt.trim()}
+            className="h-8 gap-1.5 text-xs"
+          >
+            {result ? <RotateCcw className="h-3.5 w-3.5" /> : <Sparkles className="h-3.5 w-3.5" />}
+            {result
+              ? "Regenerate"
+              : featureEnabled
+                ? "Generate Plan"
+                : `Requires ${requiredPlan ?? "PROFESSIONAL"} plan`}
+          </Button>
+        )}
+
+        {mutation.isPending && (
+          <div className="space-y-1.5 py-1">
+            <Skeleton className="h-3.5 w-3/4 rounded" />
+            <Skeleton className="h-3.5 w-full rounded" />
+            <Skeleton className="h-8 w-full rounded-lg" />
+            <Skeleton className="h-8 w-full rounded-lg" />
+            <Skeleton className="h-8 w-full rounded-lg" />
+          </div>
+        )}
+
+        {mutation.isError && (
+          <p className="text-[13px] text-destructive leading-snug">
+            {getErrorMessage(mutation.error)}
+          </p>
+        )}
+
+        {result && (
+          <div className="space-y-3 pt-1 border-t border-border/60">
+            {result.summary && (
+              <p className="text-[13px] text-muted-foreground leading-relaxed">{result.summary}</p>
+            )}
+            <SuggestedTaskList items={flatItems} projectId={projectId} />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

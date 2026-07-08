@@ -3,7 +3,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 
 export default function RunExecutionLoading() {
   return (
-    <PageWrapper title="Loading run..." backHref="#">
+    <PageWrapper eyebrow="Quality" title="Loading run..." subtitle="Test run execution">
       <div className="px-4 pb-4 space-y-2">
         <Skeleton className="h-4 w-48 rounded" />
         {Array.from({ length: 5 }).map((_, i) => (

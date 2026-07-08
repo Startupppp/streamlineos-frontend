@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
-import { Sparkles, ShieldOff } from "lucide-react";
+import { ShieldOff, Sparkles } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useCan } from "@/hooks/api/access";
@@ -17,6 +17,8 @@ interface AiAssistantPageProps {
   projectId: number;
 }
 
+const SUBTITLE = "Analyze, plan, and get answers about this project.";
+
 export function AiAssistantPage({ projectId }: AiAssistantPageProps) {
   const canUseAI = useCan("projects:ai:use");
   const feature = useFeature("ai.project-manager");
@@ -24,7 +26,7 @@ export function AiAssistantPage({ projectId }: AiAssistantPageProps) {
 
   if (!canUseAI) {
     return (
-      <PageWrapper title="AI Assistant" eyebrow="Project">
+      <PageWrapper title="AI Assistant" eyebrow="Project" subtitle={SUBTITLE}>
         <EmptyState
           illustration={<ShieldOff className="h-10 w-10 text-muted-foreground/40" />}
           title="Access restricted"
@@ -37,7 +39,7 @@ export function AiAssistantPage({ projectId }: AiAssistantPageProps) {
 
   if (!feature.enabled) {
     return (
-      <PageWrapper title="AI Assistant" eyebrow="Project">
+      <PageWrapper title="AI Assistant" eyebrow="Project" subtitle={SUBTITLE}>
         <EmptyState
           illustration={<Sparkles className="h-10 w-10 text-blue-400/60" />}
           title="Upgrade to unlock AI features"
@@ -55,38 +57,53 @@ export function AiAssistantPage({ projectId }: AiAssistantPageProps) {
     requiredPlan: feature.requiredPlan,
   };
 
-  const cards = [
-    <SummaryCard key="summary" {...sharedProps} />,
-    <RisksCard key="risks" {...sharedProps} />,
-    <ClientUpdateCard key="client-update" {...sharedProps} />,
-    <AskCard key="ask" {...sharedProps} />,
-    <PlanCard key="plan" {...sharedProps} />,
-    <ExtractTasksCard key="extract" {...sharedProps} />,
+  const gridItems = [
+    { id: "summary", card: <SummaryCard {...sharedProps} /> },
+    { id: "risks", card: <RisksCard {...sharedProps} /> },
+    { id: "client", card: <ClientUpdateCard {...sharedProps} /> },
+    { id: "plan", card: <PlanCard {...sharedProps} /> },
   ];
 
   return (
-    <PageWrapper
-      title="AI Assistant"
-      eyebrow="Project"
-      subtitle="Intelligent insights and task generation powered by your project data"
-      variant="display"
-      badge={<Sparkles className="h-3.5 w-3.5 text-blue-600" />}
-    >
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {cards.map((card, i) => (
-          <motion.div
-            key={card.key}
-            initial={prefersReducedMotion ? false : { opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={
-              prefersReducedMotion
-                ? undefined
-                : { duration: 0.22, ease: "easeOut", delay: i * 0.06 }
-            }
-          >
-            {card}
-          </motion.div>
-        ))}
+    <PageWrapper title="AI Assistant" eyebrow="Project" subtitle={SUBTITLE}>
+      <div className="space-y-4 pb-16">
+        <motion.div
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={prefersReducedMotion ? undefined : { duration: 0.22, ease: "easeOut" }}
+        >
+          <AskCard {...sharedProps} />
+        </motion.div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
+          {gridItems.map(({ id, card }, i) => (
+            <motion.div
+              key={id}
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={
+                prefersReducedMotion
+                  ? undefined
+                  : { duration: 0.22, ease: "easeOut", delay: (i + 1) * 0.06 }
+              }
+              className="h-full"
+            >
+              {card}
+            </motion.div>
+          ))}
+        </div>
+
+        <motion.div
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={
+            prefersReducedMotion
+              ? undefined
+              : { duration: 0.22, ease: "easeOut", delay: 5 * 0.06 }
+          }
+        >
+          <ExtractTasksCard {...sharedProps} />
+        </motion.div>
       </div>
     </PageWrapper>
   );

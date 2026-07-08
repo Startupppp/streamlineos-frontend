@@ -6,6 +6,7 @@ export default function CyclesLoading() {
   return (
     <PageWrapper
       title="Cycles"
+      subtitle="Time-box work into focused iterations"
       actions={<Skeleton className="h-8 w-28 rounded-md" />}
     >
       <div className="space-y-6">

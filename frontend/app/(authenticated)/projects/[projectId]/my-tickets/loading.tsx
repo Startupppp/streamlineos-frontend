@@ -14,14 +14,7 @@ export default function MyTicketsLoading() {
   return (
     <PageWrapper
       title="My Tickets"
-      subtitle="Loading tickets assigned to you"
-      badge={
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-3 w-12" />
-          <Skeleton className="h-3 w-12" />
-          <Skeleton className="h-3 w-12" />
-        </div>
-      }
+      subtitle="Tickets assigned to or reported by you"
       filters={filterBar}
     >
       <div className="border rounded-lg overflow-hidden">

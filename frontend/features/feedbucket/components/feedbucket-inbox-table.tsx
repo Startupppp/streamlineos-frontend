@@ -69,11 +69,11 @@ function AssigneeCell({ submission }: { submission: FeedbucketSubmission }) {
   if (!submission.assignee) {
     return <span className="text-muted-foreground text-xs">Unassigned</span>;
   }
+  const fullName = [submission.assignee.firstName, submission.assignee.lastName]
+    .filter(Boolean)
+    .join(" ");
   const name =
-    submission.assignee.name ??
-    [submission.assignee.firstName, submission.assignee.lastName].filter(Boolean).join(" ") ||
-    submission.assignee.email ??
-    "Unknown";
+    submission.assignee.name || fullName || submission.assignee.email || "Unknown";
   return <span className="text-sm truncate max-w-[120px]">{name}</span>;
 }
 

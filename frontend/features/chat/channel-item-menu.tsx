@@ -10,7 +10,6 @@ import {
   Settings,
   Star,
   UserPlus,
-  Video,
 } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -62,7 +61,7 @@ export function ChannelItemMenu({
 }: {
   channel: Channel;
   currentUserId: string;
-  onStartCall: (channelId: number, type: "huddle" | "video") => void;
+  onStartCall: (channelId: number, type: "huddle") => void;
   onOpenSettings: (channelId: number) => void;
 }) {
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -157,14 +156,6 @@ export function ChannelItemMenu({
     [archiveChannel, channel.id],
   );
 
-  const handleStartVideoCall = useCallback(
-    (event: Event) => {
-      event.preventDefault();
-      onStartCall(channel.id, "video");
-    },
-    [onStartCall, channel.id],
-  );
-
   const handleStartCall = useCallback(
     (event: Event) => {
       event.preventDefault();
@@ -200,10 +191,6 @@ export function ChannelItemMenu({
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-64" onClick={(e) => e.stopPropagation()}>
-          <DropdownMenuItem onSelect={handleStartVideoCall}>
-            <Video className="h-4 w-4" />
-            Start Video Call
-          </DropdownMenuItem>
           <DropdownMenuItem onSelect={handleStartCall}>
             <Phone className="h-4 w-4" />
             Start Call

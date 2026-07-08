@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Mic, Speaker, Video } from "lucide-react";
+import { Mic, Speaker } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface MediaDeviceOption {
@@ -12,10 +12,8 @@ interface MediaDeviceOption {
 export function useMediaDevices() {
   const [audioInputs, setAudioInputs] = useState<MediaDeviceOption[]>([]);
   const [audioOutputs, setAudioOutputs] = useState<MediaDeviceOption[]>([]);
-  const [videoInputs, setVideoInputs] = useState<MediaDeviceOption[]>([]);
   const [selectedAudioInput, setSelectedAudioInput] = useState<string>("default");
   const [selectedAudioOutput, setSelectedAudioOutput] = useState<string>("default");
-  const [selectedVideoInput, setSelectedVideoInput] = useState<string>("default");
 
   useEffect(() => {
     const load = async () => {
@@ -31,11 +29,6 @@ export function useMediaDevices() {
             .filter((d) => d.kind === "audiooutput")
             .map((d) => ({ deviceId: d.deviceId, label: d.label || `Speaker ${d.deviceId.slice(0, 4)}` })),
         );
-        setVideoInputs(
-          devices
-            .filter((d) => d.kind === "videoinput")
-            .map((d) => ({ deviceId: d.deviceId, label: d.label || `Camera ${d.deviceId.slice(0, 4)}` })),
-        );
       } catch {}
     };
     load();
@@ -46,13 +39,10 @@ export function useMediaDevices() {
   return {
     audioInputs,
     audioOutputs,
-    videoInputs,
     selectedAudioInput,
     selectedAudioOutput,
-    selectedVideoInput,
     setSelectedAudioInput,
     setSelectedAudioOutput,
-    setSelectedVideoInput,
   };
 }
 
@@ -60,20 +50,17 @@ export function DeviceSelector({ show, onClose }: { show: boolean; onClose: () =
   const {
     audioInputs,
     audioOutputs,
-    videoInputs,
     selectedAudioInput,
     selectedAudioOutput,
-    selectedVideoInput,
     setSelectedAudioInput,
     setSelectedAudioOutput,
-    setSelectedVideoInput,
   } = useMediaDevices();
 
   if (!show) return null;
 
   return (
     <div className="absolute bottom-full mb-2 left-0 right-0 mx-4 bg-background border border-border/60 rounded-xl shadow-xl p-4 z-50">
-      <h4 className="text-[12px] font-bold mb-3">Audio &amp; Video Settings</h4>
+      <h4 className="text-[12px] font-bold mb-3">Audio Settings</h4>
 
       {audioInputs.length > 0 && (
         <div className="mb-3">
@@ -111,28 +98,6 @@ export function DeviceSelector({ show, onClose }: { show: boolean; onClose: () =
             )}
           >
             {audioOutputs.map((d) => (
-              <option key={d.deviceId} value={d.deviceId}>
-                {d.label}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
-
-      {videoInputs.length > 0 && (
-        <div className="mb-3">
-          <div className="flex items-center gap-1.5 mb-1.5">
-            <Video className="h-3 w-3 text-muted-foreground" />
-            <label className="text-[11px] font-medium text-muted-foreground">Camera</label>
-          </div>
-          <select
-            value={selectedVideoInput}
-            onChange={(e) => setSelectedVideoInput(e.target.value)}
-            className={cn(
-              "w-full text-[12px] border border-border/50 rounded-lg px-2 py-1.5 bg-background focus:outline-none focus:border-blue-500/40",
-            )}
-          >
-            {videoInputs.map((d) => (
               <option key={d.deviceId} value={d.deviceId}>
                 {d.label}
               </option>

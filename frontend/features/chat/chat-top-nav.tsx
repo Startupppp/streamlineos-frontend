@@ -8,7 +8,7 @@ const TABS = [
   { href: "/chat", label: "Discuss" },
   { href: "/chat/channels", label: "Channels" },
   { href: "/chat/configuration?tab=settings", label: "Settings", configTab: "settings" as const },
-  { href: "/chat/configuration?tab=voice-video", label: "Voice & Video", configTab: "voice-video" as const },
+  { href: "/chat/configuration?tab=voice-video", label: "Voice", configTab: "voice-video" as const },
 ];
 
 function isTabActive(

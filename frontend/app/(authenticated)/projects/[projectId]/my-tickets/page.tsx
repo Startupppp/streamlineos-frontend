@@ -160,18 +160,27 @@ export default function MyTicketsPage({ params }: PageProps) {
         }[])
       : undefined;
 
-  const todoCount = myTickets.filter((t) => t.status === "TODO").length;
-  const inProgressCount = myTickets.filter(
-    (t) => t.status === "IN_PROGRESS",
-  ).length;
-  const doneCount = myTickets.filter((t) => t.status === "DONE").length;
-
   if (isLoading) {
     return (
-      <PageWrapper title="My Tickets" subtitle="Tickets assigned to you">
-        <div className="space-y-3 p-4">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-12 w-full" />
+      <PageWrapper title="My Tickets" subtitle="Tickets assigned to or reported by you">
+        <div className="rounded-lg border border-border overflow-hidden mx-4 mb-4">
+          <div className="flex items-center gap-4 px-3 py-2 border-b bg-muted/30">
+            <Skeleton className="h-3 w-12" />
+            <Skeleton className="h-3 flex-1" />
+            <Skeleton className="h-3 w-16" />
+            <Skeleton className="h-3 w-16" />
+            <Skeleton className="h-3 w-12" />
+            <Skeleton className="h-3 w-16" />
+          </div>
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-4 px-3 py-2 border-b last:border-b-0">
+              <Skeleton className="h-3 w-12" />
+              <Skeleton className="h-3 flex-1" />
+              <Skeleton className="h-5 w-16 rounded-full" />
+              <Skeleton className="h-5 w-16 rounded-full" />
+              <Skeleton className="h-5 w-8 rounded-full" />
+              <Skeleton className="h-3 w-12" />
+            </div>
           ))}
         </div>
       </PageWrapper>
@@ -183,14 +192,7 @@ export default function MyTicketsPage({ params }: PageProps) {
   return (
     <PageWrapper
       title="My Tickets"
-      subtitle={`${myTickets.length} ticket${myTickets.length !== 1 ? "s" : ""} assigned to you`}
-      badge={
-        <div className="flex items-center gap-2 text-xs">
-          <span className="text-muted-foreground">{todoCount} todo</span>
-          <span className="text-blue-500">{inProgressCount} active</span>
-          <span className="text-green-500">{doneCount} done</span>
-        </div>
-      }
+      subtitle="Tickets assigned to or reported by you"
       filters={
         <TicketFilterBar showSprintFilter={false} showAssigneeFilter={false} />
       }

@@ -200,7 +200,7 @@ export function RisksPage({ projectId }: RisksPageProps) {
     <PageWrapper
       title="Risk Register"
       eyebrow="Project"
-      subtitle={`${displayed.length} risk${displayed.length === 1 ? "" : "s"}`}
+      subtitle="Identify, assess, and mitigate project risks"
       actions={
         canManage ? (
           <Button size="sm" className="h-8 text-xs gap-1.5" onClick={() => setSheetOpen(true)}>

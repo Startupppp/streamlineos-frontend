@@ -269,7 +269,7 @@ export default function PagesPage({
 
   if (isLoading) {
     return (
-      <PageWrapper title="Pages" eyebrow="Projects" backHref={`/projects/${projectId}`} noInternalScroll contentClassName="p-0">
+      <PageWrapper title="Pages" eyebrow="Project" subtitle="Create and manage project documentation and notes" noInternalScroll contentClassName="p-0">
         <div className="flex h-full">
           <div className="w-64 border-r p-4 space-y-2">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -287,8 +287,8 @@ export default function PagesPage({
   return (
     <PageWrapper
       title="Pages"
-      eyebrow="Projects"
-      backHref={`/projects/${projectId}`}
+      eyebrow="Project"
+      subtitle="Create and manage project documentation and notes"
       actions={
         <Sheet open={createOpen} onOpenChange={setCreateOpen}>
           <SheetTrigger asChild>

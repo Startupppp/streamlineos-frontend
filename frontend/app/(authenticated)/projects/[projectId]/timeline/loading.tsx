@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function TimelineLoading() {
   return (
-    <PageWrapper title="Timeline" subtitle="Loading timeline...">
+    <PageWrapper title="Timeline" subtitle="Visual timeline of project tickets and deadlines">
       <div className="h-full px-4 pb-4 space-y-3">
         <div className="flex items-center justify-between">
           <Skeleton className="h-6 w-48" />

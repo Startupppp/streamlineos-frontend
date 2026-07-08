@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Mic, MicOff, Hand, PhoneOff, ChevronUp, ChevronDown, CameraOff, Monitor, MonitorOff, Settings, UserMinus, VolumeX, Volume2, MessageSquare, UserPlus, Smile, PauseCircle, PlayCircle } from "lucide-react";
+import { Mic, MicOff, Hand, PhoneOff, ChevronUp, ChevronDown, Monitor, MonitorOff, Settings, UserMinus, VolumeX, Volume2, MessageSquare, UserPlus, Smile, PauseCircle, PlayCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn, resolveImageUrl } from "@/lib/utils";
@@ -571,11 +571,6 @@ function ParticipantCard({ participant, audioLevel, isCurrentUser, isHost, onKic
         {participant.handRaised && (
           <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-amber-500/10 border border-border flex items-center justify-center text-[9px]">
             <Hand className="h-2.5 w-2.5 text-amber-500" />
-          </span>
-        )}
-        {participant.isCameraOff && (
-          <span className="absolute -top-0.5 -left-0.5 h-4 w-4 rounded-full bg-background border border-border flex items-center justify-center">
-            <CameraOff className="h-2.5 w-2.5 text-muted-foreground" />
           </span>
         )}
         {participant.isScreenSharing && (

@@ -3,8 +3,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function PortfoliosLoading() {
   return (
-    <PageWrapper title="Portfolios" eyebrow="Projects" filters={<Skeleton className="h-8 w-80 rounded-md" />} actions={<Skeleton className="h-8 w-32 rounded-md" />}>
-      <div className="px-4 pb-4 space-y-2">
+    <PageWrapper title="Portfolios" eyebrow="Projects" subtitle="Group related programs and projects into portfolios" filters={<Skeleton className="h-8 w-80 rounded-md" />} actions={<Skeleton className="h-8 w-32 rounded-md" />}>
+      <div className="space-y-2">
         {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="flex items-center gap-4 py-2.5 border-b border-border/40">
             <Skeleton className="h-4 w-48" />

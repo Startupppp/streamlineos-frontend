@@ -188,7 +188,7 @@ export default function ProjectSettingsPage({ params }: PageProps) {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Settings">
+      <PageWrapper title="Settings" eyebrow="Project">
         <div className="flex flex-col md:flex-row md:items-stretch gap-0 pb-8 md:min-h-full">
           <div className="flex md:flex-col gap-1 md:w-44 shrink-0 p-2 mb-4 md:mb-0 md:self-stretch border-b border-border md:border-b-0 md:border-r md:pr-4 bg-card/50 md:rounded-l-lg">
             {Array.from({ length: 4 }).map((_, i) => (
@@ -207,7 +207,7 @@ export default function ProjectSettingsPage({ params }: PageProps) {
 
   if (!project) {
     return (
-      <PageWrapper title="Settings">
+      <PageWrapper title="Settings" eyebrow="Project">
         <div className="flex items-center justify-center h-64" role="alert">
           <div className="text-center space-y-2">
             <h2 className="text-lg font-semibold text-destructive">
@@ -224,10 +224,9 @@ export default function ProjectSettingsPage({ params }: PageProps) {
 
   return (
     <PageWrapper
-      eyebrow="Projects"
+      eyebrow="Project"
       title="Settings"
       subtitle={project.name}
-      backHref={`/projects/${projectId}`}
     >
       <div className="flex flex-col md:flex-row md:items-stretch gap-0 pb-8 md:min-h-full">
         <nav

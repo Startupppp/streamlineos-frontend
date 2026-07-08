@@ -70,7 +70,7 @@ export default function ViewsPage({
 
   if (isLoading) {
     return (
-      <PageWrapper title="Views" backHref={`/projects/${projectIdStr}`}>
+      <PageWrapper title="Views" subtitle="Loading...">
         <div className="space-y-2">
           {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-14 w-full rounded-lg" />
@@ -83,7 +83,7 @@ export default function ViewsPage({
   return (
     <PageWrapper
       title="Views"
-      backHref={`/projects/${projectIdStr}`}
+      subtitle="Saved filters and layouts for this project"
       actions={
         <Button size="sm" onClick={handleOpenCreate}>
           <Plus className="h-4 w-4 mr-1" /> New View

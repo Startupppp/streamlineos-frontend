@@ -4,7 +4,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 
 export default function ProjectSettingsLoading() {
   return (
-    <PageWrapper title="Settings" subtitle="Loading project settings...">
+    <PageWrapper title="Settings" eyebrow="Project">
       <div className="max-w-xl mx-auto space-y-6 pb-8">
         <Card>
           <CardContent className="pt-5 space-y-5">

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { HardDrive, Loader2, ShieldAlert, Users, Video } from "lucide-react";
+import { HardDrive, Loader2, Mic, ShieldAlert, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,7 +16,7 @@ import type { ChatOrgSettings } from "@/types/chat";
 
 const TABS = [
   { value: "settings", label: "Settings", icon: HardDrive },
-  { value: "voice-video", label: "Voice & Video", icon: Video },
+  { value: "voice-video", label: "Voice", icon: Mic },
 ] as const;
 
 type TabValue = (typeof TABS)[number]["value"];
@@ -142,9 +142,9 @@ export function ChatConfigurationPage() {
         ) : (
           <div className="space-y-5">
             <div>
-              <h2 className="text-[15px] font-bold mb-1">Voice & Video</h2>
+              <h2 className="text-[15px] font-bold mb-1">Voice</h2>
               <p className="text-[12px] text-muted-foreground">
-                Limits for huddles and video meetings across your organization.
+                Limits for huddles across your organization.
               </p>
             </div>
             <div className="space-y-1.5">

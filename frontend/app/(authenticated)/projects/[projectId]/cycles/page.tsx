@@ -71,18 +71,9 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
     );
   }, [createMutation, projectId]);
 
-  const subtitleText =
-    [
-      activeCycles.length > 0 && `${activeCycles.length} active`,
-      upcomingCycles.length > 0 && `${upcomingCycles.length} upcoming`,
-      completedCycles.length > 0 && `${completedCycles.length} completed`,
-    ]
-      .filter((s): s is string => Boolean(s))
-      .join(", ") || undefined;
-
   if (isLoading) {
     return (
-      <PageWrapper title="Cycles" backHref={`/projects/${projectIdStr}`}>
+      <PageWrapper title="Cycles" subtitle="Loading...">
         <div className="space-y-6">
           <div className="space-y-2">
             <Skeleton className="h-3 w-12" />
@@ -122,8 +113,7 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
   return (
     <PageWrapper
       title="Cycles"
-      subtitle={subtitleText}
-      backHref={`/projects/${projectIdStr}`}
+      subtitle="Time-box work into focused iterations"
       actions={
         <Sheet open={createOpen} onOpenChange={setCreateOpen}>
           <SheetTrigger asChild>

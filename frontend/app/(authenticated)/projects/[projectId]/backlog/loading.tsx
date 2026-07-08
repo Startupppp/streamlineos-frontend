@@ -14,7 +14,7 @@ export default function BacklogLoading() {
   return (
     <PageWrapper
       title="Backlog"
-      subtitle="Loading tickets..."
+      subtitle="Manage and prioritize unscheduled work"
       actions={<Skeleton className="h-8 w-28 rounded-md" />}
       filters={filterBar}
     >

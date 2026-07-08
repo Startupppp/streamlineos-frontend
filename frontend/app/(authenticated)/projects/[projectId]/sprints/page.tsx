@@ -106,7 +106,7 @@ export default function SprintsPage({ params }: PageProps) {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Sprints" backHref={`/projects/${projectId}`} actions={<CreateSprintDialog projectId={projectId} />}>
+      <PageWrapper title="Sprints" subtitle="Loading..." actions={<CreateSprintDialog projectId={projectId} />}>
         <div className="space-y-6">
           <div className="space-y-2">
             <Skeleton className="h-3 w-20" />
@@ -136,21 +136,12 @@ export default function SprintsPage({ params }: PageProps) {
   const completionSprint = completionSprintId ? sprints?.find((s) => s.id === completionSprintId) : null;
   const nextPlannedSprint = sprints?.find((s) => s.status === "PLANNED");
 
-  const subtitleParts: string[] = [];
-  if (activeSprints.length > 0) subtitleParts.push(`${activeSprints.length} active`);
-  if (plannedSprints.length > 0) subtitleParts.push(`${plannedSprints.length} planned`);
-  if (completedSprints.length > 0) subtitleParts.push(`${completedSprints.length} completed`);
-  const subtitle = subtitleParts.length > 0
-    ? subtitleParts.join(", ")
-    : "Create your first sprint to start organizing work";
-
   const hasSections = activeSprints.length > 0 || plannedSprints.length > 0 || completedSprints.length > 0;
 
   return (
     <PageWrapper
       title="Sprints"
-      subtitle={subtitle}
-      backHref={`/projects/${projectId}`}
+      subtitle="Plan and track time-boxed iterations"
       actions={<CreateSprintDialog projectId={projectId} />}
     >
       {planningSprintId && planningSprint && (
