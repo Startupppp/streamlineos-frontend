@@ -32,7 +32,7 @@ export function ChannelItem({
   currentUserId: string;
   onlineUserIds: Set<string>;
   compact?: boolean;
-  onStartCall?: (channelId: number, type: "huddle" | "video") => void;
+  onStartCall?: (channelId: number, type: "huddle") => void;
   onOpenSettings?: (channelId: number) => void;
 }) {
   const otherMember =
