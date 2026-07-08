@@ -121,12 +121,21 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
                       "—"
                     )}
                   </TableCell>
+                  <TableCell className="px-1 py-1">
+                    <TicketQuickActions
+                      ticketId={ticket.id}
+                      projectId={projectId}
+                      currentStatus={ticket.status}
+                      currentPriority={ticket.priority}
+                      currentAssigneeId={ticket.assignee?.id}
+                    />
+                  </TableCell>
                 </TableRow>
               );
             })}
             {tickets.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground text-sm">
+                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground text-sm">
                   No work items found
                 </TableCell>
               </TableRow>
