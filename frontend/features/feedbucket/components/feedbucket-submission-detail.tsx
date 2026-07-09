@@ -163,6 +163,17 @@ export function FeedbucketSubmissionDetail({ submissionId }: FeedbucketSubmissio
         </div>
       )}
 
+      {submission.recordingUrl && (
+        <div className="rounded-xl border border-border overflow-hidden bg-muted/20">
+          <video
+            controls
+            src={submission.recordingUrl}
+            className="w-full max-h-[480px]"
+            aria-label="Screen recording"
+          />
+        </div>
+      )}
+
       <div className="rounded-xl border border-border bg-card p-4 space-y-3">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="space-y-1">

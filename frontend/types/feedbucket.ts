@@ -66,6 +66,7 @@ export interface FeedbucketSubmission {
   message: string;
   pageUrl: string | null;
   screenshotUrl: string | null;
+  recordingUrl: string | null;
   metadata: FeedbucketMetadata | null;
   consoleLogs: FeedbucketConsoleEntry[] | null;
   reporterName: string | null;

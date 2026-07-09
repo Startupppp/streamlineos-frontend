@@ -49,10 +49,6 @@ export interface Notification {
   category: NotificationCategory;
   sourceModule: string | null;
   eventKey?: string | null;
-  entityType?: string | null;
-  entityId?: string | null;
-  actorUserId?: string | null;
-  groupKey?: string | null;
   reason?: string | null;
   title: string;
   message: string | null;
@@ -60,12 +56,9 @@ export interface Notification {
   isRead: boolean;
   pinned: boolean;
   channel: string;
-  sound: boolean;
   archivedAt: Date | string | null;
   snoozedUntil: Date | string | null;
-  deletedAt: Date | string | null;
   createdAt: Date | string;
-  updatedAt: Date | string;
 }
 
 export interface UnreadCount {

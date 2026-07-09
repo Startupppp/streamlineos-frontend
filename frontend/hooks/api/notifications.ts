@@ -201,16 +201,6 @@ export const useBulkDelete = () => {
   });
 };
 
-export const useClearAllNotifications = () => {
-  const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, void>({
-    mutationFn: () => apiClient.delete<{ success: boolean }>("/notifications/clear-all"),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
-    },
-  });
-};
-
 export const useNotificationTemplates = (
   params?: Record<string, unknown>,
   options?: Omit<UseQueryOptions<NotificationTemplate[], Error>, "queryKey" | "queryFn">,
@@ -262,20 +252,6 @@ export const usePreviewTemplate = () => {
   return useMutation<TemplatePreviewResult, Error, { id: number; variables: Record<string, string> }>({
     mutationFn: ({ id, variables }) =>
       apiClient.post<TemplatePreviewResult>(`/notification-templates/${id}/preview`, { variables }),
-  });
-};
-
-export const useTestTemplate = () => {
-  return useMutation<
-    { success: boolean },
-    Error,
-    { id: number; recipientId: string; variables: Record<string, string> }
-  >({
-    mutationFn: ({ id, recipientId, variables }) =>
-      apiClient.post<{ success: boolean }>(`/notification-templates/${id}/test`, {
-        recipientId,
-        variables,
-      }),
   });
 };
 

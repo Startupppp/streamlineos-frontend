@@ -47,6 +47,7 @@ import {
   Bug,
   FilePen,
   Gavel,
+  MessageSquareText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -93,6 +94,7 @@ function useSidebarSections(baseUrl: string): NavSection[] {
   const canMeetings = useCan("projects:meetings:view");
   const canWorkflow = useCan("projects:workflow:view");
   const canChat = useCan("projects:tickets:view");
+  const canFeedback = useCan("feedbucket:submissions:view");
 
   return [
     {
@@ -117,6 +119,15 @@ function useSidebarSections(baseUrl: string): NavSection[] {
                 label: "Chat",
                 icon: MessageCircleIcon,
                 href: `${baseUrl}/chat`,
+              },
+            ]
+          : []),
+        ...(canFeedback
+          ? [
+              {
+                label: "Feedback",
+                icon: MessageSquareText,
+                href: `${baseUrl}/feedbucket`,
               },
             ]
           : []),

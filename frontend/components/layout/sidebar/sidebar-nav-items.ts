@@ -1302,24 +1302,6 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    label: "Feedbucket",
-    requiredPermission: "feedbucket:submissions:view",
-    routes: [
-      {
-        label: "Inbox",
-        icon: Inbox,
-        href: "/feedbucket",
-        requiredPermission: "feedbucket:submissions:view",
-      },
-      {
-        label: "Widgets",
-        icon: MessageSquareText,
-        href: "/feedbucket/widgets",
-        requiredPermission: "feedbucket:widgets:view",
-      },
-    ],
-  },
-  {
     label: "Organization",
     module: "hrms",
     requiredPermission: ["settings:manage", "settings:view"],
@@ -1680,12 +1662,6 @@ export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
     label: "Payroll",
     href: "/payroll",
     icon: IndianRupee,
-  },
-  {
-    key: "feedbucket",
-    label: "Feedbucket",
-    href: "/feedbucket",
-    icon: MessageSquareText,
   },
 ];
 
