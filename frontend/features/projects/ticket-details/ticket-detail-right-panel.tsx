@@ -24,6 +24,7 @@ interface TicketDetailRightPanelProps {
     sprintId?: number | null;
     epicId?: number | null;
     moduleId?: number | null;
+    cycleId?: number | null;
     startDate?: string | null;
     dueDate?: string | null;
     timeSpent?: string | null;

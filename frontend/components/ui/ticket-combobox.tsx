@@ -33,7 +33,6 @@ export function TicketCombobox({
   const { data, isFetching } = useTickets(
     projectId,
     debouncedSearch ? { search: debouncedSearch, limit: 20 } : { limit: 20 },
-    { enabled: !!projectId },
   );
 
   const tickets = data?.data ?? [];

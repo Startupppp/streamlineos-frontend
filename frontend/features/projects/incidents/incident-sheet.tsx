@@ -15,7 +15,9 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { toast } from "sonner";
 import { TiptapEditor } from "@/components/editor/tiptap-editor";
 import { useCreateIncident, useUpdateIncident } from "@/hooks/api/projects/incidents";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { useProject } from "@/hooks/api/projects/projects";
+import { UserCombobox } from "@/components/ui/user-combobox";
+import { TicketCombobox } from "@/components/ui/ticket-combobox";
 import type { Incident, IncidentSeverity, IncidentStatus } from "@/types/projects";
 
 const SEVERITIES: IncidentSeverity[] = ["critical", "high", "medium", "low"];
@@ -44,7 +46,7 @@ type FormValues = z.infer<typeof schema>;
 
 const DEFAULT_VALUES: FormValues = {
   title: "", description: "", severity: "medium", status: "detected",
-  impact: "", ownerId: "none", detectedAt: "", responseDueAt: "",
+  impact: "", ownerId: "", detectedAt: "", responseDueAt: "",
   resolutionDueAt: "", linkedTicketId: "",
 };
 
@@ -63,8 +65,8 @@ interface IncidentSheetProps {
 export function IncidentSheet({ projectId, open, onOpenChange, editIncident }: IncidentSheetProps) {
   const create = useCreateIncident();
   const update = useUpdateIncident();
-  const { data: membersData } = useOrgMembers(1, 100);
-  const members = membersData?.data ?? [];
+  const { data: project } = useProject(projectId);
+  const projectKey = project?.key ?? "";
 
   const form = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: DEFAULT_VALUES });
 
@@ -77,7 +79,7 @@ export function IncidentSheet({ projectId, open, onOpenChange, editIncident }: I
         severity: editIncident.severity,
         status: editIncident.status,
         impact: editIncident.impact ?? "",
-        ownerId: editIncident.ownerId ?? "none",
+        ownerId: editIncident.ownerId ?? "",
         detectedAt: toLocalDt(editIncident.detectedAt),
         responseDueAt: toLocalDt(editIncident.responseDueAt),
         resolutionDueAt: toLocalDt(editIncident.resolutionDueAt),
@@ -96,7 +98,7 @@ export function IncidentSheet({ projectId, open, onOpenChange, editIncident }: I
       severity: values.severity,
       status: values.status,
       impact: values.impact || undefined,
-      ownerId: values.ownerId !== "none" ? values.ownerId : undefined,
+      ownerId: values.ownerId || undefined,
       detectedAt: values.detectedAt ? new Date(values.detectedAt).toISOString() : undefined,
       responseDueAt: values.responseDueAt ? new Date(values.responseDueAt).toISOString() : undefined,
       resolutionDueAt: values.resolutionDueAt ? new Date(values.resolutionDueAt).toISOString() : undefined,
@@ -178,15 +180,13 @@ export function IncidentSheet({ projectId, open, onOpenChange, editIncident }: I
 
             <div className="space-y-1.5">
               <Label className="text-[11px]">Owner</Label>
-              <Select value={form.watch("ownerId")} onValueChange={(v) => form.setValue("ownerId", v)}>
-                <SelectTrigger className="h-8 text-[11px]"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Unassigned</SelectItem>
-                  {members.map((m) => (
-                    <SelectItem key={m.userId} value={m.userId}>{m.name ?? m.email}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <UserCombobox
+                value={form.watch("ownerId")}
+                onChange={(v) => form.setValue("ownerId", v)}
+                placeholder="Unassigned"
+                allowUnassigned
+                className="h-8 text-[11px]"
+              />
             </div>
 
             <div className="grid grid-cols-3 gap-3">
@@ -205,8 +205,16 @@ export function IncidentSheet({ projectId, open, onOpenChange, editIncident }: I
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-[11px]">Linked Ticket ID</Label>
-              <Input {...form.register("linkedTicketId")} type="number" className="h-8 text-[11px]" placeholder="ID" />
+              <Label className="text-[11px]">Linked Ticket</Label>
+              <TicketCombobox
+                projectId={projectId}
+                projectKey={projectKey}
+                value={form.watch("linkedTicketId")}
+                onChange={(v) => form.setValue("linkedTicketId", v)}
+                placeholder="Link a ticket…"
+                allowClear
+                className="h-8 text-[11px]"
+              />
             </div>
           </form>
         </ScrollArea>

@@ -245,6 +245,26 @@ export function SidebarSelectFields({
             </SelectContent>
           </Select>
         </div>
+        <div>
+          <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide mb-1 block">
+            <RotateCcw className="h-3 w-3 inline mr-0.5" />
+            Cycle
+          </span>
+          <Select value={ticket.cycleId?.toString() || "none"} onValueChange={onCycleChange}>
+            <SelectTrigger className="h-8 text-xs bg-background w-full">
+              <SelectValue placeholder="None" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">None</SelectItem>
+              {cycles.map((cycle) => (
+                <SelectItem key={cycle.id} value={cycle.id.toString()}>
+                  {cycle.name}
+                  {cycle.status === "active" ? " (Active)" : ""}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
     </>
   );

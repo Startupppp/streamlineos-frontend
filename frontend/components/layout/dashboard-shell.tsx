@@ -107,7 +107,7 @@ export function DashboardShell({
       </Link>
 
       {hasDashboardAccess ? (
-        <>
+        <CommandPaletteProvider>
           <CommandPalette />
           <TrialBanner />
 
@@ -167,7 +167,7 @@ export function DashboardShell({
 
           <MobileBottomNav onOpenMobileMenu={handleOpenMobileMenu} />
           <GlobalAskOs />
-        </>
+        </CommandPaletteProvider>
       ) : (
         <NotActivatedPage />
       )}

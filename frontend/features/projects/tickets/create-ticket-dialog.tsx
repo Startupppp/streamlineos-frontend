@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,7 +10,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Paperclip, X, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -32,17 +31,21 @@ interface CreateTicketDialogProps {
   projectId: number;
   defaultStatus?: string;
   variant?: "default" | "fab";
+  externalOpen?: boolean;
+  onExternalOpenChange?: (open: boolean) => void;
 }
 
 export function CreateTicketDialog({
   projectId,
   defaultStatus,
   variant = "default",
+  externalOpen,
+  onExternalOpenChange,
 }: CreateTicketDialogProps) {
   const { data: project } = useProject(projectId);
 
   const {
-    open,
+    open: internalOpen,
     setOpen,
     form,
     files,
@@ -64,8 +67,20 @@ export function CreateTicketDialog({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    if (externalOpen === true) setOpen(true);
+  }, [externalOpen, setOpen]);
+
+  const resolvedOpen = externalOpen !== undefined ? externalOpen || internalOpen : internalOpen;
+
   const handleOpenTrigger = useCallback(() => setOpen(true), [setOpen]);
-  const handleOpenChange = useCallback((v: boolean) => setOpen(v), [setOpen]);
+  const handleOpenChange = useCallback(
+    (v: boolean) => {
+      setOpen(v);
+      onExternalOpenChange?.(v);
+    },
+    [setOpen, onExternalOpenChange],
+  );
   const handleAttachClick = useCallback(() => fileInputRef.current?.click(), []);
   const handleFormSubmit = useCallback(
     (e: React.FormEvent) => {
@@ -93,7 +108,7 @@ export function CreateTicketDialog({
         </Button>
       )}
 
-      <Dialog open={open} onOpenChange={handleOpenChange}>
+      <Dialog open={resolvedOpen} onOpenChange={handleOpenChange}>
         <DialogContent className="max-w-2xl gap-0 p-0 overflow-hidden">
           <DialogHeader className="px-5 pt-4 pb-3 border-b border-border/60">
             <div className="flex items-center gap-2">

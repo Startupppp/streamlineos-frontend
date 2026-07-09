@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Clock, User, Calendar, XIcon } from "lucide-react";
 import { format } from "date-fns";
 import { resolveImageUrl } from "@/lib/utils";
-import { useEpics, useModules } from "@/hooks/api/projects";
+import { useEpics, useModules, useCycles } from "@/hooks/api/projects";
 import { LabelPicker } from "../tickets/label-picker";
 import { RecurrencePicker } from "../tickets/recurrence-picker";
 import { useSetRecurrence, type RecurrenceRule } from "@/hooks/api/projects/recurring";
@@ -26,6 +26,7 @@ interface TicketSidebarProps {
     sprintId?: number | null;
     epicId?: number | null;
     moduleId?: number | null;
+    cycleId?: number | null;
     startDate?: string | null;
     dueDate?: string | null;
     timeSpent?: string | null;
@@ -97,6 +98,7 @@ export function TicketSidebar({
 }: TicketSidebarProps) {
   const { data: epics } = useEpics(projectId ?? 0);
   const { data: modules } = useModules(projectId ?? 0);
+  const { data: cycles } = useCycles(projectId ?? 0);
   const setRecurrence = useSetRecurrence(projectId ?? 0, ticketId);
   const selectableEpics = (epics ?? []).filter((e) => e.id !== ticket.id);
 
@@ -115,6 +117,8 @@ export function TicketSidebar({
     onAutoSave({ epicId: v === "none" ? null : parseInt(v) });
   const handleModuleChange = (v: string) =>
     onAutoSave({ moduleId: v === "none" ? null : parseInt(v) });
+  const handleCycleChange = (v: string) =>
+    onAutoSave({ cycleId: v === "none" ? null : parseInt(v) });
   const handlePointsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value === "" ? undefined : parseInt(e.target.value);
     onAutoSave({ points: val });
@@ -167,6 +171,7 @@ export function TicketSidebar({
         sprints={sprints}
         epics={selectableEpics}
         modules={modules ?? []}
+        cycles={cycles ?? []}
         onStatusChange={handleStatusChange}
         onPriorityChange={handlePriorityChange}
         onTypeChange={handleTypeChange}
@@ -174,6 +179,7 @@ export function TicketSidebar({
         onSprintChange={handleSprintChange}
         onEpicChange={handleEpicChange}
         onModuleChange={handleModuleChange}
+        onCycleChange={handleCycleChange}
       />
 
       <div className="grid grid-cols-2 gap-3">

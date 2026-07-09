@@ -9,6 +9,7 @@ export type GitProvider = "github" | "gitlab" | "bitbucket";
 export interface GitConnection {
   id: number;
   provider: GitProvider;
+  projectId: number | null;
   repoUrl: string;
   repoName: string | null;
   isActive: boolean;
@@ -34,6 +35,7 @@ interface CreateGitConnectionInput {
   provider: GitProvider;
   repoUrl: string;
   repoName?: string;
+  projectId?: number | null;
 }
 
 interface UpdateGitConnectionInput {
@@ -41,6 +43,7 @@ interface UpdateGitConnectionInput {
   isActive?: boolean;
   repoUrl?: string;
   repoName?: string | null;
+  projectId?: number | null;
 }
 
 export function useGitConnections() {

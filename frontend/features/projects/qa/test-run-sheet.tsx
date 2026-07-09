@@ -27,7 +27,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useCreateTestRun, useTestCases, useTestSuites } from "@/hooks/api/projects/qa";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { UserCombobox } from "@/components/ui/user-combobox";
 
 const schema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -52,10 +52,8 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
 
   const { data: suites } = useTestSuites(projectId);
   const { data: casesData } = useTestCases(projectId);
-  const { data: membersData } = useOrgMembers(1, 100);
 
   const cases = casesData ?? [];
-  const members = membersData?.data ?? [];
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -63,7 +61,7 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
       name: "",
       environment: "",
       browserDevice: "",
-      testerId: "none",
+      testerId: "",
       suiteId: "none",
     },
   });
@@ -74,7 +72,7 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
         name: "",
         environment: "",
         browserDevice: "",
-        testerId: "none",
+        testerId: "",
         suiteId: "none",
       });
       setSelectedCaseIds(new Set());
@@ -103,8 +101,7 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
       mode === "suite" && values.suiteId !== "none" ? Number(values.suiteId) : undefined;
     const caseIds =
       mode === "cases" && selectedCaseIds.size > 0 ? Array.from(selectedCaseIds) : undefined;
-    const testerId =
-      values.testerId !== "none" && values.testerId !== "" ? values.testerId : undefined;
+    const testerId = values.testerId || undefined;
 
     create.mutate(
       {
@@ -230,22 +227,13 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
 
             <div className="space-y-1.5">
               <Label className="text-[11px]">Tester</Label>
-              <Select
+              <UserCombobox
                 value={form.watch("testerId")}
-                onValueChange={(v) => form.setValue("testerId", v)}
-              >
-                <SelectTrigger className="h-8 text-[11px]">
-                  <SelectValue placeholder="Assign tester" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Unassigned</SelectItem>
-                  {members.map((m) => (
-                    <SelectItem key={m.userId} value={m.userId}>
-                      {m.name ?? m.email}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={(v) => form.setValue("testerId", v)}
+                placeholder="Assign tester…"
+                allowUnassigned
+                className="h-8 text-[11px]"
+              />
             </div>
           </form>
         </ScrollArea>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
   Contact2,
@@ -13,6 +13,13 @@ import {
   Loader2,
   ArrowRight,
   Hash,
+  Plus,
+  LayoutDashboard,
+  Kanban,
+  ListTodo,
+  RefreshCw,
+  BarChart2,
+  Star,
 } from "lucide-react";
 import {
   CommandDialog,
@@ -22,6 +29,7 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
+  CommandShortcut,
 } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
 import { apiClient } from "@/lib/api-client";
@@ -33,6 +41,7 @@ import {
 import { usePermissions } from "@/lib/rbac/hooks";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
 import { cn } from "@/lib/utils";
+import { useCommandPalette } from "@/features/command-palette";
 
 interface SearchResult {
   id: number;
@@ -86,16 +95,41 @@ const COMMAND_ITEM_CLASS =
 const COMMAND_ARROW_CLASS =
   "h-3.5 w-3.5 text-muted-foreground/40 shrink-0 group-data-[selected=true]:text-blue-500 transition-colors";
 
+function extractProjectId(pathname: string): number | null {
+  const match = /\/projects\/(\d+)/.exec(pathname);
+  if (!match) return null;
+  const parsed = parseInt(match[1] ?? "", 10);
+  return Number.isNaN(parsed) ? null : parsed;
+}
+
+interface ProjectNavItem {
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  segment: string;
+  shortcut?: string;
+}
+
+const PROJECT_NAV_ITEMS: ProjectNavItem[] = [
+  { label: "Board", icon: Kanban, segment: "", shortcut: "G B" },
+  { label: "Backlog", icon: ListTodo, segment: "/backlog" },
+  { label: "Sprints", icon: RefreshCw, segment: "/sprints" },
+  { label: "My Tickets", icon: Star, segment: "/my-tickets", shortcut: "G I" },
+  { label: "Analytics", icon: BarChart2, segment: "/analytics" },
+];
+
 export function CommandPalette() {
-  const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [entityResults, setEntityResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
   const { data: session } = useSession();
   const role = session?.user?.role;
   const { permissions } = usePermissions();
   const enabledModules = useEnabledModules();
+  const { paletteOpen, setPaletteOpen, openCreateTicket } = useCommandPalette();
+
+  const projectId = useMemo(() => extractProjectId(pathname), [pathname]);
 
   const pages = useMemo(() => {
     const groups = getNavGroupsForUser(role, permissions, enabledModules);
@@ -117,15 +151,15 @@ export function CommandPalette() {
   }, [role, permissions, enabledModules]);
 
   useEffect(() => {
-    const down = (e: KeyboardEvent) => {
+    const handleDown = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
-        setOpen((o) => !o);
+        setPaletteOpen(!paletteOpen);
       }
     };
-    document.addEventListener("keydown", down);
-    return () => document.removeEventListener("keydown", down);
-  }, []);
+    document.addEventListener("keydown", handleDown);
+    return () => document.removeEventListener("keydown", handleDown);
+  }, [paletteOpen, setPaletteOpen]);
 
   const debouncedQuery = useDebouncedValue(query, 280);
 
@@ -154,21 +188,31 @@ export function CommandPalette() {
 
   const handleSelect = useCallback(
     (href: string) => {
-      setOpen(false);
+      setPaletteOpen(false);
       setQuery("");
       setEntityResults([]);
       router.push(href);
     },
-    [router],
+    [router, setPaletteOpen],
   );
 
-  const handleOpenChange = useCallback((v: boolean) => {
-    setOpen(v);
-    if (!v) {
-      setQuery("");
-      setEntityResults([]);
-    }
-  }, []);
+  const handleOpenChange = useCallback(
+    (v: boolean) => {
+      setPaletteOpen(v);
+      if (!v) {
+        setQuery("");
+        setEntityResults([]);
+      }
+    },
+    [setPaletteOpen],
+  );
+
+  const handleCreateTicket = useCallback(() => {
+    if (projectId === null) return;
+    setPaletteOpen(false);
+    setQuery("");
+    openCreateTicket(projectId);
+  }, [projectId, setPaletteOpen, openCreateTicket]);
 
   const filteredPages = useMemo(() => {
     if (!query) return [];
@@ -219,7 +263,7 @@ export function CommandPalette() {
   const showEmpty = !isSearching && query.length >= 2 && !hasResults;
 
   return (
-    <CommandDialog open={open} onOpenChange={handleOpenChange}>
+    <CommandDialog open={paletteOpen} onOpenChange={handleOpenChange}>
       <div className="relative">
         <CommandInput
           placeholder="Search pages, leads, deals, contacts…"
@@ -313,6 +357,59 @@ export function CommandPalette() {
 
         {!query && (
           <>
+            {projectId !== null && (
+              <>
+                <CommandGroup heading="This project">
+                  <CommandItem
+                    value="create ticket issue"
+                    onSelect={handleCreateTicket}
+                    className={COMMAND_ITEM_CLASS}
+                  >
+                    <ItemIcon icon={Plus} />
+                    <span className="flex-1 text-sm">Create ticket</span>
+                    <CommandShortcut>C</CommandShortcut>
+                  </CommandItem>
+                  {PROJECT_NAV_ITEMS.map((item) => (
+                    <CommandItem
+                      key={item.segment}
+                      value={`project ${item.label}`}
+                      onSelect={() =>
+                        handleSelect(`/projects/${projectId}${item.segment}`)
+                      }
+                      className={COMMAND_ITEM_CLASS}
+                    >
+                      <ItemIcon icon={item.icon} />
+                      <span className="flex-1 text-sm">{item.label}</span>
+                      {item.shortcut && (
+                        <CommandShortcut>{item.shortcut}</CommandShortcut>
+                      )}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+                <CommandSeparator className="my-1" />
+              </>
+            )}
+
+            <CommandGroup heading="Navigation">
+              <CommandItem
+                value="all projects overview"
+                onSelect={() => handleSelect("/projects")}
+                className={COMMAND_ITEM_CLASS}
+              >
+                <ItemIcon icon={LayoutDashboard} />
+                <span className="flex-1 text-sm">All Projects</span>
+              </CommandItem>
+              <CommandItem
+                value="my work tickets assigned"
+                onSelect={() => handleSelect("/projects/my-work")}
+                className={COMMAND_ITEM_CLASS}
+              >
+                <ItemIcon icon={Star} />
+                <span className="flex-1 text-sm">My Work</span>
+              </CommandItem>
+            </CommandGroup>
+            <CommandSeparator className="my-1" />
+
             <div className="px-2 pb-1 pt-2">
               <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
                 Quick navigation
@@ -364,6 +461,12 @@ export function CommandPalette() {
           <kbd className="inline-flex h-4 items-center rounded border bg-background px-1 font-mono text-[10px]">
             esc
           </kbd>
+          <span className="ml-2">
+            <kbd className="inline-flex h-4 items-center rounded border bg-background px-1 font-mono text-[10px]">
+              ?
+            </kbd>
+            <span className="ml-1">shortcuts</span>
+          </span>
         </div>
       </div>
     </CommandDialog>

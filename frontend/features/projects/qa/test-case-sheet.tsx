@@ -27,6 +27,8 @@ import {
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useCreateTestCase, useUpdateTestCase } from "@/hooks/api/projects/qa";
+import { useProject } from "@/hooks/api/projects/projects";
+import { TicketCombobox } from "@/components/ui/ticket-combobox";
 import type { TestCase, TestSuite } from "@/types/projects";
 
 const schema = z.object({
@@ -60,6 +62,8 @@ export function TestCaseSheet({
 }: TestCaseSheetProps) {
   const create = useCreateTestCase();
   const update = useUpdateTestCase();
+  const { data: project } = useProject(projectId);
+  const projectKey = project?.key ?? "";
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -312,12 +316,15 @@ export function TestCaseSheet({
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-[11px]">Linked Ticket ID</Label>
-              <Input
-                {...form.register("linkedTicketId")}
+              <Label className="text-[11px]">Linked Ticket</Label>
+              <TicketCombobox
+                projectId={projectId}
+                projectKey={projectKey}
+                value={form.watch("linkedTicketId")}
+                onChange={(v) => form.setValue("linkedTicketId", v)}
+                placeholder="Link a ticket…"
+                allowClear
                 className="h-8 text-[11px]"
-                placeholder="Ticket number (optional)"
-                type="number"
               />
             </div>
           </form>

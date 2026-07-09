@@ -34,6 +34,7 @@ interface Props {
 export function PortfolioDetailPage({ portfolioId }: Props) {
   const canManage = useCan("projects:portfolios:manage");
 
+  const [activeTab, setActiveTab] = useState<PortfolioTab>("projects");
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [linkProjectId, setLinkProjectId] = useState("");
@@ -145,62 +146,77 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
           </div>
         )}
 
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold">Linked Projects <span className="text-muted-foreground font-normal">({data.projects.length})</span></h2>
-            {canManage && availableProjects.length > 0 && (
-              <div className="flex items-center gap-2">
-                <Select value={linkProjectId} onValueChange={setLinkProjectId}>
-                  <SelectTrigger className="h-7 w-48 text-xs"><SelectValue placeholder="Link a projectâ€¦" /></SelectTrigger>
-                  <SelectContent>
-                    {availableProjects.map((p) => (
-                      <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button size="sm" className="h-7 text-xs gap-1" onClick={handleLink} disabled={!linkProjectId || linkProject.isPending}>
-                  <Plus className="h-3 w-3" /> Link
-                </Button>
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as PortfolioTab)}>
+          <TabsList>
+            <TabsTrigger value="projects">
+              Linked Projects
+              {data.projects.length > 0 && (
+                <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">{data.projects.length}</Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="programs">
+              Programs
+              {data.programs.length > 0 && (
+                <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">{data.programs.length}</Badge>
+              )}
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="projects">
+            <div className="space-y-3">
+              {canManage && availableProjects.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <Select value={linkProjectId} onValueChange={setLinkProjectId}>
+                    <SelectTrigger className="h-7 w-48 text-xs"><SelectValue placeholder="Link a project…" /></SelectTrigger>
+                    <SelectContent>
+                      {availableProjects.map((p) => (
+                        <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button size="sm" className="h-7 text-xs gap-1" onClick={handleLink} disabled={!linkProjectId || linkProject.isPending}>
+                    <Plus className="h-3 w-3" /> Link
+                  </Button>
+                </div>
+              )}
+              {data.projects.length === 0 ? (
+                <EmptyState illustrationPreset="projects" title="No linked projects" description="Link projects to this portfolio to track them here." compact />
+              ) : (
+                <div className="rounded-lg border border-border divide-y divide-border/50">
+                  {data.projects.map((proj) => (
+                    <div key={proj.id} className="flex items-center justify-between px-4 py-2.5 hover:bg-muted/30">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="font-mono text-xs text-muted-foreground shrink-0">{proj.key}</span>
+                        <Link href={`/projects/${proj.id}`} className="text-sm font-medium text-foreground hover:text-primary truncate">{proj.name}</Link>
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0.5 shrink-0">{proj.status}</Badge>
+                      </div>
+                      {canManage && (
+                        <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => handleUnlink(proj.id)} disabled={unlinkProject.isPending}>
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="programs">
+            {data.programs.length === 0 ? (
+              <EmptyState illustrationPreset="projects" title="No programs" description="Programs in this portfolio will appear here." compact />
+            ) : (
+              <div className="rounded-lg border border-border divide-y divide-border/50">
+                {data.programs.map((prog) => (
+                  <div key={prog.id} className="flex items-center justify-between px-4 py-2.5 hover:bg-muted/30">
+                    <Link href={`/projects/programs/${prog.id}`} className="text-sm font-medium text-foreground hover:text-primary">{prog.name}</Link>
+                    <PortfolioStatusBadge status={prog.status} />
+                  </div>
+                ))}
               </div>
             )}
-          </div>
-          {data.projects.length === 0 ? (
-            <EmptyState illustrationPreset="projects" title="No linked projects" description="Link projects to this portfolio to track them here." compact />
-          ) : (
-            <div className="rounded-lg border border-border divide-y divide-border/50">
-              {data.projects.map((proj) => (
-                <div key={proj.id} className="flex items-center justify-between px-4 py-2.5 hover:bg-muted/30">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <span className="font-mono text-xs text-muted-foreground shrink-0">{proj.key}</span>
-                    <Link href={`/projects/${proj.id}`} className="text-sm font-medium text-foreground hover:text-primary truncate">{proj.name}</Link>
-                    <Badge variant="outline" className="text-[10px] px-1.5 py-0.5 shrink-0">{proj.status}</Badge>
-                  </div>
-                  {canManage && (
-                    <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => handleUnlink(proj.id)} disabled={unlinkProject.isPending}>
-                      <X className="h-3.5 w-3.5" />
-                    </Button>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div>
-          <h2 className="text-sm font-semibold mb-3">Programs <span className="text-muted-foreground font-normal">({data.programs.length})</span></h2>
-          {data.programs.length === 0 ? (
-            <EmptyState illustrationPreset="projects" title="No programs" description="Programs in this portfolio will appear here." compact />
-          ) : (
-            <div className="rounded-lg border border-border divide-y divide-border/50">
-              {data.programs.map((prog) => (
-                <div key={prog.id} className="flex items-center justify-between px-4 py-2.5 hover:bg-muted/30">
-                  <Link href={`/projects/programs/${prog.id}`} className="text-sm font-medium text-foreground hover:text-primary">{prog.name}</Link>
-                  <PortfolioStatusBadge status={prog.status} />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+          </TabsContent>
+        </Tabs>
       </div>
 
       <PortfolioFormSheet
