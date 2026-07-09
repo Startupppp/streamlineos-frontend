@@ -3,6 +3,7 @@
 import { useState, type ChangeEvent } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Table,
   TableBody,
@@ -129,12 +130,12 @@ export default function CashFlowPage() {
   const query = useCashFlow({ from, to });
   const report = query.data;
 
-  function handleFromChange(event: ChangeEvent<HTMLInputElement>): void {
-    setFrom(event.target.value);
+  function handleFromChange(value: string): void {
+    setFrom(value);
   }
 
-  function handleToChange(event: ChangeEvent<HTMLInputElement>): void {
-    setTo(event.target.value);
+  function handleToChange(value: string): void {
+    setTo(value);
   }
 
   function handleRetry(): void {
@@ -161,13 +162,7 @@ export default function CashFlowPage() {
             >
               From
             </label>
-            <Input
-              id="cash-flow-from"
-              type="date"
-              value={from}
-              onChange={handleFromChange}
-              className="w-[160px] h-8 text-sm"
-            />
+            <DatePicker id="cash-flow-from" value={from ?? ""} onChange={handleFromChange} placeholder="Pick a date" className="w-[160px] h-8 text-sm" />
           </div>
           <div className="flex flex-col gap-1">
             <label
@@ -176,13 +171,7 @@ export default function CashFlowPage() {
             >
               To
             </label>
-            <Input
-              id="cash-flow-to"
-              type="date"
-              value={to}
-              onChange={handleToChange}
-              className="w-[160px] h-8 text-sm"
-            />
+            <DatePicker id="cash-flow-to" value={to ?? ""} onChange={handleToChange} placeholder="Pick a date" className="w-[160px] h-8 text-sm" />
           </div>
           {report && !report.reconciled && (
             <div className="ml-auto self-end text-xs text-amber-600">

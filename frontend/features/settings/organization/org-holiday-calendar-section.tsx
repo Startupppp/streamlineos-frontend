@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -115,7 +116,13 @@ export function OrgHolidayCalendarSection({ canEdit }: OrgHolidayCalendarSection
               </div>
               <div className="space-y-1">
                 <Label className="text-sm font-medium">Date *</Label>
-                <Input type="date" {...form.register("date")} className="h-8 text-sm" />
+                <Controller
+                  name="date"
+                  control={form.control}
+                  render={({ field }) => (
+                    <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+                  )}
+                />
                 {form.formState.errors.date && <p className="text-[11px] text-destructive">{form.formState.errors.date.message}</p>}
               </div>
             </div>

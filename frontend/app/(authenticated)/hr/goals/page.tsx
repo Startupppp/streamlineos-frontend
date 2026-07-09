@@ -7,6 +7,7 @@ import { Target, Plus, Calendar, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -307,51 +308,11 @@ export default function GoalsPage() {
             <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
               <div className="space-y-1.5">
                 <Label className="text-sm font-medium">Title *</Label>
-                <Input
-                  value={form.title}
-                  onChange={handleTitleChange}
-                  placeholder="Goal title"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-sm font-medium">Description</Label>
-                <Input
-                  value={form.description}
-                  onChange={handleDescriptionChange}
-                  placeholder="Optional description"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-sm font-medium">Type</Label>
-                <Select value={form.type} onValueChange={handleTypeChange}>
-                  <SelectTrigger className="h-8 text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="OKR">OKR</SelectItem>
-                    <SelectItem value="STRETCH">Stretch</SelectItem>
-                    <SelectItem value="text">Text</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-medium">Start Date *</Label>
-                  <Input
-                    type="date"
-                    className="h-8 text-sm"
-                    value={form.startDate}
-                    onChange={handleStartDateChange}
-                  />
+                <DatePicker value={form.title ?? ""} onChange={handleTitleChange} placeholder="Pick a date" className="space-y-1.5" />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-sm font-medium">End Date *</Label>
-                  <Input
-                    type="date"
-                    className="h-8 text-sm"
-                    value={form.endDate}
-                    onChange={handleEndDateChange}
-                  />
+                  <DatePicker value={form.endDate ?? ""} onChange={handleEndDateChange} placeholder="Pick a date" className="h-8 text-sm" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">

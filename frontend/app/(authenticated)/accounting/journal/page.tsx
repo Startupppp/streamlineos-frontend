@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Plus, BookOpen } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -82,12 +83,12 @@ export default function JournalListPage() {
     sourceType: sourceType === "ALL" ? undefined : sourceType,
   });
 
-  function handleFromChange(event: ChangeEvent<HTMLInputElement>): void {
-    setFrom(event.target.value);
+  function handleFromChange(value: string): void {
+    setFrom(value);
   }
 
-  function handleToChange(event: ChangeEvent<HTMLInputElement>): void {
-    setTo(event.target.value);
+  function handleToChange(value: string): void {
+    setTo(value);
   }
 
   function handleSourceTypeChange(value: string): void {
@@ -126,13 +127,7 @@ export default function JournalListPage() {
             >
               From
             </label>
-            <Input
-              id="journal-from"
-              type="date"
-              value={from}
-              onChange={handleFromChange}
-              className="h-8 text-xs w-[150px]"
-            />
+            <DatePicker id="journal-from" value={from ?? ""} onChange={handleFromChange} placeholder="Pick a date" className="h-8 text-xs w-[150px]" />
           </div>
           <div className="flex items-center gap-1.5">
             <label
@@ -141,13 +136,7 @@ export default function JournalListPage() {
             >
               To
             </label>
-            <Input
-              id="journal-to"
-              type="date"
-              value={to}
-              onChange={handleToChange}
-              className="h-8 text-xs w-[150px]"
-            />
+            <DatePicker id="journal-to" value={to ?? ""} onChange={handleToChange} placeholder="Pick a date" className="h-8 text-xs w-[150px]" />
           </div>
           <Select value={sourceType} onValueChange={handleSourceTypeChange}>
             <SelectTrigger className="h-8 w-[160px] text-xs">

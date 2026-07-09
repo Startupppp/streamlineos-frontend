@@ -6,6 +6,7 @@ import { Plus, Clock, X, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -54,10 +55,7 @@ export function BusinessHoursSheet({ open, onOpenChange, mode, form, onSubmit, i
   const is24x7 = form.watch("is24x7");
   const holidays = form.watch("holidays");
 
-  const handleHolidayInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setHolidayInput(e.target.value),
-    [],
-  );
+  const handleHolidayInputChange = useCallback((value: string) => setHolidayInput(value), []);
 
   const handleAddHoliday = useCallback(() => {
     if (!holidayInput) return;
@@ -191,12 +189,7 @@ export function BusinessHoursSheet({ open, onOpenChange, mode, form, onSubmit, i
                   <span>Holidays</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Input
-                    type="date"
-                    value={holidayInput}
-                    onChange={handleHolidayInputChange}
-                    className="h-9"
-                  />
+                  <DatePicker value={holidayInput ?? ""} onChange={handleHolidayInputChange} placeholder="Pick a date" className="h-9" />
                   <Button type="button" variant="outline" size="sm" onClick={handleAddHoliday}>
                     <Plus className="h-3.5 w-3.5" />
                   </Button>

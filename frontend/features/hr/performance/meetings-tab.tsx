@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -202,7 +203,7 @@ export function MeetingsTab() {
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Date</label>
-            <Input type="date" value={scheduledDate} min={new Date().toISOString().slice(0, 10)} onChange={handleScheduledDateChange} />
+            <DatePicker value={scheduledDate ?? ""} onChange={handleScheduledDateChange} fromDate={new Date().toISOString().slice(0, 10) ? parseISO(new Date().toISOString().slice(0, 10)) : undefined} placeholder="Pick a date" className="h-8 text-sm" />
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Time</label>

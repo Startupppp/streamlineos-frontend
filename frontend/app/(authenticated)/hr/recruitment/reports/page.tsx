@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -547,21 +548,11 @@ export default function ReportsPage() {
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
                   <Label className="text-xs">Date From</Label>
-                  <Input
-                    type="date"
-                    value={dateFrom}
-                    onChange={handleDateFromChange}
-                    className="h-8 text-xs"
-                  />
+                  <DatePicker value={dateFrom ?? ""} onChange={handleDateFromChange} placeholder="Pick a date" className="h-8 text-xs" />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">Date To</Label>
-                  <Input
-                    type="date"
-                    value={dateTo}
-                    onChange={handleDateToChange}
-                    className="h-8 text-xs"
-                  />
+                  <DatePicker value={dateTo ?? ""} onChange={handleDateToChange} placeholder="Pick a date" className="h-8 text-xs" />
                 </div>
               </div>
 

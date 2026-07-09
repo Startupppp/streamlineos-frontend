@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -343,11 +344,11 @@ export function ReviewsTab() {
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Period Start</label>
-            <Input type="date" value={periodStart} onChange={handlePeriodStartChange} />
+            <DatePicker value={periodStart ?? ""} onChange={handlePeriodStartChange} placeholder="Pick a date" className="h-8 text-sm" />
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Period End</label>
-            <Input type="date" value={periodEnd} onChange={handlePeriodEndChange} />
+            <DatePicker value={periodEnd ?? ""} onChange={handlePeriodEndChange} placeholder="Pick a date" className="h-8 text-sm" />
           </div>
         </div>
         {employeeId && periodStart && periodEnd && (

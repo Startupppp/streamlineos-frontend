@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { HrSheet } from "@/features/hr/hr-sheet";
@@ -110,6 +111,7 @@ export function SalaryStructureTemplateSheet({
     reset,
     watch,
     setValue,
+    control,
     formState: { errors },
   } = useForm<TemplateFormValues>({
     resolver: zodResolver(templateSchema),
@@ -318,20 +320,24 @@ export function SalaryStructureTemplateSheet({
 
       <div className="grid grid-cols-2 gap-3">
         <FieldGroup label="Effective From">
-          <Input
-            {...register("effectiveFrom")}
-            type="date"
-            className="h-9"
+          <Controller
+            name="effectiveFrom"
+            control={control}
+            render={({ field }) => (
+              <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+            )}
           />
           {errors.effectiveFrom && (
             <p className="text-xs text-destructive mt-1">{errors.effectiveFrom.message}</p>
           )}
         </FieldGroup>
         <FieldGroup label="Effective To (optional)">
-          <Input
-            {...register("effectiveTo")}
-            type="date"
-            className="h-9"
+          <Controller
+            name="effectiveTo"
+            control={control}
+            render={({ field }) => (
+              <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+            )}
           />
         </FieldGroup>
       </div>

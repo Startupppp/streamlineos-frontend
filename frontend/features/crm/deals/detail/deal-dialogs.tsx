@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Calendar, FolderKanban } from "lucide-react";
@@ -172,11 +173,11 @@ export function CreateProjectDialog({ open, onOpenChange, defaultName, onSubmit,
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Start Date</Label>
-              <Input type="date" value={startDate} onChange={handleStartDateChange} />
+              <DatePicker value={startDate ?? ""} onChange={handleStartDateChange} placeholder="Pick a date" className="h-8 text-sm" />
             </div>
             <div className="space-y-1.5">
               <Label>End Date</Label>
-              <Input type="date" value={endDate} onChange={handleEndDateChange} />
+              <DatePicker value={endDate ?? ""} onChange={handleEndDateChange} placeholder="Pick a date" className="h-8 text-sm" />
             </div>
           </div>
         </div>

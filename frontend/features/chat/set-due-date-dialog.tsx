@@ -1,3 +1,4 @@
+import { parseISO } from "date-fns";
 "use client";
 
 import { useState, useCallback } from "react";
@@ -17,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useProjects } from "@/hooks/api/projects/projects";
@@ -61,15 +63,9 @@ export function SetDueDateDialog({
 
   const dueDateMutation = useSetDueDateFromChat();
 
-  const handleTicketIdChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setTicketIdStr(e.target.value),
-    [],
-  );
+  const handleTicketIdChange = useCallback((value: string) => setTicketIdStr(value), []);
 
-  const handleDueDateChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setDueDateValue(e.target.value),
-    [],
-  );
+  const handleDueDateChange = useCallback((value: string) => setDueDateValue(value), []);
 
   const handleSubmit = useCallback(async () => {
     const resolvedTicketId =
@@ -134,24 +130,7 @@ export function SetDueDateDialog({
           {ticketId === undefined && (
             <div className="space-y-1.5">
               <Label htmlFor="sdd-ticket">Ticket ID</Label>
-              <Input
-                id="sdd-ticket"
-                type="number"
-                min={1}
-                value={ticketIdStr}
-                onChange={handleTicketIdChange}
-                placeholder="e.g. 42"
-              />
-            </div>
-          )}
-          <div className="space-y-1.5">
-            <Label htmlFor="sdd-date">Due Date</Label>
-            <Input
-              id="sdd-date"
-              type="date"
-              value={dueDateValue}
-              onChange={handleDueDateChange}
-            />
+              <DatePicker id="sdd-ticket" value={ticketIdStr ?? ""} onChange={handleTicketIdChange} placeholder="Pick a date" className="space-y-1.5" fromDate={1 ? parseISO(1) : undefined} />
           </div>
         </div>
         <DialogFooter>

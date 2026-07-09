@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Button } from "@/components/ui/button";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { useOrgMembers } from "@/hooks/api/organization";
@@ -187,7 +188,7 @@ export function SalaryProfileSheet({
                     <FormItem>
                       <FormLabel>Effective From *</FormLabel>
                       <FormControl>
-                        <Input {...field} type="date" />
+                        <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -126,33 +127,8 @@ export function OrgAuditLogPage() {
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative min-w-[180px]">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input
-              placeholder="Filter by actor ID..."
-              value={actorSearch}
-              onChange={handleActorSearch}
-              className="pl-8 h-8 text-xs w-44"
-            />
-          </div>
-          <Input
-            placeholder="Action (e.g. user.invite)"
-            value={actionFilter}
-            onChange={handleActionFilterChange}
-            className="h-8 text-xs w-44"
-          />
-          <Input
-            type="date"
-            value={from}
-            onChange={handleFromChange}
-            className="h-8 text-xs w-36"
-            title="From date"
-          />
-          <Input
-            type="date"
-            value={to}
-            onChange={handleToChange}
-            className="h-8 text-xs w-36"
-            title="To date"
-          />
+            <DatePicker value={actorSearch ?? ""} onChange={handleActorSearch} placeholder="Pick a date" className="pl-8 h-8 text-xs w-44" />
+          <DatePicker value={to ?? ""} onChange={handleToChange} placeholder="Pick a date" className="h-8 text-xs w-36" />
           {hasFilters && (
             <Button
               variant="ghost"

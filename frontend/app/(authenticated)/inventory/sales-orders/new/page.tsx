@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation";
 import { useForm, useFieldArray, useWatch, Controller, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { parseISO } from "date-fns";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -277,7 +279,13 @@ export default function NewSalesOrderPage() {
               <Label className="text-sm text-muted-foreground mb-1 block">
                 Order Date <span className="text-destructive">*</span>
               </Label>
-              <Input type="date" {...register("orderDate")} />
+              <Controller
+                name="orderDate"
+                control={control}
+                render={({ field }) => (
+                  <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+                )}
+              />
               {errors.orderDate && (
                 <p className="text-xs text-destructive mt-1">{errors.orderDate.message}</p>
               )}
@@ -285,7 +293,19 @@ export default function NewSalesOrderPage() {
 
             <div>
               <Label className="text-sm text-muted-foreground mb-1 block">Expected Ship Date</Label>
-              <Input type="date" min={todayIso()} {...register("expectedShipDate")} />
+              <Controller
+                name="expectedShipDate"
+                control={control}
+                render={({ field }) => (
+                  <DatePicker
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    placeholder="Pick a date"
+                    className="h-8 text-sm"
+                    fromDate={parseISO(todayIso())}
+                  />
+                )}
+              />
             </div>
 
             <div>

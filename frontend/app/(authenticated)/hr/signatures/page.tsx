@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -624,13 +625,7 @@ export default function SignaturesPage() {
               <Label htmlFor="sig-expires" className="text-xs font-medium">
                 Expires At (optional)
               </Label>
-              <Input
-                id="sig-expires"
-                type="date"
-                value={newExpiresAt}
-                onChange={handleNewExpiresAtChange}
-                className="text-sm"
-              />
+              <DatePicker id="sig-expires" value={newExpiresAt ?? ""} onChange={handleNewExpiresAtChange} placeholder="Pick a date" className="text-sm" />
             </div>
 
             <div className="space-y-3">

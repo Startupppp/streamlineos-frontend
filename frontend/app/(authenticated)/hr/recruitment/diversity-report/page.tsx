@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import {
   DropdownMenu,
@@ -151,21 +152,11 @@ export default function DiversityReportPage() {
       <div className="flex flex-wrap items-end gap-3 mb-6 p-4 rounded-lg border bg-card">
         <div className="flex flex-col gap-1">
           <Label className="text-xs">From Date</Label>
-          <Input
-            type="date"
-            className="h-8 text-xs w-36"
-            value={pendingFilters.from}
-            onChange={handleFromChange}
-          />
+          <DatePicker value={pendingFilters.from ?? ""} onChange={handleFromChange} placeholder="Pick a date" className="h-8 text-xs w-36" />
         </div>
         <div className="flex flex-col gap-1">
           <Label className="text-xs">To Date</Label>
-          <Input
-            type="date"
-            className="h-8 text-xs w-36"
-            value={pendingFilters.to}
-            onChange={handleToChange}
-          />
+          <DatePicker value={pendingFilters.to ?? ""} onChange={handleToChange} placeholder="Pick a date" className="h-8 text-xs w-36" />
         </div>
         <div className="flex flex-col gap-1">
           <Label className="text-xs">Departments</Label>

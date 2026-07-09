@@ -7,6 +7,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Skeleton } from "@/components/ui/skeleton";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -380,11 +381,11 @@ export default function CertificationsPage() {
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Issue Date</label>
-            <Input type="date" value={issueDate} onChange={handleIssueDateChange} />
+            <DatePicker value={issueDate ?? ""} onChange={handleIssueDateChange} placeholder="Pick a date" className="h-8 text-sm" />
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Expiry Date</label>
-            <Input type="date" value={expiryDate} onChange={handleExpiryDateChange} />
+            <DatePicker value={expiryDate ?? ""} onChange={handleExpiryDateChange} placeholder="Pick a date" className="h-8 text-sm" />
           </div>
         </div>
         <div className="space-y-1.5">

@@ -21,6 +21,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -203,7 +204,7 @@ export function BudgetFormDialog({ open, onOpenChange, budget }: BudgetFormDialo
                   <FormItem>
                     <FormLabel className="text-[13px]">Starts (optional)</FormLabel>
                     <FormControl>
-                      <Input type="date" className="h-9" {...field} />
+                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-9" />
                     </FormControl>
                   </FormItem>
                 )}
@@ -215,7 +216,7 @@ export function BudgetFormDialog({ open, onOpenChange, budget }: BudgetFormDialo
                   <FormItem>
                     <FormLabel className="text-[13px]">Ends (optional)</FormLabel>
                     <FormControl>
-                      <Input type="date" className="h-9" {...field} />
+                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-9" />
                     </FormControl>
                   </FormItem>
                 )}

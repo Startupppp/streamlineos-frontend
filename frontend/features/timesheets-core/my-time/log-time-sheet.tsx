@@ -13,6 +13,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { AppSheet } from "@/components/shared/app-sheet";
@@ -154,7 +155,7 @@ export function LogTimeSheet({
               <FormItem>
                 <FormLabel className="text-xs">Date</FormLabel>
                 <FormControl>
-                  <Input type="date" {...field} className="h-8 text-sm" />
+                  <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
                 </FormControl>
                 <FormMessage className="text-xs" />
               </FormItem>

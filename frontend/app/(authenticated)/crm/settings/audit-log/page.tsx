@@ -5,6 +5,7 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyActivityIllustration } from "@/components/illustrations";
@@ -154,21 +155,9 @@ export default function CrmAuditLogPage() {
           </Select>
 
           <div className="flex items-center gap-1.5">
-            <Input
-              type="date"
-              value={fromDate}
-              onChange={handleFromDateChange}
-              className="h-8 w-36 text-xs"
-              aria-label="From date"
-            />
+            <DatePicker value={fromDate ?? ""} onChange={handleFromDateChange} placeholder="Pick a date" className="h-8 w-36 text-xs" />
             <span className="text-xs text-muted-foreground">to</span>
-            <Input
-              type="date"
-              value={toDate}
-              onChange={handleToDateChange}
-              className="h-8 w-36 text-xs"
-              aria-label="To date"
-            />
+            <DatePicker value={toDate ?? ""} onChange={handleToDateChange} placeholder="Pick a date" className="h-8 w-36 text-xs" />
           </div>
 
           {hasActiveFilters && (

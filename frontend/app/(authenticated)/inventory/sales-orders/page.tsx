@@ -8,6 +8,7 @@ import { EmptyOrdersIllustration, EmptySearchIllustration } from "@/components/i
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -207,40 +208,8 @@ function SalesOrdersListContent() {
     <>
       <div className="relative min-w-0 flex-1 lg:max-w-md">
         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-        <Input
-          value={searchInput}
-          onChange={handleSearchChange}
-          placeholder="Search orders…"
-          className="h-8 w-full min-w-0 pl-8 text-xs"
-          aria-label="Search sales orders"
-        />
-      </div>
-      <Select value={statusFilter} onValueChange={handleStatusChange}>
-        <SelectTrigger className="h-8 w-[160px] min-w-0 text-xs">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {STATUS_OPTIONS.map((opt) => (
-            <SelectItem key={opt.value} value={opt.value}>
-              {opt.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <Input
-        type="date"
-        value={dateFromParam}
-        onChange={handleDateFromChange}
-        className="h-8 w-[130px] text-xs"
-        aria-label="From date"
-      />
-      <Input
-        type="date"
-        value={dateToParam}
-        onChange={handleDateToChange}
-        className="h-8 w-[130px] text-xs"
-        aria-label="To date"
-      />
+        <DatePicker value={searchInput ?? ""} onChange={handleSearchChange} placeholder="Pick a date" className="h-8 w-full min-w-0 pl-8 text-xs" />
+      <DatePicker value={dateToParam ?? ""} onChange={handleDateToChange} placeholder="Pick a date" className="h-8 w-[130px] text-xs" />
     </>
   );
 

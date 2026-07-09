@@ -3,6 +3,7 @@
 import { useState, type ChangeEvent } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Table,
   TableBody,
@@ -26,8 +27,8 @@ export default function TrialBalancePage() {
 
   const query = useTrialBalance(asOf);
 
-  function handleAsOfChange(event: ChangeEvent<HTMLInputElement>): void {
-    setAsOf(event.target.value);
+  function handleAsOfChange(value: string): void {
+    setAsOf(value);
   }
 
   function handleRetry(): void {
@@ -51,13 +52,7 @@ export default function TrialBalancePage() {
             >
               As of
             </label>
-            <Input
-              id="tb-as-of"
-              type="date"
-              value={asOf}
-              onChange={handleAsOfChange}
-              className="w-full sm:w-[160px] h-8 text-sm"
-            />
+            <DatePicker id="tb-as-of" value={asOf ?? ""} onChange={handleAsOfChange} placeholder="Pick a date" className="w-full sm:w-[160px] h-8 text-sm" />
           </div>
           {tb ? (
             <div className="flex flex-col gap-1">

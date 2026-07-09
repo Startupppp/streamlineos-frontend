@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Select,
   SelectContent,
@@ -231,7 +232,7 @@ export function UserInviteDialog({ open, onOpenChange }: UserInviteDialogProps) 
                         <FormItem>
                           <FormLabel className="text-xs">Start Date</FormLabel>
                           <FormControl>
-                            <Input {...field} type="date" className="h-8 text-xs" />
+                            <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-xs" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

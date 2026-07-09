@@ -30,6 +30,7 @@ import {
   Form, FormField, FormItem, FormLabel, FormControl, FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -399,7 +400,7 @@ function CreateRequisitionSheet({ open, onClose }: CreateRequisitionSheetProps) 
                 <FormItem>
                   <FormLabel>Target Hire Date</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

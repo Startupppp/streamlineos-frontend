@@ -16,6 +16,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Select,
   SelectContent,
@@ -164,7 +165,7 @@ function EventForm({ editing, defaultMonth, onSuccess, onCancel }: EventFormProp
             <FormItem>
               <FormLabel className="text-[11px]">Date</FormLabel>
               <FormControl>
-                <Input type="date" {...field} className="h-8 text-xs" />
+                <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-xs" />
               </FormControl>
               <FormMessage />
             </FormItem>

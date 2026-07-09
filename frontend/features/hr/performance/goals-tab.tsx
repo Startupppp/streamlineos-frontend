@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { LoadingState } from "@/components/shared/loading-state";
@@ -267,23 +268,14 @@ export function GoalsTab() {
     if (!open) setDeleteId(null);
   }, []);
 
-  const handleTitleChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value),
-    [],
-  );
+  const handleTitleChange = useCallback((value: string) => setTitle(value), []);
   const handleDescriptionChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) =>
       setDescription(e.target.value),
     [],
   );
-  const handleStartDateChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setStartDate(e.target.value),
-    [],
-  );
-  const handleEndDateChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setEndDate(e.target.value),
-    [],
-  );
+  const handleStartDateChange = useCallback((value: string) => setStartDate(value), []);
+  const handleEndDateChange = useCallback((value: string) => setEndDate(value), []);
 
   if (isLoading) {
     return <LoadingState variant="cards" rows={4} />;
@@ -515,15 +507,11 @@ export function GoalsTab() {
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Start Date</label>
-            <Input
-              type="date"
-              value={startDate}
-              onChange={handleStartDateChange}
-            />
+            <DatePicker value={startDate ?? ""} onChange={handleStartDateChange} placeholder="Pick a date" className="h-8 text-sm" />
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">End Date</label>
-            <Input type="date" value={endDate} onChange={handleEndDateChange} />
+            <DatePicker value={endDate ?? ""} onChange={handleEndDateChange} placeholder="Pick a date" className="h-8 text-sm" />
           </div>
         </div>
       </HrSheet>

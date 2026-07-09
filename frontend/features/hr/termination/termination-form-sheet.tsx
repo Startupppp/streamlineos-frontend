@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { format } from "date-fns";
 
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -258,13 +259,7 @@ export function TerminationFormSheet({
           <Label className="text-sm font-medium">
             Effective Date <span className="text-rose-500">*</span>
           </Label>
-          <Input
-            type="date"
-            value={effectiveDate}
-            min={format(new Date(), "yyyy-MM-dd")}
-            onChange={onEffectiveDateChange}
-            aria-label="Effective date"
-          />
+          <DatePicker value={effectiveDate ?? ""} onChange={onEffectiveDateChange} placeholder="Pick a date" className="h-8 text-sm" fromDate={format(new Date(), "yyyy-MM-dd") ? parseISO(format(new Date(), "yyyy-MM-dd")) : undefined} />
           <p className="text-[11px] text-muted-foreground">
             Must be today or a future date.
           </p>

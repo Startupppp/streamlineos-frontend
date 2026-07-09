@@ -19,6 +19,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Button } from "@/components/ui/button";
 import { useCreateTaxWindow, useUpdateTaxWindow } from "@/hooks/api/payroll/tax-windows";
 import type { TaxWindow } from "@/types/payroll/reports";
@@ -124,7 +125,7 @@ export function TaxWindowSheet({ window, onClose }: TaxWindowSheetProps) {
                   <FormItem>
                     <FormLabel>Opens At</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -137,7 +138,7 @@ export function TaxWindowSheet({ window, onClose }: TaxWindowSheetProps) {
                   <FormItem>
                     <FormLabel>Closes At</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -150,7 +151,7 @@ export function TaxWindowSheet({ window, onClose }: TaxWindowSheetProps) {
                   <FormItem>
                     <FormLabel>Proof Deadline (optional)</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -163,7 +164,7 @@ export function TaxWindowSheet({ window, onClose }: TaxWindowSheetProps) {
                   <FormItem>
                     <FormLabel>Lock Date (optional)</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

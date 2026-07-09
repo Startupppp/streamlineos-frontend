@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import {
   Sheet,
@@ -199,19 +200,11 @@ export function CyclesTab() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label>Start Date *</Label>
-                  <Input
-                    type="date"
-                    value={form.startDate}
-                    onChange={(e) => handleFormChange("startDate", e.target.value)}
-                  />
+                  <DatePicker value={form.startDate ?? ""} onChange={(e) => handleFormChange("startDate", e.target.value)} placeholder="Pick a date" className="h-8 text-sm" />
                 </div>
                 <div className="space-y-1.5">
                   <Label>End Date *</Label>
-                  <Input
-                    type="date"
-                    value={form.endDate}
-                    onChange={(e) => handleFormChange("endDate", e.target.value)}
-                  />
+                  <DatePicker value={form.endDate ?? ""} onChange={(e) => handleFormChange("endDate", e.target.value)} placeholder="Pick a date" className="h-8 text-sm" />
                 </div>
               </div>
               <div className="flex items-center gap-3">

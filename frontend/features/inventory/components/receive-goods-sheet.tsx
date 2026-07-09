@@ -7,6 +7,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
@@ -190,7 +191,7 @@ const GrnLineRow = memo(function GrnLineRow({ meta, index, control }: GrnLineRow
               <FormItem>
                 <FormLabel className="text-xs">Expiry date</FormLabel>
                 <FormControl>
-                  <Input type="date" {...field} />
+                  <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -203,7 +204,7 @@ const GrnLineRow = memo(function GrnLineRow({ meta, index, control }: GrnLineRow
               <FormItem>
                 <FormLabel className="text-xs">Manufacture date</FormLabel>
                 <FormControl>
-                  <Input type="date" {...field} />
+                  <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
                 </FormControl>
                 <FormMessage />
               </FormItem>

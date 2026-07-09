@@ -1,11 +1,12 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { AppSheet } from "@/components/shared/app-sheet";
@@ -82,11 +83,12 @@ export function ShipSheet({ open, onOpenChange, soId }: ShipSheetProps) {
       <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
         <div className="space-y-1.5">
           <Label htmlFor="shipDate">Ship Date *</Label>
-          <Input
-            id="shipDate"
-            type="date"
-            className="h-8 text-sm"
-            {...form.register("shipDate")}
+          <Controller
+            name="shipDate"
+            control={form.control}
+            render={({ field }) => (
+              <DatePicker id="shipDate" value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+            )}
           />
           {form.formState.errors.shipDate && (
             <p className="text-xs text-destructive">{form.formState.errors.shipDate.message}</p>

@@ -7,6 +7,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Table,
   TableBody,
@@ -140,13 +141,7 @@ export default function CustomerLedgerDetailPage({
             >
               From
             </label>
-            <Input
-              id="customer-ledger-from"
-              type="date"
-              value={from}
-              onChange={handleFromChange}
-              className="w-full sm:w-[160px]"
-            />
+            <DatePicker id="customer-ledger-from" value={from ?? ""} onChange={handleFromChange} placeholder="Pick a date" className="w-full sm:w-[160px]" />
           </div>
           <div className="flex flex-col gap-1">
             <label
@@ -155,13 +150,7 @@ export default function CustomerLedgerDetailPage({
             >
               To
             </label>
-            <Input
-              id="customer-ledger-to"
-              type="date"
-              value={to}
-              onChange={handleToChange}
-              className="w-full sm:w-[160px]"
-            />
+            <DatePicker id="customer-ledger-to" value={to ?? ""} onChange={handleToChange} placeholder="Pick a date" className="w-full sm:w-[160px]" />
           </div>
         </div>
 

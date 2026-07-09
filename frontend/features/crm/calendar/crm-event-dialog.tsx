@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
@@ -330,13 +331,17 @@ export function CrmEventDialog({
                 <Label htmlFor="startDate" className="text-[13px] font-medium text-foreground">
                   Start Date <span className="text-destructive">*</span>
                 </Label>
-                <Input
-                  id="startDate"
-                  type="date"
-                  {...form.register("startDate")}
-                  className={cn(
-                    "h-9",
-                    form.formState.errors.startDate && "border-destructive",
+                <Controller
+                  name="startDate"
+                  control={form.control}
+                  render={({ field }) => (
+                    <DatePicker
+                      id="startDate"
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                      placeholder="Pick a date"
+                      className={cn("h-8 text-sm", form.formState.errors.startDate && "border-destructive")}
+                    />
                   )}
                 />
                 {form.formState.errors.startDate && (
@@ -365,13 +370,17 @@ export function CrmEventDialog({
                 <Label htmlFor="endDate" className="text-[13px] font-medium text-foreground">
                   End Date <span className="text-destructive">*</span>
                 </Label>
-                <Input
-                  id="endDate"
-                  type="date"
-                  {...form.register("endDate")}
-                  className={cn(
-                    "h-9",
-                    form.formState.errors.endDate && "border-destructive",
+                <Controller
+                  name="endDate"
+                  control={form.control}
+                  render={({ field }) => (
+                    <DatePicker
+                      id="endDate"
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                      placeholder="Pick a date"
+                      className={cn("h-8 text-sm", form.formState.errors.endDate && "border-destructive")}
+                    />
                   )}
                 />
                 {form.formState.errors.endDate && (

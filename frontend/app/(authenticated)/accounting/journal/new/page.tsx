@@ -11,6 +11,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import {
@@ -340,7 +341,7 @@ export default function NewJournalEntryPage() {
                   <FormItem>
                     <FormLabel>Entry date</FormLabel>
                     <FormControl>
-                      <Input id="entry-date" type="date" {...field} />
+                      <DatePicker id="entry-date" value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

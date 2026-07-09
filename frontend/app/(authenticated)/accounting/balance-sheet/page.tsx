@@ -4,6 +4,7 @@ import { useState, type ChangeEvent } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Table,
   TableBody,
@@ -90,8 +91,8 @@ export default function BalanceSheetPage() {
   const query = useBalanceSheet(asOf);
   const report = query.data;
 
-  function handleAsOfChange(event: ChangeEvent<HTMLInputElement>): void {
-    setAsOf(event.target.value);
+  function handleAsOfChange(value: string): void {
+    setAsOf(value);
   }
 
   function handleRetry(): void {
@@ -112,13 +113,7 @@ export default function BalanceSheetPage() {
             >
               As of
             </label>
-            <Input
-              id="balance-sheet-asof"
-              type="date"
-              value={asOf}
-              onChange={handleAsOfChange}
-              className="w-full sm:w-[160px] h-8 text-sm"
-            />
+            <DatePicker id="balance-sheet-asof" value={asOf ?? ""} onChange={handleAsOfChange} placeholder="Pick a date" className="w-full sm:w-[160px] h-8 text-sm" />
           </div>
           {report && (
             <div className="ml-auto text-sm">

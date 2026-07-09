@@ -4,6 +4,7 @@ import { useState, type ChangeEvent } from "react";
 import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Table,
   TableBody,
@@ -31,8 +32,8 @@ export default function AgedReceivablesPage() {
   const query = useAgedReceivables(asOf);
   const report = query.data;
 
-  function handleAsOfChange(event: ChangeEvent<HTMLInputElement>): void {
-    setAsOf(event.target.value);
+  function handleAsOfChange(value: string): void {
+    setAsOf(value);
   }
 
   function handleRetry(): void {
@@ -48,7 +49,7 @@ export default function AgedReceivablesPage() {
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex flex-col gap-1">
             <label htmlFor="aged-asof" className="text-[11px] font-medium text-muted-foreground leading-none">As of</label>
-            <Input id="aged-asof" type="date" value={asOf} onChange={handleAsOfChange} className="w-full sm:w-[160px] h-8 text-sm" />
+            <DatePicker id="aged-asof" value={asOf ?? ""} onChange={handleAsOfChange} placeholder="Pick a date" className="w-full sm:w-[160px] h-8 text-sm" />
           </div>
         </div>
       }

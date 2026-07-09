@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -345,11 +346,11 @@ export function PIPTab() {
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Start Date <span className="text-destructive">*</span></label>
-            <Input type="date" value={startDate} onChange={handleStartDateChange} disabled={!!editingPip} />
+            <DatePicker value={startDate ?? ""} onChange={handleStartDateChange} disabled={!!editingPip} placeholder="Pick a date" className="h-8 text-sm" />
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">End Date <span className="text-destructive">*</span></label>
-            <Input type="date" value={endDate} onChange={handleEndDateChange} />
+            <DatePicker value={endDate ?? ""} onChange={handleEndDateChange} placeholder="Pick a date" className="h-8 text-sm" />
           </div>
         </div>
         <div className="space-y-2">
@@ -372,7 +373,7 @@ export function PIPTab() {
                 </div>
                 <Input placeholder="Goal / objective" value={obj.objective} onChange={(e) => updateObjectiveField(idx, "objective", e.target.value)} className="h-8 text-xs" />
                 <Input placeholder="Success metric" value={obj.metric} onChange={(e) => updateObjectiveField(idx, "metric", e.target.value)} className="h-8 text-xs" />
-                <Input type="date" value={obj.deadline} onChange={(e) => updateObjectiveField(idx, "deadline", e.target.value)} className="h-8 text-xs" />
+                <DatePicker value={obj.deadline ?? ""} onChange={(e) => updateObjectiveField(idx, "deadline", e.target.value)} placeholder="Pick a date" className="h-8 text-xs" />
               </div>
             ))}
           </div>

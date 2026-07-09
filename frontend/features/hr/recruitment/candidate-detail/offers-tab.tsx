@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -411,11 +412,11 @@ export function OffersTab({ candidateId }: Props) {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">Joining Date</label>
-                <Input type="date" value={joiningDate} onChange={(e) => setJoiningDate(e.target.value)} />
+                <DatePicker value={joiningDate ?? ""} onChange={(e) => setJoiningDate(e.target.value)} placeholder="Pick a date" className="h-8 text-sm" />
               </div>
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">Valid Until</label>
-                <Input type="date" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} />
+                <DatePicker value={validUntil ?? ""} onChange={(e) => setValidUntil(e.target.value)} placeholder="Pick a date" className="h-8 text-sm" />
               </div>
             </div>
             <div className="space-y-1.5">

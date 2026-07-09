@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -156,7 +157,7 @@ function RequestSheet({ initial, onClose }: RequestSheetProps) {
           </div>
           <div className="space-y-1.5">
             <Label>Target Start Date</Label>
-            <Input type="date" value={targetDate} onChange={handleTargetDateChange} />
+            <DatePicker value={targetDate ?? ""} onChange={handleTargetDateChange} placeholder="Pick a date" className="h-8 text-sm" />
           </div>
           <div className="space-y-1.5">
             <Label>Justification</Label>

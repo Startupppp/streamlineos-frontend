@@ -9,6 +9,7 @@ import { InventoryEmptyState } from "@/features/inventory/components/inventory-e
 import { ErrorState } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { useStockTransactions } from "@/hooks/api/inventory/stock";
 import type { StockTransaction } from "@/hooks/api/inventory/stock";
 
@@ -150,20 +151,8 @@ export default function IssuesPage() {
 
   const filterBar = (
     <div className="flex w-full min-w-0 items-center gap-2">
-      <Input
-        type="date"
-        value={fromDate}
-        onChange={handleFromDateChange}
-        className="h-8 text-xs w-36"
-        placeholder="From"
-      />
-      <Input
-        type="date"
-        value={toDate}
-        onChange={handleToDateChange}
-        className="h-8 text-xs w-36"
-        placeholder="To"
-      />
+      <DatePicker value={fromDate ?? ""} onChange={handleFromDateChange} placeholder="Pick a date" className="h-8 text-xs w-36" />
+      <DatePicker value={toDate ?? ""} onChange={handleToDateChange} placeholder="Pick a date" className="h-8 text-xs w-36" />
     </div>
   );
 

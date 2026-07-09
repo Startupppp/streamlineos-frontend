@@ -17,6 +17,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -208,7 +209,7 @@ export function CreateProgramSheet({ open, onOpenChange }: Props) {
                     Start Date
                   </FormLabel>
                   <FormControl>
-                    <Input type="date" className="h-9 text-sm" {...field} />
+                    <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-9 text-sm" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -225,7 +226,7 @@ export function CreateProgramSheet({ open, onOpenChange }: Props) {
                     <span className="normal-case font-normal text-muted-foreground tracking-normal">(optional)</span>
                   </FormLabel>
                   <FormControl>
-                    <Input type="date" className="h-9 text-sm" {...field} />
+                    <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-9 text-sm" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

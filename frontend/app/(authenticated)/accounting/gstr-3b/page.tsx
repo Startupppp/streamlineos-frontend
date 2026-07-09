@@ -3,6 +3,7 @@
 import { useState, type ChangeEvent } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Table,
   TableBody,
@@ -59,12 +60,12 @@ export default function Gstr3BPage() {
   const query = useGstr3B(from, to);
   const report = query.data;
 
-  function handleFromChange(event: ChangeEvent<HTMLInputElement>): void {
-    setFrom(event.target.value);
+  function handleFromChange(value: string): void {
+    setFrom(value);
   }
 
-  function handleToChange(event: ChangeEvent<HTMLInputElement>): void {
-    setTo(event.target.value);
+  function handleToChange(value: string): void {
+    setTo(value);
   }
 
   function handleRetry(): void {
@@ -85,13 +86,7 @@ export default function Gstr3BPage() {
             >
               From
             </label>
-            <Input
-              id="gstr3b-from"
-              type="date"
-              value={from}
-              onChange={handleFromChange}
-              className="w-full sm:w-[160px] h-8 text-sm"
-            />
+            <DatePicker id="gstr3b-from" value={from ?? ""} onChange={handleFromChange} placeholder="Pick a date" className="w-full sm:w-[160px] h-8 text-sm" />
           </div>
           <div className="flex flex-col gap-1">
             <label
@@ -100,13 +95,7 @@ export default function Gstr3BPage() {
             >
               To
             </label>
-            <Input
-              id="gstr3b-to"
-              type="date"
-              value={to}
-              onChange={handleToChange}
-              className="w-full sm:w-[160px] h-8 text-sm"
-            />
+            <DatePicker id="gstr3b-to" value={to ?? ""} onChange={handleToChange} placeholder="Pick a date" className="w-full sm:w-[160px] h-8 text-sm" />
           </div>
         </div>
       }

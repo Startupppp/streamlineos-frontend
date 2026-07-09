@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Form,
   FormControl,
@@ -214,7 +215,7 @@ export function CreateTicketFromCalendarDialog({
                 <FormItem className="gap-1">
                   <FormLabel className="text-xs font-medium">Due date</FormLabel>
                   <FormControl>
-                    <Input {...field} type="date" className="h-8 text-sm" />
+                    <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
                   </FormControl>
                   <FormMessage className="text-xs" />
                 </FormItem>

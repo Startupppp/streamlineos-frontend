@@ -25,6 +25,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -176,7 +177,7 @@ export function MyCareerPlan() {
                       Target Date
                     </FormLabel>
                     <FormControl>
-                      <Input type="date" className="h-9 text-sm" {...field} />
+                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-9 text-sm" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -380,11 +381,11 @@ export function MyCareerPlan() {
             value={newMilestoneTitle}
             onChange={(e) => setNewMilestoneTitle(e.target.value)}
           />
-          <Input
-            type="date"
+          <DatePicker
             className="h-8 text-sm w-36 shrink-0"
             value={newMilestoneDue}
-            onChange={(e) => setNewMilestoneDue(e.target.value)}
+            onChange={setNewMilestoneDue}
+            placeholder="Pick a date"
           />
           <Button
             variant="outline"

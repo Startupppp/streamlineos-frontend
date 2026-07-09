@@ -1,3 +1,4 @@
+import { parseISO } from "date-fns";
 "use client";
 
 import { useState, useCallback } from "react";
@@ -11,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
@@ -254,16 +256,16 @@ export function CyclesTab() {
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Period Start</label>
-            <Input type="date" value={periodStart} onChange={handlePeriodStartChange} />
+            <DatePicker value={periodStart ?? ""} onChange={handlePeriodStartChange} placeholder="Pick a date" className="h-8 text-sm" />
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Period End</label>
-            <Input type="date" value={periodEnd} min={periodStart || undefined} onChange={handlePeriodEndChange} />
+            <DatePicker value={periodEnd ?? ""} onChange={handlePeriodEndChange} fromDate={periodStart || undefined ? parseISO(periodStart || undefined) : undefined} placeholder="Pick a date" className="h-8 text-sm" />
           </div>
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Submission Deadline</label>
-          <Input type="date" value={deadline} min={periodEnd || undefined} onChange={handleDeadlineChange} />
+          <DatePicker value={deadline ?? ""} onChange={handleDeadlineChange} fromDate={periodEnd || undefined ? parseISO(periodEnd || undefined) : undefined} placeholder="Pick a date" className="h-8 text-sm" />
         </div>
       </HrSheet>
 

@@ -7,6 +7,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Select,
   SelectContent,
@@ -184,52 +185,8 @@ function MovementsReportContent() {
         <>
           <div className="relative min-w-0 flex-1 max-w-[180px]">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-            <Input
-              value={search}
-              onChange={handleSearchChange}
-              placeholder="Search…"
-              className="h-8 w-full min-w-0 pl-8 text-xs"
-            />
-          </div>
-          <Select value={warehouseValue} onValueChange={handleWarehouseChange}>
-            <SelectTrigger className="w-[150px] h-8 text-xs shrink-0">
-              <SelectValue placeholder="All warehouses" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All warehouses</SelectItem>
-              {warehouses.map((w) => (
-                <SelectItem key={w.id} value={String(w.id)}>
-                  {w.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={typeValue} onValueChange={handleTypeChange}>
-            <SelectTrigger className="w-[140px] h-8 text-xs shrink-0">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {TYPE_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Input
-            type="date"
-            value={dateFrom}
-            onChange={handleDateFromChange}
-            className="w-[130px] h-8 text-xs shrink-0"
-            aria-label="From date"
-          />
-          <Input
-            type="date"
-            value={dateTo}
-            onChange={handleDateToChange}
-            className="w-[130px] h-8 text-xs shrink-0"
-            aria-label="To date"
-          />
+            <DatePicker value={search ?? ""} onChange={handleSearchChange} placeholder="Pick a date" className="h-8 w-full min-w-0 pl-8 text-xs" />
+          <DatePicker value={dateTo ?? ""} onChange={handleDateToChange} placeholder="Pick a date" className="w-[130px] h-8 text-xs shrink-0" />
           <Button
             variant="outline"
             size="sm"

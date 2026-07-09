@@ -2,6 +2,7 @@
 
 import { Controller } from "react-hook-form";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
@@ -52,7 +53,13 @@ export function Section9({ form }: SectionProps) {
         </Field>
 
         <Field label="Application Deadline">
-          <Input type="date" {...register("applicationDeadline")} />
+          <Controller
+            name="applicationDeadline"
+            control={control}
+            render={({ field }) => (
+              <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+            )}
+          />
         </Field>
       </div>
     </div>

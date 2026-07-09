@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
@@ -11,6 +11,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -330,7 +331,13 @@ export default function TravelPage() {
             <Label htmlFor="departureDate">
               Departure <span className="text-destructive">*</span>
             </Label>
-            <Input id="departureDate" type="date" {...form.register("departureDate")} />
+            <Controller
+              name="departureDate"
+              control={form.control}
+              render={({ field }) => (
+                <DatePicker id="departureDate" value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+              )}
+            />
             {form.formState.errors.departureDate && (
               <p className="text-xs text-destructive">{form.formState.errors.departureDate.message}</p>
             )}
@@ -339,7 +346,13 @@ export default function TravelPage() {
             <Label htmlFor="returnDate">
               Return <span className="text-destructive">*</span>
             </Label>
-            <Input id="returnDate" type="date" {...form.register("returnDate")} />
+            <Controller
+              name="returnDate"
+              control={form.control}
+              render={({ field }) => (
+                <DatePicker id="returnDate" value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+              )}
+            />
             {form.formState.errors.returnDate && (
               <p className="text-xs text-destructive">{form.formState.errors.returnDate.message}</p>
             )}

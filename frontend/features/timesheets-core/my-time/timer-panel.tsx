@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { Play, Pause, Square, Trash2, Timer, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -227,7 +228,7 @@ export function TimerPanel({ weekStart, weekEnd }: TimerPanelProps) {
             <div className="space-y-3 py-2">
               <div className="space-y-1">
                 <Label className="text-xs">Date</Label>
-                <Input type="date" value={convertDate} onChange={handleConvertDateChange} className="h-8 text-sm" />
+                <DatePicker value={convertDate ?? ""} onChange={handleConvertDateChange} placeholder="Pick a date" className="h-8 text-sm" />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">Hours</Label>
