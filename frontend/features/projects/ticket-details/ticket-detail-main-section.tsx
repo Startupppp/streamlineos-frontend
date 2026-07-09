@@ -1,9 +1,8 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { ExternalLink } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import { viewFile } from "@/hooks/common/use-file-url";
+import { viewFile, downloadFile } from "@/hooks/common/use-file-url";
 import { TicketSubtasks } from "./ticket-subtasks";
 import { TicketRelations } from "./ticket-relations";
 import { ActivityFeed } from "./activity-feed";
@@ -11,6 +10,13 @@ import { TicketActivityLog } from "@/features/projects/tickets/ticket-activity-l
 import { TicketChecklists } from "./ticket-checklists";
 import { TicketCustomFields } from "./ticket-custom-fields";
 import { AttachmentImage } from "./attachment-image";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import type { ProjectMember } from "./types";
 import type { Ticket } from "@/types/projects";
 
@@ -35,6 +41,52 @@ interface TicketDetailMainSectionProps {
   highlightCommentId?: number | null;
   onTitleChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   onDescriptionChange: (html: string) => void;
+}
+
+interface AttachmentItem {
+  id: number;
+  fileUrl: string;
+  fileName: string;
+  mimeType?: string | null;
+}
+
+interface AttachmentContextMenuProps {
+  attachment: AttachmentItem;
+  children: React.ReactNode;
+}
+
+function AttachmentContextMenu({ attachment, children }: AttachmentContextMenuProps) {
+  function handleView() {
+    void viewFile(attachment.fileUrl);
+  }
+
+  function handleDownload() {
+    void downloadFile(attachment.fileUrl, attachment.fileName);
+  }
+
+  function handleCopyLink() {
+    void navigator.clipboard.writeText(attachment.fileUrl);
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        {children}
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start">
+        <DropdownMenuItem onSelect={handleView}>
+          View image
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={handleDownload}>
+          Download
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={handleCopyLink}>
+          Copy link
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 }
 
 export function TicketDetailMainSection({
@@ -81,25 +133,33 @@ export function TicketDetailMainSection({
             Attachments
           </h4>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {ticket.attachments.map((att) => (
-              <button
-                key={att.id}
-                type="button"
-                onClick={() => viewFile(att.fileUrl)}
-                className="group relative aspect-video rounded-md overflow-hidden bg-muted border hover:border-primary/50 transition-all text-left"
-              >
-                {att.mimeType?.startsWith("image/") ? (
-                  <AttachmentImage fileUrl={att.fileUrl} fileName={att.fileName} />
-                ) : (
+            {ticket.attachments.map((att) => {
+              if (att.mimeType?.startsWith("image/")) {
+                return (
+                  <AttachmentContextMenu key={att.id} attachment={att}>
+                    <button
+                      type="button"
+                      className="group relative aspect-video rounded-md overflow-hidden bg-muted border hover:border-primary/50 transition-all text-left"
+                    >
+                      <AttachmentImage fileUrl={att.fileUrl} fileName={att.fileName} />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none" />
+                    </button>
+                  </AttachmentContextMenu>
+                );
+              }
+              return (
+                <button
+                  key={att.id}
+                  type="button"
+                  onClick={() => void viewFile(att.fileUrl)}
+                  className="group relative aspect-video rounded-md overflow-hidden bg-muted border hover:border-primary/50 transition-all text-left"
+                >
                   <div className="flex items-center justify-center h-full text-muted-foreground text-[10px] p-1 text-center">
                     {att.fileName}
                   </div>
-                )}
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <ExternalLink className="h-4 w-4 text-white" />
-                </div>
-              </button>
-            ))}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}

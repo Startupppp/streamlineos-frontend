@@ -166,6 +166,7 @@ export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormShe
                   content={descriptionValue ?? ""}
                   onChangeHtml={handleDescriptionChange}
                   placeholder="Describe what's in this release…"
+                  menuMode="static"
                 />
               </div>
             </div>

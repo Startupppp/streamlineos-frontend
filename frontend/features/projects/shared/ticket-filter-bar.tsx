@@ -1,31 +1,17 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useMemo, useTransition, type ChangeEvent } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import { Search, SlidersHorizontal, X, CheckCircle2, Check } from "lucide-react";
-import { cn } from "@/lib/utils";
-import type { TicketPriority, TicketType } from "@/types/projects";
+import { Search, X, CheckCircle2 } from "lucide-react";
 import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
 import { useCycles } from "@/hooks/api/projects/advanced";
 import { useProjectLabels } from "@/hooks/api/projects/projects";
-import { FilterChip, FilterSection } from "./filter-chips";
-
-const PRIORITIES: TicketPriority[] = ["LOW", "MEDIUM", "HIGH", "URGENT"];
-const TYPES: TicketType[] = ["TASK", "BUG", "STORY", "EPIC", "SUBTASK"];
+import { FilterChip } from "./filter-chips";
+import { FilterCommandMenu } from "./filter-command-menu";
+import type { FilterState } from "./filter-command-menu";
 
 interface Member {
   id: string;
@@ -156,52 +142,44 @@ export function TicketFilterBar({
     setParam("q", e.target.value);
   }
 
-  function handleDueDateFromChange(e: ChangeEvent<HTMLInputElement>) {
-    setParam("dueDateFrom", e.target.value);
-  }
-
-  function handleDueDateToChange(e: ChangeEvent<HTMLInputElement>) {
-    setParam("dueDateTo", e.target.value);
-  }
-
   function handleHideCompletedChange(checked: boolean) {
     onHideCompletedChange?.(checked);
   }
 
-  function makeStatusToggle(status: string) {
-    return function onStatusToggle() {
-      toggleParam("status", selectedStatuses, status);
-    };
+  function handleToggleStatus(status: string) {
+    toggleParam("status", selectedStatuses, status);
   }
 
-  function makePriorityToggle(priority: string) {
-    return function onPriorityToggle() {
-      toggleParam("priority", selectedPriorities, priority);
-    };
+  function handleTogglePriority(priority: string) {
+    toggleParam("priority", selectedPriorities, priority);
   }
 
-  function makeTypeToggle(type: string) {
-    return function onTypeToggle() {
-      toggleParam("type", selectedTypes, type);
-    };
+  function handleToggleType(type: string) {
+    toggleParam("type", selectedTypes, type);
   }
 
-  function makeAssigneeToggle(id: string) {
-    return function onAssigneeToggle() {
-      toggleParam("assigneeId", selectedAssignees, id);
-    };
+  function handleToggleAssignee(id: string) {
+    toggleParam("assigneeId", selectedAssignees, id);
   }
 
-  function makeLabelToggle(id: string) {
-    return function onLabelToggle() {
-      toggleParam("labels", selectedLabels, id);
-    };
+  function handleToggleLabel(id: string) {
+    toggleParam("labels", selectedLabels, id);
   }
 
-  function makeCycleToggle(id: string) {
-    return function onCycleToggle() {
-      toggleParam("cycle", selectedCycles, id);
-    };
+  function handleToggleCycle(id: string) {
+    toggleParam("cycle", selectedCycles, id);
+  }
+
+  function handleToggleSprint(id: string) {
+    setParam("sprintId", sprintParam === id ? "" : id);
+  }
+
+  function handleDueDateFromChange(value: string) {
+    setParam("dueDateFrom", value);
+  }
+
+  function handleDueDateToChange(value: string) {
+    setParam("dueDateTo", value);
   }
 
   function makeRemoveStatus(status: string) {
@@ -253,6 +231,18 @@ export function TicketFilterBar({
     [members],
   );
 
+  const filterState: FilterState = {
+    selectedStatuses,
+    selectedPriorities,
+    selectedTypes,
+    selectedAssignees,
+    selectedLabels,
+    selectedCycles,
+    sprintParam,
+    dueDateFrom,
+    dueDateTo,
+  };
+
   return (
     <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
       <div className="relative min-w-[120px] max-w-[180px] flex-1">
@@ -265,217 +255,48 @@ export function TicketFilterBar({
         />
       </div>
 
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            className="relative h-8 shrink-0 gap-1.5 bg-card border-border px-2.5 text-xs font-normal shadow-xs"
+      <FilterCommandMenu
+        activeFilterCount={activeFilterCount}
+        statusOptions={statusOptions}
+        members={members ?? []}
+        labels={labels}
+        cycles={cycles}
+        sprints={sprints ?? []}
+        showTypeFilter={showTypeFilter}
+        showSprintFilter={showSprintFilter}
+        showAssigneeFilter={showAssigneeFilter}
+        filterState={filterState}
+        onToggleStatus={handleToggleStatus}
+        onTogglePriority={handleTogglePriority}
+        onToggleType={handleToggleType}
+        onToggleAssignee={handleToggleAssignee}
+        onToggleLabel={handleToggleLabel}
+        onToggleCycle={handleToggleCycle}
+        onToggleSprint={handleToggleSprint}
+        onDueDateFromChange={handleDueDateFromChange}
+        onDueDateToChange={handleDueDateToChange}
+      />
+
+      {showDoneToggle && onHideCompletedChange !== undefined && hideCompleted !== undefined && (
+        <div className="flex items-center justify-between gap-2 rounded-md border border-border bg-muted/30 px-2.5 py-2">
+          <Label
+            htmlFor="hide-done-filter"
+            className="flex cursor-pointer items-center gap-1.5 text-xs font-normal"
           >
-            <SlidersHorizontal className="h-3.5 w-3.5 shrink-0" />
-            <span>Filters</span>
-            {activeFilterCount > 0 && (
-              <Badge className="h-4 min-w-4 border-0 bg-blue-500 px-1 text-[10px] font-semibold text-white">
-                {activeFilterCount}
-              </Badge>
+            <CheckCircle2 className="h-3 w-3 text-muted-foreground" />
+            Hide done
+            {hideCompleted && doneCount > 0 && (
+              <span className="text-muted-foreground">({doneCount})</span>
             )}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent align="start" className="w-72 p-3 space-y-3 max-h-[80vh] overflow-y-auto">
-          <FilterSection label="Status">
-            <Command className="border border-border rounded-md">
-              <CommandInput placeholder="Search status..." className="h-7 text-xs" />
-              <CommandList className="max-h-32">
-                <CommandEmpty className="py-1 text-center text-xs text-muted-foreground">No results.</CommandEmpty>
-                <CommandGroup>
-                  {statusOptions.map((s) => (
-                    <CommandItem key={s} value={s} onSelect={makeStatusToggle(s)}>
-                      <Check className={cn("mr-2 h-3 w-3", selectedStatuses.includes(s) ? "opacity-100" : "opacity-0")} />
-                      <span className="text-xs">{s.replace(/_/g, " ")}</span>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </FilterSection>
-
-          <FilterSection label="Priority">
-            <div className="flex flex-wrap gap-1">
-              {PRIORITIES.map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  onClick={makePriorityToggle(p)}
-                  className={cn(
-                    "rounded px-2 py-0.5 text-xs border transition-colors",
-                    selectedPriorities.includes(p)
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border text-muted-foreground hover:border-muted-foreground",
-                  )}
-                >
-                  {p.charAt(0) + p.slice(1).toLowerCase()}
-                </button>
-              ))}
-            </div>
-          </FilterSection>
-
-          {showTypeFilter && (
-            <FilterSection label="Type">
-              <div className="flex flex-wrap gap-1">
-                {TYPES.map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={makeTypeToggle(t)}
-                    className={cn(
-                      "rounded px-2 py-0.5 text-xs border transition-colors",
-                      selectedTypes.includes(t)
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border text-muted-foreground hover:border-muted-foreground",
-                    )}
-                  >
-                    {t.charAt(0) + t.slice(1).toLowerCase()}
-                  </button>
-                ))}
-              </div>
-            </FilterSection>
-          )}
-
-          {showAssigneeFilter && members && members.length > 0 && (
-            <FilterSection label="Assignee">
-              <Command className="border border-border rounded-md">
-                <CommandInput placeholder="Search assignees..." className="h-7 text-xs" />
-                <CommandList className="max-h-40">
-                  <CommandEmpty className="py-1 text-center text-xs text-muted-foreground">No results.</CommandEmpty>
-                  <CommandGroup>
-                    <CommandItem value="__unassigned__" onSelect={makeAssigneeToggle("__unassigned__")}>
-                      <Check className={cn("mr-2 h-3 w-3", selectedAssignees.includes("__unassigned__") ? "opacity-100" : "opacity-0")} />
-                      <span className="text-xs">Unassigned</span>
-                    </CommandItem>
-                    {members.map((m) => (
-                      <CommandItem key={m.id} value={getUserDisplayName(m)} onSelect={makeAssigneeToggle(m.id)}>
-                        <Check className={cn("mr-2 h-3 w-3", selectedAssignees.includes(m.id) ? "opacity-100" : "opacity-0")} />
-                        <span className="text-xs">{getUserDisplayName(m)}</span>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </FilterSection>
-          )}
-
-          {labels.length > 0 && (
-            <FilterSection label="Labels">
-              <Command className="border border-border rounded-md">
-                <CommandInput placeholder="Search labels..." className="h-7 text-xs" />
-                <CommandList className="max-h-36">
-                  <CommandEmpty className="py-1 text-center text-xs text-muted-foreground">No results.</CommandEmpty>
-                  <CommandGroup>
-                    {labels.map((l) => (
-                      <CommandItem key={l.id} value={l.name} onSelect={makeLabelToggle(String(l.id))}>
-                        <Check className={cn("mr-2 h-3 w-3", selectedLabels.includes(String(l.id)) ? "opacity-100" : "opacity-0")} />
-                        <span
-                          className="mr-1.5 inline-block h-2 w-2 rounded-full shrink-0"
-                          style={{ backgroundColor: l.color || "#3b82f6" }}
-                        />
-                        <span className="text-xs">{l.name}</span>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </FilterSection>
-          )}
-
-          {cycles.length > 0 && (
-            <FilterSection label="Cycle">
-              <Command className="border border-border rounded-md">
-                <CommandInput placeholder="Search cycles..." className="h-7 text-xs" />
-                <CommandList className="max-h-36">
-                  <CommandEmpty className="py-1 text-center text-xs text-muted-foreground">No results.</CommandEmpty>
-                  <CommandGroup>
-                    {cycles.map((c) => (
-                      <CommandItem key={c.id} value={c.name} onSelect={makeCycleToggle(String(c.id))}>
-                        <Check className={cn("mr-2 h-3 w-3", selectedCycles.includes(String(c.id)) ? "opacity-100" : "opacity-0")} />
-                        <span className="text-xs">{c.name}</span>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </FilterSection>
-          )}
-
-          <FilterSection label="Due date range">
-            <div className="flex gap-2">
-              <Input
-                type="date"
-                value={dueDateFrom}
-                onChange={handleDueDateFromChange}
-                className="h-7 flex-1 text-xs"
-                aria-label="Due date from"
-              />
-              <span className="self-center text-xs text-muted-foreground">–</span>
-              <Input
-                type="date"
-                value={dueDateTo}
-                onChange={handleDueDateToChange}
-                className="h-7 flex-1 text-xs"
-                aria-label="Due date to"
-              />
-            </div>
-          </FilterSection>
-
-          {showSprintFilter && sprints && sprints.length > 0 && (
-            <FilterSection label="Sprint">
-              <Command className="border border-border rounded-md">
-                <CommandList className="max-h-32">
-                  <CommandGroup>
-                    {sprints.map((s) => (
-                      <CommandItem key={s.id} value={s.name} onSelect={() => setParam("sprintId", sprintParam === String(s.id) ? "" : String(s.id))}>
-                        <Check className={cn("mr-2 h-3 w-3", sprintParam === String(s.id) ? "opacity-100" : "opacity-0")} />
-                        <span className="text-xs">{s.name}</span>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </FilterSection>
-          )}
-
-          {showDoneToggle && onHideCompletedChange !== undefined && hideCompleted !== undefined && (
-            <div className="flex items-center justify-between gap-2 rounded-md border border-border bg-muted/30 px-2.5 py-2">
-              <Label
-                htmlFor="hide-done-filter"
-                className="flex cursor-pointer items-center gap-1.5 text-xs font-normal"
-              >
-                <CheckCircle2 className="h-3 w-3 text-muted-foreground" />
-                Hide done
-                {hideCompleted && doneCount > 0 && (
-                  <span className="text-muted-foreground">({doneCount})</span>
-                )}
-              </Label>
-              <Switch
-                id="hide-done-filter"
-                checked={hideCompleted}
-                onCheckedChange={handleHideCompletedChange}
-                className="scale-90"
-              />
-            </div>
-          )}
-
-          {activeFilterCount > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={clearAll}
-              className="h-8 w-full text-xs text-muted-foreground"
-            >
-              <X className="mr-1 h-3 w-3" />
-              Clear all filters
-            </Button>
-          )}
-        </PopoverContent>
-      </Popover>
+          </Label>
+          <Switch
+            id="hide-done-filter"
+            checked={hideCompleted}
+            onCheckedChange={handleHideCompletedChange}
+            className="scale-90"
+          />
+        </div>
+      )}
 
       {(selectedStatuses.length > 0 ||
         selectedPriorities.length > 0 ||
@@ -529,4 +350,3 @@ export function TicketFilterBar({
     </div>
   );
 }
-

@@ -146,6 +146,7 @@ export function IncidentSheet({ projectId, open, onOpenChange, editIncident }: I
                 onChangeHtml={(v) => form.setValue("description", v)}
                 placeholder="What happened?"
                 minHeightClassName="min-h-[80px]"
+                menuMode="static"
               />
             </div>
 

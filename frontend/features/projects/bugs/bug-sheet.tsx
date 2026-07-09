@@ -188,6 +188,7 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
                 onChangeHtml={(v) => form.setValue("description", v)}
                 placeholder="Detailed description..."
                 minHeightClassName="min-h-[80px]"
+                menuMode="static"
               />
             </div>
 

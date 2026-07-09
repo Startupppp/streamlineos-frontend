@@ -90,6 +90,7 @@ export function PortalCrSheet({ projectId, open, onOpenChange }: PortalCrSheetPr
                 onChangeHtml={(v) => form.setValue("description", v)}
                 placeholder="Describe the change in detail..."
                 minHeightClassName="min-h-[100px]"
+                menuMode="static"
               />
             </div>
             <div className="space-y-1.5">

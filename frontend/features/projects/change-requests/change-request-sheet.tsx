@@ -143,6 +143,7 @@ export function ChangeRequestSheet({ projectId, open, onOpenChange, editCr }: Ch
                 placeholder="What needs to change and why..."
                 minHeightClassName="min-h-[80px]"
                 contentKey={editCr?.id ?? "new"}
+                menuMode="static"
               />
             </div>
             <div className="space-y-1.5">

@@ -1,99 +1,30 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
-import { ListChecks, Plus } from "lucide-react";
-import { resolveImageUrl } from "@/lib/utils";
-import { useCreateTicket, useUpdateTicket } from "@/hooks/api";
-import { useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/query-keys";
-import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/get-error-message";
-import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
-
-interface Subtask {
-  id: number;
-  title?: string | null;
-  status?: string | null;
-  assignee?: {
-    name?: string | null;
-    firstName?: string | null;
-    lastName?: string | null;
-    email?: string | null;
-    image?: string | null;
-  } | null;
-}
+import { Skeleton } from "@/components/ui/skeleton";
+import { ListChecks } from "lucide-react";
+import { useProject } from "@/hooks/api";
+import { SubtaskRow } from "./subtask-row";
+import { SubtaskComposer } from "./subtask-composer";
+import type { Ticket } from "@/types/projects";
+import type { ProjectStatusRecord } from "@/types/projects";
 
 interface TicketSubtasksProps {
   ticketId: number;
   projectId: number;
-  subtasks: Subtask[];
+  subtasks: Ticket[];
 }
 
-export function TicketSubtasks({
-  ticketId,
-  projectId,
-  subtasks,
-}: TicketSubtasksProps) {
-  const queryClient = useQueryClient();
-  const [subtaskTitle, setSubtaskTitle] = useState("");
+export function TicketSubtasks({ ticketId, projectId, subtasks }: TicketSubtasksProps) {
+  const { data: projectData, isLoading: projectLoading } = useProject(projectId);
+
+  const projectKey = projectData?.key ?? null;
+  const projectStatuses: ProjectStatusRecord[] = projectData?.statuses ?? [];
 
   const subtasksDone = subtasks.filter((s) => s.status === "DONE").length;
   const subtasksTotal = subtasks.length;
-  const subtaskProgress =
-    subtasksTotal > 0 ? (subtasksDone / subtasksTotal) * 100 : 0;
-
-  const subtaskQueryKey = [...queryKeys.projects.all, "subtasks", { ticketId }];
-
-  const createSubtask = useCreateTicket({
-    onSuccess: () => {
-      setSubtaskTitle("");
-      queryClient.invalidateQueries({ queryKey: subtaskQueryKey });
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.detail(projectId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.ticket(ticketId),
-      });
-    },
-    onError: (error) => toast.error(getErrorMessage(error)),
-  });
-
-  const updateTicketMutation = useUpdateTicket(projectId, {
-    onSuccess: () => {
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: subtaskQueryKey });
-      }, 300);
-    },
-    onError: (error) => toast.error(getErrorMessage(error)),
-  });
-
-  const handleAddSubtask = () => {
-    if (!subtaskTitle.trim()) return;
-    createSubtask.mutate({
-      projectId,
-      title: subtaskTitle.trim(),
-      type: "TASK",
-      parentTicketId: ticketId,
-    });
-  };
-
-  const handleToggleSubtask = (
-    subtaskId: number,
-    currentStatus: string | null | undefined,
-  ) => {
-    const newStatus = currentStatus === "DONE" ? "TODO" : "DONE";
-    updateTicketMutation.mutate({ ticketId: subtaskId, status: newStatus });
-  };
-
-  const handleSubtaskKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") handleAddSubtask();
-  };
+  const subtaskProgress = subtasksTotal > 0 ? (subtasksDone / subtasksTotal) * 100 : 0;
 
   return (
     <div className="pt-2">
@@ -111,55 +42,30 @@ export function TicketSubtasks({
         <Progress value={subtaskProgress} className="h-1.5 mb-3" />
       )}
 
-      <div className="space-y-1.5 mb-3">
-        {subtasks.map((sub) => (
-          <div
-            key={sub.id}
-            className="flex items-center gap-2 p-2 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
-          >
-            <Checkbox
-              checked={sub.status === "DONE"}
-              onCheckedChange={() => handleToggleSubtask(sub.id, sub.status)}
+      {projectLoading && subtasksTotal === 0 ? (
+        <div className="space-y-1.5 mb-3">
+          <Skeleton className="h-7 w-full rounded-lg" />
+          <Skeleton className="h-7 w-full rounded-lg" />
+        </div>
+      ) : (
+        <div className="space-y-1 mb-3">
+          {subtasks.map((sub) => (
+            <SubtaskRow
+              key={sub.id}
+              subtask={sub}
+              projectId={projectId}
+              projectKey={projectKey}
+              projectStatuses={projectStatuses}
             />
-            <span
-              className={`text-sm flex-1 ${
-                sub.status === "DONE"
-                  ? "line-through text-muted-foreground"
-                  : ""
-              }`}
-            >
-              {sub.title}
-            </span>
-            {sub.assignee && (
-              <Avatar className="h-7 w-7" title={getUserDisplayName(sub.assignee)}>
-                <AvatarImage src={resolveImageUrl(sub.assignee.image)} />
-                <AvatarFallback className="text-[10px]">
-                  {getUserInitials(sub.assignee)}
-                </AvatarFallback>
-              </Avatar>
-            )}
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
-      <div className="flex gap-2">
-        <Input
-          value={subtaskTitle}
-          onChange={(e) => setSubtaskTitle(e.target.value)}
-          placeholder="Add subtask..."
-          className="h-8 text-sm flex-1"
-          onKeyDown={handleSubtaskKeyDown}
-        />
-        <Button
-          size="sm"
-          className="h-8"
-          onClick={handleAddSubtask}
-          disabled={!subtaskTitle.trim() || createSubtask.isPending}
-          aria-label="Add subtask"
-        >
-          <Plus className="h-3.5 w-3.5" />
-        </Button>
-      </div>
+      <SubtaskComposer
+        ticketId={ticketId}
+        projectId={projectId}
+        projectStatuses={projectStatuses}
+      />
     </div>
   );
 }

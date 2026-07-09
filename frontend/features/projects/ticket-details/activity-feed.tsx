@@ -1,10 +1,13 @@
 "use client";
 
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Send, Loader2, MessageSquare, AlertTriangle, X } from "lucide-react";
 import { useAddComment } from "@/hooks/api/projects";
+import { useCreateTicket } from "@/hooks/api/projects/tickets";
 import { useUpdateComment, useDeleteComment } from "@/hooks/api/projects/comment-mutations";
 import { useAddReaction, useRemoveReaction } from "@/hooks/api/projects/reactions";
 import { useCan } from "@/hooks/api/access";
@@ -14,6 +17,7 @@ import type { TicketComment } from "@/types/projects";
 import { MentionTextarea, type MentionUser } from "@/features/projects/comments/mention-textarea";
 import { CommentItem } from "./comment-item";
 import { getTicketDetailHref } from "@/features/projects/shared/format-ticket-key";
+import { queryKeys } from "@/lib/query-keys";
 
 interface ActivityFeedProps {
   ticketId: number;
@@ -47,6 +51,8 @@ export function ActivityFeed({
   const currentUserId = session?.user?.id;
   const commentRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const canManage = useCan("projects:manage");
+  const router = useRouter();
+  const queryClient = useQueryClient();
 
   const commentPermalink = useCallback(
     (commentId: number) => {
@@ -179,6 +185,34 @@ export function ActivityFeed({
 
   const handleDismissNotFound = useCallback(() => setCommentNotFoundDismissed(true), []);
 
+  const createTicket = useCreateTicket({
+    onSuccess: (ticket) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.ticketActivity.list(ticketId) });
+      toast.success("Issue created");
+      if (ticket.projectId != null) {
+        router.push(`/projects/${ticket.projectId}?ticket=${ticket.id}`);
+      }
+    },
+    onError: (error) => toast.error(getErrorMessage(error)),
+  });
+
+  const handleCreateIssue = useCallback(
+    (commentId: number, content: string) => {
+      if (!projectId) return;
+      const sourceRef =
+        ticketNumber != null && projectKey
+          ? `${projectKey}-${ticketNumber}`
+          : `ticket #${ticketId}`;
+      createTicket.mutate({
+        projectId,
+        title: `Issue from comment on ${sourceRef}`,
+        description: `${content}\n\n---\nCreated from a comment on ${sourceRef} (comment #${commentId}).`,
+        type: "TASK",
+      });
+    },
+    [createTicket, projectId, ticketId, ticketNumber, projectKey],
+  );
+
   const { repliesMap, sortedTopLevel } = useMemo(() => {
     const topLevel = comments.filter((c) => !c.parentCommentId);
     const built = comments
@@ -280,6 +314,7 @@ export function ActivityFeed({
                 onDelete={handleDeleteComment}
                 isSavingEdit={editingSaveId === comment.id}
                 isDeletingComment={deletingId === comment.id}
+                onCreateIssue={handleCreateIssue}
               />
               {(repliesMap[comment.id]?.length ?? 0) > 0 && (
                 <div className="ml-9 mt-2 space-y-2 border-l border-border pl-3">
@@ -319,6 +354,7 @@ export function ActivityFeed({
                           onDelete={handleDeleteComment}
                           isSavingEdit={editingSaveId === reply.id}
                           isDeletingComment={deletingId === reply.id}
+                          onCreateIssue={handleCreateIssue}
                         />
                       </div>
                     ))}

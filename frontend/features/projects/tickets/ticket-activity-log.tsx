@@ -7,9 +7,11 @@ import {
   ArrowRight,
   CircleDot,
   Flag,
+  Gauge,
   History,
   MessageSquare,
   Pencil,
+  RefreshCw,
   Tag,
   Timer,
   UserCog,
@@ -41,6 +43,9 @@ const ACTION_ICONS: Record<TicketActivityAction, LucideIcon> = {
   comment_updated: MessageSquare,
   comment_deleted: MessageSquare,
   label_changed: Tag,
+  estimate_changed: Gauge,
+  cycle_changed: RefreshCw,
+  type_changed: RefreshCw,
 };
 
 interface ActivityItemProps {

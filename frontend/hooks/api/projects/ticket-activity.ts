@@ -15,7 +15,10 @@ export type TicketActivityAction =
   | "comment_added"
   | "comment_updated"
   | "comment_deleted"
-  | "label_changed";
+  | "label_changed"
+  | "estimate_changed"
+  | "cycle_changed"
+  | "type_changed";
 
 export interface TicketActivityEntry {
   id: number;

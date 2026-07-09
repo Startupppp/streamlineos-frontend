@@ -8,27 +8,18 @@ import {
   Heading1, Heading2, Heading3,
   List, ListOrdered, Quote,
   AlignLeft, AlignCenter, AlignRight,
-  Link as LinkIcon, Undo, Redo,
+  Link as LinkIcon, Undo, Redo, Image as ImageIcon,
 } from "lucide-react";
 
-interface TiptapToolbarProps {
-  editor: Editor | null;
+interface ToolbarButtonProps {
+  onClick: () => void;
+  isActive?: boolean;
+  children: React.ReactNode;
+  title: string;
 }
 
-export function TiptapToolbar({ editor }: TiptapToolbarProps) {
-  if (!editor) return null;
-
-  const ToolbarButton = ({
-    onClick,
-    isActive,
-    children,
-    title,
-  }: {
-    onClick: () => void;
-    isActive?: boolean;
-    children: React.ReactNode;
-    title: string;
-  }) => (
+export function ToolbarButton({ onClick, isActive, children, title }: ToolbarButtonProps) {
+  return (
     <Button
       type="button"
       variant="ghost"
@@ -40,137 +31,109 @@ export function TiptapToolbar({ editor }: TiptapToolbarProps) {
       {children}
     </Button>
   );
+}
+
+interface TiptapToolbarProps {
+  editor: Editor;
+  onImageInsert?: () => void;
+  compact?: boolean;
+}
+
+export function TiptapToolbar({ editor, onImageInsert, compact = false }: TiptapToolbarProps) {
+  function handleBold() { editor.chain().focus().toggleBold().run(); }
+  function handleItalic() { editor.chain().focus().toggleItalic().run(); }
+  function handleUnderline() { editor.chain().focus().toggleUnderline().run(); }
+  function handleStrike() { editor.chain().focus().toggleStrike().run(); }
+  function handleH1() { editor.chain().focus().toggleHeading({ level: 1 }).run(); }
+  function handleH2() { editor.chain().focus().toggleHeading({ level: 2 }).run(); }
+  function handleH3() { editor.chain().focus().toggleHeading({ level: 3 }).run(); }
+  function handleBulletList() { editor.chain().focus().toggleBulletList().run(); }
+  function handleOrderedList() { editor.chain().focus().toggleOrderedList().run(); }
+  function handleBlockquote() { editor.chain().focus().toggleBlockquote().run(); }
+  function handleAlignLeft() { editor.chain().focus().setTextAlign("left").run(); }
+  function handleAlignCenter() { editor.chain().focus().setTextAlign("center").run(); }
+  function handleAlignRight() { editor.chain().focus().setTextAlign("right").run(); }
+  function handleLink() {
+    const url = window.prompt("Enter URL:");
+    if (url) editor.chain().focus().setLink({ href: url }).run();
+  }
+  function handleUndo() { editor.chain().focus().undo().run(); }
+  function handleRedo() { editor.chain().focus().redo().run(); }
 
   return (
-    <div className="flex flex-wrap items-center gap-0.5 border-b p-1">
-      <ToolbarButton
-        onClick={() => editor.chain().focus().undo().run()}
-        title="Undo"
-      >
-        <Undo className="h-4 w-4" />
-      </ToolbarButton>
-      <ToolbarButton
-        onClick={() => editor.chain().focus().redo().run()}
-        title="Redo"
-      >
-        <Redo className="h-4 w-4" />
-      </ToolbarButton>
+    <div className="flex flex-wrap items-center gap-0.5 p-1">
+      {!compact && (
+        <>
+          <ToolbarButton onClick={handleUndo} title="Undo">
+            <Undo className="h-4 w-4" />
+          </ToolbarButton>
+          <ToolbarButton onClick={handleRedo} title="Redo">
+            <Redo className="h-4 w-4" />
+          </ToolbarButton>
+          <Separator orientation="vertical" className="mx-1 h-6" />
+        </>
+      )}
 
-      <Separator orientation="vertical" className="mx-1 h-6" />
-
-      <ToolbarButton
-        onClick={() => editor.chain().focus().toggleBold().run()}
-        isActive={editor.isActive("bold")}
-        title="Bold"
-      >
+      <ToolbarButton onClick={handleBold} isActive={editor.isActive("bold")} title="Bold">
         <Bold className="h-4 w-4" />
       </ToolbarButton>
-      <ToolbarButton
-        onClick={() => editor.chain().focus().toggleItalic().run()}
-        isActive={editor.isActive("italic")}
-        title="Italic"
-      >
+      <ToolbarButton onClick={handleItalic} isActive={editor.isActive("italic")} title="Italic">
         <Italic className="h-4 w-4" />
       </ToolbarButton>
-      <ToolbarButton
-        onClick={() => editor.chain().focus().toggleUnderline().run()}
-        isActive={editor.isActive("underline")}
-        title="Underline"
-      >
+      <ToolbarButton onClick={handleUnderline} isActive={editor.isActive("underline")} title="Underline">
         <UnderlineIcon className="h-4 w-4" />
       </ToolbarButton>
-      <ToolbarButton
-        onClick={() => editor.chain().focus().toggleStrike().run()}
-        isActive={editor.isActive("strike")}
-        title="Strikethrough"
-      >
+      <ToolbarButton onClick={handleStrike} isActive={editor.isActive("strike")} title="Strikethrough">
         <Strikethrough className="h-4 w-4" />
       </ToolbarButton>
 
       <Separator orientation="vertical" className="mx-1 h-6" />
 
-      <ToolbarButton
-        onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-        isActive={editor.isActive("heading", { level: 1 })}
-        title="Heading 1"
-      >
+      <ToolbarButton onClick={handleH1} isActive={editor.isActive("heading", { level: 1 })} title="Heading 1">
         <Heading1 className="h-4 w-4" />
       </ToolbarButton>
-      <ToolbarButton
-        onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-        isActive={editor.isActive("heading", { level: 2 })}
-        title="Heading 2"
-      >
+      <ToolbarButton onClick={handleH2} isActive={editor.isActive("heading", { level: 2 })} title="Heading 2">
         <Heading2 className="h-4 w-4" />
       </ToolbarButton>
-      <ToolbarButton
-        onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-        isActive={editor.isActive("heading", { level: 3 })}
-        title="Heading 3"
-      >
+      <ToolbarButton onClick={handleH3} isActive={editor.isActive("heading", { level: 3 })} title="Heading 3">
         <Heading3 className="h-4 w-4" />
       </ToolbarButton>
 
       <Separator orientation="vertical" className="mx-1 h-6" />
 
-      <ToolbarButton
-        onClick={() => editor.chain().focus().toggleBulletList().run()}
-        isActive={editor.isActive("bulletList")}
-        title="Bullet List"
-      >
+      <ToolbarButton onClick={handleBulletList} isActive={editor.isActive("bulletList")} title="Bullet List">
         <List className="h-4 w-4" />
       </ToolbarButton>
-      <ToolbarButton
-        onClick={() => editor.chain().focus().toggleOrderedList().run()}
-        isActive={editor.isActive("orderedList")}
-        title="Ordered List"
-      >
+      <ToolbarButton onClick={handleOrderedList} isActive={editor.isActive("orderedList")} title="Ordered List">
         <ListOrdered className="h-4 w-4" />
       </ToolbarButton>
-      <ToolbarButton
-        onClick={() => editor.chain().focus().toggleBlockquote().run()}
-        isActive={editor.isActive("blockquote")}
-        title="Blockquote"
-      >
+      <ToolbarButton onClick={handleBlockquote} isActive={editor.isActive("blockquote")} title="Blockquote">
         <Quote className="h-4 w-4" />
       </ToolbarButton>
 
       <Separator orientation="vertical" className="mx-1 h-6" />
 
-      <ToolbarButton
-        onClick={() => editor.chain().focus().setTextAlign("left").run()}
-        isActive={editor.isActive({ textAlign: "left" })}
-        title="Align Left"
-      >
+      <ToolbarButton onClick={handleAlignLeft} isActive={editor.isActive({ textAlign: "left" })} title="Align Left">
         <AlignLeft className="h-4 w-4" />
       </ToolbarButton>
-      <ToolbarButton
-        onClick={() => editor.chain().focus().setTextAlign("center").run()}
-        isActive={editor.isActive({ textAlign: "center" })}
-        title="Align Center"
-      >
+      <ToolbarButton onClick={handleAlignCenter} isActive={editor.isActive({ textAlign: "center" })} title="Align Center">
         <AlignCenter className="h-4 w-4" />
       </ToolbarButton>
-      <ToolbarButton
-        onClick={() => editor.chain().focus().setTextAlign("right").run()}
-        isActive={editor.isActive({ textAlign: "right" })}
-        title="Align Right"
-      >
+      <ToolbarButton onClick={handleAlignRight} isActive={editor.isActive({ textAlign: "right" })} title="Align Right">
         <AlignRight className="h-4 w-4" />
       </ToolbarButton>
 
       <Separator orientation="vertical" className="mx-1 h-6" />
 
-      <ToolbarButton
-        onClick={() => {
-          const url = window.prompt("Enter URL:");
-          if (url) editor.chain().focus().setLink({ href: url }).run();
-        }}
-        isActive={editor.isActive("link")}
-        title="Add Link"
-      >
+      <ToolbarButton onClick={handleLink} isActive={editor.isActive("link")} title="Add Link">
         <LinkIcon className="h-4 w-4" />
       </ToolbarButton>
+
+      {onImageInsert && (
+        <ToolbarButton onClick={onImageInsert} title="Insert Image">
+          <ImageIcon className="h-4 w-4" />
+        </ToolbarButton>
+      )}
     </div>
   );
 }

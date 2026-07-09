@@ -15,7 +15,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Send, Loader2, Link, Pencil, Trash2, X } from "lucide-react";
+import { Send, Loader2, Link, Pencil, Trash2, X, CirclePlus } from "lucide-react";
 import { resolveImageUrl } from "@/lib/utils";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -64,6 +64,7 @@ export interface CommentItemProps {
   onDelete: (commentId: number) => void;
   isSavingEdit: boolean;
   isDeletingComment: boolean;
+  onCreateIssue?: (commentId: number, content: string) => void;
 }
 
 function CommentItemComponent({
@@ -88,6 +89,7 @@ function CommentItemComponent({
   onDelete,
   isSavingEdit,
   isDeletingComment,
+  onCreateIssue,
 }: CommentItemProps) {
   const user = comment.user;
   const timeAgo = comment.createdAt
@@ -172,6 +174,10 @@ function CommentItemComponent({
   const handleReplySubmitClick = useCallback(() => {
     onReplySubmit(comment.id);
   }, [onReplySubmit, comment.id]);
+
+  const handleCreateIssue = useCallback(() => {
+    onCreateIssue?.(comment.id, comment.content);
+  }, [onCreateIssue, comment.id, comment.content]);
 
   return (
     <div
@@ -260,6 +266,17 @@ function CommentItemComponent({
               >
                 <Link className="h-3 w-3" />
                 Copy link
+              </button>
+            )}
+            {onCreateIssue && (
+              <button
+                type="button"
+                onClick={handleCreateIssue}
+                className="text-[11px] text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100 flex items-center gap-1"
+                aria-label="Create new issue from comment"
+              >
+                <CirclePlus className="h-3 w-3" />
+                New issue
               </button>
             )}
             {isAuthor && (
