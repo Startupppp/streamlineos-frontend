@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -174,11 +175,11 @@ export function GoalFormSheet({
   function handleGoalStatusChange(v: string) {
     setStatus(v as GoalStatus);
   }
-  function handleStartDateChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setStartDate(e.target.value);
+  function handleStartDateChange(value: string) {
+    setStartDate(value);
   }
-  function handleDueDateChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setDueDate(e.target.value);
+  function handleDueDateChange(value: string) {
+    setDueDate(value);
   }
   function handleClose() {
     onOpenChange(false);
@@ -374,24 +375,24 @@ export function GoalFormSheet({
                   <Label htmlFor="goal-start" className="text-xs font-medium">
                     Start Date
                   </Label>
-                  <Input
+                  <DatePicker
                     id="goal-start"
-                    type="date"
-                    className="h-9"
                     value={startDate}
                     onChange={handleStartDateChange}
+                    placeholder="Pick a date"
+                    className="h-8 text-sm"
                   />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="goal-due" className="text-xs font-medium">
                     Due Date
                   </Label>
-                  <Input
+                  <DatePicker
                     id="goal-due"
-                    type="date"
-                    className="h-9"
                     value={dueDate}
                     onChange={handleDueDateChange}
+                    placeholder="Pick a date"
+                    className="h-8 text-sm"
                   />
                 </div>
               </div>

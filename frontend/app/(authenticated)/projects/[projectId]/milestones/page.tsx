@@ -9,6 +9,7 @@ import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -80,8 +81,8 @@ function MilestoneDialog({
     setDescription(e.target.value);
   }, []);
 
-  const handleTargetDateChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    setTargetDate(e.target.value);
+  const handleTargetDateChange = useCallback((value: string) => {
+    setTargetDate(value);
   }, []);
 
   const handleStatusChange = useCallback((v: string) => {
@@ -123,7 +124,7 @@ function MilestoneDialog({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label>Target Date *</Label>
-              <Input type="date" value={targetDate} onChange={handleTargetDateChange} />
+              <DatePicker value={targetDate} onChange={handleTargetDateChange} placeholder="Pick a date" className="h-8 text-sm" />
             </div>
             <div className="space-y-1">
               <Label>Status</Label>

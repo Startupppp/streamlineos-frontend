@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Button } from "@/components/ui/button";
 import type { OrgMember } from "@/types/organization";
 import type { CreateApprovalInput } from "@/types/projects";
@@ -198,7 +199,7 @@ export function RequestApprovalSheet({
                   <FormItem>
                     <FormLabel>Due Date (optional)</FormLabel>
                     <FormControl>
-                      <Input {...field} type="date" />
+                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

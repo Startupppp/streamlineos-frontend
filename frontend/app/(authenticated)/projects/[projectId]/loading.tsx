@@ -27,7 +27,6 @@ export default function ProjectBoardLoading() {
       title="Loading project..."
       noInternalScroll
       contentClassName="!p-0"
-      filtersClassName="pb-0"
       actions={<Skeleton className="h-8 w-28 rounded-md" />}
       filters={filterBar}
     >

@@ -308,7 +308,6 @@ export default function ProjectBoardPage({ params }: PageProps) {
       subtitle={data.description ?? undefined}
       noInternalScroll
       contentClassName="!p-0"
-      filtersClassName="pb-0"
       actions={<CreateTicketDialog projectId={projectId} />}
       filters={
         <div className="flex min-h-8 w-full flex-wrap items-center gap-2 sm:gap-3">

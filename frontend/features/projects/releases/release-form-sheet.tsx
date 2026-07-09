@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -64,6 +65,12 @@ export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormShe
 
   const descriptionValue = watch("description");
   const statusValue = watch("status");
+  const releaseDateValue = watch("releaseDate");
+
+  const handleReleaseDateChange = useCallback(
+    (val: string) => setValue("releaseDate", val || null),
+    [setValue],
+  );
 
   const handleDescriptionChange = useCallback(
     (html: string) => setValue("description", html || null, { shouldValidate: false }),
@@ -155,7 +162,12 @@ export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormShe
               </div>
               <div className="space-y-1.5">
                 <Label>Release Date</Label>
-                <Input type="date" {...register("releaseDate")} />
+                <DatePicker
+                  value={releaseDateValue ?? ""}
+                  onChange={handleReleaseDateChange}
+                  placeholder="Pick a date"
+                  className="h-8 text-sm"
+                />
               </div>
             </div>
 

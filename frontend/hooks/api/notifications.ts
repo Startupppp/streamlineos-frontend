@@ -464,7 +464,6 @@ export const useEmitNotificationEvent = () => {
     mutationFn: (dto) => apiClient.post<DispatchResult>("/notifications/admin/events/emit", dto),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
-      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.queue() });
     },
   });
 };

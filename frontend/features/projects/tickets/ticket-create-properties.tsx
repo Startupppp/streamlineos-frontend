@@ -15,6 +15,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
+import { popoverOptionBaseClass, popoverOptionSelectedClass } from "../shared/popover-option-classes";
 import { buildStatusConfig, getStatusEntry } from "../shared/types";
 import { getUserDisplayName, getUserInitials } from "../shared/resolve-user-name";
 import type { ProjectStatusRecord, ProjectMember, Cycle, TicketLabel } from "@/types/projects";
@@ -181,8 +182,8 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
                 type="button"
                 onClick={makeStatusHandler(s)}
                 className={cn(
-                  "flex w-full items-center gap-2 rounded px-2 py-1.5 text-xs hover:bg-muted transition-colors",
-                  value.status === s && "font-medium text-accent",
+                  popoverOptionBaseClass,
+                  value.status === s && popoverOptionSelectedClass,
                 )}
               >
                 <span className={cn("h-2 w-2 rounded-full shrink-0", entry.dotColor)} />
@@ -208,8 +209,8 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
               type="button"
               onClick={makePriorityHandler(pVal)}
               className={cn(
-                "flex w-full items-center gap-2 rounded px-2 py-1.5 text-xs hover:bg-muted transition-colors",
-                value.priority === pVal && "font-medium text-accent",
+                popoverOptionBaseClass,
+                value.priority === pVal && popoverOptionSelectedClass,
               )}
             >
               <Icon className={cn("h-3.5 w-3.5 shrink-0", PRIORITY_COLOR[pVal])} />
@@ -367,8 +368,9 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
             type="button"
             onClick={makeCycleHandler(null)}
             className={cn(
-              "flex w-full items-center gap-2 rounded px-2 py-1.5 text-xs hover:bg-muted transition-colors text-muted-foreground",
-              value.cycleId === null && "font-medium text-accent",
+              popoverOptionBaseClass,
+              "text-muted-foreground",
+              value.cycleId === null && popoverOptionSelectedClass,
             )}
           >
             No cycle
@@ -380,8 +382,8 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
               type="button"
               onClick={makeCycleHandler(c.id)}
               className={cn(
-                "flex w-full items-center gap-2 rounded px-2 py-1.5 text-xs hover:bg-muted transition-colors",
-                value.cycleId === c.id && "font-medium text-accent",
+                popoverOptionBaseClass,
+                value.cycleId === c.id && popoverOptionSelectedClass,
               )}
             >
               <span

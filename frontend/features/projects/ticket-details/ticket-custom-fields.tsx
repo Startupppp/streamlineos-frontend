@@ -8,6 +8,7 @@ import {
 } from "@/hooks/api/projects/custom-fields";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -41,6 +42,14 @@ const FieldValueInput = memo(function FieldValueInput({ field, currentValue, onS
   const handleBlurSave = useCallback(() => {
     onSave(field.id, localValue || null);
   }, [field.id, localValue, onSave]);
+
+  const handleDateChange = useCallback(
+    (value: string) => {
+      setLocalValue(value);
+      onSave(field.id, value || null);
+    },
+    [field.id, onSave],
+  );
 
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -81,12 +90,11 @@ const FieldValueInput = memo(function FieldValueInput({ field, currentValue, onS
 
   if (field.type === "date") {
     return (
-      <Input
-        type="date"
+      <DatePicker
         value={localValue}
-        onChange={handleInputChange}
-        onBlur={handleBlurSave}
-        className="h-7 text-xs border-0 bg-slate-50 hover:bg-slate-100 focus:bg-white w-36"
+        onChange={handleDateChange}
+        placeholder="Pick a date"
+        className="h-7 text-xs w-36"
       />
     );
   }

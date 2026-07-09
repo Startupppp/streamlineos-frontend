@@ -14,6 +14,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useApplyProjectTemplate, type ProjectTemplate } from "@/hooks/api/projects";
@@ -42,11 +43,11 @@ export function ApplyTemplateDialog({ template, onClose }: ApplyTemplateDialogPr
     [],
   );
   const handleStartDateChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => setStartDate(e.target.value),
+    (value: string) => setStartDate(value),
     [],
   );
   const handleEndDateChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => setEndDate(e.target.value),
+    (value: string) => setEndDate(value),
     [],
   );
 
@@ -97,19 +98,11 @@ export function ApplyTemplateDialog({ template, onClose }: ApplyTemplateDialogPr
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label>Start Date</Label>
-              <Input
-                type="date"
-                value={startDate}
-                onChange={handleStartDateChange}
-              />
+              <DatePicker value={startDate} onChange={handleStartDateChange} placeholder="Pick a date" className="h-8 text-sm" />
             </div>
             <div className="space-y-1">
               <Label>End Date</Label>
-              <Input
-                type="date"
-                value={endDate}
-                onChange={handleEndDateChange}
-              />
+              <DatePicker value={endDate} onChange={handleEndDateChange} placeholder="Pick a date" className="h-8 text-sm" />
             </div>
           </div>
           <div className="rounded-md border p-3 space-y-1 text-sm">

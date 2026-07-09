@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { KbSmileIcon, KbXIcon } from "@/features/knowledge-base/lib/kb-icons";
+import { cn } from "@/lib/utils";
 
 const EMOJI_PRESETS = [
   "📄","📝","📋","📌","📍","🔖","🏷️","📁","📂","🗂️",
@@ -18,12 +19,16 @@ interface PageIconPickerProps {
   icon: string | null;
   isEditable: boolean;
   onIconChange: (icon: string | null) => void;
+  id?: string;
+  variant?: "inline" | "field";
 }
 
 export default function PageIconPicker({
   icon,
   isEditable,
   onIconChange,
+  id,
+  variant = "inline",
 }: PageIconPickerProps) {
   const [open, setOpen] = useState(false);
 
@@ -44,11 +49,26 @@ export default function PageIconPicker({
     return <span className="text-4xl leading-none shrink-0">{icon}</span>;
   }
 
+  const isField = variant === "field";
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        {icon ? (
+        {isField ? (
           <button
+            id={id}
+            type="button"
+            className={cn(
+              "flex h-9 min-w-9 items-center justify-center rounded-md border border-input bg-background px-2 text-xl leading-none transition-colors hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+              !icon && "text-muted-foreground/70"
+            )}
+            aria-label={icon ? "Change page icon" : "Pick page icon"}
+          >
+            {icon ?? "📄"}
+          </button>
+        ) : icon ? (
+          <button
+            type="button"
             className="text-4xl leading-none shrink-0 hover:opacity-80 transition-opacity"
             aria-label="Change page icon"
           >

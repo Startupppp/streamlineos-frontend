@@ -35,6 +35,7 @@ import {
   getUserDisplayName,
   getUserInitials,
 } from "@/features/projects/shared/resolve-user-name";
+import { popoverOptionSelectedClass } from "../shared/popover-option-classes";
 import { statusConfig, priorityConfig, buildStatusConfig, getStatusEntry } from "../shared/types";
 import type { TicketPriority } from "@/types/projects";
 
@@ -153,7 +154,7 @@ export function TicketQuickActions({
                       <DropdownMenuItem
                         key={status}
                         className={cn(
-                          status === currentStatus && "font-medium text-accent"
+                          status === currentStatus && popoverOptionSelectedClass
                         )}
                         onSelect={makeStatusHandler(status)}
                       >
@@ -177,7 +178,7 @@ export function TicketQuickActions({
                     <DropdownMenuItem
                       key={priority}
                       className={cn(
-                        priority === currentPriority && "font-medium text-accent"
+                        priority === currentPriority && popoverOptionSelectedClass
                       )}
                       onSelect={makePriorityHandler(priority)}
                     >
@@ -203,7 +204,7 @@ export function TicketQuickActions({
                   </DropdownMenuLabel>
                   <DropdownMenuItem
                     className={cn(
-                      !currentAssigneeId && "font-medium text-accent"
+                      !currentAssigneeId && popoverOptionSelectedClass
                     )}
                     onSelect={handleUnassign}
                   >
@@ -218,7 +219,7 @@ export function TicketQuickActions({
                         key={member.userId}
                         className={cn(
                           member.userId === currentAssigneeId &&
-                            "font-medium text-accent"
+                            popoverOptionSelectedClass
                         )}
                         onSelect={makeAssigneeHandler(member.userId)}
                       >

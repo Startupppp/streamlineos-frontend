@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -83,7 +84,7 @@ export function RecurrencePicker({ value, onChange }: RecurrencePickerProps) {
 
           <div className="flex items-center gap-2">
             <Label className="text-xs text-muted-foreground w-14 shrink-0">End date</Label>
-            <Input type="date" value={value.endDate ?? ""} onChange={e => onChange({ ...value, endDate: e.target.value || null })} className="h-7 text-xs w-36" />
+            <DatePicker value={value.endDate ?? ""} onChange={(v) => onChange({ ...value, endDate: v || null })} placeholder="Pick a date" className="h-7 text-xs w-36" />
           </div>
         </div>
       )}

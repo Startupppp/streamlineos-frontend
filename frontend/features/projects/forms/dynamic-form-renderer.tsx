@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -139,7 +140,7 @@ export function DynamicFormRenderer({
               />
             )}
             {field.type === "date" && (
-              <Input type="date" value={strVal} onChange={(e) => setFieldValue(field.key, e.target.value)} className="h-8 text-sm" />
+              <DatePicker value={strVal} onChange={(v) => setFieldValue(field.key, v)} placeholder="Pick a date" className="h-8 text-sm" />
             )}
             {field.type === "url" && (
               <Input type="url" value={strVal} onChange={(e) => setFieldValue(field.key, e.target.value)} className="h-8 text-sm" placeholder="https://" />

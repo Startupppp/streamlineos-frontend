@@ -24,7 +24,8 @@ import {
   Pin,
   PinOff,
 } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
+import PageIconPicker from "@/features/knowledge-base/components/page-icon-picker";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -317,11 +318,18 @@ export default function PagesPage({
               </div>
               <div>
                 <Label htmlFor="page-icon">Icon Emoji</Label>
-                <Input
-                  id="page-icon"
-                  placeholder="📄"
-                  maxLength={4}
-                  {...form.register("icon")}
+                <Controller
+                  name="icon"
+                  control={form.control}
+                  render={({ field }) => (
+                    <PageIconPicker
+                      id="page-icon"
+                      variant="field"
+                      icon={field.value ?? null}
+                      isEditable
+                      onIconChange={(nextIcon) => field.onChange(nextIcon ?? undefined)}
+                    />
+                  )}
                 />
               </div>
             </form>

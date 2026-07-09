@@ -339,11 +339,7 @@ export type PermissionKey =
   | "notifications:providers:manage"
   | "notifications:policy:view"
   | "notifications:policy:manage"
-  | "notifications:queue:view"
-  | "notifications:queue:manage"
   | "notifications:templates:view"
   | "notifications:templates:manage"
   | "notifications:broadcasts:view"
-  | "notifications:broadcasts:manage"
-  | "notifications:analytics:view"
-  | "notifications:audit:view";
+  | "notifications:broadcasts:manage";

@@ -11,6 +11,4 @@ export const NOTIFICATIONS_PERMISSIONS: Permission[] = [
   { name: "notifications:templates:manage", resource: "notifications:templates", action: "manage", description: "Create, edit, and delete notification templates" },
   { name: "notifications:broadcasts:view", resource: "notifications:broadcasts", action: "view", description: "View broadcasts" },
   { name: "notifications:broadcasts:manage", resource: "notifications:broadcasts", action: "manage", description: "Create, schedule, send, and cancel broadcasts" },
-  { name: "notifications:analytics:view", resource: "notifications:analytics", action: "view", description: "View notification analytics" },
-  { name: "notifications:audit:view", resource: "notifications:audit", action: "view", description: "View notification audit logs" },
 ];

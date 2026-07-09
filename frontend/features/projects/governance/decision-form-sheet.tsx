@@ -14,6 +14,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import type { OrgMember } from "@/types/organization";
@@ -170,14 +171,18 @@ export function DecisionFormSheet({
                 <FormField control={form.control} name="decidedAt" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Decided At (optional)</FormLabel>
-                    <FormControl><Input {...field} type="date" /></FormControl>
+                    <FormControl>
+                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
                 <FormField control={form.control} name="revisitAt" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Revisit At (optional)</FormLabel>
-                    <FormControl><Input {...field} type="date" /></FormControl>
+                    <FormControl>
+                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />

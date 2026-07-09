@@ -23,6 +23,7 @@ import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PriorityBadge } from "../shared/priority-badge";
+import { popoverOptionBaseClass, popoverOptionSelectedClass } from "../shared/popover-option-classes";
 import { buildStatusConfig, getStatusEntry } from "../shared/types";
 import { getUserDisplayName, getUserInitials } from "../shared/resolve-user-name";
 import type { TicketPriority } from "@/types/projects";
@@ -154,8 +155,8 @@ export function SubtaskComposer({ ticketId, projectId, projectStatuses }: Subtas
                 type="button"
                 onClick={makeStatusHandler(s)}
                 className={cn(
-                  "flex w-full items-center gap-2 rounded px-2 py-1.5 text-xs hover:bg-muted transition-colors",
-                  status === s && "font-medium text-accent",
+                  popoverOptionBaseClass,
+                  status === s && popoverOptionSelectedClass,
                 )}
               >
                 <span className={cn("h-2 w-2 rounded-full shrink-0", entry.dotColor)} />
@@ -193,8 +194,8 @@ export function SubtaskComposer({ ticketId, projectId, projectStatuses }: Subtas
               type="button"
               onClick={makePriorityHandler(value)}
               className={cn(
-                "flex w-full items-center gap-2 rounded px-2 py-1.5 text-xs hover:bg-muted transition-colors",
-                priority === value && "font-medium text-accent",
+                popoverOptionBaseClass,
+                priority === value && popoverOptionSelectedClass,
               )}
             >
               <Icon className="h-3.5 w-3.5 shrink-0" />

@@ -12,6 +12,7 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Check, ListFilter, CalendarRange } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
@@ -160,12 +161,12 @@ export function FilterCommandMenu({
   );
 
   const handleDueDateFromChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => { onDueDateFromChange(e.target.value); },
+    (value: string) => { onDueDateFromChange(value); },
     [onDueDateFromChange],
   );
 
   const handleDueDateToChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => { onDueDateToChange(e.target.value); },
+    (value: string) => { onDueDateToChange(value); },
     [onDueDateToChange],
   );
 
@@ -394,20 +395,18 @@ export function FilterCommandMenu({
                   )}
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <input
-                    type="date"
+                  <DatePicker
                     value={dueDateFrom}
                     onChange={handleDueDateFromChange}
-                    className="h-7 flex-1 min-w-0 rounded-md border border-border bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
-                    aria-label="Due date from"
+                    placeholder="From"
+                    className="h-7 flex-1 min-w-0 text-xs"
                   />
                   <span className="shrink-0 text-xs text-muted-foreground">-</span>
-                  <input
-                    type="date"
+                  <DatePicker
                     value={dueDateTo}
                     onChange={handleDueDateToChange}
-                    className="h-7 flex-1 min-w-0 rounded-md border border-border bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
-                    aria-label="Due date to"
+                    placeholder="To"
+                    className="h-7 flex-1 min-w-0 text-xs"
                   />
                 </div>
               </div>

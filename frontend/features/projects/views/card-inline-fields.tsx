@@ -20,6 +20,7 @@ import { useUpdateTicket } from "@/hooks/api/projects/tickets";
 import { useProjectMembers } from "@/hooks/api/projects/projects";
 import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
 import { PriorityBadge } from "../shared/priority-badge";
+import { popoverOptionBaseClass, popoverOptionSelectedClass } from "../shared/popover-option-classes";
 import { buildStatusConfig, getStatusEntry } from "../shared/types";
 import type { TicketPriority } from "@/types/projects";
 import { AlertTriangle, ArrowUp, Minus, ArrowDown, Check, User } from "lucide-react";
@@ -89,8 +90,8 @@ export const InlinePriority = memo(function InlinePriority({
               type="button"
               onClick={makePriorityHandler(value)}
               className={cn(
-                "flex w-full items-center gap-2 rounded px-2 py-1.5 text-xs hover:bg-muted transition-colors",
-                currentPriority === value && "font-medium text-accent",
+                popoverOptionBaseClass,
+                currentPriority === value && popoverOptionSelectedClass,
               )}
             >
               <Icon className="h-3.5 w-3.5 shrink-0" />
@@ -329,8 +330,8 @@ export const InlineStatus = memo(function InlineStatus({
                 type="button"
                 onClick={makeStatusHandler(status)}
                 className={cn(
-                  "flex w-full items-center gap-2 rounded px-2 py-1.5 text-xs hover:bg-muted transition-colors",
-                  status === currentStatus && "font-medium text-accent",
+                  popoverOptionBaseClass,
+                  status === currentStatus && popoverOptionSelectedClass,
                 )}
               >
                 <span className={cn("h-2 w-2 rounded-full shrink-0", entry.dotColor)} />
