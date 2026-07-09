@@ -14,6 +14,8 @@ import {
   type ViewType,
 } from "@/features/projects/views/view-switcher";
 import { TicketFilterBar } from "@/features/projects/shared/ticket-filter-bar";
+import { DisplayOptionsPanel, DEFAULT_DISPLAY_OPTIONS } from "@/features/projects/views/display-options-panel";
+import type { DisplayOptions } from "@/features/projects/shared/types";
 import { CreateTicketDialog } from "@/features/projects/tickets/create-ticket-dialog";
 import { SaveViewDialog } from "@/features/projects/views/save-view-dialog";
 import { buildTicketDetailUrl } from "@/features/projects/ticket-details/build-ticket-detail-url";
@@ -43,6 +45,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
   const [hideCompleted, setHideCompleted] = useState(true);
   const [saveViewOpen, setSaveViewOpen] = useState(false);
   const [saveViewName, setSaveViewName] = useState("");
+  const [displayOptions, setDisplayOptions] = useState<DisplayOptions>(DEFAULT_DISPLAY_OPTIONS);
 
   const ticketParam = searchParams.get("ticket");
   const selectedTicketId = ticketParam ? parseInt(ticketParam) : null;
@@ -55,6 +58,8 @@ export default function ProjectBoardPage({ params }: PageProps) {
   const filterPriority = searchParams.get("priority") ?? "";
   const filterType = searchParams.get("type") ?? "";
   const filterAssigneeId = searchParams.get("assigneeId") ?? "";
+  const filterLabels = searchParams.get("labels") ?? "";
+  const filterCycle = searchParams.get("cycle") ?? "";
 
   const { data: views } = useViews(projectId);
   const createView = useCreateView();
@@ -129,42 +134,58 @@ export default function ProjectBoardPage({ params }: PageProps) {
 
   const allTickets: KanbanTicket[] = useMemo(() => {
     if (!data) return [];
-    return (data.tickets || []).map((t) => ({
-      id: t.id,
-      title: t.title,
-      status: t.status ?? "TODO",
-      type: t.type ?? "TASK",
-      priority: t.priority ?? undefined,
-      points: t.points ?? undefined,
-      timeSpent: t.timeSpent ?? undefined,
-      ticketNumber: t.ticketNumber,
-      order: t.order ?? undefined,
-      epicId: t.epicId ?? undefined,
-      assigneeId: t.assigneeId ?? undefined,
-      sprintId: t.sprintId ?? undefined,
-      dueDate: t.dueDate ?? null,
-      startDate: t.startDate ?? null,
-      sequenceId: t.sequenceId ?? null,
-      assignee: t.assignee
-        ? {
-            id: t.assignee.id,
-            name: t.assignee.name ?? undefined,
-            firstName: t.assignee.firstName ?? undefined,
-            lastName: t.assignee.lastName ?? undefined,
-            email: t.assignee.email ?? undefined,
-            image: t.assignee.image ?? null,
-          }
-        : null,
-      labels: (t.labels || [])
-        .filter((l) => !!l.label)
-        .map((l) => ({
-          label: {
-            id: l.label!.id,
-            name: l.label!.name,
-            color: l.label!.color,
-          },
-        })),
-    }));
+    return (data.tickets || []).map((t) => {
+      const raw = t as typeof t & {
+        cycleId?: number | null;
+        cycle?: { id: number; name: string; status: string; startDate: string; endDate: string } | null;
+      };
+      return {
+        id: t.id,
+        title: t.title,
+        status: t.status ?? "TODO",
+        type: t.type ?? "TASK",
+        priority: t.priority ?? undefined,
+        points: t.points ?? undefined,
+        timeSpent: t.timeSpent ?? undefined,
+        ticketNumber: t.ticketNumber,
+        order: t.order ?? undefined,
+        epicId: t.epicId ?? undefined,
+        assigneeId: t.assigneeId ?? undefined,
+        sprintId: t.sprintId ?? undefined,
+        cycleId: raw.cycleId ?? null,
+        dueDate: t.dueDate ?? null,
+        startDate: t.startDate ?? null,
+        sequenceId: t.sequenceId ?? null,
+        assignee: t.assignee
+          ? {
+              id: t.assignee.id,
+              name: t.assignee.name ?? undefined,
+              firstName: t.assignee.firstName ?? undefined,
+              lastName: t.assignee.lastName ?? undefined,
+              email: t.assignee.email ?? undefined,
+              image: t.assignee.image ?? null,
+            }
+          : null,
+        labels: (t.labels || [])
+          .filter((l) => !!l.label)
+          .map((l) => ({
+            label: {
+              id: l.label!.id,
+              name: l.label!.name,
+              color: l.label!.color,
+            },
+          })),
+        cycle: raw.cycle
+          ? {
+              id: raw.cycle.id,
+              name: raw.cycle.name,
+              status: raw.cycle.status,
+              startDate: raw.cycle.startDate,
+              endDate: raw.cycle.endDate,
+            }
+          : null,
+      };
+    });
   }, [data]);
 
   const filteredTickets = useMemo(() => {
@@ -175,12 +196,36 @@ export default function ProjectBoardPage({ params }: PageProps) {
       const lower = q.toLowerCase();
       tickets = tickets.filter((t) => t.title.toLowerCase().includes(lower));
     }
-    if (filterStatus) tickets = tickets.filter((t) => t.status === filterStatus);
-    if (filterPriority) tickets = tickets.filter((t) => t.priority === filterPriority);
-    if (filterType) tickets = tickets.filter((t) => t.type === filterType);
-    if (filterAssigneeId) tickets = tickets.filter((t) => t.assigneeId === filterAssigneeId);
+    if (filterStatus) {
+      const statusSet = new Set(filterStatus.split(",").filter(Boolean));
+      tickets = tickets.filter((t) => statusSet.has(t.status));
+    }
+    if (filterPriority) {
+      const prioritySet = new Set(filterPriority.split(",").filter(Boolean));
+      tickets = tickets.filter((t) => t.priority != null && prioritySet.has(t.priority));
+    }
+    if (filterType) {
+      const typeSet = new Set(filterType.split(",").filter(Boolean));
+      tickets = tickets.filter((t) => typeSet.has(t.type));
+    }
+    if (filterAssigneeId) {
+      const assigneeSet = new Set(filterAssigneeId.split(",").filter(Boolean));
+      tickets = tickets.filter((t) =>
+        assigneeSet.has("__unassigned__") ? !t.assigneeId : t.assigneeId != null && assigneeSet.has(t.assigneeId)
+      );
+    }
+    if (filterLabels) {
+      const labelIds = new Set(filterLabels.split(",").filter(Boolean).map(Number));
+      tickets = tickets.filter((t) =>
+        (t.labels ?? []).some((l) => l.label && labelIds.has(l.label.id))
+      );
+    }
+    if (filterCycle) {
+      const cycleIds = new Set(filterCycle.split(",").filter(Boolean).map(Number));
+      tickets = tickets.filter((t) => t.cycleId != null && cycleIds.has(t.cycleId));
+    }
     return tickets;
-  }, [allTickets, hideCompleted, q, filterStatus, filterPriority, filterType, filterAssigneeId]);
+  }, [allTickets, hideCompleted, q, filterStatus, filterPriority, filterType, filterAssigneeId, filterLabels, filterCycle]);
 
   const members = useMemo(() => {
     if (!data?.members) return [];
@@ -268,6 +313,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
       filters={
         <div className="flex min-h-8 w-full flex-wrap items-center gap-2 sm:gap-3">
           <ViewSwitcher activeView={view} onViewChange={handleViewChange} />
+          <DisplayOptionsPanel options={displayOptions} onChange={setDisplayOptions} />
           <Button
             variant="outline"
             size="icon"
@@ -308,6 +354,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
           <TicketFilterBar
             members={members}
             statuses={statuses}
+            projectId={projectId}
             showSprintFilter={false}
             showDoneToggle
             hideCompleted={hideCompleted}
@@ -326,12 +373,13 @@ export default function ProjectBoardPage({ params }: PageProps) {
             statuses={statuses}
             wipLimits={wipLimits}
             onTicketSelect={handleTicketSelect}
+            displayOptions={displayOptions}
           />
         </div>
       )}
       {view === "list" && (
         <div className="h-full min-h-0 overflow-y-auto px-4 pb-2 pt-0">
-          <ListView tickets={filteredTickets} onTicketClick={handleTicketSelect} groupBy="status" projectKey={data.key} projectStatuses={statuses} />
+          <ListView tickets={filteredTickets} onTicketClick={handleTicketSelect} groupBy={displayOptions.groupBy !== "none" ? displayOptions.groupBy : undefined} projectKey={data.key} projectStatuses={statuses} displayOptions={displayOptions} />
         </div>
       )}
       {view === "table" && (

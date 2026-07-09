@@ -8,7 +8,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { RequireModule } from "@/components/auth/require-module";
 import { NewProjectDialog } from "@/features/projects/project-list/new-project-dialog";
 import { ProjectCard } from "@/features/projects/project-list/project-card";
-import { ProjectListRow } from "@/features/projects/project-list/project-list-row";
+import { ProjectTable } from "@/features/projects/project-list/project-table";
 import { ProjectFilterBar } from "@/features/projects/project-list/project-filter-bar";
 import { ProjectPagination } from "@/features/projects/project-list/project-pagination";
 import { ProjectsEmptyState } from "@/features/projects/project-list/projects-empty-state";
@@ -51,7 +51,7 @@ export default function ProjectsPage() {
   const search = searchParams.get("q") || "";
   const status = (searchParams.get("status") as StatusFilter) || "ALL";
   const page = Number(searchParams.get("page")) || 1;
-  const viewMode = (searchParams.get("view") as ViewMode) || "grid";
+  const viewMode = (searchParams.get("view") as ViewMode) || "list";
 
   const debouncedSearch = useDebouncedValue(search, 300);
 
@@ -80,7 +80,7 @@ export default function ProjectsPage() {
   );
   const handleViewModeChange = useCallback(
     (value: ViewMode) =>
-      updateParams({ view: value === "grid" ? null : value }),
+      updateParams({ view: value === "list" ? null : value }),
     [updateParams],
   );
   const setPage = useCallback(
@@ -95,14 +95,14 @@ export default function ProjectsPage() {
 
   const { data, isLoading, isError, refetch } = useProjects({
     page,
-    limit: 12,
+    limit: viewMode === "grid" ? 12 : 25,
     search: debouncedSearch || undefined,
     status,
   });
 
-  function handleRetry() {
+  const handleRetry = useCallback(() => {
     refetch();
-  }
+  }, [refetch]);
 
   const projects = data?.data ?? [];
   const pagination = data
@@ -153,27 +153,28 @@ export default function ProjectsPage() {
             ))}
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+            <div className="bg-muted/30 border-b border-border px-3 py-2 flex items-center gap-4">
+              <Skeleton className="h-3 w-16" />
+              <Skeleton className="h-3 w-14 ml-auto hidden sm:block" />
+              <Skeleton className="h-3 w-12 hidden md:block" />
+              <Skeleton className="h-3 w-14 hidden lg:block" />
+              <Skeleton className="h-3 w-16 hidden sm:block" />
+            </div>
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="rounded-xl border border-border bg-card p-3 shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div className="min-w-0 flex-1 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Skeleton className="h-5 w-14 rounded" />
-                      <Skeleton className="h-5 w-20 rounded-full" />
-                    </div>
-                    <Skeleton className="h-4 w-56 max-w-[70%]" />
-                    <Skeleton className="h-3 w-80 max-w-[90%]" />
-                  </div>
-                  <div className="hidden md:flex md:items-center md:gap-3 md:min-w-[220px]">
-                    <Skeleton className="h-1.5 w-full rounded-full" />
-                    <Skeleton className="h-3 w-16" />
-                  </div>
-                  <div className="flex -space-x-1.5 shrink-0">
-                    {[1, 2, 3].map((j) => (
-                      <Skeleton key={j} className="h-6 w-6 rounded-full" />
-                    ))}
-                  </div>
+              <div key={i} className="flex items-center gap-3 px-3 py-2.5 border-b border-border/50 last:border-0">
+                <Skeleton className="h-6 w-6 rounded shrink-0" />
+                <Skeleton className="h-4 flex-1 max-w-[240px]" />
+                <Skeleton className="h-3 w-12 hidden sm:block shrink-0" />
+                <Skeleton className="h-5 w-20 rounded-full ml-auto shrink-0" />
+                <div className="hidden md:flex items-center gap-1.5 shrink-0">
+                  <Skeleton className="h-5 w-5 rounded-full" />
+                  <Skeleton className="h-3 w-16" />
+                </div>
+                <Skeleton className="h-3 w-14 hidden lg:block shrink-0" />
+                <div className="hidden sm:flex items-center gap-2 w-[130px] shrink-0">
+                  <Skeleton className="h-1 flex-1 rounded-full" />
+                  <Skeleton className="h-3 w-7" />
                 </div>
               </div>
             ))}
@@ -209,20 +210,7 @@ export default function ProjectsPage() {
           ))}
         </motion.div>
       ) : (
-        <motion.div
-          className="space-y-2"
-          role="list"
-          aria-label="Projects list"
-          variants={staggerContainer}
-          initial="hidden"
-          animate="visible"
-        >
-          {projects.map((project) => (
-            <motion.div key={project.id} variants={fadeUp}>
-              <ProjectListRow project={project} />
-            </motion.div>
-          ))}
-        </motion.div>
+        <ProjectTable projects={projects} />
       )}
 
       {pagination && pagination.totalPages > 1 && (

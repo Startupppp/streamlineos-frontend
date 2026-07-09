@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import {
   SidebarAnimatedNavIcon,
@@ -64,6 +65,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useCan } from "@/hooks/api/access";
+import { useProjectSidebarPrefs } from "@/features/projects/sidebar/use-project-sidebar-prefs";
+import { ProjectSidebarCustomizer } from "@/features/projects/sidebar/project-sidebar-customizer";
 
 interface ProjectSidebarProps {
   projectId: string;
@@ -71,13 +74,15 @@ interface ProjectSidebarProps {
   projectKey: string | undefined;
 }
 
+interface NavItem {
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  href: string;
+}
+
 interface NavSection {
   label: string;
-  items: {
-    label: string;
-    icon: React.ComponentType<{ className?: string }>;
-    href: string;
-  }[];
+  items: NavItem[];
 }
 
 function useSidebarSections(baseUrl: string): NavSection[] {
@@ -119,15 +124,6 @@ function useSidebarSections(baseUrl: string): NavSection[] {
                 label: "Chat",
                 icon: MessageCircleIcon,
                 href: `${baseUrl}/chat`,
-              },
-            ]
-          : []),
-        ...(canFeedback
-          ? [
-              {
-                label: "Feedback",
-                icon: MessageSquareText,
-                href: `${baseUrl}/feedbucket`,
               },
             ]
           : []),
@@ -235,6 +231,15 @@ function useSidebarSections(baseUrl: string): NavSection[] {
         { label: "Intake", icon: Inbox, href: `${baseUrl}/intake` },
         { label: "Automations", icon: ZapIcon, href: `${baseUrl}/automations` },
         { label: "Webhooks", icon: WebhookIcon, href: `${baseUrl}/webhooks` },
+        ...(canFeedback
+          ? [
+              {
+                label: "Feedback",
+                icon: MessageSquareText,
+                href: `${baseUrl}/feedbucket`,
+              },
+            ]
+          : []),
         ...(canAI
           ? [
               {
@@ -248,6 +253,16 @@ function useSidebarSections(baseUrl: string): NavSection[] {
       ],
     },
   ].filter((s) => s.items.length > 0);
+}
+
+function applyHiddenItems(sections: NavSection[], hiddenItems: ReadonlySet<string>): NavSection[] {
+  if (hiddenItems.size === 0) return sections;
+  return sections
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => !hiddenItems.has(item.label)),
+    }))
+    .filter((section) => section.items.length > 0);
 }
 
 function useIsActive(baseUrl: string) {
@@ -374,8 +389,12 @@ function DesktopSidebar({
     if (typeof window === "undefined") return false;
     return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true";
   });
+  const { data: session } = useSession();
+  const userId = session?.user?.id;
   const baseUrl = `/projects/${projectId}`;
-  const sections = useSidebarSections(baseUrl);
+  const allSections = useSidebarSections(baseUrl);
+  const { hiddenItems, toggleItem, resetPrefs } = useProjectSidebarPrefs(userId);
+  const visibleSections = applyHiddenItems(allSections, hiddenItems);
   const isActive = useIsActive(baseUrl);
 
   function handleToggleCollapse() {
@@ -432,7 +451,7 @@ function DesktopSidebar({
 
       <ScrollArea className="flex-1">
         <div className={cn("py-1.5", isCollapsed ? "px-1" : "px-1.5")}>
-          {sections.map((section, si) => (
+          {visibleSections.map((section, si) => (
             <div key={section.label}>
               {si > 0 && <div className="my-1.5 mx-1 border-t" />}
               {!isCollapsed && (
@@ -454,6 +473,21 @@ function DesktopSidebar({
           ))}
         </div>
       </ScrollArea>
+
+      <div
+        className={cn(
+          "shrink-0 border-t py-1.5",
+          isCollapsed ? "px-1 flex justify-center" : "px-1.5",
+        )}
+      >
+        <ProjectSidebarCustomizer
+          sections={allSections}
+          hiddenItems={hiddenItems}
+          onToggleItem={toggleItem}
+          onReset={resetPrefs}
+          collapsed={isCollapsed}
+        />
+      </div>
     </div>
     </TooltipProvider>
   );
@@ -465,13 +499,21 @@ function MobileProjectNav({
   projectKey,
 }: ProjectSidebarProps) {
   const [open, setOpen] = useState(false);
+  const { data: session } = useSession();
+  const userId = session?.user?.id;
   const baseUrl = `/projects/${projectId}`;
-  const sections = useSidebarSections(baseUrl);
+  const allSections = useSidebarSections(baseUrl);
+  const { hiddenItems, toggleItem, resetPrefs } = useProjectSidebarPrefs(userId);
+  const visibleSections = applyHiddenItems(allSections, hiddenItems);
   const isActive = useIsActive(baseUrl);
   const pathname = usePathname();
 
-  const allItems = sections.flatMap((s) => s.items);
+  const allItems = visibleSections.flatMap((s) => s.items);
   const current = allItems.find((i) => isActive(i.href));
+
+  function handleClose() {
+    setOpen(false);
+  }
 
   return (
     <div className="flex items-center gap-2 border-b px-3 py-2 bg-background">
@@ -502,7 +544,7 @@ function MobileProjectNav({
 
             <ScrollArea className="flex-1">
               <div className="py-1.5 px-1.5">
-                {sections.map((section, si) => (
+                {visibleSections.map((section, si) => (
                   <div key={section.label}>
                     {si > 0 && <div className="my-1.5 mx-1 border-t" />}
                     <p className="px-2 pt-1.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
@@ -515,13 +557,23 @@ function MobileProjectNav({
                         label={item.label}
                         icon={item.icon}
                         active={isActive(item.href)}
-                        onNavigate={() => setOpen(false)}
+                        onNavigate={handleClose}
                       />
                     ))}
                   </div>
                 ))}
               </div>
             </ScrollArea>
+
+            <div className="shrink-0 border-t py-1.5 px-1.5">
+              <ProjectSidebarCustomizer
+                sections={allSections}
+                hiddenItems={hiddenItems}
+                onToggleItem={toggleItem}
+                onReset={resetPrefs}
+                collapsed={false}
+              />
+            </div>
           </div>
         </SheetContent>
       </Sheet>

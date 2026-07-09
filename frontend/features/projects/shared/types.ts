@@ -1,5 +1,23 @@
 import type { TicketPriority } from "@/types/projects";
 
+export type GroupByOption = "status" | "assignee" | "priority" | "label" | "cycle" | "none";
+export type OrderByOption = "created" | "priority" | "dueDate" | "manual";
+
+export interface DisplayOptions {
+  groupBy: GroupByOption;
+  orderBy: OrderByOption;
+  showSubIssues: boolean;
+  showEmptyGroups: boolean;
+  showId: boolean;
+  showStatus: boolean;
+  showAssignee: boolean;
+  showPriority: boolean;
+  showEstimate: boolean;
+  showCycle: boolean;
+  showLabels: boolean;
+  showDueDate: boolean;
+}
+
 export interface KanbanTicket {
   id: number;
   title: string;
@@ -13,6 +31,7 @@ export interface KanbanTicket {
   assigneeId?: string | null;
   epicId?: number | null;
   sprintId?: number | null;
+  cycleId?: number | null;
   order?: number | null;
   dueDate?: string | null;
   startDate?: string | null;
@@ -42,6 +61,13 @@ export interface KanbanTicket {
       color?: string | null;
     };
   }[];
+  cycle?: {
+    id: number;
+    name: string;
+    status: string;
+    startDate: string;
+    endDate: string;
+  } | null;
   project?: { id: number; name: string; key: string } | null;
 }
 

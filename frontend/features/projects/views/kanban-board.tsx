@@ -16,7 +16,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { KanbanTicketCard } from "./kanban-ticket-card";
 import { QuickAddInput } from "./kanban-quick-add";
 import { AddColumn } from "./kanban-add-column";
-import type { KanbanTicket, KanbanColumn } from "../shared/types";
+import type { KanbanTicket, KanbanColumn, DisplayOptions } from "../shared/types";
 import { AnimatePresence, motion } from "framer-motion";
 
 type UpdateOrderContext = { previous: KanbanTicket[] };
@@ -46,6 +46,7 @@ interface KanbanBoardProps {
   }>;
   onTicketSelect?: (ticketId: number) => void;
   wipLimits?: Record<string, number>;
+  displayOptions?: DisplayOptions;
 }
 
 export function KanbanBoard({
@@ -55,6 +56,7 @@ export function KanbanBoard({
   statuses,
   onTicketSelect,
   wipLimits,
+  displayOptions,
 }: KanbanBoardProps) {
   const [optimisticTickets, setOptimisticTickets] = useState(tickets);
   const [isMounted, setIsMounted] = useState(false);
@@ -221,7 +223,7 @@ export function KanbanBoard({
                 overWip && "border-destructive/60",
               )}
             >
-              <div className="flex items-center justify-between px-3 py-2">
+              <div className="relative flex items-center justify-between px-3 py-2">
                 <div className="flex items-center gap-2">
                   <span
                     className="h-2.5 w-2.5 rounded-full shrink-0"
@@ -235,6 +237,7 @@ export function KanbanBoard({
                     {wip != null && `/${wip}`}
                   </span>
                 </div>
+                <QuickAddInput columnId={col.id} projectId={projectId} headerMode />
               </div>
 
               <Droppable droppableId={col.id}>
@@ -288,6 +291,7 @@ export function KanbanBoard({
                                 dragStartRef={dragStartRef}
                                 onSelect={handleSelect}
                                 projectStatuses={statuses}
+                                displayOptions={displayOptions}
                               />
                             </div>
                           )}
