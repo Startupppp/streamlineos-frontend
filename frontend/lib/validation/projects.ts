@@ -3,7 +3,6 @@ import { z } from "zod";
 const projectStatusSchema = z.enum(["ACTIVE", "COMPLETED", "ARCHIVED"]);
 
 const ticketTypeSchema = z.enum(["EPIC", "STORY", "TASK", "BUG"]);
-const ticketStatusSchema = z.enum(["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"]);
 const ticketPrioritySchema = z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]);
 
 export const updateProjectSettingsInputSchema = z.object({
@@ -29,11 +28,13 @@ export const createTicketInputSchema = z.object({
   reporterId: z.string().optional(),
   sprintId: z.number().int().positive().optional(),
   epicId: z.number().int().positive().optional(),
+  cycleId: z.number().int().positive().optional(),
+  labelIds: z.array(z.number().int().positive()).optional(),
   points: z.number().int().min(0).optional(),
   link: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   originalEstimate: z.number().positive().optional(),
   parentTicketId: z.number().int().positive().optional(),
-  status: ticketStatusSchema.optional(),
+  status: z.string().optional(),
 });
 
 export const addTimeEntryInputSchema = z.object({

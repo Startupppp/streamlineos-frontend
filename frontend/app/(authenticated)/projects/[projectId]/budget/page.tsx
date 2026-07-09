@@ -9,15 +9,19 @@ import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { IndianRupee, Clock, TrendingUp, Pencil } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { IndianRupee, TrendingUp, Pencil } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
-import { useProjectBudget, useUpdateProjectBudget } from "@/hooks/api/projects";
+import { useProjectBudget, useUpdateProjectBudget, useProjectMembers } from "@/hooks/api/projects";
+import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
+import { resolveImageUrl } from "@/lib/utils";
 import { toast } from "sonner";
 
 export default function BudgetPage({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId: projectIdStr } = use(params);
   const projectId = Number(projectIdStr);
   const { data: budget, isLoading } = useProjectBudget(projectId);
+  const { data: members } = useProjectMembers(projectId);
   const updateBudget = useUpdateProjectBudget(projectId);
 
   const [editMode, setEditMode] = useState(false);
@@ -43,6 +47,10 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
       onSuccess: () => { toast.success("Budget updated"); setEditMode(false); },
       onError: () => toast.error("Failed to update budget"),
     });
+  }
+
+  function resolveMemberUser(userId: string) {
+    return members?.find((m) => m.userId === userId)?.user ?? null;
   }
 
   if (isLoading) {
@@ -147,24 +155,38 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border bg-muted/40">
-                    <th className="px-2 py-1.5 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Member</th>
-                    <th className="px-2 py-1.5 text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Hours</th>
-                    <th className="px-2 py-1.5 text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Cost</th>
+                    <th className="px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Member</th>
+                    <th className="px-3 py-2 text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Hours</th>
+                    <th className="px-3 py-2 text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Cost</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {budget.memberBreakdown.map((m) => (
-                    <tr key={m.userId} className="border-b border-border/50 hover:bg-muted/30 transition-colors h-8">
-                      <td className="px-2 py-1">
-                        <div className="flex items-center gap-2">
-                          <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                          <span className="text-muted-foreground font-mono text-xs">{m.userId.substring(0, 8)}…</span>
-                        </div>
-                      </td>
-                      <td className="px-2 py-1 text-right font-mono text-sm text-muted-foreground">{m.hours.toFixed(1)} hrs</td>
-                      <td className="px-2 py-1 text-right font-mono text-sm font-medium">{fmt(m.cost)}</td>
-                    </tr>
-                  ))}
+                  {budget.memberBreakdown.map((m) => {
+                    const user = resolveMemberUser(m.userId);
+                    const displayName = user ? getUserDisplayName(user) : m.userId.substring(0, 8) + "…";
+                    const initials = user ? getUserInitials(user) : "?";
+                    const email = user?.email ?? null;
+                    return (
+                      <tr key={m.userId} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                        <td className="px-3 py-2">
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-6 w-6 shrink-0">
+                              <AvatarImage src={resolveImageUrl(user?.image)} />
+                              <AvatarFallback className="text-[9px] bg-primary/10 text-primary font-medium">
+                                {initials}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium truncate">{displayName}</p>
+                              {email && <p className="text-[11px] text-muted-foreground truncate">{email}</p>}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-3 py-2 text-right font-mono text-sm text-muted-foreground whitespace-nowrap">{m.hours.toFixed(1)} hrs</td>
+                        <td className="px-3 py-2 text-right font-mono text-sm font-medium whitespace-nowrap">{fmt(m.cost)}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

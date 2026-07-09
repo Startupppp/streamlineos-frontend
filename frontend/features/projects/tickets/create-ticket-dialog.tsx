@@ -1,241 +1,254 @@
 "use client";
 
+import dynamic from "next/dynamic";
+import { useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Plus, Link as LinkIcon } from "lucide-react";
-import dynamic from "next/dynamic";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Paperclip, X, Upload } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useProject } from "@/hooks/api";
 import { useCreateTicketForm } from "./use-create-ticket-form";
-import { CreateTicketAssignees } from "./create-ticket-assignees";
-import { CreateTicketAttachments } from "./create-ticket-attachments";
+import { TicketCreateProperties } from "./ticket-create-properties";
 
 const TiptapEditorDynamic = dynamic(
   () => import("@/components/editor/tiptap-editor").then((m) => ({ default: m.TiptapEditor })),
   {
     ssr: false,
     loading: () => (
-      <div className="rounded-md border border-input bg-background animate-pulse min-h-[120px]" />
+      <div className="animate-pulse rounded-md bg-muted min-h-[80px]" />
     ),
   },
 );
 
 interface CreateTicketDialogProps {
   projectId: number;
+  defaultStatus?: string;
   variant?: "default" | "fab";
 }
 
 export function CreateTicketDialog({
   projectId,
+  defaultStatus,
   variant = "default",
 }: CreateTicketDialogProps) {
+  const { data: project } = useProject(projectId);
+
   const {
     open,
     setOpen,
     form,
     files,
-    selectedAssignees,
     isUploading,
-    members,
     isPending,
+    properties,
+    handlePropertiesChange,
     handleSubmit,
-    handleAssigneeSelect,
-    handleRemoveAssignee,
-    handleRemoveFile,
     handleFileChange,
-  } = useCreateTicketForm(projectId);
+    handleRemoveFile,
+    createMore,
+    handleToggleCreateMore,
+    titleRef,
+    projectStatuses,
+    members,
+    labels,
+    cycles,
+  } = useCreateTicketForm({ projectId, defaultStatus });
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleOpenTrigger = useCallback(() => setOpen(true), [setOpen]);
+  const handleOpenChange = useCallback((v: boolean) => setOpen(v), [setOpen]);
+  const handleAttachClick = useCallback(() => fileInputRef.current?.click(), []);
+  const handleFormSubmit = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      form.handleSubmit(handleSubmit)();
+    },
+    [form, handleSubmit],
+  );
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        {variant === "fab" ? (
-          <Button
-            size="lg"
-            className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-shadow"
-            aria-label="Create Ticket"
-          >
-            <Plus className="h-6 w-6" />
-          </Button>
-        ) : (
-          <Button>
-            <Plus className="mr-2 h-4 w-4" /> Create Ticket
-          </Button>
-        )}
-      </SheetTrigger>
-      <SheetContent
-        side="right"
-        className="w-full sm:max-w-none lg:w-3/4 lg:max-w-[75vw] overflow-hidden p-0 flex flex-col"
-      >
-        <SheetHeader className="shrink-0 px-6 py-4 border-b">
-          <SheetTitle>New Ticket</SheetTitle>
-        </SheetHeader>
-        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
+    <>
+      {variant === "fab" ? (
+        <Button
+          size="lg"
+          className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-shadow"
+          aria-label="Create Issue"
+          onClick={handleOpenTrigger}
+        >
+          <Plus className="h-6 w-6" />
+        </Button>
+      ) : (
+        <Button onClick={handleOpenTrigger}>
+          <Plus className="mr-2 h-4 w-4" />
+          Create Issue
+        </Button>
+      )}
+
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+        <DialogContent className="max-w-2xl gap-0 p-0 overflow-hidden">
+          <DialogHeader className="px-5 pt-4 pb-3 border-b border-border/60">
+            <div className="flex items-center gap-2">
+              {project && (
+                <Badge
+                  variant="outline"
+                  className="h-5 px-1.5 text-[10px] font-medium text-muted-foreground shrink-0"
+                >
+                  {project.key ?? project.name}
+                </Badge>
+              )}
+              <DialogTitle className="text-sm font-medium text-muted-foreground">
+                New Issue
+              </DialogTitle>
+            </div>
+          </DialogHeader>
+
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Title</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="E.g. Implement login page"
-                        {...field}
-                        className="text-base font-medium capitalize"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <TiptapEditorDynamic
-                        content={field.value ?? ""}
-                        onChangeHtml={(html) => field.onChange(html)}
-                        output="html"
-                        minHeightClassName="min-h-[120px]"
-                        placeholder="Describe the ticket…"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <form onSubmit={handleFormSubmit} className="flex flex-col">
+              <div className="px-5 pt-4 pb-2 space-y-3">
                 <FormField
                   control={form.control}
-                  name="type"
+                  name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Type</FormLabel>
                       <FormControl>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select type" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="TASK">Task</SelectItem>
-                            <SelectItem value="BUG">Bug</SelectItem>
-                            <SelectItem value="STORY">Story</SelectItem>
-                            <SelectItem value="EPIC">Epic</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <input
+                          {...field}
+                          ref={(el) => {
+                            field.ref(el);
+                            (titleRef as React.MutableRefObject<HTMLInputElement | null>).current = el;
+                          }}
+                          autoFocus
+                          placeholder="Issue title"
+                          className="w-full bg-transparent text-lg font-semibold text-foreground placeholder:text-muted-foreground/50 outline-none border-0 focus:ring-0 p-0 leading-tight"
+                        />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-xs" />
                     </FormItem>
                   )}
                 />
+
                 <FormField
                   control={form.control}
-                  name="priority"
+                  name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Priority</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger className="w-full">
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="LOW">Low</SelectItem>
-                          <SelectItem value="MEDIUM">Medium</SelectItem>
-                          <SelectItem value="HIGH">High</SelectItem>
-                          <SelectItem value="URGENT">Urgent</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
+                      <FormControl>
+                        <TiptapEditorDynamic
+                          content={field.value ?? ""}
+                          onChangeHtml={(html) => field.onChange(html)}
+                          output="html"
+                          minHeightClassName="min-h-[80px]"
+                          placeholder="Add description…"
+                        />
+                      </FormControl>
+                      <FormMessage className="text-xs" />
                     </FormItem>
                   )}
                 />
               </div>
 
-              <FormItem className="gap-1">
-                <FormLabel>Assignees</FormLabel>
-                <CreateTicketAssignees
+              <div className="px-5 py-3 border-t border-border/60">
+                <TicketCreateProperties
+                  value={properties}
+                  onChange={handlePropertiesChange}
+                  projectStatuses={projectStatuses}
                   members={members}
-                  selectedAssignees={selectedAssignees}
-                  onSelectAssignee={handleAssigneeSelect}
-                  onRemoveAssignee={handleRemoveAssignee}
+                  labels={labels}
+                  cycles={cycles}
                 />
-                <FormMessage />
-              </FormItem>
+              </div>
 
-              <FormField
-                control={form.control}
-                name="link"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Link (Optional)</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <LinkIcon className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          className="pl-9"
-                          placeholder="https://..."
-                          {...field}
-                          value={field.value ?? ""}
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {files.length > 0 && (
+                <div className="px-5 pb-2 space-y-1.5">
+                  {files.map((file, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2"
+                    >
+                      <Upload className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <span className="flex-1 truncate text-xs font-medium">{file.name}</span>
+                      <span className="text-[10px] text-muted-foreground shrink-0">
+                        {(file.size / 1024).toFixed(0)}KB
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFile(idx)}
+                        aria-label="Remove file"
+                        className="text-muted-foreground hover:text-destructive transition-colors"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
 
-              <FormItem className="pt-2">
-                <FormLabel>Attachments</FormLabel>
-                <FormControl>
-                  <CreateTicketAttachments
-                    files={files}
-                    onFileChange={handleFileChange}
-                    onRemoveFile={handleRemoveFile}
+              <div className="flex items-center justify-between gap-3 border-t border-border/60 px-5 py-3">
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleAttachClick}
+                    aria-label="Attach file"
+                    className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors"
+                  >
+                    <Paperclip className="h-3.5 w-3.5" />
+                    Attach
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    className="hidden"
+                    accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+                    multiple
+                    onChange={handleFileChange}
                   />
-                </FormControl>
-              </FormItem>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={createMore}
+                      onClick={handleToggleCreateMore}
+                      className={cn(
+                        "relative inline-flex h-4 w-7 shrink-0 items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none",
+                        createMore ? "bg-primary" : "bg-muted",
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow-sm transition-transform",
+                          createMore ? "translate-x-3" : "translate-x-0",
+                        )}
+                      />
+                    </button>
+                    <span className="text-xs text-muted-foreground">Create more</span>
+                  </label>
+
+                  <Button
+                    type="submit"
+                    disabled={isPending || isUploading}
+                    className="h-8 px-4 text-xs"
+                    size="sm"
+                  >
+                    {isPending || isUploading ? "Creating…" : "Create issue"}
+                  </Button>
+                </div>
+              </div>
             </form>
           </Form>
-        </div>
-        <div className="shrink-0 px-6 py-4 border-t">
-          <Button
-            type="button"
-            disabled={isPending || isUploading}
-            className="w-full"
-            onClick={form.handleSubmit(handleSubmit)}
-          >
-            {isPending || isUploading ? "Creating..." : "Create Ticket"}
-          </Button>
-        </div>
-      </SheetContent>
-    </Sheet>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

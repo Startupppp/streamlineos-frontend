@@ -6,12 +6,15 @@ import {
   useSprints,
   useSprintBurndown,
 } from "@/hooks/api/projects";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Sprint, SprintBurndownPoint } from "@/types/projects";
-import { ProjectStats } from "@/features/projects/analytics/project-stats";
+import {
+  AnalyticsKpiStrip,
+  AnalyticsKpiStripSkeleton,
+} from "@/features/projects/analytics/analytics-kpi-strip";
 import {
   StateDistributionChart,
   PriorityBreakdownChart,
@@ -30,7 +33,7 @@ export default function AnalyticsPage({
   params: Promise<{ projectId: string }>;
 }) {
   const { projectId: projectIdStr } = use(params);
-  const projectId = parseInt(projectIdStr);
+  const projectId = parseInt(projectIdStr, 10);
 
   const { data: analytics, isLoading } = useProjectAnalytics(projectId);
   const { data: sprints } = useSprints(projectId);
@@ -47,76 +50,55 @@ export default function AnalyticsPage({
 
   const stateData = useMemo(() => {
     if (!analytics?.stateDistribution) return [];
-    return analytics.stateDistribution.map(
-      (row: { status: string | null; count: number }) => {
-        const state = row.status ?? "unknown";
-        return {
-          state: state
-            .replace(/_/g, " ")
-            .replace(/\b\w/g, (c: string) => c.toUpperCase()),
-          count: row.count,
-          fill: STATE_COLORS[state.toLowerCase()] ?? "#94a3b8",
-        };
-      },
-    );
+    return analytics.stateDistribution.map((row) => {
+      const state = row.status ?? "unknown";
+      return {
+        state: state
+          .replace(/_/g, " ")
+          .replace(/\b\w/g, (c: string) => c.toUpperCase()),
+        count: row.count,
+        fill: STATE_COLORS[state.toLowerCase()] ?? "#94a3b8",
+      };
+    });
   }, [analytics?.stateDistribution]);
 
   const priorityData = useMemo(() => {
     if (!analytics?.priorityBreakdown) return [];
-    return analytics.priorityBreakdown.map(
-      (row: { priority: string | null; count: number }) => {
-        const priority = row.priority ?? "none";
-        return {
-          name: priority.charAt(0).toUpperCase() + priority.slice(1),
-          value: row.count,
-          fill: PRIORITY_COLORS[priority.toLowerCase()] ?? "#94a3b8",
-        };
-      },
-    );
+    return analytics.priorityBreakdown.map((row) => {
+      const priority = row.priority ?? "none";
+      return {
+        name: priority.charAt(0).toUpperCase() + priority.slice(1),
+        value: row.count,
+        fill: PRIORITY_COLORS[priority.toLowerCase()] ?? "#94a3b8",
+      };
+    });
   }, [analytics?.priorityBreakdown]);
 
   const volumeData = useMemo(() => {
     if (!analytics?.volumeOverTime) return [];
-    return analytics.volumeOverTime.map(
-      (entry: { week: string | null; count: number }) => ({
-        date: entry.week ?? "",
-        created: entry.count,
-      }),
-    );
+    return analytics.volumeOverTime.map((entry) => ({
+      date: entry.week ?? "",
+      created: entry.count,
+    }));
   }, [analytics?.volumeOverTime]);
 
   const assigneeData = useMemo(() => {
     if (!analytics?.assigneeCompletion) return [];
-    return analytics.assigneeCompletion.map(
-      (entry: {
-        assigneeId: string | null;
-        assigneeName: string | null;
-        total: number;
-        completed: number;
-      }) => ({
-        name: entry.assigneeName ?? "Unassigned",
-        completed: entry.completed,
-        total: entry.total,
-        rate:
-          entry.total > 0
-            ? Math.round((entry.completed / entry.total) * 100)
-            : 0,
-      }),
-    );
+    return analytics.assigneeCompletion.map((entry) => ({
+      name: entry.assigneeName ?? "Unassigned",
+      completed: entry.completed,
+      total: entry.total,
+      rate:
+        entry.total > 0 ? Math.round((entry.completed / entry.total) * 100) : 0,
+    }));
   }, [analytics?.assigneeCompletion]);
 
   const velocityData = useMemo(() => {
     if (!analytics?.cycleVelocity) return [];
-    return analytics.cycleVelocity.map(
-      (entry: {
-        cycleId: number;
-        cycleName: string | null;
-        completedPoints: number;
-      }) => ({
-        cycle: entry.cycleName ?? `Cycle ${entry.cycleId}`,
-        points: entry.completedPoints,
-      }),
-    );
+    return analytics.cycleVelocity.map((entry) => ({
+      cycle: entry.cycleName ?? `Cycle ${entry.cycleId}`,
+      points: entry.completedPoints,
+    }));
   }, [analytics?.cycleVelocity]);
 
   const burndownChartData = useMemo(() => {
@@ -144,30 +126,24 @@ export default function AnalyticsPage({
 
   const estimateData = useMemo(() => {
     if (!analytics?.estimateVsActual) return [];
-    return analytics.estimateVsActual.map(
-      (entry: {
-        ticketId: number;
-        title: string;
-        estimated: string | null;
-        actual: number;
-      }) => ({
-        label: entry.title || `#${entry.ticketId}`,
-        estimate: entry.estimated ? parseFloat(entry.estimated) : 0,
-        actual: entry.actual,
-      }),
-    );
+    return analytics.estimateVsActual.map((entry) => ({
+      label: entry.title || `#${entry.ticketId}`,
+      estimate: entry.estimated ? parseFloat(entry.estimated) : 0,
+      actual: entry.actual,
+    }));
   }, [analytics?.estimateVsActual]);
-
-  const healthScore = analytics?.healthScore;
-  const healthStatus = analytics?.healthStatus;
-  const healthBreakdown = analytics?.healthBreakdown;
 
   if (isLoading) {
     return (
-      <PageWrapper title="Analytics" eyebrow="Project" subtitle="Project health, velocity, and performance charts">
+      <PageWrapper
+        title="Analytics"
+        eyebrow="Project"
+        subtitle="Velocity, health, and ticket insights"
+      >
+        <AnalyticsKpiStripSkeleton />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-56 w-full" />
+            <Skeleton key={i} className="h-[296px] w-full rounded-xl" />
           ))}
         </div>
       </PageWrapper>
@@ -176,11 +152,15 @@ export default function AnalyticsPage({
 
   if (!analytics) {
     return (
-      <PageWrapper title="Analytics" eyebrow="Project" subtitle="Project health, velocity, and performance charts">
+      <PageWrapper
+        title="Analytics"
+        eyebrow="Project"
+        subtitle="Velocity, health, and ticket insights"
+      >
         <EmptyState
           illustrationPreset="chart"
-          title="No data yet"
-          description="Analytics will appear once your project has work items."
+          title="No analytics yet"
+          description="Analytics will appear once your project has tickets."
           className="flex-1 min-h-[50vh]"
         />
       </PageWrapper>
@@ -188,123 +168,37 @@ export default function AnalyticsPage({
   }
 
   return (
-    <PageWrapper title="Analytics" eyebrow="Project" subtitle="Project health, velocity, and performance charts">
-      <ProjectStats
-        healthScore={healthScore}
-        healthStatus={healthStatus}
-        healthBreakdown={healthBreakdown}
-      />
+    <PageWrapper
+      title="Analytics"
+      eyebrow="Project"
+      subtitle="Velocity, health, and ticket insights"
+    >
+      <AnalyticsKpiStrip analytics={analytics} />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
-        <Card className="bg-card border border-border rounded-lg shadow-none">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold">
-              State Distribution
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            {stateData.length === 0 ? (
-              <EmptyState
-                illustrationPreset="chart"
-                title="No data yet"
-                compact
-                className="h-40"
-              />
-            ) : (
-              <div className="h-56">
-                <StateDistributionChart data={stateData} />
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <ChartShell title="State Distribution">
+          <StateDistributionChart data={stateData} />
+        </ChartShell>
 
-        <Card className="bg-card border border-border rounded-lg shadow-none">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold">
-              Priority Breakdown
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            {priorityData.length === 0 ? (
-              <EmptyState
-                illustrationPreset="chart"
-                title="No data yet"
-                compact
-                className="h-40"
-              />
-            ) : (
-              <div className="h-56">
-                <PriorityBreakdownChart data={priorityData} />
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <ChartShell title="Priority Breakdown">
+          <PriorityBreakdownChart data={priorityData} />
+        </ChartShell>
 
-        <Card className="bg-card border border-border rounded-lg shadow-none">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold">
-              Volume Over Time
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            {volumeData.length === 0 ? (
-              <EmptyState
-                illustrationPreset="chart"
-                title="No data yet"
-                compact
-                className="h-40"
-              />
-            ) : (
-              <div className="h-56">
-                <VolumeOverTimeChart data={volumeData} />
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <ChartShell title="Volume Over Time">
+          <VolumeOverTimeChart data={volumeData} />
+        </ChartShell>
 
-        <Card className="bg-card border border-border rounded-lg shadow-none">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold">
-              Completion Rate by Assignee
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            {assigneeData.length === 0 ? (
-              <EmptyState
-                illustrationPreset="chart"
-                title="No data yet"
-                compact
-                className="h-40"
-              />
-            ) : (
-              <div className="h-56">
-                <AssigneeCompletionChart data={assigneeData} />
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <ChartShell title="Completion by Assignee">
+          <AssigneeCompletionChart data={assigneeData} />
+        </ChartShell>
 
-        <Card className="bg-card border border-border rounded-lg shadow-none">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold">
-              Cycle Velocity
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            {velocityData.length === 0 ? (
-              <EmptyState
-                illustrationPreset="chart"
-                title="No data yet"
-                compact
-                className="h-40"
-              />
-            ) : (
-              <div className="h-56">
-                <CycleVelocityChart data={velocityData} />
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <ChartShell title="Cycle Velocity">
+          <CycleVelocityChart data={velocityData} />
+        </ChartShell>
+
+        <ChartShell title="Estimate vs Actual">
+          <EstimateVsActualChart data={estimateData} />
+        </ChartShell>
 
         <SprintBurndownChart
           data={burndownChartData}
@@ -312,29 +206,24 @@ export default function AnalyticsPage({
           sprintId={sprintId}
           onSprintChange={setSelectedSprintId}
         />
-
-        <Card className="bg-card border border-border rounded-lg shadow-none">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold">
-              Estimate vs Actual
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            {estimateData.length === 0 ? (
-              <EmptyState
-                illustrationPreset="chart"
-                title="No data yet"
-                compact
-                className="h-40"
-              />
-            ) : (
-              <div className="h-56">
-                <EstimateVsActualChart data={estimateData} />
-              </div>
-            )}
-          </CardContent>
-        </Card>
       </div>
     </PageWrapper>
+  );
+}
+
+function ChartShell({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Card className="bg-card border border-border rounded-xl shadow-sm">
+      <CardHeader className="pb-1 pt-4 px-4">
+        <CardTitle className="text-sm font-semibold">{title}</CardTitle>
+      </CardHeader>
+      <CardContent className="px-4 pb-4 pt-0">{children}</CardContent>
+    </Card>
   );
 }

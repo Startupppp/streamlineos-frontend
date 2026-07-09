@@ -26,12 +26,12 @@ const STATUS_LABEL: Record<FormSubmissionStatus, string> = {
   rejected: "Rejected",
 };
 
-interface SubmissionsSectionProps {
+interface FormSubmissionsTabProps {
   projectId: number;
   formId: number;
 }
 
-export function SubmissionsSection({ projectId, formId }: SubmissionsSectionProps) {
+export function FormSubmissionsTab({ projectId, formId }: FormSubmissionsTabProps) {
   const canManage = useCan("projects:forms:manage");
   const [viewTarget, setViewTarget] = useState<FormSubmission | null>(null);
 
@@ -111,13 +111,17 @@ export function SubmissionsSection({ projectId, formId }: SubmissionsSectionProp
           {canManage && row.status === "submitted" && (
             <>
               <Button
-                variant="ghost" size="sm" className="h-7 text-xs text-green-700 hover:text-green-800"
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs text-green-700 hover:text-green-800"
                 onClick={() => handleStatusUpdate(row, "processed")}
               >
                 Process
               </Button>
               <Button
-                variant="ghost" size="sm" className="h-7 text-xs text-destructive hover:text-destructive"
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs text-destructive hover:text-destructive"
                 onClick={() => handleStatusUpdate(row, "rejected")}
               >
                 Reject
@@ -132,16 +136,13 @@ export function SubmissionsSection({ projectId, formId }: SubmissionsSectionProp
   const items = data ?? [];
 
   return (
-    <div className="space-y-3">
-      <h3 className="text-sm font-semibold">Submissions</h3>
-
+    <div className="pt-3 space-y-3">
       {isLoading ? (
         <SkeletonTable rows={4} columns={6} />
       ) : isError ? (
         <ErrorState compact onRetry={() => void refetch()} />
       ) : items.length === 0 ? (
         <EmptyState
-          compact
           illustrationPreset="documents"
           title="No submissions yet"
           description="Submissions will appear here once the form is filled out."

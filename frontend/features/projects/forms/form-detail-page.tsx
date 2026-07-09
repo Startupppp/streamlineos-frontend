@@ -9,7 +9,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,16 +20,23 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useCan } from "@/hooks/api/access";
-import { useForm, useUpdateForm, useDeleteForm, useSubmitForm } from "@/hooks/api/projects";
+import { useForm, useDeleteForm, useSubmitForm } from "@/hooks/api/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type { CreateFormInput, UpdateFormInput } from "@/types/projects/forms";
 import { FORM_TYPE_LABELS } from "./field-type-meta";
-import { FormBuilder } from "./form-builder";
 import { DynamicFormRenderer } from "./dynamic-form-renderer";
-import { SubmissionsSection } from "./submissions-section";
+import {
+  FormBuilderTab,
+  FormBuilderTabSkeleton,
+} from "./components/form-builder-tab";
+import { FormSubmissionsTab } from "./components/form-submissions-tab";
 
 interface FormDetailPageProps {
   projectId: number;
@@ -45,20 +52,14 @@ export function FormDetailPage({ projectId, formId }: FormDetailPageProps) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [previewSubmitted, setPreviewSubmitted] = useState(false);
 
-  const { data: form, isLoading, isError, refetch } = useForm(projectId, formId);
-  const updateForm = useUpdateForm(projectId);
+  const {
+    data: form,
+    isLoading,
+    isError,
+    refetch,
+  } = useForm(projectId, formId);
   const deleteForm = useDeleteForm(projectId);
   const submitForm = useSubmitForm(projectId, formId);
-
-  function handleSave(data: CreateFormInput | UpdateFormInput) {
-    updateForm.mutate(
-      { id: formId, ...data },
-      {
-        onSuccess: () => toast.success("Form saved"),
-        onError: (e) => toast.error(getErrorMessage(e)),
-      },
-    );
-  }
 
   function handleDeleteConfirm() {
     deleteForm.mutate(formId, {
@@ -70,7 +71,10 @@ export function FormDetailPage({ projectId, formId }: FormDetailPageProps) {
     });
   }
 
-  function handlePreviewSubmit(values: Record<string, unknown>, submittedByName?: string) {
+  function handlePreviewSubmit(
+    values: Record<string, unknown>,
+    submittedByName?: string,
+  ) {
     submitForm.mutate(
       { values, submittedByName },
       {
@@ -92,13 +96,24 @@ export function FormDetailPage({ projectId, formId }: FormDetailPageProps) {
     setPreviewSubmitted(false);
   }
 
+  function handlePreviewOpen() {
+    setPreviewOpen(true);
+  }
+
+  function handleDeleteOpen() {
+    setDeleteOpen(true);
+  }
+
   if (isLoading) {
     return (
-      <PageWrapper title="Form" eyebrow="Project" backHref={`/projects/${projectId}/forms`}>
-        <div className="px-4 pb-4 space-y-4">
+      <PageWrapper
+        title="Form"
+        eyebrow="Project"
+        backHref={`/projects/${projectId}/forms`}
+      >
+        <div className="space-y-4 pt-2">
           <Skeleton className="h-8 w-64 rounded-md" />
-          <Skeleton className="h-32 w-full rounded-xl" />
-          <Skeleton className="h-48 w-full rounded-xl" />
+          <FormBuilderTabSkeleton />
         </div>
       </PageWrapper>
     );
@@ -106,10 +121,12 @@ export function FormDetailPage({ projectId, formId }: FormDetailPageProps) {
 
   if (isError || !form) {
     return (
-      <PageWrapper title="Form" eyebrow="Project" backHref={`/projects/${projectId}/forms`}>
-        <div className="px-4 pb-4">
-          <ErrorState onRetry={() => void refetch()} />
-        </div>
+      <PageWrapper
+        title="Form"
+        eyebrow="Project"
+        backHref={`/projects/${projectId}/forms`}
+      >
+        <ErrorState onRetry={() => void refetch()} />
       </PageWrapper>
     );
   }
@@ -121,20 +138,29 @@ export function FormDetailPage({ projectId, formId }: FormDetailPageProps) {
       backHref={`/projects/${projectId}/forms`}
       actions={
         <div className="flex items-center gap-2">
-          <Badge variant={form.isActive ? "default" : "secondary"} className="text-xs">
+          <Badge
+            variant={form.isActive ? "default" : "secondary"}
+            className="text-xs"
+          >
             {form.isActive ? "Active" : "Inactive"}
           </Badge>
           <Badge variant="outline" className="text-xs">
             {FORM_TYPE_LABELS[form.type]}
           </Badge>
-          <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => setPreviewOpen(true)}>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 text-xs"
+            onClick={handlePreviewOpen}
+          >
             Preview / Fill
           </Button>
           {canManage && (
             <Button
-              size="sm" variant="outline"
+              size="sm"
+              variant="outline"
               className="h-8 text-xs text-destructive hover:text-destructive border-destructive/30"
-              onClick={() => setDeleteOpen(true)}
+              onClick={handleDeleteOpen}
             >
               Delete
             </Button>
@@ -143,23 +169,27 @@ export function FormDetailPage({ projectId, formId }: FormDetailPageProps) {
       }
     >
       <motion.div
-        className="px-4 pb-10 space-y-8"
         initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: shouldReduceMotion ? 0 : 0.22, ease: "easeOut" }}
+        transition={{
+          duration: shouldReduceMotion ? 0 : 0.22,
+          ease: "easeOut",
+        }}
       >
-        <div className="max-w-2xl">
-          <FormBuilder
-            form={form}
-            onSave={handleSave}
-            isPending={updateForm.isPending}
-            readOnly={!canManage}
-          />
-        </div>
+        <Tabs defaultValue="builder">
+          <TabsList>
+            <TabsTrigger value="builder">Builder</TabsTrigger>
+            <TabsTrigger value="submissions">Submissions</TabsTrigger>
+          </TabsList>
 
-        <Separator />
+          <TabsContent value="builder">
+            <FormBuilderTab projectId={projectId} formId={formId} />
+          </TabsContent>
 
-        <SubmissionsSection projectId={projectId} formId={formId} />
+          <TabsContent value="submissions">
+            <FormSubmissionsTab projectId={projectId} formId={formId} />
+          </TabsContent>
+        </Tabs>
       </motion.div>
 
       <Dialog open={previewOpen} onOpenChange={handlePreviewOpenChange}>
@@ -191,7 +221,8 @@ export function FormDetailPage({ projectId, formId }: FormDetailPageProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this form?</AlertDialogTitle>
             <AlertDialogDescription>
-              All submissions will be permanently deleted. This cannot be undone.
+              All submissions will be permanently deleted. This cannot be
+              undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

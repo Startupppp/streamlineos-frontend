@@ -163,6 +163,7 @@ export interface CreateTicketInput {
   reporterId?: string;
   sprintId?: number;
   epicId?: number;
+  cycleId?: number;
   points?: number;
   link?: string;
   originalEstimate?: number;

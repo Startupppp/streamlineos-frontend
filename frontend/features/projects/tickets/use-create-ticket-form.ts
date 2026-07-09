@@ -1,9 +1,13 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCreateTicket, useAddAttachment, useProject } from "@/hooks/api";
+import { useCycles } from "@/hooks/api/projects/advanced";
+import { useProjectLabels } from "@/hooks/api/projects/projects";
+import { useProjectMembers } from "@/hooks/api/projects/projects";
+import { useAddLabelToTicket } from "@/hooks/api/projects/tickets";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -11,62 +15,64 @@ import { createTicketInputSchema } from "@/lib/validation/projects";
 import { z } from "zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import type { AssigneeMember } from "./create-ticket-assignees";
+import type { CreateTicketPropertiesValue } from "./ticket-create-properties";
+import type { ProjectMember, ProjectStatusRecord, Cycle, TicketLabel } from "@/types/projects";
 
-const formSchema = createTicketInputSchema.omit({ projectId: true }).extend({
-  assigneeIds: z.array(z.string()).optional(),
-});
+const formSchema = createTicketInputSchema.omit({ projectId: true, labelIds: true });
 
 export type CreateTicketFormValues = z.infer<typeof formSchema>;
 
-function isProjectWithManager(data: unknown): data is { manager?: AssigneeMember } {
-  return typeof data === "object" && data !== null && "manager" in data;
+function findActiveCycle(cycles: Cycle[]): Cycle | null {
+  const today = new Date().toISOString().slice(0, 10);
+  const active = cycles.find((c) => c.status === "active");
+  if (active) return active;
+  return cycles.find((c) => c.startDate <= today && c.endDate >= today) ?? null;
 }
 
-export function useCreateTicketForm(projectId: number) {
+export interface UseCreateTicketFormOptions {
+  projectId: number;
+  defaultStatus?: string;
+  onCreated?: () => void;
+}
+
+export function useCreateTicketForm({ projectId, defaultStatus, onCreated }: UseCreateTicketFormOptions) {
   const [open, setOpen] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
-  const [selectedAssignees, setSelectedAssignees] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [createMore, setCreateMore] = useState(false);
+  const titleRef = useRef<HTMLInputElement | null>(null);
   const queryClient = useQueryClient();
+
   const { data: projectData } = useProject(projectId);
+  const { data: cyclesRaw } = useCycles(projectId);
+  const { data: labelsRaw } = useProjectLabels(projectId);
+  const { data: membersRaw } = useProjectMembers(projectId);
 
-  const members = useMemo<AssigneeMember[]>(() => {
-    const projectMembersList =
-      projectData?.members
-        ?.filter(
-          (m): m is typeof m & { user: NonNullable<typeof m.user> } => m.user != null,
-        )
-        .map((m) => ({
-          id: m.user.id,
-          name: m.user.name || `${m.user.firstName ?? ""} ${m.user.lastName ?? ""}`.trim(),
-          firstName: m.user.firstName ?? undefined,
-          lastName: m.user.lastName ?? undefined,
-          image: m.user.image ?? null,
-          email: m.user.email,
-        })) ?? [];
+  const cycles = useMemo<Cycle[]>(() => cyclesRaw ?? [], [cyclesRaw]);
+  const labels = useMemo<TicketLabel[]>(() => labelsRaw ?? [], [labelsRaw]);
+  const members = useMemo<ProjectMember[]>(() => membersRaw ?? [], [membersRaw]);
 
-    const manager =
-      projectData && isProjectWithManager(projectData) ? projectData.manager : undefined;
+  const projectStatuses = useMemo<ProjectStatusRecord[]>(
+    () => projectData?.statuses ?? [],
+    [projectData],
+  );
 
-    if (manager && !projectMembersList.some((m) => m.id === manager.id)) {
-      return [
-        {
-          id: manager.id,
-          name:
-            manager.name ||
-            `${manager.firstName ?? ""} ${manager.lastName ?? ""}`.trim(),
-          firstName: manager.firstName ?? undefined,
-          lastName: manager.lastName ?? undefined,
-          image: manager.image ?? null,
-        },
-        ...projectMembersList,
-      ];
-    }
-    return projectMembersList;
-  }, [projectData]);
+  const defaultStatusValue = useMemo<string>(() => {
+    if (defaultStatus) return defaultStatus;
+    const first = projectStatuses[0];
+    return first?.name ?? "TODO";
+  }, [defaultStatus, projectStatuses]);
 
-  const addAttachmentMutation = useAddAttachment();
+  const activeCycle = useMemo(() => findActiveCycle(cycles), [cycles]);
+
+  const [properties, setProperties] = useState<CreateTicketPropertiesValue>({
+    status: defaultStatusValue,
+    priority: null,
+    assigneeId: null,
+    points: null,
+    labelIds: [],
+    cycleId: activeCycle?.id ?? null,
+  });
 
   const form = useForm<CreateTicketFormValues>({
     resolver: zodResolver(formSchema),
@@ -74,28 +80,67 @@ export function useCreateTicketForm(projectId: number) {
       title: "",
       type: "TASK",
       description: "",
-      priority: "MEDIUM",
-      link: "",
-      assigneeId: undefined,
-      assigneeIds: [],
     },
   });
 
-  const finishCreation = useCallback(() => {
-    setOpen(false);
-    form.reset();
+  const addAttachmentMutation = useAddAttachment();
+  const addLabelMutation = useAddLabelToTicket();
+
+  const handlePropertiesChange = useCallback((patch: Partial<CreateTicketPropertiesValue>) => {
+    setProperties((prev) => ({ ...prev, ...patch }));
+  }, []);
+
+  const resetForm = useCallback((preserveContext: boolean) => {
+    form.reset({ title: "", type: "TASK", description: "" });
     setFiles([]);
-    setSelectedAssignees([]);
+    if (!preserveContext) {
+      setProperties({
+        status: defaultStatusValue,
+        priority: null,
+        assigneeId: null,
+        points: null,
+        labelIds: [],
+        cycleId: activeCycle?.id ?? null,
+      });
+    } else {
+      setProperties((prev) => ({ ...prev, priority: null, assigneeId: null, points: null, labelIds: [] }));
+    }
+    setTimeout(() => titleRef.current?.focus(), 50);
+  }, [form, defaultStatusValue, activeCycle]);
+
+  const finishCreation = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.projects.tickets({ projectId }) });
     queryClient.invalidateQueries({ queryKey: queryKeys.projects.detail(projectId) });
-  }, [form, queryClient, projectId]);
+    queryClient.invalidateQueries({ queryKey: queryKeys.projects.sprints(projectId) });
+    onCreated?.();
+    if (createMore) {
+      resetForm(true);
+    } else {
+      setOpen(false);
+      resetForm(false);
+    }
+  }, [queryClient, projectId, createMore, resetForm, onCreated]);
 
   const createTicketMutation = useCreateTicket({
     onSuccess: async (data) => {
-      if (files.length > 0) {
+      const pendingLabels = properties.labelIds;
+      const pendingFiles = files;
+
+      const labelTask =
+        pendingLabels.length > 0
+          ? Promise.all(
+              pendingLabels.map((labelId) =>
+                addLabelMutation.mutateAsync({ ticketId: data.id, projectId, labelId }),
+              ),
+            ).catch(() => toast.error("Ticket created but some labels failed to attach"))
+          : Promise.resolve();
+
+      if (pendingFiles.length > 0) {
         try {
           setIsUploading(true);
+          await labelTask;
           await Promise.all(
-            files.map(async (file) => {
+            pendingFiles.map(async (file) => {
               const formData = new FormData();
               formData.append("file", file);
               formData.append("folder", "tickets");
@@ -109,17 +154,16 @@ export function useCreateTicketForm(projectId: number) {
               });
             }),
           );
-          toast.success(
-            `Ticket created with ${files.length} attachment${files.length > 1 ? "s" : ""}`,
-          );
+          toast.success(`Issue created with ${pendingFiles.length} attachment${pendingFiles.length > 1 ? "s" : ""}`);
         } catch {
-          toast.error("Ticket created but failed to upload attachments");
+          toast.error("Issue created but failed to upload attachments");
         } finally {
           setIsUploading(false);
           finishCreation();
         }
       } else {
-        toast.success("Ticket created successfully");
+        await labelTask;
+        toast.success("Issue created");
         finishCreation();
       }
     },
@@ -133,27 +177,17 @@ export function useCreateTicketForm(projectId: number) {
       createTicketMutation.mutate({
         ...values,
         projectId,
-        type: values.type,
+        status: properties.status,
+        priority: properties.priority ?? undefined,
+        assigneeId: properties.assigneeId ?? undefined,
+        assigneeIds: properties.assigneeId ? [properties.assigneeId] : undefined,
+        points: properties.points ?? undefined,
+        cycleId: properties.cycleId ?? undefined,
         link: values.link || undefined,
-        assigneeId: selectedAssignees[0] || undefined,
-        assigneeIds: selectedAssignees.length > 0 ? selectedAssignees : undefined,
       });
     },
-    [createTicketMutation, selectedAssignees, projectId],
+    [createTicketMutation, properties, projectId],
   );
-
-  const handleAssigneeSelect = useCallback((value: string) => {
-    if (!value || value === "unassigned") return;
-    setSelectedAssignees((prev) => (prev.includes(value) ? prev : [...prev, value]));
-  }, []);
-
-  const handleRemoveAssignee = useCallback((id: string) => {
-    setSelectedAssignees((prev) => prev.filter((a) => a !== id));
-  }, []);
-
-  const handleRemoveFile = useCallback((idx: number) => {
-    setFiles((prev) => prev.filter((_, i) => i !== idx));
-  }, []);
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = Array.from(e.target.files ?? []);
@@ -168,19 +202,32 @@ export function useCreateTicketForm(projectId: number) {
     e.target.value = "";
   }, []);
 
+  const handleRemoveFile = useCallback((idx: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== idx));
+  }, []);
+
+  const handleToggleCreateMore = useCallback(() => {
+    setCreateMore((prev) => !prev);
+  }, []);
+
   return {
     open,
     setOpen,
     form,
     files,
-    selectedAssignees,
     isUploading,
-    members,
     isPending: createTicketMutation.isPending,
+    properties,
+    handlePropertiesChange,
     handleSubmit,
-    handleAssigneeSelect,
-    handleRemoveAssignee,
-    handleRemoveFile,
     handleFileChange,
+    handleRemoveFile,
+    createMore,
+    handleToggleCreateMore,
+    titleRef,
+    projectStatuses,
+    members,
+    labels,
+    cycles,
   };
 }

@@ -440,15 +440,27 @@ function EventRow({
           aria-label={`Toggle ${event.displayName}`}
         />
         {canManage && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={handleConfigureClick}
-            title="Configure"
-          >
-            <Settings2 className="h-3.5 w-3.5 text-muted-foreground" />
-          </Button>
+          <>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={handleSendTestClick}
+              disabled={sending}
+              title="Send test to me"
+            >
+              <Send className={cn("h-3.5 w-3.5 text-muted-foreground", sending && "animate-pulse")} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={handleConfigureClick}
+              title="Configure"
+            >
+              <Settings2 className="h-3.5 w-3.5 text-muted-foreground" />
+            </Button>
+          </>
         )}
       </div>
     </div>
@@ -458,11 +470,39 @@ function EventRow({
 export default function NotificationEventsPage() {
   const canManage = useCan("notifications:events:manage");
   const { data: events, isLoading, isError, refetch } = useNotificationEventCatalog();
+  const { data: session } = useSession();
+  const currentUserId = session?.user?.id ?? null;
+  const emitEvent = useEmitNotificationEvent();
 
   const [search, setSearch] = useState("");
   const [moduleFilter, setModuleFilter] = useState("all");
   const [configTarget, setConfigTarget] = useState<NotificationEventDefinition | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [sendingKey, setSendingKey] = useState<string | null>(null);
+
+  const handleSendTest = useCallback(
+    (event: NotificationEventDefinition) => {
+      if (!currentUserId) {
+        toast.error("Could not determine your account to send a test");
+        return;
+      }
+      setSendingKey(event.eventKey);
+      emitEvent.mutate(
+        { eventKey: event.eventKey, targetUserIds: [currentUserId] },
+        {
+          onSuccess: (result) => {
+            const parts = [`${result.notified} in-app`, `${result.deliveriesQueued} queued`];
+            if (result.suppressed > 0) parts.push(`${result.suppressed} suppressed`);
+            if (result.deduped > 0) parts.push(`${result.deduped} deduped`);
+            toast.success(`Test event sent — ${parts.join(", ")}`);
+          },
+          onError: (err) => toast.error(getErrorMessage(err)),
+          onSettled: () => setSendingKey(null),
+        },
+      );
+    },
+    [currentUserId, emitEvent],
+  );
 
   const debouncedSearch = useDebounce(search, 300);
 
@@ -595,6 +635,8 @@ export default function NotificationEventsPage() {
                     event={event}
                     canManage={canManage}
                     onConfigure={handleConfigure}
+                    onSendTest={handleSendTest}
+                    sending={sendingKey === event.eventKey}
                   />
                 ))}
               </div>

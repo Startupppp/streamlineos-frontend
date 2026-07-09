@@ -22,6 +22,7 @@ import { StatCardGrid, StatCard } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { AutomationsIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared/error-state";
+import { AutomationValueInput } from "@/features/projects/automations/automation-value-input";
 import {
   useAutomations,
   useCreateAutomation,
@@ -389,11 +390,13 @@ export default function AutomationsPage({ params }: PageProps) {
                         </SelectContent>
                       </Select>
                       {!["is_empty", "is_not_empty"].includes(form.watch(`conditions.${idx}.operator`)) && (
-                        <Input
+                        <AutomationValueInput
+                          kind="condition"
+                          discriminant={form.watch(`conditions.${idx}.field`)}
                           value={form.watch(`conditions.${idx}.value`) ?? ""}
-                          onChange={e => form.setValue(`conditions.${idx}.value`, e.target.value)}
-                          placeholder="value"
-                          className={cn(FIELD_CLASS, "w-24")}
+                          onChange={v => form.setValue(`conditions.${idx}.value`, v)}
+                          projectId={projectId}
+                          className={cn(FIELD_CLASS, "w-28")}
                         />
                       )}
                       <RemoveButton onClick={makeRemoveConditionHandler(idx)} />
@@ -420,12 +423,16 @@ export default function AutomationsPage({ params }: PageProps) {
                           ))}
                         </SelectContent>
                       </Select>
-                      <Input
-                        value={form.watch(`actions.${idx}.value`)}
-                        onChange={e => form.setValue(`actions.${idx}.value`, e.target.value)}
-                        placeholder="value"
-                        className={cn(FIELD_CLASS, "flex-1")}
-                      />
+                      <div className="flex-1 min-w-0">
+                        <AutomationValueInput
+                          kind="action"
+                          discriminant={form.watch(`actions.${idx}.type`)}
+                          value={form.watch(`actions.${idx}.value`)}
+                          onChange={v => form.setValue(`actions.${idx}.value`, v)}
+                          projectId={projectId}
+                          className={FIELD_CLASS}
+                        />
+                      </div>
                       <RemoveButton onClick={makeRemoveActionHandler(idx)} />
                     </div>
                   ))}
