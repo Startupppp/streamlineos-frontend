@@ -63,15 +63,46 @@ export const priorityConfig: Record<
   LOW: { label: "Low", color: "text-blue-500", icon: "ArrowDown" },
 };
 
-export const statusConfig: Record<
-  string,
-  { label: string; dotColor: string }
-> = {
+export interface StatusConfigEntry {
+  label: string;
+  dotColor: string;
+  color?: string | null;
+}
+
+export const statusConfig: Record<string, StatusConfigEntry> = {
   TODO: { label: "To Do", dotColor: "bg-muted-foreground" },
   IN_PROGRESS: { label: "In Progress", dotColor: "bg-blue-500" },
   IN_REVIEW: { label: "In Review", dotColor: "bg-amber-500" },
   DONE: { label: "Done", dotColor: "bg-green-500" },
 };
+
+const TYPE_TO_DOT_COLOR: Record<string, string> = {
+  unstarted: "bg-muted-foreground",
+  started: "bg-blue-500",
+  completed: "bg-green-500",
+  cancelled: "bg-red-400",
+};
+
+export function buildStatusConfig(
+  projectStatuses: Array<{ name: string; color: string | null; type?: string | null }>,
+): Record<string, StatusConfigEntry> {
+  const merged: Record<string, StatusConfigEntry> = { ...statusConfig };
+  for (const s of projectStatuses) {
+    merged[s.name] = {
+      label: s.name.replace(/_/g, " "),
+      dotColor: TYPE_TO_DOT_COLOR[s.type ?? "unstarted"] ?? "bg-muted-foreground",
+      color: s.color,
+    };
+  }
+  return merged;
+}
+
+export function getStatusEntry(
+  config: Record<string, StatusConfigEntry>,
+  key: string,
+): StatusConfigEntry {
+  return config[key] ?? { label: key.replace(/_/g, " "), dotColor: "bg-muted-foreground" };
+}
 
 export const typeConfig: Record<
   string,

@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Check, X, Copy } from "lucide-react";
+import { PriorityBadge } from "@/features/projects/shared/priority-badge";
 
 const STATUS_BADGE_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   pending: "secondary",
@@ -20,6 +21,14 @@ const STATUS_LEFT_COLOR: Record<string, string> = {
   duplicate: "bg-slate-300",
 };
 
+const REQUEST_TYPE_LABEL: Record<string, string> = {
+  bug: "Bug",
+  feature: "Feature",
+  task: "Task",
+  question: "Question",
+  other: "Other",
+};
+
 interface IntakeItem {
   id: number;
   title: string;
@@ -27,6 +36,9 @@ interface IntakeItem {
   status: string;
   createdAt?: string | Date | null;
   submitterEmail?: string | null;
+  submitterName?: string | null;
+  priority?: "low" | "medium" | "high" | "urgent" | null;
+  requestType?: "bug" | "feature" | "task" | "question" | "other" | null;
   declineReason?: string | null;
 }
 
@@ -42,11 +54,13 @@ export const IntakeItemCard = memo(function IntakeItemCard({ item, onAccept, onD
   const handleDecline = useCallback(() => onDecline(item.id), [item.id, onDecline]);
   const handleDuplicate = useCallback(() => onDuplicate(item.id), [item.id, onDuplicate]);
 
+  const submitterDisplay = item.submitterName ?? item.submitterEmail ?? null;
+
   return (
     <div className="flex overflow-hidden rounded-lg border border-border bg-card hover:shadow-md transition-shadow">
       <div className={cn("w-1 shrink-0", STATUS_LEFT_COLOR[item.status] ?? "bg-slate-300")} />
       <div className="flex-1 py-3 px-4 min-w-0">
-        <div className="flex items-center gap-2 mb-1">
+        <div className="flex items-center gap-2 mb-1 flex-wrap">
           <p className="font-semibold truncate text-sm">{item.title}</p>
           <Badge
             variant={STATUS_BADGE_VARIANT[item.status] ?? "outline"}
@@ -54,6 +68,14 @@ export const IntakeItemCard = memo(function IntakeItemCard({ item, onAccept, onD
           >
             {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
           </Badge>
+          {item.requestType && (
+            <Badge variant="outline" className="text-xs font-medium px-1.5 py-0.5 rounded-md">
+              {REQUEST_TYPE_LABEL[item.requestType] ?? item.requestType}
+            </Badge>
+          )}
+          {item.priority && (
+            <PriorityBadge priority={item.priority} showLabel size="sm" />
+          )}
         </div>
         {item.description != null && (
           <p className="text-sm text-muted-foreground line-clamp-2">
@@ -62,7 +84,7 @@ export const IntakeItemCard = memo(function IntakeItemCard({ item, onAccept, onD
         )}
         <p className="text-xs text-muted-foreground mt-1">
           {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : ""}
-          {item.submitterEmail && ` by ${item.submitterEmail}`}
+          {submitterDisplay && ` · ${submitterDisplay}`}
         </p>
         {item.declineReason && (
           <p className="text-xs text-destructive mt-1">Reason: {item.declineReason}</p>

@@ -20,7 +20,6 @@ import { cn } from "@/lib/utils";
 import type { TicketPriority, TicketType } from "@/types/projects";
 import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
 
-const STATUSES = ["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"] as const;
 const PRIORITIES: TicketPriority[] = ["LOW", "MEDIUM", "HIGH", "URGENT"];
 const TYPES: TicketType[] = ["TASK", "BUG", "STORY", "EPIC", "SUBTASK"];
 
@@ -35,6 +34,7 @@ interface TicketFilterBarProps {
     firstName: string | null;
     lastName: string | null;
   }[];
+  statuses?: Array<{ name: string }>;
   showTypeFilter?: boolean;
   showSprintFilter?: boolean;
   showAssigneeFilter?: boolean;
@@ -47,6 +47,7 @@ interface TicketFilterBarProps {
 export function TicketFilterBar({
   sprints,
   members,
+  statuses,
   showTypeFilter = true,
   showSprintFilter = true,
   showAssigneeFilter = true,
@@ -68,6 +69,11 @@ export function TicketFilterBar({
   const assigneeId = searchParams.get("assigneeId") ?? "";
 
   const hasFilters = !!(status || priority || type || sprintId || assigneeId);
+
+  const statusOptions =
+    statuses && statuses.length > 0
+      ? statuses.map((s) => s.name)
+      : ["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"];
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -172,7 +178,7 @@ export function TicketFilterBar({
                 <SelectItem value="ALL" className="text-xs">
                   All Status
                 </SelectItem>
-                {STATUSES.map((s) => (
+                {statusOptions.map((s) => (
                   <SelectItem key={s} value={s} className="text-xs">
                     {s.replace(/_/g, " ")}
                   </SelectItem>

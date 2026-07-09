@@ -14,5 +14,7 @@ export interface WebhookDelivery {
   event: string;
   status: "success" | "failed" | "pending";
   responseCode: number | null;
+  attempts: number;
+  lastError: string | null;
   deliveredAt: string;
 }

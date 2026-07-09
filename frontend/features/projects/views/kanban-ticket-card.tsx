@@ -32,6 +32,7 @@ interface KanbanTicketCardProps {
   isDragging: boolean;
   dragStartRef: React.MutableRefObject<{ x: number; y: number } | null>;
   onSelect: (id: number) => void;
+  projectStatuses?: Array<{ name: string; color: string | null; type?: string | null }>;
 }
 
 export const KanbanTicketCard = memo(function KanbanTicketCard({
@@ -41,6 +42,7 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
   isDragging,
   dragStartRef,
   onSelect,
+  projectStatuses,
 }: KanbanTicketCardProps) {
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -103,6 +105,7 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
           currentStatus={ticket.status}
           currentPriority={ticket.priority}
           currentAssigneeId={ticket.assigneeId ?? ticket.assignees?.[0]?.user?.id ?? ticket.assignee?.id}
+          projectStatuses={projectStatuses}
           className="opacity-0 group-hover:opacity-100 transition-opacity -mt-0.5 -mr-1"
         />
       </div>

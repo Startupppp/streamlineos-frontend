@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Trash2, Zap, Clock, ChevronDown } from "lucide-react";
+import { Plus, Trash2, Zap, Clock, ChevronDown, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -46,6 +46,7 @@ import {
   useCreateWebhook,
   useDeleteWebhook,
   useWebhookDeliveries,
+  useSendTestWebhook,
   type ProjectWebhook,
   type WebhookDelivery,
 } from "@/hooks/api/projects/webhooks";
@@ -79,17 +80,27 @@ function DeliveryRow({ delivery }: { delivery: WebhookDelivery }) {
         ? "bg-red-500"
         : "bg-amber-400";
   return (
-    <div className="flex items-center gap-3 py-2 px-3 text-sm border-b last:border-0">
-      <div className={cn("h-2 w-2 rounded-full shrink-0", statusColor)} />
-      <span className="flex-1 font-mono text-xs text-muted-foreground truncate">
-        {delivery.event}
-      </span>
-      <Badge variant="outline" className="text-[10px] shrink-0 font-mono">
-        {delivery.responseCode ?? "—"}
-      </Badge>
-      <span className="text-[10px] text-muted-foreground shrink-0">
-        {new Date(delivery.deliveredAt).toLocaleTimeString()}
-      </span>
+    <div className="py-2 px-3 border-b last:border-0">
+      <div className="flex items-center gap-3 text-sm">
+        <div className={cn("h-2 w-2 rounded-full shrink-0", statusColor)} />
+        <span className="flex-1 font-mono text-xs text-muted-foreground truncate">
+          {delivery.event}
+        </span>
+        <Badge variant="outline" className="text-[10px] shrink-0 font-mono">
+          {delivery.responseCode ?? "—"}
+        </Badge>
+        {delivery.attempts > 1 && (
+          <Badge variant="secondary" className="text-[10px] shrink-0">
+            {delivery.attempts}x
+          </Badge>
+        )}
+        <span className="text-[10px] text-muted-foreground shrink-0">
+          {new Date(delivery.deliveredAt).toLocaleTimeString()}
+        </span>
+      </div>
+      {delivery.lastError && delivery.status === "failed" && (
+        <p className="mt-0.5 ml-5 text-[10px] text-red-500 truncate">{delivery.lastError}</p>
+      )}
     </div>
   );
 }
@@ -109,12 +120,27 @@ function WebhookCard({
     webhook.id,
     expanded,
   );
+  const sendTest = useSendTestWebhook(projectId);
 
   function handleToggle() {
     setExpanded((v) => !v);
   }
 
   const handleConfirmDelete = useCallback(() => onDelete(webhook.id), [onDelete, webhook.id]);
+
+  const handleSendTest = useCallback(() => {
+    sendTest.mutate(webhook.id, {
+      onSuccess: (result) => {
+        if (result.success) {
+          toast.success("Test delivery succeeded");
+        } else {
+          toast.error(`Test delivery failed (HTTP ${result.responseCode ?? "—"})`);
+        }
+        setExpanded(true);
+      },
+      onError: (e) => toast.error(getErrorMessage(e)),
+    });
+  }, [sendTest, webhook.id]);
 
   return (
     <motion.div
@@ -144,6 +170,15 @@ function WebhookCard({
             )}
           </div>
         </div>
+        <button
+          type="button"
+          onClick={handleSendTest}
+          disabled={sendTest.isPending}
+          aria-label="Send test webhook"
+          className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors disabled:opacity-50"
+        >
+          <Send className="h-3.5 w-3.5 text-muted-foreground" />
+        </button>
         <button
           type="button"
           onClick={handleToggle}

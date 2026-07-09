@@ -31,6 +31,7 @@ interface TableViewProps {
   onTicketClick: (ticketId: number) => void;
   projectKey?: string | null;
   projectId?: number;
+  projectStatuses?: Array<{ name: string; color: string | null; type?: string | null }>;
 }
 
 function isOverdue(ticket: Ticket): boolean {
@@ -42,7 +43,7 @@ function isOverdue(ticket: Ticket): boolean {
   return due < today;
 }
 
-export const TableView = memo(function TableView({ tickets, onTicketClick, projectKey, projectId }: TableViewProps) {
+export const TableView = memo(function TableView({ tickets, onTicketClick, projectKey, projectId, projectStatuses }: TableViewProps) {
   function handleRowClick(e: MouseEvent<HTMLTableRowElement>) {
     const id = Number(e.currentTarget.dataset.ticketId);
     if (id) onTicketClick(id);
@@ -128,6 +129,7 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
                       currentStatus={ticket.status}
                       currentPriority={ticket.priority}
                       currentAssigneeId={ticket.assignee?.id}
+                      projectStatuses={projectStatuses}
                     />
                   </TableCell>
                 </TableRow>

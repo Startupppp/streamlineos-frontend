@@ -21,7 +21,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, ExternalLink, Copy } from "lucide-react";
+import { Plus, ExternalLink } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useForm, Controller, useController } from "react-hook-form";
 import { z } from "zod";
@@ -170,8 +170,6 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
   const filteredItems = allItems.filter((item) => activeTab === "all" || item.status === activeTab);
   const pendingCount = allItems.filter((i) => i.status === "pending").length;
 
-  const formUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/intake/${projectId}`;
-
   if (isLoading) {
     return (
       <PageWrapper title="Intake" eyebrow="Project" subtitle="Collect and triage incoming requests from your team or clients">
@@ -233,14 +231,6 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
       }
     >
       <div className="space-y-4">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/40 rounded-lg px-3 py-2">
-          <ExternalLink className="h-4 w-4 shrink-0" />
-          <span className="truncate">Public form: {formUrl}</span>
-          <Button variant="ghost" size="sm" className="h-6 px-2 shrink-0" onClick={handleCopyFormUrl}>
-            <Copy className="h-3 w-3" />
-          </Button>
-        </div>
-
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
             <TabsTrigger value="pending">

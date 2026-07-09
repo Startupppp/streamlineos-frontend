@@ -197,8 +197,17 @@ export default function ProjectBoardPage({ params }: PageProps) {
 
   const statuses =
     data && "statuses" in data
-      ? (data.statuses as { id: number; name: string; color: string | null; order: number }[])
+      ? (data.statuses as { id: number; name: string; color: string | null; order: number; wipLimit?: number | null; type?: string | null }[])
       : undefined;
+
+  const wipLimits = useMemo<Record<string, number>>(() => {
+    if (!statuses) return {};
+    const result: Record<string, number> = {};
+    for (const s of statuses) {
+      if (s.wipLimit != null) result[s.name] = s.wipLimit;
+    }
+    return result;
+  }, [statuses]);
 
   const handleTicketSelect = useCallback(
     (id: number) => {
@@ -298,6 +307,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
           )}
           <TicketFilterBar
             members={members}
+            statuses={statuses}
             showSprintFilter={false}
             showDoneToggle
             hideCompleted={hideCompleted}
@@ -314,18 +324,19 @@ export default function ProjectBoardPage({ params }: PageProps) {
             projectId={projectId}
             projectKey={data.key}
             statuses={statuses}
+            wipLimits={wipLimits}
             onTicketSelect={handleTicketSelect}
           />
         </div>
       )}
       {view === "list" && (
         <div className="h-full min-h-0 overflow-y-auto px-4 pb-2 pt-0">
-          <ListView tickets={filteredTickets} onTicketClick={handleTicketSelect} groupBy="status" projectKey={data.key} />
+          <ListView tickets={filteredTickets} onTicketClick={handleTicketSelect} groupBy="status" projectKey={data.key} projectStatuses={statuses} />
         </div>
       )}
       {view === "table" && (
         <div className="h-full min-h-0 overflow-y-auto px-4 pb-2 pt-0">
-          <TableView tickets={filteredTickets} onTicketClick={handleTicketSelect} projectKey={data.key} />
+          <TableView tickets={filteredTickets} onTicketClick={handleTicketSelect} projectKey={data.key} projectStatuses={statuses} />
         </div>
       )}
       {view === "calendar" && (

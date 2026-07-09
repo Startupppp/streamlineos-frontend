@@ -28,6 +28,7 @@ interface ListViewProps {
   groupBy?: keyof Ticket;
   projectKey?: string | null;
   projectId?: number;
+  projectStatuses?: Array<{ name: string; color: string | null; type?: string | null }>;
 }
 
 const typeIcons: Record<string, typeof CheckSquare> = {
@@ -48,10 +49,11 @@ interface ListViewItemProps {
   ticket: Ticket;
   projectKey?: string | null;
   projectId?: number;
+  projectStatuses?: Array<{ name: string; color: string | null; type?: string | null }>;
   onClick: (id: number) => void;
 }
 
-const ListViewItem = memo(function ListViewItem({ ticket, projectKey, projectId, onClick }: ListViewItemProps) {
+const ListViewItem = memo(function ListViewItem({ ticket, projectKey, projectId, projectStatuses, onClick }: ListViewItemProps) {
   const TypeIcon = typeIcons[ticket.type] ?? CheckSquare;
   const handleClick = useCallback(() => onClick(ticket.id), [onClick, ticket.id]);
 
@@ -92,6 +94,7 @@ const ListViewItem = memo(function ListViewItem({ ticket, projectKey, projectId,
           currentStatus={ticket.status}
           currentPriority={ticket.priority}
           currentAssigneeId={ticket.assignee?.id}
+          projectStatuses={projectStatuses}
           className="opacity-0 group-hover:opacity-100 transition-opacity"
         />
       </div>
@@ -99,7 +102,7 @@ const ListViewItem = memo(function ListViewItem({ ticket, projectKey, projectId,
   );
 });
 
-export const ListView = memo(function ListView({ tickets, onTicketClick, groupBy, projectKey, projectId }: ListViewProps) {
+export const ListView = memo(function ListView({ tickets, onTicketClick, groupBy, projectKey, projectId, projectStatuses }: ListViewProps) {
   const grouped = useMemo(
     () =>
       groupBy
@@ -129,6 +132,7 @@ export const ListView = memo(function ListView({ tickets, onTicketClick, groupBy
                 ticket={ticket}
                 projectKey={projectKey}
                 projectId={projectId}
+                projectStatuses={projectStatuses}
                 onClick={onTicketClick}
               />
             ))}

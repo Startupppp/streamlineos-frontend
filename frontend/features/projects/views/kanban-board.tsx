@@ -41,6 +41,8 @@ interface KanbanBoardProps {
     name: string;
     color: string | null;
     order: number;
+    wipLimit?: number | null;
+    type?: string | null;
   }>;
   onTicketSelect?: (ticketId: number) => void;
   wipLimits?: Record<string, number>;
@@ -285,6 +287,7 @@ export function KanbanBoard({
                                 isDragging={draggableSnapshot.isDragging}
                                 dragStartRef={dragStartRef}
                                 onSelect={handleSelect}
+                                projectStatuses={statuses}
                               />
                             </div>
                           )}

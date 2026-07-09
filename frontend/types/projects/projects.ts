@@ -34,13 +34,15 @@ export interface Project {
   settings: ProjectSettings | null;
 }
 
-interface ProjectStatusRecord {
+export interface ProjectStatusRecord {
   id: number;
   orgId: string;
   projectId: number;
   name: string;
   order: number;
   color: string | null;
+  type?: string | null;
+  wipLimit?: number | null;
   createdAt: string | Date | null;
   updatedAt: string | Date | null;
 }
@@ -166,6 +168,9 @@ export interface IntakeRequest {
   source: IntakeSource;
   status: IntakeStatus;
   submitterEmail: string | null;
+  submitterName: string | null;
+  priority: "low" | "medium" | "high" | "urgent" | null;
+  requestType: "bug" | "feature" | "task" | "question" | "other" | null;
   linkedWorkItemId: number | null;
   declineReason: string | null;
   createdAt: string | Date | null;
@@ -328,6 +333,9 @@ export interface CreateIntakeRequestInput {
   description?: unknown;
   source?: IntakeSource;
   submitterEmail?: string;
+  submitterName?: string;
+  priority?: "low" | "medium" | "high" | "urgent";
+  requestType?: "bug" | "feature" | "task" | "question" | "other";
 }
 
 export interface UpdateIntakeRequestInput {

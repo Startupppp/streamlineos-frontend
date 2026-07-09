@@ -46,3 +46,18 @@ export function useDeleteWebhook(projectId: number) {
     onSuccess: () => qc.invalidateQueries({ queryKey: webhookKeys(projectId) }),
   });
 }
+
+export function useSendTestWebhook(projectId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["projects", projectId, "webhooks", "test"],
+    mutationFn: (webhookId: number) =>
+      apiClient.post<{ success: boolean; responseCode: number | null }>(
+        `/projects/${projectId}/webhooks/${webhookId}/test`,
+        {},
+      ),
+    onSuccess: (_data, webhookId) => {
+      void qc.invalidateQueries({ queryKey: [...webhookKeys(projectId), webhookId, "deliveries"] });
+    },
+  });
+}

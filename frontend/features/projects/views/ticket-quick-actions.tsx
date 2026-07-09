@@ -35,10 +35,9 @@ import {
   getUserDisplayName,
   getUserInitials,
 } from "@/features/projects/shared/resolve-user-name";
-import { statusConfig, priorityConfig } from "../shared/types";
+import { statusConfig, priorityConfig, buildStatusConfig, getStatusEntry } from "../shared/types";
 import type { TicketPriority } from "@/types/projects";
 
-const STATUSES = ["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"] as const;
 const PRIORITIES: TicketPriority[] = ["LOW", "MEDIUM", "HIGH", "URGENT"];
 
 interface TicketQuickActionsProps {
@@ -48,6 +47,7 @@ interface TicketQuickActionsProps {
   currentPriority?: string | null;
   currentAssigneeId?: string | null;
   className?: string;
+  projectStatuses?: Array<{ name: string; color: string | null; type?: string | null }>;
 }
 
 export function TicketQuickActions({
@@ -57,6 +57,7 @@ export function TicketQuickActions({
   currentPriority,
   currentAssigneeId,
   className,
+  projectStatuses,
 }: TicketQuickActionsProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -78,6 +79,16 @@ export function TicketQuickActions({
 
   if (!projectId) return null;
   if (!canUpdate && !canDelete) return null;
+
+  const resolvedStatusConfig =
+    projectStatuses && projectStatuses.length > 0
+      ? buildStatusConfig(projectStatuses)
+      : statusConfig;
+
+  const statusList: string[] =
+    projectStatuses && projectStatuses.length > 0
+      ? projectStatuses.map((s) => s.name)
+      : ["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"];
 
   function makeStatusHandler(status: string) {
     return function selectStatus() {
@@ -136,23 +147,26 @@ export function TicketQuickActions({
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>Change status</DropdownMenuSubTrigger>
                 <DropdownMenuSubContent className="w-44">
-                  {STATUSES.map((status) => (
-                    <DropdownMenuItem
-                      key={status}
-                      className={cn(
-                        status === currentStatus && "font-medium text-accent"
-                      )}
-                      onSelect={makeStatusHandler(status)}
-                    >
-                      <span
+                  {statusList.map((status) => {
+                    const entry = getStatusEntry(resolvedStatusConfig, status);
+                    return (
+                      <DropdownMenuItem
+                        key={status}
                         className={cn(
-                          "mr-2 inline-block h-2 w-2 rounded-full shrink-0",
-                          statusConfig[status]?.dotColor ?? "bg-muted-foreground"
+                          status === currentStatus && "font-medium text-accent"
                         )}
-                      />
-                      {statusConfig[status]?.label ?? status}
-                    </DropdownMenuItem>
-                  ))}
+                        onSelect={makeStatusHandler(status)}
+                      >
+                        <span
+                          className={cn(
+                            "mr-2 inline-block h-2 w-2 rounded-full shrink-0",
+                            entry.dotColor
+                          )}
+                        />
+                        {entry.label}
+                      </DropdownMenuItem>
+                    );
+                  })}
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
 
