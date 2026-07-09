@@ -317,6 +317,9 @@ export const queryKeys = {
     queue: () => [...base, "notifications", "queue"] as const,
     queueFailed: () => [...base, "notifications", "queueFailed"] as const,
     auditLogs: (params?: Record<string, unknown>) => [...base, "notifications", "auditLogs", params] as const,
+    providers: () => [...base, "notifications", "providers"] as const,
+    events: () => [...base, "notifications", "events"] as const,
+    policy: () => [...base, "notifications", "policy"] as const,
   },
 
   invoice: {

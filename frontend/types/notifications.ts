@@ -243,3 +243,130 @@ export interface NotificationAuditLogListResult {
   page: number;
   totalPages: number;
 }
+
+export type NotificationProviderName =
+  | "SMTP"
+  | "SENDGRID"
+  | "TWILIO"
+  | "META_WHATSAPP"
+  | "SLACK"
+  | "TEAMS"
+  | "WEBHOOK"
+  | "WEB_PUSH"
+  | "INTERNAL"
+  | "SANDBOX";
+
+export type QuietHoursBehavior = "respect" | "bypass_if_high" | "always_bypass";
+
+export interface NotificationProvider {
+  id: number;
+  orgId: string;
+  channel: NotificationChannel;
+  provider: NotificationProviderName;
+  displayName: string;
+  enabled: boolean;
+  sandboxMode: boolean;
+  isDefault: boolean;
+  dailySendLimit: number | null;
+  monthlyCostLimit: number | null;
+  healthStatus: string;
+  lastTestedAt: Date | string | null;
+  hasCredentials: boolean;
+  createdBy: string;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+
+export interface CreateProviderInput {
+  channel: NotificationChannel;
+  provider: NotificationProviderName;
+  displayName: string;
+  config?: Record<string, unknown>;
+  enabled?: boolean;
+  sandboxMode?: boolean;
+  isDefault?: boolean;
+  dailySendLimit?: number | null;
+  monthlyCostLimit?: number | null;
+}
+
+export type UpdateProviderInput = Partial<Omit<CreateProviderInput, "channel" | "provider">>;
+
+export interface TestProviderInput {
+  to?: string;
+}
+
+export interface TestProviderResult {
+  status: "SENT" | "FAILED";
+  sandbox: boolean;
+  message: string;
+  providerMessageId: string | null;
+}
+
+export interface NotificationEventDefinition {
+  eventKey: string;
+  sourceModule: string;
+  category: string;
+  displayName: string;
+  description: string;
+  defaultPriority: NotificationPriority;
+  defaultType: NotificationType;
+  defaultChannels: NotificationChannel[];
+  allowedChannels: NotificationChannel[];
+  mandatory: boolean;
+  userConfigurable: boolean;
+  adminConfigurable: boolean;
+  quietHoursBehavior: QuietHoursBehavior;
+  dedupeWindowSeconds: number;
+  rateLimitWindowSeconds: number;
+  rateLimitMax: number;
+  templateKey?: string;
+  audienceResolver?: string;
+  enabled: boolean;
+  overridden: boolean;
+}
+
+export interface UpdateEventPolicyInput {
+  enabled?: boolean;
+  defaultPriority?: NotificationPriority;
+  defaultChannels?: NotificationChannel[];
+  allowedChannels?: NotificationChannel[];
+  mandatory?: boolean;
+  userConfigurable?: boolean;
+  quietHoursBehavior?: QuietHoursBehavior;
+  dedupeWindowSeconds?: number;
+  rateLimitWindowSeconds?: number;
+  rateLimitMax?: number;
+}
+
+export type PolicyScopeType = "ORG" | "ROLE" | "DEPARTMENT" | "TEAM" | "PROJECT";
+
+export interface PolicyOverride {
+  channels?: NotificationChannel[];
+  muted?: boolean;
+}
+
+export interface NotificationPolicyDefault {
+  id: number;
+  orgId: string;
+  scopeType: PolicyScopeType;
+  scopeId: string | null;
+  defaultChannels: NotificationChannel[];
+  eventOverrides: Record<string, PolicyOverride>;
+  categoryOverrides: Record<string, PolicyOverride>;
+  moduleOverrides: Record<string, PolicyOverride>;
+  canUserOverride: boolean;
+  resolutionOrder: number;
+  createdBy: string | null;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+
+export interface UpsertPolicyInput {
+  scopeType?: PolicyScopeType;
+  scopeId?: string | null;
+  defaultChannels?: NotificationChannel[];
+  eventOverrides?: Record<string, PolicyOverride>;
+  categoryOverrides?: Record<string, PolicyOverride>;
+  moduleOverrides?: Record<string, PolicyOverride>;
+  canUserOverride?: boolean;
+}

@@ -6,6 +6,7 @@ import { KB_PERMISSIONS } from "./kb";
 import { INVENTORY_PERMISSIONS } from "./inventory";
 import { SURVEYS_PERMISSIONS } from "./surveys";
 import { FEEDBUCKET_PERMISSIONS } from "./feedbucket";
+import { NOTIFICATIONS_PERMISSIONS } from "./notifications";
 import { ROLES } from "@/lib/constants/roles";
 
 export const PERMISSIONS = [
@@ -17,6 +18,7 @@ export const PERMISSIONS = [
   ...INVENTORY_PERMISSIONS,
   ...SURVEYS_PERMISSIONS,
   ...FEEDBUCKET_PERMISSIONS,
+  ...NOTIFICATIONS_PERMISSIONS,
 ];
 
 const EMPLOYEE_SELF_SERVICE = [
