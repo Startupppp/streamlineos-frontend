@@ -14,6 +14,7 @@ import { SkeletonTable } from "@/components/shared/skeletons/skeleton-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -23,6 +24,8 @@ import { PortfolioStatusBadge, PortfolioHealthBadge } from "./portfolio-status-b
 import { PortfolioFormSheet } from "./portfolio-form-sheet";
 import type { UpdatePortfolioInput } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
+
+type PortfolioTab = "projects" | "programs";
 
 interface Props {
   portfolioId: number;

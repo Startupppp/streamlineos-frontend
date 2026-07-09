@@ -78,3 +78,29 @@ export function useDeleteGitConnection() {
   });
 }
 
+export type GitRefType = "commit" | "pull_request" | "branch";
+
+export interface TicketGitLink {
+  id: number;
+  provider: GitProvider;
+  refType: GitRefType;
+  externalId: string;
+  title: string | null;
+  url: string | null;
+  author: string | null;
+  status: string | null;
+  createdAt: string;
+}
+
+export function useTicketGitLinks(projectId: number, ticketId: number) {
+  return useQuery({
+    queryKey: queryKeys.gitIntegration.ticketLinks(ticketId),
+    queryFn: () =>
+      apiClient.get<TicketGitLink[]>(
+        `/projects/${projectId}/tickets/${ticketId}/git-links`,
+      ),
+    enabled: !!projectId && !!ticketId,
+    staleTime: 30_000,
+  });
+}
+

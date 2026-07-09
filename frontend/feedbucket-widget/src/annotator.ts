@@ -61,13 +61,30 @@ function icon(paths: string[], circles?: Array<[number, number, number]>): SVGSV
   return svg;
 }
 
+function filledRectIcon(): SVGSVGElement {
+  const svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("width", "18");
+  svg.setAttribute("height", "18");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("fill", "currentColor");
+  svg.setAttribute("stroke", "none");
+  const rect = document.createElementNS(NS, "rect");
+  rect.setAttribute("x", "3");
+  rect.setAttribute("y", "3");
+  rect.setAttribute("width", "18");
+  rect.setAttribute("height", "18");
+  rect.setAttribute("rx", "2");
+  svg.appendChild(rect);
+  return svg;
+}
+
 const TOOL_ICONS: Record<Tool | "undo" | "close", () => SVGSVGElement> = {
   arrow: () => icon(["M7 17L17 7", "M8 7h9v9"]),
-  rect: () => icon(["M4 4h16v16H4z"]),
-  "rect-outline": () => icon(["M5 5h14v14H5z"]),
+  rect: filledRectIcon,
+  "rect-outline": () => icon(["M4 4h16v16H4z"]),
   pen: () => icon(["M12 19l7-7 3 3-7 7-3-3z", "M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z", "M2 2l7.586 7.586"]),
   comment: () => icon(["M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"]),
-  undo: () => icon(["M3 7v6h6", "M3.51 15a9 9 0 1 0 2.13-9.36L3 7"]),
+  undo: () => icon(["M2.5 8a9.5 9.5 0 1 1 0 8", "M2.5 2v6h6"]),
   close: () => icon(["M18 6L6 18", "M6 6l12 12"]),
 };
 

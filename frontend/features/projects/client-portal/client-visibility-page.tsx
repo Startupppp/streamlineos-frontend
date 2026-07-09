@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useClientVisibility, useUpdateTicketVisibility, useUpdateMilestoneVisibility } from "@/hooks/api/projects/client-portal";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -7,9 +8,12 @@ import { ErrorState } from "@/components/shared/error-state";
 import { SkeletonTable } from "@/components/shared/skeletons/skeleton-table";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Info } from "lucide-react";
 import { toast } from "sonner";
 import type { ClientVisibilityTicket, ClientVisibilityMilestone } from "@/types/projects";
+
+type VisibilityTab = "tickets" | "milestones";
 
 interface ClientVisibilityPageProps { projectId: number }
 
@@ -61,6 +65,14 @@ function MilestoneRow({ milestone, projectId }: { milestone: ClientVisibilityMil
 
 export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
   const { data, isLoading, isError, refetch } = useClientVisibility(projectId);
+  const [activeTab, setActiveTab] = useState<VisibilityTab>("tickets");
+
+  const ticketCount = data?.tickets.length ?? 0;
+  const milestoneCount = data?.milestones.length ?? 0;
+
+  function handleTabChange(value: string) {
+    setActiveTab(value as VisibilityTab);
+  }
 
   return (
     <PageWrapper
@@ -68,7 +80,7 @@ export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
       title="Client Portal"
       subtitle="Control what clients see in their portal"
     >
-      <div className="px-4 pb-4 space-y-6">
+      <div className="px-4 pb-4 space-y-4">
         <div className="flex items-start gap-2.5 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/40 px-4 py-3">
           <Info className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
           <p className="text-[11px] text-blue-700 dark:text-blue-300 leading-relaxed">
@@ -81,11 +93,23 @@ export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
         ) : isError ? (
           <ErrorState onRetry={refetch} />
         ) : (
-          <>
-            <section>
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 px-1">
+          <Tabs value={activeTab} onValueChange={handleTabChange}>
+            <TabsList>
+              <TabsTrigger value="tickets">
                 Tickets
-              </h2>
+                {ticketCount > 0 && (
+                  <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">{ticketCount}</Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="milestones">
+                Milestones
+                {milestoneCount > 0 && (
+                  <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">{milestoneCount}</Badge>
+                )}
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="tickets">
               {(data?.tickets ?? []).length === 0 ? (
                 <EmptyState
                   illustrationPreset="ticket"
@@ -107,12 +131,9 @@ export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
                   ))}
                 </div>
               )}
-            </section>
+            </TabsContent>
 
-            <section>
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 px-1">
-                Milestones
-              </h2>
+            <TabsContent value="milestones">
               {(data?.milestones ?? []).length === 0 ? (
                 <EmptyState
                   illustrationPreset="calendar"
@@ -132,8 +153,8 @@ export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
                   ))}
                 </div>
               )}
-            </section>
-          </>
+            </TabsContent>
+          </Tabs>
         )}
       </div>
     </PageWrapper>

@@ -8,6 +8,7 @@ import { StatusBadge } from "../shared/status-badge";
 import { TicketSidebar } from "./ticket-sidebar";
 import { TicketTimeTracker } from "./ticket-time-tracker";
 import { WatcherList } from "./watcher-list";
+import { TicketGitLinks } from "./ticket-git-links";
 import type { ProjectMember } from "./types";
 import type { RecurrenceRule } from "@/hooks/api/projects/recurring";
 
@@ -120,6 +121,7 @@ export function TicketDetailRightPanel({
         />
 
         <div className="space-y-4 border-t border-border bg-card px-4 py-3">
+          <TicketGitLinks projectId={projectId} ticketId={ticketId} />
           <TicketTimeTracker
             ticketId={ticketId}
             projectId={projectId}

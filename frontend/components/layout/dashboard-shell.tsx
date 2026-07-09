@@ -15,6 +15,7 @@ import { ProductSwitcherMenu } from "./header/product-switcher-menu"
 import { WorkspaceSwitcher } from "./header/workspace-switcher"
 import { useProductSidebarVisibility } from "./sidebar/use-product-sidebar-visibility"
 import { GlobalAskOs } from "@/components/assistant/global-ask-os"
+import { CommandPaletteProvider } from "@/features/command-palette"
 
 const SuccessChecklist = dynamic(
   () =>

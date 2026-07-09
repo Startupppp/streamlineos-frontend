@@ -16,6 +16,7 @@ import {
   Zap,
   Target,
   Boxes,
+  RotateCcw,
 } from "lucide-react";
 
 interface Epic {
@@ -26,6 +27,12 @@ interface Epic {
 interface Module {
   id: number;
   name: string;
+}
+
+interface Cycle {
+  id: number;
+  name: string;
+  status: string;
 }
 
 interface Sprint {
@@ -49,11 +56,13 @@ export interface SidebarSelectFieldsProps {
     sprintId?: number | null;
     epicId?: number | null;
     moduleId?: number | null;
+    cycleId?: number | null;
   };
   statuses?: Status[];
   sprints: Sprint[];
   epics: Epic[];
   modules: Module[];
+  cycles: Cycle[];
   onStatusChange: (v: string) => void;
   onPriorityChange: (v: string) => void;
   onTypeChange: (v: string) => void;
@@ -61,6 +70,7 @@ export interface SidebarSelectFieldsProps {
   onSprintChange: (v: string) => void;
   onEpicChange: (v: string) => void;
   onModuleChange: (v: string) => void;
+  onCycleChange: (v: string) => void;
 }
 
 export function SidebarSelectFields({
@@ -69,6 +79,7 @@ export function SidebarSelectFields({
   sprints,
   epics,
   modules,
+  cycles,
   onStatusChange,
   onPriorityChange,
   onTypeChange,
@@ -76,6 +87,7 @@ export function SidebarSelectFields({
   onSprintChange,
   onEpicChange,
   onModuleChange,
+  onCycleChange,
 }: SidebarSelectFieldsProps) {
   return (
     <>

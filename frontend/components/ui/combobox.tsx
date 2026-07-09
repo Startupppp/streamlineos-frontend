@@ -33,6 +33,7 @@ interface ComboboxProps {
   emptyText?: string;
   disabled?: boolean;
   className?: string;
+  onSearchChange?: (search: string) => void;
 }
 
 export function Combobox({
@@ -44,14 +45,17 @@ export function Combobox({
   emptyText = "No results found.",
   disabled = false,
   className,
+  onSearchChange,
 }: ComboboxProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
 
-  const filtered = options.filter((opt) => {
-    const haystack = `${opt.label} ${opt.sublabel ?? ""}`.toLowerCase();
-    return haystack.includes(search.toLowerCase());
-  });
+  const filtered = onSearchChange
+    ? options
+    : options.filter((opt) => {
+        const haystack = `${opt.label} ${opt.sublabel ?? ""}`.toLowerCase();
+        return haystack.includes(search.toLowerCase());
+      });
 
   const selected = options.find((o) => o.value === value);
 
@@ -60,14 +64,29 @@ export function Combobox({
       onChange(v);
       setOpen(false);
       setSearch("");
+      onSearchChange?.("");
     },
-    [onChange],
+    [onChange, onSearchChange],
   );
 
-  const handleOpenChange = useCallback((next: boolean) => {
-    setOpen(next);
-    if (!next) setSearch("");
-  }, []);
+  const handleOpenChange = useCallback(
+    (next: boolean) => {
+      setOpen(next);
+      if (!next) {
+        setSearch("");
+        onSearchChange?.("");
+      }
+    },
+    [onSearchChange],
+  );
+
+  const handleSearchInput = useCallback(
+    (v: string) => {
+      setSearch(v);
+      onSearchChange?.(v);
+    },
+    [onSearchChange],
+  );
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
@@ -97,7 +116,7 @@ export function Combobox({
           <CommandInput
             placeholder={searchPlaceholder}
             value={search}
-            onValueChange={setSearch}
+            onValueChange={handleSearchInput}
           />
           <CommandList className="max-h-52 overflow-y-auto overscroll-contain">
             <CommandEmpty>{emptyText}</CommandEmpty>

@@ -184,6 +184,7 @@ export interface UpdateTicketInput {
   sprintId?: number | null;
   epicId?: number | null;
   moduleId?: number | null;
+  cycleId?: number | null;
   points?: number | null;
   originalEstimate?: number | null;
   startDate?: string | null;
