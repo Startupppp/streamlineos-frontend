@@ -12,21 +12,41 @@ import {
   Settings,
   Megaphone,
   Bell,
+  MessageSquare,
+  Banknote,
+  UserPlus,
+  BookOpen,
+  PenLine,
+  Package,
+  ClipboardList,
+  Calendar,
+  LifeBuoy,
   type LucideIcon,
 } from "lucide-react";
 
 export type NotificationType = "INFO" | "SUCCESS" | "WARNING" | "ERROR";
 export type NotificationPriority = "LOW" | "NORMAL" | "HIGH" | "CRITICAL";
-export type NotificationCategory =
-  | "SECURITY"
-  | "CRM"
-  | "HRMS"
-  | "BILLING"
-  | "AI"
-  | "PROJECTS"
-  | "WORKFLOW"
-  | "MARKETING"
-  | "SYSTEM";
+export const NOTIFICATION_CATEGORY_VALUES = [
+  "SECURITY",
+  "CRM",
+  "HRMS",
+  "BILLING",
+  "AI",
+  "PROJECTS",
+  "WORKFLOW",
+  "MARKETING",
+  "SYSTEM",
+  "CHAT",
+  "PAYROLL",
+  "RECRUITMENT",
+  "KNOWLEDGE",
+  "SIGN",
+  "INVENTORY",
+  "SURVEYS",
+  "CALENDAR",
+  "SUPPORT",
+] as const;
+export type NotificationCategory = (typeof NOTIFICATION_CATEGORY_VALUES)[number];
 export type NotificationSection =
   | "ALL"
   | "UNREAD"
@@ -143,6 +163,60 @@ export const NOTIFICATION_CATEGORY_CONFIG: Record<
     color: "text-slate-600",
     bg: "bg-slate-500/10",
   },
+  CHAT: {
+    label: "Chat",
+    icon: MessageSquare,
+    color: "text-sky-600",
+    bg: "bg-sky-500/10",
+  },
+  PAYROLL: {
+    label: "Payroll",
+    icon: Banknote,
+    color: "text-green-600",
+    bg: "bg-green-500/10",
+  },
+  RECRUITMENT: {
+    label: "Recruitment",
+    icon: UserPlus,
+    color: "text-teal-600",
+    bg: "bg-teal-500/10",
+  },
+  KNOWLEDGE: {
+    label: "Knowledge",
+    icon: BookOpen,
+    color: "text-cyan-600",
+    bg: "bg-cyan-500/10",
+  },
+  SIGN: {
+    label: "Sign",
+    icon: PenLine,
+    color: "text-amber-600",
+    bg: "bg-amber-500/10",
+  },
+  INVENTORY: {
+    label: "Inventory",
+    icon: Package,
+    color: "text-orange-600",
+    bg: "bg-orange-500/10",
+  },
+  SURVEYS: {
+    label: "Surveys",
+    icon: ClipboardList,
+    color: "text-fuchsia-600",
+    bg: "bg-fuchsia-500/10",
+  },
+  CALENDAR: {
+    label: "Calendar",
+    icon: Calendar,
+    color: "text-rose-600",
+    bg: "bg-rose-500/10",
+  },
+  SUPPORT: {
+    label: "Support",
+    icon: LifeBuoy,
+    color: "text-lime-600",
+    bg: "bg-lime-500/10",
+  },
 };
 
 interface PriorityConfig {
@@ -182,17 +256,7 @@ export const SECTION_TABS: Array<{ value: NotificationSection; label: string }> 
   { value: "SYSTEM", label: "System" },
 ];
 
-export const NOTIFICATION_CATEGORIES: NotificationCategory[] = [
-  "SECURITY",
-  "CRM",
-  "HRMS",
-  "BILLING",
-  "AI",
-  "PROJECTS",
-  "WORKFLOW",
-  "MARKETING",
-  "SYSTEM",
-];
+export const NOTIFICATION_CATEGORIES: NotificationCategory[] = [...NOTIFICATION_CATEGORY_VALUES];
 
 export const NOTIFICATION_PRIORITIES: NotificationPriority[] = [
   "LOW",

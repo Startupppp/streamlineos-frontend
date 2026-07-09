@@ -9,7 +9,16 @@ export type NotificationCategory =
   | "PROJECTS"
   | "WORKFLOW"
   | "MARKETING"
-  | "SYSTEM";
+  | "SYSTEM"
+  | "CHAT"
+  | "PAYROLL"
+  | "RECRUITMENT"
+  | "KNOWLEDGE"
+  | "SIGN"
+  | "INVENTORY"
+  | "SURVEYS"
+  | "CALENDAR"
+  | "SUPPORT";
 export type NotificationSection =
   | "ALL"
   | "UNREAD"

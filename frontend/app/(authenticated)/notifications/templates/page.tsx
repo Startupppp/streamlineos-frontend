@@ -49,6 +49,7 @@ import {
 import {
   NOTIFICATION_CATEGORIES,
   NOTIFICATION_CATEGORY_CONFIG,
+  NOTIFICATION_CATEGORY_VALUES,
 } from "@/features/notifications/notification-types";
 import type { NotificationTemplate, NotificationChannel } from "@/types/notifications";
 
@@ -69,7 +70,7 @@ const templateSchema = z.object({
   templateKey: z.string().min(1).regex(/^[a-z0-9_.-]+$/, "Lowercase letters, numbers, dashes, dots only"),
   name: z.string().min(1, "Name is required"),
   channel: z.enum(["IN_APP", "EMAIL", "PUSH", "SMS", "WHATSAPP", "SLACK", "TEAMS", "WEBHOOK"]),
-  category: z.enum(["SECURITY", "CRM", "HRMS", "BILLING", "AI", "PROJECTS", "WORKFLOW", "MARKETING", "SYSTEM", "none"]).optional(),
+  category: z.union([z.enum(NOTIFICATION_CATEGORY_VALUES), z.literal("none")]).optional(),
   locale: z.string().min(1),
   subject: z.string().optional(),
   body: z.string().min(1, "Body is required"),

@@ -22,6 +22,7 @@ export interface GitConnection {
 export interface CreatedGitConnection {
   id: number;
   provider: GitProvider;
+  projectId: number | null;
   repoUrl: string;
   repoName: string | null;
   isActive: boolean;

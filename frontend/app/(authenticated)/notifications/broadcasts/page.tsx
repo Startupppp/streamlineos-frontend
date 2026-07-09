@@ -45,6 +45,7 @@ import {
 import {
   NOTIFICATION_CATEGORIES,
   NOTIFICATION_CATEGORY_CONFIG,
+  NOTIFICATION_CATEGORY_VALUES,
   NOTIFICATION_PRIORITIES,
   NOTIFICATION_PRIORITY_CONFIG,
 } from "@/features/notifications/notification-types";
@@ -74,7 +75,7 @@ const broadcastSchema = z.object({
   message: z.string().min(1, "Message is required"),
   type: z.enum(["INFO", "SUCCESS", "WARNING", "ERROR"]),
   priority: z.enum(["LOW", "NORMAL", "HIGH", "CRITICAL"]),
-  category: z.enum(["SECURITY", "CRM", "HRMS", "BILLING", "AI", "PROJECTS", "WORKFLOW", "MARKETING", "SYSTEM"]),
+  category: z.enum(NOTIFICATION_CATEGORY_VALUES),
   audienceType: z.enum(["all", "roles", "departments", "users"]),
   scheduledAt: z.string().optional(),
 });
