@@ -143,7 +143,7 @@ export function AskOsConversationList({
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem data-id={String(conv.id)} onClick={handleMenuRename}>Rename</DropdownMenuItem>
-                            <DropdownMenuItem data-id={String(conv.id)} onClick={handleMenuDelete} className="text-destructive focus:text-destructive">Delete</DropdownMenuItem>
+                            <DropdownMenuItem variant="destructive" data-id={String(conv.id)} onClick={handleMenuDelete}>Delete</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>

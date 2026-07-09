@@ -172,8 +172,7 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                className="text-destructive"
+              <DropdownMenuItem variant="destructive"
                 onSelect={() => setDeleteTarget(row)}
               >
                 Delete

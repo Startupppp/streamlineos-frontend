@@ -7,8 +7,6 @@ export const NOTIFICATIONS_PERMISSIONS: Permission[] = [
   { name: "notifications:providers:manage", resource: "notifications:providers", action: "manage", description: "Configure, test, and remove notification providers" },
   { name: "notifications:policy:view", resource: "notifications:policy", action: "view", description: "View notification policy defaults" },
   { name: "notifications:policy:manage", resource: "notifications:policy", action: "manage", description: "Set organization notification policy defaults" },
-  { name: "notifications:queue:view", resource: "notifications:queue", action: "view", description: "View the notification delivery queue" },
-  { name: "notifications:queue:manage", resource: "notifications:queue", action: "manage", description: "Retry and cancel notification deliveries" },
   { name: "notifications:templates:view", resource: "notifications:templates", action: "view", description: "View notification templates" },
   { name: "notifications:templates:manage", resource: "notifications:templates", action: "manage", description: "Create, edit, and delete notification templates" },
   { name: "notifications:broadcasts:view", resource: "notifications:broadcasts", action: "view", description: "View broadcasts" },

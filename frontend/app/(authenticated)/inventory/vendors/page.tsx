@@ -67,7 +67,8 @@ function VendorRowActions({ vendor }: { vendor: InventoryVendor }) {
         <DropdownMenuItem
           onClick={handleToggleActive}
           disabled={toggleMutation.isPending}
-          className={!vendor.isActive ? "text-emerald-600" : "text-destructive"}
+          variant={vendor.isActive ? "destructive" : "default"}
+          className={!vendor.isActive ? "text-emerald-600" : undefined}
         >
           {vendor.isActive ? "Deactivate" : "Activate"}
         </DropdownMenuItem>

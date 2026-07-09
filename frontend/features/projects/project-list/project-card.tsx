@@ -185,9 +185,8 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
                       {canDelete && (
                         <>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem
+                          <DropdownMenuItem variant="destructive"
                             onClick={handleDeleteClick}
-                            className="text-destructive focus:text-destructive"
                           >
                             <Trash2 className="mr-2 h-3.5 w-3.5" />
                             Delete project

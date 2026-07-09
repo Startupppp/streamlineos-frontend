@@ -184,8 +184,7 @@ export function TransitionsTable({ projectId, statuses }: TransitionsTableProps)
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => handleEditClick(row)}>Edit</DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="text-destructive"
+                  <DropdownMenuItem variant="destructive"
                     onClick={() => setDeleteTarget(row)}
                   >
                     Delete

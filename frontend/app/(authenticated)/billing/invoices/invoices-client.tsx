@@ -96,12 +96,12 @@ function InvoiceActionsCell({ inv, onUpdateStatus, onDelete }: InvoiceActionsCel
           </DropdownMenuItem>
         )}
         {inv.status !== "PAID" && inv.status !== "VOIDED" && (
-          <DropdownMenuItem onClick={handleMarkVoided} className="text-destructive">
+          <DropdownMenuItem variant="destructive" onClick={handleMarkVoided}>
             <Ban className="h-3.5 w-3.5 mr-2" /> Void
           </DropdownMenuItem>
         )}
         {inv.status !== "PAID" && (
-          <DropdownMenuItem onClick={handleDelete} className="text-destructive">
+          <DropdownMenuItem variant="destructive" onClick={handleDelete}>
             <Trash2 className="h-3.5 w-3.5 mr-2" /> Delete
           </DropdownMenuItem>
         )}

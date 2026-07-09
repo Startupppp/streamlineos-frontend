@@ -175,7 +175,7 @@ function ProductRowActions({ product }: { product: InventoryProduct }) {
             <DropdownMenuItem onClick={handleRestore}>Restore</DropdownMenuItem>
           )}
           <AlertDialogTrigger asChild>
-            <DropdownMenuItem className="text-destructive focus:text-destructive">
+            <DropdownMenuItem variant="destructive">
               Delete
             </DropdownMenuItem>
           </AlertDialogTrigger>

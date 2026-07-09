@@ -209,9 +209,8 @@ export const ProjectListRow = React.memo(function ProjectListRow({ project }: Pr
               {canDelete && (
                 <>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem
+                  <DropdownMenuItem variant="destructive"
                     onClick={handleDeleteClick}
-                    className="text-destructive focus:text-destructive"
                   >
                     <Trash2 className="h-3.5 w-3.5 mr-2" />
                     Delete project

@@ -71,9 +71,8 @@ export function TableDropdown() {
           Delete column
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem
+        <DropdownMenuItem variant="destructive"
           onClick={handleDeleteTable}
-          className="text-destructive focus:text-destructive"
         >
           Delete table
         </DropdownMenuItem>

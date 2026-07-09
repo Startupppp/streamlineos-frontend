@@ -2,11 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-const PREFS_KEY_PREFIX = "streamlineos:project-sidebar:prefs:v1";
-
-function buildKey(userId: string): string {
-  return `${PREFS_KEY_PREFIX}:${userId}`;
-}
+const PREFS_KEY = "streamlineos:project-sidebar:prefs:v1";
 
 export interface ProjectSidebarPrefs {
   hiddenItems: string[];
@@ -16,9 +12,9 @@ const DEFAULT_PREFS: ProjectSidebarPrefs = {
   hiddenItems: [],
 };
 
-function loadPrefs(userId: string): ProjectSidebarPrefs {
+function loadPrefs(): ProjectSidebarPrefs {
   try {
-    const raw = localStorage.getItem(buildKey(userId));
+    const raw = localStorage.getItem(PREFS_KEY);
     if (!raw) return { ...DEFAULT_PREFS };
     const parsed = JSON.parse(raw) as Record<string, unknown>;
     return {
@@ -31,47 +27,38 @@ function loadPrefs(userId: string): ProjectSidebarPrefs {
   }
 }
 
-function savePrefs(userId: string, prefs: ProjectSidebarPrefs): void {
+function savePrefs(prefs: ProjectSidebarPrefs): void {
   try {
-    localStorage.setItem(buildKey(userId), JSON.stringify(prefs));
+    localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
   } catch {}
 }
 
-export function useProjectSidebarPrefs(userId: string | undefined): {
+export function useProjectSidebarPrefs(): {
   hiddenItems: ReadonlySet<string>;
   toggleItem: (itemLabel: string) => void;
   resetPrefs: () => void;
 } {
-  const [prefs, setPrefs] = useState<ProjectSidebarPrefs>(() => {
-    if (typeof window === "undefined" || !userId) return { ...DEFAULT_PREFS };
-    return loadPrefs(userId);
-  });
+  const [prefs, setPrefs] = useState<ProjectSidebarPrefs>(DEFAULT_PREFS);
 
   useEffect(() => {
-    if (!userId) return;
-    setPrefs(loadPrefs(userId));
-  }, [userId]);
+    setPrefs(loadPrefs());
+  }, []);
 
-  const toggleItem = useCallback(
-    (itemLabel: string) => {
-      if (!userId) return;
-      setPrefs((prev) => {
-        const next: ProjectSidebarPrefs = prev.hiddenItems.includes(itemLabel)
-          ? { ...prev, hiddenItems: prev.hiddenItems.filter((l) => l !== itemLabel) }
-          : { ...prev, hiddenItems: [...prev.hiddenItems, itemLabel] };
-        savePrefs(userId, next);
-        return next;
-      });
-    },
-    [userId],
-  );
+  const toggleItem = useCallback((itemLabel: string) => {
+    setPrefs((prev) => {
+      const next: ProjectSidebarPrefs = prev.hiddenItems.includes(itemLabel)
+        ? { ...prev, hiddenItems: prev.hiddenItems.filter((l) => l !== itemLabel) }
+        : { ...prev, hiddenItems: [...prev.hiddenItems, itemLabel] };
+      savePrefs(next);
+      return next;
+    });
+  }, []);
 
   const resetPrefs = useCallback(() => {
-    if (!userId) return;
     const next = { ...DEFAULT_PREFS };
-    savePrefs(userId, next);
+    savePrefs(next);
     setPrefs(next);
-  }, [userId]);
+  }, []);
 
   return {
     hiddenItems: new Set(prefs.hiddenItems),

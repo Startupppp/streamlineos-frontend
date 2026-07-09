@@ -42,21 +42,6 @@ const ADMIN_TABS: Array<NavTab & { permission: PermissionKey }> = [
     label: "Policy",
     permission: "notifications:policy:view",
   },
-  {
-    href: "/notifications/queue",
-    label: "Queue",
-    permission: "notifications:queue:view",
-  },
-  {
-    href: "/notifications/analytics",
-    label: "Analytics",
-    permission: "notifications:analytics:view",
-  },
-  {
-    href: "/notifications/audit",
-    label: "Audit",
-    permission: "notifications:audit:view",
-  },
 ];
 
 function isTabActive(pathname: string, href: string): boolean {
@@ -93,9 +78,6 @@ export function NotificationsNav() {
     "notifications:providers:view": useCan("notifications:providers:view"),
     "notifications:events:view": useCan("notifications:events:view"),
     "notifications:policy:view": useCan("notifications:policy:view"),
-    "notifications:queue:view": useCan("notifications:queue:view"),
-    "notifications:analytics:view": useCan("notifications:analytics:view"),
-    "notifications:audit:view": useCan("notifications:audit:view"),
   };
 
   const visibleAdmin = ADMIN_TABS.filter(

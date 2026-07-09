@@ -123,7 +123,7 @@ export function ProgramDetailPage({ programId }: Props) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => setEditOpen(true)}>Edit Program</DropdownMenuItem>
-            <DropdownMenuItem className="text-red-600" onClick={() => setDeleteOpen(true)}>Delete Program</DropdownMenuItem>
+            <DropdownMenuItem variant="destructive" onClick={() => setDeleteOpen(true)}>Delete Program</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       ) : undefined}

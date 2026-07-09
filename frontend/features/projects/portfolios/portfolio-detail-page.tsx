@@ -120,7 +120,7 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => setEditOpen(true)}>Edit Portfolio</DropdownMenuItem>
-            <DropdownMenuItem className="text-red-600" onClick={() => setDeleteOpen(true)}>Delete Portfolio</DropdownMenuItem>
+            <DropdownMenuItem variant="destructive" onClick={() => setDeleteOpen(true)}>Delete Portfolio</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       ) : undefined}

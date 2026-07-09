@@ -157,9 +157,8 @@ export function TaskRow({
             <Pencil className="h-3.5 w-3.5" />
             Edit
           </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={handleDelete}
-            className="text-xs gap-2 text-red-600 focus:text-red-600"
+          <DropdownMenuItem variant="destructive"
+            onClick={handleDelete} className="text-xs gap-2"
           >
             <Trash2 className="h-3.5 w-3.5" />
             Delete

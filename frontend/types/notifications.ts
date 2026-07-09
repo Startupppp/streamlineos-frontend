@@ -199,60 +199,6 @@ export interface UpdatePreferencesInput {
   channelCategories?: Record<string, Record<string, boolean>>;
 }
 
-export interface NotificationAnalyticsOverview {
-  total: number;
-  delivered: number;
-  read: number;
-  archived: number;
-  readRate: number;
-  deliveryRate: number;
-  days: number;
-}
-
-export interface NotificationAnalyticsByCategory {
-  category: string;
-  total: number;
-  read: number;
-  readRate: number;
-}
-
-export interface NotificationAnalyticsByPriority {
-  priority: string;
-  total: number;
-  read: number;
-  readRate: number;
-}
-
-export interface NotificationAnalyticsByChannel {
-  channel: string;
-  total: number;
-  read: number;
-  archived: number;
-  readRate: number;
-}
-
-export interface NotificationAuditLog {
-  id: number;
-  notificationId: number | null;
-  broadcastId: number | null;
-  actorId: string | null;
-  actorName: string | null;
-  actorEmail: string | null;
-  action: string;
-  sourceModule: string | null;
-  channel: string | null;
-  metadata: Record<string, unknown> | null;
-  ipAddress: string | null;
-  createdAt: Date | string;
-}
-
-export interface NotificationAuditLogListResult {
-  logs: NotificationAuditLog[];
-  total: number;
-  page: number;
-  totalPages: number;
-}
-
 export type NotificationProviderName =
   | "SMTP"
   | "SENDGRID"

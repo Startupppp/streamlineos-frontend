@@ -156,7 +156,7 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onSelect={() => handleEdit(row)}>Edit</DropdownMenuItem>
-              <DropdownMenuItem className="text-destructive" onSelect={() => setDeleteTarget(row)}>
+              <DropdownMenuItem variant="destructive" onSelect={() => setDeleteTarget(row)}>
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>

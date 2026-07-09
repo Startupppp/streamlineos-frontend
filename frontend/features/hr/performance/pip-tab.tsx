@@ -239,7 +239,7 @@ export function PIPTab() {
                             <DropdownMenuItem onClick={() => handleUpdateStatus(pip.id, "EXTENDED")}>
                               <Calendar className="h-3.5 w-3.5 mr-1.5" />Extend
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive" onClick={() => handleUpdateStatus(pip.id, "TERMINATED")}>
+                            <DropdownMenuItem variant="destructive" onClick={() => handleUpdateStatus(pip.id, "TERMINATED")}>
                               <Trash2 className="h-3.5 w-3.5 mr-1.5" />Terminate
                             </DropdownMenuItem>
                           </>

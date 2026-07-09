@@ -90,7 +90,7 @@ export function QuoteRowActions({
         {canDelete && (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-red-600" onClick={handleDelete}>
+            <DropdownMenuItem variant="destructive" onClick={handleDelete}>
               <Trash2 className="h-3.5 w-3.5 mr-2" />
               Delete
             </DropdownMenuItem>

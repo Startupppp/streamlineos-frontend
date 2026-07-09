@@ -97,7 +97,7 @@ export function DealKanbanCard({ deal, onStageChange, onDelete, onOpen }: DealKa
                   onStageChange={onStageChange}
                 />
               ))}
-              <DropdownMenuItem className="text-destructive" onClick={handleDelete}>
+              <DropdownMenuItem variant="destructive" onClick={handleDelete}>
                 <Trash2 className="h-3.5 w-3.5 mr-2" />
                 Delete
               </DropdownMenuItem>

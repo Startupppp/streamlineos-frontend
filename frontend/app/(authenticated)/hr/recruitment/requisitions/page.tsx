@@ -539,7 +539,7 @@ function RequisitionCard({
                   <DropdownMenuItem onClick={handleApproveClick} disabled={isApproving}>
                     <CheckCircle2 className="mr-2 h-3.5 w-3.5 text-emerald-600" /> Approve
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleRejectClick} className="text-destructive focus:text-destructive">
+                  <DropdownMenuItem variant="destructive" onClick={handleRejectClick}>
                     <XCircle className="mr-2 h-3.5 w-3.5" /> Reject
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />

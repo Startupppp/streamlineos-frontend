@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import {
   SidebarAnimatedNavIcon,
@@ -389,11 +388,9 @@ function DesktopSidebar({
     if (typeof window === "undefined") return false;
     return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true";
   });
-  const { data: session } = useSession();
-  const userId = session?.user?.id;
   const baseUrl = `/projects/${projectId}`;
   const allSections = useSidebarSections(baseUrl);
-  const { hiddenItems, toggleItem, resetPrefs } = useProjectSidebarPrefs(userId);
+  const { hiddenItems, toggleItem, resetPrefs } = useProjectSidebarPrefs();
   const visibleSections = applyHiddenItems(allSections, hiddenItems);
   const isActive = useIsActive(baseUrl);
 
@@ -499,11 +496,9 @@ function MobileProjectNav({
   projectKey,
 }: ProjectSidebarProps) {
   const [open, setOpen] = useState(false);
-  const { data: session } = useSession();
-  const userId = session?.user?.id;
   const baseUrl = `/projects/${projectId}`;
   const allSections = useSidebarSections(baseUrl);
-  const { hiddenItems, toggleItem, resetPrefs } = useProjectSidebarPrefs(userId);
+  const { hiddenItems, toggleItem, resetPrefs } = useProjectSidebarPrefs();
   const visibleSections = applyHiddenItems(allSections, hiddenItems);
   const isActive = useIsActive(baseUrl);
   const pathname = usePathname();

@@ -230,11 +230,7 @@ function CategoryRow({
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={handleArchiveToggle}
-              className={
-                cat.isActive
-                  ? "text-destructive focus:text-destructive"
-                  : undefined
-              }
+              variant={cat.isActive ? "destructive" : "default"}
             >
               {cat.isActive ? (
                 <>

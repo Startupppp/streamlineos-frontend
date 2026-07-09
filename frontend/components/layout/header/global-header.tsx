@@ -4,6 +4,7 @@ import dynamic from "next/dynamic"
 import Link from "next/link"
 import { Search, CalendarDays, MessageSquare } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { HeaderBrand } from "./header-brand"
 import { ProductSwitcherMenu } from "./product-switcher-menu"
 import { WorkspaceSwitcher } from "./workspace-switcher"
 import { QuickCreateButton } from "./quick-create-button"
@@ -71,6 +72,7 @@ function HeaderIconLink({
 function DesktopHeader() {
   return (
     <div className="flex items-center h-full w-full px-4 gap-3">
+      <HeaderBrand />
       <div className="flex items-center gap-2 shrink-0 min-w-0">
         <ProductSwitcherMenu />
         <div className="w-px h-4 bg-sidebar-border" />
@@ -104,11 +106,24 @@ function DesktopHeader() {
   )
 }
 
+function MobileHeader() {
+  return (
+    <div className="flex items-center h-full w-full px-4">
+      <HeaderBrand />
+    </div>
+  )
+}
+
 export function GlobalHeader() {
   return (
-    <header className="hidden md:block h-14 border-b border-sidebar-border bg-sidebar text-sidebar-foreground shrink-0 z-40 relative">
+    <header className="h-14 border-b border-sidebar-border bg-sidebar text-sidebar-foreground shrink-0 z-40 relative">
       <TooltipProvider>
-        <DesktopHeader />
+        <div className="hidden md:block h-full">
+          <DesktopHeader />
+        </div>
+        <div className="md:hidden h-full">
+          <MobileHeader />
+        </div>
       </TooltipProvider>
     </header>
   )

@@ -374,8 +374,7 @@ export function GoalsTab() {
                         >
                           Mark Complete
                         </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-destructive"
+                        <DropdownMenuItem variant="destructive"
                           onClick={() => setDeleteId(goal.id)}
                         >
                           <Trash2 className="h-3.5 w-3.5 mr-1.5" />

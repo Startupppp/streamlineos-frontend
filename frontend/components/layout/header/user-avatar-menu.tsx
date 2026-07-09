@@ -131,8 +131,7 @@ export function UserAvatarMenu({ variant = "header" }: UserAvatarMenuProps) {
           </>
         )}
         <DropdownMenuSeparator />
-        <DropdownMenuItem
-          className="gap-2 text-destructive focus:text-destructive cursor-pointer"
+        <DropdownMenuItem variant="destructive" className="gap-2 cursor-pointer"
           onClick={handleSignOutClick}
           disabled={isSigningOut}
         >

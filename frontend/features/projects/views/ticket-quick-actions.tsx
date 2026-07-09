@@ -242,8 +242,7 @@ export function TicketQuickActions({
           {canUpdate && canDelete && <DropdownMenuSeparator />}
 
           {canDelete && (
-            <DropdownMenuItem
-              className="text-destructive focus:text-destructive"
+            <DropdownMenuItem variant="destructive"
               onSelect={handleDeleteSelect}
             >
               <Trash2 className="mr-2 h-4 w-4 shrink-0" />

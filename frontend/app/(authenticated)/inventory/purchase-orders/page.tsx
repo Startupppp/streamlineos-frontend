@@ -148,7 +148,7 @@ const PoRowActions = memo(function PoRowActions({ po }: { po: PurchaseOrderSumma
           )}
           {(canApprove || canClose) && canCancel && <DropdownMenuSeparator />}
           {canCancel && (
-            <DropdownMenuItem onSelect={handleOpenCancel} className="text-red-600">
+            <DropdownMenuItem variant="destructive" onSelect={handleOpenCancel}>
               Cancel
             </DropdownMenuItem>
           )}

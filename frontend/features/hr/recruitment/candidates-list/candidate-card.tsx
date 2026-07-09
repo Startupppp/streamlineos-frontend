@@ -196,8 +196,7 @@ export function CandidateCard({
               <Pencil className="h-3.5 w-3.5 mr-2" /> Edit
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="text-destructive focus:text-destructive"
+            <DropdownMenuItem variant="destructive"
               onClick={handleDeleteClick}
             >
               <Trash2 className="h-3.5 w-3.5 mr-2" /> Delete

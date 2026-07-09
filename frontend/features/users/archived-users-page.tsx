@@ -123,9 +123,8 @@ function ArchivedActionsMenu({ user, onView }: ArchivedActionsMenuProps) {
           Restore
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem
+        <DropdownMenuItem variant="destructive"
           onClick={handleDelete}
-          className="text-red-600 focus:text-red-600 focus:bg-red-50"
         >
           <Trash2 className="h-3.5 w-3.5 mr-2" />
           Delete user

@@ -178,7 +178,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onSelect={() => handleEdit(row)}>Edit</DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive" onSelect={() => setDeleteTarget(row)}>Delete</DropdownMenuItem>
+            <DropdownMenuItem variant="destructive" onSelect={() => setDeleteTarget(row)}>Delete</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       ) : null,

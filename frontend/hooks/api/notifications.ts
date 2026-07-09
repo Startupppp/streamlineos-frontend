@@ -18,11 +18,6 @@ import type {
   UpdateBroadcastInput,
   NotificationPreferences,
   UpdatePreferencesInput,
-  NotificationAnalyticsOverview,
-  NotificationAnalyticsByCategory,
-  NotificationAnalyticsByPriority,
-  NotificationAnalyticsByChannel,
-  NotificationAuditLogListResult,
   NotificationProvider,
   CreateProviderInput,
   UpdateProviderInput,
@@ -353,97 +348,6 @@ export const useUpdateNotificationPreferences = () => {
   });
 };
 
-export const useNotificationAnalytics = (
-  days = 30,
-  options?: Omit<UseQueryOptions<NotificationAnalyticsOverview, Error>, "queryKey" | "queryFn">,
-) => {
-  return useQuery<NotificationAnalyticsOverview, Error>({
-    queryKey: queryKeys.notifications.analytics(days),
-    queryFn: () =>
-      apiClient.get<NotificationAnalyticsOverview>("/notification-analytics", { days: String(days) }),
-    staleTime: 5 * 60_000,
-    ...options,
-  });
-};
-
-export const useNotificationAnalyticsByCategory = (
-  days = 30,
-  options?: Omit<UseQueryOptions<NotificationAnalyticsByCategory[], Error>, "queryKey" | "queryFn">,
-) => {
-  return useQuery<NotificationAnalyticsByCategory[], Error>({
-    queryKey: [...queryKeys.notifications.analytics(days), "categories"],
-    queryFn: () =>
-      apiClient.get<NotificationAnalyticsByCategory[]>("/notification-analytics/categories", {
-        days: String(days),
-      }),
-    staleTime: 5 * 60_000,
-    ...options,
-  });
-};
-
-export const useNotificationAnalyticsByPriority = (
-  days = 30,
-  options?: Omit<UseQueryOptions<NotificationAnalyticsByPriority[], Error>, "queryKey" | "queryFn">,
-) => {
-  return useQuery<NotificationAnalyticsByPriority[], Error>({
-    queryKey: [...queryKeys.notifications.analytics(days), "priorities"],
-    queryFn: () =>
-      apiClient.get<NotificationAnalyticsByPriority[]>("/notification-analytics/priorities", {
-        days: String(days),
-      }),
-    staleTime: 5 * 60_000,
-    ...options,
-  });
-};
-
-export const useNotificationAnalyticsByChannel = (
-  days = 30,
-  options?: Omit<UseQueryOptions<NotificationAnalyticsByChannel[], Error>, "queryKey" | "queryFn">,
-) => {
-  return useQuery<NotificationAnalyticsByChannel[], Error>({
-    queryKey: [...queryKeys.notifications.analytics(days), "channels"],
-    queryFn: () =>
-      apiClient.get<NotificationAnalyticsByChannel[]>("/notification-analytics/channels", {
-        days: String(days),
-      }),
-    staleTime: 5 * 60_000,
-    ...options,
-  });
-};
-
-export const useNotificationQueue = (
-  options?: Omit<UseQueryOptions<Notification[], Error>, "queryKey" | "queryFn">,
-) => {
-  return useQuery<Notification[], Error>({
-    queryKey: queryKeys.notifications.queue(),
-    queryFn: () => apiClient.get<Notification[]>("/notification-queue"),
-    staleTime: 30_000,
-    ...options,
-  });
-};
-
-export const useFailedNotifications = (
-  options?: Omit<UseQueryOptions<Notification[], Error>, "queryKey" | "queryFn">,
-) => {
-  return useQuery<Notification[], Error>({
-    queryKey: queryKeys.notifications.queueFailed(),
-    queryFn: () => apiClient.get<Notification[]>("/notification-queue/failed"),
-    staleTime: 30_000,
-    ...options,
-  });
-};
-
-export const useRetryNotification = () => {
-  const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, number>({
-    mutationFn: (id) => apiClient.post<{ success: boolean }>(`/notification-queue/${id}/retry`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.queue() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.queueFailed() });
-    },
-  });
-};
-
 export const useApproveNotification = () => {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, number>({
@@ -587,18 +491,3 @@ export const useUpsertNotificationPolicy = () => {
   });
 };
 
-export const useNotificationAuditLogs = (
-  params?: { page?: number; pageSize?: number; action?: string; dateFrom?: string; dateTo?: string },
-  options?: Omit<UseQueryOptions<NotificationAuditLogListResult, Error>, "queryKey" | "queryFn">,
-) => {
-  return useQuery<NotificationAuditLogListResult, Error>({
-    queryKey: queryKeys.notifications.auditLogs(params as Record<string, unknown>),
-    queryFn: () =>
-      apiClient.get<NotificationAuditLogListResult>(
-        "/notifications/audit",
-        params ? toStringParams(params as Record<string, unknown>) : undefined,
-      ),
-    staleTime: 30_000,
-    ...options,
-  });
-};

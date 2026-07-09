@@ -334,8 +334,7 @@ export default function JobPostingsPage() {
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            className="text-destructive focus:text-destructive"
+                          <DropdownMenuItem variant="destructive"
                             onClick={() => setDeleteJobId(job.id)}
                           >
                             <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete

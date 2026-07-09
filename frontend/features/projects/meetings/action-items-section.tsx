@@ -88,7 +88,7 @@ const ActionItemRow = memo(function ActionItemRow({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={handleEditClick}>Edit</DropdownMenuItem>
-              <DropdownMenuItem className="text-red-600" onClick={handleDeleteClick}>Delete</DropdownMenuItem>
+              <DropdownMenuItem variant="destructive" onClick={handleDeleteClick}>Delete</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

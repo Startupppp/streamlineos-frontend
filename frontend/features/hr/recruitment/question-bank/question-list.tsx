@@ -111,7 +111,7 @@ function QuestionRow({ question, roleOptions, onDeleteRequest }: QuestionRowProp
                 Edit
               </DropdownMenuItem>
             </QuestionFormDialog>
-            <DropdownMenuItem onClick={handleDeleteClick} className="text-destructive">
+            <DropdownMenuItem variant="destructive" onClick={handleDeleteClick}>
               <Trash2 className="mr-2 h-4 w-4" />
               Delete
             </DropdownMenuItem>

@@ -190,8 +190,7 @@ function QuoteRow({ quote, dealId, onDeleteRequest }: QuoteRowProps) {
               </DropdownMenuItem>
             </>
           )}
-          <DropdownMenuItem
-            className="text-red-600 focus:text-red-600"
+          <DropdownMenuItem variant="destructive"
             onClick={handleDeleteRequest}
           >
             <Trash2 className="h-3.5 w-3.5 mr-1.5" />

@@ -175,7 +175,7 @@ export function BugsPage({ projectId }: BugsPageProps) {
           <DropdownMenuContent align="end">
             {canUpdate && <DropdownMenuItem onSelect={() => handleEdit(row)}>Edit</DropdownMenuItem>}
             {canDelete && (
-              <DropdownMenuItem className="text-destructive" onSelect={() => setDeleteTarget(row)}>
+              <DropdownMenuItem variant="destructive" onSelect={() => setDeleteTarget(row)}>
                 Delete
               </DropdownMenuItem>
             )}

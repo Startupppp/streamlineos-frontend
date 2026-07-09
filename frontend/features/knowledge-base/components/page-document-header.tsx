@@ -446,9 +446,8 @@ export default function PageDocumentHeader({
               {canDelete && (
                 <>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem
+                  <DropdownMenuItem variant="destructive"
                     onSelect={handleDelete}
-                    className="text-destructive focus:text-destructive"
                   >
                     <KbTrash2Icon className="h-4 w-4 mr-2" />
                     Delete

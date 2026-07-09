@@ -19,7 +19,6 @@ import {
   type ModuleAccent,
 } from "./sidebar/sidebar-nav-items"
 import { SidebarSection } from "./sidebar/sidebar-section"
-import { SidebarHeader } from "./sidebar/sidebar-header"
 import { SidebarWorkspaceRow } from "./sidebar/sidebar-workspace-row"
 import { ProductSwitcherMenu } from "./header/product-switcher-menu"
 import { usePermissions } from "@/lib/rbac/hooks"
@@ -33,6 +32,48 @@ interface AppSidebarProps {
   onRequestProductSwitcher?: () => void
   onRequestWorkspaceSwitcher?: () => void
   isMobile?: boolean
+}
+
+interface SidebarSkeletonProps {
+  isCollapsed: boolean
+  isMobile: boolean
+}
+
+function SidebarSkeleton({ isCollapsed, isMobile }: SidebarSkeletonProps) {
+  const effectiveCollapsed = isMobile ? false : isCollapsed
+
+  return (
+    <div
+      className={cn(
+        "relative flex flex-col h-full overflow-visible bg-sidebar text-sidebar-foreground",
+        !isMobile && "transition-[width] duration-300 ease-in-out",
+        isMobile ? "w-full" : effectiveCollapsed ? "w-[3.5rem]" : "w-[17rem]",
+      )}
+    >
+      <ScrollArea className="flex-1 min-h-0">
+        <div className={cn("py-2", effectiveCollapsed ? "px-1" : "px-2.5")}>
+          <div className="space-y-px">
+            {Array.from({ length: effectiveCollapsed ? 5 : 6 }).map((_, i) =>
+              effectiveCollapsed ? (
+                <Skeleton
+                  key={i}
+                  className="h-8 w-8 rounded-[6px] mx-auto"
+                />
+              ) : (
+                <div
+                  key={i}
+                  className="flex items-center gap-2.5 px-2.5 py-1.5"
+                >
+                  <Skeleton className="h-4 w-4 rounded shrink-0" />
+                  <Skeleton className="h-3.5 flex-1 max-w-[7rem] rounded" />
+                </div>
+              ),
+            )}
+          </div>
+        </div>
+      </ScrollArea>
+    </div>
+  )
 }
 
 export function AppSidebar({
@@ -139,24 +180,7 @@ export function AppSidebar({
   }
 
   if (status === "loading") {
-    return (
-      <div className="flex flex-col h-full bg-sidebar">
-        <div className="h-14 shrink-0 border-b border-sidebar-border px-3 flex items-center justify-between">
-          <Skeleton className="h-8 w-8 rounded-lg bg-sidebar-border" />
-          <Skeleton className="h-6 w-6 rounded-md bg-sidebar-border" />
-        </div>
-        <div className="px-3 py-4 flex-1 space-y-6">
-          <div className="space-y-1">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-3 px-2 py-1.5">
-                <Skeleton className="h-4 w-4 rounded bg-sidebar-border" />
-                <Skeleton className="h-3.5 w-24 rounded bg-sidebar-border" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    )
+    return <SidebarSkeleton isCollapsed={isCollapsed} isMobile={isMobile} />
   }
 
   return (
@@ -173,7 +197,7 @@ export function AppSidebar({
             type="button"
             onClick={handleToggleClick}
             aria-label={effectiveCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-            className="absolute top-[1.75rem] -translate-y-1/2 -right-3 z-[60] h-6 w-6 rounded-full border border-sidebar-border bg-sidebar shadow-md flex items-center justify-center text-sidebar-foreground/70 hover:text-blue-600 hover:border-blue-500/40 hover:bg-sidebar-accent transition-colors"
+            className="absolute top-4 -translate-y-1/2 -right-3 z-[60] h-6 w-6 rounded-full border border-sidebar-border bg-sidebar shadow-md flex items-center justify-center text-sidebar-foreground/70 hover:text-blue-600 hover:border-blue-500/40 hover:bg-sidebar-accent transition-colors"
           >
             {effectiveCollapsed ? (
               <ChevronRight className="h-3.5 w-3.5" />
@@ -182,8 +206,6 @@ export function AppSidebar({
             )}
           </button>
         )}
-
-        <SidebarHeader isCollapsed={effectiveCollapsed} />
 
         {isMobile && (
           <div className="shrink-0 px-2.5 py-2 border-b border-sidebar-border">

@@ -163,7 +163,7 @@ export function KbConversationList({
                         <DropdownMenuItem data-conversation-id={conv.id} data-conversation-title={conv.title ?? ""} onClick={handleRenameFromMenu}>
                           <PenLine className="mr-2 h-3.5 w-3.5" />Rename
                         </DropdownMenuItem>
-                        <DropdownMenuItem data-conversation-id={conv.id} onClick={handleDeleteFromMenu} className="text-destructive focus:text-destructive">
+                        <DropdownMenuItem variant="destructive" data-conversation-id={conv.id} onClick={handleDeleteFromMenu}>
                           <Trash2 className="mr-2 h-3.5 w-3.5" />Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>

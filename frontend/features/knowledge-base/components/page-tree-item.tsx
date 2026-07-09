@@ -325,9 +325,8 @@ const PageTreeItem = memo(function PageTreeItemInner({
                   {canDelete && (
                     <>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem
+                      <DropdownMenuItem variant="destructive"
                         onSelect={handleDeleteClick}
-                        className="text-destructive focus:text-destructive"
                       >
                         Delete
                       </DropdownMenuItem>

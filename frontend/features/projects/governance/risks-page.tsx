@@ -186,7 +186,7 @@ export function RisksPage({ projectId }: RisksPageProps) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => setEditRisk(row)}>Edit</DropdownMenuItem>
-              <DropdownMenuItem className="text-red-600" onClick={() => setDeleteTarget(row)}>Delete</DropdownMenuItem>
+              <DropdownMenuItem variant="destructive" onClick={() => setDeleteTarget(row)}>Delete</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         );

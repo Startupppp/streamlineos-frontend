@@ -107,8 +107,7 @@ export function DeleteConfirm({
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <DropdownMenuItem
-          className="text-destructive focus:text-destructive"
+        <DropdownMenuItem variant="destructive"
           onSelect={handleSelectPrevent}
         >
           <Trash2 className="mr-2 h-3.5 w-3.5" />

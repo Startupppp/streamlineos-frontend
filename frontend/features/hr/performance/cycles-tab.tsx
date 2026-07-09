@@ -215,7 +215,7 @@ export function CyclesTab() {
                         <DropdownMenuItem onClick={() => openEdit(cycle)}>
                           <Pencil className="h-3.5 w-3.5 mr-1.5" />Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(cycle.id)}>
+                        <DropdownMenuItem variant="destructive" onClick={() => setDeleteId(cycle.id)}>
                           <Trash2 className="h-3.5 w-3.5 mr-1.5" />Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>

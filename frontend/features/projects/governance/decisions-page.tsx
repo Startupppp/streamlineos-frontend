@@ -151,7 +151,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => setEditDecision(row)}>Edit</DropdownMenuItem>
-              <DropdownMenuItem className="text-red-600" onClick={() => setDeleteTarget(row)}>Delete</DropdownMenuItem>
+              <DropdownMenuItem variant="destructive" onClick={() => setDeleteTarget(row)}>Delete</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         );

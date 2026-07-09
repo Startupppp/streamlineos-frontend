@@ -257,7 +257,7 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
                 <DropdownMenuItem onClick={() => setCancelTarget(row)}>Cancel</DropdownMenuItem>
               )}
               {canManage && (
-                <DropdownMenuItem className="text-red-600" onClick={() => setDeleteTarget(row)}>
+                <DropdownMenuItem variant="destructive" onClick={() => setDeleteTarget(row)}>
                   Delete
                 </DropdownMenuItem>
               )}

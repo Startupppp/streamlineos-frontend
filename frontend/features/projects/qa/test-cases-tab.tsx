@@ -172,8 +172,7 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onSelect={() => handleEdit(row)}>Edit</DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-destructive"
+              <DropdownMenuItem variant="destructive"
                 onSelect={() => setDeleteTarget(row)}
               >
                 Delete

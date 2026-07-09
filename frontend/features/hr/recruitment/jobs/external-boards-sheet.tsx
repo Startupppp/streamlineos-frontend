@@ -150,8 +150,7 @@ export function ExternalBoardsSheet({ jobId, onClose }: ExternalBoardsSheetProps
                             Mark as {s}
                           </DropdownMenuItem>
                         ))}
-                        <DropdownMenuItem
-                          className="text-destructive focus:text-destructive"
+                        <DropdownMenuItem variant="destructive"
                           onClick={() => handleDelete(posting.id)}
                         >
                           <Trash2 className="mr-2 h-3.5 w-3.5" /> Remove
