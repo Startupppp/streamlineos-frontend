@@ -57,7 +57,7 @@ export function BlogContentEditor({
 
   return (
     <div className="overflow-hidden rounded-md border border-input bg-background">
-      <TiptapToolbar editor={editor} />
+      {editor && <TiptapToolbar editor={editor} />}
       <EditorContent editor={editor} />
     </div>
   );

@@ -5,7 +5,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Settings2, Bell } from "lucide-react";
+import { Settings2, Bell, Send } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -42,6 +43,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useNotificationEventCatalog,
   useUpdateNotificationEventPolicy,
+  useEmitNotificationEvent,
 } from "@/hooks/api/notifications";
 import { useCan } from "@/hooks/api/access";
 import type {
@@ -362,10 +364,14 @@ function EventRow({
   event,
   canManage,
   onConfigure,
+  onSendTest,
+  sending,
 }: {
   event: NotificationEventDefinition;
   canManage: boolean;
   onConfigure: (event: NotificationEventDefinition) => void;
+  onSendTest: (event: NotificationEventDefinition) => void;
+  sending: boolean;
 }) {
   const updatePolicy = useUpdateNotificationEventPolicy();
 
@@ -384,6 +390,10 @@ function EventRow({
   const handleConfigureClick = useCallback(() => {
     onConfigure(event);
   }, [event, onConfigure]);
+
+  const handleSendTestClick = useCallback(() => {
+    onSendTest(event);
+  }, [event, onSendTest]);
 
   return (
     <div className="group flex items-start gap-3 px-3 py-2.5 hover:bg-muted/30 transition-colors">

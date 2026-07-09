@@ -30,6 +30,8 @@ import type {
   TestProviderResult,
   NotificationEventDefinition,
   UpdateEventPolicyInput,
+  EmitTestEventInput,
+  DispatchResult,
   NotificationPolicyDefault,
   UpsertPolicyInput,
 } from "@/types/notifications";
@@ -547,6 +549,18 @@ export const useUpdateNotificationEventPolicy = () => {
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.events() });
+    },
+  });
+};
+
+export const useEmitNotificationEvent = () => {
+  const queryClient = useQueryClient();
+  return useMutation<DispatchResult, Error, EmitTestEventInput>({
+    mutationKey: ["notifications", "events", "emit"],
+    mutationFn: (dto) => apiClient.post<DispatchResult>("/notifications/admin/events/emit", dto),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.queue() });
     },
   });
 };

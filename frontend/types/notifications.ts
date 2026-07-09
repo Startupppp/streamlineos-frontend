@@ -325,6 +325,23 @@ export interface NotificationEventDefinition {
   overridden: boolean;
 }
 
+export interface EmitTestEventInput {
+  eventKey: string;
+  targetUserIds: string[];
+  title?: string;
+  message?: string;
+  link?: string;
+  priority?: NotificationPriority;
+}
+
+export interface DispatchResult {
+  eventKey: string;
+  notified: number;
+  deliveriesQueued: number;
+  suppressed: number;
+  deduped: number;
+}
+
 export interface UpdateEventPolicyInput {
   enabled?: boolean;
   defaultPriority?: NotificationPriority;
