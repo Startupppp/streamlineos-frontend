@@ -1,24 +1,27 @@
-﻿"use client";
+"use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-  CommandSeparator,
-} from "@/components/ui/command";
+import { Command, CommandInput } from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
-import { DatePicker } from "@/components/ui/date-picker";
-import { Check, ListFilter, CalendarRange } from "lucide-react";
+import {
+  ListFilter,
+  ChevronRight,
+  CircleDot,
+  AlertTriangle,
+  Tag,
+  User,
+  Layers,
+  RefreshCw,
+  Zap,
+  CalendarRange,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
-
-const PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
-const TYPES = ["TASK", "BUG", "STORY", "EPIC", "SUBTASK"] as const;
+import {
+  FilterCategorySubmenu,
+  type FilterCategory,
+} from "./filter-category-submenu";
+import { FilterFlatSearch } from "./filter-flat-search";
 
 interface Member {
   id: string;
@@ -79,14 +82,58 @@ export interface FilterCommandMenuProps {
   onDueDateToChange: (value: string) => void;
 }
 
-function CheckMark({ active }: { active: boolean }) {
+interface CategoryDefinition {
+  key: FilterCategory;
+  label: string;
+  icon: React.ReactNode;
+  visible: boolean;
+  activeCount: number;
+}
+
+interface CategoryRowProps {
+  icon: React.ReactNode;
+  label: string;
+  activeCount: number;
+  hovered: boolean;
+  onMouseEnter: () => void;
+  onFocus: () => void;
+  onKeyDown: (e: React.KeyboardEvent) => void;
+}
+
+function CategoryRow({
+  icon,
+  label,
+  activeCount,
+  hovered,
+  onMouseEnter,
+  onFocus,
+  onKeyDown,
+}: CategoryRowProps) {
   return (
-    <Check
+    <div
+      role="menuitem"
+      tabIndex={0}
+      aria-haspopup="true"
+      aria-expanded={hovered}
+      onMouseEnter={onMouseEnter}
+      onFocus={onFocus}
+      onKeyDown={onKeyDown}
       className={cn(
-        "mr-2 h-3.5 w-3.5 shrink-0 transition-opacity motion-reduce:transition-none",
-        active ? "opacity-100" : "opacity-0",
+        "flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-xs outline-none transition-colors motion-reduce:transition-none",
+        hovered
+          ? "bg-accent text-accent-foreground"
+          : "hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent",
       )}
-    />
+    >
+      <span className="shrink-0 text-muted-foreground">{icon}</span>
+      <span className="flex-1 truncate">{label}</span>
+      {activeCount > 0 && (
+        <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-500 px-1 text-[10px] font-semibold text-white">
+          {activeCount}
+        </span>
+      )}
+      <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+    </div>
   );
 }
 
@@ -112,6 +159,10 @@ export function FilterCommandMenu({
   onDueDateToChange,
 }: FilterCommandMenuProps) {
   const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [hoveredCategory, setHoveredCategory] = useState<FilterCategory | null>(null);
+  const submenuRef = useRef<HTMLDivElement>(null);
+  const categoryListRef = useRef<HTMLDivElement>(null);
 
   const {
     selectedStatuses,
@@ -125,60 +176,150 @@ export function FilterCommandMenu({
     dueDateTo,
   } = filterState;
 
-  const handleToggleStatus = useCallback(
-    (value: string) => { onToggleStatus(value); },
-    [onToggleStatus],
-  );
+  const isSearching = search.trim().length > 0;
 
-  const handleTogglePriority = useCallback(
-    (value: string) => { onTogglePriority(value); },
-    [onTogglePriority],
-  );
+  const categories: CategoryDefinition[] = [
+    {
+      key: "status",
+      label: "Status",
+      icon: <CircleDot className="h-3.5 w-3.5" />,
+      visible: true,
+      activeCount: selectedStatuses.length,
+    },
+    {
+      key: "priority",
+      label: "Priority",
+      icon: <AlertTriangle className="h-3.5 w-3.5" />,
+      visible: true,
+      activeCount: selectedPriorities.length,
+    },
+    {
+      key: "type",
+      label: "Type",
+      icon: <Layers className="h-3.5 w-3.5" />,
+      visible: showTypeFilter,
+      activeCount: selectedTypes.length,
+    },
+    {
+      key: "assignee",
+      label: "Assignee",
+      icon: <User className="h-3.5 w-3.5" />,
+      visible: showAssigneeFilter,
+      activeCount: selectedAssignees.length,
+    },
+    {
+      key: "label",
+      label: "Label",
+      icon: <Tag className="h-3.5 w-3.5" />,
+      visible: labels.length > 0,
+      activeCount: selectedLabels.length,
+    },
+    {
+      key: "cycle",
+      label: "Cycle",
+      icon: <RefreshCw className="h-3.5 w-3.5" />,
+      visible: cycles.length > 0,
+      activeCount: selectedCycles.length,
+    },
+    {
+      key: "sprint",
+      label: "Sprint",
+      icon: <Zap className="h-3.5 w-3.5" />,
+      visible: showSprintFilter && sprints.length > 0,
+      activeCount: sprintParam ? 1 : 0,
+    },
+    {
+      key: "dates",
+      label: "Due Dates",
+      icon: <CalendarRange className="h-3.5 w-3.5" />,
+      visible: true,
+      activeCount: dueDateFrom || dueDateTo ? 1 : 0,
+    },
+  ];
 
-  const handleToggleType = useCallback(
-    (value: string) => { onToggleType(value); },
-    [onToggleType],
-  );
-
-  const handleToggleAssignee = useCallback(
-    (value: string) => { onToggleAssignee(value); },
-    [onToggleAssignee],
-  );
-
-  const handleToggleLabel = useCallback(
-    (value: string) => { onToggleLabel(value); },
-    [onToggleLabel],
-  );
-
-  const handleToggleCycle = useCallback(
-    (value: string) => { onToggleCycle(value); },
-    [onToggleCycle],
-  );
-
-  const handleToggleSprint = useCallback(
-    (value: string) => { onToggleSprint(value); },
-    [onToggleSprint],
-  );
-
-  const handleDueDateFromChange = useCallback(
-    (value: string) => { onDueDateFromChange(value); },
-    [onDueDateFromChange],
-  );
-
-  const handleDueDateToChange = useCallback(
-    (value: string) => { onDueDateToChange(value); },
-    [onDueDateToChange],
-  );
-
-  const hasDateFilter = Boolean(dueDateFrom || dueDateTo);
+  const visibleCategories = categories.filter((c) => c.visible);
 
   function handleOpenChange(next: boolean) {
     setOpen(next);
+    if (!next) {
+      setSearch("");
+      setHoveredCategory(null);
+    }
   }
 
   function handleInteractOutside() {
     setOpen(false);
   }
+
+  function handleSearchChange(value: string) {
+    setSearch(value);
+    if (value.trim().length > 0) {
+      setHoveredCategory(null);
+    }
+  }
+
+  function handleCategoryMouseEnter(key: FilterCategory) {
+    setHoveredCategory(key);
+  }
+
+  function handleCategoryFocus(key: FilterCategory) {
+    setHoveredCategory(key);
+  }
+
+  function handleCategoryKeyDown(key: FilterCategory, e: React.KeyboardEvent) {
+    if (e.key === "ArrowRight" || e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      setHoveredCategory(key);
+      setTimeout(() => {
+        submenuRef.current?.focus();
+      }, 0);
+    }
+  }
+
+  function handleSubmenuClose() {
+    setHoveredCategory(null);
+    categoryListRef.current?.focus();
+  }
+
+  function handleListMouseLeave() {
+    setHoveredCategory(null);
+  }
+
+  const handleToggleStatus = useCallback((v: string) => { onToggleStatus(v); }, [onToggleStatus]);
+  const handleTogglePriority = useCallback((v: string) => { onTogglePriority(v); }, [onTogglePriority]);
+  const handleToggleType = useCallback((v: string) => { onToggleType(v); }, [onToggleType]);
+  const handleToggleAssignee = useCallback((v: string) => { onToggleAssignee(v); }, [onToggleAssignee]);
+  const handleToggleLabel = useCallback((v: string) => { onToggleLabel(v); }, [onToggleLabel]);
+  const handleToggleCycle = useCallback((v: string) => { onToggleCycle(v); }, [onToggleCycle]);
+  const handleToggleSprint = useCallback((v: string) => { onToggleSprint(v); }, [onToggleSprint]);
+  const handleDueDateFromChange = useCallback((v: string) => { onDueDateFromChange(v); }, [onDueDateFromChange]);
+  const handleDueDateToChange = useCallback((v: string) => { onDueDateToChange(v); }, [onDueDateToChange]);
+
+  const sharedProps = {
+    statusOptions,
+    members,
+    labels,
+    cycles,
+    sprints,
+    selectedStatuses,
+    selectedPriorities,
+    selectedTypes,
+    selectedAssignees,
+    selectedLabels,
+    selectedCycles,
+    sprintParam,
+    dueDateFrom,
+    dueDateTo,
+    onToggleStatus: handleToggleStatus,
+    onTogglePriority: handleTogglePriority,
+    onToggleType: handleToggleType,
+    onToggleAssignee: handleToggleAssignee,
+    onToggleLabel: handleToggleLabel,
+    onToggleCycle: handleToggleCycle,
+    onToggleSprint: handleToggleSprint,
+    onDueDateFromChange: handleDueDateFromChange,
+    onDueDateToChange: handleDueDateToChange,
+  };
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
@@ -198,221 +339,70 @@ export function FilterCommandMenu({
       </PopoverTrigger>
       <PopoverContent
         align="start"
-        className="w-72 p-0"
+        className="w-64 p-0 overflow-visible"
         onInteractOutside={handleInteractOutside}
       >
-        <Command>
-          <CommandInput placeholder="Search filters..." className="h-9 text-xs" />
-          <CommandList className="max-h-[360px]">
-            <CommandEmpty className="py-4 text-center text-xs text-muted-foreground">
-              No matching filters.
-            </CommandEmpty>
-
-            <CommandGroup heading="Status">
-              {statusOptions.map((s) => {
-                const label = s.replace(/_/g, " ");
-                const active = selectedStatuses.includes(s);
-                function onSelectStatus() { handleToggleStatus(s); }
-                return (
-                  <CommandItem
-                    key={s}
-                    value={`Status ${label}`}
-                    keywords={["status", label, s]}
-                    onSelect={onSelectStatus}
-                  >
-                    <CheckMark active={active} />
-                    <span className="text-xs">{label}</span>
-                  </CommandItem>
-                );
-              })}
-            </CommandGroup>
-
-            <CommandSeparator />
-
-            <CommandGroup heading="Priority">
-              {PRIORITIES.map((p) => {
-                const label = p.charAt(0) + p.slice(1).toLowerCase();
-                const active = selectedPriorities.includes(p);
-                function onSelectPriority() { handleTogglePriority(p); }
-                return (
-                  <CommandItem
-                    key={p}
-                    value={`Priority ${label}`}
-                    keywords={["priority", label, p]}
-                    onSelect={onSelectPriority}
-                  >
-                    <CheckMark active={active} />
-                    <span className="text-xs">{label}</span>
-                  </CommandItem>
-                );
-              })}
-            </CommandGroup>
-
-            {showTypeFilter && (
-              <>
-                <CommandSeparator />
-                <CommandGroup heading="Type">
-                  {TYPES.map((t) => {
-                    const label = t.charAt(0) + t.slice(1).toLowerCase();
-                    const active = selectedTypes.includes(t);
-                    function onSelectType() { handleToggleType(t); }
-                    return (
-                      <CommandItem
-                        key={t}
-                        value={`Type ${label}`}
-                        keywords={["type", label, t]}
-                        onSelect={onSelectType}
-                      >
-                        <CheckMark active={active} />
-                        <span className="text-xs">{label}</span>
-                      </CommandItem>
-                    );
-                  })}
-                </CommandGroup>
-              </>
-            )}
-
-            {showAssigneeFilter && (
-              <>
-                <CommandSeparator />
-                <CommandGroup heading="Assignee">
-                  <CommandItem
-                    value="Assignee Unassigned"
-                    keywords={["assignee", "unassigned", "no assignee"]}
-                    onSelect={() => handleToggleAssignee("__unassigned__")}
-                  >
-                    <CheckMark active={selectedAssignees.includes("__unassigned__")} />
-                    <span className="text-xs">Unassigned</span>
-                  </CommandItem>
-                  {members.map((m) => {
-                    const displayName = getUserDisplayName(m);
-                    const active = selectedAssignees.includes(m.id);
-                    function onSelectAssignee() { handleToggleAssignee(m.id); }
-                    return (
-                      <CommandItem
-                        key={m.id}
-                        value={`Assignee ${displayName}`}
-                        keywords={["assignee", displayName, m.email ?? ""]}
-                        onSelect={onSelectAssignee}
-                      >
-                        <CheckMark active={active} />
-                        <span className="text-xs">{displayName}</span>
-                      </CommandItem>
-                    );
-                  })}
-                </CommandGroup>
-              </>
-            )}
-
-            {labels.length > 0 && (
-              <>
-                <CommandSeparator />
-                <CommandGroup heading="Label">
-                  {labels.map((l) => {
-                    const labelId = String(l.id);
-                    const active = selectedLabels.includes(labelId);
-                    function onSelectLabel() { handleToggleLabel(labelId); }
-                    return (
-                      <CommandItem
-                        key={l.id}
-                        value={`Label ${l.name}`}
-                        keywords={["label", l.name]}
-                        onSelect={onSelectLabel}
-                      >
-                        <CheckMark active={active} />
-                        {l.color && (
-                          <span
-                            className="mr-1.5 inline-block h-2 w-2 shrink-0 rounded-full"
-                            style={{ backgroundColor: l.color }}
-                          />
-                        )}
-                        <span className="text-xs">{l.name}</span>
-                      </CommandItem>
-                    );
-                  })}
-                </CommandGroup>
-              </>
-            )}
-
-            {cycles.length > 0 && (
-              <>
-                <CommandSeparator />
-                <CommandGroup heading="Cycle">
-                  {cycles.map((c) => {
-                    const cycleId = String(c.id);
-                    const active = selectedCycles.includes(cycleId);
-                    function onSelectCycle() { handleToggleCycle(cycleId); }
-                    return (
-                      <CommandItem
-                        key={c.id}
-                        value={`Cycle ${c.name}`}
-                        keywords={["cycle", c.name]}
-                        onSelect={onSelectCycle}
-                      >
-                        <CheckMark active={active} />
-                        <span className="text-xs">{c.name}</span>
-                      </CommandItem>
-                    );
-                  })}
-                </CommandGroup>
-              </>
-            )}
-
-            {showSprintFilter && sprints.length > 0 && (
-              <>
-                <CommandSeparator />
-                <CommandGroup heading="Sprint">
-                  {sprints.map((s) => {
-                    const sprintId = String(s.id);
-                    const active = sprintParam === sprintId;
-                    function onSelectSprint() { handleToggleSprint(sprintId); }
-                    return (
-                      <CommandItem
-                        key={s.id}
-                        value={`Sprint ${s.name}`}
-                        keywords={["sprint", s.name]}
-                        onSelect={onSelectSprint}
-                      >
-                        <CheckMark active={active} />
-                        <span className="text-xs">{s.name}</span>
-                      </CommandItem>
-                    );
-                  })}
-                </CommandGroup>
-              </>
-            )}
-
-            <CommandSeparator />
-
-            <CommandGroup heading="Due Date">
-              <div className="px-2 py-2">
-                <div className="mb-1.5 flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                  <CalendarRange className="h-3 w-3" />
-                  {hasDateFilter ? (
-                    <span className="font-medium text-foreground">Range active</span>
-                  ) : (
-                    <span>Select a date range</span>
-                  )}
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <DatePicker
-                    value={dueDateFrom}
-                    onChange={handleDueDateFromChange}
-                    placeholder="From"
-                    className="h-7 flex-1 min-w-0 text-xs"
-                  />
-                  <span className="shrink-0 text-xs text-muted-foreground">-</span>
-                  <DatePicker
-                    value={dueDateTo}
-                    onChange={handleDueDateToChange}
-                    placeholder="To"
-                    className="h-7 flex-1 min-w-0 text-xs"
-                  />
-                </div>
+        {isSearching ? (
+          <FilterFlatSearch
+            search={search}
+            onSearchChange={handleSearchChange}
+            showTypeFilter={showTypeFilter}
+            showSprintFilter={showSprintFilter}
+            showAssigneeFilter={showAssigneeFilter}
+            {...sharedProps}
+          />
+        ) : (
+          <div className="flex">
+            <div className="min-w-[200px]">
+              <Command shouldFilter={false}>
+                <CommandInput
+                  placeholder="Filter by..."
+                  className="h-9 text-xs"
+                  value={search}
+                  onValueChange={handleSearchChange}
+                />
+              </Command>
+              <div
+                ref={categoryListRef}
+                role="menu"
+                aria-label="Filter categories"
+                onMouseLeave={handleListMouseLeave}
+                className="p-1"
+              >
+                {visibleCategories.map((cat) => {
+                  function onMouseEnter() { handleCategoryMouseEnter(cat.key); }
+                  function onFocus() { handleCategoryFocus(cat.key); }
+                  function onKeyDown(e: React.KeyboardEvent) { handleCategoryKeyDown(cat.key, e); }
+                  return (
+                    <CategoryRow
+                      key={cat.key}
+                      icon={cat.icon}
+                      label={cat.label}
+                      activeCount={cat.activeCount}
+                      hovered={hoveredCategory === cat.key}
+                      onMouseEnter={onMouseEnter}
+                      onFocus={onFocus}
+                      onKeyDown={onKeyDown}
+                    />
+                  );
+                })}
               </div>
-            </CommandGroup>
-          </CommandList>
-        </Command>
+            </div>
+
+            {hoveredCategory !== null && (
+              <div
+                ref={submenuRef}
+                className="border-l border-border bg-popover"
+              >
+                <FilterCategorySubmenu
+                  category={hoveredCategory}
+                  onClose={handleSubmenuClose}
+                  {...sharedProps}
+                />
+              </div>
+            )}
+          </div>
+        )}
       </PopoverContent>
     </Popover>
   );

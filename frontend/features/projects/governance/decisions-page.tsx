@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -63,7 +63,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
   const deleteDecision = useDeleteDecision(projectId);
 
   const memberName = useCallback((userId: string | null): string => {
-    if (!userId) return “—“;
+    if (!userId) return "-";
     const m = members.find((x) => x.id === userId);
     return getUserDisplayName(m) || userId;
   }, [members]);
@@ -125,7 +125,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
       key: "decidedAt", header: "Decided", sortable: true, sortValue: (d) => d.decidedAt ?? "",
       cell: (row) => (
         <span className="text-muted-foreground tabular-nums text-sm">
-          {row.decidedAt ? row.decidedAt.slice(0, 10) : "â€”"}
+          {row.decidedAt ? row.decidedAt.slice(0, 10) : "-"}
         </span>
       ),
     },
@@ -133,7 +133,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
       key: "revisitAt", header: "Revisit", sortable: true, sortValue: (d) => d.revisitAt ?? "",
       cell: (row) => (
         <span className="text-muted-foreground tabular-nums text-sm">
-          {row.revisitAt ? row.revisitAt.slice(0, 10) : "â€”"}
+          {row.revisitAt ? row.revisitAt.slice(0, 10) : "-"}
         </span>
       ),
     },
@@ -182,7 +182,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
           </Select>
           <Input
             className="h-8 text-xs w-52"
-            placeholder="Search decisionsâ€¦"
+            placeholder="Search decisions..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />

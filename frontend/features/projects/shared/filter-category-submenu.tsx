@@ -1,0 +1,428 @@
+"use client";
+
+import { useState, useCallback, useRef, useEffect } from "react";
+import { Check, Search, CalendarRange } from "lucide-react";
+import { DatePicker } from "@/components/ui/date-picker";
+import { cn } from "@/lib/utils";
+import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
+
+interface Member {
+  id: string;
+  name: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  image?: string | null;
+  email?: string | null;
+}
+
+interface Label {
+  id: number;
+  name: string;
+  color?: string | null;
+}
+
+interface Cycle {
+  id: number;
+  name: string;
+}
+
+interface Sprint {
+  id: number;
+  name: string;
+}
+
+export type FilterCategory =
+  | "status"
+  | "priority"
+  | "type"
+  | "assignee"
+  | "label"
+  | "cycle"
+  | "sprint"
+  | "dates";
+
+interface FilterCategorySubmenuProps {
+  category: FilterCategory;
+  statusOptions: string[];
+  members: Member[];
+  labels: Label[];
+  cycles: Cycle[];
+  sprints: Sprint[];
+  selectedStatuses: string[];
+  selectedPriorities: string[];
+  selectedTypes: string[];
+  selectedAssignees: string[];
+  selectedLabels: string[];
+  selectedCycles: string[];
+  sprintParam: string;
+  dueDateFrom: string;
+  dueDateTo: string;
+  onToggleStatus: (v: string) => void;
+  onTogglePriority: (v: string) => void;
+  onToggleType: (v: string) => void;
+  onToggleAssignee: (v: string) => void;
+  onToggleLabel: (v: string) => void;
+  onToggleCycle: (v: string) => void;
+  onToggleSprint: (v: string) => void;
+  onDueDateFromChange: (v: string) => void;
+  onDueDateToChange: (v: string) => void;
+  onClose: () => void;
+}
+
+const PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
+const TYPES = ["TASK", "BUG", "STORY", "EPIC", "SUBTASK"] as const;
+
+function OptionRow({
+  active,
+  label,
+  color,
+  onClick,
+}: {
+  active: boolean;
+  label: string;
+  color?: string | null;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-xs hover:bg-accent hover:text-accent-foreground transition-colors motion-reduce:transition-none focus-visible:outline-none focus-visible:bg-accent"
+    >
+      <Check
+        className={cn(
+          "h-3.5 w-3.5 shrink-0 transition-opacity motion-reduce:transition-none",
+          active ? "opacity-100" : "opacity-0",
+        )}
+      />
+      {color && (
+        <span
+          className="h-2 w-2 shrink-0 rounded-full"
+          style={{ backgroundColor: color }}
+        />
+      )}
+      <span className="truncate">{label}</span>
+    </button>
+  );
+}
+
+function SearchInput({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+}) {
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    onChange(e.target.value);
+  }
+
+  return (
+    <div className="flex items-center gap-1.5 border-b border-border px-2 py-1.5">
+      <Search className="h-3 w-3 shrink-0 text-muted-foreground" />
+      <input
+        autoFocus
+        type="text"
+        value={value}
+        onChange={handleChange}
+        placeholder={placeholder}
+        className="flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground"
+      />
+    </div>
+  );
+}
+
+export function FilterCategorySubmenu({
+  category,
+  statusOptions,
+  members,
+  labels,
+  cycles,
+  sprints,
+  selectedStatuses,
+  selectedPriorities,
+  selectedTypes,
+  selectedAssignees,
+  selectedLabels,
+  selectedCycles,
+  sprintParam,
+  dueDateFrom,
+  dueDateTo,
+  onToggleStatus,
+  onTogglePriority,
+  onToggleType,
+  onToggleAssignee,
+  onToggleLabel,
+  onToggleCycle,
+  onToggleSprint,
+  onDueDateFromChange,
+  onDueDateToChange,
+  onClose,
+}: FilterCategorySubmenuProps) {
+  const [search, setSearch] = useState("");
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "Escape" || e.key === "ArrowLeft") {
+        e.preventDefault();
+        e.stopPropagation();
+        onClose();
+      }
+    },
+    [onClose],
+  );
+
+  useEffect(() => {
+    containerRef.current?.focus();
+  }, []);
+
+  const needsSearch = category === "assignee" || category === "label";
+  const q = search.toLowerCase();
+
+  if (category === "status") {
+    const filtered = statusOptions.filter((s) =>
+      !q || s.toLowerCase().includes(q) || s.replace(/_/g, " ").toLowerCase().includes(q),
+    );
+    return (
+      <div
+        ref={containerRef}
+        tabIndex={-1}
+        onKeyDown={handleKeyDown}
+        className="flex min-w-[160px] flex-col py-1 outline-none"
+      >
+        {filtered.map((s) => {
+          const label = s.replace(/_/g, " ");
+          function handleClick() { onToggleStatus(s); }
+          return (
+            <OptionRow
+              key={s}
+              active={selectedStatuses.includes(s)}
+              label={label}
+              onClick={handleClick}
+            />
+          );
+        })}
+        {filtered.length === 0 && (
+          <p className="px-2 py-3 text-center text-xs text-muted-foreground">No options</p>
+        )}
+      </div>
+    );
+  }
+
+  if (category === "priority") {
+    return (
+      <div
+        ref={containerRef}
+        tabIndex={-1}
+        onKeyDown={handleKeyDown}
+        className="flex min-w-[160px] flex-col py-1 outline-none"
+      >
+        {PRIORITIES.map((p) => {
+          const label = p.charAt(0) + p.slice(1).toLowerCase();
+          function handleClick() { onTogglePriority(p); }
+          return (
+            <OptionRow
+              key={p}
+              active={selectedPriorities.includes(p)}
+              label={label}
+              onClick={handleClick}
+            />
+          );
+        })}
+      </div>
+    );
+  }
+
+  if (category === "type") {
+    return (
+      <div
+        ref={containerRef}
+        tabIndex={-1}
+        onKeyDown={handleKeyDown}
+        className="flex min-w-[160px] flex-col py-1 outline-none"
+      >
+        {TYPES.map((t) => {
+          const label = t.charAt(0) + t.slice(1).toLowerCase();
+          function handleClick() { onToggleType(t); }
+          return (
+            <OptionRow
+              key={t}
+              active={selectedTypes.includes(t)}
+              label={label}
+              onClick={handleClick}
+            />
+          );
+        })}
+      </div>
+    );
+  }
+
+  if (category === "assignee") {
+    const allMembers = [
+      { id: "__unassigned__", displayName: "Unassigned", color: null as string | null },
+      ...members.map((m) => ({ id: m.id, displayName: getUserDisplayName(m), color: null as string | null })),
+    ];
+    const filtered = allMembers.filter(
+      (m) => !q || m.displayName.toLowerCase().includes(q),
+    );
+    return (
+      <div
+        ref={containerRef}
+        tabIndex={-1}
+        onKeyDown={handleKeyDown}
+        className="flex min-w-[180px] flex-col outline-none"
+      >
+        {needsSearch && (
+          <SearchInput value={search} onChange={setSearch} placeholder="Search assignees..." />
+        )}
+        <div className="max-h-[200px] overflow-y-auto py-1">
+          {filtered.map((m) => {
+            function handleClick() { onToggleAssignee(m.id); }
+            return (
+              <OptionRow
+                key={m.id}
+                active={selectedAssignees.includes(m.id)}
+                label={m.displayName}
+                onClick={handleClick}
+              />
+            );
+          })}
+          {filtered.length === 0 && (
+            <p className="px-2 py-3 text-center text-xs text-muted-foreground">No members</p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (category === "label") {
+    const filtered = labels.filter(
+      (l) => !q || l.name.toLowerCase().includes(q),
+    );
+    return (
+      <div
+        ref={containerRef}
+        tabIndex={-1}
+        onKeyDown={handleKeyDown}
+        className="flex min-w-[180px] flex-col outline-none"
+      >
+        {needsSearch && (
+          <SearchInput value={search} onChange={setSearch} placeholder="Search labels..." />
+        )}
+        <div className="max-h-[200px] overflow-y-auto py-1">
+          {filtered.map((l) => {
+            const labelId = String(l.id);
+            function handleClick() { onToggleLabel(labelId); }
+            return (
+              <OptionRow
+                key={l.id}
+                active={selectedLabels.includes(labelId)}
+                label={l.name}
+                color={l.color}
+                onClick={handleClick}
+              />
+            );
+          })}
+          {filtered.length === 0 && (
+            <p className="px-2 py-3 text-center text-xs text-muted-foreground">No labels</p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (category === "cycle") {
+    return (
+      <div
+        ref={containerRef}
+        tabIndex={-1}
+        onKeyDown={handleKeyDown}
+        className="flex min-w-[160px] flex-col py-1 outline-none"
+      >
+        {cycles.map((c) => {
+          const cycleId = String(c.id);
+          function handleClick() { onToggleCycle(cycleId); }
+          return (
+            <OptionRow
+              key={c.id}
+              active={selectedCycles.includes(cycleId)}
+              label={c.name}
+              onClick={handleClick}
+            />
+          );
+        })}
+        {cycles.length === 0 && (
+          <p className="px-2 py-3 text-center text-xs text-muted-foreground">No cycles</p>
+        )}
+      </div>
+    );
+  }
+
+  if (category === "sprint") {
+    return (
+      <div
+        ref={containerRef}
+        tabIndex={-1}
+        onKeyDown={handleKeyDown}
+        className="flex min-w-[160px] flex-col py-1 outline-none"
+      >
+        {sprints.map((s) => {
+          const sprintId = String(s.id);
+          function handleClick() { onToggleSprint(sprintId); }
+          return (
+            <OptionRow
+              key={s.id}
+              active={sprintParam === sprintId}
+              label={s.name}
+              onClick={handleClick}
+            />
+          );
+        })}
+        {sprints.length === 0 && (
+          <p className="px-2 py-3 text-center text-xs text-muted-foreground">No sprints</p>
+        )}
+      </div>
+    );
+  }
+
+  if (category === "dates") {
+    const hasDate = Boolean(dueDateFrom || dueDateTo);
+    return (
+      <div
+        ref={containerRef}
+        tabIndex={-1}
+        onKeyDown={handleKeyDown}
+        className="flex min-w-[220px] flex-col p-2 outline-none"
+      >
+        <div className="mb-1.5 flex items-center gap-1.5 text-[10px] text-muted-foreground">
+          <CalendarRange className="h-3 w-3" />
+          {hasDate ? (
+            <span className="font-medium text-foreground">Range active</span>
+          ) : (
+            <span>Select a date range</span>
+          )}
+        </div>
+        <div className="flex items-center gap-1.5">
+          <DatePicker
+            value={dueDateFrom}
+            onChange={onDueDateFromChange}
+            placeholder="From"
+            className="h-7 flex-1 min-w-0 text-xs"
+          />
+          <span className="shrink-0 text-xs text-muted-foreground">–</span>
+          <DatePicker
+            value={dueDateTo}
+            onChange={onDueDateToChange}
+            placeholder="To"
+            className="h-7 flex-1 min-w-0 text-xs"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+}
