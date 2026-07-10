@@ -175,8 +175,8 @@ export function PIPTab() {
   const handleOpenCreate = useCallback(() => { resetForm(); setSheetOpen(true); }, [resetForm]);
   const handleSheetOpenChange = useCallback((open: boolean) => { if (!open) resetForm(); setSheetOpen(open); }, [resetForm]);
   const handleReasonChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setReason(e.target.value), []);
-  const handleStartDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setStartDate(e.target.value), []);
-  const handleEndDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setEndDate(e.target.value), []);
+  const handleStartDateChange = useCallback((value: string) => setStartDate(value), []);
+  const handleEndDateChange = useCallback((value: string) => setEndDate(value), []);
   const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value), []);
 
   if (isLoading) {

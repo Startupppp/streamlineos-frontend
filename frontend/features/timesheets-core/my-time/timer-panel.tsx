@@ -142,7 +142,7 @@ export function TimerPanel({ weekStart, weekEnd }: TimerPanelProps) {
 
   const handleStartDescChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setStartDesc(e.target.value), []);
   const handleStartBillableChange = useCallback((v: boolean) => setStartBillable(v), []);
-  const handleConvertDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setConvertDate(e.target.value), []);
+  const handleConvertDateChange = useCallback((value: string) => setConvertDate(value), []);
   const handleConvertHoursChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setConvertHours(e.target.value), []);
   const handleConvertBillableChange = useCallback((v: boolean) => setConvertBillable(v), []);
   const handleConvertDescChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setConvertDesc(e.target.value), []);

@@ -34,10 +34,7 @@ export function ApplyTemplateDialog({ template, onClose }: ApplyTemplateDialogPr
   const [endDate, setEndDate] = useState("");
   const apply = useApplyProjectTemplate();
 
-  const handleNameChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => setName(e.target.value),
-    [],
-  );
+  const handleNameChange = useCallback((e: ChangeEvent<HTMLInputElement>) => setName(e.target.value), []);
   const handleDescriptionChange = useCallback(
     (e: ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value),
     [],

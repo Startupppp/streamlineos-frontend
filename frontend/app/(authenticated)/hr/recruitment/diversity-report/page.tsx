@@ -115,15 +115,15 @@ export default function DiversityReportPage() {
   }, []);
 
   const handleFromChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setPendingFilters((p) => ({ ...p, from: e.target.value }));
+    (value: string) => {
+      setPendingFilters((p) => ({ ...p, from: value }));
     },
     [],
   );
 
   const handleToChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setPendingFilters((p) => ({ ...p, to: e.target.value }));
+    (value: string) => {
+      setPendingFilters((p) => ({ ...p, to: value }));
     },
     [],
   );

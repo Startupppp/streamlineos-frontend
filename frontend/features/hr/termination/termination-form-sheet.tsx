@@ -87,7 +87,7 @@ interface TerminationFormSheetProps {
   remarks: string;
   onRemarksChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   effectiveDate: string;
-  onEffectiveDateChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onEffectiveDateChange: (value: string) => void;
   noticePeriodWaived: boolean;
   onNoticePeriodWaivedChange: (checked: boolean) => void;
   severanceAmount: string;
@@ -259,7 +259,7 @@ export function TerminationFormSheet({
           <Label className="text-sm font-medium">
             Effective Date <span className="text-rose-500">*</span>
           </Label>
-          <DatePicker value={effectiveDate ?? ""} onChange={onEffectiveDateChange} placeholder="Pick a date" className="h-8 text-sm" fromDate={format(new Date(), "yyyy-MM-dd") ? parseISO(format(new Date(), "yyyy-MM-dd")) : undefined} />
+          <DatePicker value={effectiveDate ?? ""} onChange={onEffectiveDateChange} placeholder="Pick a date" className="h-8 text-sm" fromDate={new Date()} />
           <p className="text-[11px] text-muted-foreground">
             Must be today or a future date.
           </p>

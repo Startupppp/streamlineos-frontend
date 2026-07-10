@@ -105,7 +105,7 @@ function GoalCard({
       </div>
       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <Calendar className="w-3.5 h-3.5" />
-        <span>{new Date(goal.startDate).toLocaleDateString()} — {new Date(goal.endDate).toLocaleDateString()}</span>
+        <span>{new Date(goal.startDate).toLocaleDateString()} ??? {new Date(goal.endDate).toLocaleDateString()}</span>
       </div>
       <div className="space-y-1">
         <div className="flex justify-between text-xs text-muted-foreground">
@@ -197,11 +197,11 @@ export default function GoalsPage() {
   function handleTypeChange(v: string) {
     handleFormChange("type", v);
   }
-  function handleStartDateChange(e: ChangeEvent<HTMLInputElement>) {
-    handleFormChange("startDate", e.target.value);
+  function handleStartDateChange(value: string) {
+    handleFormChange("startDate", value);
   }
-  function handleEndDateChange(e: ChangeEvent<HTMLInputElement>) {
-    handleFormChange("endDate", e.target.value);
+  function handleEndDateChange(value: string) {
+    handleFormChange("endDate", value);
   }
   function handleTargetValueChange(e: ChangeEvent<HTMLInputElement>) {
     handleFormChange("targetValue", e.target.value);
@@ -308,11 +308,41 @@ export default function GoalsPage() {
             <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
               <div className="space-y-1.5">
                 <Label className="text-sm font-medium">Title *</Label>
-                <DatePicker value={form.title ?? ""} onChange={handleTitleChange} placeholder="Pick a date" className="space-y-1.5" />
+                <Input
+                  value={form.title}
+                  onChange={handleTitleChange}
+                  placeholder="Goal title"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium">Description</Label>
+                <Input
+                  value={form.description}
+                  onChange={handleDescriptionChange}
+                  placeholder="Optional description"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium">Type</Label>
+                <Select value={form.type} onValueChange={handleTypeChange}>
+                  <SelectTrigger className="h-8 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="OKR">OKR</SelectItem>
+                    <SelectItem value="STRETCH">Stretch</SelectItem>
+                    <SelectItem value="text">Text</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-medium">Start Date *</Label>
+                  <DatePicker value={form.startDate} onChange={handleStartDateChange} placeholder="Pick a date" className="h-8 text-sm" />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-sm font-medium">End Date *</Label>
-                  <DatePicker value={form.endDate ?? ""} onChange={handleEndDateChange} placeholder="Pick a date" className="h-8 text-sm" />
+                  <DatePicker value={form.endDate} onChange={handleEndDateChange} placeholder="Pick a date" className="h-8 text-sm" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -349,7 +379,7 @@ export default function GoalsPage() {
                 onClick={handleCreate}
                 disabled={createGoal.isPending}
               >
-                {createGoal.isPending ? "Creating…" : "Create Goal"}
+                {createGoal.isPending ? "Creating???" : "Create Goal"}
               </Button>
             </div>
           </SheetContent>
@@ -427,7 +457,7 @@ export default function GoalsPage() {
                 onClick={handleSaveProgress}
                 disabled={updateGoal.isPending}
               >
-                {updateGoal.isPending ? "Saving…" : "Save Progress"}
+                {updateGoal.isPending ? "Saving???" : "Save Progress"}
               </Button>
             </div>
           )}

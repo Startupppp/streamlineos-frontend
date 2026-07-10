@@ -81,14 +81,12 @@ export default function CrmAuditLogPage() {
   );
 
   const handleFromDateChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) =>
-      updateParams({ from: e.target.value || null, page: null }),
+    (value: string) => updateParams({ from: value || null, page: null }),
     [updateParams],
   );
 
   const handleToDateChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) =>
-      updateParams({ to: e.target.value || null, page: null }),
+    (value: string) => updateParams({ to: value || null, page: null }),
     [updateParams],
   );
 

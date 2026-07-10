@@ -154,8 +154,8 @@ export function CreateProjectDialog({ open, onOpenChange, defaultName, onSubmit,
 
   const handleCancel = useCallback(() => handleOpenChange(false), [handleOpenChange]);
   const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value), []);
-  const handleStartDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setStartDate(e.target.value), []);
-  const handleEndDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setEndDate(e.target.value), []);
+  const handleStartDateChange = useCallback((value: string) => setStartDate(value), []);
+  const handleEndDateChange = useCallback((value: string) => setEndDate(value), []);
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>

@@ -1,6 +1,6 @@
-import { parseISO } from "date-fns";
 "use client";
 
+import { parseISO } from "date-fns";
 import { useState, useCallback } from "react";
 import {
   useReviewCycles,
@@ -120,9 +120,9 @@ export function CyclesTab() {
 
   const handleDeleteDialogChange = useCallback((open: boolean) => { if (!open) setDeleteId(null); }, []);
   const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value), []);
-  const handlePeriodStartChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setPeriodStart(e.target.value), []);
-  const handlePeriodEndChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setPeriodEnd(e.target.value), []);
-  const handleDeadlineChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setDeadline(e.target.value), []);
+  const handlePeriodStartChange = useCallback((value: string) => setPeriodStart(value), []);
+  const handlePeriodEndChange = useCallback((value: string) => setPeriodEnd(value), []);
+  const handleDeadlineChange = useCallback((value: string) => setDeadline(value), []);
 
   if (isLoading) {
     return <LoadingState variant="list" rows={3} />;
@@ -260,12 +260,12 @@ export function CyclesTab() {
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Period End</label>
-            <DatePicker value={periodEnd ?? ""} onChange={handlePeriodEndChange} fromDate={periodStart || undefined ? parseISO(periodStart || undefined) : undefined} placeholder="Pick a date" className="h-8 text-sm" />
+            <DatePicker value={periodEnd ?? ""} onChange={handlePeriodEndChange} fromDate={periodStart ? parseISO(periodStart) : undefined} placeholder="Pick a date" className="h-8 text-sm" />
           </div>
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Submission Deadline</label>
-          <DatePicker value={deadline ?? ""} onChange={handleDeadlineChange} fromDate={periodEnd || undefined ? parseISO(periodEnd || undefined) : undefined} placeholder="Pick a date" className="h-8 text-sm" />
+          <DatePicker value={deadline ?? ""} onChange={handleDeadlineChange} fromDate={periodEnd ? parseISO(periodEnd) : undefined} placeholder="Pick a date" className="h-8 text-sm" />
         </div>
       </HrSheet>
 

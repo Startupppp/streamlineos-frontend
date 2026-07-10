@@ -168,8 +168,8 @@ export function ReviewsTab() {
 
   const handleOpenSheet = useCallback(() => { resetForm(); setSheetOpen(true); }, [resetForm]);
 
-  const handlePeriodStartChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setPeriodStart(e.target.value), []);
-  const handlePeriodEndChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setPeriodEnd(e.target.value), []);
+  const handlePeriodStartChange = useCallback((value: string) => setPeriodStart(value), []);
+  const handlePeriodEndChange = useCallback((value: string) => setPeriodEnd(value), []);
 
   if (isLoading) {
     return <LoadingState variant="cards" rows={4} />;

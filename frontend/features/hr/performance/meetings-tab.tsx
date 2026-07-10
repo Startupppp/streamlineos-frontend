@@ -113,7 +113,7 @@ export function MeetingsTab() {
 
   const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
   const handleDeleteDialogChange = useCallback((open: boolean) => { if (!open) setDeleteId(null); }, []);
-  const handleScheduledDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setScheduledDate(e.target.value), []);
+  const handleScheduledDateChange = useCallback((value: string) => setScheduledDate(value), []);
   const handleScheduledTimeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setScheduledTime(e.target.value), []);
   const handleDurationChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setDuration(e.target.value), []);
   const handleAgendaChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setAgenda(e.target.value), []);
@@ -203,7 +203,7 @@ export function MeetingsTab() {
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Date</label>
-            <DatePicker value={scheduledDate ?? ""} onChange={handleScheduledDateChange} fromDate={new Date().toISOString().slice(0, 10) ? parseISO(new Date().toISOString().slice(0, 10)) : undefined} placeholder="Pick a date" className="h-8 text-sm" />
+            <DatePicker value={scheduledDate ?? ""} onChange={handleScheduledDateChange} fromDate={new Date()} placeholder="Pick a date" className="h-8 text-sm" />
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Time</label>

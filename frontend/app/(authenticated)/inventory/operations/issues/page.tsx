@@ -121,12 +121,12 @@ export default function IssuesPage() {
     });
   }
 
-  function handleFromDateChange(e: React.ChangeEvent<HTMLInputElement>): void {
-    updateParams({ fromDate: e.target.value, page: "1" });
+  function handleFromDateChange(value: string): void {
+    updateParams({ fromDate: value, page: "1" });
   }
 
-  function handleToDateChange(e: React.ChangeEvent<HTMLInputElement>): void {
-    updateParams({ toDate: e.target.value, page: "1" });
+  function handleToDateChange(value: string): void {
+    updateParams({ toDate: value, page: "1" });
   }
 
   function handlePageChange(nextPage: number): void {

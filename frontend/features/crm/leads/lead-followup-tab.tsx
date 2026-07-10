@@ -165,14 +165,8 @@ export function LeadFollowupTab({ leadId }: LeadFollowupTabProps) {
     (v: string) => setFuType(v as TaskType),
     [],
   );
-  const handleTitleChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setFuTitle(e.target.value),
-    [],
-  );
-  const handleTimeChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setFuTime(e.target.value),
-    [],
-  );
+  const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setFuTitle(e.target.value), []);
+  const handleTimeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setFuTime(e.target.value), []);
   const handleNotesChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => setFuNotes(e.target.value),
     [],

@@ -479,11 +479,11 @@ export default function ReportsPage() {
   function handleEntitySelectChange(v: string) {
     handleEntityChange(v as ReportEntity);
   }
-  function handleDateFromChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setDateFrom(e.target.value);
+  function handleDateFromChange(value: string) {
+    setDateFrom(value);
   }
-  function handleDateToChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setDateTo(e.target.value);
+  function handleDateToChange(value: string) {
+    setDateTo(value);
   }
   function handleOpenSchedule() {
     setScheduleSheetOpen(true);

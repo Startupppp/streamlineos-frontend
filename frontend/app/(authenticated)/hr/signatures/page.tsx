@@ -372,8 +372,8 @@ export default function SignaturesPage() {
     setNewDocUrl(e.target.value);
   }
 
-  function handleNewExpiresAtChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setNewExpiresAt(e.target.value);
+  function handleNewExpiresAtChange(value: string) {
+    setNewExpiresAt(value);
   }
 
   function handleDocTypeChange(value: string) {

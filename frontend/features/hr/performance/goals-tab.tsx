@@ -268,7 +268,7 @@ export function GoalsTab() {
     if (!open) setDeleteId(null);
   }, []);
 
-  const handleTitleChange = useCallback((value: string) => setTitle(value), []);
+  const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value), []);
   const handleDescriptionChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) =>
       setDescription(e.target.value),

@@ -296,7 +296,7 @@ export default function TerminationPage() {
   const handleSetSubmitId = useCallback((id: number) => setSubmitId(id), []);
   const handleSetCompleteId = useCallback((id: number) => setCompleteId(id), []);
   const handleRemarksChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setRemarks(e.target.value), []);
-  const handleEffectiveDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setEffectiveDate(e.target.value), []);
+  const handleEffectiveDateChange = useCallback((value: string) => setEffectiveDate(value), []);
   const handleSeveranceAmountChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSeveranceAmount(e.target.value), []);
   const handleInternalNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setInternalNotes(e.target.value), []);
   const handleCeoRemarksChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setCeoRemarks(e.target.value), []);

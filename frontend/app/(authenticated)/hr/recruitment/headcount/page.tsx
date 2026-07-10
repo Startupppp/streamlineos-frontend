@@ -120,9 +120,15 @@ function RequestSheet({ initial, onClose }: RequestSheetProps) {
 
   const isPending = create.isPending || update.isPending;
 
-  function handleRoleChange(e: React.ChangeEvent<HTMLInputElement>) { setRole(e.target.value); }
-  function handleLevelChange(e: React.ChangeEvent<HTMLInputElement>) { setLevel(e.target.value); }
-  function handleTargetDateChange(e: React.ChangeEvent<HTMLInputElement>) { setTargetDate(e.target.value); }
+  function handleRoleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setRole(e.target.value);
+  }
+  function handleLevelChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setLevel(e.target.value);
+  }
+  function handleTargetDateChange(value: string) {
+    setTargetDate(value);
+  }
   function handleJustificationChange(e: React.ChangeEvent<HTMLTextAreaElement>) { setJustification(e.target.value); }
   function handleSheetOpenChange(v: boolean) { if (!v) onClose(); }
   function handleSaveDraft() { handleSubmit("DRAFT"); }

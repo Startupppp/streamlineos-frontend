@@ -1,4 +1,3 @@
-import { parseISO } from "date-fns";
 "use client";
 
 import { useState, useCallback } from "react";
@@ -63,7 +62,10 @@ export function SetDueDateDialog({
 
   const dueDateMutation = useSetDueDateFromChat();
 
-  const handleTicketIdChange = useCallback((value: string) => setTicketIdStr(value), []);
+  const handleTicketIdChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setTicketIdStr(e.target.value),
+    [],
+  );
 
   const handleDueDateChange = useCallback((value: string) => setDueDateValue(value), []);
 
@@ -130,7 +132,24 @@ export function SetDueDateDialog({
           {ticketId === undefined && (
             <div className="space-y-1.5">
               <Label htmlFor="sdd-ticket">Ticket ID</Label>
-              <DatePicker id="sdd-ticket" value={ticketIdStr ?? ""} onChange={handleTicketIdChange} placeholder="Pick a date" className="space-y-1.5" fromDate={1 ? parseISO(1) : undefined} />
+              <Input
+                id="sdd-ticket"
+                type="number"
+                min={1}
+                value={ticketIdStr}
+                onChange={handleTicketIdChange}
+                placeholder="e.g. 42"
+              />
+            </div>
+          )}
+          <div className="space-y-1.5">
+            <Label htmlFor="sdd-date">Due Date</Label>
+            <DatePicker
+              id="sdd-date"
+              value={dueDateValue}
+              onChange={handleDueDateChange}
+              placeholder="Pick a date"
+            />
           </div>
         </div>
         <DialogFooter>

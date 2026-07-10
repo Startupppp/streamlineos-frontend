@@ -67,19 +67,13 @@ export default function VendorLedgerDetailPage({ params }: PageProps) {
     to: to || undefined,
   });
 
-  const handleFromChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>): void => {
-      setFrom(event.target.value);
-    },
-    [],
-  );
+  const handleFromChange = useCallback((value: string) => {
+    setFrom(value);
+  }, []);
 
-  const handleToChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>): void => {
-      setTo(event.target.value);
-    },
-    [],
-  );
+  const handleToChange = useCallback((value: string): void => {
+    setTo(value);
+  }, []);
 
   const handleRetry = useCallback((): void => {
     void query.refetch();

@@ -93,8 +93,8 @@ export default function CertificationsPage() {
 
   const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value), []);
   const handleOrgChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setOrg(e.target.value), []);
-  const handleIssueDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setIssueDate(e.target.value), []);
-  const handleExpiryDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setExpiryDate(e.target.value), []);
+  const handleIssueDateChange = useCallback((value: string) => setIssueDate(value), []);
+  const handleExpiryDateChange = useCallback((value: string) => setExpiryDate(value), []);
   const handleCredentialIdChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setCredentialId(e.target.value), []);
   const handleCredentialUrlChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setCredentialUrl(e.target.value), []);
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value), []);
