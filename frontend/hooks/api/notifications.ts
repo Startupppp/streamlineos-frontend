@@ -14,6 +14,7 @@ import type {
   UpdateTemplateInput,
   TemplatePreviewResult,
   Broadcast,
+  BroadcastListResponse,
   CreateBroadcastInput,
   UpdateBroadcastInput,
   NotificationPreferences,
@@ -267,12 +268,12 @@ export const usePreviewTemplate = () => {
 
 export const useBroadcasts = (
   params?: Record<string, unknown>,
-  options?: Omit<UseQueryOptions<Broadcast[], Error>, "queryKey" | "queryFn">,
+  options?: Omit<UseQueryOptions<BroadcastListResponse, Error>, "queryKey" | "queryFn">,
 ) => {
-  return useQuery<Broadcast[], Error>({
+  return useQuery<BroadcastListResponse, Error>({
     queryKey: queryKeys.notifications.broadcasts(params),
     queryFn: () =>
-      apiClient.get<Broadcast[]>(
+      apiClient.get<BroadcastListResponse>(
         "/broadcasts",
         params ? toStringParams(params) : undefined,
       ),

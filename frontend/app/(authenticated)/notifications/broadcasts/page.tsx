@@ -432,7 +432,7 @@ export default function BroadcastsPage() {
   const [deleteTarget, setDeleteTarget] = useState<Broadcast | null>(null);
 
   const params = activeStatus !== "ALL" ? { status: activeStatus } : undefined;
-  const { data: broadcasts, isLoading, isError, refetch } = useBroadcasts(params);
+  const { data: broadcastData, isLoading, isError, refetch } = useBroadcasts(params);
   const publish = usePublishBroadcast();
   const cancel = useCancelBroadcast();
   const deleteBroadcast = useDeleteBroadcast();
@@ -478,7 +478,7 @@ export default function BroadcastsPage() {
 
   function handleRetry() { void refetch(); }
 
-  const items = broadcasts ?? [];
+  const items = broadcastData?.items ?? [];
 
   return (
     <PageWrapper

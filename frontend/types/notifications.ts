@@ -162,6 +162,11 @@ export interface CreateBroadcastInput {
 
 export type UpdateBroadcastInput = Partial<CreateBroadcastInput>;
 
+export interface BroadcastListResponse {
+  items: Broadcast[];
+  nextCursor?: number;
+}
+
 export interface NotificationPreferences {
   id: number;
   userId: string;
