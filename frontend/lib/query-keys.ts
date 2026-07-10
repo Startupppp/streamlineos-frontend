@@ -316,6 +316,7 @@ export const queryKeys = {
     providers: () => [...base, "notifications", "providers"] as const,
     events: () => [...base, "notifications", "events"] as const,
     policy: () => [...base, "notifications", "policy"] as const,
+    suppressions: () => [...base, "notifications", "suppressions"] as const,
   },
 
   invoice: {

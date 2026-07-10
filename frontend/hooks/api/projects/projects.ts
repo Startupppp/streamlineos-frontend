@@ -9,6 +9,7 @@ import type {
   ProjectListItem,
   ProjectWithDetails,
   ProjectMember,
+  ProjectMemberRecord,
   TicketLabel,
   PaginatedResponse,
   ProjectFilters,
@@ -109,11 +110,11 @@ export function useArchiveProject(
 
 export function useProjectMembers(
   projectId: number,
-  options?: Omit<UseQueryOptions<ProjectMember[]>, "queryKey" | "queryFn" | "enabled">
+  options?: Omit<UseQueryOptions<ProjectMemberRecord[]>, "queryKey" | "queryFn" | "enabled">
 ) {
-  return useQuery<ProjectMember[]>({
+  return useQuery<ProjectMemberRecord[]>({
     queryKey: queryKeys.projects.members(projectId),
-    queryFn: () => apiClient.get<ProjectMember[]>(`/projects/${projectId}/members`),
+    queryFn: () => apiClient.get<ProjectMemberRecord[]>(`/projects/${projectId}/members`),
     enabled: !!projectId,
     staleTime: 30_000,
     ...options,

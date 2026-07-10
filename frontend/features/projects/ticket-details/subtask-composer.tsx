@@ -101,7 +101,7 @@ export function SubtaskComposer({ ticketId, projectId, projectStatuses }: Subtas
   }
 
   const selectedMember = assigneeId
-    ? members.find((m) => m.userId === assigneeId)?.user ?? null
+    ? members.find((m) => m.id === assigneeId) ?? null
     : null;
 
   const currentStatusEntry = status ? getStatusEntry(resolvedConfig, status) : null;
@@ -233,24 +233,20 @@ export function SubtaskComposer({ ticketId, projectId, projectStatuses }: Subtas
                   <span className="text-xs">Unassigned</span>
                   {!assigneeId && <Check className="ml-auto h-3 w-3" />}
                 </CommandItem>
-                {members.map((m) => {
-                  const user = m.user;
-                  if (!user) return null;
-                  return (
-                    <CommandItem
-                      key={m.userId}
-                      value={getUserDisplayName(user)}
-                      onSelect={makeAssigneeHandler(m.userId)}
-                    >
-                      <Avatar className="mr-2 h-5 w-5 shrink-0">
-                        <AvatarImage src={resolveImageUrl(user.image)} />
-                        <AvatarFallback className="text-[7px]">{getUserInitials(user)}</AvatarFallback>
-                      </Avatar>
-                      <span className="truncate text-xs">{getUserDisplayName(user)}</span>
-                      {m.userId === assigneeId && <Check className="ml-auto h-3 w-3" />}
-                    </CommandItem>
-                  );
-                })}
+                {members.map((m) => (
+                  <CommandItem
+                    key={m.id}
+                    value={getUserDisplayName(m)}
+                    onSelect={makeAssigneeHandler(m.id)}
+                  >
+                    <Avatar className="mr-2 h-5 w-5 shrink-0">
+                      <AvatarImage src={resolveImageUrl(m.image)} />
+                      <AvatarFallback className="text-[7px]">{getUserInitials(m)}</AvatarFallback>
+                    </Avatar>
+                    <span className="truncate text-xs">{getUserDisplayName(m)}</span>
+                    {m.id === assigneeId && <Check className="ml-auto h-3 w-3" />}
+                  </CommandItem>
+                ))}
               </CommandGroup>
             </CommandList>
           </Command>

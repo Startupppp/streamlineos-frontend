@@ -29,6 +29,8 @@ import type {
   DispatchResult,
   NotificationPolicyDefault,
   UpsertPolicyInput,
+  SuppressionRule,
+  CreateSuppressionInput,
 } from "@/types/notifications";
 
 function toStringParams(params: Record<string, unknown>): Record<string, string> {
@@ -490,6 +492,40 @@ export const useUpsertNotificationPolicy = () => {
     mutationFn: (dto) => apiClient.put<NotificationPolicyDefault>("/notifications/admin/policy", dto),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.policy() });
+    },
+  });
+};
+
+export const useSuppressions = (
+  options?: Omit<UseQueryOptions<SuppressionRule[], Error>, "queryKey" | "queryFn">,
+) => {
+  return useQuery<SuppressionRule[], Error>({
+    queryKey: queryKeys.notifications.suppressions(),
+    queryFn: () => apiClient.get<SuppressionRule[]>("/notification-preferences/suppressions"),
+    staleTime: 60_000,
+    ...options,
+  });
+};
+
+export const useCreateSuppression = () => {
+  const queryClient = useQueryClient();
+  return useMutation<SuppressionRule, Error, CreateSuppressionInput>({
+    mutationKey: ["notifications", "suppressions", "create"],
+    mutationFn: (dto) => apiClient.post<SuppressionRule>("/notification-preferences/suppressions", dto),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.suppressions() });
+    },
+  });
+};
+
+export const useRemoveSuppression = () => {
+  const queryClient = useQueryClient();
+  return useMutation<{ success: boolean }, Error, number>({
+    mutationKey: ["notifications", "suppressions", "remove"],
+    mutationFn: (suppressionId) =>
+      apiClient.delete<{ success: boolean }>(`/notification-preferences/suppressions/${suppressionId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.suppressions() });
     },
   });
 };

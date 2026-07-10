@@ -3,7 +3,8 @@
 import { useCallback, useMemo, useState } from "react";
 import { useBugs, useDeleteBug } from "@/hooks/api/projects/bugs";
 import { useCan } from "@/hooks/api/access";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { useProjectMembers } from "@/hooks/api/projects";
+import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
 import type { Bug, BugSeverity, BugStatus, BugPriority } from "@/types/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable } from "@/components/ui/data-table";
@@ -80,9 +81,8 @@ export function BugsPage({ projectId }: BugsPageProps) {
   };
 
   const { data: bugs, isLoading, isError, refetch } = useBugs(projectId, filters);
-  const { data: membersData } = useOrgMembers(1, 100);
+  const { data: members = [] } = useProjectMembers(projectId);
   const deleteBug = useDeleteBug();
-  const members = useMemo(() => membersData?.data ?? [], [membersData]);
 
   const handleEdit = useCallback((bug: Bug) => { setEditBug(bug); setSheetOpen(true); }, []);
   const handleNewBug = useCallback(() => { setEditBug(null); setSheetOpen(true); }, []);
@@ -153,10 +153,10 @@ export function BugsPage({ projectId }: BugsPageProps) {
       key: "assignee",
       header: "Assignee",
       cell: (row) => {
-        const member = members.find((m) => m.userId === row.assigneeId);
+        const member = members.find((m) => m.id === row.assigneeId);
         return (
           <span className="text-[11px] text-muted-foreground">
-            {member ? (member.name ?? member.email) : "—"}
+            {member ? getUserDisplayName(member) : "—"}
           </span>
         );
       },
@@ -217,7 +217,7 @@ export function BugsPage({ projectId }: BugsPageProps) {
         <SelectContent>
           <SelectItem value="all">All assignees</SelectItem>
           {members.map((m) => (
-            <SelectItem key={m.userId} value={m.userId}>{m.name ?? m.email}</SelectItem>
+            <SelectItem key={m.id} value={m.id}>{getUserDisplayName(m)}</SelectItem>
           ))}
         </SelectContent>
       </Select>

@@ -16,7 +16,7 @@ import { toast } from "sonner";
 import { TiptapEditor } from "@/components/editor/tiptap-editor";
 import { useCreateIncident, useUpdateIncident } from "@/hooks/api/projects/incidents";
 import { useProject } from "@/hooks/api/projects/projects";
-import { UserCombobox } from "@/components/ui/user-combobox";
+import { ProjectMemberSelect } from "@/components/members/project-member-select";
 import { TicketCombobox } from "@/components/ui/ticket-combobox";
 import type { Incident, IncidentSeverity, IncidentStatus } from "@/types/projects";
 
@@ -180,11 +180,13 @@ export function IncidentSheet({ projectId, open, onOpenChange, editIncident }: I
 
             <div className="space-y-1.5">
               <Label className="text-[11px]">Owner</Label>
-              <UserCombobox
+              <ProjectMemberSelect
+                projectId={projectId}
+                mode="single"
                 value={form.watch("ownerId")}
-                onChange={(v) => form.setValue("ownerId", v)}
-                placeholder="Unassigned"
+                onChange={(v) => form.setValue("ownerId", v ?? "")}
                 allowUnassigned
+                placeholder="Unassigned"
                 className="h-8 text-[11px]"
               />
             </div>

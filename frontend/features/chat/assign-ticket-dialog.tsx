@@ -155,8 +155,8 @@ export function AssignTicketDialog({
               </SelectTrigger>
               <SelectContent>
                 {members?.map((m) => (
-                  <SelectItem key={m.userId} value={m.userId}>
-                    {m.user?.name ?? m.userId}
+                  <SelectItem key={m.id} value={m.id}>
+                    {m.name ?? m.email}
                   </SelectItem>
                 ))}
               </SelectContent>

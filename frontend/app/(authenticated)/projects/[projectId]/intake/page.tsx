@@ -23,6 +23,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, ExternalLink } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
 import { useForm, Controller, useController } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -316,8 +317,8 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
                   <SelectTrigger><SelectValue placeholder="Select assignee..." /></SelectTrigger>
                   <SelectContent>
                     {members?.map((m) => (
-                      <SelectItem key={m.userId} value={m.userId}>
-                        {m.user?.name ?? m.user?.email ?? m.userId}
+                      <SelectItem key={m.id} value={m.id}>
+                        {getUserDisplayName(m)}
                       </SelectItem>
                     ))}
                   </SelectContent>

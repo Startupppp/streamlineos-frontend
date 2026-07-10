@@ -1,13 +1,22 @@
 import type { TicketPriority } from "@/types/projects";
 
-export type GroupByOption = "status" | "assignee" | "priority" | "label" | "cycle" | "none";
+export type GroupByOption = "status" | "assignee" | "priority" | "label" | "cycle" | "project" | "none";
+export type ColumnByOption = "status" | "assignee" | "priority" | "label" | "cycle" | "project";
+export type SwimlaneBy = "none" | "status" | "assignee" | "priority" | "cycle";
 export type OrderByOption = "created" | "priority" | "dueDate" | "manual";
+export type CompletedIssuesFilter = "all" | "none" | "last-day" | "last-week" | "last-month";
 
 export interface DisplayOptions {
+  columnBy: ColumnByOption;
+  rowBy: SwimlaneBy;
   groupBy: GroupByOption;
   orderBy: OrderByOption;
+  orderCompleteByRecency: boolean;
+  completedIssues: CompletedIssuesFilter;
   showSubIssues: boolean;
   showEmptyGroups: boolean;
+  showEmptyColumns: boolean;
+  showEmptyRows: boolean;
   showId: boolean;
   showStatus: boolean;
   showAssignee: boolean;
@@ -16,6 +25,13 @@ export interface DisplayOptions {
   showCycle: boolean;
   showLabels: boolean;
   showDueDate: boolean;
+  showProject: boolean;
+  showMilestone: boolean;
+  showLinks: boolean;
+  showTimeInStatus: boolean;
+  showCreated: boolean;
+  showUpdated: boolean;
+  showPRs: boolean;
 }
 
 export interface KanbanTicket {
@@ -36,6 +52,7 @@ export interface KanbanTicket {
   dueDate?: string | null;
   startDate?: string | null;
   timeSpent?: string | null;
+  updatedAt?: string | null;
   assignee?: {
     id: string;
     name?: string | null;
@@ -140,5 +157,3 @@ export const typeConfig: Record<
   EPIC: { label: "Epic", color: "text-violet-600" },
   SUBTASK: { label: "Subtask", color: "text-muted-foreground" },
 };
-
-export type SwimlaneBy = "none" | "assignee" | "priority" | "epic";

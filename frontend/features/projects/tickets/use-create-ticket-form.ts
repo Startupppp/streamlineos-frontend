@@ -16,7 +16,7 @@ import { z } from "zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import type { CreateTicketPropertiesValue } from "./ticket-create-properties";
-import type { ProjectMember, ProjectStatusRecord, Cycle, TicketLabel } from "@/types/projects";
+import type { ProjectMemberRecord, ProjectStatusRecord, Cycle, TicketLabel } from "@/types/projects";
 
 const formSchema = createTicketInputSchema.omit({ projectId: true, labelIds: true });
 
@@ -50,7 +50,7 @@ export function useCreateTicketForm({ projectId, defaultStatus, onCreated }: Use
 
   const cycles = useMemo<Cycle[]>(() => cyclesRaw ?? [], [cyclesRaw]);
   const labels = useMemo<TicketLabel[]>(() => labelsRaw ?? [], [labelsRaw]);
-  const members = useMemo<ProjectMember[]>(() => membersRaw ?? [], [membersRaw]);
+  const members = useMemo<ProjectMemberRecord[]>(() => membersRaw ?? [], [membersRaw]);
 
   const projectStatuses = useMemo<ProjectStatusRecord[]>(
     () => projectData?.statuses ?? [],

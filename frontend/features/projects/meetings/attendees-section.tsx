@@ -10,7 +10,7 @@ import { Combobox } from "@/components/ui/combobox";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { resolveImageUrl } from "@/lib/utils";
 import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
-import type { MeetingAttendee, ProjectMember } from "@/types/projects";
+import type { MeetingAttendee, ProjectMemberRecord } from "@/types/projects";
 
 const FIELD_CLASS = "h-8 w-full text-xs bg-card border-border shadow-xs";
 
@@ -18,12 +18,12 @@ interface AttendeesSectionProps {
   projectId: number;
   meetingId: number;
   attendees: MeetingAttendee[];
-  projectMembers: ProjectMember[];
+  projectMembers: ProjectMemberRecord[];
   canManage: boolean;
 }
 
-function findMember(members: ProjectMember[], userId: string): ProjectMember | undefined {
-  return members.find((m) => m.userId === userId);
+function findMember(members: ProjectMemberRecord[], userId: string): ProjectMemberRecord | undefined {
+  return members.find((m) => m.id === userId);
 }
 
 export function AttendeesSection({
@@ -37,16 +37,16 @@ export function AttendeesSection({
   const attendeeIds = useMemo(() => new Set(attendees.map((a) => a.userId)), [attendees]);
 
   const availableMembers = useMemo(
-    () => projectMembers.filter((m) => !attendeeIds.has(m.userId)),
+    () => projectMembers.filter((m) => !attendeeIds.has(m.id)),
     [projectMembers, attendeeIds],
   );
 
   const comboboxOptions = useMemo(
     () =>
       availableMembers.map((m) => ({
-        value: m.userId,
-        label: getUserDisplayName(m.user),
-        sublabel: m.user?.email ?? undefined,
+        value: m.id,
+        label: getUserDisplayName(m),
+        sublabel: m.email,
       })),
     [availableMembers],
   );
@@ -103,7 +103,7 @@ export function AttendeesSection({
         <div className="flex flex-wrap gap-1.5">
           {attendees.map((attendee) => {
             const member = findMember(projectMembers, attendee.userId);
-            const displayName = getUserDisplayName(member?.user);
+            const displayName = getUserDisplayName(member);
             return (
               <Badge
                 key={attendee.userId}
@@ -111,9 +111,9 @@ export function AttendeesSection({
                 className="gap-1.5 pl-0.5 pr-1.5 py-0.5"
               >
                 <Avatar className="h-5 w-5 shrink-0">
-                  <AvatarImage src={resolveImageUrl(member?.user?.image)} />
+                  <AvatarImage src={resolveImageUrl(member?.image)} />
                   <AvatarFallback className="text-[7px]">
-                    {getUserInitials(member?.user)}
+                    {getUserInitials(member)}
                   </AvatarFallback>
                 </Avatar>
                 <span className="truncate max-w-[140px] text-[11px]">{displayName}</span>

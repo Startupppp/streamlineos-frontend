@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useProjectMembers } from "@/hooks/api/projects";
+import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
 import type { FormField } from "@/types/projects/forms";
 
 interface DynamicFormRendererProps {
@@ -177,8 +178,8 @@ export function DynamicFormRenderer({
                 <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Select user…" /></SelectTrigger>
                 <SelectContent>
                   {(members ?? []).map((m) => (
-                    <SelectItem key={m.userId} value={m.userId}>
-                      {m.user?.name ?? m.user?.email ?? m.userId}
+                    <SelectItem key={m.id} value={m.id}>
+                      {getUserDisplayName(m)}
                     </SelectItem>
                   ))}
                 </SelectContent>

@@ -27,7 +27,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useCreateTestRun, useTestCases, useTestSuites } from "@/hooks/api/projects/qa";
-import { UserCombobox } from "@/components/ui/user-combobox";
+import { ProjectMemberSelect } from "@/components/members/project-member-select";
 
 const schema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -227,11 +227,13 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
 
             <div className="space-y-1.5">
               <Label className="text-[11px]">Tester</Label>
-              <UserCombobox
+              <ProjectMemberSelect
+                projectId={projectId}
+                mode="single"
                 value={form.watch("testerId")}
-                onChange={(v) => form.setValue("testerId", v)}
-                placeholder="Assign tester…"
+                onChange={(v) => form.setValue("testerId", v ?? "")}
                 allowUnassigned
+                placeholder="Assign tester…"
                 className="h-8 text-[11px]"
               />
             </div>

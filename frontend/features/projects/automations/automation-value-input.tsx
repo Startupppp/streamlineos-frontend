@@ -6,6 +6,7 @@ import { Combobox } from "@/components/ui/combobox";
 import { useCustomStates } from "@/hooks/api/projects/custom-states";
 import { useProjectMembers, useProjectLabels } from "@/hooks/api/projects/projects";
 import { cn } from "@/lib/utils";
+import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
 
 const PRIORITY_OPTIONS = [
   { value: "LOW", label: "Low" },
@@ -72,12 +73,9 @@ function AssigneeCombobox({
 }) {
   const { data: members = [] } = useProjectMembers(projectId);
   const options = members.map((m) => ({
-    value: m.userId,
-    label:
-      m.user?.name ??
-      ([m.user?.firstName, m.user?.lastName].filter(Boolean).join(" ") || m.user?.email) ??
-      m.userId,
-    sublabel: m.user?.email ?? undefined,
+    value: m.id,
+    label: getUserDisplayName(m),
+    sublabel: m.email,
   }));
   return (
     <Combobox

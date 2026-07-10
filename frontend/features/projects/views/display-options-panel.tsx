@@ -8,13 +8,20 @@ import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import type { DisplayOptions, GroupByOption, OrderByOption } from "../shared/types";
+import { cn } from "@/lib/utils";
+import type { DisplayOptions, ColumnByOption, SwimlaneBy, OrderByOption, CompletedIssuesFilter } from "../shared/types";
 
 export const DEFAULT_DISPLAY_OPTIONS: DisplayOptions = {
+  columnBy: "status",
+  rowBy: "none",
   groupBy: "status",
   orderBy: "manual",
+  orderCompleteByRecency: false,
+  completedIssues: "all",
   showSubIssues: false,
   showEmptyGroups: true,
+  showEmptyColumns: true,
+  showEmptyRows: false,
   showId: true,
   showStatus: true,
   showAssignee: true,
@@ -23,15 +30,30 @@ export const DEFAULT_DISPLAY_OPTIONS: DisplayOptions = {
   showCycle: true,
   showLabels: true,
   showDueDate: true,
+  showProject: false,
+  showMilestone: false,
+  showLinks: false,
+  showTimeInStatus: false,
+  showCreated: false,
+  showUpdated: false,
+  showPRs: false,
 };
 
-const GROUP_OPTIONS: { value: GroupByOption; label: string }[] = [
+const COLUMN_OPTIONS: { value: ColumnByOption; label: string }[] = [
   { value: "status", label: "Status" },
   { value: "assignee", label: "Assignee" },
   { value: "priority", label: "Priority" },
   { value: "label", label: "Label" },
   { value: "cycle", label: "Cycle" },
+  { value: "project", label: "Project" },
+];
+
+const ROW_OPTIONS: { value: SwimlaneBy; label: string }[] = [
   { value: "none", label: "None" },
+  { value: "status", label: "Status" },
+  { value: "assignee", label: "Assignee" },
+  { value: "priority", label: "Priority" },
+  { value: "cycle", label: "Cycle" },
 ];
 
 const ORDER_OPTIONS: { value: OrderByOption; label: string }[] = [
@@ -40,6 +62,37 @@ const ORDER_OPTIONS: { value: OrderByOption; label: string }[] = [
   { value: "priority", label: "Priority" },
   { value: "dueDate", label: "Due date" },
 ];
+
+const COMPLETED_OPTIONS: { value: CompletedIssuesFilter; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "none", label: "None" },
+  { value: "last-day", label: "Last day" },
+  { value: "last-week", label: "Last week" },
+  { value: "last-month", label: "Last month" },
+];
+
+interface PropertyChipProps {
+  label: string;
+  active: boolean;
+  onToggle: () => void;
+}
+
+function PropertyChip({ label, active, onToggle }: PropertyChipProps) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className={cn(
+        "border rounded px-2 py-1 text-xs transition-colors",
+        active
+          ? "bg-primary/10 border-primary/40 text-primary"
+          : "border-border text-muted-foreground hover:border-primary/30",
+      )}
+    >
+      {label}
+    </button>
+  );
+}
 
 interface ToggleRowProps {
   id: string;
@@ -75,40 +128,48 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
     [options, onChange],
   );
 
-  function handleGroupByChange(value: string) {
-    if (
-      value === "status" ||
-      value === "assignee" ||
-      value === "priority" ||
-      value === "label" ||
-      value === "cycle" ||
-      value === "none"
-    ) {
-      set("groupBy", value);
-    }
+  function handleColumnByChange(v: string) {
+    const valid: ColumnByOption[] = ["status", "assignee", "priority", "label", "cycle", "project"];
+    if (valid.includes(v as ColumnByOption)) set("columnBy", v as ColumnByOption);
   }
 
-  function handleOrderByChange(value: string) {
-    if (
-      value === "created" ||
-      value === "priority" ||
-      value === "dueDate" ||
-      value === "manual"
-    ) {
-      set("orderBy", value);
-    }
+  function handleRowByChange(v: string) {
+    const valid: SwimlaneBy[] = ["none", "status", "assignee", "priority", "cycle"];
+    if (valid.includes(v as SwimlaneBy)) set("rowBy", v as SwimlaneBy);
   }
 
+  function handleOrderByChange(v: string) {
+    const valid: OrderByOption[] = ["manual", "created", "priority", "dueDate"];
+    if (valid.includes(v as OrderByOption)) set("orderBy", v as OrderByOption);
+  }
+
+  function handleCompletedIssuesChange(v: string) {
+    const valid: CompletedIssuesFilter[] = ["all", "none", "last-day", "last-week", "last-month"];
+    if (valid.includes(v as CompletedIssuesFilter)) set("completedIssues", v as CompletedIssuesFilter);
+  }
+
+  function handleOrderCompleteByRecency(checked: boolean) { set("orderCompleteByRecency", checked); }
   function handleShowSubIssues(checked: boolean) { set("showSubIssues", checked); }
-  function handleShowEmptyGroups(checked: boolean) { set("showEmptyGroups", checked); }
-  function handleShowId(checked: boolean) { set("showId", checked); }
-  function handleShowStatus(checked: boolean) { set("showStatus", checked); }
-  function handleShowAssignee(checked: boolean) { set("showAssignee", checked); }
-  function handleShowPriority(checked: boolean) { set("showPriority", checked); }
-  function handleShowEstimate(checked: boolean) { set("showEstimate", checked); }
-  function handleShowCycle(checked: boolean) { set("showCycle", checked); }
-  function handleShowLabels(checked: boolean) { set("showLabels", checked); }
-  function handleShowDueDate(checked: boolean) { set("showDueDate", checked); }
+  function handleShowEmptyColumns(checked: boolean) { set("showEmptyColumns", checked); }
+  function handleShowEmptyRows(checked: boolean) { set("showEmptyRows", checked); }
+
+  function handleToggleId() { set("showId", !options.showId); }
+  function handleToggleStatus() { set("showStatus", !options.showStatus); }
+  function handleToggleAssignee() { set("showAssignee", !options.showAssignee); }
+  function handleTogglePriority() { set("showPriority", !options.showPriority); }
+  function handleToggleProject() { set("showProject", !options.showProject); }
+  function handleToggleDueDate() { set("showDueDate", !options.showDueDate); }
+  function handleToggleMilestone() { set("showMilestone", !options.showMilestone); }
+  function handleToggleCycle() { set("showCycle", !options.showCycle); }
+  function handleToggleEstimate() { set("showEstimate", !options.showEstimate); }
+  function handleToggleLabels() { set("showLabels", !options.showLabels); }
+  function handleToggleLinks() { set("showLinks", !options.showLinks); }
+  function handleToggleTimeInStatus() { set("showTimeInStatus", !options.showTimeInStatus); }
+  function handleToggleCreated() { set("showCreated", !options.showCreated); }
+  function handleToggleUpdated() { set("showUpdated", !options.showUpdated); }
+  function handleTogglePRs() { set("showPRs", !options.showPRs); }
+
+  function handleReset() { onChange(DEFAULT_DISPLAY_OPTIONS); }
 
   return (
     <Popover>
@@ -123,20 +184,37 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
           Display
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-56 p-3 space-y-3">
-        <div className="space-y-1.5">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Grouping</p>
-          <Select value={options.groupBy} onValueChange={handleGroupByChange}>
-            <SelectTrigger className="h-7 w-full bg-card text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {GROUP_OPTIONS.map((o) => (
-                <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      <PopoverContent align="start" className="w-72 p-3 space-y-3 max-h-[80vh] overflow-y-auto">
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Columns</p>
+            <Select value={options.columnBy} onValueChange={handleColumnByChange}>
+              <SelectTrigger className="h-7 w-full bg-card text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {COLUMN_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Rows</p>
+            <Select value={options.rowBy} onValueChange={handleRowByChange}>
+              <SelectTrigger className="h-7 w-full bg-card text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {ROW_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
+
+        <Separator />
 
         <div className="space-y-1.5">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Ordering</p>
@@ -150,29 +228,72 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
               ))}
             </SelectContent>
           </Select>
+          <ToggleRow
+            id="disp-order-complete"
+            label="Order completed by recency"
+            checked={options.orderCompleteByRecency}
+            onCheckedChange={handleOrderCompleteByRecency}
+          />
+        </div>
+
+        <Separator />
+
+        <div className="space-y-1.5">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Completed issues</p>
+          <Select value={options.completedIssues} onValueChange={handleCompletedIssuesChange}>
+            <SelectTrigger className="h-7 w-full bg-card text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {COMPLETED_OPTIONS.map((o) => (
+                <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <Separator />
 
         <div className="space-y-0.5">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Display</p>
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Show</p>
           <ToggleRow id="disp-sub-issues" label="Sub-issues" checked={options.showSubIssues} onCheckedChange={handleShowSubIssues} />
-          <ToggleRow id="disp-empty-groups" label="Empty groups" checked={options.showEmptyGroups} onCheckedChange={handleShowEmptyGroups} />
+          <ToggleRow id="disp-empty-columns" label="Empty columns" checked={options.showEmptyColumns} onCheckedChange={handleShowEmptyColumns} />
+          <ToggleRow id="disp-empty-rows" label="Empty rows" checked={options.showEmptyRows} onCheckedChange={handleShowEmptyRows} />
         </div>
 
         <Separator />
 
-        <div className="space-y-0.5">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Properties</p>
-          <ToggleRow id="disp-id" label="ID" checked={options.showId} onCheckedChange={handleShowId} />
-          <ToggleRow id="disp-status" label="Status" checked={options.showStatus} onCheckedChange={handleShowStatus} />
-          <ToggleRow id="disp-assignee" label="Assignee" checked={options.showAssignee} onCheckedChange={handleShowAssignee} />
-          <ToggleRow id="disp-priority" label="Priority" checked={options.showPriority} onCheckedChange={handleShowPriority} />
-          <ToggleRow id="disp-estimate" label="Estimate" checked={options.showEstimate} onCheckedChange={handleShowEstimate} />
-          <ToggleRow id="disp-cycle" label="Cycle" checked={options.showCycle} onCheckedChange={handleShowCycle} />
-          <ToggleRow id="disp-labels" label="Labels" checked={options.showLabels} onCheckedChange={handleShowLabels} />
-          <ToggleRow id="disp-due-date" label="Due date" checked={options.showDueDate} onCheckedChange={handleShowDueDate} />
+        <div className="space-y-2">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Properties</p>
+          <div className="grid grid-cols-2 gap-1.5">
+            <PropertyChip label="ID" active={options.showId} onToggle={handleToggleId} />
+            <PropertyChip label="Status" active={options.showStatus} onToggle={handleToggleStatus} />
+            <PropertyChip label="Assignee" active={options.showAssignee} onToggle={handleToggleAssignee} />
+            <PropertyChip label="Priority" active={options.showPriority} onToggle={handleTogglePriority} />
+            <PropertyChip label="Project" active={options.showProject} onToggle={handleToggleProject} />
+            <PropertyChip label="Due date" active={options.showDueDate} onToggle={handleToggleDueDate} />
+            <PropertyChip label="Milestone" active={options.showMilestone} onToggle={handleToggleMilestone} />
+            <PropertyChip label="Cycle" active={options.showCycle} onToggle={handleToggleCycle} />
+            <PropertyChip label="Estimate" active={options.showEstimate} onToggle={handleToggleEstimate} />
+            <PropertyChip label="Labels" active={options.showLabels} onToggle={handleToggleLabels} />
+            <PropertyChip label="Links" active={options.showLinks} onToggle={handleToggleLinks} />
+            <PropertyChip label="Time in status" active={options.showTimeInStatus} onToggle={handleToggleTimeInStatus} />
+            <PropertyChip label="Created" active={options.showCreated} onToggle={handleToggleCreated} />
+            <PropertyChip label="Updated" active={options.showUpdated} onToggle={handleToggleUpdated} />
+            <PropertyChip label="PRs" active={options.showPRs} onToggle={handleTogglePRs} />
+          </div>
         </div>
+
+        <Separator />
+
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleReset}
+          className="w-full h-7 text-xs text-muted-foreground"
+        >
+          Reset to defaults
+        </Button>
       </PopoverContent>
     </Popover>
   );

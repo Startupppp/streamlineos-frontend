@@ -211,30 +211,26 @@ export function TicketQuickActions({
                     <User className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" />
                     Unassigned
                   </DropdownMenuItem>
-                  {members.map((member) => {
-                    const user = member.user;
-                    if (!user) return null;
-                    return (
-                      <DropdownMenuItem
-                        key={member.userId}
-                        className={cn(
-                          member.userId === currentAssigneeId &&
-                            popoverOptionSelectedClass
-                        )}
-                        onSelect={makeAssigneeHandler(member.userId)}
-                      >
-                        <Avatar className="mr-2 h-5 w-5 shrink-0">
-                          <AvatarImage src={resolveImageUrl(user.image)} />
-                          <AvatarFallback className="text-[7px]">
-                            {getUserInitials(user)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="truncate">
-                          {getUserDisplayName(user)}
-                        </span>
-                      </DropdownMenuItem>
-                    );
-                  })}
+                  {members.map((member) => (
+                    <DropdownMenuItem
+                      key={member.id}
+                      className={cn(
+                        member.id === currentAssigneeId &&
+                          popoverOptionSelectedClass
+                      )}
+                      onSelect={makeAssigneeHandler(member.id)}
+                    >
+                      <Avatar className="mr-2 h-5 w-5 shrink-0">
+                        <AvatarImage src={resolveImageUrl(member.image)} />
+                        <AvatarFallback className="text-[7px]">
+                          {getUserInitials(member)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="truncate">
+                        {getUserDisplayName(member)}
+                      </span>
+                    </DropdownMenuItem>
+                  ))}
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
             </>

@@ -16,7 +16,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { toast } from "sonner";
 import { TiptapEditor } from "@/components/editor/tiptap-editor";
 import { useCreateBug, useUpdateBug } from "@/hooks/api/projects/bugs";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { ProjectMemberSelect } from "@/components/members/project-member-select";
 import type { Bug, BugSeverity, BugPriority, BugStatus } from "@/types/projects";
 
 const SEVERITIES: BugSeverity[] = ["blocker", "critical", "major", "minor", "trivial"];
@@ -69,8 +69,6 @@ interface BugSheetProps {
 export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: BugSheetProps) {
   const create = useCreateBug();
   const update = useUpdateBug();
-  const { data: membersData } = useOrgMembers(1, 100);
-  const members = membersData?.data ?? [];
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -226,18 +224,30 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <SelectField
-                name="assigneeId"
-                label="Assignee"
-                options={["none", ...members.map((m) => m.userId)]}
-                labels={{ none: "Unassigned", ...Object.fromEntries(members.map((m) => [m.userId, m.name ?? m.email])) }}
-              />
-              <SelectField
-                name="qaOwnerId"
-                label="QA Owner"
-                options={["none", ...members.map((m) => m.userId)]}
-                labels={{ none: "Unassigned", ...Object.fromEntries(members.map((m) => [m.userId, m.name ?? m.email])) }}
-              />
+              <div className="space-y-1.5">
+                <Label className="text-[11px]">Assignee</Label>
+                <ProjectMemberSelect
+                  projectId={projectId}
+                  mode="single"
+                  value={form.watch("assigneeId") === "none" ? "" : form.watch("assigneeId")}
+                  onChange={(v) => form.setValue("assigneeId", v ?? "none")}
+                  allowUnassigned
+                  placeholder="Unassigned"
+                  className="h-8 text-[11px]"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[11px]">QA Owner</Label>
+                <ProjectMemberSelect
+                  projectId={projectId}
+                  mode="single"
+                  value={form.watch("qaOwnerId") === "none" ? "" : form.watch("qaOwnerId")}
+                  onChange={(v) => form.setValue("qaOwnerId", v ?? "none")}
+                  allowUnassigned
+                  placeholder="Unassigned"
+                  className="h-8 text-[11px]"
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-3 gap-3">

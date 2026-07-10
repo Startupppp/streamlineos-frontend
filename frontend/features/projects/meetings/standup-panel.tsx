@@ -14,7 +14,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type { StandupEntry, MeetingAttendee, ProjectMember } from "@/types/projects";
+import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
+import type { StandupEntry, MeetingAttendee, ProjectMemberRecord } from "@/types/projects";
 
 const standupSchema = z.object({
   yesterday: z.string(),
@@ -29,7 +30,7 @@ interface StandupPanelProps {
   meetingId: number;
   standupEntries: StandupEntry[];
   attendees: MeetingAttendee[];
-  projectMembers: ProjectMember[];
+  projectMembers: ProjectMemberRecord[];
 }
 
 export function StandupPanel({
@@ -70,8 +71,8 @@ export function StandupPanel({
   }
 
   function memberName(userId: string): string {
-    const m = projectMembers.find((p) => p.userId === userId);
-    return m?.user?.name ?? m?.user?.email ?? userId;
+    const m = projectMembers.find((p) => p.id === userId);
+    return getUserDisplayName(m) || userId;
   }
 
   const otherEntries = standupEntries.filter((e) => e.userId !== currentUserId);

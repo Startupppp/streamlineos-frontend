@@ -344,3 +344,22 @@ export interface UpsertPolicyInput {
   moduleOverrides?: Record<string, PolicyOverride>;
   canUserOverride?: boolean;
 }
+
+export type SuppressionScopeType = "event" | "module" | "category";
+
+export interface SuppressionRule {
+  id: number;
+  scopeType: SuppressionScopeType;
+  scopeKey: string;
+  channel: NotificationChannel | null;
+  reason: string;
+  expiresAt: string | null;
+  createdAt: string;
+}
+
+export interface CreateSuppressionInput {
+  scopeType: SuppressionScopeType;
+  scopeKey: string;
+  channel?: NotificationChannel;
+  expiresAt?: string;
+}

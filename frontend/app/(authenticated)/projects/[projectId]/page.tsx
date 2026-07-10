@@ -192,6 +192,19 @@ export default function ProjectBoardPage({ params }: PageProps) {
     let tickets = hideCompleted
       ? allTickets.filter((t) => t.status !== "DONE")
       : allTickets;
+    if (displayOptions.completedIssues !== "all") {
+      if (displayOptions.completedIssues === "none") {
+        tickets = tickets.filter((t) => t.status !== "DONE");
+      } else {
+        const cutoff = new Date();
+        if (displayOptions.completedIssues === "last-day") cutoff.setDate(cutoff.getDate() - 1);
+        else if (displayOptions.completedIssues === "last-week") cutoff.setDate(cutoff.getDate() - 7);
+        else if (displayOptions.completedIssues === "last-month") cutoff.setMonth(cutoff.getMonth() - 1);
+        tickets = tickets.filter(
+          (t) => t.status !== "DONE" || !t.updatedAt || new Date(t.updatedAt) >= cutoff,
+        );
+      }
+    }
     if (q) {
       const lower = q.toLowerCase();
       tickets = tickets.filter((t) => t.title.toLowerCase().includes(lower));
@@ -378,7 +391,18 @@ export default function ProjectBoardPage({ params }: PageProps) {
       )}
       {view === "list" && (
         <div className="h-full min-h-0 overflow-y-auto px-4 pb-2 pt-0">
-          <ListView tickets={filteredTickets} onTicketClick={handleTicketSelect} groupBy={displayOptions.groupBy !== "none" ? displayOptions.groupBy : undefined} projectKey={data.key} projectStatuses={statuses} displayOptions={displayOptions} />
+          <ListView
+            tickets={filteredTickets}
+            onTicketClick={handleTicketSelect}
+            groupBy={displayOptions.groupBy !== "none" ? displayOptions.groupBy : undefined}
+            rowBy={displayOptions.rowBy !== "none" ? displayOptions.rowBy : undefined}
+            projectKey={data.key}
+            projectStatuses={statuses}
+            displayOptions={displayOptions}
+            showEmptyColumns={displayOptions.showEmptyColumns}
+            showEmptyRows={displayOptions.showEmptyRows}
+            projectId={projectId}
+          />
         </div>
       )}
       {view === "table" && (

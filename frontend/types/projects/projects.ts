@@ -63,6 +63,16 @@ export interface ProjectMember {
   };
 }
 
+export interface ProjectMemberRecord {
+  id: string;
+  name: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  email: string;
+  image: string | null;
+  role: string | null;
+}
+
 export interface ProjectWithDetails extends Project {
   statuses?: ProjectStatusRecord[];
   members?: ProjectMember[];

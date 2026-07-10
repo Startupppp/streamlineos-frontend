@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { cn, resolveImageUrl } from "@/lib/utils";
-import { Bug, Bookmark, Zap, CheckSquare, ChevronRight, Plus, X } from "lucide-react";
+import { Bug, Bookmark, Zap, CheckSquare, ChevronRight, Plus, X, User } from "lucide-react";
 import { getStatusDotClass } from "../shared/status-badge";
 import { formatTicketKey } from "../shared/format-ticket-key";
 import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
@@ -35,10 +35,13 @@ interface ListViewProps {
   tickets: Ticket[];
   onTicketClick: (ticketId: number) => void;
   groupBy?: string;
+  rowBy?: string;
   projectKey?: string | null;
   projectId?: number;
   projectStatuses?: Array<{ name: string; color: string | null; type?: string | null }>;
   displayOptions?: DisplayOptions;
+  showEmptyRows?: boolean;
+  showEmptyColumns?: boolean;
 }
 
 const typeIcons: Record<string, typeof CheckSquare> = {
@@ -218,7 +221,90 @@ function getGroupStatus(groupBy: string, groupKey: string, tickets: Ticket[]): s
   return tickets[0]?.status ?? "TODO";
 }
 
-export const ListView = memo(function ListView({ tickets, onTicketClick, groupBy, projectKey, projectId, projectStatuses, displayOptions }: ListViewProps) {
+interface OuterGroupHeaderProps {
+  groupKey: string;
+  rowBy: string;
+  tickets: Ticket[];
+  count: number;
+}
+
+function OuterGroupHeader({ groupKey, rowBy, tickets, count }: OuterGroupHeaderProps) {
+  if (rowBy === "assignee") {
+    const assigneeTicket = tickets.find((t) => t.assignee != null);
+    const assignee = assigneeTicket?.assignee ?? null;
+    return (
+      <div className="flex items-center gap-2 mb-3 py-1">
+        {assignee ? (
+          <Avatar className="h-6 w-6 flex-shrink-0">
+            <AvatarImage src={resolveImageUrl(assignee.image)} />
+            <AvatarFallback className="text-[8px]">{getUserInitials(assignee)}</AvatarFallback>
+          </Avatar>
+        ) : (
+          <div className="h-6 w-6 flex-shrink-0 rounded-full bg-muted flex items-center justify-center">
+            <User className="h-3.5 w-3.5 text-muted-foreground" />
+          </div>
+        )}
+        <span className="text-sm font-semibold text-foreground">{groupKey}</span>
+        <Badge variant="secondary" className="text-xs">{count}</Badge>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2 mb-3 py-1">
+      <span className="text-sm font-semibold text-foreground">{groupKey}</span>
+      <Badge variant="secondary" className="text-xs">{count}</Badge>
+    </div>
+  );
+}
+
+interface NestedGroupProps {
+  groupKey: string;
+  outerGroupKey: string;
+  items: Ticket[];
+  groupBy: string;
+  projectKey?: string | null;
+  projectId?: number;
+  projectStatuses?: Array<{ name: string; color: string | null; type?: string | null }>;
+  displayOptions?: DisplayOptions;
+  onTicketClick: (id: number) => void;
+}
+
+function NestedGroup({ groupKey, outerGroupKey, items, groupBy, projectKey, projectId, projectStatuses, displayOptions, onTicketClick }: NestedGroupProps) {
+  const status = getGroupStatus(groupBy, groupKey, items);
+  return (
+    <div className="mb-3">
+      <div className="flex items-center gap-2 mb-1.5 pl-1">
+        <span className="text-xs font-medium text-muted-foreground">{groupKey}</span>
+        <Badge variant="outline" className="text-xs h-4 px-1">{items.length}</Badge>
+        {projectId && (
+          <InlineGroupCreate
+            groupKey={`${outerGroupKey}/${groupKey}`}
+            projectId={projectId}
+            status={status}
+          />
+        )}
+      </div>
+      <div className="border border-border rounded-lg divide-y divide-border overflow-hidden">
+        {items.map((ticket) => (
+          <ListViewItem
+            key={ticket.id}
+            ticket={ticket}
+            projectKey={projectKey}
+            projectId={projectId}
+            projectStatuses={projectStatuses}
+            onClick={onTicketClick}
+            displayOptions={displayOptions}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export const ListView = memo(function ListView({ tickets, onTicketClick, groupBy, rowBy, projectKey, projectId, projectStatuses, displayOptions, showEmptyRows }: ListViewProps) {
+  const hasRowBy = !!rowBy && rowBy !== "none";
+
   const grouped = useMemo(() => {
     if (!groupBy || groupBy === "none") return { "All Items": tickets };
     return tickets.reduce<Record<string, Ticket[]>>((acc, t) => {
@@ -227,6 +313,68 @@ export const ListView = memo(function ListView({ tickets, onTicketClick, groupBy
       return acc;
     }, {});
   }, [tickets, groupBy]);
+
+  const nested = useMemo(() => {
+    if (!hasRowBy) return null;
+    const outerGrouped = tickets.reduce<Record<string, Ticket[]>>((acc, t) => {
+      const key = getGroupKey(t, rowBy);
+      (acc[key] ??= []).push(t);
+      return acc;
+    }, {});
+    const result: Record<string, Record<string, Ticket[]>> = {};
+    for (const [outerKey, outerTickets] of Object.entries(outerGrouped)) {
+      result[outerKey] = {};
+      if (!groupBy || groupBy === "none") {
+        result[outerKey]["All Items"] = outerTickets;
+      } else {
+        for (const t of outerTickets) {
+          const innerKey = getGroupKey(t, groupBy);
+          (result[outerKey][innerKey] ??= []).push(t);
+        }
+      }
+    }
+    return result;
+  }, [tickets, groupBy, rowBy, hasRowBy]);
+
+  if (hasRowBy && nested) {
+    return (
+      <div className="flex flex-col gap-6 p-4">
+        {Object.entries(nested).map(([outerKey, innerGroups]) => {
+          const outerTickets = Object.values(innerGroups).flat();
+          if (!showEmptyRows && outerTickets.length === 0) return null;
+          return (
+            <div key={outerKey}>
+              <OuterGroupHeader
+                groupKey={outerKey}
+                rowBy={rowBy}
+                tickets={outerTickets}
+                count={outerTickets.length}
+              />
+              <div className="pl-4 border-l border-border space-y-0">
+                {Object.entries(innerGroups).map(([innerKey, items]) => (
+                  <NestedGroup
+                    key={innerKey}
+                    groupKey={innerKey}
+                    outerGroupKey={outerKey}
+                    items={items}
+                    groupBy={groupBy ?? "none"}
+                    projectKey={projectKey}
+                    projectId={projectId}
+                    projectStatuses={projectStatuses}
+                    displayOptions={displayOptions}
+                    onTicketClick={onTicketClick}
+                  />
+                ))}
+              </div>
+            </div>
+          );
+        })}
+        {tickets.length === 0 && (
+          <div className="text-center py-12 text-muted-foreground text-sm">No work items found</div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4 p-4">

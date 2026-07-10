@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { popoverOptionBaseClass, popoverOptionSelectedClass } from "../shared/popover-option-classes";
 import { buildStatusConfig, getStatusEntry } from "../shared/types";
 import { getUserDisplayName, getUserInitials } from "../shared/resolve-user-name";
-import type { ProjectStatusRecord, ProjectMember, Cycle, TicketLabel } from "@/types/projects";
+import type { ProjectStatusRecord, ProjectMemberRecord, Cycle, TicketLabel } from "@/types/projects";
 import type { TicketPriority } from "@/types/projects";
 
 const PRIORITIES: { value: TicketPriority; label: string; Icon: typeof Minus }[] = [
@@ -48,7 +48,7 @@ interface TicketCreatePropertiesProps {
   value: CreateTicketPropertiesValue;
   onChange: (patch: Partial<CreateTicketPropertiesValue>) => void;
   projectStatuses: ProjectStatusRecord[];
-  members: ProjectMember[];
+  members: ProjectMemberRecord[];
   labels: TicketLabel[];
   cycles: Cycle[];
 }
@@ -102,7 +102,7 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
   const currentStatus = getStatusEntry(statusConfig, value.status);
 
   const selectedAssignee = value.assigneeId
-    ? members.find((m) => m.userId === value.assigneeId)?.user ?? null
+    ? members.find((m) => m.id === value.assigneeId) ?? null
     : null;
 
   const selectedLabels = labels.filter((l) => value.labelIds.includes(l.id));
@@ -251,24 +251,20 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
                   <span className="text-xs">Unassigned</span>
                   {!value.assigneeId && <Check className="ml-auto h-3 w-3" />}
                 </CommandItem>
-                {members.map((m) => {
-                  const user = m.user;
-                  if (!user) return null;
-                  return (
-                    <CommandItem
-                      key={m.userId}
-                      value={getUserDisplayName(user)}
-                      onSelect={makeAssigneeHandler(m.userId)}
-                    >
-                      <Avatar className="mr-2 h-5 w-5 shrink-0">
-                        <AvatarImage src={resolveImageUrl(user.image)} />
-                        <AvatarFallback className="text-[7px]">{getUserInitials(user)}</AvatarFallback>
-                      </Avatar>
-                      <span className="truncate text-xs">{getUserDisplayName(user)}</span>
-                      {m.userId === value.assigneeId && <Check className="ml-auto h-3 w-3" />}
-                    </CommandItem>
-                  );
-                })}
+                {members.map((m) => (
+                  <CommandItem
+                    key={m.id}
+                    value={getUserDisplayName(m)}
+                    onSelect={makeAssigneeHandler(m.id)}
+                  >
+                    <Avatar className="mr-2 h-5 w-5 shrink-0">
+                      <AvatarImage src={resolveImageUrl(m.image)} />
+                      <AvatarFallback className="text-[7px]">{getUserInitials(m)}</AvatarFallback>
+                    </Avatar>
+                    <span className="truncate text-xs">{getUserDisplayName(m)}</span>
+                    {m.id === value.assigneeId && <Check className="ml-auto h-3 w-3" />}
+                  </CommandItem>
+                ))}
               </CommandGroup>
             </CommandList>
           </Command>

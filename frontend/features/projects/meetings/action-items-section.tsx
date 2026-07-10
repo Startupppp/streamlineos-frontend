@@ -19,7 +19,8 @@ import {
 import { ActionItemStatusBadge } from "./meeting-badges";
 import { ActionItemFormSheet } from "./action-item-form-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type { ActionItem, CreateActionItemInput, UpdateActionItemInput, ProjectMember } from "@/types/projects";
+import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
+import type { ActionItem, CreateActionItemInput, UpdateActionItemInput, ProjectMemberRecord } from "@/types/projects";
 
 const CONVERTIBLE = new Set(["open", "in_progress"]);
 
@@ -101,7 +102,7 @@ interface ActionItemsSectionProps {
   projectId: number;
   meetingId: number;
   actionItems: ActionItem[];
-  projectMembers: ProjectMember[];
+  projectMembers: ProjectMemberRecord[];
   canManage: boolean;
 }
 
@@ -119,8 +120,8 @@ export function ActionItemsSection({
 
   function memberName(userId: string | null): string {
     if (!userId) return "—";
-    const m = projectMembers.find((p) => p.userId === userId);
-    return m?.user?.name ?? m?.user?.email ?? userId;
+    const m = projectMembers.find((p) => p.id === userId);
+    return getUserDisplayName(m) || userId;
   }
 
   function handleCreate(input: CreateActionItemInput) {

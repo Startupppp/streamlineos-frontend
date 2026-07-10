@@ -1,18 +1,23 @@
 "use client";
 
 import { useCallback } from "react";
-import { Bell, Mail, Smartphone, MessageSquare, Slack, Volume2, Moon } from "lucide-react";
+import { Bell, Mail, Smartphone, MessageSquare, Slack, Volume2, Moon, BellOff, X } from "lucide-react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { ErrorState } from "@/components/shared/error-state";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useNotificationPreferences,
   useUpdateNotificationPreferences,
+  useSuppressions,
+  useRemoveSuppression,
 } from "@/hooks/api/notifications";
 import {
   NOTIFICATION_CATEGORIES,
@@ -53,6 +58,8 @@ const DIGEST_OPTIONS: Array<{ value: DigestMode; label: string }> = [
 export default function NotificationPreferencesPage() {
   const { data: prefs, isLoading, isError, refetch } = useNotificationPreferences();
   const updatePreferences = useUpdateNotificationPreferences();
+  const { data: suppressions, isLoading: suppressionsLoading } = useSuppressions();
+  const removeSuppression = useRemoveSuppression();
 
   const handleChannelToggle = useCallback(
     (key: keyof UpdatePreferencesInput, value: boolean) => {
@@ -109,6 +116,15 @@ export default function NotificationPreferencesPage() {
       );
     },
     [prefs?.categories, updatePreferences],
+  );
+
+  const handleRemoveSuppression = useCallback(
+    (id: number) => {
+      removeSuppression.mutate(id, {
+        onError: (err) => toast.error(getErrorMessage(err)),
+      });
+    },
+    [removeSuppression],
   );
 
   function handleRetry() {
@@ -271,6 +287,58 @@ export default function NotificationPreferencesPage() {
                 </div>
               );
             })}
+          </div>
+        </section>
+
+        <section>
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Muted Notifications</h2>
+          <div className="rounded-lg border border-border overflow-hidden">
+            {suppressionsLoading ? (
+              <div className="divide-y divide-border">
+                {Array.from({ length: 2 }).map((_, i) => (
+                  <div key={i} className="flex items-center justify-between px-3 py-2.5 bg-card gap-3">
+                    <Skeleton className="h-4 w-40" />
+                    <Skeleton className="h-7 w-16 rounded-md" />
+                  </div>
+                ))}
+              </div>
+            ) : !suppressions || suppressions.length === 0 ? (
+              <div className="flex flex-col items-center justify-center gap-2 py-8 bg-card text-center">
+                <BellOff className="h-8 w-8 text-muted-foreground/40" />
+                <p className="text-sm text-muted-foreground">Nothing muted</p>
+                <p className="text-xs text-muted-foreground/70">
+                  Mute specific notification types from the notification detail drawer.
+                </p>
+              </div>
+            ) : (
+              <div className="divide-y divide-border">
+                {suppressions.map((rule) => (
+                  <div key={rule.id} className="flex items-center justify-between px-3 py-2.5 bg-card gap-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <BellOff className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{rule.scopeKey}</p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <Badge variant="outline" className="text-[10px] h-4 px-1.5">{rule.scopeType}</Badge>
+                          {rule.channel && (
+                            <Badge variant="secondary" className="text-[10px] h-4 px-1.5">{rule.channel}</Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <LoadingButton
+                      variant="ghost"
+                      size="sm"
+                      className="shrink-0 h-7 px-2 text-muted-foreground hover:text-destructive"
+                      onClick={() => handleRemoveSuppression(rule.id)}
+                      isPending={removeSuppression.isPending && removeSuppression.variables === rule.id}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </LoadingButton>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </section>
       </div>

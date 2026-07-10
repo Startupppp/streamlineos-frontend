@@ -30,6 +30,7 @@ import {
 import { Plus, Calendar, Package, Activity, CheckCircle2 } from "lucide-react";
 import { useForm, Controller, useController } from "react-hook-form";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -192,8 +193,8 @@ export default function ModulesPage({
                     </SelectTrigger>
                     <SelectContent>
                       {members?.map((m) => (
-                        <SelectItem key={m.userId} value={m.userId}>
-                          {m.user?.name ?? m.user?.email ?? m.userId}
+                        <SelectItem key={m.id} value={m.id}>
+                          {getUserDisplayName(m)}
                         </SelectItem>
                       ))}
                     </SelectContent>

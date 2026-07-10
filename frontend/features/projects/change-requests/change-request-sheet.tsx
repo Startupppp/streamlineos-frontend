@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { TiptapEditor } from "@/components/editor/tiptap-editor";
 import { toast } from "sonner";
 import { useCreateChangeRequest, useUpdateChangeRequest } from "@/hooks/api/projects/change-requests";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { ProjectMemberSelect } from "@/components/members/project-member-select";
 import type { ChangeRequest, ChangeRequestStatus } from "@/types/projects";
 
 const CR_STATUSES: ChangeRequestStatus[] = [
@@ -59,8 +59,6 @@ interface ChangeRequestSheetProps {
 export function ChangeRequestSheet({ projectId, open, onOpenChange, editCr }: ChangeRequestSheetProps) {
   const create = useCreateChangeRequest(projectId);
   const update = useUpdateChangeRequest(projectId);
-  const { data: membersData } = useOrgMembers(1, 100);
-  const members = membersData?.data ?? [];
 
   const form = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: DEFAULTS });
 
@@ -183,15 +181,15 @@ export function ChangeRequestSheet({ projectId, open, onOpenChange, editCr }: Ch
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-[11px]">Approval Owner</Label>
-                  <Select value={form.watch("approvalOwnerId")} onValueChange={(v) => form.setValue("approvalOwnerId", v)}>
-                    <SelectTrigger className="h-8 text-[11px]"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Unassigned</SelectItem>
-                      {members.map((m) => (
-                        <SelectItem key={m.userId} value={m.userId}>{m.name ?? m.email}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <ProjectMemberSelect
+                    projectId={projectId}
+                    mode="single"
+                    value={form.watch("approvalOwnerId") === "none" ? "" : form.watch("approvalOwnerId")}
+                    onChange={(v) => form.setValue("approvalOwnerId", v ?? "none")}
+                    allowUnassigned
+                    placeholder="Unassigned"
+                    className="h-8 text-[11px]"
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-[11px]">Decision Comment</Label>

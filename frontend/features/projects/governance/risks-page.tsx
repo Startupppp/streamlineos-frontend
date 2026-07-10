@@ -3,9 +3,9 @@
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { MoreHorizontal, Plus, ShieldAlert, AlertTriangle, CheckCircle2 } from "lucide-react";
-import { useProjectRisks, useCreateRisk, useUpdateRisk, useDeleteRisk } from "@/hooks/api/projects";
+import { useProjectRisks, useCreateRisk, useUpdateRisk, useDeleteRisk, useProjectMembers } from "@/hooks/api/projects";
 import { useCan } from "@/hooks/api/access";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
 import type { Risk, RiskStatus, RiskProbability, RiskImpact, CreateRiskInput, UpdateRiskInput } from "@/types/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
@@ -68,8 +68,7 @@ export function RisksPage({ projectId }: RisksPageProps) {
   const { data, isLoading, isError, refetch } = useProjectRisks(projectId, {
     status: statusFilter !== "all" ? statusFilter : undefined,
   });
-  const { data: membersRes } = useOrgMembers(1, 100);
-  const members = useMemo(() => membersRes?.data ?? [], [membersRes]);
+  const { data: members = [] } = useProjectMembers(projectId);
 
   const createRisk = useCreateRisk(projectId);
   const updateRisk = useUpdateRisk(projectId);
@@ -77,8 +76,8 @@ export function RisksPage({ projectId }: RisksPageProps) {
 
   function memberName(userId: string | null): string {
     if (!userId) return "—";
-    const m = members.find((x) => x.userId === userId);
-    return m?.name ?? m?.email ?? userId;
+    const m = members.find((x) => x.id === userId);
+    return getUserDisplayName(m) || userId;
   }
 
   const allRisks = useMemo(() => data ?? [], [data]);
@@ -273,7 +272,7 @@ export function RisksPage({ projectId }: RisksPageProps) {
         onSubmitCreate={handleCreate}
         onSubmitEdit={handleUpdate}
         isPending={createRisk.isPending || updateRisk.isPending}
-        members={members}
+        projectId={projectId}
       />
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>

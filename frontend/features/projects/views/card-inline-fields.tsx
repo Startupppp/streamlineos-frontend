@@ -173,20 +173,16 @@ export const InlineAssignee = memo(function InlineAssignee({
                   <span className="text-xs">Unassigned</span>
                   {!currentAssigneeId && <Check className="ml-auto h-3 w-3" />}
                 </CommandItem>
-                {members.map((m) => {
-                  const user = m.user;
-                  if (!user) return null;
-                  return (
-                    <CommandItem key={m.userId} value={getUserDisplayName(user)} onSelect={makeAssigneeHandler(m.userId)}>
-                      <Avatar className="mr-2 h-5 w-5 shrink-0">
-                        <AvatarImage src={resolveImageUrl(user.image)} />
-                        <AvatarFallback className="text-[7px]">{getUserInitials(user)}</AvatarFallback>
-                      </Avatar>
-                      <span className="truncate text-xs">{getUserDisplayName(user)}</span>
-                      {m.userId === currentAssigneeId && <Check className="ml-auto h-3 w-3" />}
-                    </CommandItem>
-                  );
-                })}
+                {members.map((m) => (
+                  <CommandItem key={m.id} value={getUserDisplayName(m)} onSelect={makeAssigneeHandler(m.id)}>
+                    <Avatar className="mr-2 h-5 w-5 shrink-0">
+                      <AvatarImage src={resolveImageUrl(m.image)} />
+                      <AvatarFallback className="text-[7px]">{getUserInitials(m)}</AvatarFallback>
+                    </Avatar>
+                    <span className="truncate text-xs">{getUserDisplayName(m)}</span>
+                    {m.id === currentAssigneeId && <Check className="ml-auto h-3 w-3" />}
+                  </CommandItem>
+                ))}
               </CommandGroup>
             </CommandList>
           </Command>

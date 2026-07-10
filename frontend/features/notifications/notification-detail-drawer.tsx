@@ -1,14 +1,17 @@
 "use client";
 
 import { useCallback } from "react";
-import { Archive, ArchiveRestore, Pin, PinOff, ExternalLink, Clock, Info, Check } from "lucide-react";
+import { Archive, ArchiveRestore, Pin, PinOff, ExternalLink, Clock, Info, Check, BellOff } from "lucide-react";
 import { Trash2Icon } from "@animateicons/react/lucide";
+import { toast } from "sonner";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   NOTIFICATION_CATEGORY_CONFIG,
   NOTIFICATION_PRIORITY_CONFIG,
@@ -16,6 +19,7 @@ import {
   type NotificationPriority,
 } from "./notification-types";
 import { formatRelativeTime } from "./format-relative-time";
+import { useCreateSuppression } from "@/hooks/api/notifications";
 import type { Notification } from "@/types/notifications";
 
 interface NotificationDetailDrawerProps {
@@ -75,12 +79,24 @@ export function NotificationDetailDrawer({
   onDelete,
 }: NotificationDetailDrawerProps) {
   const trashAnimated = useAnimatedIcon();
+  const createSuppression = useCreateSuppression();
 
   const handleDelete = useCallback(() => {
     if (!notification) return;
     onDelete(notification.id);
     onOpenChange(false);
   }, [notification, onDelete, onOpenChange]);
+
+  const handleMute = useCallback(() => {
+    if (!notification?.eventKey) return;
+    createSuppression.mutate(
+      { scopeType: "event", scopeKey: notification.eventKey },
+      {
+        onSuccess: () => toast.success("Muted — you won't get these again"),
+        onError: (err) => toast.error(getErrorMessage(err)),
+      },
+    );
+  }, [notification, createSuppression]);
 
   const handleArchiveToggle = useCallback(() => {
     if (!notification) return;
@@ -222,6 +238,19 @@ export function NotificationDetailDrawer({
                 </>
               )}
             </Button>
+            {notification.eventKey && (
+              <LoadingButton
+                variant="outline"
+                size="sm"
+                className="col-span-2"
+                onClick={handleMute}
+                isPending={createSuppression.isPending}
+                loadingText="Muting…"
+              >
+                <BellOff className="h-3.5 w-3.5 mr-1.5" />
+                Mute notifications like this
+              </LoadingButton>
+            )}
             <Button
               variant="outline"
               size="sm"

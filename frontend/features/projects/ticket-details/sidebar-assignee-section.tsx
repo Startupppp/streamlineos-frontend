@@ -1,17 +1,10 @@
 "use client";
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { resolveImageUrl } from "@/lib/utils";
 import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
-import type { ProjectMember } from "./types";
+import { ProjectMemberSelect } from "@/components/members/project-member-select";
 
 export interface DisplayedAssignee {
   id: string;
@@ -23,7 +16,7 @@ export interface DisplayedAssignee {
 }
 
 interface SidebarAssigneeSectionProps {
-  members: ProjectMember[];
+  projectId: number;
   displayedAssignees: DisplayedAssignee[];
   currentAssigneeIds: string[];
   onAddAssignee: (v: string) => void;
@@ -31,12 +24,16 @@ interface SidebarAssigneeSectionProps {
 }
 
 export function SidebarAssigneeSection({
-  members,
+  projectId,
   displayedAssignees,
   currentAssigneeIds,
   onAddAssignee,
   onRemoveAssignee,
 }: SidebarAssigneeSectionProps) {
+  function handleAddAssignee(userId: string | null) {
+    if (userId) onAddAssignee(userId);
+  }
+
   return (
     <div>
       <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide mb-1 block">
@@ -72,28 +69,14 @@ export function SidebarAssigneeSection({
           })}
         </div>
       )}
-      <Select value="" onValueChange={onAddAssignee}>
-        <SelectTrigger className="h-8 text-xs bg-background w-full">
-          <SelectValue placeholder="+ Add assignee" />
-        </SelectTrigger>
-        <SelectContent>
-          {members
-            ?.filter((m) => !currentAssigneeIds.includes(m.id))
-            .map((member) => (
-              <SelectItem key={member.id} value={member.id}>
-                <div className="flex items-center gap-2">
-                  <Avatar className="h-5 w-5">
-                    <AvatarImage src={resolveImageUrl(member.image)} />
-                    <AvatarFallback className="text-[8px]">
-                      {getUserInitials(member)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="text-xs">{getUserDisplayName(member)}</span>
-                </div>
-              </SelectItem>
-            ))}
-        </SelectContent>
-      </Select>
+      <ProjectMemberSelect
+        projectId={projectId}
+        mode="single"
+        value=""
+        onChange={handleAddAssignee}
+        placeholder="+ Add assignee"
+        className="h-8 text-xs w-full"
+      />
     </div>
   );
 }

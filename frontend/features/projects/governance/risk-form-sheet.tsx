@@ -16,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import type { OrgMember } from "@/types/organization";
+import { ProjectMemberSelect } from "@/components/members/project-member-select";
 import type { Risk, CreateRiskInput, UpdateRiskInput } from "@/types/projects";
 
 const riskSchema = z.object({
@@ -58,12 +58,12 @@ interface RiskFormSheetProps {
   onSubmitCreate: (input: CreateRiskInput) => void;
   onSubmitEdit: (input: UpdateRiskInput & { id: number }) => void;
   isPending?: boolean;
-  members: OrgMember[];
+  projectId: number;
 }
 
 export function RiskFormSheet({
   open, onOpenChange, mode, defaultValues,
-  onSubmitCreate, onSubmitEdit, isPending, members,
+  onSubmitCreate, onSubmitEdit, isPending, projectId,
 }: RiskFormSheetProps) {
   const form = useForm<RiskFormValues>({
     resolver: zodResolver(riskSchema),
@@ -178,14 +178,13 @@ export function RiskFormSheet({
               <FormField control={form.control} name="ownerId" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Owner (optional)</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <FormControl><SelectTrigger><SelectValue placeholder="Select owner" /></SelectTrigger></FormControl>
-                    <SelectContent>
-                      {members.map((m) => (
-                        <SelectItem key={m.userId} value={m.userId}>{m.name ?? m.email}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <ProjectMemberSelect
+                    projectId={projectId}
+                    mode="single"
+                    value={field.value}
+                    onChange={(v) => field.onChange(v ?? "")}
+                    placeholder="Select owner"
+                  />
                   <FormMessage />
                 </FormItem>
               )} />

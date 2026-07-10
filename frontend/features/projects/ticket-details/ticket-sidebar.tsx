@@ -247,7 +247,7 @@ export function TicketSidebar({
       </div>
 
       <SidebarAssigneeSection
-        members={members}
+        projectId={projectId ?? 0}
         displayedAssignees={displayedAssignees}
         currentAssigneeIds={currentAssigneeIds}
         onAddAssignee={handleAddAssignee}

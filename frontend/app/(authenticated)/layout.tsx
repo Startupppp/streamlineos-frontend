@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { DashboardShell } from "../../components/layout/dashboard-shell";
 import { FeedbucketEmbed } from "../../components/feedbucket/feedbucket-embed";
+import { SessionProvider } from "../../components/providers/session-provider";
 
 export default async function DashboardLayout({
   children,
@@ -23,13 +24,15 @@ export default async function DashboardLayout({
 
   return (
     <>
-      <DashboardShell
-        userId={session.user.id}
-        hasDashboardAccess={hasDashboardAccess}
-        defaultCollapsed={defaultCollapsed}
-      >
-        {children}
-      </DashboardShell>
+      <SessionProvider session={session}>
+        <DashboardShell
+          userId={session.user.id}
+          hasDashboardAccess={hasDashboardAccess}
+          defaultCollapsed={defaultCollapsed}
+        >
+          {children}
+        </DashboardShell>
+      </SessionProvider>
       <FeedbucketEmbed />
     </>
   );

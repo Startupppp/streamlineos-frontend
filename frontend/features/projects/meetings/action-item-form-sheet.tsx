@@ -15,7 +15,8 @@ import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import type { ActionItem, CreateActionItemInput, UpdateActionItemInput, ProjectMember } from "@/types/projects";
+import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
+import type { ActionItem, CreateActionItemInput, UpdateActionItemInput, ProjectMemberRecord } from "@/types/projects";
 
 const NONE_SENTINEL = "__none__";
 
@@ -55,7 +56,7 @@ interface ActionItemFormSheetProps {
   onSubmitCreate: (input: CreateActionItemInput) => void;
   onSubmitEdit: (input: UpdateActionItemInput) => void;
   isPending: boolean;
-  projectMembers: ProjectMember[];
+  projectMembers: ProjectMemberRecord[];
 }
 
 export function ActionItemFormSheet({
@@ -88,10 +89,6 @@ export function ActionItemFormSheet({
     } else {
       onSubmitCreate({ title: values.title, description, assigneeId, dueDate, status: values.status });
     }
-  }
-
-  function memberName(m: ProjectMember): string {
-    return m.user?.name ?? m.user?.email ?? m.userId;
   }
 
   return (
@@ -129,7 +126,7 @@ export function ActionItemFormSheet({
                       <SelectContent>
                         <SelectItem value={NONE_SENTINEL}>Unassigned</SelectItem>
                         {projectMembers.map((m) => (
-                          <SelectItem key={m.userId} value={m.userId}>{memberName(m)}</SelectItem>
+                          <SelectItem key={m.id} value={m.id}>{getUserDisplayName(m)}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>

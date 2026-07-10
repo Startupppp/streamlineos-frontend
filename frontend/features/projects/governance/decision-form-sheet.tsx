@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import type { OrgMember } from "@/types/organization";
+import { ProjectMemberSelect } from "@/components/members/project-member-select";
 import type { Decision, CreateDecisionInput, UpdateDecisionInput } from "@/types/projects";
 
 const decisionSchema = z.object({
@@ -61,12 +61,12 @@ interface DecisionFormSheetProps {
   onSubmitCreate: (input: CreateDecisionInput) => void;
   onSubmitEdit: (input: UpdateDecisionInput & { id: number }) => void;
   isPending?: boolean;
-  members: OrgMember[];
+  projectId: number;
 }
 
 export function DecisionFormSheet({
   open, onOpenChange, mode, defaultValues,
-  onSubmitCreate, onSubmitEdit, isPending, members,
+  onSubmitCreate, onSubmitEdit, isPending, projectId,
 }: DecisionFormSheetProps) {
   const form = useForm<DecisionFormValues>({
     resolver: zodResolver(decisionSchema),
@@ -156,14 +156,13 @@ export function DecisionFormSheet({
               <FormField control={form.control} name="ownerId" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Owner (optional)</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <FormControl><SelectTrigger><SelectValue placeholder="Select owner" /></SelectTrigger></FormControl>
-                    <SelectContent>
-                      {members.map((m) => (
-                        <SelectItem key={m.userId} value={m.userId}>{m.name ?? m.email}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <ProjectMemberSelect
+                    projectId={projectId}
+                    mode="single"
+                    value={field.value}
+                    onChange={(v) => field.onChange(v ?? "")}
+                    placeholder="Select owner"
+                  />
                   <FormMessage />
                 </FormItem>
               )} />

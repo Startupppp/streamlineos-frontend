@@ -3,9 +3,9 @@
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { MoreHorizontal, Plus } from "lucide-react";
-import { useProjectDecisions, useCreateDecision, useUpdateDecision, useDeleteDecision } from "@/hooks/api/projects";
+import { useProjectDecisions, useCreateDecision, useUpdateDecision, useDeleteDecision, useProjectMembers } from "@/hooks/api/projects";
 import { useCan } from "@/hooks/api/access";
-import { useOrgMembers } from "@/hooks/api/organization";
+import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
 import type { Decision, DecisionStatus, CreateDecisionInput, UpdateDecisionInput } from "@/types/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable } from "@/components/ui/data-table";
@@ -56,17 +56,16 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
   const { data, isLoading, isError, refetch } = useProjectDecisions(projectId, {
     status: statusFilter !== "all" ? statusFilter : undefined,
   });
-  const { data: membersRes } = useOrgMembers(1, 100);
-  const members = useMemo(() => membersRes?.data ?? [], [membersRes]);
+  const { data: members = [] } = useProjectMembers(projectId);
 
   const createDecision = useCreateDecision(projectId);
   const updateDecision = useUpdateDecision(projectId);
   const deleteDecision = useDeleteDecision(projectId);
 
   const memberName = useCallback((userId: string | null): string => {
-    if (!userId) return "â€”";
-    const m = members.find((x) => x.userId === userId);
-    return m?.name ?? m?.email ?? userId;
+    if (!userId) return “—“;
+    const m = members.find((x) => x.id === userId);
+    return getUserDisplayName(m) || userId;
   }, [members]);
 
   const allDecisions = useMemo(() => data ?? [], [data]);
@@ -229,7 +228,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
         onSubmitCreate={handleCreate}
         onSubmitEdit={handleUpdate}
         isPending={createDecision.isPending || updateDecision.isPending}
-        members={members}
+        projectId={projectId}
       />
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>

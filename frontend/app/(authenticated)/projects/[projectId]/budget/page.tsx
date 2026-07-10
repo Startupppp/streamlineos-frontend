@@ -50,7 +50,7 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
   }
 
   function resolveMemberUser(userId: string) {
-    return members?.find((m) => m.userId === userId)?.user ?? null;
+    return members?.find((m) => m.id === userId) ?? null;
   }
 
   if (isLoading) {
