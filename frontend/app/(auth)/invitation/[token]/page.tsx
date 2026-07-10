@@ -433,7 +433,12 @@ export default function InvitationPage() {
                   </p>
                 )}
                 {password.length > 0 && (
-                  <PasswordStrengthIndicator strength={strength} />
+                  <PasswordStrengthIndicator
+                    strength={strength}
+                    showRequirements={
+                      form.formState.submitCount > 0 && Boolean(form.formState.errors.password)
+                    }
+                  />
                 )}
               </div>
 

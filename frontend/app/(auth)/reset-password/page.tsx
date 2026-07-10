@@ -57,9 +57,11 @@ type FormValues = z.infer<typeof formSchema>;
 function PasswordFields({
   control,
   watch,
+  showRequirements,
 }: {
   control: ReturnType<typeof useForm<FormValues>>["control"];
   watch: ReturnType<typeof useForm<FormValues>>["watch"];
+  showRequirements: boolean;
 }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -102,7 +104,12 @@ function PasswordFields({
                 </button>
               </div>
             </FormControl>
-            {password && <PasswordStrengthIndicator strength={getPasswordStrength(password)} />}
+            {password && (
+              <PasswordStrengthIndicator
+                strength={getPasswordStrength(password)}
+                showRequirements={showRequirements}
+              />
+            )}
             <FormMessage className="text-[12px]" />
           </FormItem>
         )}
@@ -220,7 +227,13 @@ function TokenResetForm({ token }: { token: string }) {
       <div className="rounded-xl border border-border bg-card shadow-soft p-4 sm:p-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <PasswordFields control={form.control} watch={form.watch} />
+            <PasswordFields
+              control={form.control}
+              watch={form.watch}
+              showRequirements={
+                form.formState.submitCount > 0 && Boolean(form.formState.errors.password)
+              }
+            />
             <Button
               type="submit"
               disabled={resetPasswordMutation.isPending}
@@ -297,7 +310,13 @@ function ForceChangePasswordForm() {
       <div className="rounded-xl border border-border bg-card shadow-soft p-4 sm:p-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <PasswordFields control={form.control} watch={form.watch} />
+            <PasswordFields
+              control={form.control}
+              watch={form.watch}
+              showRequirements={
+                form.formState.submitCount > 0 && Boolean(form.formState.errors.password)
+              }
+            />
             <Button
               type="submit"
               disabled={loading}

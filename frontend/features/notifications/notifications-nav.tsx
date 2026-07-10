@@ -86,7 +86,7 @@ export function NotificationsNav() {
 
   return (
     <nav className="shrink-0 border-b border-border bg-background px-2 sm:px-4">
-      <div className="flex items-center gap-1 overflow-x-auto">
+      <div className="flex items-center gap-1 overflow-x-auto overflow-y-hidden">
         {PERSONAL_TABS.map((tab) => (
           <NavLink
             key={tab.href}

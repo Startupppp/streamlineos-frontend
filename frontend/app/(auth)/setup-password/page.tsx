@@ -156,7 +156,14 @@ function SetupPasswordContent() {
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
-            {strength && <PasswordStrengthIndicator strength={strength} />}
+            {strength && (
+              <PasswordStrengthIndicator
+                strength={strength}
+                showRequirements={
+                  form.formState.submitCount > 0 && Boolean(form.formState.errors.password)
+                }
+              />
+            )}
             {form.formState.errors.password && (
               <p className="text-xs text-destructive">{form.formState.errors.password.message}</p>
             )}

@@ -315,7 +315,12 @@ export default function SignupPage() {
               </button>
             </div>
             {passwordStrength ? (
-              <PasswordStrengthIndicator strength={passwordStrength} />
+              <PasswordStrengthIndicator
+                strength={passwordStrength}
+                showRequirements={
+                  form.formState.submitCount > 0 && Boolean(form.formState.errors.password)
+                }
+              />
             ) : (
               <p className="text-[11px] text-muted-foreground/60">
                 8+ chars · upper · lower · number · symbol

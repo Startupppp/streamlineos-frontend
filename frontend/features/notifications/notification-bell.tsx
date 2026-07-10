@@ -4,7 +4,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Bell, BellRing, CheckCheck, Inbox } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/common/use-mobile";
@@ -42,7 +46,8 @@ function PopoverNotificationItem({
   onItemClick: (n: Notification) => void;
 }) {
   const catKey = (notification.category ?? "SYSTEM") as NotificationCategory;
-  const config = NOTIFICATION_CATEGORY_CONFIG[catKey] ?? NOTIFICATION_CATEGORY_CONFIG.SYSTEM;
+  const config =
+    NOTIFICATION_CATEGORY_CONFIG[catKey] ?? NOTIFICATION_CATEGORY_CONFIG.SYSTEM;
   const Icon = config.icon;
 
   function handleClick() {
@@ -58,18 +63,34 @@ function PopoverNotificationItem({
         !notification.isRead && "bg-blue-50/40",
       )}
     >
-      <div className={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-md mt-0.5", config.bg)}>
+      <div
+        className={cn(
+          "flex h-7 w-7 shrink-0 items-center justify-center rounded-md mt-0.5",
+          config.bg,
+        )}
+      >
         <Icon className={cn("h-3.5 w-3.5", config.color)} />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
-          <p className={cn("text-[13px] truncate leading-snug", notification.isRead ? "font-medium text-muted-foreground" : "font-semibold text-foreground")}>
+          <p
+            className={cn(
+              "text-[13px] truncate leading-snug",
+              notification.isRead
+                ? "font-medium text-muted-foreground"
+                : "font-semibold text-foreground",
+            )}
+          >
             {notification.title}
           </p>
-          <span className="text-[11px] text-muted-foreground/50 shrink-0">{formatRelativeTime(notification.createdAt)}</span>
+          <span className="text-[11px] text-muted-foreground/50 shrink-0">
+            {formatRelativeTime(notification.createdAt)}
+          </span>
         </div>
         {notification.message && (
-          <p className="text-xs text-muted-foreground truncate mt-0.5">{notification.message}</p>
+          <p className="text-xs text-muted-foreground truncate mt-0.5">
+            {notification.message}
+          </p>
         )}
       </div>
       {!notification.isRead && (
@@ -104,7 +125,11 @@ export function NotificationBell() {
 
   useNotificationEvents();
   const { data: unreadData } = useUnreadNotificationCount();
-  const { data: notifications, isLoading, isError } = useNotifications({ section: "UNREAD", limit: 10 });
+  const {
+    data: notifications,
+    isLoading,
+    isError,
+  } = useNotifications({ section: "UNREAD", limit: 10 });
   const markRead = useMarkNotificationRead();
   const markAllRead = useMarkAllNotificationsRead();
 
@@ -181,7 +206,9 @@ export function NotificationBell() {
         onMouseLeave={enableHoverOpen ? handleHoverLeave : undefined}
       >
         <div className="flex items-center justify-between px-3 py-2.5 border-b border-border">
-          <h3 className="text-sm font-semibold text-foreground">Notifications</h3>
+          <h3 className="text-sm font-semibold text-foreground">
+            Notifications
+          </h3>
           <div className="flex items-center gap-1">
             {unreadCount > 0 && (
               <Button
@@ -195,12 +222,6 @@ export function NotificationBell() {
                 <CheckCheck className="h-3.5 w-3.5 text-muted-foreground" />
               </Button>
             )}
-            <Link
-              href="/notifications"
-              className="text-xs text-foreground/80 hover:text-foreground font-medium px-2 py-1 rounded-md hover:bg-muted transition-colors"
-            >
-              View all
-            </Link>
           </div>
         </div>
 
@@ -210,16 +231,25 @@ export function NotificationBell() {
           ) : isError ? (
             <div className="flex flex-col items-center justify-center py-8 text-center px-4">
               <Inbox className="h-8 w-8 text-muted-foreground/30 mb-2" />
-              <p className="text-sm font-medium text-foreground">Couldn&apos;t load notifications</p>
-              <Link href="/notifications" className="text-xs text-accent hover:underline mt-0.5">
+              <p className="text-sm font-medium text-foreground">
+                Couldn&apos;t load notifications
+              </p>
+              <Link
+                href="/notifications"
+                className="text-xs text-accent hover:underline mt-0.5"
+              >
                 Open the notification center
               </Link>
             </div>
           ) : recentNotifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center px-4">
               <Inbox className="h-8 w-8 text-muted-foreground/30 mb-2" />
-              <p className="text-sm font-medium text-foreground">You&apos;re all caught up</p>
-              <p className="text-xs text-muted-foreground mt-0.5">No unread notifications</p>
+              <p className="text-sm font-medium text-foreground">
+                You&apos;re all caught up
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                No unread notifications
+              </p>
             </div>
           ) : (
             recentNotifications.map((notification) => (
