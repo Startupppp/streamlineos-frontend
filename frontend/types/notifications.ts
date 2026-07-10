@@ -1,24 +1,26 @@
 export type NotificationType = "INFO" | "SUCCESS" | "WARNING" | "ERROR";
 export type NotificationPriority = "LOW" | "NORMAL" | "HIGH" | "CRITICAL";
-export type NotificationCategory =
-  | "SECURITY"
-  | "CRM"
-  | "HRMS"
-  | "BILLING"
-  | "AI"
-  | "PROJECTS"
-  | "WORKFLOW"
-  | "MARKETING"
-  | "SYSTEM"
-  | "CHAT"
-  | "PAYROLL"
-  | "RECRUITMENT"
-  | "KNOWLEDGE"
-  | "SIGN"
-  | "INVENTORY"
-  | "SURVEYS"
-  | "CALENDAR"
-  | "SUPPORT";
+export const NOTIFICATION_CATEGORY_VALUES = [
+  "SECURITY",
+  "CRM",
+  "HRMS",
+  "BILLING",
+  "AI",
+  "PROJECTS",
+  "WORKFLOW",
+  "MARKETING",
+  "SYSTEM",
+  "CHAT",
+  "PAYROLL",
+  "RECRUITMENT",
+  "KNOWLEDGE",
+  "SIGN",
+  "INVENTORY",
+  "SURVEYS",
+  "CALENDAR",
+  "SUPPORT",
+] as const;
+export type NotificationCategory = (typeof NOTIFICATION_CATEGORY_VALUES)[number];
 export type NotificationSection =
   | "ALL"
   | "UNREAD"

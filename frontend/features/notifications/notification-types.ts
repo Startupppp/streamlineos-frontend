@@ -24,40 +24,21 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-export type NotificationType = "INFO" | "SUCCESS" | "WARNING" | "ERROR";
-export type NotificationPriority = "LOW" | "NORMAL" | "HIGH" | "CRITICAL";
-export const NOTIFICATION_CATEGORY_VALUES = [
-  "SECURITY",
-  "CRM",
-  "HRMS",
-  "BILLING",
-  "AI",
-  "PROJECTS",
-  "WORKFLOW",
-  "MARKETING",
-  "SYSTEM",
-  "CHAT",
-  "PAYROLL",
-  "RECRUITMENT",
-  "KNOWLEDGE",
-  "SIGN",
-  "INVENTORY",
-  "SURVEYS",
-  "CALENDAR",
-  "SUPPORT",
-] as const;
-export type NotificationCategory = (typeof NOTIFICATION_CATEGORY_VALUES)[number];
-export type NotificationSection =
-  | "ALL"
-  | "UNREAD"
-  | "READ"
-  | "MENTIONS"
-  | "ASSIGNED_TO_ME"
-  | "APPROVALS"
-  | "BROADCASTS"
-  | "ARCHIVED"
-  | "SYSTEM"
-  | "PINNED";
+import type {
+  NotificationType,
+  NotificationPriority,
+  NotificationCategory,
+  NotificationSection,
+} from "@/types/notifications";
+import { NOTIFICATION_CATEGORY_VALUES } from "@/types/notifications";
+
+export type {
+  NotificationType,
+  NotificationPriority,
+  NotificationCategory,
+  NotificationSection,
+};
+export { NOTIFICATION_CATEGORY_VALUES };
 
 interface TypeConfig {
   icon: LucideIcon;

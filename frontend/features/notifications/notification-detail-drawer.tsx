@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback } from "react";
-import { Archive, ArchiveRestore, Pin, PinOff, Trash2, ExternalLink, Clock, Info, Check } from "lucide-react";
+import { Archive, ArchiveRestore, Pin, PinOff, ExternalLink, Clock, Info, Check } from "lucide-react";
+import { Trash2Icon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
@@ -72,6 +74,8 @@ export function NotificationDetailDrawer({
   onSnooze,
   onDelete,
 }: NotificationDetailDrawerProps) {
+  const trashAnimated = useAnimatedIcon();
+
   const handleDelete = useCallback(() => {
     if (!notification) return;
     onDelete(notification.id);
@@ -223,8 +227,10 @@ export function NotificationDetailDrawer({
               size="sm"
               className="col-span-2 text-destructive hover:text-destructive"
               onClick={handleDelete}
+              {...trashAnimated.hoverHandlers}
             >
-              <Trash2 className="h-3.5 w-3.5 mr-1.5" /> Delete
+              <Trash2Icon ref={trashAnimated.iconRef} size={14} />
+              Delete
             </Button>
           </div>
         </div>

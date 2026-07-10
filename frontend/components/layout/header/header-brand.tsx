@@ -3,7 +3,11 @@
 import Link from "next/link"
 import Image from "next/image"
 
-export function HeaderBrand() {
+interface HeaderBrandProps {
+  showLabel?: boolean
+}
+
+export function HeaderBrand({ showLabel = true }: HeaderBrandProps) {
   return (
     <div className="flex shrink-0 items-center overflow-visible gap-2">
       <Link
@@ -19,9 +23,11 @@ export function HeaderBrand() {
           className="object-contain"
         />
       </Link>
-      <span className="text-sm font-semibold text-sidebar-foreground truncate min-w-0">
-        StreamlineOS
-      </span>
+      {showLabel && (
+        <span className="text-sm font-semibold text-sidebar-foreground truncate min-w-0">
+          StreamlineOS
+        </span>
+      )}
     </div>
   )
 }

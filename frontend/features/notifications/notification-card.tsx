@@ -1,10 +1,13 @@
 "use client";
 
 import { useCallback } from "react";
-import { Archive, Pin, PinOff, Trash2, Check, X } from "lucide-react";
+import { Archive, Pin, PinOff } from "lucide-react";
+import { Trash2Icon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { cn } from "@/lib/utils";
 import {
   NOTIFICATION_TYPE_CONFIG,
@@ -30,6 +33,11 @@ export interface NotificationCardProps {
   link?: string | null;
   selected?: boolean;
   isApproval?: boolean;
+  isApproving?: boolean;
+  isRejecting?: boolean;
+  isArchiving?: boolean;
+  isPinning?: boolean;
+  isDeleting?: boolean;
   onSelect?: (id: number) => void;
   onClick: (n: { id: number; isRead: boolean; link: string | null }) => void;
   onArchive?: (id: number) => void;
@@ -37,6 +45,29 @@ export interface NotificationCardProps {
   onDelete?: (id: number) => void;
   onApprove?: (id: number) => void;
   onReject?: (id: number) => void;
+}
+
+function TrashButton({
+  onClick,
+  isDeleting,
+}: {
+  onClick: (e: React.MouseEvent) => void;
+  isDeleting?: boolean;
+}) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="h-6 w-6 shrink-0 hover:text-destructive"
+      onClick={onClick}
+      disabled={isDeleting}
+      title="Delete"
+      {...hoverHandlers}
+    >
+      <Trash2Icon ref={iconRef} size={12} />
+    </Button>
+  );
 }
 
 export function NotificationCard({
@@ -54,6 +85,11 @@ export function NotificationCard({
   link,
   selected = false,
   isApproval = false,
+  isApproving = false,
+  isRejecting = false,
+  isArchiving = false,
+  isPinning = false,
+  isDeleting = false,
   onSelect,
   onClick,
   onArchive,
@@ -117,8 +153,8 @@ export function NotificationCard({
     <div
       onClick={handleCardClick}
       className={cn(
-        "group relative flex items-start gap-2.5 px-3 py-2.5 cursor-pointer transition-colors hover:bg-muted/40",
-        isUnread && !isArchived && "bg-blue-50/30 hover:bg-blue-50/50 shadow-[inset_3px_0_0_rgb(59,130,246)]",
+        "group relative flex items-start gap-2.5 px-3 py-2.5 cursor-pointer transition-colors hover:bg-muted/40 hover:shadow-md",
+        isUnread && !isArchived && "bg-blue-50/30 hover:bg-blue-50/50 border-l-[3px] border-l-blue-500",
         selected && "bg-blue-50/50",
       )}
     >
@@ -178,26 +214,26 @@ export function NotificationCard({
         {isApproval && (onApprove || onReject) && (
           <div className="flex items-center gap-1.5 mt-2" onClick={(e) => e.stopPropagation()}>
             {onApprove && (
-              <Button
+              <LoadingButton
                 size="sm"
                 variant="outline"
                 className="h-6 text-xs px-2.5 border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300"
                 onClick={handleApprove}
+                isPending={isApproving}
               >
-                <Check className="h-3 w-3 mr-1" />
                 Approve
-              </Button>
+              </LoadingButton>
             )}
             {onReject && (
-              <Button
+              <LoadingButton
                 size="sm"
                 variant="outline"
                 className="h-6 text-xs px-2.5 border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300"
                 onClick={handleReject}
+                isPending={isRejecting}
               >
-                <X className="h-3 w-3 mr-1" />
                 Reject
-              </Button>
+              </LoadingButton>
             )}
           </div>
         )}
@@ -215,6 +251,7 @@ export function NotificationCard({
                 size="icon"
                 className="h-6 w-6 shrink-0"
                 onClick={handleArchive}
+                disabled={isArchiving}
                 title="Archive"
               >
                 <Archive className="h-3 w-3 text-muted-foreground" />
@@ -226,6 +263,7 @@ export function NotificationCard({
                 size="icon"
                 className="h-6 w-6 shrink-0"
                 onClick={handlePin}
+                disabled={isPinning}
                 title={pinned ? "Unpin" : "Pin"}
               >
                 {pinned ? (
@@ -236,15 +274,7 @@ export function NotificationCard({
               </Button>
             )}
             {onDelete && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 shrink-0 hover:text-destructive"
-                onClick={handleDelete}
-                title="Delete"
-              >
-                <Trash2 className="h-3 w-3 text-muted-foreground" />
-              </Button>
+              <TrashButton onClick={handleDelete} isDeleting={isDeleting} />
             )}
           </div>
         )}

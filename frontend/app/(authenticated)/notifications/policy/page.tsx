@@ -4,6 +4,7 @@ import { useState, useRef, useCallback } from "react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -185,9 +186,9 @@ export default function NotificationPolicyPage() {
       subtitle="Configure organization-wide notification delivery defaults"
       actions={
         canManage ? (
-          <Button size="sm" onClick={handleSave} disabled={upsert.isPending}>
-            {upsert.isPending ? "Saving..." : "Save changes"}
-          </Button>
+          <LoadingButton size="sm" onClick={handleSave} isPending={upsert.isPending} loadingText="Saving...">
+            Save changes
+          </LoadingButton>
         ) : undefined
       }
     >

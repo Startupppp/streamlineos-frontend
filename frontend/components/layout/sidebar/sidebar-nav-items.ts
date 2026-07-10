@@ -1875,7 +1875,6 @@ export function getProductFromPathname(pathname: string): ProductKey {
   if (pathname.startsWith("/knowledge")) return "documents";
   if (pathname.startsWith("/surveys")) return "surveys";
   if (pathname.startsWith("/payroll")) return "payroll";
-  if (pathname.startsWith("/feedbucket")) return "feedbucket";
   if (
     pathname.startsWith("/organization") ||
     pathname.startsWith("/users") ||

@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Bell, BellRing, CheckCheck, Inbox } from "lucide-react";
+import { Inbox } from "lucide-react";
+import { BellIcon, BellRingIcon, CheckCheckIcon } from "@animateicons/react/lucide";
 import {
   Popover,
   PopoverContent,
@@ -12,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/common/use-mobile";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { cn } from "@/lib/utils";
 import {
   useUnreadNotificationCount,
@@ -123,6 +125,9 @@ export function NotificationBell() {
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const enableHoverOpen = !isMobile;
 
+  const bellAnimated = useAnimatedIcon();
+  const markAllReadAnimated = useAnimatedIcon();
+
   useNotificationEvents();
   const { data: unreadData } = useUnreadNotificationCount();
   const {
@@ -176,9 +181,9 @@ export function NotificationBell() {
     [markRead, router],
   );
 
-  function handleMarkAllRead() {
+  const handleMarkAllRead = useCallback(() => {
     markAllRead.mutate(undefined);
-  }
+  }, [markAllRead]);
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
@@ -186,14 +191,14 @@ export function NotificationBell() {
         <button
           type="button"
           aria-label={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ""}`}
-          onMouseEnter={enableHoverOpen ? handleHoverEnter : undefined}
-          onMouseLeave={enableHoverOpen ? handleHoverLeave : undefined}
+          onMouseEnter={enableHoverOpen ? handleHoverEnter : bellAnimated.hoverHandlers.onMouseEnter}
+          onMouseLeave={enableHoverOpen ? handleHoverLeave : bellAnimated.hoverHandlers.onMouseLeave}
           className="relative h-8 w-8 rounded-lg flex items-center justify-center text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
         >
           {unreadCount > 0 ? (
-            <BellRing className="h-4 w-4" />
+            <BellRingIcon ref={bellAnimated.iconRef} size={16} />
           ) : (
-            <Bell className="h-4 w-4" />
+            <BellIcon ref={bellAnimated.iconRef} size={16} />
           )}
           <BellBadge count={unreadCount} />
         </button>
@@ -218,8 +223,9 @@ export function NotificationBell() {
                 disabled={markAllRead.isPending}
                 onClick={handleMarkAllRead}
                 title="Mark all read"
+                {...markAllReadAnimated.hoverHandlers}
               >
-                <CheckCheck className="h-3.5 w-3.5 text-muted-foreground" />
+                <CheckCheckIcon ref={markAllReadAnimated.iconRef} size={14} />
               </Button>
             )}
           </div>

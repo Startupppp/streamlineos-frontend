@@ -111,6 +111,12 @@ export function DashboardShell({
           <CommandPalette />
           <TrialBanner />
 
+          <GlobalHeader
+            isSidebarCollapsed={isSidebarCollapsed}
+            onToggleSidebar={handleToggleSidebar}
+            showSidebarToggle={!hideSidebar}
+          />
+
           <div className="flex-1 flex min-h-0">
             {!hideSidebar && (
               <aside
@@ -118,26 +124,19 @@ export function DashboardShell({
                 style={{ width: sidebarW }}
                 className="hidden md:flex flex-col h-full border-r border-sidebar-border bg-sidebar shrink-0 transition-[width] duration-300 ease-in-out overflow-visible relative z-50"
               >
-                <AppSidebar
-                  isCollapsed={isSidebarCollapsed}
-                  onToggleCollapse={handleToggleSidebar}
-                />
+                <AppSidebar isCollapsed={isSidebarCollapsed} />
               </aside>
             )}
 
-            <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
-              <GlobalHeader />
-
-              <main
-                id="dashboard-content"
-                className="flex-1 min-w-0 flex flex-col overflow-hidden"
-              >
-                <div className="flex-1 min-h-0 overflow-auto flex flex-col pb-16 md:pb-0">
-                  {children}
-                  <SuccessChecklist />
-                </div>
-              </main>
-            </div>
+            <main
+              id="dashboard-content"
+              className="flex-1 min-w-0 flex flex-col overflow-hidden"
+            >
+              <div className="flex-1 min-h-0 overflow-auto flex flex-col pb-16 md:pb-0">
+                {children}
+                <SuccessChecklist />
+              </div>
+            </main>
           </div>
 
           {!hideSidebar && (

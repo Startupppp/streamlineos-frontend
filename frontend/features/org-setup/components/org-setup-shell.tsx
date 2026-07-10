@@ -63,7 +63,8 @@ export function OrgSetupShell({
 
         <div
           className={cn(
-            "bg-card rounded-xl border border-border shadow-soft",
+            "bg-card rounded-xl border border-border shadow-soft min-h-0 overflow-y-auto scrollbar-hide",
+            "max-h-[calc(100dvh-15rem)] lg:max-h-[calc(100dvh-11rem)]",
             isFirstOrLast ? "p-5" : "p-4",
           )}
         >
@@ -87,8 +88,8 @@ export function OrgSetupShell({
         </div>
       </div>
 
-      <aside className="hidden lg:block w-72 shrink-0">
-        <div className="sticky top-8 rounded-xl border border-border bg-card p-4">
+      <aside className="hidden lg:block w-72 shrink-0 self-start sticky top-8">
+        <div className="max-h-[calc(100dvh-5rem)] overflow-y-auto scrollbar-hide rounded-xl border border-border bg-card p-4">
           <WorkspacePreviewPanel data={data} />
         </div>
       </aside>

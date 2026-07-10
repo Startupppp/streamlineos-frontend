@@ -1,14 +1,17 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Plus, Edit2, Trash2, Eye, LayoutTemplate } from "lucide-react";
+import { Plus, Eye, Edit2, Trash2 } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Sheet,
   SheetContent,
@@ -39,6 +42,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 import { cn } from "@/lib/utils";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import {
+  EyeIcon,
+  UserPenIcon,
+  Trash2Icon,
+} from "@animateicons/react/lucide";
 import {
   useNotificationTemplates,
   useCreateNotificationTemplate,
@@ -145,150 +154,155 @@ function TemplateSheet({
           <SheetTitle>{isEdit ? "Edit Template" : "New Template"}</SheetTitle>
         </SheetHeader>
         <div className="flex-1 overflow-y-auto px-6 py-4">
-        <Form {...form}>
-          <form id="template-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="templateKey"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Template Key</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g. invoice.payment.due" disabled={isEdit} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Display Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Invoice Payment Due" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <div className="grid grid-cols-2 gap-3">
+          <Form {...form}>
+            <form id="template-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
-                name="channel"
+                name="templateKey"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Channel</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {CHANNELS.map((c) => (
-                          <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Category</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value={NO_CATEGORY}>None</SelectItem>
-                        {NOTIFICATION_CATEGORIES.map((cat) => (
-                          <SelectItem key={cat} value={cat}>{NOTIFICATION_CATEGORY_CONFIG[cat].label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <FormField
-              control={form.control}
-              name="locale"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Locale</FormLabel>
-                  <FormControl>
-                    <Input placeholder="en" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            {needsSubject && (
-              <FormField
-                control={form.control}
-                name="subject"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Subject</FormLabel>
+                    <FormLabel>Template Key</FormLabel>
                     <FormControl>
-                      <Input placeholder="Your invoice is due" {...field} />
+                      <Input placeholder="e.g. invoice.payment.due" disabled={isEdit} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            )}
-            <FormField
-              control={form.control}
-              name="body"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Body</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Your invoice {{invoiceNumber}} for {{amount}} is due on {{dueDate}}."
-                      rows={5}
-                      className="resize-none"
-                      {...field}
-                    />
-                  </FormControl>
-                  <p className="text-[11px] text-muted-foreground">
-                    Use {"{{variable}}"} syntax for dynamic values.
-                  </p>
-                  <FormMessage />
-                </FormItem>
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Display Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Invoice Payment Due" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="channel"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Channel</FormLabel>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {CHANNELS.map((c) => (
+                            <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Category</FormLabel>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value={NO_CATEGORY}>None</SelectItem>
+                          {NOTIFICATION_CATEGORIES.map((cat) => (
+                            <SelectItem key={cat} value={cat}>{NOTIFICATION_CATEGORY_CONFIG[cat].label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <FormField
+                control={form.control}
+                name="locale"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Locale</FormLabel>
+                    <FormControl>
+                      <Input placeholder="en" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {needsSubject && (
+                <FormField
+                  control={form.control}
+                  name="subject"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Subject</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Your invoice is due" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               )}
-            />
-            <FormField
-              control={form.control}
-              name="variables"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Variables</FormLabel>
-                  <FormControl>
-                    <Input placeholder="invoiceNumber, amount, dueDate" {...field} />
-                  </FormControl>
-                  <p className="text-[11px] text-muted-foreground">Comma-separated variable names.</p>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </form>
-        </Form>
+              <FormField
+                control={form.control}
+                name="body"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Body</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Your invoice {{invoiceNumber}} for {{amount}} is due on {{dueDate}}."
+                        rows={5}
+                        className="resize-none"
+                        {...field}
+                      />
+                    </FormControl>
+                    <p className="text-[11px] text-muted-foreground">
+                      Use {"{{variable}}"} syntax for dynamic values.
+                    </p>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="variables"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Variables</FormLabel>
+                    <FormControl>
+                      <Input placeholder="invoiceNumber, amount, dueDate" {...field} />
+                    </FormControl>
+                    <p className="text-[11px] text-muted-foreground">Comma-separated variable names.</p>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </form>
+          </Form>
         </div>
         <SheetFooter className="px-6 py-4 justify-end">
           <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>
             Cancel
           </Button>
-          <Button type="submit" form="template-form" disabled={isPending}>
-            {isPending ? "Saving..." : isEdit ? "Save Changes" : "Create"}
-          </Button>
+          <LoadingButton
+            type="submit"
+            form="template-form"
+            isPending={isPending}
+            loadingText="Saving..."
+          >
+            {isEdit ? "Save Changes" : "Create"}
+          </LoadingButton>
         </SheetFooter>
       </SheetContent>
     </Sheet>
@@ -354,17 +368,110 @@ function PreviewDialog({
               <div className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{template?.body}</div>
             </div>
           )}
-          <Button
+          <LoadingButton
             className="w-full"
             variant="outline"
             onClick={handlePreview}
-            disabled={preview.isPending}
+            isPending={preview.isPending}
+            loadingText="Generating..."
           >
-            {preview.isPending ? "Generating..." : "Render with sample variables"}
-          </Button>
+            Render with sample variables
+          </LoadingButton>
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function TemplateRow({ template, idx, onPreview, onEdit, onDelete }: {
+  template: NotificationTemplate;
+  idx: number;
+  onPreview: (t: NotificationTemplate) => void;
+  onEdit: (t: NotificationTemplate) => void;
+  onDelete: (t: NotificationTemplate) => void;
+}) {
+  const shouldReduceMotion = useReducedMotion();
+  const previewAnim = useAnimatedIcon();
+  const editAnim = useAnimatedIcon();
+  const deleteAnim = useAnimatedIcon();
+
+  const catConfig = template.category ? NOTIFICATION_CATEGORY_CONFIG[template.category] : null;
+
+  const handlePreviewClick = useCallback(() => onPreview(template), [onPreview, template]);
+  const handleEditClick = useCallback(() => onEdit(template), [onEdit, template]);
+  const handleDeleteClick = useCallback(() => onDelete(template), [onDelete, template]);
+
+  return (
+    <motion.div
+      initial={shouldReduceMotion ? false : { opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, delay: Math.min(idx, 10) * 0.04, ease: "easeOut" }}
+      className="group flex items-start gap-3 px-3 py-2.5 hover:bg-muted/30 transition-colors"
+    >
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-sm font-medium">{template.name}</span>
+          <Badge variant="outline" className="text-[10px] h-4 px-1.5 shrink-0">
+            {template.channel}
+          </Badge>
+          {catConfig && (
+            <Badge variant="secondary" className="text-[10px] h-4 px-1.5 shrink-0">
+              {catConfig.label}
+            </Badge>
+          )}
+          <Badge
+            variant="outline"
+            className={cn(
+              "text-[10px] h-4 px-1.5 shrink-0",
+              template.isActive ? "border-emerald-300 text-emerald-600" : "text-muted-foreground",
+            )}
+          >
+            {template.isActive ? "Active" : "Inactive"}
+          </Badge>
+        </div>
+        <p className="mt-0.5 text-[11px] font-mono text-muted-foreground/70">{template.templateKey}</p>
+        {template.subject && (
+          <p className="mt-0.5 text-xs text-muted-foreground truncate">
+            Subject: {template.subject}
+          </p>
+        )}
+        <p className="text-[11px] text-muted-foreground/50 mt-0.5">
+          v{template.version} · {template.locale}
+        </p>
+      </div>
+      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6"
+          onClick={handlePreviewClick}
+          title="Preview"
+          {...previewAnim.hoverHandlers}
+        >
+          <EyeIcon ref={previewAnim.iconRef} size={12} className="text-muted-foreground" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6"
+          onClick={handleEditClick}
+          title="Edit"
+          {...editAnim.hoverHandlers}
+        >
+          <UserPenIcon ref={editAnim.iconRef} size={12} className="text-muted-foreground" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6 hover:text-destructive"
+          onClick={handleDeleteClick}
+          title="Delete"
+          {...deleteAnim.hoverHandlers}
+        >
+          <Trash2Icon ref={deleteAnim.iconRef} size={12} className="text-muted-foreground" />
+        </Button>
+      </div>
+    </motion.div>
   );
 }
 
@@ -403,6 +510,8 @@ export default function NotificationTemplatesPage() {
     });
   }, [deleteTarget, deleteTemplate]);
 
+  const handleSetDeleteTarget = useCallback((t: NotificationTemplate) => setDeleteTarget(t), []);
+
   function handleRetry() {
     void refetch();
   }
@@ -436,86 +545,24 @@ export default function NotificationTemplatesPage() {
           onRetry={handleRetry}
         />
       ) : !templates?.length ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <LayoutTemplate className="h-10 w-10 text-muted-foreground/25 mb-3" />
-          <p className="text-sm font-medium text-foreground">No templates yet</p>
-          <p className="text-xs text-muted-foreground mt-1 mb-4 max-w-xs">
-            Create reusable notification templates to standardize messages sent to your team.
-          </p>
-          <Button size="sm" onClick={handleCreate}>
-            <Plus className="mr-2 h-3.5 w-3.5" />
-            Create Template
-          </Button>
-        </div>
+        <EmptyState
+          illustrationPreset="mail"
+          title="No templates yet"
+          description="Create reusable notification templates to standardize messages sent to your team."
+          action={{ label: "Create Template", onClick: handleCreate }}
+        />
       ) : (
         <div className="rounded-lg border border-border overflow-hidden divide-y divide-border">
-          {templates.map((t) => {
-            const catConfig = t.category ? NOTIFICATION_CATEGORY_CONFIG[t.category] : null;
-            return (
-              <div key={t.id} className="group flex items-start gap-3 px-3 py-2.5 hover:bg-muted/30 transition-colors">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-sm font-medium">{t.name}</span>
-                    <Badge variant="outline" className="text-[10px] h-4 px-1.5 shrink-0">
-                      {t.channel}
-                    </Badge>
-                    {catConfig && (
-                      <Badge variant="secondary" className="text-[10px] h-4 px-1.5 shrink-0">
-                        {catConfig.label}
-                      </Badge>
-                    )}
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        "text-[10px] h-4 px-1.5 shrink-0",
-                        t.isActive ? "border-emerald-300 text-emerald-600" : "text-muted-foreground",
-                      )}
-                    >
-                      {t.isActive ? "Active" : "Inactive"}
-                    </Badge>
-                  </div>
-                  <p className="mt-0.5 text-[11px] font-mono text-muted-foreground/70">{t.templateKey}</p>
-                  {t.subject && (
-                    <p className="mt-0.5 text-xs text-muted-foreground truncate">
-                      Subject: {t.subject}
-                    </p>
-                  )}
-                  <p className="text-[11px] text-muted-foreground/50 mt-0.5">
-                    v{t.version} · {t.locale}
-                  </p>
-                </div>
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    onClick={() => setPreviewTarget(t)}
-                    title="Preview"
-                  >
-                    <Eye className="h-3 w-3 text-muted-foreground" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    onClick={() => handleEdit(t)}
-                    title="Edit"
-                  >
-                    <Edit2 className="h-3 w-3 text-muted-foreground" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 hover:text-destructive"
-                    onClick={() => setDeleteTarget(t)}
-                    title="Delete"
-                  >
-                    <Trash2 className="h-3 w-3 text-muted-foreground" />
-                  </Button>
-                </div>
-              </div>
-            );
-          })}
+          {templates.map((t, idx) => (
+            <TemplateRow
+              key={t.id}
+              template={t}
+              idx={idx}
+              onPreview={setPreviewTarget}
+              onEdit={handleEdit}
+              onDelete={handleSetDeleteTarget}
+            />
+          ))}
         </div>
       )}
 

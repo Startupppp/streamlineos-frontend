@@ -9,6 +9,7 @@ import { ProductSwitcherMenu } from "./product-switcher-menu"
 import { WorkspaceSwitcher } from "./workspace-switcher"
 import { QuickCreateButton } from "./quick-create-button"
 import { UserAvatarMenu } from "./user-avatar-menu"
+import { SidebarCollapseToggle } from "./sidebar-collapse-toggle"
 
 const NotificationBell = dynamic(
   () => import("@/features/notifications/notification-bell").then((m) => m.NotificationBell),
@@ -69,14 +70,30 @@ function HeaderIconLink({
   )
 }
 
-function DesktopHeader() {
+function DesktopHeader({
+  isSidebarCollapsed,
+  onToggleSidebar,
+  showSidebarToggle,
+}: {
+  isSidebarCollapsed: boolean
+  onToggleSidebar: () => void
+  showSidebarToggle: boolean
+}) {
+  const showLabels = !isSidebarCollapsed
+
   return (
     <div className="flex items-center h-full w-full px-4 gap-3">
-      <HeaderBrand />
       <div className="flex items-center gap-2 shrink-0 min-w-0">
-        <ProductSwitcherMenu />
+        {showSidebarToggle && (
+          <SidebarCollapseToggle
+            isCollapsed={isSidebarCollapsed}
+            onToggle={onToggleSidebar}
+          />
+        )}
+        <HeaderBrand showLabel={showLabels} />
+        <ProductSwitcherMenu hideLabel={!showLabels} />
         <div className="w-px h-4 bg-sidebar-border" />
-        <WorkspaceSwitcher variant="header" />
+        <WorkspaceSwitcher variant="header" iconOnly={!showLabels} />
       </div>
 
       <div className="flex-1 flex justify-center min-w-0 px-4">
@@ -114,12 +131,24 @@ function MobileHeader() {
   )
 }
 
-export function GlobalHeader() {
+export function GlobalHeader({
+  isSidebarCollapsed = false,
+  onToggleSidebar,
+  showSidebarToggle = true,
+}: {
+  isSidebarCollapsed?: boolean
+  onToggleSidebar?: () => void
+  showSidebarToggle?: boolean
+}) {
   return (
     <header className="h-14 border-b border-sidebar-border bg-sidebar text-sidebar-foreground shrink-0 z-40 relative">
       <TooltipProvider>
         <div className="hidden md:block h-full">
-          <DesktopHeader />
+          <DesktopHeader
+            isSidebarCollapsed={isSidebarCollapsed}
+            onToggleSidebar={onToggleSidebar ?? (() => {})}
+            showSidebarToggle={showSidebarToggle}
+          />
         </div>
         <div className="md:hidden h-full">
           <MobileHeader />

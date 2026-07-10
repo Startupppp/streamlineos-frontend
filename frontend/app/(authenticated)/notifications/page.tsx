@@ -2,7 +2,8 @@
 
 import { useState, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCheck, Loader2, X } from "lucide-react";
+import { CheckCheck, X } from "lucide-react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
   useNotifications,
   useUnreadNotificationCount,
@@ -22,6 +23,7 @@ import {
 } from "@/hooks/api/notifications";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { NotificationCard } from "@/features/notifications/notification-card";
@@ -38,6 +40,7 @@ import type { Notification } from "@/types/notifications";
 
 export default function NotificationsPage() {
   const router = useRouter();
+  const prefersReducedMotion = useReducedMotion();
   const [activeSection, setActiveSection] = useState<NotificationSection>("ALL");
   const [activeCategory, setActiveCategory] = useState<NotificationCategory | undefined>(undefined);
   const [activePriority, setActivePriority] = useState<NotificationPriority | undefined>(undefined);
@@ -228,6 +231,14 @@ export default function NotificationsPage() {
     return "When something important happens, you'll see it here.";
   }, [activeSection, debouncedSearch]);
 
+  const rowVariants = prefersReducedMotion
+    ? {}
+    : {
+        initial: { opacity: 0, y: 8 },
+        animate: { opacity: 1, y: 0 },
+        exit: { opacity: 0 },
+      };
+
   return (
     <PageWrapper
       title="Notifications"
@@ -235,16 +246,13 @@ export default function NotificationsPage() {
       mobileFiltersInline
       actions={
         showMarkAllRead ? (
-          <Button
+          <LoadingButton
             size="sm"
-            disabled={unreadCount === 0 || markAllRead.isPending}
+            disabled={unreadCount === 0}
+            isPending={markAllRead.isPending}
             onClick={handleMarkAllRead}
           >
-            {markAllRead.isPending ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <CheckCheck className="mr-2 h-4 w-4" />
-            )}
+            <CheckCheck className="mr-2 h-4 w-4" />
             Mark all read
             {unreadCount > 0 && (
               <Badge
@@ -254,7 +262,7 @@ export default function NotificationsPage() {
                 {unreadCount}
               </Badge>
             )}
-          </Button>
+          </LoadingButton>
         ) : undefined
       }
       filters={
@@ -280,33 +288,33 @@ export default function NotificationsPage() {
               {selectedIds.size} selected
             </span>
             <div className="h-3.5 w-px bg-border" />
-            <Button
+            <LoadingButton
               size="sm"
               variant="ghost"
               className="h-6 text-xs px-2"
               onClick={handleBulkMarkRead}
-              disabled={bulkMarkRead.isPending}
+              isPending={bulkMarkRead.isPending}
             >
               Mark read
-            </Button>
-            <Button
+            </LoadingButton>
+            <LoadingButton
               size="sm"
               variant="ghost"
               className="h-6 text-xs px-2"
               onClick={handleBulkArchive}
-              disabled={bulkArchive.isPending}
+              isPending={bulkArchive.isPending}
             >
               Archive
-            </Button>
-            <Button
+            </LoadingButton>
+            <LoadingButton
               size="sm"
               variant="ghost"
               className="h-6 text-xs px-2 text-destructive hover:text-destructive"
               onClick={handleBulkDelete}
-              disabled={bulkDelete.isPending}
+              isPending={bulkDelete.isPending}
             >
               Delete
-            </Button>
+            </LoadingButton>
             <div className="h-3.5 w-px bg-border" />
             <Button size="sm" variant="ghost" className="h-6 text-xs px-2" onClick={handleSelectAll}>
               Select all
@@ -335,32 +343,51 @@ export default function NotificationsPage() {
           />
         ) : (
           <div className="rounded-lg border border-border overflow-hidden divide-y divide-border">
-            {items.map((n: Notification) => (
-              <NotificationCard
-                key={n.id}
-                id={n.id}
-                title={n.title}
-                message={n.message}
-                type={n.type}
-                priority={n.priority ?? "NORMAL"}
-                category={n.category ?? "SYSTEM"}
-                sourceModule={n.sourceModule ?? null}
-                isRead={n.isRead}
-                pinned={n.pinned ?? false}
-                archivedAt={n.archivedAt ?? null}
-                createdAt={n.createdAt}
-                link={n.link}
-                selected={selectedIds.has(n.id)}
-                isApproval={isApprovalSection}
-                onSelect={handleSelect}
-                onClick={handleNotificationClick}
-                onArchive={handleArchive}
-                onPin={handlePin}
-                onDelete={handleDelete}
-                onApprove={isApprovalSection ? handleApprove : undefined}
-                onReject={isApprovalSection ? handleReject : undefined}
-              />
-            ))}
+            <AnimatePresence initial={false}>
+              {items.map((n: Notification, idx: number) => (
+                <motion.div
+                  key={n.id}
+                  {...rowVariants}
+                  transition={
+                    prefersReducedMotion
+                      ? undefined
+                      : { duration: 0.2, delay: Math.min(idx, 10) * 0.04, ease: "easeOut" }
+                  }
+                >
+                  <NotificationCard
+                    id={n.id}
+                    title={n.title}
+                    message={n.message}
+                    type={n.type}
+                    priority={n.priority ?? "NORMAL"}
+                    category={n.category ?? "SYSTEM"}
+                    sourceModule={n.sourceModule ?? null}
+                    isRead={n.isRead}
+                    pinned={n.pinned ?? false}
+                    archivedAt={n.archivedAt ?? null}
+                    createdAt={n.createdAt}
+                    link={n.link}
+                    selected={selectedIds.has(n.id)}
+                    isApproval={isApprovalSection}
+                    isApproving={approve.isPending && approve.variables === n.id}
+                    isRejecting={reject.isPending && reject.variables === n.id}
+                    isArchiving={archive.isPending && archive.variables === n.id}
+                    isPinning={
+                      (pin.isPending && pin.variables === n.id) ||
+                      (unpin.isPending && unpin.variables === n.id)
+                    }
+                    isDeleting={deleteMutation.isPending && deleteMutation.variables === n.id}
+                    onSelect={handleSelect}
+                    onClick={handleNotificationClick}
+                    onArchive={handleArchive}
+                    onPin={handlePin}
+                    onDelete={handleDelete}
+                    onApprove={isApprovalSection ? handleApprove : undefined}
+                    onReject={isApprovalSection ? handleReject : undefined}
+                  />
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
         )}
       </div>

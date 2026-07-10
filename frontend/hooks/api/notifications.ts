@@ -63,7 +63,6 @@ export const useUnreadNotificationCount = (
   return useQuery<UnreadCount, Error>({
     queryKey: queryKeys.notifications.unreadCount(),
     queryFn: () => apiClient.get<UnreadCount>("/notifications/unread-count"),
-    refetchInterval: 60_000,
     staleTime: 30_000,
     ...options,
     enabled: !!orgId,
@@ -123,6 +122,7 @@ export const useArchiveNotification = () => {
 export const useUnarchiveNotification = () => {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, number>({
+    mutationKey: ["notifications", "unarchive"],
     mutationFn: (id) => apiClient.patch<{ success: boolean }>(`/notifications/${id}/unarchive`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
@@ -166,6 +166,7 @@ export const useUnpinNotification = () => {
 export const useSnoozeNotification = () => {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, { id: number; snoozedUntil: string }>({
+    mutationKey: ["notifications", "snooze"],
     mutationFn: ({ id, snoozedUntil }) =>
       apiClient.patch<{ success: boolean }>(`/notifications/${id}/snooze`, { snoozedUntil }),
     onSuccess: () => {
@@ -218,6 +219,7 @@ export const useNotificationTemplates = (
         "/notification-templates",
         params ? toStringParams(params) : undefined,
       ),
+    staleTime: 60_000,
     ...options,
   });
 };
@@ -272,6 +274,7 @@ export const useBroadcasts = (
         "/broadcasts",
         params ? toStringParams(params) : undefined,
       ),
+    staleTime: 60_000,
     ...options,
   });
 };
@@ -320,6 +323,7 @@ export const useCancelBroadcast = () => {
 export const useDeleteBroadcast = () => {
   const queryClient = useQueryClient();
   return useMutation<{ success: boolean }, Error, number>({
+    mutationKey: ["notifications", "broadcasts", "delete"],
     mutationFn: (id) => apiClient.delete<{ success: boolean }>(`/broadcasts/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.broadcasts() });

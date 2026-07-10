@@ -3,7 +3,6 @@
 import { useMemo, useRef, useCallback, useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
 import { usePathname } from "next/navigation"
-import { ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -27,7 +26,6 @@ import { useEnabledModules } from "@/hooks/api/access/org-modules"
 
 interface AppSidebarProps {
   isCollapsed?: boolean
-  onToggleCollapse?: () => void
   onNavigate?: () => void
   onRequestProductSwitcher?: () => void
   onRequestWorkspaceSwitcher?: () => void
@@ -78,7 +76,6 @@ function SidebarSkeleton({ isCollapsed, isMobile }: SidebarSkeletonProps) {
 
 export function AppSidebar({
   isCollapsed = false,
-  onToggleCollapse,
   onNavigate,
   onRequestProductSwitcher,
   onRequestWorkspaceSwitcher,
@@ -172,12 +169,7 @@ export function AppSidebar({
       total > 0 ? `(${total > 99 ? "99+" : total}) ${base}` : base
   }, [unreadChatCount, unreadNotifCount])
 
-  const showCollapseToggle = !isMobile && !!onToggleCollapse
   const effectiveCollapsed = isMobile ? false : isCollapsed
-
-  function handleToggleClick() {
-    onToggleCollapse?.()
-  }
 
   if (status === "loading") {
     return <SidebarSkeleton isCollapsed={isCollapsed} isMobile={isMobile} />

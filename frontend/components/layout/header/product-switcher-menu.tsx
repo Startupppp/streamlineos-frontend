@@ -40,6 +40,7 @@ interface ProductSwitcherMenuProps {
   triggerOnly?: boolean;
   onRequestOpen?: () => void;
   sheetOnly?: boolean;
+  hideLabel?: boolean;
 }
 
 const PRODUCT_DESCRIPTIONS: Record<ProductKey, string> = {
@@ -232,6 +233,7 @@ export function ProductSwitcherMenu({
   sheetOnly = false,
   variant = "header",
   triggerOnly = false,
+  hideLabel = false,
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
 }: ProductSwitcherMenuProps) {
@@ -363,16 +365,18 @@ export function ProductSwitcherMenu({
               <ActiveIcon className="h-3 w-3" strokeWidth={ICON_STROKE} />
             </span>
           )}
-          <span
-            className={cn(
-              "text-xs font-medium truncate",
-              isSidebarVariant
-                ? "min-w-0 flex-1 text-left text-sidebar-foreground"
-                : "hidden lg:inline max-w-[5rem] text-sidebar-foreground",
-            )}
-          >
-            {activeDefinition?.label}
-          </span>
+          {!hideLabel && (
+            <span
+              className={cn(
+                "text-xs font-medium truncate",
+                isSidebarVariant
+                  ? "min-w-0 flex-1 text-left text-sidebar-foreground"
+                  : "max-w-[5rem] text-sidebar-foreground",
+              )}
+            >
+              {activeDefinition?.label}
+            </span>
+          )}
           <ChevronDown
             className={cn(
               "h-3 w-3 shrink-0",

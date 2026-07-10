@@ -5,11 +5,13 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Settings2, Bell, Send } from "lucide-react";
+import { Settings2, Bell } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 import { useSession } from "next-auth/react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -40,6 +42,8 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { SendIcon } from "@animateicons/react/lucide";
 import {
   useNotificationEventCatalog,
   useUpdateNotificationEventPolicy,
@@ -350,9 +354,14 @@ function PolicySheet({
             Cancel
           </Button>
           {canManage && (
-            <Button type="submit" form="policy-form" disabled={updatePolicy.isPending}>
-              {updatePolicy.isPending ? "Saving..." : "Save Changes"}
-            </Button>
+            <LoadingButton
+              type="submit"
+              form="policy-form"
+              isPending={updatePolicy.isPending}
+              loadingText="Saving..."
+            >
+              Save Changes
+            </LoadingButton>
           )}
         </SheetFooter>
       </SheetContent>
@@ -374,6 +383,7 @@ function EventRow({
   sending: boolean;
 }) {
   const updatePolicy = useUpdateNotificationEventPolicy();
+  const sendAnim = useAnimatedIcon();
 
   const handleEnabledChange = useCallback(
     (checked: boolean) => {
@@ -448,8 +458,13 @@ function EventRow({
               onClick={handleSendTestClick}
               disabled={sending}
               title="Send test to me"
+              {...sendAnim.hoverHandlers}
             >
-              <Send className={cn("h-3.5 w-3.5 text-muted-foreground", sending && "animate-pulse")} />
+              <SendIcon
+                ref={sendAnim.iconRef}
+                size={14}
+                className={cn("text-muted-foreground", sending && "animate-pulse")}
+              />
             </Button>
             <Button
               variant="ghost"
@@ -473,6 +488,7 @@ export default function NotificationEventsPage() {
   const { data: session } = useSession();
   const currentUserId = session?.user?.id ?? null;
   const emitEvent = useEmitNotificationEvent();
+  const shouldReduceMotion = useReducedMotion();
 
   const [search, setSearch] = useState("");
   const [moduleFilter, setModuleFilter] = useState("all");
@@ -617,8 +633,13 @@ export default function NotificationEventsPage() {
         />
       ) : (
         <div className="space-y-4">
-          {grouped.map(([module, moduleEvents]) => (
-            <div key={module}>
+          {grouped.map(([module, moduleEvents], groupIdx) => (
+            <motion.div
+              key={module}
+              initial={shouldReduceMotion ? false : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2, delay: Math.min(groupIdx, 10) * 0.04, ease: "easeOut" }}
+            >
               <div className="flex items-center gap-2 mb-1.5">
                 <Bell className="h-3.5 w-3.5 text-muted-foreground/60 shrink-0" />
                 <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
@@ -640,7 +661,7 @@ export default function NotificationEventsPage() {
                   />
                 ))}
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       )}
