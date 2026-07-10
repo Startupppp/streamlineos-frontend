@@ -76,24 +76,24 @@ function DesktopHeader({
   showSidebarToggle,
 }: {
   isSidebarCollapsed: boolean
-  onToggleSidebar: () => void
+  onToggleSidebar?: () => void
   showSidebarToggle: boolean
 }) {
-  const showLabels = !isSidebarCollapsed
+  const showLabels = !isSidebarCollapsed || !showSidebarToggle
 
   return (
     <div className="flex items-center h-full w-full px-4 gap-3">
       <div className="flex items-center gap-2 shrink-0 min-w-0">
-        {showSidebarToggle && (
+        <HeaderBrand showLabel={showLabels} />
+        <ProductSwitcherMenu hideLabel={!showLabels} />
+        {showSidebarToggle && onToggleSidebar && (
           <SidebarCollapseToggle
             isCollapsed={isSidebarCollapsed}
             onToggle={onToggleSidebar}
           />
         )}
-        <HeaderBrand showLabel={showLabels} />
-        <ProductSwitcherMenu hideLabel={!showLabels} />
         <div className="w-px h-4 bg-sidebar-border" />
-        <WorkspaceSwitcher variant="header" iconOnly={!showLabels} />
+        <WorkspaceSwitcher variant="header" hideLabel={!showLabels} />
       </div>
 
       <div className="flex-1 flex justify-center min-w-0 px-4">
@@ -146,7 +146,7 @@ export function GlobalHeader({
         <div className="hidden md:block h-full">
           <DesktopHeader
             isSidebarCollapsed={isSidebarCollapsed}
-            onToggleSidebar={onToggleSidebar ?? (() => {})}
+            onToggleSidebar={onToggleSidebar}
             showSidebarToggle={showSidebarToggle}
           />
         </div>

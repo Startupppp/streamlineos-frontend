@@ -184,21 +184,6 @@ export function AppSidebar({
           isMobile ? "w-full" : effectiveCollapsed ? "w-[3.5rem]" : "w-[17rem]",
         )}
       >
-        {showCollapseToggle && (
-          <button
-            type="button"
-            onClick={handleToggleClick}
-            aria-label={effectiveCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-            className="absolute top-4 -translate-y-1/2 -right-3 z-[60] h-6 w-6 rounded-full border border-sidebar-border bg-sidebar shadow-md flex items-center justify-center text-sidebar-foreground/70 hover:text-blue-600 hover:border-blue-500/40 hover:bg-sidebar-accent transition-colors"
-          >
-            {effectiveCollapsed ? (
-              <ChevronRight className="h-3.5 w-3.5" />
-            ) : (
-              <ChevronLeft className="h-3.5 w-3.5" />
-            )}
-          </button>
-        )}
-
         {isMobile && (
           <div className="shrink-0 px-2.5 py-2 border-b border-sidebar-border">
             <ProductSwitcherMenu

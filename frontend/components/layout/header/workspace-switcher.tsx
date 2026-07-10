@@ -19,6 +19,7 @@ import { CreateWorkspaceDialog } from "@/features/workspace/create-workspace-dia
 interface WorkspaceSwitcherProps {
   variant?: "header" | "sidebar"
   iconOnly?: boolean
+  hideLabel?: boolean
   className?: string
   open?: boolean
   onOpenChange?: (open: boolean) => void
@@ -150,6 +151,7 @@ function WorkspaceSwitcherPanel({
 export function WorkspaceSwitcher({
   variant = "header",
   iconOnly = false,
+  hideLabel = false,
   className,
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
@@ -204,6 +206,7 @@ export function WorkspaceSwitcher({
   }, [triggerOnly, onRequestOpen, handleOpenChange])
 
   const isSidebar = variant === "sidebar"
+  const isLabelHidden = isSidebar ? iconOnly : hideLabel
   const workspaceName = activeOrg?.name ?? "Workspace"
 
   const panelProps = {
@@ -220,13 +223,14 @@ export function WorkspaceSwitcher({
     <button
       type="button"
       onClick={triggerOnly ? handleTriggerClick : undefined}
+      aria-label={isLabelHidden ? workspaceName : undefined}
       className={cn(
         "flex items-center outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors",
-        iconOnly
+        isLabelHidden
           ? "h-8 w-8 justify-center rounded-lg text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
           : isSidebar
             ? "gap-1.5 h-8 w-full min-w-0 px-2 rounded-lg text-sm font-medium text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-            : "gap-1.5 h-8 px-2 rounded-lg text-sm font-medium text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent max-w-[160px]",
+            : "gap-1.5 h-8 px-2 rounded-lg text-sm font-medium text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent",
         className,
       )}
       disabled={switchOrg.isPending}
@@ -234,26 +238,21 @@ export function WorkspaceSwitcher({
       <Building2
         className={cn(
           "shrink-0",
-          iconOnly ? "h-4 w-4" : "h-3.5 w-3.5",
+          isLabelHidden ? "h-4 w-4" : "h-3.5 w-3.5",
           "text-sidebar-foreground/50",
         )}
       />
-      {!iconOnly && (
+      {!isLabelHidden && (
         <>
           <span
             className={cn(
-              "min-w-0 flex-1 truncate text-left text-sm font-medium",
-              isSidebar || !iconOnly ? "text-sidebar-foreground" : "text-foreground",
+              "min-w-0 truncate text-left text-sm font-medium text-sidebar-foreground",
+              isSidebar ? "flex-1" : "max-w-[8rem]",
             )}
           >
             {workspaceName}
           </span>
-          <ChevronsUpDown
-            className={cn(
-              "h-3 w-3 shrink-0",
-              isSidebar || !iconOnly ? "text-sidebar-foreground/50" : "text-muted-foreground",
-            )}
-          />
+          <ChevronsUpDown className="h-3 w-3 shrink-0 text-sidebar-foreground/50" />
         </>
       )}
     </button>
@@ -279,7 +278,7 @@ export function WorkspaceSwitcher({
   if (triggerOnly) {
     return (
       <>
-        {iconOnly ? (
+        {isLabelHidden ? (
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>{triggerButton}</TooltipTrigger>
             <TooltipContent side="right" sideOffset={10} className="text-xs font-medium">
@@ -297,7 +296,7 @@ export function WorkspaceSwitcher({
   return (
     <>
       <DropdownMenu open={open} onOpenChange={handleOpenChange}>
-        {iconOnly ? (
+        {isLabelHidden ? (
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
               <DropdownMenuTrigger asChild>{triggerButton}</DropdownMenuTrigger>

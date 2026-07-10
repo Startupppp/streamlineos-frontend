@@ -346,7 +346,7 @@ export function ProductSwitcherMenu({
               "text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent focus-visible:ring-sidebar-ring",
               isSidebarVariant
                 ? "gap-2 h-9 w-full min-w-0 px-2.5"
-                : "gap-1.5 h-8 px-2",
+                : "gap-1.5 h-8 px-2 shrink-0 max-w-[7rem]",
             ),
       )}
     >
@@ -367,12 +367,7 @@ export function ProductSwitcherMenu({
           )}
           {!hideLabel && (
             <span
-              className={cn(
-                "text-xs font-medium truncate",
-                isSidebarVariant
-                  ? "min-w-0 flex-1 text-left text-sidebar-foreground"
-                  : "max-w-[5rem] text-sidebar-foreground",
-              )}
+              className="min-w-0 flex-1 truncate text-left text-xs font-medium text-sidebar-foreground"
             >
               {activeDefinition?.label}
             </span>
