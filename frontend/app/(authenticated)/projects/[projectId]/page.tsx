@@ -23,12 +23,14 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Bookmark, X } from "lucide-react";
+import { Download, Upload, Bookmark, X } from "lucide-react";
 import { exportToCsv } from "@/lib/export-csv";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { notFound, useRouter, useSearchParams } from "next/navigation";
 import type { KanbanTicket } from "@/features/projects/shared/types";
+import { useExportTickets } from "@/hooks/api/projects/import-export";
+import { ImportTicketsDialog } from "@/features/projects/tickets/import-tickets-dialog";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -47,6 +49,8 @@ export default function ProjectBoardPage({ params }: PageProps) {
   const [saveViewName, setSaveViewName] = useState("");
   const [displayOptions, setDisplayOptions] = useState<DisplayOptions>(DEFAULT_DISPLAY_OPTIONS);
 
+  const [importOpen, setImportOpen] = useState(false);
+
   const ticketParam = searchParams.get("ticket");
   const selectedTicketId = ticketParam ? parseInt(ticketParam) : null;
   const commentParam = searchParams.get("comment");
@@ -63,6 +67,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
 
   const { data: views } = useViews(projectId);
   const createView = useCreateView();
+  const exportQuery = useExportTickets(projectId);
   const appliedViewIdRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -290,20 +295,28 @@ export default function ProjectBoardPage({ params }: PageProps) {
   const doneCount = allTickets.filter((t) => t.status === "DONE").length;
 
   const handleExportCsv = useCallback(() => {
-    exportToCsv(
-      `${data?.key ?? "export"}-tickets.csv`,
-      filteredTickets.map((t) => ({
-        id: t.id,
-        number: `#${t.ticketNumber}`,
-        title: t.title,
-        status: t.status,
-        priority: t.priority ?? "",
-        type: t.type ?? "",
-        assignee: t.assigneeId ?? "",
-        dueDate: t.dueDate ?? "",
-      })),
-    );
-  }, [data?.key, filteredTickets]);
+    exportQuery.refetch().then(({ data: rows }) => {
+      if (!rows || rows.length === 0) {
+        toast.info("No tickets to export");
+        return;
+      }
+      exportToCsv(
+        `${data?.key ?? "export"}-tickets.csv`,
+        rows.map((r) => ({
+          number: r.number,
+          title: r.title,
+          type: r.type,
+          status: r.status,
+          priority: r.priority,
+          points: r.points ?? "",
+          dueDate: r.dueDate ?? "",
+          assignee: r.assignee,
+        })),
+      );
+    }).catch((err: unknown) => toast.error(getErrorMessage(err)));
+  }, [exportQuery, data?.key]);
+
+  const handleOpenImport = useCallback(() => setImportOpen(true), []);
 
   if (isLoading) {
     return (
@@ -334,6 +347,15 @@ export default function ProjectBoardPage({ params }: PageProps) {
             aria-label="Export tickets"
           >
             <Download className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleOpenImport}
+            className="h-8 w-8 shrink-0 bg-card"
+            aria-label="Import tickets"
+          >
+            <Upload className="h-3.5 w-3.5" />
           </Button>
           <Button
             variant="outline"
@@ -407,12 +429,12 @@ export default function ProjectBoardPage({ params }: PageProps) {
       )}
       {view === "table" && (
         <div className="h-full min-h-0 overflow-y-auto px-4 pb-2 pt-0">
-          <TableView tickets={filteredTickets} onTicketClick={handleTicketSelect} projectKey={data.key} projectStatuses={statuses} />
+          <TableView tickets={filteredTickets} onTicketClick={handleTicketSelect} projectKey={data.key} projectId={projectId} projectStatuses={statuses} />
         </div>
       )}
       {view === "calendar" && (
         <div className="flex h-full min-h-0 flex-col overflow-hidden px-4 pb-2 pt-0">
-          <CalendarView tickets={filteredTickets} onTicketClick={handleTicketSelect} />
+          <CalendarView tickets={filteredTickets} onTicketClick={handleTicketSelect} projectId={projectId} projectStatuses={statuses} />
         </div>
       )}
       {view === "gantt" && (
@@ -422,7 +444,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
       )}
       {view === "workload" && (
         <div className="h-full min-h-0 flex flex-col overflow-hidden px-4 pb-2 pt-0">
-          <WorkloadView tickets={filteredTickets} projectId={projectId} members={members} />
+          <WorkloadView tickets={filteredTickets} projectId={projectId} members={members} projectStatuses={statuses} />
         </div>
       )}
 
@@ -434,6 +456,11 @@ export default function ProjectBoardPage({ params }: PageProps) {
         onSave={handleSaveView}
         isSaving={createView.isPending}
         activeLayout={view}
+      />
+      <ImportTicketsDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        projectId={projectId}
       />
     </PageWrapper>
   );

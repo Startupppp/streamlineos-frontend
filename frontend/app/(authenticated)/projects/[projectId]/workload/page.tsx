@@ -68,6 +68,14 @@ export default function WorkloadPage({ params }: PageProps) {
       }));
   }, [data]);
 
+  const statuses = useMemo(
+    () =>
+      data && "statuses" in data
+        ? (data.statuses as { id: number; name: string; color: string | null; order: number; wipLimit?: number | null; type?: string | null }[])
+        : [],
+    [data],
+  );
+
   if (isLoading) {
     return (
       <PageWrapper title="Workload" subtitle="Team capacity and ticket distribution">
@@ -87,7 +95,7 @@ export default function WorkloadPage({ params }: PageProps) {
 
   return (
     <PageWrapper title="Workload" subtitle={`Team capacity for ${data.name}`}>
-      <WorkloadView tickets={tickets} projectId={projectId} members={members} />
+      <WorkloadView tickets={tickets} projectId={projectId} members={members} projectStatuses={statuses} />
     </PageWrapper>
   );
 }

@@ -12,7 +12,6 @@ import type {
   ProjectView,
   IntakeRequest,
   ProjectAnalytics,
-  UpdateTicketInput,
   CreateCycleInput,
   UpdateCycleInput,
   CreateModuleInput,
@@ -58,27 +57,6 @@ export function useCreateEpic(options?: Parameters<typeof useMutation>[0]) {
     onSuccess: (_data: unknown, variables: CreateEpicInput) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.epics(variables.projectId),
-      });
-    },
-    ...options,
-  });
-}
-
-export function useUpdateEpic(
-  projectId: number,
-  options?: Parameters<typeof useMutation>[0]
-) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationKey: ["projects", "epics", "update"],
-    mutationFn: ({ ticketId, ...data }: UpdateTicketInput) =>
-      apiClient.patch<{ success: boolean }>(
-        `/projects/${projectId}/tickets/${ticketId}`,
-        data
-      ),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.epics(projectId),
       });
     },
     ...options,
@@ -344,7 +322,7 @@ export function useProjectAnalytics(
     queryFn: () =>
       apiClient.get<ProjectAnalytics>(`/projects/${projectId}/analytics`),
     enabled: !!projectId,
-    refetchInterval: 30_000,
+    staleTime: 5 * 60_000,
     ...options,
   });
 }

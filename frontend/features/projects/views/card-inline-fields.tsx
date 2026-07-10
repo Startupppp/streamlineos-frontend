@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, memo } from "react";
+import { useState, memo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -36,11 +36,11 @@ interface InlineFieldWrapperProps {
   children: React.ReactNode;
 }
 
-function stopEvent(e: React.MouseEvent | React.KeyboardEvent) {
+export function stopEvent(e: React.MouseEvent | React.KeyboardEvent) {
   e.stopPropagation();
 }
 
-function InlineFieldWrapper({ children }: InlineFieldWrapperProps) {
+export function InlineFieldWrapper({ children }: InlineFieldWrapperProps) {
   return (
     <span onMouseDown={stopEvent} onClick={stopEvent}>
       {children}

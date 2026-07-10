@@ -164,7 +164,6 @@ export function SidebarSelectFields({
               <SelectItem value="BUG">Bug</SelectItem>
               <SelectItem value="STORY">Story</SelectItem>
               <SelectItem value="EPIC">Epic</SelectItem>
-              <SelectItem value="SUBTASK">Subtask</SelectItem>
             </SelectContent>
           </Select>
         </div>

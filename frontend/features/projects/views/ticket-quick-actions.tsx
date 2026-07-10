@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { MoreHorizontal, Trash2, User } from "lucide-react";
+import { Trash2, User, Check } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,17 +30,22 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
-import { useUpdateTicket, useDeleteTicket } from "@/hooks/api/projects/tickets";
-import { useProjectMembers } from "@/hooks/api/projects/projects";
+import { useUpdateTicket, useDeleteTicket, useAddLabelToTicket, useRemoveLabelFromTicket } from "@/hooks/api/projects/tickets";
+import { useProjectMembers, useProjectLabels } from "@/hooks/api/projects/projects";
+import { useCycles } from "@/hooks/api/projects/advanced";
+import { useSprints } from "@/hooks/api/projects/sprints";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import {
   getUserDisplayName,
   getUserInitials,
 } from "@/features/projects/shared/resolve-user-name";
 import { popoverOptionSelectedClass } from "../shared/popover-option-classes";
-import { statusConfig, priorityConfig, buildStatusConfig, getStatusEntry } from "../shared/types";
+import { statusConfig, priorityConfig, buildStatusConfig, getStatusEntry, typeConfig } from "../shared/types";
+import { TicketTypeIcon } from "../shared/ticket-type-icon";
 import type { TicketPriority } from "@/types/projects";
 
 const PRIORITIES: TicketPriority[] = ["LOW", "MEDIUM", "HIGH", "URGENT"];
+const INLINE_TYPES = ["TASK", "BUG", "STORY", "EPIC"] as const;
 
 interface TicketQuickActionsProps {
   ticketId: number;
@@ -47,6 +53,10 @@ interface TicketQuickActionsProps {
   currentStatus: string;
   currentPriority?: string | null;
   currentAssigneeId?: string | null;
+  currentType?: string | null;
+  currentLabelIds?: number[];
+  currentCycleId?: number | null;
+  currentSprintId?: number | null;
   className?: string;
   projectStatuses?: Array<{ name: string; color: string | null; type?: string | null }>;
 }
@@ -57,16 +67,25 @@ export function TicketQuickActions({
   currentStatus,
   currentPriority,
   currentAssigneeId,
+  currentType,
+  currentLabelIds = [],
+  currentCycleId,
+  currentSprintId,
   className,
   projectStatuses,
 }: TicketQuickActionsProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
 
   const canUpdate = useCan("projects:tickets:update");
   const canDelete = useCan("projects:tickets:delete");
 
   const { data: members = [] } = useProjectMembers(projectId ?? 0);
+  const { data: labels = [] } = useProjectLabels(projectId);
+  const { data: cycles = [] } = useCycles(projectId ?? 0);
+  const { data: allSprints = [] } = useSprints(projectId);
+  const sprints = allSprints.filter((s) => s.status !== "COMPLETED");
 
   const updateTicket = useUpdateTicket(projectId ?? 0, {
     onSuccess: () => toast.success("Ticket updated"),
@@ -76,6 +95,14 @@ export function TicketQuickActions({
   const deleteTicket = useDeleteTicket(projectId ?? 0, {
     onSuccess: () => toast.success("Ticket deleted"),
     onError: (error) => toast.error(getErrorMessage(error)),
+  });
+
+  const addLabel = useAddLabelToTicket({
+    onError: (e) => toast.error(getErrorMessage(e)),
+  });
+
+  const removeLabel = useRemoveLabelFromTicket({
+    onError: (e) => toast.error(getErrorMessage(e)),
   });
 
   if (!projectId) return null;
@@ -109,6 +136,34 @@ export function TicketQuickActions({
     };
   }
 
+  function makeTypeHandler(type: string) {
+    return function selectType() {
+      updateTicket.mutate({ ticketId, type });
+    };
+  }
+
+  function makeLabelToggleHandler(labelId: number) {
+    return function toggleLabel() {
+      if (currentLabelIds.includes(labelId)) {
+        removeLabel.mutate({ ticketId, projectId, labelId });
+      } else {
+        addLabel.mutate({ ticketId, projectId, labelId });
+      }
+    };
+  }
+
+  function makeCycleHandler(cycleId: number | null) {
+    return function selectCycle() {
+      updateTicket.mutate({ ticketId, cycleId });
+    };
+  }
+
+  function makeSprintHandler(sprintId: number | null) {
+    return function selectSprint() {
+      updateTicket.mutate({ ticketId, sprintId });
+    };
+  }
+
   function handleUnassign() {
     updateTicket.mutate({ ticketId, assigneeIds: [] });
   }
@@ -138,8 +193,8 @@ export function TicketQuickActions({
     >
       <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-6 w-6">
-            <MoreHorizontal className="h-3.5 w-3.5" />
+          <Button variant="ghost" size="icon" className="h-6 w-6" {...hoverHandlers}>
+            <EllipsisIcon ref={iconRef} size={14} />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
@@ -229,6 +284,95 @@ export function TicketQuickActions({
                       <span className="truncate">
                         {getUserDisplayName(member)}
                       </span>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>Change type</DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="w-36">
+                  {INLINE_TYPES.map((t) => (
+                    <DropdownMenuItem
+                      key={t}
+                      className={cn(currentType === t && popoverOptionSelectedClass)}
+                      onSelect={makeTypeHandler(t)}
+                    >
+                      <TicketTypeIcon type={t} size="sm" />
+                      <span className="ml-2">{typeConfig[t]?.label ?? t}</span>
+                      {currentType === t && <Check className="ml-auto h-3 w-3" />}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>Labels</DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="w-44">
+                  {labels.length === 0 && (
+                    <DropdownMenuItem disabled>No labels</DropdownMenuItem>
+                  )}
+                  {labels.map((label) => {
+                    const active = currentLabelIds.includes(label.id);
+                    return (
+                      <DropdownMenuItem
+                        key={label.id}
+                        className={cn(active && popoverOptionSelectedClass)}
+                        onSelect={makeLabelToggleHandler(label.id)}
+                      >
+                        <span
+                          className="mr-2 h-2.5 w-2.5 rounded-full shrink-0 border border-border"
+                          style={{ backgroundColor: label.color ?? undefined }}
+                        />
+                        <span className="truncate">{label.name}</span>
+                        {active && <Check className="ml-auto h-3 w-3 shrink-0" />}
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>Cycle</DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="w-44">
+                  <DropdownMenuItem
+                    className={cn(!currentCycleId && popoverOptionSelectedClass)}
+                    onSelect={makeCycleHandler(null)}
+                  >
+                    No cycle
+                    {!currentCycleId && <Check className="ml-auto h-3 w-3" />}
+                  </DropdownMenuItem>
+                  {cycles.map((cycle) => (
+                    <DropdownMenuItem
+                      key={cycle.id}
+                      className={cn(currentCycleId === cycle.id && popoverOptionSelectedClass)}
+                      onSelect={makeCycleHandler(cycle.id)}
+                    >
+                      <span className="truncate">{cycle.name}</span>
+                      {currentCycleId === cycle.id && <Check className="ml-auto h-3 w-3 shrink-0" />}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>Sprint</DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="w-44">
+                  <DropdownMenuItem
+                    className={cn(!currentSprintId && popoverOptionSelectedClass)}
+                    onSelect={makeSprintHandler(null)}
+                  >
+                    No sprint
+                    {!currentSprintId && <Check className="ml-auto h-3 w-3" />}
+                  </DropdownMenuItem>
+                  {sprints.map((sprint) => (
+                    <DropdownMenuItem
+                      key={sprint.id}
+                      className={cn(currentSprintId === sprint.id && popoverOptionSelectedClass)}
+                      onSelect={makeSprintHandler(sprint.id)}
+                    >
+                      <span className="truncate">{sprint.name}</span>
+                      {currentSprintId === sprint.id && <Check className="ml-auto h-3 w-3 shrink-0" />}
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuSubContent>

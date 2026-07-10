@@ -2,14 +2,18 @@
 
 import { useMemo, memo, useCallback, useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn, resolveImageUrl } from "@/lib/utils";
-import { Bug, Bookmark, Zap, CheckSquare, ChevronRight, Plus, X, User } from "lucide-react";
+import { ChevronRight, Plus, X, User } from "lucide-react";
+import { TicketTypeIcon } from "../shared/ticket-type-icon";
 import { getStatusDotClass } from "../shared/status-badge";
 import { formatTicketKey } from "../shared/format-ticket-key";
 import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
 import { TicketQuickActions } from "./ticket-quick-actions";
+import { InlineStatus, InlinePriority, InlineAssignee, InlineEstimate } from "./card-inline-fields";
+import { InlineType, InlineLabels } from "./card-inline-extra-fields";
+import { InlineDueDate } from "./card-inline-date-fields";
 import { useCreateTicket } from "@/hooks/api";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
@@ -26,6 +30,9 @@ interface Ticket {
   sequenceId?: string | null;
   assigneeId?: string | null;
   cycleId?: number | null;
+  sprintId?: number | null;
+  dueDate?: string | null;
+  startDate?: string | null;
   assignee?: { id: string; name?: string | null; firstName?: string | null; lastName?: string | null; email?: string | null; image?: string | null } | null;
   labels?: { label?: { id: number; name: string; color?: string | null } }[];
   cycle?: { id: number; name: string; status: string; startDate: string; endDate: string } | null;
@@ -44,20 +51,6 @@ interface ListViewProps {
   showEmptyColumns?: boolean;
 }
 
-const typeIcons: Record<string, typeof CheckSquare> = {
-  TASK: CheckSquare,
-  BUG: Bug,
-  STORY: Bookmark,
-  EPIC: Zap,
-};
-
-const priorityColors: Record<string, string> = {
-  URGENT: "text-red-500",
-  HIGH: "text-orange-500",
-  MEDIUM: "text-yellow-500",
-  LOW: "text-blue-400",
-};
-
 interface ListViewItemProps {
   ticket: Ticket;
   projectKey?: string | null;
@@ -68,7 +61,6 @@ interface ListViewItemProps {
 }
 
 const ListViewItem = memo(function ListViewItem({ ticket, projectKey, projectId, projectStatuses, onClick, displayOptions }: ListViewItemProps) {
-  const TypeIcon = typeIcons[ticket.type] ?? CheckSquare;
   const handleClick = useCallback(() => onClick(ticket.id), [onClick, ticket.id]);
 
   const showId = displayOptions?.showId ?? true;
@@ -77,59 +69,109 @@ const ListViewItem = memo(function ListViewItem({ ticket, projectKey, projectId,
   const showEstimate = displayOptions?.showEstimate ?? true;
   const showLabels = displayOptions?.showLabels ?? true;
 
+  const labelIds = ticket.labels
+    ?.map((l) => l.label?.id)
+    .filter((v): v is number => v != null) ?? [];
+
+  const hasProjectId = projectId != null;
+
   return (
     <div className="group flex items-center hover:bg-muted/30 transition-colors">
-      <button
-        onClick={handleClick}
-        className="flex flex-1 min-w-0 items-center gap-3 px-3 py-2 text-left"
-      >
-        <div className={cn("h-2 w-2 rounded-full flex-shrink-0", getStatusDotClass(ticket.status))} />
-        <TypeIcon className={cn("h-4 w-4 flex-shrink-0", ticket.type === "BUG" ? "text-red-500" : "text-muted-foreground")} />
+      <div className="flex flex-1 min-w-0 items-center gap-2 px-3 py-2">
+        {hasProjectId ? (
+          <InlineStatus
+            ticketId={ticket.id}
+            projectId={projectId}
+            currentStatus={ticket.status}
+            projectStatuses={projectStatuses}
+          />
+        ) : (
+          <div className={cn("h-2 w-2 rounded-full flex-shrink-0", getStatusDotClass(ticket.status))} />
+        )}
+        {hasProjectId ? (
+          <InlineType
+            ticketId={ticket.id}
+            projectId={projectId}
+            currentType={ticket.type}
+          />
+        ) : (
+          <TicketTypeIcon type={ticket.type} size="sm" />
+        )}
         {showId && (
           <span className="text-xs text-muted-foreground font-mono flex-shrink-0">
             {formatTicketKey(projectKey, ticket.ticketNumber, ticket.sequenceId ?? undefined)}
           </span>
         )}
-        <span className="text-sm text-foreground truncate flex-1">{ticket.title}</span>
-        {showLabels && ticket.labels && ticket.labels.length > 0 && (
-          <div className="flex items-center gap-0.5 flex-shrink-0">
-            {ticket.labels.slice(0, 3).map(({ label }) =>
-              label ? (
-                <span
-                  key={label.id}
-                  className="h-2 w-2 rounded-full"
-                  style={{ backgroundColor: label.color || "#3b82f6" }}
-                  title={label.name}
-                />
-              ) : null
-            )}
-          </div>
+        <button
+          onClick={handleClick}
+          className="text-sm text-foreground truncate flex-1 text-left hover:underline underline-offset-2"
+        >
+          {ticket.title}
+        </button>
+        {showLabels && hasProjectId && (
+          <InlineLabels
+            ticketId={ticket.id}
+            projectId={projectId}
+            currentLabelIds={labelIds}
+          />
         )}
-        {showPriority && ticket.priority && (
-          <span className={cn("text-xs font-medium flex-shrink-0", priorityColors[ticket.priority])}>
-            {ticket.priority}
-          </span>
-        )}
-        {showEstimate && ticket.points != null && ticket.points > 0 && (
+        {showPriority && hasProjectId ? (
+          <InlinePriority
+            ticketId={ticket.id}
+            projectId={projectId}
+            currentPriority={ticket.priority}
+          />
+        ) : showPriority && ticket.priority ? (
+          <span className="text-xs font-medium flex-shrink-0 text-muted-foreground">{ticket.priority}</span>
+        ) : null}
+        {showEstimate && hasProjectId ? (
+          <InlineEstimate
+            ticketId={ticket.id}
+            projectId={projectId}
+            currentPoints={ticket.points}
+          />
+        ) : showEstimate && ticket.points != null && ticket.points > 0 ? (
           <Badge variant="outline" className="text-xs flex-shrink-0">{ticket.points}pt</Badge>
+        ) : null}
+        {hasProjectId && (
+          <InlineDueDate
+            ticketId={ticket.id}
+            projectId={projectId}
+            currentDueDate={ticket.dueDate}
+          />
         )}
-        {showAssignee && ticket.assignee && (
+        {showAssignee && hasProjectId ? (
+          <InlineAssignee
+            ticketId={ticket.id}
+            projectId={projectId}
+            currentAssigneeId={ticket.assigneeId ?? ticket.assignee?.id}
+            assignee={ticket.assignee}
+          />
+        ) : showAssignee && ticket.assignee ? (
           <Avatar className="h-6 w-6 flex-shrink-0" title={getUserDisplayName(ticket.assignee)}>
             <AvatarImage src={resolveImageUrl(ticket.assignee.image)} />
-            <AvatarFallback className="text-[8px]">
-              {getUserInitials(ticket.assignee)}
-            </AvatarFallback>
+            <AvatarFallback className="text-[8px]">{getUserInitials(ticket.assignee)}</AvatarFallback>
           </Avatar>
-        )}
-        <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-      </button>
+        ) : null}
+        <button
+          onClick={handleClick}
+          className="ml-1 flex-shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+          aria-label="Open ticket"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </button>
+      </div>
       <div className="pr-2 flex-shrink-0">
         <TicketQuickActions
           ticketId={ticket.id}
           projectId={projectId}
           currentStatus={ticket.status}
           currentPriority={ticket.priority}
-          currentAssigneeId={ticket.assignee?.id}
+          currentAssigneeId={ticket.assigneeId ?? ticket.assignee?.id}
+          currentType={ticket.type}
+          currentLabelIds={labelIds}
+          currentCycleId={ticket.cycleId}
+          currentSprintId={ticket.sprintId}
           projectStatuses={projectStatuses}
           className="opacity-0 group-hover:opacity-100 transition-opacity"
         />

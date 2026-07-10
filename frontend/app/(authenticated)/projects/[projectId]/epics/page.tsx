@@ -26,6 +26,7 @@ import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { ModuleDisabledState } from "@/features/projects/shared/module-disabled-state";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -79,6 +80,10 @@ export default function EpicsPage({ params }: PageProps) {
       }
     );
   }, [createTicket, projectId]);
+
+  if (project?.settings?.modules?.epics === false) {
+    return <ModuleDisabledState moduleName="Epics" projectId={projectId} />;
+  }
 
   if (isLoading) {
     return (

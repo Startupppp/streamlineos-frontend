@@ -13,6 +13,8 @@ import type {
   UpdateTicketInput,
   MoveTicketInput,
   CreateLabelInput,
+  ProjectWithDetails,
+  ProjectMember,
 } from "@/types/projects";
 import { useProjectLabels } from "./projects";
 
@@ -80,12 +82,66 @@ export interface UpdateTicketResponse {
   updatedAt: string;
 }
 
+interface UpdateTicketContext {
+  detailKey: readonly unknown[];
+  ticketKey: readonly unknown[];
+  previousDetail: ProjectWithDetails | null | undefined;
+  previousTicket: Ticket | null | undefined;
+}
+
+function resolveAssigneeId(input: UpdateTicketInput): string | null | undefined {
+  if (input.assigneeIds !== undefined) return input.assigneeIds[0] ?? null;
+  if (input.assigneeId !== undefined) return input.assigneeId;
+  return undefined;
+}
+
+function applyTicketPatch(
+  ticket: Ticket,
+  input: UpdateTicketInput,
+  members: ProjectMember[],
+): Ticket {
+  const next: Ticket = { ...ticket };
+  if (input.title !== undefined) next.title = input.title;
+  if (input.description !== undefined) next.description = input.description;
+  if (input.type !== undefined) next.type = input.type;
+  if (input.status !== undefined) next.status = input.status;
+  if (input.priority !== undefined) next.priority = input.priority;
+  if (input.points !== undefined) next.points = input.points;
+  if (input.sprintId !== undefined) next.sprintId = input.sprintId;
+  if (input.epicId !== undefined) next.epicId = input.epicId;
+  if (input.moduleId !== undefined) next.moduleId = input.moduleId;
+  if (input.cycleId !== undefined) next.cycleId = input.cycleId;
+  if (input.startDate !== undefined) next.startDate = input.startDate;
+  if (input.dueDate !== undefined) next.dueDate = input.dueDate;
+  const assigneeId = resolveAssigneeId(input);
+  if (assigneeId !== undefined) {
+    next.assigneeId = assigneeId;
+    const member = assigneeId
+      ? members.find((m) => m.user?.id === assigneeId)
+      : undefined;
+    next.assignee = member?.user
+      ? {
+          id: member.user.id,
+          name: member.user.name,
+          firstName: member.user.firstName,
+          lastName: member.user.lastName,
+          email: member.user.email,
+          image: member.user.image,
+        }
+      : null;
+  }
+  return next;
+}
+
 export function useUpdateTicket(
   projectId: number,
-  options?: Omit<UseMutationOptions<UpdateTicketResponse, Error, UpdateTicketInput>, "mutationFn">
+  options?: Omit<
+    UseMutationOptions<UpdateTicketResponse, Error, UpdateTicketInput, UpdateTicketContext>,
+    "mutationFn" | "mutationKey" | "onMutate"
+  >
 ) {
   const queryClient = useQueryClient();
-  return useMutation<UpdateTicketResponse, Error, UpdateTicketInput>({
+  return useMutation<UpdateTicketResponse, Error, UpdateTicketInput, UpdateTicketContext>({
     ...options,
     mutationKey: ["projects", "tickets", "update"],
     mutationFn: ({ ticketId, ...data }) =>
@@ -93,34 +149,60 @@ export function useUpdateTicket(
         `/projects/${projectId}/tickets/${ticketId}`,
         data
       ),
-    onSuccess: (data, variables, context, mutFnCtx) => {
+    onMutate: async (variables) => {
+      const detailKey = queryKeys.projects.detail(projectId);
+      const ticketKey = queryKeys.projects.ticket(variables.ticketId);
+      await queryClient.cancelQueries({ queryKey: detailKey });
+      const previousDetail = queryClient.getQueryData<ProjectWithDetails | null>(detailKey);
+      const previousTicket = queryClient.getQueryData<Ticket | null>(ticketKey);
+      const members = previousDetail?.members ?? [];
+      if (previousDetail?.tickets) {
+        queryClient.setQueryData<ProjectWithDetails | null>(detailKey, (old) => {
+          if (!old?.tickets) return old;
+          return {
+            ...old,
+            tickets: old.tickets.map((t) =>
+              t.id === variables.ticketId ? applyTicketPatch(t, variables, members) : t,
+            ),
+          };
+        });
+      }
+      if (previousTicket) {
+        queryClient.setQueryData<Ticket | null>(ticketKey, (old) =>
+          old ? applyTicketPatch(old, variables, members) : old,
+        );
+      }
+      return { detailKey, ticketKey, previousDetail, previousTicket };
+    },
+    onError: (error, variables, context, mutFnCtx) => {
+      if (context) {
+        queryClient.setQueryData(context.detailKey, context.previousDetail);
+        queryClient.setQueryData(context.ticketKey, context.previousTicket);
+      }
+      options?.onError?.(error, variables, context, mutFnCtx);
+    },
+    onSettled: (data, error, variables, context, mutFnCtx) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.ticket(variables.ticketId),
       });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.tickets({ projectId }),
-      });
-      queryClient.invalidateQueries({
         queryKey: queryKeys.ticketActivity.list(variables.ticketId),
       });
-      const affectsAggregates =
+      const affectsSprintAggregates =
         variables.status !== undefined ||
         variables.sprintId !== undefined ||
-        variables.priority !== undefined ||
-        variables.points !== undefined ||
-        variables.assigneeId !== undefined ||
-        variables.assigneeIds !== undefined;
-      if (affectsAggregates) {
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.projects.sprints(projectId),
-        });
-        queryClient.invalidateQueries({
-          queryKey: [...queryKeys.projects.all, "burndown"],
-        });
+        variables.points !== undefined;
+      const affectsAssignment =
+        variables.assigneeId !== undefined || variables.assigneeIds !== undefined;
+      if (affectsSprintAggregates) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.projects.sprints(projectId) });
+        queryClient.invalidateQueries({ queryKey: [...queryKeys.projects.all, "burndown"] });
         queryClient.invalidateQueries({ queryKey: queryKeys.projectReports.all });
+      }
+      if (affectsSprintAggregates || affectsAssignment) {
         queryClient.invalidateQueries({ queryKey: [...queryKeys.dashboard.all, "myIssues"] });
       }
-      options?.onSuccess?.(data, variables, context, mutFnCtx);
+      options?.onSettled?.(data, error, variables, context, mutFnCtx);
     },
   });
 }

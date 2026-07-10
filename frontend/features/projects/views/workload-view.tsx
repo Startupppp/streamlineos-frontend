@@ -15,6 +15,8 @@ import {
 import { cn, resolveImageUrl } from "@/lib/utils";
 import type { KanbanTicket } from "../shared/types";
 import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
+import { TicketQuickActions } from "./ticket-quick-actions";
+import { stopEvent } from "./card-inline-fields";
 
 interface WorkloadMember {
   id: string;
@@ -28,6 +30,7 @@ interface WorkloadViewProps {
   tickets: KanbanTicket[];
   projectId: number;
   members: WorkloadMember[];
+  projectStatuses?: Array<{ name: string; color: string | null; type?: string | null }>;
 }
 
 function getDays(count: number): Date[] {
@@ -66,7 +69,7 @@ function isTicketOverdue(ticket: KanbanTicket): boolean {
   }
 }
 
-export const WorkloadView = memo(function WorkloadView({ tickets, members }: WorkloadViewProps) {
+export const WorkloadView = memo(function WorkloadView({ tickets, members, projectId, projectStatuses }: WorkloadViewProps) {
   const shouldReduceMotion = useReducedMotion();
   const [expandedMembers, setExpandedMembers] = useState<Set<string>>(
     new Set(),
@@ -279,25 +282,49 @@ export const WorkloadView = memo(function WorkloadView({ tickets, members }: Wor
                             transition={{ duration: 0.2 }}
                             className="overflow-hidden bg-muted/20"
                           >
-                            {memberTickets.slice(0, 10).map((ticket) => (
-                              <div
-                                key={ticket.id}
-                                className="flex items-center border-b border-border/40 px-8 py-2 gap-2"
-                              >
-                                <span className="text-xs text-muted-foreground font-mono w-12 shrink-0">
-                                  #{ticket.ticketNumber}
-                                </span>
-                                <span className="text-xs text-foreground truncate flex-1">
-                                  {ticket.title}
-                                </span>
-                                {ticket.dueDate && (
-                                  <span className="text-[10px] text-muted-foreground ml-auto shrink-0">
-                                    Due{" "}
-                                    {format(parseISO(ticket.dueDate), "MMM d")}
+                            {memberTickets.slice(0, 10).map((ticket) => {
+                              const labelIds = ticket.labels
+                                ?.map((l) => l.label?.id)
+                                .filter((v): v is number => v != null) ?? [];
+
+                              return (
+                                <div
+                                  key={ticket.id}
+                                  className="group/workload flex items-center border-b border-border/40 px-8 py-2 gap-2"
+                                >
+                                  <span className="text-xs text-muted-foreground font-mono w-12 shrink-0">
+                                    #{ticket.ticketNumber}
                                   </span>
-                                )}
-                              </div>
-                            ))}
+                                  <span className="text-xs text-foreground truncate flex-1">
+                                    {ticket.title}
+                                  </span>
+                                  {ticket.dueDate && (
+                                    <span className="text-[10px] text-muted-foreground ml-auto shrink-0">
+                                      Due{" "}
+                                      {format(parseISO(ticket.dueDate), "MMM d")}
+                                    </span>
+                                  )}
+                                  <span
+                                    onMouseDown={stopEvent}
+                                    onClick={stopEvent}
+                                    className="shrink-0 opacity-0 group-hover/workload:opacity-100 transition-opacity"
+                                  >
+                                    <TicketQuickActions
+                                      ticketId={ticket.id}
+                                      projectId={projectId}
+                                      currentStatus={ticket.status}
+                                      currentPriority={ticket.priority}
+                                      currentAssigneeId={ticket.assigneeId}
+                                      currentType={ticket.type}
+                                      currentLabelIds={labelIds}
+                                      currentCycleId={ticket.cycleId}
+                                      currentSprintId={ticket.sprintId}
+                                      projectStatuses={projectStatuses}
+                                    />
+                                  </span>
+                                </div>
+                              );
+                            })}
                             {memberTickets.length > 10 && (
                               <div className="px-8 py-1.5 text-xs text-muted-foreground">
                                 +{memberTickets.length - 10} more tickets

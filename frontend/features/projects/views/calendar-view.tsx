@@ -12,6 +12,8 @@ import {
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getStatusDotClass } from "../shared/status-badge";
+import { TicketQuickActions } from "./ticket-quick-actions";
+import { stopEvent } from "./card-inline-fields";
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -28,15 +30,20 @@ interface Ticket {
   startDate?: string | null;
   ticketNumber?: number;
   sequenceId?: string | null;
+  assigneeId?: string | null;
+  cycleId?: number | null;
+  sprintId?: number | null;
+  labels?: { label?: { id: number; name: string; color?: string | null } }[];
 }
 
 interface CalendarViewProps {
   tickets: Ticket[];
   onTicketClick: (ticketId: number) => void;
+  projectId?: number;
+  projectStatuses?: Array<{ name: string; color: string | null; type?: string | null }>;
 }
 
-
-export function CalendarView({ tickets, onTicketClick }: CalendarViewProps) {
+export function CalendarView({ tickets, onTicketClick, projectId, projectStatuses }: CalendarViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -143,16 +150,43 @@ export function CalendarView({ tickets, onTicketClick }: CalendarViewProps) {
                     {day}
                   </span>
                   <div className="flex flex-col gap-0.5">
-                    {dayTickets.slice(0, 3).map((t) => (
-                      <button
-                        key={t.id}
-                        onClick={() => onTicketClick(t.id)}
-                        className="flex items-center gap-1 px-1.5 py-0.5 rounded text-left hover:bg-muted transition-colors"
-                      >
-                        <div className={cn("h-1.5 w-1.5 rounded-full flex-shrink-0", getStatusDotClass(t.status))} />
-                        <span className="text-[10px] text-foreground truncate">{t.title}</span>
-                      </button>
-                    ))}
+                    {dayTickets.slice(0, 3).map((t) => {
+                      const labelIds = t.labels
+                        ?.map((l) => l.label?.id)
+                        .filter((v): v is number => v != null) ?? [];
+
+                      return (
+                        <div
+                          key={t.id}
+                          className="group/chip flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-muted transition-colors"
+                        >
+                          <button
+                            type="button"
+                            onClick={() => onTicketClick(t.id)}
+                            className="flex items-center gap-1 min-w-0 flex-1 text-left"
+                          >
+                            <div className={cn("h-1.5 w-1.5 rounded-full flex-shrink-0", getStatusDotClass(t.status))} />
+                            <span className="text-[10px] text-foreground truncate">{t.title}</span>
+                          </button>
+                          {projectId != null && (
+                            <span onMouseDown={stopEvent} onClick={stopEvent} className="shrink-0 opacity-0 group-hover/chip:opacity-100 transition-opacity">
+                              <TicketQuickActions
+                                ticketId={t.id}
+                                projectId={projectId}
+                                currentStatus={t.status}
+                                currentPriority={t.priority}
+                                currentAssigneeId={t.assigneeId}
+                                currentType={t.type}
+                                currentLabelIds={labelIds}
+                                currentCycleId={t.cycleId}
+                                currentSprintId={t.sprintId}
+                                projectStatuses={projectStatuses}
+                              />
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
                     {dayTickets.length > 3 && (
                       <span className="text-[10px] text-muted-foreground px-1.5">+{dayTickets.length - 3} more</span>
                     )}

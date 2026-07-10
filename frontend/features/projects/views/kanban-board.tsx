@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { useUpdateTicketOrder } from "@/hooks/api";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   DragDropContext,
   Droppable,
@@ -136,9 +137,9 @@ export function KanbanBoard({
       });
       return { previous: optimisticTickets };
     },
-    onError: (_, __, context) => {
+    onError: (error, __, context) => {
       if (isUpdateOrderContext(context)) setOptimisticTickets(context.previous);
-      toast.error("Failed to update order");
+      toast.error(getErrorMessage(error));
     },
     onSettled: () => {
       queryClient.invalidateQueries({

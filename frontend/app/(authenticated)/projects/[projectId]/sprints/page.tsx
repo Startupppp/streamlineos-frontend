@@ -17,6 +17,7 @@ import type { DropResult } from "@hello-pangea/dnd";
 import { SprintCard } from "@/features/projects/sprints/sprint-card";
 import { CompleteSprintSheet } from "@/features/projects/sprints/complete-sprint-sheet";
 import { SprintPlanningPanel } from "@/features/projects/sprints/sprint-planning-panel";
+import { ModuleDisabledState } from "@/features/projects/shared/module-disabled-state";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -103,6 +104,10 @@ export default function SprintsPage({ params }: PageProps) {
       { onError: (error) => toast.error(getErrorMessage(error)) }
     );
   }, [updateTicket]);
+
+  if (project?.settings?.modules?.sprints === false) {
+    return <ModuleDisabledState moduleName="Sprints" projectId={projectId} />;
+  }
 
   if (isLoading) {
     return (

@@ -1,8 +1,9 @@
 "use client";
 
 import { use, useState, useMemo, useCallback, memo } from "react";
-import { usePages, useCreatePage, useUpdatePage } from "@/hooks/api/projects";
+import { usePages, useCreatePage, useUpdatePage, useProject } from "@/hooks/api/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { ModuleDisabledState } from "@/features/projects/shared/module-disabled-state";
 import { Button } from "@/components/ui/button";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -195,6 +196,7 @@ export default function PagesPage({
   const [editContent, setEditContent] = useState("");
 
   const { data: pages, isLoading } = usePages(projectId);
+  const { data: projectData } = useProject(projectId);
 
   const createMutation = useCreatePage();
   const updateMutation = useUpdatePage();
@@ -267,6 +269,10 @@ export default function PagesPage({
 
   const handleOpenCreatePage = useCallback(() => setCreateOpen(true), []);
   const handleCloseCreate = useCallback(() => setCreateOpen(false), []);
+
+  if (projectData?.settings?.modules?.wiki === false) {
+    return <ModuleDisabledState moduleName="Wiki" projectId={projectId} />;
+  }
 
   if (isLoading) {
     return (

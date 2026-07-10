@@ -139,6 +139,8 @@ Architecture · Database · API · Cache · Backend · Frontend · UI · UX · S
 - **Optimistic updates:** `onMutate` → `cancelQueries` → snapshot → `setQueryData`; `onError` → roll back from snapshot; `onSettled` → `invalidateQueries`.
 - Dedupe identical inflight requests with a shared Promise (token/session fetch) — never let N callers each fire the same call.
 - Client request/response types must match the backend Zod contract exactly — no hand-maintained drift (extra fields are silently stripped → silent no-ops).
+- **Optimistic writes on interactive surfaces (living rule, 2026-07-10):** inline edits on board/list/card surfaces (assignee, status, priority, type, points, dates, drag-reorder) MUST be optimistic — `onMutate` cancels + snapshots + patches the **exact cache the view renders from** (e.g. the project-detail cache the kanban board reads, not a sibling list cache the view ignores), `onError` rolls back from the snapshot, `onSettled` reconciles. NEVER rely on invalidate-and-refetch for perceived speed, and NEVER invalidate a heavy detail/aggregate query (full project detail, all reports, burndown, velocity) on **every** field change — gate each aggregate behind the specific fields that actually move it, and let it refetch in the background (invalidation is a no-op when the view is unmounted). Resolve related display objects (e.g. the assignee avatar/name) from an already-cached list inside the patch so the card is correct with zero round-trip.
+- **Never hydrate a collection through a parent-detail endpoint (living rule, 2026-07-10):** a list/board view must read its rows from a dedicated **paginated, column-projected** endpoint (`GET /projects/:id/tickets`), never from an unbounded `with: { tickets: { … } }` embedded in `GET /projects/:id`. Parent-detail endpoints return only the parent + light metadata (name, key, statuses, members) — never every child row with per-row sub-joins, which re-runs on every mutation invalidation.
 
 ## 12. Forms & Validation
 
@@ -182,6 +184,8 @@ Architecture · Database · API · Cache · Backend · Frontend · UI · UX · S
 - Long content scrolls **inside the main content area only**; sidebar + shell never scroll with the page (sidebar `h-screen sticky`; main `overflow-y-auto`).
 - No unintended overflow/scrollbars: `min-w-0`, `truncate`, `flex-1`, proper overflow — not fixed heights that burst.
 - Unconnected integration (calendar, payments, …) → clear **"Connect X"** banner with a connect action; never fail silently or render broken data.
+- **Show names, never raw IDs (living rule, 2026-07-10):** the UI (cards, tables, CSV/exports, tooltips, activity logs, filter chips) MUST render human-readable labels — a person's display name (via the shared `getUserDisplayName`/`getUserInitials`), a project/ticket title, a status/label name — **never** a raw UUID/numeric FK or an `assigneeId`-style value. Resolve the id to its entity (from an already-cached list where possible) at the display boundary. A visible id in the UI is a bug.
+- **Edit-in-place on cards/rows (living rule, 2026-07-10):** on board cards and list/table rows, **every** editable field (assignee, status, priority, type, points, labels, cycle, sprint, dates) must be changeable inline via a compact popover — the user should not have to open the detail panel to change a field. Reuse the shared inline field components (`features/projects/views/card-inline-fields.tsx`) and drive them through the optimistic mutation, never a separate non-optimistic path.
 
 ## 16. Feature Completeness (per page)
 
