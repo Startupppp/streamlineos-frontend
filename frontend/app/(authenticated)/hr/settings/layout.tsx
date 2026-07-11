@@ -5,12 +5,17 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const TABS = [
+  { label: "Overview", href: "/hr/settings" },
   { label: "Policies", href: "/hr/settings/policies" },
   { label: "Workflows", href: "/hr/settings/workflows" },
   { label: "Automations", href: "/hr/settings/automations" },
   { label: "Templates", href: "/hr/settings/templates" },
+  { label: "Forms", href: "/hr/settings/forms" },
+  { label: "Custom Fields", href: "/hr/settings/custom-fields" },
   { label: "Import / Export", href: "/hr/settings/import-export" },
   { label: "Integrations", href: "/hr/settings/integrations" },
+  { label: "Preview", href: "/hr/settings/preview" },
+  { label: "Versions", href: "/hr/settings/versions" },
 ] as const;
 
 export default function HrSettingsLayout({
@@ -25,7 +30,10 @@ export default function HrSettingsLayout({
       <div className="shrink-0 border-b bg-background/95 backdrop-blur-sm px-1">
         <nav className="flex flex-wrap items-center gap-1" aria-label="HR Settings">
           {TABS.map((tab) => {
-            const isActive = pathname === tab.href;
+            const isActive =
+              tab.href === "/hr/settings"
+                ? pathname === "/hr/settings"
+                : pathname === tab.href;
             return (
               <Link
                 key={tab.href}

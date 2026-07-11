@@ -127,6 +127,7 @@ const MIGRATED_PREFIXES = [
   "/hr/tax-calculator",
   "/hr/teams",
   "/hr/travel-visits",
+  "/hr/settings-hub",
   "/hr/wfh",
   "/hr/work-logs",
   "/hr/shifts",
@@ -187,6 +188,9 @@ const MIGRATED_PREFIXES = [
   "/payroll",
   "/timesheets",
   "/feedbucket",
+  "/hr/enterprise/comp",
+  "/hr/governance",
+  "/hr/enterprise/ops",
 ] as const;
 
 const PUBLIC_AUTH_PATHS = new Set([

@@ -1,0 +1,157 @@
+"use client";
+
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { DataTable } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
+import {
+  useCompCycle,
+  useCompRecommendations,
+  useBudgetPools,
+  useCalibrateRecommendation,
+  type CompRecommendation,
+} from "@/hooks/api/hr/enterprise-comp";
+
+interface Props {
+  cycleId: number;
+  canManage: boolean;
+}
+
+function formatCents(cents: number | null): string {
+  if (cents === null) return "—";
+  return `$${(cents / 100).toLocaleString("en-US", { minimumFractionDigits: 0 })}`;
+}
+
+function BudgetBar({ allocated, used }: { allocated: number; used: number }) {
+  const pct = allocated > 0 ? Math.min((used / allocated) * 100, 100) : 0;
+  return (
+    <div className="space-y-1">
+      <div className="flex justify-between text-xs text-muted-foreground">
+        <span>{formatCents(used)} used</span>
+        <span>{formatCents(allocated)} budget</span>
+      </div>
+      <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+        <motion.div
+          className="h-full rounded-full bg-blue-600"
+          initial={{ width: 0 }}
+          animate={{ width: `${pct}%` }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+        />
+      </div>
+      <p className="text-xs text-muted-foreground">{pct.toFixed(1)}% utilized</p>
+    </div>
+  );
+}
+
+export function CompCycleDetail({ cycleId, canManage }: Props) {
+  const { data: cycle, isLoading: cycleLoading } = useCompCycle(cycleId);
+  const { data: recsData, isLoading: recsLoading } = useCompRecommendations(cycleId);
+  const { data: pools, isLoading: poolsLoading } = useBudgetPools(cycleId);
+  const calibrateMut = useCalibrateRecommendation();
+
+  const [calibratingId, setCalibratingId] = useState<number | null>(null);
+  const [calibrateValue, setCalibrateValue] = useState<Record<number, string>>({});
+
+  if (cycleLoading) return <div className="space-y-3">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-12 rounded-xl" />)}</div>;
+
+  const recs = recsData?.data ?? [];
+
+  function handleCalibrate(rec: CompRecommendation) {
+    const val = calibrateValue[rec.id];
+    if (!val) return;
+    setCalibratingId(rec.id);
+    calibrateMut.mutate(
+      { id: rec.id, hrCalibratedCents: parseInt(val) },
+      {
+        onSuccess: () => { toast.success("Calibrated"); setCalibratingId(null); },
+        onError: (err) => { toast.error(getErrorMessage(err)); setCalibratingId(null); },
+      },
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Budget Pools */}
+      {!poolsLoading && pools && pools.length > 0 && (
+        <div className="p-4 rounded-xl border bg-card space-y-3">
+          <p className="text-sm font-semibold">Budget Pools</p>
+          {pools.map((pool) => (
+            <BudgetBar key={pool.id} allocated={pool.allocatedCents} used={pool.usedCents} />
+          ))}
+        </div>
+      )}
+
+      {/* Merit Matrix */}
+      {cycle?.meritMatrix && Object.keys(cycle.meritMatrix).length > 0 && (
+        <div className="p-4 rounded-xl border bg-card">
+          <p className="text-sm font-semibold mb-3">Merit Matrix</p>
+          <div className="grid grid-cols-3 gap-2">
+            {Object.entries(cycle.meritMatrix).map(([rating, pct]) => (
+              <div key={rating} className="p-2 rounded-lg bg-blue-50 text-center">
+                <p className="text-xs text-muted-foreground">{rating}</p>
+                <p className="text-sm font-bold text-blue-700">{pct}%</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Recommendations */}
+      <div>
+        <p className="text-sm font-semibold mb-3">Recommendations ({recs.length})</p>
+        {recsLoading ? (
+          Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-12 mb-2 rounded-lg" />)
+        ) : !recs.length ? (
+          <EmptyState illustrationPreset="default" title="No recommendations yet" compact className="h-40 border-0 shadow-none" />
+        ) : (
+          <DataTable
+            getRowKey={(r) => r.id}
+            columns={[
+              { key: "user", header: "Employee", cell: (r) => <span className="font-medium text-sm">{r.userId}</span> },
+              { key: "current", header: "Current Salary", cell: (r) => formatCents(r.currentSalaryCents) },
+              { key: "increase", header: "Increase", cell: (r) => <span className="text-blue-700 font-medium">{formatCents(r.recommendedIncreaseCents)}</span> },
+              { key: "calibrated", header: "Calibrated", cell: (r) => formatCents(r.hrCalibratedCents) },
+              {
+                key: "status",
+                header: "Status",
+                cell: (r) => <Badge variant="secondary" className="capitalize text-[11px]">{r.status}</Badge>,
+              },
+              {
+                key: "calibrateAction",
+                header: "",
+                cell: (r) => canManage && r.status === "submitted" ? (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      className="h-7 w-28 text-xs"
+                      placeholder="Calibrated $"
+                      value={calibrateValue[r.id] ?? ""}
+                      onChange={(e) => setCalibrateValue((prev) => ({ ...prev, [r.id]: e.target.value }))}
+                    />
+                    <LoadingButton
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs"
+                      isPending={calibratingId === r.id}
+                      onClick={() => handleCalibrate(r)}
+                    >
+                      Set
+                    </LoadingButton>
+                  </div>
+                ) : null,
+              },
+            ]}
+            data={recs}
+          />
+        )}
+      </div>
+    </div>
+  );
+}

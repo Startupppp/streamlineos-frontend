@@ -26,7 +26,8 @@ interface JobErrorsSheetProps {
 }
 
 export function JobErrorsSheet({ jobId, open, onOpenChange }: JobErrorsSheetProps) {
-  const { data: job, isLoading } = useHrImportJob(open ? jobId : null);
+  const { data: detail, isLoading } = useHrImportJob(open ? jobId : null);
+  const job = detail?.job;
   const rollback = useRollbackImportJob();
 
   const handleRollback = useCallback(() => {

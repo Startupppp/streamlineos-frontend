@@ -432,7 +432,7 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
                     <YAxis tick={chartAxisTick} width={40} tickFormatter={(v: number) => formatCurrency(v)} />
                     <Tooltip
                       contentStyle={chartTooltipStyle}
-                      formatter={(v: number) => [formatCurrency(v), "Gross Total"]}
+                      formatter={(value) => [formatCurrency(Number(value)), "Gross Total"]}
                     />
                     <Line
                       type="monotone"

@@ -52,7 +52,8 @@ export interface HrImportRow {
   createdRecordRef: { table: string; id: string | number } | null;
 }
 
-export interface HrImportJobDetail extends HrImportJob {
+export interface HrImportJobDetail {
+  job: HrImportJob;
   errorRows: HrImportRow[];
 }
 

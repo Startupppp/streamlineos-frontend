@@ -31,17 +31,18 @@ import { RecruitmentSection } from "@/features/hr/analytics/recruitment-section"
 import { AttendanceSection } from "@/features/hr/analytics/attendance-section";
 import { LeaveSection } from "@/features/hr/analytics/leave-section";
 import { AttritionSection } from "@/features/hr/analytics/attrition-section";
+import { CommandCenterSection } from "@/features/hr/analytics/command-center-section";
 import { cn } from "@/lib/utils";
 
 type DateRange = "month" | "quarter" | "year";
-type SectionTab = "workforce" | "recruitment" | "attendance" | "leaves" | "attrition";
+type SectionTab = "command-center" | "workforce" | "recruitment" | "attendance" | "leaves" | "attrition";
 
 const NOW = new Date();
 const CURRENT_YEAR = NOW.getFullYear();
 const CURRENT_MONTH = NOW.getMonth() + 1;
 
 const DATE_RANGE_VALUES: readonly DateRange[] = ["month", "quarter", "year"];
-const SECTION_TAB_VALUES: readonly SectionTab[] = ["workforce", "recruitment", "attendance", "leaves", "attrition"];
+const SECTION_TAB_VALUES: readonly SectionTab[] = ["command-center", "workforce", "recruitment", "attendance", "leaves", "attrition"];
 
 function isDateRange(v: string): v is DateRange {
   return (DATE_RANGE_VALUES as readonly string[]).includes(v);
@@ -56,6 +57,7 @@ const SECTION_TABS: Array<{
   label: string;
   icon: React.ComponentType<{ className?: string }>;
 }> = [
+  { value: "command-center", label: "Command Center", icon: BarChart3 },
   { value: "workforce", label: "Workforce", icon: Users },
   { value: "recruitment", label: "Recruitment", icon: Briefcase },
   { value: "attendance", label: "Attendance", icon: Activity },
@@ -206,7 +208,7 @@ function ExecutiveKPIs({
 
 function AnalyticsContent() {
   const [dateRange, setDateRange] = useState<DateRange>("month");
-  const [activeSection, setActiveSection] = useState<SectionTab>("workforce");
+  const [activeSection, setActiveSection] = useState<SectionTab>("command-center");
 
   const analyticsYear = useMemo(() => CURRENT_YEAR, []);
 
@@ -296,6 +298,10 @@ function AnalyticsContent() {
             </div>
 
             <div className="p-4">
+              <TabsContent value="command-center" className="mt-0">
+                <CommandCenterSection />
+              </TabsContent>
+
               <TabsContent value="workforce" className="mt-0">
                 <WorkforceSection data={data} isLoading={isAnalyticsLoading} />
               </TabsContent>
@@ -328,7 +334,7 @@ function AnalyticsContent() {
 
 export default function HrAnalyticsPage() {
   return (
-    <DashboardGate permission="hr:performance:view">
+    <DashboardGate permission="hr:analytics:read">
       <AnalyticsContent />
     </DashboardGate>
   );

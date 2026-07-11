@@ -1,0 +1,207 @@
+"use client";
+
+import { useState } from "react";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { DataTable } from "@/components/ui/data-table";
+import type { DataTableColumn } from "@/components/ui/data-table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus, ShieldCheck } from "lucide-react";
+import { useCan } from "@/hooks/api/access";
+import {
+  useAccessProvisioning,
+  useProvisioningTemplates,
+  useDeleteProvisioningTemplate,
+  type AccessProvisioningRecord,
+  type ProvisioningTemplate,
+  type ProvisioningStatus,
+  type ProvisioningTrigger,
+} from "@/hooks/api/hr/enterprise-ops-identity";
+import { ProvisioningSheet } from "./provisioning-sheet";
+import { TemplateSheet } from "./template-sheet";
+import { ExitVerificationView } from "./exit-verification-view";
+import { format } from "date-fns";
+
+const STATUS_COLORS: Record<ProvisioningStatus, string> = {
+  pending: "bg-yellow-50 text-yellow-700 border-yellow-200",
+  completed: "bg-blue-50 text-blue-700 border-blue-200",
+  verified: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  failed: "bg-red-50 text-red-700 border-red-200",
+};
+
+const TRIGGER_COLORS: Record<ProvisioningTrigger, string> = {
+  joiner: "bg-emerald-50 text-emerald-700",
+  mover: "bg-blue-50 text-blue-700",
+  leaver: "bg-red-50 text-red-700",
+  manual: "bg-slate-100 text-slate-700",
+};
+
+export function IdentityPageContent() {
+  const canManage = useCan("hr:identity:manage");
+  const [page, setPage] = useState(1);
+  const [showCreate, setShowCreate] = useState(false);
+  const [showTemplate, setShowTemplate] = useState(false);
+  const [activeTab, setActiveTab] = useState("provisioning");
+  const [exitUserId, setExitUserId] = useState("");
+
+  const { data, isLoading } = useAccessProvisioning({ page });
+  const { data: templates, isLoading: templatesLoading } = useProvisioningTemplates();
+  const deleteTemplate = useDeleteProvisioningTemplate();
+
+  const provisioningColumns: DataTableColumn<AccessProvisioningRecord>[] = [
+    {
+      key: "userId",
+      header: "Employee",
+      cell: (r) => <span className="font-mono text-xs text-muted-foreground">{r.userId.slice(0, 8)}…</span>,
+    },
+    {
+      key: "systemName",
+      header: "System",
+      cell: (r) => <span className="text-sm font-medium text-foreground">{r.systemName}</span>,
+    },
+    {
+      key: "action",
+      header: "Action",
+      cell: (r) => (
+        <Badge variant="outline" className="text-xs capitalize">
+          {r.action}
+        </Badge>
+      ),
+    },
+    {
+      key: "triggeredBy",
+      header: "Trigger",
+      cell: (r) => (
+        <Badge variant="secondary" className={`text-xs capitalize ${TRIGGER_COLORS[r.triggeredBy]}`}>
+          {r.triggeredBy}
+        </Badge>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (r) => (
+        <Badge variant="outline" className={`text-xs capitalize ${STATUS_COLORS[r.status]}`}>
+          {r.status}
+        </Badge>
+      ),
+    },
+    {
+      key: "requestedAt",
+      header: "Requested",
+      cell: (r) => (
+        <span className="text-sm text-muted-foreground">
+          {format(new Date(r.requestedAt), "MMM d, yyyy")}
+        </span>
+      ),
+    },
+  ];
+
+  const templateColumns: DataTableColumn<ProvisioningTemplate>[] = [
+    {
+      key: "name",
+      header: "Template",
+      cell: (r) => <span className="text-sm font-medium text-foreground">{r.name}</span>,
+    },
+    {
+      key: "triggeredBy",
+      header: "Trigger",
+      cell: (r) => (
+        <Badge variant="secondary" className={`text-xs capitalize ${TRIGGER_COLORS[r.triggeredBy]}`}>
+          {r.triggeredBy}
+        </Badge>
+      ),
+    },
+    {
+      key: "systems",
+      header: "Systems",
+      cell: (r) => (
+        <span className="text-sm text-muted-foreground">{r.systemsConfig.length} system(s)</span>
+      ),
+    },
+    {
+      key: "actions",
+      header: "",
+      cell: (r) => canManage ? (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+          onClick={(e) => { e.stopPropagation(); deleteTemplate.mutate(r.id); }}
+        >
+          Delete
+        </Button>
+      ) : null,
+    },
+  ];
+
+  return (
+    <>
+      <PageWrapper
+        title="Identity Lifecycle"
+        subtitle="Manage system access provisioning for joiners, movers, and leavers"
+        actions={
+          canManage ? (
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={() => setShowTemplate(true)}>
+                <Plus className="h-4 w-4 mr-1.5" />
+                Template
+              </Button>
+              <Button size="sm" onClick={() => setShowCreate(true)} className="bg-blue-600 hover:bg-blue-700 text-white">
+                <Plus className="h-4 w-4 mr-1.5" />
+                Provision
+              </Button>
+            </div>
+          ) : null
+        }
+      >
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="mb-4">
+            <TabsTrigger value="provisioning">Provisioning</TabsTrigger>
+            <TabsTrigger value="templates">Templates</TabsTrigger>
+            <TabsTrigger value="exit">Exit Verification</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="provisioning">
+            <DataTable
+              data={data?.data ?? []}
+              columns={provisioningColumns}
+              getRowKey={(r) => r.id}
+              isLoading={isLoading}
+              emptyState={<p className="text-sm text-muted-foreground text-center py-8">No provisioning records</p>}
+              pagination={
+                data
+                  ? {
+                      mode: "server",
+                      page,
+                      pageSize: data.pagination.limit,
+                      total: data.pagination.total,
+                      onPageChange: setPage,
+                    }
+                  : undefined
+              }
+            />
+          </TabsContent>
+
+          <TabsContent value="templates">
+            <DataTable
+              data={templates ?? []}
+              columns={templateColumns}
+              getRowKey={(r) => r.id}
+              isLoading={templatesLoading}
+              emptyState={<p className="text-sm text-muted-foreground text-center py-8">No templates. Create one to auto-generate provisioning tasks.</p>}
+            />
+          </TabsContent>
+
+          <TabsContent value="exit">
+            <ExitVerificationView />
+          </TabsContent>
+        </Tabs>
+      </PageWrapper>
+
+      <ProvisioningSheet open={showCreate} onOpenChange={setShowCreate} />
+      <TemplateSheet open={showTemplate} onOpenChange={setShowTemplate} />
+    </>
+  );
+}

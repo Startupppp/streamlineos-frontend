@@ -346,7 +346,7 @@ function AttritionForecastCard() {
               <CartesianGrid {...chartGridProps} />
               <XAxis dataKey="month" tick={chartAxisTick} />
               <YAxis tick={chartAxisTick} width={32} tickFormatter={(v: number) => `${v}%`} />
-              <Tooltip contentStyle={chartTooltipStyle} formatter={(v: number) => [`${v}%`]} />
+              <Tooltip contentStyle={chartTooltipStyle} formatter={(value) => [`${Number(value)}%`]} />
               <Legend wrapperStyle={{ fontSize: 11 }} />
               <Line
                 type="monotone"

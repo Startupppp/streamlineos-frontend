@@ -74,6 +74,7 @@ Architecture · Database · API · Cache · Backend · Frontend · UI · UX · S
 - Readable, reusable, efficient, clean, extensible, scalable, maintainable, robust, secure. SOLID throughout.
 - **`strict: true`** (enables `strictNullChecks`, `noImplicitAny`, `strictFunctionTypes`, etc.). Also enable `noUncheckedIndexedAccess`.
 - No `any` — use `unknown` + narrowing. No `@ts-ignore`/`@ts-expect-error`. No non-null assertion (`!`) abuse — restructure or use optional chaining / `??`. No casting hacks.
+- **Never force types (living rule, 2026-07-11):** don't silence TS with `as SomeShape` / `as unknown as X`. This includes raw `db.execute(sql\`…\`)` results — the rows are `Record<string, unknown>`; read each field through a converter at the use site (`Number(row.count)`, `String(row.month)`, `row?.field ?? fallback`), never `(row[0] as { count: string })`. If a cast feels necessary, fix the source type or the query projection instead.
 - **Discriminated unions** for state machines and API responses (shared literal `type`/`status` field), with exhaustive `switch` + `assertNever` default so missing cases fail at compile time.
 - **Validate untrusted input at runtime with Zod** at every boundary (API bodies/params, Server Actions, env). Types are compile-time only and do not protect a running endpoint.
 - **No anonymous functions for event handlers** — named handlers only.

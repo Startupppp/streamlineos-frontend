@@ -214,7 +214,7 @@ export function useGenerateComplianceEvents() {
   return useMutation({
     mutationKey: ["hr", "global", "compliance", "generateEvents"],
     mutationFn: (requirementId?: number) =>
-      apiClient.post(`/hr/global/compliance/generate-events${requirementId ? `?requirementId=${requirementId}` : ""}`, {}),
+      apiClient.post<{ generated: number }>(`/hr/global/compliance/generate-events${requirementId ? `?requirementId=${requirementId}` : ""}`, {}),
     onSuccess: (res: { generated: number }) => {
       void qc.invalidateQueries({ queryKey: queryKeys.hr.complianceEvents() });
       toast.success(`Generated ${res.generated} compliance events`);
@@ -228,7 +228,7 @@ export function useSeedCountryPack() {
   return useMutation({
     mutationKey: ["hr", "global", "compliance", "seedPack"],
     mutationFn: (body: { country: string; year?: number }) =>
-      apiClient.post("/hr/global/compliance/seed-country-pack", body),
+      apiClient.post<{ holidays: number; requirements: number; country: string }>("/hr/global/compliance/seed-country-pack", body),
     onSuccess: (res: { holidays: number; requirements: number; country: string }) => {
       void qc.invalidateQueries({ queryKey: queryKeys.hr.complianceRequirements() });
       toast.success(`Seeded ${res.holidays} holidays and ${res.requirements} requirements for ${res.country}`);

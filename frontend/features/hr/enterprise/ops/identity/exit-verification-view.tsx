@@ -1,0 +1,81 @@
+"use client";
+
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { AlertCircle, CheckCircle, Search } from "lucide-react";
+import { useExitVerification } from "@/hooks/api/hr/enterprise-ops-identity";
+
+export function ExitVerificationView() {
+  const [userId, setUserId] = useState("");
+  const [queryId, setQueryId] = useState("");
+
+  const { data, isLoading } = useExitVerification(queryId);
+
+  function handleSearch() {
+    setQueryId(userId.trim());
+  }
+
+  return (
+    <div className="max-w-xl space-y-4">
+      <div>
+        <p className="text-sm text-muted-foreground mb-3">
+          Verify that all system access has been revoked before completing an employee exit.
+          Exit cannot proceed while there are unverified revokes pending.
+        </p>
+        <div className="flex gap-2">
+          <Input
+            placeholder="Employee UUID"
+            value={userId}
+            onChange={(e) => setUserId(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") handleSearch(); }}
+            className="flex-1"
+          />
+          <Button onClick={handleSearch} disabled={!userId.trim()} variant="outline" size="sm">
+            <Search className="h-4 w-4 mr-1.5" />
+            Check
+          </Button>
+        </div>
+      </div>
+
+      {isLoading && (
+        <div className="animate-pulse h-16 bg-muted rounded-xl" />
+      )}
+
+      {data && !isLoading && (
+        <div className={`rounded-xl border p-4 ${data.hasUnverifiedRevokes ? "border-red-200 bg-red-50" : "border-emerald-200 bg-emerald-50"}`}>
+          <div className="flex items-center gap-2 mb-3">
+            {data.hasUnverifiedRevokes ? (
+              <AlertCircle className="h-5 w-5 text-red-600" />
+            ) : (
+              <CheckCircle className="h-5 w-5 text-emerald-600" />
+            )}
+            <span className={`font-medium text-sm ${data.hasUnverifiedRevokes ? "text-red-700" : "text-emerald-700"}`}>
+              {data.hasUnverifiedRevokes
+                ? `${data.unverified.length} unverified revoke(s) pending`
+                : "All access revoked and verified"}
+            </span>
+          </div>
+
+          {data.unverified.length > 0 && (
+            <div className="space-y-2">
+              {data.unverified.map((r) => (
+                <div key={r.id} className="flex items-center justify-between rounded-md bg-white/60 border border-red-100 px-3 py-2">
+                  <span className="text-sm font-medium text-foreground">{r.systemName}</span>
+                  <Badge variant="outline" className="text-xs capitalize bg-red-50 text-red-700 border-red-200">
+                    {r.status}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <p className="mt-2 text-xs text-muted-foreground">
+            Total provisioning records: {data.total}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}

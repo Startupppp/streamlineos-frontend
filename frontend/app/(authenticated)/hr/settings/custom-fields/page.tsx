@@ -11,7 +11,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { CustomFieldsDataTable } from "@/features/hr/custom-fields/components/custom-fields-data-table";
 import { CustomFieldUpsertDialog } from "@/features/hr/custom-fields/components/custom-field-upsert-dialog";
 import { useHrCustomFields, useCreateCustomField } from "@/features/hr/custom-fields/hooks/use-hr-custom-fields";
-import type { CreateCustomFieldPayload } from "@/features/hr/forms/lib/types";
+import type { CreateCustomFieldPayload, UpdateCustomFieldPayload } from "@/features/hr/forms/lib/types";
 
 const ENTITY_TYPES = [
   { value: "employee", label: "Employee" },
@@ -25,7 +25,8 @@ export default function HrCustomFieldsPage() {
   const { data: fields, isLoading } = useHrCustomFields(entityType);
   const create = useCreateCustomField(entityType);
 
-  async function handleCreate(payload: CreateCustomFieldPayload) {
+  async function handleCreate(payload: CreateCustomFieldPayload | UpdateCustomFieldPayload) {
+    if (!("entityType" in payload)) return;
     try {
       await create.mutateAsync(payload);
       toast.success("Custom field created");
