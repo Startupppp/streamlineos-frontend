@@ -2072,11 +2072,9 @@ export function getProductFromPathname(pathname: string): ProductKey {
   if (pathname.startsWith("/hr") || pathname.startsWith("/recruitment"))
     return "hrms";
   if (pathname.startsWith("/timesheets")) return "timesheets";
-  if (pathname.startsWith("/projects") || pathname.startsWith("/goals"))
-    return "projects";
+  if (pathname.startsWith("/projects")) return "projects";
   if (pathname.startsWith("/inventory")) return "inventory";
   if (pathname.startsWith("/accounting")) return "finance";
-  if (pathname.startsWith("/reports")) return "crm";
   if (pathname.startsWith("/support/kb")) return "documents";
   if (pathname.startsWith("/support")) return "helpdesk";
   if (pathname.startsWith("/knowledge")) return "documents";
