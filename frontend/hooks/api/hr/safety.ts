@@ -111,7 +111,7 @@ export function useReportIncident() {
   });
 }
 
-export function useUpdateIncident(id: number) {
+export function useUpdateSafetyIncident(id: number) {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["hr-safety", "incident", "update", id],
@@ -131,7 +131,7 @@ export function useUpdateIncident(id: number) {
   });
 }
 
-export function useDeleteIncident() {
+export function useDeleteSafetyIncident() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["hr-safety", "incident", "delete"],

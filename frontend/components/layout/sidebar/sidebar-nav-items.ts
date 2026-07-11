@@ -35,6 +35,7 @@ import {
   GraduationCap,
   ClipboardCheck,
   Sparkles,
+  HeartHandshake,
   Scale,
   MailOpen,
   FileCheck,
@@ -175,6 +176,30 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: Sparkles,
         href: "/hr/engagement",
         requiredPermission: "hr:engagement:view",
+      },
+      {
+        label: "Employee Relations",
+        icon: Scale,
+        href: "/hr/cases",
+        requiredPermission: "hr:cases:view",
+      },
+      {
+        label: "Health & Safety",
+        icon: ShieldAlert,
+        href: "/hr/safety",
+        requiredPermission: "hr:safety:view",
+      },
+      {
+        label: "Benefits",
+        icon: HeartHandshake,
+        href: "/hr/benefits",
+        requiredPermission: "hr:benefits:view",
+      },
+      {
+        label: "HR Helpdesk",
+        icon: LifeBuoy,
+        href: "/hr/helpdesk",
+        requiredPermission: "hr:helpdesk:view",
       },
       {
         label: "Employees",

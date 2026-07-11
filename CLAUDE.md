@@ -194,6 +194,7 @@ Architecture · Database · API · Cache · Backend · Frontend · UI · UX · S
 - **Product-specific (HR):** onboarding/profile forms collect only what a real HR platform asks a new joiner — personal (phone, DOB, gender, home address, emergency contact), bank/payroll, ID & document uploads. Exclude recruitment-only data (years of experience, skills).
 - Employee onboarding form is **never** shown to org owners or platform/super admins — gate **server-side** and redirect (owner → setup/dashboard; platform admin → `/owner`).
 - **Module-owned surfaces (living rule, 2026-07-02):** custom fields, automations, integrations, and data-hub import/export are module-scoped features — surface them inside each module's own settings area, never as global `/settings/*` pages. Global settings keeps only org-wide concerns (security, billing, roles, modules, org profile).
+- **One unified calendar (living rule, 2026-07-11):** `/calendar` is the single calendar surface for every employee. Never build module-specific calendar pages (`/hr/calendar` etc.). Module events (holidays, leaves, birthdays/anniversaries, review cycles, training, travel, interviews) are exposed as toggleable SOURCES inside the global `/calendar` via backend aggregate endpoints.
 
 ---
 

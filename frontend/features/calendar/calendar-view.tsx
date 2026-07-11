@@ -36,7 +36,9 @@ import { CreateTicketFromCalendarDialog } from "./create-ticket-from-calendar-di
 import type { View, SlotInfo, BigCalEvent } from "./big-calendar-wrapper";
 import { CalendarAccountsSheet } from "./calendar-accounts-sheet";
 import { ExternalEventDetailSheet } from "./external-event-detail-sheet";
+import { HrEventDetailSheet } from "./hr-event-detail-sheet";
 import { useCalendarAccountFilters } from "./use-calendar-account-filters";
+import { useHrCalendarEventsMapped, useHrEventsVisible } from "./use-hr-calendar-events";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useFinalizeIntegrationConnection,
@@ -99,6 +101,7 @@ export function CalendarView() {
   const [selectedExternal, setSelectedExternal] = useState<BigCalEvent | null>(
     null,
   );
+  const [selectedHrEvent, setSelectedHrEvent] = useState<BigCalEvent | null>(null);
   const [accountsOpen, setAccountsOpen] = useState(false);
 
   const rangeStart = useMemo(
@@ -125,6 +128,8 @@ export function CalendarView() {
   );
 
   const { hiddenIds } = useCalendarAccountFilters();
+  const { visible: hrEventsVisible, toggle: toggleHrEvents } = useHrEventsVisible();
+  const { hrCalEvents } = useHrCalendarEventsMapped(rangeStart, rangeEnd);
   const { data: externalData } = useExternalCalendarEvents(
     rangeStart,
     rangeEnd,
@@ -146,6 +151,8 @@ export function CalendarView() {
     connections,
     currentDate,
     view,
+    hrCalEvents,
+    hrVisible: hrEventsVisible,
   });
 
   const handleSelectSlot = useCallback((slotInfo: SlotInfo) => {
@@ -159,7 +166,8 @@ export function CalendarView() {
     isCreateTicketOpen ||
     accountsOpen ||
     selectedEventId !== null ||
-    selectedExternal !== null;
+    selectedExternal !== null ||
+    selectedHrEvent !== null;
 
   const guardedSelectSlot = useCalendarSlotSelectionGuard(
     handleSelectSlot,
@@ -190,6 +198,10 @@ export function CalendarView() {
 
   const handleSelectEvent = useCallback(
     (event: BigCalEvent) => {
+      if (event.resource?.source === "hr") {
+        setSelectedHrEvent(event);
+        return;
+      }
       if (event.resource?.source === "external") {
         setSelectedExternal(event);
         return;
@@ -232,6 +244,7 @@ export function CalendarView() {
 
   const handleCloseDetail = useCallback(() => setSelectedEventId(null), []);
   const handleCloseExternal = useCallback(() => setSelectedExternal(null), []);
+  const handleCloseHrEvent = useCallback(() => setSelectedHrEvent(null), []);
   const handleOpenAccounts = useCallback(() => setAccountsOpen(true), []);
   const handleCloseAccounts = useCallback(() => setAccountsOpen(false), []);
   const handleCloseCreateTicket = useCallback(
@@ -267,6 +280,7 @@ export function CalendarView() {
         viewMode={viewMode}
         currentDate={currentDate}
         activeConnectionCount={activeConnectionCount}
+        hrEventsVisible={hrEventsVisible}
         onPrev={handlePrev}
         onNext={handleNext}
         onToday={handleToday}
@@ -276,6 +290,7 @@ export function CalendarView() {
         onOpenAccounts={handleOpenAccounts}
         onOpenCreate={handleOpenCreate}
         onOpenCreateTicket={handleOpenCreateTicket}
+        onToggleHrEvents={toggleHrEvents}
       />
 
       {externalData?.errors && externalData.errors.length > 0 && (
@@ -379,6 +394,10 @@ export function CalendarView() {
       <ExternalEventDetailSheet
         event={selectedExternal}
         onClose={handleCloseExternal}
+      />
+      <HrEventDetailSheet
+        event={selectedHrEvent}
+        onClose={handleCloseHrEvent}
       />
       <CalendarAccountsSheet
         open={accountsOpen}

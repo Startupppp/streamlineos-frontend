@@ -43,6 +43,7 @@ export interface BigCalEvent {
     webLink?: string | null;
     connectionId?: number | null;
     externalId?: string | null;
+    hrEventType?: string | null;
   };
 }
 

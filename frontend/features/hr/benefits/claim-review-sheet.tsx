@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useReviewClaim, useSetClaimPayoutRoute, type InsuranceClaim } from "@/hooks/api/hr";
+import { useReviewClaim, type InsuranceClaim } from "@/hooks/api/hr";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
@@ -37,14 +37,13 @@ interface Props {
 
 export function ClaimReviewSheet({ open, onOpenChange, claim }: Props) {
   const reviewClaim = useReviewClaim();
-  const setPayoutRoute = useSetClaimPayoutRoute();
 
   const [status, setStatus] = useState<"in_review" | "approved" | "rejected">("in_review");
   const [rejectionReason, setRejectionReason] = useState("");
   const [payoutRoute, setPayoutRoute] = useState<string>("");
 
   const handleStatusChange = useCallback((v: string) => {
-    setStatus(v as typeof status);
+    if (v === "in_review" || v === "approved" || v === "rejected") setStatus(v);
   }, []);
 
   const handlePayoutRouteChange = useCallback((v: string) => {

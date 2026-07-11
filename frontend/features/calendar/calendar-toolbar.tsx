@@ -12,6 +12,7 @@ import {
   History,
   Link2,
   Ticket,
+  Building2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ViewToggle, type ViewOption } from "@/components/ui/view-toggle";
@@ -44,6 +45,7 @@ interface CalendarToolbarProps {
   viewMode: ViewMode;
   currentDate: Date;
   activeConnectionCount: number;
+  hrEventsVisible: boolean;
   onPrev: () => void;
   onNext: () => void;
   onToday: () => void;
@@ -53,6 +55,7 @@ interface CalendarToolbarProps {
   onOpenAccounts: () => void;
   onOpenCreate: () => void;
   onOpenCreateTicket: () => void;
+  onToggleHrEvents: () => void;
 }
 
 export const CalendarToolbar = memo(function CalendarToolbar({
@@ -60,6 +63,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
   viewMode,
   currentDate,
   activeConnectionCount,
+  hrEventsVisible,
   onPrev,
   onNext,
   onToday,
@@ -69,6 +73,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
   onOpenAccounts,
   onOpenCreate,
   onOpenCreateTicket,
+  onToggleHrEvents,
 }: CalendarToolbarProps) {
   const handleViewChange = useCallback(
     (v: string) => onViewChange(v as View),
@@ -173,6 +178,17 @@ export const CalendarToolbar = memo(function CalendarToolbar({
               {activeConnectionCount}
             </span>
           )}
+        </Button>
+
+        <Button
+          variant={hrEventsVisible ? "secondary" : "outline"}
+          size="sm"
+          className="h-8 text-xs font-medium gap-1 px-3"
+          aria-label={hrEventsVisible ? "Hide HR events" : "Show HR events"}
+          onClick={onToggleHrEvents}
+        >
+          <Building2 className="h-3.5 w-3.5" />
+          <span className="hidden md:inline">HR events</span>
         </Button>
 
         <DropdownMenu>

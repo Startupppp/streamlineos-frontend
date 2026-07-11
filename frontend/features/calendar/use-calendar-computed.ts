@@ -23,6 +23,8 @@ interface UseCalendarComputedParams {
   connections: IntegrationConnection[];
   currentDate: Date;
   view: View;
+  hrCalEvents?: BigCalEvent[];
+  hrVisible?: boolean;
 }
 
 export function useCalendarComputed({
@@ -32,6 +34,8 @@ export function useCalendarComputed({
   connections,
   currentDate,
   view,
+  hrCalEvents = [],
+  hrVisible = true,
 }: UseCalendarComputedParams) {
   const calEvents = useMemo<BigCalEvent[]>(
     () =>
@@ -83,9 +87,14 @@ export function useCalendarComputed({
     [externalData, hiddenIds, connections],
   );
 
+  const visibleHrCalEvents = useMemo(
+    () => (hrVisible ? hrCalEvents : []),
+    [hrCalEvents, hrVisible],
+  );
+
   const allCalEvents = useMemo(
-    () => [...calEvents, ...externalCalEvents],
-    [calEvents, externalCalEvents],
+    () => [...calEvents, ...externalCalEvents, ...visibleHrCalEvents],
+    [calEvents, externalCalEvents, visibleHrCalEvents],
   );
 
   const todayActivities = useMemo(

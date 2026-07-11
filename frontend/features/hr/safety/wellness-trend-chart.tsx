@@ -47,8 +47,8 @@ export function WellnessTrendChart({ fromDate, toDate }: Props) {
             />
             <YAxis domain={[1, 10]} tick={{ fontSize: 10 }} tickCount={5} />
             <Tooltip
-              formatter={(v: number) => [`${v.toFixed(1)} / 10`, "Avg Score"]}
-              labelFormatter={(l: string) => format(new Date(l), "MMM d, yyyy")}
+              formatter={(value) => [`${Number(value).toFixed(1)} / 10`, "Avg Score"]}
+              labelFormatter={(label) => format(new Date(String(label)), "MMM d, yyyy")}
             />
             <Line
               type="monotone"
