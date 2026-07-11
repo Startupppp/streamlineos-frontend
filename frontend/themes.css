@@ -1,0 +1,290 @@
+/* Selectable interface themes (authenticated shell) — default ink theme lives in globals.css :root */
+
+:root.theme-red {
+  --primary: #dc2626;
+  --primary-foreground: #ffffff;
+  --ring: #ef4444;
+  --sidebar-primary: #ef4444;
+  --sidebar-accent-foreground: #991b1b;
+  --sidebar-ring: #f87171;
+  --brand-deep: #991b1b;
+  --brand-core: #ef4444;
+  --brand-bright: #f87171;
+  --gradient-signature: linear-gradient(135deg, #991b1b 0%, #ef4444 50%, #f87171 100%);
+  --chart-1: #b91c1c;
+  --chart-3: #f87171;
+  --gold: #ef4444;
+  --blue: #b91c1c;
+}
+
+:root.theme-orange {
+  --primary: #ea580c;
+  --primary-foreground: #ffffff;
+  --ring: #f97316;
+  --sidebar-primary: #f97316;
+  --sidebar-accent-foreground: #9a3412;
+  --sidebar-ring: #fb923c;
+  --brand-deep: #9a3412;
+  --brand-core: #f97316;
+  --brand-bright: #fb923c;
+  --gradient-signature: linear-gradient(135deg, #9a3412 0%, #f97316 50%, #fb923c 100%);
+  --chart-1: #c2410c;
+  --chart-3: #fb923c;
+  --gold: #f97316;
+  --blue: #c2410c;
+}
+
+:root.theme-amber {
+  --primary: #fbbf24;
+  --primary-foreground: #451a03;
+  --ring: #f59e0b;
+  --sidebar-primary: #f59e0b;
+  --sidebar-accent-foreground: #92400e;
+  --sidebar-ring: #fbbf24;
+  --brand-deep: #92400e;
+  --brand-core: #f59e0b;
+  --brand-bright: #fbbf24;
+  --gradient-signature: linear-gradient(135deg, #92400e 0%, #f59e0b 50%, #fbbf24 100%);
+  --chart-1: #b45309;
+  --chart-3: #fbbf24;
+  --gold: #f59e0b;
+  --blue: #b45309;
+}
+
+:root.theme-yellow {
+  --primary: #facc15;
+  --primary-foreground: #422006;
+  --ring: #eab308;
+  --sidebar-primary: #eab308;
+  --sidebar-accent-foreground: #854d0e;
+  --sidebar-ring: #facc15;
+  --brand-deep: #854d0e;
+  --brand-core: #eab308;
+  --brand-bright: #facc15;
+  --gradient-signature: linear-gradient(135deg, #854d0e 0%, #eab308 50%, #facc15 100%);
+  --chart-1: #a16207;
+  --chart-3: #facc15;
+  --gold: #eab308;
+  --blue: #a16207;
+}
+
+:root.theme-lime {
+  --primary: #a3e635;
+  --primary-foreground: #1a2e05;
+  --ring: #84cc16;
+  --sidebar-primary: #84cc16;
+  --sidebar-accent-foreground: #3f6212;
+  --sidebar-ring: #a3e635;
+  --brand-deep: #3f6212;
+  --brand-core: #84cc16;
+  --brand-bright: #a3e635;
+  --gradient-signature: linear-gradient(135deg, #3f6212 0%, #84cc16 50%, #a3e635 100%);
+  --chart-1: #4d7c0f;
+  --chart-3: #a3e635;
+  --gold: #84cc16;
+  --blue: #4d7c0f;
+}
+
+:root.theme-green {
+  --primary: #16a34a;
+  --primary-foreground: #ffffff;
+  --ring: #22c55e;
+  --sidebar-primary: #22c55e;
+  --sidebar-accent-foreground: #166534;
+  --sidebar-ring: #4ade80;
+  --brand-deep: #166534;
+  --brand-core: #22c55e;
+  --brand-bright: #4ade80;
+  --gradient-signature: linear-gradient(135deg, #166534 0%, #22c55e 50%, #4ade80 100%);
+  --chart-1: #15803d;
+  --chart-3: #4ade80;
+  --gold: #22c55e;
+  --blue: #15803d;
+}
+
+:root.theme-emerald {
+  --primary: #059669;
+  --primary-foreground: #ffffff;
+  --ring: #10b981;
+  --sidebar-primary: #10b981;
+  --sidebar-accent-foreground: #065f46;
+  --sidebar-ring: #34d399;
+  --brand-deep: #065f46;
+  --brand-core: #10b981;
+  --brand-bright: #34d399;
+  --gradient-signature: linear-gradient(135deg, #065f46 0%, #10b981 50%, #34d399 100%);
+  --chart-1: #047857;
+  --chart-3: #34d399;
+  --gold: #10b981;
+  --blue: #047857;
+}
+
+:root.theme-teal {
+  --primary: #0d9488;
+  --primary-foreground: #ffffff;
+  --ring: #14b8a6;
+  --sidebar-primary: #14b8a6;
+  --sidebar-accent-foreground: #115e59;
+  --sidebar-ring: #2dd4bf;
+  --brand-deep: #115e59;
+  --brand-core: #14b8a6;
+  --brand-bright: #2dd4bf;
+  --gradient-signature: linear-gradient(135deg, #115e59 0%, #14b8a6 50%, #2dd4bf 100%);
+  --chart-1: #0f766e;
+  --chart-3: #2dd4bf;
+  --gold: #14b8a6;
+  --blue: #0f766e;
+}
+
+:root.theme-cyan {
+  --primary: #0891b2;
+  --primary-foreground: #ffffff;
+  --ring: #06b6d4;
+  --sidebar-primary: #06b6d4;
+  --sidebar-accent-foreground: #155e75;
+  --sidebar-ring: #22d3ee;
+  --brand-deep: #155e75;
+  --brand-core: #06b6d4;
+  --brand-bright: #22d3ee;
+  --gradient-signature: linear-gradient(135deg, #155e75 0%, #06b6d4 50%, #22d3ee 100%);
+  --chart-1: #0e7490;
+  --chart-3: #22d3ee;
+  --gold: #06b6d4;
+  --blue: #0e7490;
+}
+
+:root.theme-sky {
+  --primary: #0284c7;
+  --primary-foreground: #ffffff;
+  --ring: #0ea5e9;
+  --sidebar-primary: #0ea5e9;
+  --sidebar-accent-foreground: #075985;
+  --sidebar-ring: #38bdf8;
+  --brand-deep: #075985;
+  --brand-core: #0ea5e9;
+  --brand-bright: #38bdf8;
+  --gradient-signature: linear-gradient(135deg, #075985 0%, #0ea5e9 50%, #38bdf8 100%);
+  --chart-1: #0369a1;
+  --chart-3: #38bdf8;
+  --gold: #0ea5e9;
+  --blue: #0369a1;
+}
+
+:root.theme-blue {
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+  --ring: #3b82f6;
+  --sidebar-primary: #3b82f6;
+  --sidebar-accent-foreground: #1e40af;
+  --sidebar-ring: #60a5fa;
+  --brand-deep: #1e40af;
+  --brand-core: #3b82f6;
+  --brand-bright: #60a5fa;
+  --gradient-signature: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%);
+  --chart-1: #1d4ed8;
+  --chart-3: #60a5fa;
+  --gold: #3b82f6;
+  --blue: #1d4ed8;
+}
+
+:root.theme-indigo {
+  --primary: #4f46e5;
+  --primary-foreground: #ffffff;
+  --ring: #6366f1;
+  --sidebar-primary: #6366f1;
+  --sidebar-accent-foreground: #3730a3;
+  --sidebar-ring: #818cf8;
+  --brand-deep: #3730a3;
+  --brand-core: #6366f1;
+  --brand-bright: #818cf8;
+  --gradient-signature: linear-gradient(135deg, #3730a3 0%, #6366f1 50%, #818cf8 100%);
+  --chart-1: #4338ca;
+  --chart-3: #818cf8;
+  --gold: #6366f1;
+  --blue: #4338ca;
+}
+
+:root.theme-violet {
+  --primary: #7c3aed;
+  --primary-foreground: #ffffff;
+  --ring: #8b5cf6;
+  --sidebar-primary: #8b5cf6;
+  --sidebar-accent-foreground: #5b21b6;
+  --sidebar-ring: #a78bfa;
+  --brand-deep: #5b21b6;
+  --brand-core: #8b5cf6;
+  --brand-bright: #a78bfa;
+  --gradient-signature: linear-gradient(135deg, #5b21b6 0%, #8b5cf6 50%, #a78bfa 100%);
+  --chart-1: #6d28d9;
+  --chart-3: #a78bfa;
+  --gold: #8b5cf6;
+  --blue: #6d28d9;
+}
+
+:root.theme-purple {
+  --primary: #9333ea;
+  --primary-foreground: #ffffff;
+  --ring: #a855f7;
+  --sidebar-primary: #a855f7;
+  --sidebar-accent-foreground: #6b21a8;
+  --sidebar-ring: #c084fc;
+  --brand-deep: #6b21a8;
+  --brand-core: #a855f7;
+  --brand-bright: #c084fc;
+  --gradient-signature: linear-gradient(135deg, #6b21a8 0%, #a855f7 50%, #c084fc 100%);
+  --chart-1: #7e22ce;
+  --chart-3: #c084fc;
+  --gold: #a855f7;
+  --blue: #7e22ce;
+}
+
+:root.theme-fuchsia {
+  --primary: #c026d3;
+  --primary-foreground: #ffffff;
+  --ring: #d946ef;
+  --sidebar-primary: #d946ef;
+  --sidebar-accent-foreground: #86198f;
+  --sidebar-ring: #e879f9;
+  --brand-deep: #86198f;
+  --brand-core: #d946ef;
+  --brand-bright: #e879f9;
+  --gradient-signature: linear-gradient(135deg, #86198f 0%, #d946ef 50%, #e879f9 100%);
+  --chart-1: #a21caf;
+  --chart-3: #e879f9;
+  --gold: #d946ef;
+  --blue: #a21caf;
+}
+
+:root.theme-pink {
+  --primary: #db2777;
+  --primary-foreground: #ffffff;
+  --ring: #ec4899;
+  --sidebar-primary: #ec4899;
+  --sidebar-accent-foreground: #9d174d;
+  --sidebar-ring: #f472b6;
+  --brand-deep: #9d174d;
+  --brand-core: #ec4899;
+  --brand-bright: #f472b6;
+  --gradient-signature: linear-gradient(135deg, #9d174d 0%, #ec4899 50%, #f472b6 100%);
+  --chart-1: #be185d;
+  --chart-3: #f472b6;
+  --gold: #ec4899;
+  --blue: #be185d;
+}
+
+:root.theme-rose {
+  --primary: #e11d48;
+  --primary-foreground: #ffffff;
+  --ring: #f43f5e;
+  --sidebar-primary: #f43f5e;
+  --sidebar-accent-foreground: #9f1239;
+  --sidebar-ring: #fb7185;
+  --brand-deep: #9f1239;
+  --brand-core: #f43f5e;
+  --brand-bright: #fb7185;
+  --gradient-signature: linear-gradient(135deg, #9f1239 0%, #f43f5e 50%, #fb7185 100%);
+  --chart-1: #be123c;
+  --chart-3: #fb7185;
+  --gold: #f43f5e;
+  --blue: #be123c;
+}

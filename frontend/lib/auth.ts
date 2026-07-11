@@ -1,3 +1,4 @@
+import { cache } from "react";
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
@@ -56,6 +57,8 @@ async function fetchSessionData(userId: string): Promise<SessionData | null> {
   }
   return null;
 }
+
+const fetchSessionDataCached = cache(fetchSessionData);
 
 function parsePlatformAdminEmails(): ReadonlySet<string> {
   const raw = process.env.PLATFORM_ADMIN_EMAILS ?? "";
@@ -277,24 +280,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
 
     async jwt({ token, user, account, trigger, session }) {
+      // The cookie carries only identity, auth-flow flags, and the small advisory claims middleware reads; everything else (permissions, modules, plan, branch, image) is resolved live in the session callback.
       if (user) {
         token.id = user.id;
         token.email = user.email;
         token.name = user.name ?? null;
         token.role = user.role;
-        token.image = user.image ?? null;
         token.forceChangePassword = user.forceChangePassword ?? false;
         token.isActive = user.isActive ?? true;
-        token.hasDashboardAccess = user.hasDashboardAccess ?? true;
         token.orgId = user.orgId ?? null;
         token.isOrgOwner = user.isOrgOwner ?? false;
         token.orgOnboardingCompletedAt = user.orgOnboardingCompletedAt ?? null;
-        token.branchId = user.branchId ?? null;
         token.totpEnabled = user.totpEnabled ?? false;
         token.mfaEnforced = user.mfaEnforced ?? false;
-        token.permissions = user.permissions ?? [];
-        token.plan = user.plan ?? null;
-        token.enabledModules = user.enabledModules ?? [];
         token.userOnboardingCompletedAt = user.userOnboardingCompletedAt ?? null;
         token.isPlatformAdmin = user.isPlatformAdmin ?? false;
         token.sessionId = user.sessionId ?? randomUUID();
@@ -311,11 +309,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             token.isOrgOwner = fresh.isOrgOwner;
             token.orgOnboardingCompletedAt = fresh.orgOnboardingCompletedAt;
             token.userOnboardingCompletedAt = fresh.userOnboardingCompletedAt;
-            token.permissions = fresh.permissions;
-            token.enabledModules = fresh.enabledModules;
-            token.plan = fresh.plan;
             token.role = fresh.role ?? undefined;
-            token.branchId = fresh.branchId;
             token.mfaEnforced = fresh.mfaEnforced;
             token.totpEnabled = fresh.totpEnabled;
           }
@@ -332,39 +326,31 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
 
     async session({ session, token }) {
-      let orgId = (token.orgId as string | null | undefined) ?? null;
-      let isOrgOwner = (token.isOrgOwner as boolean | undefined) ?? false;
-      let orgOnboardingCompletedAt = (token.orgOnboardingCompletedAt as string | null | undefined) ?? null;
-      let userOnboardingCompletedAt = (token.userOnboardingCompletedAt as string | null | undefined) ?? null;
-      let permissions = (token.permissions as string[] | undefined) ?? [];
-      let enabledModules = (token.enabledModules as string[] | undefined) ?? [];
-      let plan = (token.plan as Plan | null | undefined) ?? null;
-      let role = (token.role as string | undefined) ?? "";
-      let branchId = (token.branchId as number | null | undefined) ?? null;
+      // Volatile data (permissions, modules, plan, org context) is resolved live here, never from the cookie — 485 permission keys once ballooned it to ~16KB (5 chunks), breaking every auth request with 431s.
+      const fresh = token.id ? await fetchSessionDataCached(token.id as string) : null;
 
-      if (orgId === null && token.id) {
-        const fresh = await fetchSessionData(token.id as string);
-        if (fresh) {
-          orgId = fresh.orgId;
-          isOrgOwner = fresh.isOrgOwner;
-          orgOnboardingCompletedAt = fresh.orgOnboardingCompletedAt;
-          userOnboardingCompletedAt = fresh.userOnboardingCompletedAt;
-          permissions = fresh.permissions;
-          enabledModules = fresh.enabledModules;
-          plan = fresh.plan;
-          role = fresh.role ?? "";
-          branchId = fresh.branchId;
-        }
-      }
+      const orgId = fresh ? fresh.orgId : ((token.orgId as string | null | undefined) ?? null);
+      const isOrgOwner = fresh ? fresh.isOrgOwner : ((token.isOrgOwner as boolean | undefined) ?? false);
+      const orgOnboardingCompletedAt = fresh
+        ? fresh.orgOnboardingCompletedAt
+        : ((token.orgOnboardingCompletedAt as string | null | undefined) ?? null);
+      const userOnboardingCompletedAt = fresh
+        ? fresh.userOnboardingCompletedAt
+        : ((token.userOnboardingCompletedAt as string | null | undefined) ?? null);
+      const permissions = fresh?.permissions ?? [];
+      const enabledModules = fresh?.enabledModules ?? [];
+      const plan = fresh?.plan ?? null;
+      const role = fresh?.role ?? (token.role as string | undefined) ?? "";
+      const branchId = fresh?.branchId ?? null;
 
       if (session.user) {
         session.user.id = token.id as string;
         session.user.email = token.email as string;
         session.user.role = role;
-        session.user.image = (token.image as string | null) ?? null;
+        session.user.image = fresh?.image ?? (token.picture as string | null | undefined) ?? null;
         session.user.forceChangePassword = token.forceChangePassword as boolean;
-        session.user.isActive = token.isActive as boolean;
-        session.user.hasDashboardAccess = token.hasDashboardAccess as boolean;
+        session.user.isActive = fresh?.isActive ?? (token.isActive as boolean);
+        session.user.hasDashboardAccess = fresh?.hasDashboardAccess ?? true;
         session.user.isPlatformAdmin = (token.isPlatformAdmin as boolean | undefined) ?? false;
         session.user.isOrgOwner = isOrgOwner;
       }

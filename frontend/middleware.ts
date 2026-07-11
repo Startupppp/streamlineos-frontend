@@ -394,10 +394,11 @@ export default async function middleware(req: NextRequest) {
   ) {
     const isPlatformAdmin = (token?.isPlatformAdmin as boolean | undefined) === true;
     const isOrgOwner = (token?.isOrgOwner as boolean | undefined) === true;
+    // Permissions are no longer stored in the cookie; without the claim, defer gating to the server-side requirePermission.
     const userPermissions = Array.isArray(token?.permissions)
-      ? (token!.permissions as string[])
-      : [];
-    if (!canAccessRoute(pathname, isPlatformAdmin, isOrgOwner, userPermissions)) {
+      ? (token.permissions as string[])
+      : null;
+    if (userPermissions !== null && !canAccessRoute(pathname, isPlatformAdmin, isOrgOwner, userPermissions)) {
       const url = req.nextUrl.clone();
       url.pathname = isBlogAdminPath(pathname) ? "/blogs" : "/dashboard";
       url.search = "";

@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Search, CalendarDays, MessageSquare } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { HeaderBrand } from "./header-brand"
+import { ThemeSwitcher } from "@/components/theme/theme-switcher"
 import { ProductSwitcherMenu } from "./product-switcher-menu"
 import { WorkspaceSwitcher } from "./workspace-switcher"
 import { QuickCreateButton } from "./quick-create-button"
@@ -110,6 +111,8 @@ function DesktopHeader({
         </HeaderIconLink>
 
         <NotificationBell />
+
+        <ThemeSwitcher />
 
         <div className="w-px h-4 bg-sidebar-border mx-1" />
 

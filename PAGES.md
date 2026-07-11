@@ -20,6 +20,8 @@ Ordered money-path first. Check off each page after fixing.
 
 > **Visual redesign (redesign/v2 branch)**: All landing, auth, public/marketing pages have been visually redesigned — `brand-text` gradient clip-text removed (hero `brand-sweep` kept), `rounded-3xl` → `rounded-2xl`/`rounded-xl`, decorative uppercase eyebrows removed/converted to `font-medium`, `PageWrapper` eyebrow styling updated. Dashboard feature pages already use clean design system — no `brand-text` or `rounded-3xl` found.
 
+> **Selectable interface themes (2026-07-11)**: all 17 Tailwind accent palettes as shadcn-style themes (Red→Rose rainbow order; light hues amber/yellow/lime use 400-shade primary + dark foreground for contrast) + default Ink, scoped to the authenticated shell only — auth pages, org-setup, and marketing keep the fixed design. Themes are `:root.theme-*` token overrides in `frontend/themes.css` (primary/ring/sidebar-accent family/brand vars/chart seeds; neutrals stay slate), registry + type guard in `lib/theme/app-themes.ts`, context provider + localStorage persistence in `components/theme/app-theme-provider.tsx` (html-class applied on mount, removed on unmount so signin after logout resets), flash-free first paint via nonce'd inline script (`app-theme-script.tsx`, CSP pattern from GTM), palette-popover switcher in the global header. next-themes NOT reintroduced. Build ✓ tsc ✓ lint ✓.
+
 ---
 
 ## Global Navigation (Platform Shell)
