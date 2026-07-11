@@ -34,6 +34,7 @@ import {
   Award,
   GraduationCap,
   ClipboardCheck,
+  Sparkles,
   Scale,
   MailOpen,
   FileCheck,
@@ -168,6 +169,12 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: ClipboardCheck,
         href: "/hr/approvals",
         requiredPermission: "hr:workflows:approve",
+      },
+      {
+        label: "Engagement",
+        icon: Sparkles,
+        href: "/hr/engagement",
+        requiredPermission: "hr:engagement:view",
       },
       {
         label: "Employees",

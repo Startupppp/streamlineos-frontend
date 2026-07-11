@@ -1,0 +1,207 @@
+"use client";
+
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api-client";
+
+export const HELPDESK_CATEGORIES = [
+  "policy_question",
+  "payroll_issue",
+  "document_request",
+  "leave_issue",
+  "benefits",
+  "it_access",
+  "confidential",
+  "other",
+] as const;
+
+export type HelpdeskCategory = (typeof HELPDESK_CATEGORIES)[number];
+
+export const HELPDESK_CATEGORY_LABELS: Record<HelpdeskCategory, string> = {
+  policy_question: "Policy Question",
+  payroll_issue: "Payroll Issue",
+  document_request: "Document Request",
+  leave_issue: "Leave Issue",
+  benefits: "Benefits",
+  it_access: "IT Access",
+  confidential: "Confidential",
+  other: "Other",
+};
+
+export type TicketStatus = "TODO" | "IN_PROGRESS" | "IN_REVIEW" | "DONE";
+export type TicketPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+
+export interface HelpdeskTicket {
+  id: number;
+  orgId: string;
+  userId: string;
+  title: string;
+  description: string | null;
+  category: string | null;
+  priority: TicketPriority;
+  status: TicketStatus;
+  assigneeId: string | null;
+  isConfidential: boolean;
+  slaDueAt: string | null;
+  resolvedAt: string | null;
+  resolution: string | null;
+  createdAt: string;
+  updatedAt: string;
+  authorName: string | null;
+  authorImage: string | null;
+}
+
+export interface HelpdeskComment {
+  id: number;
+  body: string;
+  createdAt: string;
+  authorId: string;
+  authorName: string | null;
+  authorImage: string | null;
+}
+
+export interface HelpdeskTicketDetail extends HelpdeskTicket {
+  comments: HelpdeskComment[];
+}
+
+export interface HelpdeskListResult {
+  items: HelpdeskTicket[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export interface HelpdeskRoutingRule {
+  id: number;
+  category: string;
+  assigneeUserId: string;
+  assigneeName: string | null;
+  assigneeImage: string | null;
+  createdAt: string;
+}
+
+export interface CreateTicketInput {
+  title: string;
+  description?: string;
+  category: HelpdeskCategory;
+  priority?: TicketPriority;
+  isConfidential?: boolean;
+}
+
+export interface UpdateTicketInput {
+  status?: TicketStatus;
+  assigneeId?: string | null;
+  priority?: TicketPriority;
+  resolution?: string | null;
+}
+
+export interface SuggestResult {
+  results: Array<{
+    id: number;
+    title: string;
+    slug: string;
+    excerpt: string | null;
+    source: string;
+  }>;
+}
+
+const keys = {
+  all: ["hr", "helpdesk"] as const,
+  list: (params?: Record<string, unknown>) => ["hr", "helpdesk", "list", params] as const,
+  detail: (id: number) => ["hr", "helpdesk", "detail", id] as const,
+  routing: () => ["hr", "helpdesk", "routing"] as const,
+  suggest: (q: string) => ["hr", "helpdesk", "suggest", q] as const,
+};
+
+export function useHelpdeskTickets(params?: Record<string, unknown>) {
+  return useQuery({
+    queryKey: keys.list(params),
+    queryFn: () => apiClient.get<HelpdeskListResult>("/hr/helpdesk", params),
+    staleTime: 60_000,
+  });
+}
+
+export function useHelpdeskTicket(ticketId: number) {
+  return useQuery({
+    queryKey: keys.detail(ticketId),
+    queryFn: () => apiClient.get<HelpdeskTicketDetail>(`/hr/helpdesk/${ticketId}`),
+    staleTime: 30_000,
+  });
+}
+
+export function useHelpdeskSuggest(query: string) {
+  return useQuery({
+    queryKey: keys.suggest(query),
+    queryFn: () => apiClient.get<SuggestResult>("/hr/helpdesk/suggest", { query }),
+    enabled: query.length >= 2,
+    staleTime: 5 * 60_000,
+  });
+}
+
+export function useHelpdeskRoutingRules() {
+  return useQuery({
+    queryKey: keys.routing(),
+    queryFn: () => apiClient.get<HelpdeskRoutingRule[]>("/hr/helpdesk/routing"),
+    staleTime: 5 * 60_000,
+  });
+}
+
+export function useCreateHelpdeskTicket() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["hr", "helpdesk", "create"],
+    mutationFn: (data: CreateTicketInput) => apiClient.post<HelpdeskTicket>("/hr/helpdesk", data),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: keys.all });
+    },
+  });
+}
+
+export function useUpdateHelpdeskTicket(ticketId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["hr", "helpdesk", "update", ticketId],
+    mutationFn: (data: UpdateTicketInput) =>
+      apiClient.patch<HelpdeskTicket>(`/hr/helpdesk/${ticketId}`, data),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: keys.detail(ticketId) });
+      void qc.invalidateQueries({ queryKey: keys.all });
+    },
+  });
+}
+
+export function useAddHelpdeskComment(ticketId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["hr", "helpdesk", "comment", ticketId],
+    mutationFn: (data: { body: string }) =>
+      apiClient.post<HelpdeskComment>(`/hr/helpdesk/${ticketId}/comments`, data),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: keys.detail(ticketId) });
+    },
+  });
+}
+
+export function useUpsertHelpdeskRouting() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["hr", "helpdesk", "routing", "upsert"],
+    mutationFn: (data: { category: string; assigneeUserId: string }) =>
+      apiClient.post<HelpdeskRoutingRule>("/hr/helpdesk/routing", data),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: keys.routing() });
+    },
+  });
+}
+
+export function useDeleteHelpdeskRouting() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["hr", "helpdesk", "routing", "delete"],
+    mutationFn: (ruleId: number) =>
+      apiClient.delete<{ success: boolean }>(`/hr/helpdesk/routing/${ruleId}`),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: keys.routing() });
+    },
+  });
+}

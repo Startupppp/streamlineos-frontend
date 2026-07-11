@@ -19,10 +19,10 @@ export function CalibrationTab() {
   const upsert = useUpsertCalibrationEntry(selectedCycleId);
 
   function handleChange(employeeId: string, field: "preRating" | "postRating" | "note", value: string) {
-    setEditingEntry((prev) => ({
-      ...prev,
-      [employeeId]: { preRating: "", postRating: "", note: "", ...prev[employeeId], [field]: value },
-    }));
+    setEditingEntry((prev) => {
+      const current = prev[employeeId] ?? { preRating: "", postRating: "", note: "" };
+      return { ...prev, [employeeId]: { ...current, [field]: value } };
+    });
   }
 
   async function handleSave(employeeId: string) {

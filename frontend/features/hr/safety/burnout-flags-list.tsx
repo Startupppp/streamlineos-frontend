@@ -1,0 +1,49 @@
+"use client";
+
+import { useBurnoutFlags } from "@/hooks/api/hr/safety";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, AlertTriangle } from "lucide-react";
+
+export function BurnoutFlagsList() {
+  const { data, isLoading } = useBurnoutFlags();
+
+  return (
+    <Card className="p-4 bg-card border border-border rounded-xl">
+      <div className="flex items-center gap-2 mb-3">
+        <AlertTriangle className="h-4 w-4 text-orange-500" />
+        <p className="text-sm font-semibold text-foreground">Burnout Risk Signals</p>
+        <p className="text-xs text-muted-foreground ml-auto">Last 7 days</p>
+      </div>
+
+      {isLoading ? (
+        <div className="flex items-center justify-center h-20">
+          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+        </div>
+      ) : !data?.length ? (
+        <p className="text-xs text-muted-foreground text-center py-6">
+          No burnout signals detected
+        </p>
+      ) : (
+        <div className="space-y-2">
+          {data.map((flag) => (
+            <div
+              key={flag.userId}
+              className="flex items-center justify-between rounded-lg border bg-orange-50 border-orange-200 px-3 py-2"
+            >
+              <div>
+                <p className="text-xs font-mono text-slate-700">{flag.userId}</p>
+                <p className="text-xs text-muted-foreground">
+                  {flag.checkCount} check-in{flag.checkCount !== 1 ? "s" : ""}
+                </p>
+              </div>
+              <Badge variant="outline" className="text-orange-700 border-orange-300 bg-orange-50 text-xs">
+                Avg {flag.avgScore.toFixed(1)} / 10
+              </Badge>
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
+  );
+}

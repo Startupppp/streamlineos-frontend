@@ -27,7 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { useCreatePayrollAdjustment, type HrPayrollAdjustmentType, type HrPayrollInputSection } from "@/hooks/api/payroll/payroll-inputs";
+import { useCreatePayrollAdjustment } from "@/hooks/api/payroll/payroll-inputs";
 
 const schema = z.object({
   userId: z.string().min(1, "Required"),
@@ -42,8 +42,8 @@ const schema = z.object({
     "deduction",
     "lifecycle",
   ] as const),
-  amountCents: z.coerce.number().int().optional(),
-  days: z.coerce.number().optional(),
+  amountCents: z.string().optional(),
+  days: z.string().optional(),
   reason: z.string().min(1, "Required").max(1000),
 });
 
@@ -65,6 +65,8 @@ export function CreateAdjustmentDialog({ open, onOpenChange, periodId }: CreateA
       section: "attendance",
       reason: "",
       userId: "",
+      amountCents: "",
+      days: "",
     },
   });
 
@@ -73,10 +75,10 @@ export function CreateAdjustmentDialog({ open, onOpenChange, periodId }: CreateA
       {
         periodId,
         userId: values.userId,
-        adjustmentType: values.adjustmentType as HrPayrollAdjustmentType,
-        section: values.section as HrPayrollInputSection,
-        amountCents: values.amountCents,
-        days: values.days,
+        adjustmentType: values.adjustmentType,
+        section: values.section,
+        amountCents: values.amountCents ? Number(values.amountCents) : undefined,
+        days: values.days ? Number(values.days) : undefined,
         reason: values.reason,
       },
       {

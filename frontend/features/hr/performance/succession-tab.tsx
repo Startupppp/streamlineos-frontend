@@ -57,9 +57,9 @@ export function SuccessionTab() {
       await create.mutateAsync({
         roleName: form.roleName,
         successorId: form.successorId,
-        incumbentId: form.incumbentId || undefined,
+        incumbentId: form.incumbentId || null,
         readiness: form.readiness,
-        note: form.note || undefined,
+        note: form.note || null,
         jobRoleId: null,
       });
       toast.success("Succession plan created");

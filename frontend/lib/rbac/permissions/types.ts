@@ -366,4 +366,13 @@ export type PermissionKey =
   | "hr:probation:view"
   | "hr:probation:manage"
   | "hr:succession:view"
-  | "hr:succession:manage";
+  | "hr:succession:manage"
+  | "hr:engagement:view"
+  | "hr:engagement:manage"
+  | "hr:cases:view"
+  | "hr:cases:manage"
+  | "hr:cases:confidential"
+  | "hr:safety:view"
+  | "hr:safety:manage"
+  | "hr:benefits:view"
+  | "hr:benefits:manage";

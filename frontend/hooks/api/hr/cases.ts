@@ -1,0 +1,277 @@
+"use client";
+
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api-client";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
+
+export type CaseCategory =
+  | "grievance" | "disciplinary" | "harassment" | "ethics"
+  | "performance" | "workplace_conflict" | "policy_violation" | "other";
+export type CaseSeverity = "low" | "medium" | "high" | "critical";
+export type CaseStatus = "open" | "under_investigation" | "resolved" | "closed" | "dismissed";
+export type DisciplinaryActionType =
+  | "verbal_warning" | "written_warning" | "final_warning"
+  | "suspension" | "termination_recommended";
+
+export interface HrCase {
+  id: number;
+  caseNumber: string;
+  category: CaseCategory;
+  severity: CaseSeverity;
+  status: CaseStatus;
+  summary: string;
+  anonymous: boolean;
+  confidential: boolean;
+  assignedTo: string | null;
+  subjectEmployeeId: string | null;
+  reportedBy: string | null;
+  details: string;
+  outcome: string | null;
+  resolvedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CaseNote {
+  id: number;
+  caseId: number;
+  authorId: string | null;
+  note: string;
+  isConfidential: boolean;
+  createdAt: string;
+}
+
+export interface CaseDocument {
+  id: number;
+  caseId: number;
+  name: string;
+  url: string;
+  restricted: boolean;
+  uploadedBy: string | null;
+  createdAt: string;
+}
+
+export interface DisciplinaryAction {
+  id: number;
+  orgId: string;
+  caseId: number | null;
+  employeeId: string;
+  actionType: DisciplinaryActionType;
+  letterRenderId: number | null;
+  effectiveDate: string;
+  issuedBy: string;
+  note: string | null;
+  createdAt: string;
+}
+
+interface PaginatedResult<T> {
+  data: T[];
+  pagination: { page: number; limit: number; total: number; totalPages: number };
+}
+
+export interface ListCasesParams {
+  page?: number;
+  limit?: number;
+  status?: CaseStatus;
+  category?: CaseCategory;
+  severity?: CaseSeverity;
+  search?: string;
+  assignedTo?: string;
+}
+
+const caseKeys = {
+  all: ["hr-cases"] as const,
+  list: (params: ListCasesParams) => ["hr-cases", "list", params] as const,
+  detail: (id: number) => ["hr-cases", "detail", id] as const,
+  notes: (id: number) => ["hr-cases", "notes", id] as const,
+  documents: (id: number) => ["hr-cases", "documents", id] as const,
+  stats: ["hr-cases", "stats"] as const,
+  disciplinary: ["hr-disciplinary"] as const,
+  disciplinaryList: (params: Record<string, unknown>) => ["hr-disciplinary", "list", params] as const,
+};
+
+export function useHrCases(params: ListCasesParams = {}) {
+  return useQuery({
+    queryKey: caseKeys.list(params),
+    queryFn: () => apiClient.get<PaginatedResult<HrCase>>("/hr/cases", params as Record<string, unknown>),
+    staleTime: 30_000,
+  });
+}
+
+export function useHrCaseStats() {
+  return useQuery({
+    queryKey: caseKeys.stats,
+    queryFn: () => apiClient.get<{ status: CaseStatus; total: number }[]>("/hr/cases/stats"),
+    staleTime: 60_000,
+  });
+}
+
+export function useHrCase(id: number) {
+  return useQuery({
+    queryKey: caseKeys.detail(id),
+    queryFn: () => apiClient.get<HrCase>(`/hr/cases/${id}`),
+    enabled: id > 0,
+    staleTime: 30_000,
+  });
+}
+
+export function useCreateCase() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["hr-cases", "create"],
+    mutationFn: (body: {
+      category: CaseCategory;
+      subjectEmployeeId?: string;
+      severity: CaseSeverity;
+      summary: string;
+      details: string;
+      assignedTo?: string;
+      confidential?: boolean;
+    }) => apiClient.post<HrCase>("/hr/cases", body),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: caseKeys.all });
+      toast.success("Case created");
+    },
+    onError: (e) => toast.error(getErrorMessage(e)),
+  });
+}
+
+export function useAnonymousReport() {
+  return useMutation({
+    mutationKey: ["hr-cases", "anonymous"],
+    mutationFn: (body: {
+      category: CaseCategory;
+      severity: CaseSeverity;
+      summary: string;
+      details: string;
+    }) => apiClient.post<{ caseNumber: string }>("/hr/cases/anonymous", body),
+    onSuccess: () => toast.success("Anonymous report submitted"),
+    onError: (e) => toast.error(getErrorMessage(e)),
+  });
+}
+
+export function useUpdateCase(id: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["hr-cases", "update", id],
+    mutationFn: (body: Partial<{
+      status: CaseStatus;
+      severity: CaseSeverity;
+      assignedTo: string | null;
+      outcome: string;
+      summary: string;
+      details: string;
+      confidential: boolean;
+    }>) => apiClient.patch<HrCase>(`/hr/cases/${id}`, body),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: caseKeys.detail(id) });
+      void qc.invalidateQueries({ queryKey: caseKeys.all });
+      toast.success("Case updated");
+    },
+    onError: (e) => toast.error(getErrorMessage(e)),
+  });
+}
+
+export function useDeleteCase() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["hr-cases", "delete"],
+    mutationFn: (id: number) => apiClient.delete(`/hr/cases/${id}`),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: caseKeys.all });
+      toast.success("Case deleted");
+    },
+    onError: (e) => toast.error(getErrorMessage(e)),
+  });
+}
+
+export function useStartInvestigation(id: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["hr-cases", "investigate", id],
+    mutationFn: () => apiClient.post<HrCase>(`/hr/cases/${id}/investigate`, {}),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: caseKeys.detail(id) });
+      void qc.invalidateQueries({ queryKey: caseKeys.all });
+      toast.success("Investigation started");
+    },
+    onError: (e) => toast.error(getErrorMessage(e)),
+  });
+}
+
+export function useCaseNotes(caseId: number) {
+  return useQuery({
+    queryKey: caseKeys.notes(caseId),
+    queryFn: () => apiClient.get<CaseNote[]>(`/hr/cases/${caseId}/notes`),
+    enabled: caseId > 0,
+    staleTime: 20_000,
+  });
+}
+
+export function useAddCaseNote(caseId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["hr-cases", "notes", "add", caseId],
+    mutationFn: (body: { note: string; isConfidential?: boolean }) =>
+      apiClient.post<CaseNote>(`/hr/cases/${caseId}/notes`, body),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: caseKeys.notes(caseId) });
+      toast.success("Note added");
+    },
+    onError: (e) => toast.error(getErrorMessage(e)),
+  });
+}
+
+export function useCaseDocuments(caseId: number) {
+  return useQuery({
+    queryKey: caseKeys.documents(caseId),
+    queryFn: () => apiClient.get<CaseDocument[]>(`/hr/cases/${caseId}/documents`),
+    enabled: caseId > 0,
+    staleTime: 30_000,
+  });
+}
+
+export function useAddCaseDocument(caseId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["hr-cases", "documents", "add", caseId],
+    mutationFn: (body: { name: string; url: string; restricted?: boolean }) =>
+      apiClient.post<CaseDocument>(`/hr/cases/${caseId}/documents`, body),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: caseKeys.documents(caseId) });
+      toast.success("Document added");
+    },
+    onError: (e) => toast.error(getErrorMessage(e)),
+  });
+}
+
+export function useDisciplinaryActions(params: { employeeId?: string; page?: number; limit?: number } = {}) {
+  return useQuery({
+    queryKey: caseKeys.disciplinaryList(params),
+    queryFn: () => apiClient.get<PaginatedResult<DisciplinaryAction>>("/hr/cases/disciplinary", params as Record<string, unknown>),
+    staleTime: 30_000,
+  });
+}
+
+export function useCreateDisciplinaryAction() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["hr-disciplinary", "create"],
+    mutationFn: (body: {
+      caseId?: number;
+      employeeId: string;
+      actionType: DisciplinaryActionType;
+      effectiveDate: string;
+      note?: string;
+      generateLetter?: boolean;
+      letterTemplateId?: number;
+      letterContext?: Record<string, string>;
+    }) => apiClient.post<DisciplinaryAction>("/hr/cases/disciplinary", body),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: caseKeys.disciplinary });
+      toast.success("Disciplinary action issued");
+    },
+    onError: (e) => toast.error(getErrorMessage(e)),
+  });
+}

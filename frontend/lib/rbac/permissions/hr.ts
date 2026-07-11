@@ -169,4 +169,22 @@ export const HR_PERMISSIONS: Permission[] = [
     action: "manage",
     description: "Create and manage training programs",
   },
+  {
+    name: "hr:benefits:view",
+    resource: "hr:benefits",
+    action: "view",
+    description: "View employee benefit plans and enrollments",
+  },
+  {
+    name: "hr:benefits:manage",
+    resource: "hr:benefits",
+    action: "manage",
+    description: "Manage benefit plans, enrollment windows, and review claims",
+  },
+  {
+    name: "hr:travel:manage",
+    resource: "hr:travel",
+    action: "manage",
+    description: "Approve and manage travel requests",
+  },
 ];
