@@ -8,13 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api-client";
-import { useGeofences, useDeleteGeofence } from "@/hooks/api/hr/geofencing";
+import { useGeofences, useDeleteGeofence, type Geofence } from "@/hooks/api/hr/geofencing";
 
 interface Props {
   canManage: boolean;
+  onEdit: (fence: Geofence) => void;
 }
 
-export function GeofenceList({ canManage }: Props) {
+export function GeofenceList({ canManage, onEdit }: Props) {
   const { data: fences, isLoading } = useGeofences();
   const deleteFence = useDeleteGeofence();
 
@@ -55,7 +56,7 @@ export function GeofenceList({ canManage }: Props) {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.22, ease: "easeOut", delay: idx * 0.05 }}
-          className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 p-4 flex flex-col gap-3"
+          className="bg-card rounded-xl border border-border shadow-sm p-4 flex flex-col gap-3"
         >
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
@@ -64,7 +65,13 @@ export function GeofenceList({ canManage }: Props) {
             </div>
             {canManage && (
               <div className="flex items-center gap-1 shrink-0">
-                <Button variant="ghost" size="icon" className="h-7 w-7">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => onEdit(fence)}
+                  aria-label={`Edit ${fence.name}`}
+                >
                   <Edit2 className="h-3.5 w-3.5" />
                 </Button>
                 <Button

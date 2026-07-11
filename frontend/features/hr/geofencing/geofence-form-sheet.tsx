@@ -1,13 +1,17 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { getErrorMessage } from "@/lib/api-client";
-import { useCreateGeofence } from "@/hooks/api/hr/geofencing";
+import {
+  useCreateGeofence,
+  useUpdateGeofence,
+  type Geofence,
+} from "@/hooks/api/hr/geofencing";
 import {
   Form,
   FormControl,
@@ -28,51 +32,65 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
+const EMPTY_VALUES: FormValues = {
+  name: "",
+  lat: "",
+  lng: "",
+  radiusMeters: 200,
+};
+
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
+  fence?: Geofence | null;
 }
 
-export function GeofenceFormSheet({ open, onOpenChange }: Props) {
+export function GeofenceFormSheet({ open, onOpenChange, fence }: Props) {
+  const isEdit = Boolean(fence);
   const createFence = useCreateGeofence();
+  const updateFence = useUpdateGeofence();
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: {
-      name: "",
-      lat: "",
-      lng: "",
-      radiusMeters: 200,
-    },
+    defaultValues: EMPTY_VALUES,
   });
 
   const radiusValue = form.watch("radiusMeters");
 
+  useEffect(() => {
+    if (!open) return;
+    form.reset(
+      fence
+        ? { name: fence.name, lat: fence.lat, lng: fence.lng, radiusMeters: fence.radiusMeters }
+        : EMPTY_VALUES,
+    );
+  }, [open, fence, form]);
+
   const onSubmit = useCallback(
     (data: FormValues) => {
-      createFence.mutate(
-        { name: data.name, lat: data.lat, lng: data.lng, radiusMeters: data.radiusMeters },
-        {
-          onSuccess: () => {
-            toast.success("Geofence added");
-            form.reset();
-            onOpenChange(false);
-          },
-          onError: (err) => toast.error(getErrorMessage(err)),
+      const payload = { name: data.name, lat: data.lat, lng: data.lng, radiusMeters: data.radiusMeters };
+      const handlers = {
+        onSuccess: () => {
+          toast.success(isEdit ? "Geofence updated" : "Geofence added");
+          form.reset(EMPTY_VALUES);
+          onOpenChange(false);
         },
-      );
+        onError: (err: unknown) => toast.error(getErrorMessage(err)),
+      };
+      if (fence) updateFence.mutate({ id: fence.id, ...payload }, handlers);
+      else createFence.mutate(payload, handlers);
     },
-    [createFence, form, onOpenChange],
+    [fence, isEdit, createFence, updateFence, form, onOpenChange],
   );
 
   return (
     <HrSheet
       open={open}
       onOpenChange={onOpenChange}
-      title="Add Geofence"
+      title={isEdit ? "Edit Geofence" : "Add Geofence"}
       description="Define a location boundary for attendance validation"
       onSubmit={form.handleSubmit(onSubmit)}
-      submitLabel="Add Location"
-      isPending={createFence.isPending}
+      submitLabel={isEdit ? "Save Changes" : "Add Location"}
+      isPending={createFence.isPending || updateFence.isPending}
     >
       <Form {...form}>
         <div className="space-y-5">
@@ -134,7 +152,7 @@ export function GeofenceFormSheet({ open, onOpenChange }: Props) {
                   <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
                     Radius
                   </FormLabel>
-                  <span className="text-sm font-semibold text-violet-600">{radiusValue}m</span>
+                  <span className="text-sm font-semibold text-blue-600">{radiusValue}m</span>
                 </div>
                 <FormControl>
                   <Slider

@@ -8,13 +8,26 @@ import { Plus } from "lucide-react";
 import { useCan } from "@/hooks/api/access";
 import { GeofenceList } from "@/features/hr/geofencing/geofence-list";
 import { GeofenceFormSheet } from "@/features/hr/geofencing/geofence-form-sheet";
+import type { Geofence } from "@/hooks/api/hr/geofencing";
 
 export default function GeofencingPage() {
   const canManage = useCan("hr:attendance:manage");
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<Geofence | null>(null);
 
   function handleOpen() {
+    setEditing(null);
     setOpen(true);
+  }
+
+  function handleEdit(fence: Geofence) {
+    setEditing(fence);
+    setOpen(true);
+  }
+
+  function handleOpenChange(next: boolean) {
+    setOpen(next);
+    if (!next) setEditing(null);
   }
 
   return (
@@ -23,10 +36,7 @@ export default function GeofencingPage() {
       subtitle="Define office location boundaries for attendance validation"
       actions={
         canManage ? (
-          <Button
-            onClick={handleOpen}
-            className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
-          >
+          <Button onClick={handleOpen}>
             <Plus className="h-4 w-4 mr-2" />
             Add Location
           </Button>
@@ -38,9 +48,9 @@ export default function GeofencingPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.22, ease: "easeOut" }}
       >
-        <GeofenceList canManage={canManage} />
+        <GeofenceList canManage={canManage} onEdit={handleEdit} />
       </motion.div>
-      <GeofenceFormSheet open={open} onOpenChange={setOpen} />
+      <GeofenceFormSheet open={open} onOpenChange={handleOpenChange} fence={editing} />
     </PageWrapper>
   );
 }

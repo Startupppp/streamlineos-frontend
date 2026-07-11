@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAtsKanban, useUpdateCandidateStage } from "@/hooks/api/hr";
@@ -9,6 +9,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { PipelineKanban } from "@/components/hr/recruitment/pipeline-kanban";
 import { PipelineTable } from "@/components/hr/recruitment/pipeline-table";
+import { AddCandidateSheet } from "@/features/hr/recruitment/candidates-list/add-candidate-sheet";
 import { toast } from "sonner";
 import Link from "next/link";
 import { ArrowLeft, UserPlus, KanbanSquare, TableIcon } from "lucide-react";
@@ -22,6 +23,9 @@ export default function PipelinePage() {
 
   const { data: pipeline, isLoading, isError, refetch } = useAtsKanban();
   const updateStage = useUpdateCandidateStage();
+  const [addOpen, setAddOpen] = useState(false);
+
+  const handleOpenAdd = useCallback(() => setAddOpen(true), []);
 
   const handleStageChange = useCallback(
     (candidateId: number, newStage: CandidateStatus) => {
@@ -100,11 +104,9 @@ export default function PipelinePage() {
               Back
             </Link>
           </Button>
-          <Button size="sm" asChild>
-            <Link href="/hr/recruitment/candidates/new">
-              <UserPlus className="mr-1.5 h-3.5 w-3.5" />
-              New Candidate
-            </Link>
+          <Button size="sm" onClick={handleOpenAdd}>
+            <UserPlus className="mr-1.5 h-3.5 w-3.5" />
+            New Candidate
           </Button>
         </div>
       }
@@ -118,6 +120,7 @@ export default function PipelinePage() {
           isLoading={isLoading}
         />
       )}
+      <AddCandidateSheet open={addOpen} onOpenChange={setAddOpen} />
     </PageWrapper>
   );
 }

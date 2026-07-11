@@ -10,13 +10,26 @@ import { useCan } from "@/hooks/api/access";
 import { BiometricDevicesList } from "@/features/hr/biometric/biometric-devices-list";
 import { BiometricLogsList } from "@/features/hr/biometric/biometric-logs-list";
 import { AddDeviceSheet } from "@/features/hr/biometric/add-device-sheet";
+import type { BiometricDevice } from "@/hooks/api/hr/biometric";
 
 export default function BiometricPage() {
   const canManage = useCan("hr:attendance:manage");
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<BiometricDevice | null>(null);
 
   function handleOpen() {
+    setEditing(null);
     setOpen(true);
+  }
+
+  function handleEdit(device: BiometricDevice) {
+    setEditing(device);
+    setOpen(true);
+  }
+
+  function handleOpenChange(next: boolean) {
+    setOpen(next);
+    if (!next) setEditing(null);
   }
 
   return (
@@ -25,10 +38,7 @@ export default function BiometricPage() {
       subtitle="Manage fingerprint/face-recognition devices and attendance sync"
       actions={
         canManage ? (
-          <Button
-            onClick={handleOpen}
-            className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
-          >
+          <Button onClick={handleOpen}>
             <Plus className="h-4 w-4 mr-2" />
             Add Device
           </Button>
@@ -46,14 +56,14 @@ export default function BiometricPage() {
             <TabsTrigger value="logs">Punch Logs</TabsTrigger>
           </TabsList>
           <TabsContent value="devices">
-            <BiometricDevicesList canManage={canManage} />
+            <BiometricDevicesList canManage={canManage} onEdit={handleEdit} />
           </TabsContent>
           <TabsContent value="logs">
             <BiometricLogsList />
           </TabsContent>
         </Tabs>
       </motion.div>
-      <AddDeviceSheet open={open} onOpenChange={setOpen} />
+      <AddDeviceSheet open={open} onOpenChange={handleOpenChange} device={editing} />
     </PageWrapper>
   );
 }

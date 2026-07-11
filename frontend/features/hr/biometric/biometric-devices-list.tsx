@@ -6,14 +6,15 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useBiometricDevices } from "@/hooks/api/hr/biometric";
+import { useBiometricDevices, type BiometricDevice } from "@/hooks/api/hr/biometric";
 import { format } from "date-fns";
 
 interface Props {
   canManage: boolean;
+  onEdit: (device: BiometricDevice) => void;
 }
 
-export function BiometricDevicesList({ canManage }: Props) {
+export function BiometricDevicesList({ canManage, onEdit }: Props) {
   const { data: devices, isLoading } = useBiometricDevices();
 
   if (isLoading) {
@@ -46,7 +47,7 @@ export function BiometricDevicesList({ canManage }: Props) {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.22, ease: "easeOut", delay: idx * 0.05 }}
-          className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 p-4 flex flex-col gap-3"
+          className="bg-card rounded-xl border border-border shadow-sm p-4 flex flex-col gap-3"
         >
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
@@ -66,7 +67,13 @@ export function BiometricDevicesList({ canManage }: Props) {
               </div>
             </div>
             {canManage && (
-              <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 shrink-0"
+                onClick={() => onEdit(device)}
+                aria-label={`Edit ${device.name}`}
+              >
                 <Edit2 className="h-3.5 w-3.5" />
               </Button>
             )}

@@ -1,10 +1,25 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { signOut, useSession } from "next-auth/react";
+import { getSession, signIn, signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { apiClient, clearBackendTokenCache } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
+
+export async function signInWithMagicToken(magicToken: string): Promise<boolean> {
+  if (!magicToken) return false;
+  clearBackendTokenCache();
+  try {
+    const result = await signIn("credentials", {
+      magicToken,
+      redirect: false,
+    });
+    if (result?.ok) return true;
+  } catch {
+  }
+  const session = await getSession();
+  return Boolean(session?.user);
+}
 
 export function useVerifyEmail() {
   return useMutation({

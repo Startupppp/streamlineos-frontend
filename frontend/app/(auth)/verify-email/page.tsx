@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import {
+  signInWithMagicToken,
   useVerifyEmail,
   useResendVerificationEmail,
 } from "@/hooks/common/auth-hooks";
@@ -21,7 +22,6 @@ import {
   XCircle,
 } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { signIn } from "next-auth/react";
 import { fadeUp, scaleIn, staggerContainer } from "@/lib/motion-variants";
 import { cn } from "@/lib/utils";
 
@@ -175,6 +175,22 @@ function VerifyEmailForm() {
 
   const { mutate: verifyMutate } = verifyEmail;
 
+  const completeAutoSignIn = useCallback(
+    async (autoLoginToken: string | undefined) => {
+      if (!autoLoginToken) {
+        setTimeout(() => router.push("/signin"), 1500);
+        return;
+      }
+      const signedIn = await signInWithMagicToken(autoLoginToken);
+      if (signedIn) {
+        window.location.href = "/org-setup";
+      } else {
+        setTimeout(() => router.push("/signin"), 1500);
+      }
+    },
+    [router],
+  );
+
   useEffect(() => {
     if (!token) return;
     if (attemptedTokens.has(token)) return;
@@ -186,15 +202,7 @@ function VerifyEmailForm() {
         onSuccess: async (data) => {
           setIsVerified(true);
           toast.success("Email verified! Signing you in…");
-          const result = await signIn("credentials", {
-            magicToken: data.autoLoginToken,
-            redirect: false,
-          });
-          if (result?.ok) {
-            window.location.href = "/org-setup";
-          } else {
-            setTimeout(() => router.push("/signin"), 1500);
-          }
+          await completeAutoSignIn(data.autoLoginToken);
         },
         onError: (error) => {
           const msg = getErrorMessage(error);
@@ -203,7 +211,7 @@ function VerifyEmailForm() {
         },
       },
     );
-  }, [token, router, verifyMutate]);
+  }, [token, verifyMutate, completeAutoSignIn]);
 
   const handleResend = useCallback(() => {
     if (!email || cooldown > 0) return;
@@ -231,15 +239,7 @@ function VerifyEmailForm() {
         onSuccess: async (data) => {
           setIsVerified(true);
           toast.success("Email verified! Signing you in…");
-          const result = await signIn("credentials", {
-            magicToken: data.autoLoginToken,
-            redirect: false,
-          });
-          if (result?.ok) {
-            window.location.href = "/org-setup";
-          } else {
-            setTimeout(() => router.push("/signin"), 1500);
-          }
+          await completeAutoSignIn(data.autoLoginToken);
         },
         onError: (error) => {
           const msg = getErrorMessage(error);
@@ -248,7 +248,7 @@ function VerifyEmailForm() {
         },
       },
     );
-  }, [token, router, verifyMutate]);
+  }, [token, verifyMutate, completeAutoSignIn]);
 
   if (isVerified) {
     return (

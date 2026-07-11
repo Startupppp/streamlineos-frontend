@@ -1,13 +1,17 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { getErrorMessage } from "@/lib/api-client";
-import { useCreateShift } from "@/hooks/api/hr/shifts";
+import {
+  useCreateShift,
+  useUpdateShift,
+  type ShiftTemplate,
+} from "@/hooks/api/hr/shifts";
 import {
   Form,
   FormControl,
@@ -40,52 +44,75 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
+const EMPTY_VALUES: FormValues = {
+  name: "",
+  type: "FIXED",
+  startTime: "09:00",
+  endTime: "18:00",
+  breakMinutes: 60,
+  gracePeriodMinutes: 15,
+  isNightShift: false,
+};
+
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
+  shift?: ShiftTemplate | null;
 }
 
-export function ShiftFormSheet({ open, onOpenChange }: Props) {
+export function ShiftFormSheet({ open, onOpenChange, shift }: Props) {
+  const isEdit = Boolean(shift);
   const createShift = useCreateShift();
+  const updateShift = useUpdateShift();
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: {
-      name: "",
-      type: "FIXED",
-      startTime: "09:00",
-      endTime: "18:00",
-      breakMinutes: 60,
-      gracePeriodMinutes: 15,
-      isNightShift: false,
-    },
+    defaultValues: EMPTY_VALUES,
   });
+
+  useEffect(() => {
+    if (!open) return;
+    form.reset(
+      shift
+        ? {
+            name: shift.name,
+            type: SHIFT_TYPES.includes(shift.type as (typeof SHIFT_TYPES)[number])
+              ? (shift.type as (typeof SHIFT_TYPES)[number])
+              : "FIXED",
+            startTime: shift.startTime,
+            endTime: shift.endTime,
+            breakMinutes: shift.breakMinutes,
+            gracePeriodMinutes: shift.gracePeriodMinutes,
+            isNightShift: shift.isNightShift,
+          }
+        : EMPTY_VALUES,
+    );
+  }, [open, shift, form]);
 
   const onSubmit = useCallback(
     (data: FormValues) => {
-      createShift.mutate(
-        { ...data, breakMinutes: data.breakMinutes, gracePeriodMinutes: data.gracePeriodMinutes },
-        {
-          onSuccess: () => {
-            toast.success("Shift created");
-            form.reset();
-            onOpenChange(false);
-          },
-          onError: (err) => toast.error(getErrorMessage(err)),
+      const handlers = {
+        onSuccess: () => {
+          toast.success(isEdit ? "Shift updated" : "Shift created");
+          form.reset(EMPTY_VALUES);
+          onOpenChange(false);
         },
-      );
+        onError: (err: unknown) => toast.error(getErrorMessage(err)),
+      };
+      if (shift) updateShift.mutate({ id: shift.id, ...data }, handlers);
+      else createShift.mutate(data, handlers);
     },
-    [createShift, form, onOpenChange],
+    [shift, isEdit, createShift, updateShift, form, onOpenChange],
   );
 
   return (
     <HrSheet
       open={open}
       onOpenChange={onOpenChange}
-      title="Create Shift Template"
-      description="Define a new shift schedule for your organization"
+      title={isEdit ? "Edit Shift Template" : "Create Shift Template"}
+      description="Define a shift schedule for your organization"
       onSubmit={form.handleSubmit(onSubmit)}
-      submitLabel="Create Shift"
-      isPending={createShift.isPending}
+      submitLabel={isEdit ? "Save Changes" : "Create Shift"}
+      isPending={createShift.isPending || updateShift.isPending}
     >
       <Form {...form}>
         <div className="space-y-5">

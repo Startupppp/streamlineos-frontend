@@ -11,13 +11,26 @@ import { ShiftTemplatesTab } from "@/features/hr/shifts/shift-templates-tab";
 import { ShiftAssignmentsTab } from "@/features/hr/shifts/shift-assignments-tab";
 import { ShiftSwapsTab } from "@/features/hr/shifts/shift-swaps-tab";
 import { ShiftFormSheet } from "@/features/hr/shifts/shift-form-sheet";
+import type { ShiftTemplate } from "@/hooks/api/hr/shifts";
 
 export default function ShiftsPage() {
   const canManage = useCan("hr:attendance:manage");
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [editing, setEditing] = useState<ShiftTemplate | null>(null);
 
   function handleOpenSheet() {
+    setEditing(null);
     setSheetOpen(true);
+  }
+
+  function handleEdit(shift: ShiftTemplate) {
+    setEditing(shift);
+    setSheetOpen(true);
+  }
+
+  function handleSheetOpenChange(next: boolean) {
+    setSheetOpen(next);
+    if (!next) setEditing(null);
   }
 
   return (
@@ -26,10 +39,7 @@ export default function ShiftsPage() {
       subtitle="Manage shift templates, employee assignments, and swap requests"
       actions={
         canManage ? (
-          <Button
-            onClick={handleOpenSheet}
-            className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
-          >
+          <Button onClick={handleOpenSheet}>
             <Plus className="h-4 w-4 mr-2" />
             New Shift
           </Button>
@@ -48,7 +58,7 @@ export default function ShiftsPage() {
             <TabsTrigger value="swaps">Swap Requests</TabsTrigger>
           </TabsList>
           <TabsContent value="templates">
-            <ShiftTemplatesTab canManage={canManage} />
+            <ShiftTemplatesTab canManage={canManage} onEdit={handleEdit} />
           </TabsContent>
           <TabsContent value="assignments">
             <ShiftAssignmentsTab canManage={canManage} />
@@ -58,7 +68,7 @@ export default function ShiftsPage() {
           </TabsContent>
         </Tabs>
       </motion.div>
-      <ShiftFormSheet open={sheetOpen} onOpenChange={setSheetOpen} />
+      <ShiftFormSheet open={sheetOpen} onOpenChange={handleSheetOpenChange} shift={editing} />
     </PageWrapper>
   );
 }

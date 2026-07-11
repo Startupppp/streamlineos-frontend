@@ -36,22 +36,25 @@ interface SessionData {
 }
 
 async function fetchSessionData(userId: string): Promise<SessionData | null> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 3000);
-  try {
-    const res = await fetch(`${BACKEND_URL}/auth/session-data/${userId}`, {
-      headers: { "x-internal-secret": INTERNAL_SECRET },
-      cache: "no-store",
-      signal: controller.signal,
-    });
-    clearTimeout(timeout);
-    if (!res.ok) return null;
-    const body = (await res.json()) as unknown;
-    return unwrapBackend<SessionData>(body);
-  } catch {
-    clearTimeout(timeout);
-    return null;
+  const attempts = 2;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8_000);
+    try {
+      const res = await fetch(`${BACKEND_URL}/auth/session-data/${userId}`, {
+        headers: { "x-internal-secret": INTERNAL_SECRET },
+        cache: "no-store",
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+      if (!res.ok) continue;
+      const body = (await res.json()) as unknown;
+      return unwrapBackend<SessionData>(body);
+    } catch {
+      clearTimeout(timeout);
+    }
   }
+  return null;
 }
 
 function parsePlatformAdminEmails(): ReadonlySet<string> {

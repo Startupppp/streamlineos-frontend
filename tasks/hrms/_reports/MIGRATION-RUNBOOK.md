@@ -1,6 +1,11 @@
 # HRMS PeopleOS — Migration & Deployment Runbook
 
-All HRMS backend code is merged and typecheck-green (backend `tsc` 0 errors, frontend 0 errors outside stale `.next` artifacts). The migrations below are **hand-written and NOT yet applied** — they require one TTY session (drizzle `db:push`/`db:migrate` needs an interactive terminal to create enums). Apply in ascending order.
+All HRMS backend code is merged and typecheck-green (backend `tsc` 0 errors, frontend 0 errors outside stale `.next` artifacts).
+
+## STATUS: migrations 0201–0226 APPLIED to the dev database (2026-07-11)
+Applied headlessly via `node --env-file=backend/.env backend/scripts/apply-hrms-migrations.mjs` (idempotent, uses the repo's postgres driver — works without a TTY, unlike `db:push`). `backfill:rbac` run (8,881 grants, 36 orgs). Verified: 105 `hr_` tables live, all key tables present. One bug found+fixed during apply: `0219` had a `job_id TEXT`→`UUID` FK mismatch (schema + migration both corrected). Migration `0226` (pg_trgm GIN search indexes) added by the post-build efficiency audit and applied.
+
+For a FRESH environment (e.g. production), run the same headless script, or drizzle `db:migrate` in a TTY. The migrations are idempotent (safe to re-run). Apply in ascending order.
 
 ## 1. Apply migrations (single TTY session, in order)
 

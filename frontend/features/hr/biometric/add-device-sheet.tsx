@@ -1,13 +1,17 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { getErrorMessage } from "@/lib/api-client";
-import { useCreateBiometricDevice } from "@/hooks/api/hr/biometric";
+import {
+  useCreateBiometricDevice,
+  useUpdateBiometricDevice,
+  type BiometricDevice,
+} from "@/hooks/api/hr/biometric";
 import {
   Form,
   FormControl,
@@ -37,50 +41,76 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
+const EMPTY_VALUES: FormValues = {
+  name: "",
+  ipAddress: "",
+  port: 4370,
+  vendor: "ZKTeco",
+  location: "",
+};
+
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
+  device?: BiometricDevice | null;
 }
 
-export function AddDeviceSheet({ open, onOpenChange }: Props) {
+export function AddDeviceSheet({ open, onOpenChange, device }: Props) {
+  const isEdit = Boolean(device);
   const createDevice = useCreateBiometricDevice();
+  const updateDevice = useUpdateBiometricDevice();
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: {
-      name: "",
-      ipAddress: "",
-      port: 4370,
-      vendor: "ZKTeco",
-      location: "",
-    },
+    defaultValues: EMPTY_VALUES,
   });
+
+  useEffect(() => {
+    if (!open) return;
+    form.reset(
+      device
+        ? {
+            name: device.name,
+            ipAddress: device.ipAddress,
+            port: device.port,
+            vendor: VENDORS.includes(device.vendor as (typeof VENDORS)[number])
+              ? (device.vendor as (typeof VENDORS)[number])
+              : "Other",
+            location: device.location ?? "",
+          }
+        : EMPTY_VALUES,
+    );
+  }, [open, device, form]);
 
   const onSubmit = useCallback(
     (data: FormValues) => {
-      createDevice.mutate(
-        { ...data, location: data.location || undefined },
-        {
-          onSuccess: () => {
-            toast.success("Device added");
-            form.reset();
-            onOpenChange(false);
-          },
-          onError: (err) => toast.error(getErrorMessage(err)),
+      const payload = { ...data, location: data.location || undefined };
+      const handlers = {
+        onSuccess: () => {
+          toast.success(isEdit ? "Device updated" : "Device added");
+          form.reset(EMPTY_VALUES);
+          onOpenChange(false);
         },
-      );
+        onError: (err: unknown) => toast.error(getErrorMessage(err)),
+      };
+      if (device) updateDevice.mutate({ id: device.id, ...payload }, handlers);
+      else createDevice.mutate(payload, handlers);
     },
-    [createDevice, form, onOpenChange],
+    [device, isEdit, createDevice, updateDevice, form, onOpenChange],
   );
 
   return (
     <HrSheet
       open={open}
       onOpenChange={onOpenChange}
-      title="Add Biometric Device"
-      description="Connect a new fingerprint or face-recognition device"
+      title={isEdit ? "Edit Biometric Device" : "Add Biometric Device"}
+      description={
+        isEdit
+          ? "Update this fingerprint or face-recognition device"
+          : "Connect a new fingerprint or face-recognition device"
+      }
       onSubmit={form.handleSubmit(onSubmit)}
-      submitLabel="Add Device"
-      isPending={createDevice.isPending}
+      submitLabel={isEdit ? "Save Changes" : "Add Device"}
+      isPending={createDevice.isPending || updateDevice.isPending}
     >
       <Form {...form}>
         <div className="space-y-5">
