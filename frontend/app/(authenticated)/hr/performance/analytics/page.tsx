@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { useReviewCycles } from "@/hooks/api/hr";
+import { useHrPerformanceReviews } from "@/hooks/api/hr";
 import type { ReviewCycle } from "@/types/hr";
 
 const CHART_COLORS = ["#1d4ed8", "#06b6d4", "#60a5fa", "#8b5cf6"];
@@ -62,6 +63,7 @@ function StatCard({ label, value, icon, color, delay = 0 }: StatCardProps) {
 
 export default function PerformanceAnalyticsPage() {
   const { data: cycles = [], isLoading } = useReviewCycles();
+  const { data: reviews } = useHrPerformanceReviews();
 
   const activeCycles = cycles.filter((c: ReviewCycle) => c.status === "ACTIVE").length;
 
@@ -73,6 +75,17 @@ export default function PerformanceAnalyticsPage() {
     });
     return Object.entries(counts).map(([name, count]) => ({ name, count }));
   }, [cycles]);
+
+  const ratingDist = useMemo(() => {
+    const counts: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    for (const r of (reviews ?? [])) {
+      if (r.overallRating) {
+        const bucket = Math.round(Number(r.overallRating));
+        if (bucket >= 1 && bucket <= 5) counts[bucket] = (counts[bucket] ?? 0) + 1;
+      }
+    }
+    return Object.entries(counts).map(([rating, count]) => ({ rating: `★${rating}`, count }));
+  }, [reviews]);
 
   const statusData = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -211,6 +224,27 @@ export default function PerformanceAnalyticsPage() {
               )}
             </motion.div>
           </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.22, ease: "easeOut", delay: 0.32 }}
+            className="bg-card border border-border rounded-lg shadow-sm p-6"
+          >
+            <h2 className="text-base font-semibold text-foreground mb-4">Rating Distribution</h2>
+            {!reviews?.length ? (
+              <ChartEmptyState height={180} />
+            ) : (
+              <ResponsiveContainer width="100%" height={180}>
+                <BarChart data={ratingDist} barSize={32}>
+                  <XAxis dataKey="rating" tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "#64748b" }} />
+                  <YAxis allowDecimals={false} tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "#64748b" }} />
+                  <Tooltip contentStyle={{ borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }} />
+                  <Bar dataKey="count" fill="#1d4ed8" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </motion.div>
 
           <motion.div
             initial={{ opacity: 0, y: 16 }}

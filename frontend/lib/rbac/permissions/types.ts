@@ -362,4 +362,8 @@ export type PermissionKey =
   | "hr:helpdesk:create"
   | "hr:helpdesk:manage"
   | "hr:communications:send"
-  | "hr:attendance:regularize";
+  | "hr:attendance:regularize"
+  | "hr:probation:view"
+  | "hr:probation:manage"
+  | "hr:succession:view"
+  | "hr:succession:manage";

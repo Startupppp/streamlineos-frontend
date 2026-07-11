@@ -67,6 +67,9 @@ import {
   useAssignAsset,
   useHrEmployees,
 } from "@/hooks/api";
+import { AccessRequestsTab } from "@/features/hr/assets/access-requests-tab";
+import { useCan } from "@/hooks/api/access";
+import { Card, CardContent } from "@/components/ui/card";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -397,6 +400,7 @@ export default function HrAssetsPage() {
   const createAsset = useCreateAsset();
   const updateAsset = useUpdateAsset();
   const assignAsset = useAssignAsset();
+  const canManageAssets = useCan("hr:assets:manage");
   const { data, isLoading, isError, refetch } = useHrAssets();
   const { data: employeesRaw } = useHrEmployees(undefined);
 
@@ -925,6 +929,12 @@ export default function HrAssetsPage() {
           </ScrollArea>
           </div>
         )}
+
+        <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+          <CardContent className="p-4">
+            <AccessRequestsTab employees={employees} canManage={canManageAssets} />
+          </CardContent>
+        </Card>
       </div>
 
       <HrSheet

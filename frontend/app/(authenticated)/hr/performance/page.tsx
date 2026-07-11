@@ -5,12 +5,15 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
-import { Star, Target, Users, Calendar, AlertTriangle } from "lucide-react";
+import { Star, Target, Users, Calendar, AlertTriangle, BarChart3, Grid3x3, ArrowUpDown } from "lucide-react";
 import { ReviewsTab } from "@/features/hr/performance/reviews-tab";
 import { GoalsTab } from "@/features/hr/performance/goals-tab";
 import { MeetingsTab } from "@/features/hr/performance/meetings-tab";
 import { CyclesTab } from "@/features/hr/performance/cycles-tab";
 import { PIPTab } from "@/features/hr/performance/pip-tab";
+import { CalibrationTab } from "@/features/hr/performance/calibration-tab";
+import { NineBoxGrid } from "@/features/hr/performance/nine-box-grid";
+import { SuccessionTab } from "@/features/hr/performance/succession-tab";
 
 export default function PerformancePage() {
   return (
@@ -66,6 +69,24 @@ function PerformanceContent() {
           >
             <AlertTriangle className="h-3.5 w-3.5" />PIP
           </TabsTrigger>
+          <TabsTrigger
+            value="calibration"
+            className="text-xs gap-1.5 px-3 h-9 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground text-muted-foreground hover:text-foreground transition-colors duration-200"
+          >
+            <BarChart3 className="h-3.5 w-3.5" />Calibration
+          </TabsTrigger>
+          <TabsTrigger
+            value="nine-box"
+            className="text-xs gap-1.5 px-3 h-9 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground text-muted-foreground hover:text-foreground transition-colors duration-200"
+          >
+            <Grid3x3 className="h-3.5 w-3.5" />9-Box
+          </TabsTrigger>
+          <TabsTrigger
+            value="succession"
+            className="text-xs gap-1.5 px-3 h-9 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground text-muted-foreground hover:text-foreground transition-colors duration-200"
+          >
+            <ArrowUpDown className="h-3.5 w-3.5" />Succession
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="reviews" className="mt-4"><ReviewsTab /></TabsContent>
@@ -73,6 +94,9 @@ function PerformanceContent() {
         <TabsContent value="one-on-ones" className="mt-4"><MeetingsTab /></TabsContent>
         <TabsContent value="cycles" className="mt-4"><CyclesTab /></TabsContent>
         <TabsContent value="pip" className="mt-4"><PIPTab /></TabsContent>
+        <TabsContent value="calibration" className="mt-4"><CalibrationTab /></TabsContent>
+        <TabsContent value="nine-box" className="mt-4"><NineBoxGrid /></TabsContent>
+        <TabsContent value="succession" className="mt-4"><SuccessionTab /></TabsContent>
       </Tabs>
     </PageWrapper>
   );

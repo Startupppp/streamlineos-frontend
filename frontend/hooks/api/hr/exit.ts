@@ -115,3 +115,26 @@ export function useResignationProgress(id: number, enabled: boolean) {
     enabled,
   });
 }
+
+export interface ExitChecklistItem {
+  id: number;
+  item: string;
+  status: string | null;
+  completedAt: Date | string | null;
+}
+
+const checklistKeys = {
+  detail: (resignationId: number) => [...queryKeys.hr.all, "exit", "checklist", resignationId] as const,
+};
+
+export function useExitChecklist(resignationId: number) {
+  return useQuery<ExitChecklistItem[]>({
+    queryKey: checklistKeys.detail(resignationId),
+    queryFn: async () => {
+      const data = await apiClient.get<{ checklists: ExitChecklistItem[] }>(`/hr/exit/${resignationId}`);
+      return data.checklists ?? [];
+    },
+    enabled: resignationId > 0,
+    staleTime: 30_000,
+  });
+}

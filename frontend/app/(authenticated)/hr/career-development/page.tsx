@@ -10,6 +10,7 @@ import { useCan } from "@/hooks/api/access";
 import { CareerPathsList } from "@/features/hr/career/career-paths-list";
 import { CreatePathSheet } from "@/features/hr/career/create-path-sheet";
 import { MyCareerPlan } from "@/features/hr/career/my-career-plan";
+import { MentorshipTab } from "@/features/hr/career/mentorship-tab";
 
 export default function CareerDevelopmentPage() {
   const canManage = useCan("hr:learning:manage");
@@ -28,7 +29,7 @@ export default function CareerDevelopmentPage() {
         canManage && tab === "paths" ? (
           <Button
             onClick={handleOpenSheet}
-            className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
+            className="bg-blue-700 hover:bg-blue-800 text-white"
           >
             <Plus className="h-4 w-4 mr-2" />
             Create Path
@@ -45,12 +46,16 @@ export default function CareerDevelopmentPage() {
           <TabsList className="mb-4">
             <TabsTrigger value="paths">Career Paths</TabsTrigger>
             <TabsTrigger value="plan">My Career Plan</TabsTrigger>
+            <TabsTrigger value="mentorship">Mentorship</TabsTrigger>
           </TabsList>
           <TabsContent value="paths">
             <CareerPathsList canManage={canManage} />
           </TabsContent>
           <TabsContent value="plan">
             <MyCareerPlan />
+          </TabsContent>
+          <TabsContent value="mentorship">
+            <MentorshipTab />
           </TabsContent>
         </Tabs>
       </motion.div>

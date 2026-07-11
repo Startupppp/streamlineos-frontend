@@ -16,6 +16,9 @@ import {
   LayoutGrid,
   List,
   AlertCircle,
+  Mail,
+  CalendarCheck,
+  AlertTriangle,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -23,6 +26,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import {
   useHrDocuments,
@@ -30,11 +34,18 @@ import {
   useRichDocuments,
   useDeleteRichDocument,
 } from "@/hooks/api/hr";
+import { useLetters } from "@/hooks/api/hr/letters";
+import { useCertifications } from "@/hooks/api/hr/certifications";
 import { UploadDocumentDialog } from "@/features/hr/documents/components/upload-document-dialog";
+import { LetterGenerationSheet } from "@/features/hr/documents/letter-generation-sheet";
+import { LettersHistoryTable } from "@/features/hr/documents/letters-history-table";
+import { ComplianceCalendar } from "@/features/hr/documents/compliance-calendar";
+import { ExpiringDocumentsTable } from "@/features/hr/documents/expiring-documents-table";
+import { useHrEmployees } from "@/hooks/api/hr";
 import { useSession } from "next-auth/react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
-import type { Document } from "@/types/hr";
+import type { Document, Employee } from "@/types/hr";
 
 import { DocumentFilters, DOCUMENT_TYPES } from "@/features/hr/documents/document-filters";
 import { DocumentTable, type FolderItem } from "@/features/hr/documents/document-table";
@@ -77,6 +88,14 @@ export default function DocumentsPage() {
   const pageSize = 5;
 
   const isAdmin = useCan("hr:employees:manage");
+  const canManageDocs = useCan("hr:documents:manage");
+  const [isLetterGenOpen, setIsLetterGenOpen] = useState(false);
+
+  const { data: employeesRaw } = useHrEmployees();
+  const employees = useMemo(
+    () => (Array.isArray(employeesRaw) ? employeesRaw : []) as Employee[],
+    [employeesRaw],
+  );
 
   const foldersKey = session?.orgId ? `hr-doc-folders-${session.orgId}` : null;
 
@@ -188,6 +207,8 @@ export default function DocumentsPage() {
   const handleUploadSuccess = useCallback(() => { void refetch(); setIsUploadOpen(false); }, [refetch]);
   const handleEditSheetChange = useCallback((open: boolean) => { if (!open) setEditingDocument(null); }, []);
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleOpenLetterGen = useCallback(() => setIsLetterGenOpen(true), []);
+  const handleLetterSaved = useCallback(() => { void refetch(); }, [refetch]);
 
   if (isLoading) {
     return (
@@ -254,6 +275,12 @@ export default function DocumentsPage() {
         </button>
       </div>
 
+      {canManageDocs && (
+        <Button variant="outline" size="sm" className="gap-1.5 h-8" onClick={handleOpenLetterGen}>
+          <Mail className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">Generate Letter</span>
+        </Button>
+      )}
       <Button variant="outline" size="sm" className="gap-1.5 h-8" asChild>
         <Link href="/hr/documents/templates">
           <LayoutTemplate className="h-3.5 w-3.5" />
@@ -326,6 +353,8 @@ export default function DocumentsPage() {
 
         <RichDocumentsSection />
 
+        <DocumentsExtendedSection />
+
         <UploadDocumentDialog
           open={isUploadOpen}
           onOpenChange={setIsUploadOpen}
@@ -349,6 +378,12 @@ export default function DocumentsPage() {
           documentTypes={DOCUMENT_TYPES}
           categories={[...DOCUMENT_CATEGORIES, ...customFolders]}
           isAdmin={isAdmin}
+        />
+        <LetterGenerationSheet
+          open={isLetterGenOpen}
+          onOpenChange={setIsLetterGenOpen}
+          employees={employees}
+          onSaved={handleLetterSaved}
         />
       </div>
     </PageWrapper>
@@ -473,6 +508,68 @@ function RichDocumentsSection() {
             />
           ))}
         </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function DocumentsExtendedSection() {
+  const { data: letters = [], isLoading: lettersLoading } = useLetters();
+  const { data: expiringCerts = [], isLoading: certsLoading } = useCertifications({ expiringSoon: true });
+  const { data: allDocs = [], isLoading: docsLoading } = useHrDocuments();
+
+  const expiringDocs = allDocs.filter(
+    (d) => d.expiryDate && new Date(d.expiryDate) <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+  );
+
+  return (
+    <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+      <CardContent className="p-4">
+        <Tabs defaultValue="letters">
+          <TabsList className="h-8 mb-4">
+            <TabsTrigger value="letters" className="text-xs gap-1.5 h-7">
+              <Mail className="h-3 w-3" />
+              Letters
+            </TabsTrigger>
+            <TabsTrigger value="expiring" className="text-xs gap-1.5 h-7">
+              <AlertTriangle className="h-3 w-3" />
+              Expiring
+            </TabsTrigger>
+            <TabsTrigger value="compliance" className="text-xs gap-1.5 h-7">
+              <CalendarCheck className="h-3 w-3" />
+              Calendar
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="letters" className="mt-0">
+            <LettersHistoryTable letters={letters} isLoading={lettersLoading} />
+          </TabsContent>
+
+          <TabsContent value="expiring" className="mt-0">
+            <ExpiringDocumentsTable
+              expiringDocuments={expiringDocs.map((d) => ({
+                id: d.id,
+                name: d.name,
+                type: d.type ?? "",
+                expiryDate: d.expiryDate ?? "",
+                userId: d.userId ?? null,
+              }))}
+              expiringCertifications={expiringCerts
+                .filter((c) => !!c.expiryDate)
+                .map((c) => ({
+                  id: c.id,
+                  name: c.name,
+                  expiryDate: c.expiryDate!,
+                  user: c.user,
+                }))}
+              isLoading={docsLoading || certsLoading}
+            />
+          </TabsContent>
+
+          <TabsContent value="compliance" className="mt-0">
+            <ComplianceCalendar />
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );

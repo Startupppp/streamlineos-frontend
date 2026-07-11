@@ -5,6 +5,7 @@ import {
   Settings,
   ClipboardCheck,
   ArrowLeft,
+  ShieldCheck,
 } from "lucide-react";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -17,6 +18,32 @@ import { OnboardingList } from "@/features/hr/onboarding/onboarding-list";
 import { EmployeeDocumentsTab } from "@/features/hr/onboarding/onboarding-detail-sheet";
 import { OnboardingTemplatesTab } from "@/features/hr/onboarding/onboarding-templates-tab";
 import { useCan } from "@/hooks/api/access";
+
+function ProbationEntryCard() {
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">
+        Review and manage employee probation confirmations and extensions.
+      </p>
+      <Card className="rounded-lg border border-border bg-card shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+        <CardContent className="p-4 flex items-start gap-3">
+          <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center shrink-0">
+            <ShieldCheck className="h-3.5 w-3.5 text-blue-700 dark:text-blue-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-foreground">Probation Reviews</p>
+            <p className="text-xs text-muted-foreground mt-0.5 mb-3">
+              View employees due for probation confirmation or extension.
+            </p>
+            <Button size="sm" variant="outline" className="h-7 text-xs gap-1.5 duration-200" asChild>
+              <Link href="/hr/onboarding/probation">View Reviews</Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
 
 function HrDocumentsTab() {
   return (
@@ -113,6 +140,12 @@ export default function OnboardingPage() {
             >
               Documents
             </TabsTrigger>
+            <TabsTrigger
+              value="probation"
+              className="text-xs h-7 px-3 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              Probation
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="workflow" className="mt-0">
@@ -129,6 +162,10 @@ export default function OnboardingPage() {
 
           <TabsContent value="documents" className="mt-0">
             <HrDocumentsTab />
+          </TabsContent>
+
+          <TabsContent value="probation" className="mt-0">
+            <ProbationEntryCard />
           </TabsContent>
         </Tabs>
       ) : (

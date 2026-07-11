@@ -3,9 +3,11 @@
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useState, useCallback } from "react";
 import { useEmployeeSkills, useAddSkill, type EmployeeSkill } from "@/hooks/api/hr";
+import { useRoleSkillRequirements } from "@/hooks/api/hr/skill-gap";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -82,6 +84,7 @@ function getCardAccent(maxLevel: number | null): string {
 export default function SkillsPage() {
   const { data: skills, isLoading, isError, refetch } = useEmployeeSkills();
   const addSkill = useAddSkill();
+  const { data: requirements } = useRoleSkillRequirements();
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
@@ -166,7 +169,6 @@ export default function SkillsPage() {
     <PageWrapper
       title="Skills Matrix"
       subtitle="Organization-wide skill mapping and competency tracking"
-      badge={`${skills?.length ?? 0} entries`}
       actions={
         <Button size="sm" className="gap-1.5" onClick={handleOpenSheet}>
           <Plus className="h-3.5 w-3.5" />
@@ -268,6 +270,27 @@ export default function SkillsPage() {
           })}
         </div>
       )}
+
+      <Card className="mt-6">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium">Role Skill Requirements</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {requirements?.length ? (
+            requirements.map((req) => (
+              <div key={req.id} className="flex items-center justify-between py-1.5 border-b last:border-0 text-sm">
+                <span className="font-medium">{req.skillName}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground">{req.roleName ?? "General"}</span>
+                  <Badge variant="outline" className="text-xs">Level {req.requiredLevel}</Badge>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="text-sm text-muted-foreground py-2">No role requirements defined yet.</p>
+          )}
+        </CardContent>
+      </Card>
 
       <HrSheet
         open={sheetOpen}

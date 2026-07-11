@@ -124,6 +124,8 @@ export const queryKeys = {
     orgLevels: () => [...base, "hr", "org", "levels"] as const,
     orgTeams: () => [...base, "hr", "org", "teams"] as const,
     orgHeadcount: (groupBy: string) => [...base, "hr", "org", "headcount", groupBy] as const,
+    probationList: () => [...base, "hr", "probation", "list"] as const,
+    exitChecklist: (resignationId: number) => [...base, "hr", "exit", "checklist", resignationId] as const,
   },
 
   leads: {
