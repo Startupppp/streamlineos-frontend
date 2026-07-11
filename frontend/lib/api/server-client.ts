@@ -14,7 +14,6 @@ async function mintBackendToken(): Promise<string | null> {
     orgId: session.orgId,
     branchId: session.branchId ?? null,
     role: session.user.role,
-    permissions: session.permissions ?? [],
     enabledModules: session.enabledModules ?? [],
     plan: session.plan ?? null,
     isPlatformAdmin: session.user.isPlatformAdmin === true,

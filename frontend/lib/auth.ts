@@ -398,7 +398,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           orgId,
           branchId,
           role,
-          permissions,
           enabledModules,
           plan,
           isPlatformAdmin:

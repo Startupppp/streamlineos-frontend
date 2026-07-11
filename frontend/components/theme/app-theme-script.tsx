@@ -10,5 +10,11 @@ export function AppThemeScript({ nonce }: { nonce?: string }) {
     getSelectableThemeIds(),
   )}.indexOf(t)>-1){document.documentElement.classList.add("theme-"+t)}}catch(e){}`;
 
-  return <script nonce={nonce} dangerouslySetInnerHTML={{ __html: script }} />;
+  return (
+    <script
+      nonce={nonce}
+      suppressHydrationWarning
+      dangerouslySetInnerHTML={{ __html: script }}
+    />
+  );
 }
