@@ -48,3 +48,4 @@ export * from "./hr-org";
 export * from "./letters";
 export * from "./compliance-calendar";
 export * from "./access-requests";
+export * from "./probation";
