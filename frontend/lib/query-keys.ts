@@ -989,6 +989,20 @@ export const queryKeys = {
     detail: (id: number) => [...base, "crmQuotes", "detail", id] as const,
   },
 
+  crmPricebooks: {
+    all: [...base, "crmPricebooks"] as const,
+    list: (params?: Record<string, unknown>) => [...base, "crmPricebooks", "list", params] as const,
+    detail: (id: string) => [...base, "crmPricebooks", "detail", id] as const,
+    entries: (pricebookId: string) => [...base, "crmPricebooks", "entries", pricebookId] as const,
+  },
+  crmQuoteSettings: {
+    all: [...base, "crmQuoteSettings"] as const,
+  },
+  crmQuoteTemplates: {
+    all: [...base, "crmQuoteTemplates"] as const,
+    list: (params?: Record<string, unknown>) => [...base, "crmQuoteTemplates", "list", params] as const,
+  },
+
   timesheets: {
     all: [...base, "timesheets"] as const,
     payroll: {
@@ -1071,6 +1085,14 @@ export const queryKeys = {
     submissions: (params?: Record<string, unknown>) => [...base, "feedbucket", "submissions", params] as const,
     submission: (id: number) => [...base, "feedbucket", "submissions", id] as const,
     stats: () => [...base, "feedbucket", "stats"] as const,
+  },
+
+  crmMetadata: {
+    all: [...base, "crmMetadata"] as const,
+    detail: () => [...base, "crmMetadata", "detail"] as const,
+    options: (type: string) => [...base, "crmMetadata", "options", type] as const,
+    validationRules: (params?: Record<string, unknown>) => [...base, "crmMetadata", "validationRules", params] as const,
+    blueprints: (params?: Record<string, unknown>) => [...base, "crmMetadata", "blueprints", params] as const,
   },
 
 } as const;
