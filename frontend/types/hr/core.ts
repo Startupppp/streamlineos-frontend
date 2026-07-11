@@ -1,15 +1,15 @@
 export interface HrEmployment {
   id: number;
-  orgId: string;
-  personId: string;
+  orgId?: string;
+  personId?: string;
   employeeNumber: string | null;
   lifecycleStatus: string;
   workerType: string;
   departmentId: number | null;
   designation: string | null;
   joiningDate: string | null;
-  isPrimary: boolean;
-  createdAt: string;
+  isPrimary?: boolean;
+  createdAt?: string;
 }
 
 export interface HrTimelineEntry {
@@ -100,7 +100,7 @@ export interface HrTeam {
 export interface HrHeadcountGroup {
   groupId: number | string | null;
   groupName: string | null;
-  count: number;
+  headcount: number;
 }
 
 export type OrgCatalogInput = {

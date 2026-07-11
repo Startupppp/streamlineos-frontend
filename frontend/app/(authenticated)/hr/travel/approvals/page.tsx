@@ -29,7 +29,7 @@ function ApprovalsLoading() {
           <div key={si} className="space-y-3">
             <Skeleton className="h-5 w-48" />
             {Array.from({ length: 2 }).map((_, i) => (
-              <Card key={i} className="rounded-2xl">
+              <Card key={i} className="rounded-lg">
                 <CardContent className="p-5">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-2">
@@ -169,8 +169,8 @@ function TravelApprovalCard({
         <CardContent className="p-5 space-y-3">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex items-start gap-3 min-w-0">
-              <div className="h-9 w-9 rounded-xl bg-violet-50 border border-violet-100 flex items-center justify-center shrink-0">
-                <Plane className="h-4 w-4 text-violet-600" />
+              <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                <Plane className="h-4 w-4 text-foreground" />
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-foreground">{request.purpose}</p>
@@ -203,7 +203,7 @@ function TravelApprovalCard({
               {section === "manager" ? (
                 <Button
                   size="sm"
-                  className="h-8 gap-1 text-xs bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md"
+                  className="h-8 gap-1 text-xs"
                   onClick={handleManagerApprove}
                   disabled={isManagerApproving}
                 >
@@ -213,7 +213,7 @@ function TravelApprovalCard({
               ) : (
                 <Button
                   size="sm"
-                  className="h-8 gap-1 text-xs bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-md"
+                  className="h-8 gap-1 text-xs"
                   onClick={handleFinanceApprove}
                   disabled={isFinanceApproving}
                 >
@@ -279,7 +279,7 @@ export default function TravelApprovalsPage() {
     <PageWrapper
       title="Travel Approvals"
       subtitle="Review pending travel requests"
-      badge={requests?.length ? `${requests.length} pending` : undefined}
+      badge={undefined}
     >
       {isEmpty ? (
         <EmptyState

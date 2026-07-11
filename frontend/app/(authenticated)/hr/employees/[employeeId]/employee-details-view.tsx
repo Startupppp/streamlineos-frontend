@@ -6,15 +6,6 @@ import { EditEmployeeForm, type EmployeeData } from "./edit-employee-form";
 import { EmployeeAttendanceHistory } from "@/components/hr/employee-attendance-history";
 import { SelfEditProfileForm } from "@/components/hr/self-edit-profile-form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-const EmployeeTimelineTab = dynamic(
-  () => import("@/features/hr/employees/detail/timeline-tab").then(m => ({ default: m.EmployeeTimelineTab })),
-  { loading: () => <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}</div> }
-);
-const EmployeeSensitiveTab = dynamic(
-  () => import("@/features/hr/employees/detail/sensitive-tab").then(m => ({ default: m.EmployeeSensitiveTab })),
-  { loading: () => <div className="space-y-3">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-xl" />)}</div> }
-);
 import {
   useHrEmployeeStats,
   useHrEmployeeProjects,
@@ -62,6 +53,15 @@ import { resolveImageUrl, cn } from "@/lib/utils";
 import { format } from "date-fns";
 import type { Employee } from "@/types/hr";
 import { canDeleteEmployee } from "@/features/hr/employees/hr-types";
+
+const EmployeeTimelineTab = dynamic(
+  () => import("@/features/hr/employees/detail/timeline-tab").then(m => ({ default: m.EmployeeTimelineTab })),
+  { loading: () => <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}</div> }
+);
+const EmployeeSensitiveTab = dynamic(
+  () => import("@/features/hr/employees/detail/sensitive-tab").then(m => ({ default: m.EmployeeSensitiveTab })),
+  { loading: () => <div className="space-y-3">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-xl" />)}</div> }
+);
 
 function getInitials(first?: string | null, last?: string | null) {
   return `${first?.[0] ?? ""}${last?.[0] ?? ""}`.toUpperCase() || "?";
@@ -585,6 +585,22 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
               <Clock className="h-3 w-3" />
               Attendance
             </TabsTrigger>
+            <TabsTrigger
+              value="timeline"
+              className="text-xs gap-1.5 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              <Clock className="h-3 w-3" />
+              Timeline
+            </TabsTrigger>
+            {canViewSensitive && (
+              <TabsTrigger
+                value="sensitive"
+                className="text-xs gap-1.5 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                <Shield className="h-3 w-3" />
+                Sensitive
+              </TabsTrigger>
+            )}
             {isSelf && (
               <TabsTrigger
                 value="my-profile"
@@ -688,6 +704,20 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
               <EmployeeAttendanceHistory userId={employee.id} />
             </div>
           </TabsContent>
+
+          <TabsContent value="timeline" className="flex-1 min-h-0 overflow-y-auto mt-3">
+            <div className="pb-4">
+              <EmployeeTimelineTab userId={employee.id} />
+            </div>
+          </TabsContent>
+
+          {canViewSensitive && (
+            <TabsContent value="sensitive" className="flex-1 min-h-0 overflow-y-auto mt-3">
+              <div className="pb-4">
+                <EmployeeSensitiveTab userId={employee.id} />
+              </div>
+            </TabsContent>
+          )}
 
           {isSelf && (
             <TabsContent

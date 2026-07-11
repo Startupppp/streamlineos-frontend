@@ -89,7 +89,7 @@ function KpiCard({ item, delay }: { item: KpiItem; delay: number }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.22, ease: "easeOut", delay }}
     >
-      <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 overflow-hidden">
+      <Card className="bg-card border border-border rounded-lg shadow-sm overflow-hidden">
         <CardContent className="p-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
@@ -114,7 +114,7 @@ function KpiSkeletons() {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
       {Array.from({ length: 4 }).map((_, i) => (
-        <Card key={i} className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 overflow-hidden">
+        <Card key={i} className="bg-card border border-border rounded-lg shadow-sm overflow-hidden">
           <CardContent className="p-4">
             <Skeleton className="h-3 w-20 mb-3" />
             <Skeleton className="h-8 w-14" />
@@ -127,7 +127,7 @@ function KpiSkeletons() {
 
 function ChartSkeleton() {
   return (
-    <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60">
+    <Card className="bg-card border border-border rounded-lg shadow-sm">
       <CardContent className="p-4">
         <Skeleton className="h-4 w-40 mb-4" />
         <Skeleton className="h-48 w-full rounded-xl" />
@@ -138,7 +138,7 @@ function ChartSkeleton() {
 
 function TopCoursesSkeleton() {
   return (
-    <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60">
+    <Card className="bg-card border border-border rounded-lg shadow-sm">
       <CardContent className="p-4 space-y-3">
         <Skeleton className="h-4 w-40" />
         {Array.from({ length: 4 }).map((_, i) => (
@@ -204,33 +204,33 @@ export default function LearningAnalyticsPage() {
         label: "Total Courses",
         value: publishedCount,
         icon: BookOpen,
-        iconBg: "bg-violet-100",
-        iconColor: "text-violet-600",
-        valueColor: "text-violet-700",
+        iconBg: "bg-muted",
+        iconColor: "text-foreground",
+        valueColor: "text-foreground",
       },
       {
         label: "Total Enrolled",
         value: totalEnrolled,
         icon: Users,
-        iconBg: "bg-blue-100",
+        iconBg: "bg-blue-50",
         iconColor: "text-blue-600",
-        valueColor: "text-blue-700",
+        valueColor: "text-foreground",
       },
       {
         label: "Avg Completion",
         value: `${avgCompletion}%`,
         icon: TrendingUp,
-        iconBg: "bg-amber-100",
+        iconBg: "bg-amber-50",
         iconColor: "text-amber-600",
-        valueColor: "text-amber-700",
+        valueColor: "text-foreground",
       },
       {
         label: "Completed",
         value: completedCount,
         icon: CheckCircle2,
-        iconBg: "bg-emerald-100",
+        iconBg: "bg-emerald-50",
         iconColor: "text-emerald-600",
-        valueColor: "text-emerald-700",
+        valueColor: "text-foreground",
       },
     ],
     [publishedCount, totalEnrolled, avgCompletion, completedCount],
@@ -281,7 +281,7 @@ export default function LearningAnalyticsPage() {
       title="Learning Analytics"
       subtitle="Track your learning progress and course completion"
       actions={
-        <Button asChild size="sm" className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200">
+        <Button asChild size="sm" variant="outline">
           <Link href="/hr/analytics">
             See Full HR Analytics
             <ArrowRight className="ml-1.5 h-3.5 w-3.5" aria-hidden="true" />
@@ -313,11 +313,11 @@ export default function LearningAnalyticsPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.22, ease: "easeOut", delay: 0.32 }}
               >
-                <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60">
+                <Card className="bg-card border border-border rounded-lg shadow-sm">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-2 mb-4">
-                      <div className="h-7 w-7 rounded-lg bg-violet-100 flex items-center justify-center">
-                        <BarChart3 className="h-3.5 w-3.5 text-violet-600" aria-hidden="true" />
+                      <div className="h-7 w-7 rounded-lg bg-muted flex items-center justify-center">
+                        <BarChart3 className="h-3.5 w-3.5 text-foreground" aria-hidden="true" />
                       </div>
                       <h2 className="text-sm font-semibold text-foreground">
                         Enrollment by Status
@@ -350,7 +350,7 @@ export default function LearningAnalyticsPage() {
                             dataKey="count"
                             name="Enrollments"
                             radius={[4, 4, 0, 0]}
-                            fill="#6366f1"
+                            fill="#0b1220"
                           />
                         </BarChart>
                       </ResponsiveContainer>
@@ -370,11 +370,11 @@ export default function LearningAnalyticsPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.22, ease: "easeOut", delay: 0.4 }}
               >
-                <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60">
+                <Card className="bg-card border border-border rounded-lg shadow-sm">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-2 mb-4">
-                      <div className="h-7 w-7 rounded-lg bg-indigo-100 flex items-center justify-center">
-                        <BookOpen className="h-3.5 w-3.5 text-indigo-600" aria-hidden="true" />
+                      <div className="h-7 w-7 rounded-lg bg-muted flex items-center justify-center">
+                        <BookOpen className="h-3.5 w-3.5 text-foreground" aria-hidden="true" />
                       </div>
                       <h2 className="text-sm font-semibold text-foreground">
                         Top Enrolled Courses
@@ -393,7 +393,7 @@ export default function LearningAnalyticsPage() {
                             <span className="text-[13px] text-foreground truncate min-w-0">
                               {tc.title}
                             </span>
-                            <span className="shrink-0 inline-flex items-center justify-center h-5 min-w-[1.5rem] px-1.5 rounded-md bg-violet-100 text-violet-700 text-[11px] font-semibold tabular-nums">
+                            <span className="shrink-0 inline-flex items-center justify-center h-5 min-w-[1.5rem] px-1.5 rounded-md bg-muted text-foreground text-[11px] font-semibold tabular-nums">
                               {tc.count}
                             </span>
                           </motion.li>
