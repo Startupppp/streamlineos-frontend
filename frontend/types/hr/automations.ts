@@ -14,10 +14,16 @@ export type HrAutomationEvent =
   | "asset.assigned"
   | "asset.return_due"
   | "review.cycle_started"
+  | "review.due"
   | "goal.overdue"
   | "course.assigned"
   | "resignation.submitted"
-  | "exit.completed";
+  | "exit.completed"
+  | "employee.updated"
+  | "employee.exited"
+  | "contract.ended"
+  | "attendance.finalized"
+  | "payroll.inputs_locked";
 
 export type HrConditionOperator = "eq" | "neq" | "in" | "gte" | "lte" | "contains";
 

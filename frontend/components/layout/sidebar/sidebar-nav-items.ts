@@ -202,6 +202,18 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "hr:helpdesk:view",
       },
       {
+        label: "Compliance",
+        icon: Scale,
+        href: "/hr/compliance",
+        requiredPermission: "hr:compliance:manage",
+      },
+      {
+        label: "Contingent Workforce",
+        icon: Briefcase,
+        href: "/hr/contingent",
+        requiredPermission: "hr:contracts:view",
+      },
+      {
         label: "Employees",
         icon: Users,
         href: "/hr",

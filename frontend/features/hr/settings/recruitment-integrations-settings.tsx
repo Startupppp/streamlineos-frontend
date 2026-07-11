@@ -166,7 +166,11 @@ function PortalCard({
   );
 }
 
-export function HrRecruitmentIntegrationsSettings() {
+interface HrRecruitmentIntegrationsSettingsProps {
+  embedded?: boolean;
+}
+
+export function HrRecruitmentIntegrationsSettings({ embedded = false }: HrRecruitmentIntegrationsSettingsProps) {
   const { data: portals, isLoading, isError, refetch } = useSourcePortals();
 
   const portalByPlatform = useCallback(
@@ -178,45 +182,51 @@ export function HrRecruitmentIntegrationsSettings() {
     void refetch();
   }, [refetch]);
 
+  const content = (
+    <RequireModule module="HR">
+      {isError ? (
+        <div className="flex flex-col items-center justify-center flex-1 gap-3 py-16 text-center">
+          <p className="text-sm text-muted-foreground">Failed to load integrations.</p>
+          <Button variant="outline" size="sm" onClick={handleRetry}>Retry</Button>
+        </div>
+      ) : (
+        <div className="space-y-6 max-w-3xl">
+          <div className="rounded-lg border border-blue-200 bg-blue-500/5 p-4 text-sm text-blue-700">
+            <strong>How it works:</strong> Each platform sends a webhook to the URL shown below
+            whenever a candidate applies. The ATS automatically creates a candidate record and
+            deduplicates by email/phone.
+          </div>
+
+          {isLoading ? (
+            <div className="space-y-4">
+              {PLATFORMS.map((p) => (
+                <Skeleton key={p.id} className="h-48 w-full rounded-xl" />
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {PLATFORMS.map((config) => (
+                <PortalCard
+                  key={config.id}
+                  config={config}
+                  portal={portalByPlatform(config.id)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </RequireModule>
+  );
+
+  if (embedded) return content;
+
   return (
     <PageWrapper
       title="Recruitment Integrations"
       subtitle="Connect job boards to automatically ingest applications into the ATS."
     >
-      <RequireModule module="HR">
-        {isError ? (
-          <div className="flex flex-col items-center justify-center flex-1 gap-3 py-16 text-center">
-            <p className="text-sm text-muted-foreground">Failed to load integrations.</p>
-            <Button variant="outline" size="sm" onClick={handleRetry}>Retry</Button>
-          </div>
-        ) : (
-          <div className="space-y-6 max-w-3xl">
-            <div className="rounded-lg border border-blue-200 bg-blue-500/5 p-4 text-sm text-blue-700">
-              <strong>How it works:</strong> Each platform sends a webhook to the URL shown below
-              whenever a candidate applies. The ATS automatically creates a candidate record and
-              deduplicates by email/phone.
-            </div>
-
-            {isLoading ? (
-              <div className="space-y-4">
-                {PLATFORMS.map((p) => (
-                  <Skeleton key={p.id} className="h-48 w-full rounded-xl" />
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {PLATFORMS.map((config) => (
-                  <PortalCard
-                    key={config.id}
-                    config={config}
-                    portal={portalByPlatform(config.id)}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </RequireModule>
+      {content}
     </PageWrapper>
   );
 }

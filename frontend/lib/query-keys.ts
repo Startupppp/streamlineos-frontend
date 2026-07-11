@@ -126,6 +126,13 @@ export const queryKeys = {
     orgHeadcount: (groupBy: string) => [...base, "hr", "org", "headcount", groupBy] as const,
     probationList: () => [...base, "hr", "probation", "list"] as const,
     exitChecklist: (resignationId: number) => [...base, "hr", "exit", "checklist", resignationId] as const,
+    workAuthorizations: (params?: Record<string, unknown>) => [...base, "hr", "global", "workAuthorizations", params] as const,
+    workAuthorization: (id: number) => [...base, "hr", "global", "workAuthorization", id] as const,
+    complianceRequirements: (params?: Record<string, unknown>) => [...base, "hr", "global", "complianceRequirements", params] as const,
+    complianceRequirement: (id: number) => [...base, "hr", "global", "complianceRequirement", id] as const,
+    complianceEvents: (params?: Record<string, unknown>) => [...base, "hr", "global", "complianceEvents", params] as const,
+    contracts: (params?: Record<string, unknown>) => [...base, "hr", "global", "contracts", params] as const,
+    contract: (id: number) => [...base, "hr", "global", "contract", id] as const,
   },
 
   leads: {

@@ -61,7 +61,7 @@ function InstanceRow({ instance, onOpen, showActions }: { instance: HrWorkflowIn
             <Badge variant="destructive" className="text-[10px]">Overdue</Badge>
           )}
         </div>
-        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+        <div className="flex items-center gap-x-3 gap-y-1 flex-wrap text-xs text-muted-foreground">
           <span>By {instance.requester ? getUserDisplayName(instance.requester) : (instance.requesterName ?? instance.requestedBy)}</span>
           <span>·</span>
           <span>Step {instance.currentStepOrder}</span>
