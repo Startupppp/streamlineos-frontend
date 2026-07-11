@@ -22,7 +22,7 @@ import {
   EmployeesFilters,
   type Department,
 } from "@/features/hr/employees/employees-filters";
-import { EmployeesGridSkeleton } from "@/features/hr/employees/employees-skeleton";
+import { EmployeesGridSkeleton } from "@/features/hr/employees/employees-loading-skeleton";
 import type { Employee } from "@/types/hr";
 
 type ViewMode = "grid" | "list";

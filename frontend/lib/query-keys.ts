@@ -111,6 +111,10 @@ export const queryKeys = {
     feedbackCycle: (id: number) => [...base, "hr", "feedbackCycle", id] as const,
     myPendingReviews: () => [...base, "hr", "myPendingReviews"] as const,
     feedbackResults: (subjectId: string) => [...base, "hr", "feedbackResults", subjectId] as const,
+    hrTemplates: (params?: Record<string, unknown>) => [...base, "hr", "templates", params] as const,
+    hrTemplate: (id: number) => [...base, "hr", "template", id] as const,
+    hrTemplateRenders: (templateId: number) => [...base, "hr", "template", templateId, "renders"] as const,
+    hrTemplateVariables: () => [...base, "hr", "templateVariables"] as const,
   },
 
   leads: {

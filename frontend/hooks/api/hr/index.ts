@@ -40,3 +40,7 @@ export * from "./salary-structures";
 export * from "./allowances";
 export * from "./tax";
 export * from "./bank-transfers";
+export * from "./policies";
+export * from "./hr-workflows";
+export * from "./hr-templates";
+export * from "./hr-automations";

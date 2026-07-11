@@ -5,9 +5,12 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const TABS = [
+  { label: "Policies", href: "/hr/settings/policies" },
+  { label: "Workflows", href: "/hr/settings/workflows" },
+  { label: "Automations", href: "/hr/settings/automations" },
+  { label: "Templates", href: "/hr/settings/templates" },
   { label: "Import / Export", href: "/hr/settings/import-export" },
   { label: "Integrations", href: "/hr/settings/integrations" },
-  { label: "Automations", href: "/hr/settings/automations" },
 ] as const;
 
 export default function HrSettingsLayout({
@@ -36,7 +39,7 @@ export default function HrSettingsLayout({
               >
                 {tab.label}
                 {isActive && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-violet-600 rounded-full" />
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 rounded-full" />
                 )}
               </Link>
             );

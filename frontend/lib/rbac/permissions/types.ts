@@ -342,4 +342,16 @@ export type PermissionKey =
   | "notifications:templates:view"
   | "notifications:templates:manage"
   | "notifications:broadcasts:view"
-  | "notifications:broadcasts:manage";
+  | "notifications:broadcasts:manage"
+  | "hr:automations:view"
+  | "hr:automations:manage"
+  | "hr:policies:view"
+  | "hr:policies:manage"
+  | "hr:workflows:view"
+  | "hr:workflows:manage"
+  | "hr:workflows:approve"
+  | "hr:templates:view"
+  | "hr:templates:manage"
+  | "hr:sensitive:view"
+  | "hr:sensitive:manage"
+  | "hr:audit:view";
