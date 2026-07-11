@@ -21,7 +21,6 @@ import {
   CreditCard,
   Wallet,
   Star,
-  UserSearch,
   TrendingUp,
   BookOpen,
   UserMinus,
@@ -81,6 +80,9 @@ import {
   Activity,
   PenTool,
   Banknote,
+  KanbanSquare,
+  Video,
+  Layers,
 } from "lucide-react";
 
 export interface NavRoute {
@@ -714,13 +716,73 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "Recruitment",
     module: "hrms",
-    requiredPermission: ["hr:employees:create"],
+    requiredPermission: [
+      "hr:employees:view",
+      "hr:employees:create",
+      "hr:offers:view",
+      "hr:interviews:view",
+      "hr:requisitions:view",
+    ],
     routes: [
       {
-        label: "Recruitment Hub",
-        icon: UserSearch,
+        label: "Command Center",
+        icon: LayoutDashboard,
         href: "/hr/recruitment",
-        requiredPermission: "hr:employees:create",
+      },
+      {
+        label: "Jobs",
+        icon: Briefcase,
+        href: "/hr/recruitment/jobs",
+      },
+      {
+        label: "Candidates",
+        icon: Users,
+        href: "/hr/recruitment/candidates",
+      },
+      {
+        label: "Pipeline",
+        icon: KanbanSquare,
+        href: "/hr/recruitment/pipeline",
+      },
+      {
+        label: "Intake Inbox",
+        icon: Inbox,
+        href: "/hr/recruitment/candidates/intake",
+      },
+      {
+        label: "Interviews",
+        icon: Video,
+        href: "/hr/recruitment/interviews",
+      },
+      {
+        label: "Offers",
+        icon: FileCheck,
+        href: "/hr/recruitment/offers",
+      },
+      {
+        label: "Referrals",
+        icon: Share2,
+        href: "/hr/recruitment/referrals",
+      },
+      {
+        label: "Vendors",
+        icon: Truck,
+        href: "/hr/recruitment/vendors",
+      },
+      {
+        label: "Talent Pools",
+        icon: Layers,
+        href: "/hr/recruitment/talent-pools",
+      },
+      {
+        label: "Analytics",
+        icon: BarChart3,
+        href: "/hr/recruitment/analytics",
+      },
+      {
+        label: "Settings",
+        icon: SlidersHorizontal,
+        href: "/hr/recruitment/settings",
       },
     ],
   },

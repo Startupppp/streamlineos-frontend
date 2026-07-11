@@ -7,11 +7,10 @@ import { randomUUID } from "crypto";
 import { SignJWT } from "jose";
 import type { Plan } from "@/lib/billing/feature-gates";
 
-if (!process.env.NEXT_PUBLIC_API_URL) {
-  throw new Error("NEXT_PUBLIC_API_URL is not set");
-}
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL;
 const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET ?? "";
+
+if (!BACKEND_URL) throw new Error("NEXT_PUBLIC_API_URL is not set");
 
 interface SessionData {
   userId: string;
@@ -23,15 +22,12 @@ interface SessionData {
   role: string | null;
   isActive: boolean;
   hasDashboardAccess: boolean;
-  isPasswordChangeRequired: boolean;
   branchId: number | null;
   totpEnabled: boolean;
   orgId: string | null;
   isOrgOwner: boolean;
   mfaEnforced: boolean;
   enabledModules: string[];
-  orgOnboardingCompletedAt: string | null;
-  userOnboardingCompletedAt: string | null;
   permissions: string[];
   plan: Plan | null;
 }
@@ -98,17 +94,30 @@ async function resolveGoogleUser(
         "Content-Type": "application/json",
         "x-internal-secret": INTERNAL_SECRET,
       },
-      body: JSON.stringify({ email, googleId, name: name ?? undefined, image: image ?? undefined }),
+      body: JSON.stringify({
+        email,
+        googleId,
+        name: name ?? undefined,
+        image: image ?? undefined,
+      }),
     });
     if (!res.ok) return null;
-    const raw = (await res.json()) as { success?: boolean; data?: { userId: string }; userId?: string };
+    const raw = (await res.json()) as {
+      success?: boolean;
+      data?: { userId: string };
+      userId?: string;
+    };
     return raw?.data?.userId ?? raw?.userId ?? null;
   } catch {
     return null;
   }
 }
 
-function buildUserFromSessionData(userId: string, sessionData: SessionData, extra?: { forceChangePassword?: boolean; daysUntilExpiry?: number }) {
+function buildUserFromSessionData(
+  userId: string,
+  sessionData: SessionData,
+  extra?: { forceChangePassword?: boolean; daysUntilExpiry?: number },
+) {
   return {
     id: userId,
     email: sessionData.email,
@@ -123,16 +132,15 @@ function buildUserFromSessionData(userId: string, sessionData: SessionData, extr
     hasDashboardAccess: sessionData.hasDashboardAccess,
     orgId: sessionData.orgId ?? null,
     isOrgOwner: sessionData.isOrgOwner,
-    orgOnboardingCompletedAt: sessionData.orgOnboardingCompletedAt ?? null,
     branchId: sessionData.branchId ?? null,
     totpEnabled: sessionData.totpEnabled,
     mfaEnforced: sessionData.mfaEnforced,
     permissions: sessionData.permissions,
     plan: sessionData.plan ?? null,
     enabledModules: sessionData.enabledModules,
-    userOnboardingCompletedAt: sessionData.userOnboardingCompletedAt ?? null,
-    isPlatformAdmin: isPlatformAdminEmail(sessionData.email),
-    ...(extra?.daysUntilExpiry !== undefined ? { daysUntilExpiry: extra.daysUntilExpiry } : {}),
+    ...(extra?.daysUntilExpiry !== undefined
+      ? { daysUntilExpiry: extra.daysUntilExpiry }
+      : {}),
   };
 }
 
@@ -159,7 +167,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               { token: credentials.magicToken },
             );
             if (!raw) return null;
-            const data = unwrapBackend<{ userId: string; forceChangePassword: boolean }>(raw);
+            const data = unwrapBackend<{
+              userId: string;
+              forceChangePassword: boolean;
+            }>(raw);
             const sessionData = await fetchSessionData(data.userId);
             if (!sessionData) return null;
             return buildUserFromSessionData(data.userId, sessionData, {
@@ -175,24 +186,38 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         try {
           let raw: unknown = null;
           try {
-            const response = await axios.post<unknown>(`${BACKEND_URL}/auth/login`, {
-              email: credentials.email,
-              password: credentials.password,
-              totpCode: credentials.totpCode ?? undefined,
-            });
+            const response = await axios.post<unknown>(
+              `${BACKEND_URL}/auth/login`,
+              {
+                email: credentials.email,
+                password: credentials.password,
+                totpCode: credentials.totpCode ?? undefined,
+              },
+            );
             raw = response.data;
           } catch (loginErr: unknown) {
             if (loginErr instanceof AxiosError) {
-              const errData = loginErr.response?.data as Record<string, unknown> | undefined;
-              const code = typeof errData?.code === "string" ? errData.code : null;
-              const details = errData?.details as Record<string, unknown> | undefined;
+              const errData = loginErr.response?.data as
+                | Record<string, unknown>
+                | undefined;
+              const code =
+                typeof errData?.code === "string" ? errData.code : null;
+              const details = errData?.details as
+                | Record<string, unknown>
+                | undefined;
               if (code === "AUTH_ACCOUNT_LOCKED") {
-                const retryAfterSeconds = typeof details?.retryAfterSeconds === "number" ? details.retryAfterSeconds : 900;
+                const retryAfterSeconds =
+                  typeof details?.retryAfterSeconds === "number"
+                    ? details.retryAfterSeconds
+                    : 900;
                 throw new Error(`AUTH_ACCOUNT_LOCKED:${retryAfterSeconds}`);
               }
-              if (code === "AUTH_SUBSCRIPTION_INACTIVE") throw new Error("AUTH_SUBSCRIPTION_INACTIVE");
-              if (code === "AUTH_EMAIL_NOT_VERIFIED") throw new Error("AUTH_EMAIL_NOT_VERIFIED");
-              if (code === "AUTH_INVALID_MFA_CODE") throw new Error("AUTH_INVALID_MFA_CODE");
+              if (code === "AUTH_SUBSCRIPTION_INACTIVE")
+                throw new Error("AUTH_SUBSCRIPTION_INACTIVE");
+              if (code === "AUTH_EMAIL_NOT_VERIFIED")
+                throw new Error("AUTH_EMAIL_NOT_VERIFIED");
+              if (code === "AUTH_INVALID_MFA_CODE")
+                throw new Error("AUTH_INVALID_MFA_CODE");
             }
             return null;
           }
@@ -265,14 +290,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           user.hasDashboardAccess = sessionData.hasDashboardAccess;
           user.orgId = sessionData.orgId ?? null;
           user.isOrgOwner = sessionData.isOrgOwner;
-          user.orgOnboardingCompletedAt = sessionData.orgOnboardingCompletedAt ?? null;
+
           user.branchId = sessionData.branchId ?? null;
           user.totpEnabled = sessionData.totpEnabled;
           user.mfaEnforced = sessionData.mfaEnforced;
           user.permissions = sessionData.permissions;
           user.plan = sessionData.plan ?? null;
           user.enabledModules = sessionData.enabledModules;
-          user.userOnboardingCompletedAt = sessionData.userOnboardingCompletedAt ?? null;
           user.isPlatformAdmin = isPlatformAdminEmail(sessionData.email);
         }
       }
@@ -293,10 +317,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.orgOnboardingCompletedAt = user.orgOnboardingCompletedAt ?? null;
         token.totpEnabled = user.totpEnabled ?? false;
         token.mfaEnforced = user.mfaEnforced ?? false;
-        token.userOnboardingCompletedAt = user.userOnboardingCompletedAt ?? null;
+        token.userOnboardingCompletedAt =
+          user.userOnboardingCompletedAt ?? null;
         token.isPlatformAdmin = user.isPlatformAdmin ?? false;
         token.sessionId = user.sessionId ?? randomUUID();
-        if (user.daysUntilExpiry !== undefined) token.daysUntilExpiry = user.daysUntilExpiry;
+        if (user.daysUntilExpiry !== undefined)
+          token.daysUntilExpiry = user.daysUntilExpiry;
         token.authProvider = account?.provider ?? "credentials";
       }
 
@@ -307,8 +333,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           if (fresh) {
             token.orgId = fresh.orgId;
             token.isOrgOwner = fresh.isOrgOwner;
-            token.orgOnboardingCompletedAt = fresh.orgOnboardingCompletedAt;
-            token.userOnboardingCompletedAt = fresh.userOnboardingCompletedAt;
             token.role = fresh.role ?? undefined;
             token.mfaEnforced = fresh.mfaEnforced;
             token.totpEnabled = fresh.totpEnabled;
@@ -327,16 +351,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
     async session({ session, token }) {
       // Volatile data (permissions, modules, plan, org context) is resolved live here, never from the cookie — 485 permission keys once ballooned it to ~16KB (5 chunks), breaking every auth request with 431s.
-      const fresh = token.id ? await fetchSessionDataCached(token.id as string) : null;
+      const fresh = token.id
+        ? await fetchSessionDataCached(token.id as string)
+        : null;
 
-      const orgId = fresh ? fresh.orgId : ((token.orgId as string | null | undefined) ?? null);
-      const isOrgOwner = fresh ? fresh.isOrgOwner : ((token.isOrgOwner as boolean | undefined) ?? false);
-      const orgOnboardingCompletedAt = fresh
-        ? fresh.orgOnboardingCompletedAt
-        : ((token.orgOnboardingCompletedAt as string | null | undefined) ?? null);
-      const userOnboardingCompletedAt = fresh
-        ? fresh.userOnboardingCompletedAt
-        : ((token.userOnboardingCompletedAt as string | null | undefined) ?? null);
+      const orgId = fresh
+        ? fresh.orgId
+        : ((token.orgId as string | null | undefined) ?? null);
+      const isOrgOwner = fresh
+        ? fresh.isOrgOwner
+        : ((token.isOrgOwner as boolean | undefined) ?? false);
       const permissions = fresh?.permissions ?? [];
       const enabledModules = fresh?.enabledModules ?? [];
       const plan = fresh?.plan ?? null;
@@ -347,11 +371,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.id = token.id as string;
         session.user.email = token.email as string;
         session.user.role = role;
-        session.user.image = fresh?.image ?? (token.picture as string | null | undefined) ?? null;
+        session.user.image =
+          fresh?.image ?? (token.picture as string | null | undefined) ?? null;
         session.user.forceChangePassword = token.forceChangePassword as boolean;
         session.user.isActive = fresh?.isActive ?? (token.isActive as boolean);
         session.user.hasDashboardAccess = fresh?.hasDashboardAccess ?? true;
-        session.user.isPlatformAdmin = (token.isPlatformAdmin as boolean | undefined) ?? false;
+        session.user.isPlatformAdmin =
+          (token.isPlatformAdmin as boolean | undefined) ?? false;
         session.user.isOrgOwner = isOrgOwner;
       }
       session.orgId = orgId;
@@ -360,11 +386,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       session.plan = plan;
       session.permissions = permissions;
       session.enabledModules = enabledModules;
-      session.orgOnboardingCompletedAt = orgOnboardingCompletedAt;
-      session.userOnboardingCompletedAt = userOnboardingCompletedAt;
       if (token.daysUntilExpiry !== undefined)
         session.daysUntilExpiry = token.daysUntilExpiry as number;
-      session.authProvider = (token.authProvider as string | undefined) ?? "credentials";
+      session.authProvider =
+        (token.authProvider as string | undefined) ?? "credentials";
 
       const jwtSecret = process.env.BACKEND_JWT_SECRET;
       const sessionId = (token.sessionId as string | undefined)?.trim();
@@ -376,7 +401,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           permissions,
           enabledModules,
           plan,
-          isPlatformAdmin: (token.isPlatformAdmin as boolean | undefined) === true,
+          isPlatformAdmin:
+            (token.isPlatformAdmin as boolean | undefined) === true,
           isOrgOwner,
           sessionId,
         })
