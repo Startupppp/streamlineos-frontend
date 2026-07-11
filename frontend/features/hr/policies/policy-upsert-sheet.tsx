@@ -262,7 +262,11 @@ export function PolicyUpsertSheet({ open, onOpenChange, policy }: Props) {
                       min={0}
                       max={9999}
                       className="h-9 text-sm"
-                      {...field}
+                      value={field.value}
+                      onChange={(e) => field.onChange(e.target.value === "" ? 0 : parseInt(e.target.value, 10))}
+                      onBlur={field.onBlur}
+                      name={field.name}
+                      ref={field.ref}
                       disabled={isActive}
                     />
                   </FormControl>

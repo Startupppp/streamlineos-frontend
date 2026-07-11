@@ -161,6 +161,7 @@ Architecture · Database · API · Cache · Backend · Frontend · UI · UX · S
 
 - Every page feels like a **$10k+ SaaS product** — polished, dense, purposeful; no default buttons or flat cards. Canonical spec: `UI-UX-SYSTEM.md` (repo root) — read it before any UI work.
 - **Extracted-token reality (living rule, reconciled 2026-07-02):** the system is **ink-first** (Linear/Stripe style) — `--primary: #0b1220` slate-900 fills for primary CTAs, `--accent: #3b82f6` blue-500 for links/interactive states, slate-neutral chrome. The violet/indigo gradient CTA style is RETIRED; brand gradients live only on landing/marketing surfaces, never inside the authenticated shell. One primary button per view.
+- **Blue replaces purple (living rule, 2026-07-11):** wherever legacy violet/purple/indigo accents are removed or an accent color is needed (progress fills, active tab/nav indicators, icon tints, chart seeds, selection highlights), use the **blue family** (`blue-500`/`blue-600`) — never violet/purple. Emerald/amber/red stay reserved for semantic status only.
 - **Framer Motion** for page/step transitions (`AnimatePresence` + `motion.div`, slide+fade), list stagger, entrance.
 - Step/route transition: `initial={{opacity:0,x:24}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-24}}`, `duration:0.22, ease:"easeOut"`, in `<AnimatePresence mode="wait">`.
 - Selection cards/chips: subtle `hover:shadow-md` + accent border on selected — no scale transforms in dense lists.

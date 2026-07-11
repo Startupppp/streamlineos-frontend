@@ -24,13 +24,13 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { useReviewCycles } from "@/hooks/api/hr";
 import type { ReviewCycle } from "@/types/hr";
 
-const CHART_COLORS = ["#7c3aed", "#4f46e5", "#64748b", "#9333ea"];
+const CHART_COLORS = ["#0b1220", "#3b82f6", "#64748b", "#0ea5e9"];
 
 const CYCLE_STATUS_STYLES: Record<string, string> = {
-  DRAFT: "bg-slate-100 text-slate-600",
-  ACTIVE: "bg-green-100 text-green-700",
-  COMPLETED: "bg-blue-100 text-blue-700",
-  CANCELLED: "bg-red-100 text-red-700",
+  DRAFT: "bg-muted text-muted-foreground border-border",
+  ACTIVE: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  COMPLETED: "bg-blue-50 text-blue-700 border-blue-200",
+  CANCELLED: "bg-red-50 text-red-700 border-red-200",
 };
 
 interface StatCardProps {
@@ -47,15 +47,15 @@ function StatCard({ label, value, icon, color, delay = 0 }: StatCardProps) {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.22, ease: "easeOut", delay }}
-      className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 p-5"
+      className="bg-card border border-border rounded-lg shadow-sm p-5"
     >
       <div className="flex items-center justify-between mb-3">
-        <p className="text-sm text-slate-500">{label}</p>
-        <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${color}`}>
+        <p className="text-sm text-muted-foreground">{label}</p>
+        <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${color}`}>
           {icon}
         </div>
       </div>
-      <p className="text-3xl font-bold text-slate-800">{value}</p>
+      <p className="text-3xl font-bold text-foreground">{value}</p>
     </motion.div>
   );
 }
@@ -101,15 +101,15 @@ export default function PerformanceAnalyticsPage() {
         <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="bg-card rounded-2xl border border-border p-5 animate-pulse space-y-3">
+              <div key={i} className="bg-card rounded-lg border border-border p-5 animate-pulse space-y-3">
                 <div className="h-4 w-28 bg-muted rounded" />
                 <div className="h-8 w-16 bg-muted rounded" />
               </div>
             ))}
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-card rounded-2xl border border-border p-6 h-72 animate-pulse" />
-            <div className="bg-card rounded-2xl border border-border p-6 h-72 animate-pulse" />
+            <div className="bg-card rounded-lg border border-border p-6 h-72 animate-pulse" />
+            <div className="bg-card rounded-lg border border-border p-6 h-72 animate-pulse" />
           </div>
         </div>
       ) : (
@@ -118,8 +118,8 @@ export default function PerformanceAnalyticsPage() {
             <StatCard
               label="Review Cycles"
               value={cycles.length}
-              icon={<BarChart2 className="w-4 h-4 text-violet-600" />}
-              color="bg-violet-100"
+              icon={<BarChart2 className="w-4 h-4 text-foreground" />}
+              color="bg-muted"
               delay={0.05}
             />
             <StatCard
@@ -139,8 +139,8 @@ export default function PerformanceAnalyticsPage() {
             <StatCard
               label="OKR Progress"
               value="—"
-              icon={<Target className="w-4 h-4 text-indigo-600" />}
-              color="bg-indigo-100"
+              icon={<Target className="w-4 h-4 text-foreground" />}
+              color="bg-muted"
               delay={0.2}
             />
           </div>
@@ -150,9 +150,9 @@ export default function PerformanceAnalyticsPage() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.22, ease: "easeOut", delay: 0.25 }}
-              className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 p-6"
+              className="bg-card border border-border rounded-lg shadow-sm p-6"
             >
-              <h2 className="text-base font-semibold text-slate-800 mb-4">Cycles by Type</h2>
+              <h2 className="text-base font-semibold text-foreground mb-4">Cycles by Type</h2>
               {typeData.length === 0 ? (
                 <ChartEmptyState height={220} />
               ) : (
@@ -165,7 +165,7 @@ export default function PerformanceAnalyticsPage() {
                       contentStyle={{ borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }}
                       cursor={{ fill: "#f8f7ff" }}
                     />
-                    <Bar dataKey="count" fill="#7c3aed" radius={[6, 6, 0, 0]} />
+                    <Bar dataKey="count" fill="#0b1220" radius={[6, 6, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               )}
@@ -175,9 +175,9 @@ export default function PerformanceAnalyticsPage() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.22, ease: "easeOut", delay: 0.3 }}
-              className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 p-6"
+              className="bg-card border border-border rounded-lg shadow-sm p-6"
             >
-              <h2 className="text-base font-semibold text-slate-800 mb-4">Status Distribution</h2>
+              <h2 className="text-base font-semibold text-foreground mb-4">Status Distribution</h2>
               {statusData.length === 0 ? (
                 <ChartEmptyState height={220} />
               ) : (
@@ -216,10 +216,10 @@ export default function PerformanceAnalyticsPage() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.22, ease: "easeOut", delay: 0.35 }}
-            className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 overflow-hidden"
+            className="bg-card border border-border rounded-lg shadow-sm overflow-hidden"
           >
-            <div className="px-6 py-4 border-b border-slate-100">
-              <h2 className="text-base font-semibold text-slate-800">Review Cycles</h2>
+            <div className="px-6 py-4 border-b border-border">
+              <h2 className="text-base font-semibold text-foreground">Review Cycles</h2>
             </div>
             {cycles.length === 0 ? (
               <ChartEmptyState message="No review cycles found" height={220} compact />
@@ -227,26 +227,26 @@ export default function PerformanceAnalyticsPage() {
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-slate-100 bg-slate-50/50">
-                      <th className="text-left text-xs font-medium text-slate-500 px-6 py-3">Name</th>
-                      <th className="text-left text-xs font-medium text-slate-500 px-6 py-3">Type</th>
-                      <th className="text-left text-xs font-medium text-slate-500 px-6 py-3">Status</th>
-                      <th className="text-left text-xs font-medium text-slate-500 px-6 py-3">Period</th>
+                    <tr className="border-b border-border bg-muted/50">
+                      <th className="text-left text-xs font-medium text-muted-foreground px-6 py-3">Name</th>
+                      <th className="text-left text-xs font-medium text-muted-foreground px-6 py-3">Type</th>
+                      <th className="text-left text-xs font-medium text-muted-foreground px-6 py-3">Status</th>
+                      <th className="text-left text-xs font-medium text-muted-foreground px-6 py-3">Period</th>
                     </tr>
                   </thead>
                   <tbody>
                     {cycles.map((cycle: ReviewCycle) => (
-                      <tr key={cycle.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
-                        <td className="px-6 py-3 text-sm font-medium text-slate-800">{cycle.name}</td>
+                      <tr key={cycle.id} className="border-b border-border hover:bg-muted/40 transition-colors">
+                        <td className="px-6 py-3 text-sm font-medium text-foreground">{cycle.name}</td>
                         <td className="px-6 py-3">
-                          <Badge className="text-xs bg-violet-100 text-violet-700">{cycle.type}</Badge>
+                          <Badge variant="outline" className="text-xs">{cycle.type}</Badge>
                         </td>
                         <td className="px-6 py-3">
-                          <Badge className={`text-xs ${CYCLE_STATUS_STYLES[cycle.status ?? ""] ?? "bg-slate-100 text-slate-600"}`}>
+                          <Badge variant="outline" className={`text-xs ${CYCLE_STATUS_STYLES[cycle.status ?? ""] ?? "bg-muted text-muted-foreground border-border"}`}>
                             {cycle.status}
                           </Badge>
                         </td>
-                        <td className="px-6 py-3 text-sm text-slate-500">
+                        <td className="px-6 py-3 text-sm text-muted-foreground">
                           {new Date(cycle.periodStart).toLocaleDateString()} — {new Date(cycle.periodEnd).toLocaleDateString()}
                         </td>
                       </tr>

@@ -32,8 +32,8 @@ const stepSchema = z.object({
   name: z.string().min(1, "Required"),
   approverType: z.enum(HR_WORKFLOW_APPROVER_TYPES),
   approverValue: z.string().optional(),
-  mode: z.enum(STEP_MODES).default("serial"),
-  slaHours: z.coerce.number().int().positive().optional(),
+  mode: z.enum(STEP_MODES),
+  slaHours: z.number().int().positive().optional(),
   escalationApproverType: z.enum(HR_WORKFLOW_APPROVER_TYPES).optional(),
   escalationApproverValue: z.string().optional(),
 });
@@ -41,11 +41,11 @@ const stepSchema = z.object({
 const schema = z.object({
   objectType: z.enum(HR_WORKFLOW_OBJECT_TYPES),
   name: z.string().min(1, "Required"),
-  isDefault: z.boolean().default(false),
+  isDefault: z.boolean(),
   settings: z.object({
-    rejectionCommentRequired: z.boolean().default(false),
-    allowDelegation: z.boolean().default(true),
-    allowReopen: z.boolean().default(false),
+    rejectionCommentRequired: z.boolean(),
+    allowDelegation: z.boolean(),
+    allowReopen: z.boolean(),
   }),
   steps: z.array(stepSchema).min(1, "At least one step is required"),
 });

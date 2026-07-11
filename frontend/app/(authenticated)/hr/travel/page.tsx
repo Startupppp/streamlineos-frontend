@@ -77,10 +77,10 @@ function TravelLoading() {
   return (
     <PageWrapper title="Travel Requests" subtitle="Plan and track your business travel">
       <div className="space-y-4">
-        <Skeleton className="h-16 w-full rounded-2xl" />
+        <Skeleton className="h-16 w-full rounded-lg" />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-40 rounded-2xl" />
+            <Skeleton key={i} className="h-40 rounded-lg" />
           ))}
         </div>
       </div>
@@ -101,15 +101,15 @@ function StatusPipeline({ status }: { status: TravelRequest["status"] }) {
               className={cn(
                 "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all",
                 isActive
-                  ? "bg-violet-100 border-violet-300 text-violet-700"
-                  : "bg-slate-50 border-slate-200 text-slate-400",
+                  ? "bg-primary/10 border-primary/30 text-primary"
+                  : "bg-muted border-border text-muted-foreground",
               )}
             >
-              <div className={cn("h-2 w-2 rounded-full", isActive ? "bg-violet-500" : "bg-slate-300")} />
+              <div className={cn("h-2 w-2 rounded-full", isActive ? "bg-primary" : "bg-muted-foreground/30")} />
               {step.label}
             </div>
             {!isLast && (
-              <div className={cn("flex-1 h-px mx-1", isActive ? "bg-violet-300" : "bg-slate-200")} />
+              <div className={cn("flex-1 h-px mx-1", isActive ? "bg-primary/30" : "bg-border")} />
             )}
           </div>
         );
@@ -122,12 +122,12 @@ function TravelCard({ request }: { request: TravelRequest }) {
   const cfg = getStatusConfig(request.status);
   return (
     <motion.div variants={fadeUp}>
-      <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 hover:shadow-2xl transition-all duration-200">
+      <Card className="bg-card border border-border rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
         <CardContent className="p-5">
           <div className="flex items-start justify-between gap-3 mb-3">
             <div className="flex items-center gap-2">
-              <div className="h-9 w-9 rounded-xl bg-violet-50 border border-violet-100 flex items-center justify-center shrink-0">
-                <Plane className="h-4 w-4 text-violet-600" />
+              <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                <Plane className="h-4 w-4 text-foreground" />
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-foreground truncate">{request.purpose}</p>
@@ -162,7 +162,7 @@ function TravelCard({ request }: { request: TravelRequest }) {
               </div>
             )}
             {request.advanceRequired && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded bg-indigo-50 border border-indigo-200 text-indigo-600">
+              <span className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded bg-muted border border-border text-muted-foreground">
                 <Building className="h-2.5 w-2.5" />
                 Advance
               </span>
@@ -257,11 +257,10 @@ export default function TravelPage() {
     <PageWrapper
       title="Travel Requests"
       subtitle="Plan and track your business travel"
-      badge={requests?.length ? `${requests.length} requests` : undefined}
+      badge={undefined}
       actions={
         <Button
           onClick={handleOpenSheet}
-          className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
         >
           <Plus className="h-4 w-4 mr-2" />
           Request Travel

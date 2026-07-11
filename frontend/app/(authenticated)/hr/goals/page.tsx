@@ -20,17 +20,17 @@ import { useHrGoals, useCreateHrGoal, type HrGoal } from "@/hooks/api/hr";
 import { useUpdateGoal } from "@/hooks/api/hr";
 
 const STATUS_COLORS: Record<string, string> = {
-  IN_PROGRESS: "bg-blue-100 text-blue-700",
-  COMPLETED: "bg-green-100 text-green-700",
-  CANCELLED: "bg-red-100 text-red-700",
-  DRAFT: "bg-slate-100 text-slate-600",
-  ON_HOLD: "bg-amber-100 text-amber-700",
+  IN_PROGRESS: "bg-blue-50 text-blue-700 border-blue-200",
+  COMPLETED: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  CANCELLED: "bg-red-50 text-red-700 border-red-200",
+  DRAFT: "bg-muted text-muted-foreground border-border",
+  ON_HOLD: "bg-amber-50 text-amber-700 border-amber-200",
 };
 
 const TYPE_COLORS: Record<string, string> = {
-  OKR: "bg-violet-100 text-violet-700",
-  STRETCH: "bg-purple-100 text-purple-700",
-  text: "bg-indigo-100 text-indigo-700",
+  OKR: "bg-muted text-foreground border-border",
+  STRETCH: "bg-muted text-foreground border-border",
+  text: "bg-muted text-foreground border-border",
 };
 
 function CircularProgress({ value }: { value: number }) {
@@ -45,7 +45,7 @@ function CircularProgress({ value }: { value: number }) {
         cy="36"
         r={r}
         fill="none"
-        stroke="#7c3aed"
+        stroke="hsl(var(--primary))"
         strokeWidth="6"
         strokeDasharray={circ}
         strokeDashoffset={offset}
@@ -114,7 +114,7 @@ function GoalCard({
         </div>
         <div className="h-1.5 bg-muted rounded-full overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 rounded-full transition-all duration-500"
+            className="h-full bg-primary rounded-full transition-all duration-500"
             style={{ width: `${Math.min(goal.progress, 100)}%` }}
           />
         </div>
@@ -122,7 +122,7 @@ function GoalCard({
       <Button
         size="sm"
         variant="outline"
-        className="w-full text-violet-600 border-violet-200 hover:bg-violet-50"
+        className="w-full"
         onClick={handleEditProgress}
       >
         <TrendingUp className="w-3.5 h-3.5 mr-1.5" />
@@ -292,11 +292,11 @@ export default function GoalsPage() {
   return (
     <PageWrapper
       title="Goals & OKRs"
-      subtitle={`${goals.length} goals total`}
+      subtitle="Track your personal and team goals"
       actions={
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetTrigger asChild>
-            <Button size="sm" className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200">
+            <Button size="sm">
               <Plus className="w-4 h-4 mr-2" />
               New Goal
             </Button>
@@ -375,11 +375,11 @@ export default function GoalsPage() {
                 />
               </div>
               <Button
-                className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md"
+                className="w-full"
                 onClick={handleCreate}
                 disabled={createGoal.isPending}
               >
-                {createGoal.isPending ? "Creating???" : "Create Goal"}
+                {createGoal.isPending ? "Creating…" : "Create Goal"}
               </Button>
             </div>
           </SheetContent>
@@ -436,7 +436,7 @@ export default function GoalsPage() {
                   max={100}
                   value={progressValue}
                   onChange={handleProgressRangeChange}
-                  className="w-full accent-violet-600"
+                  className="w-full"
                 />
                 <Input
                   type="number"
@@ -448,16 +448,16 @@ export default function GoalsPage() {
               </div>
               <div className="h-2 bg-muted rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 rounded-full transition-all duration-300"
+                  className="h-full bg-primary rounded-full transition-all duration-300"
                   style={{ width: `${progressValue}%` }}
                 />
               </div>
               <Button
-                className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white"
+                className="w-full"
                 onClick={handleSaveProgress}
                 disabled={updateGoal.isPending}
               >
-                {updateGoal.isPending ? "Saving???" : "Save Progress"}
+                {updateGoal.isPending ? "Saving…" : "Save Progress"}
               </Button>
             </div>
           )}

@@ -1,0 +1,110 @@
+"use client";
+
+import { useEmployeeEmployment, useEmployeeTimeline } from "@/hooks/api/hr/employees";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { motion } from "framer-motion";
+import { GitBranch, Clock, FileText, AlertCircle } from "lucide-react";
+import type { HrTimelineEntry } from "@/types/hr/core";
+
+function entryIcon(type: HrTimelineEntry["type"]) {
+  if (type === "status_transition") return GitBranch;
+  if (type === "effective_change") return Clock;
+  return FileText;
+}
+
+function entryColor(type: HrTimelineEntry["type"]) {
+  if (type === "status_transition") return "bg-blue-100 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400";
+  if (type === "effective_change") return "bg-amber-100 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400";
+  return "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400";
+}
+
+interface Props {
+  userId: string;
+}
+
+export function EmployeeTimelineTab({ userId }: Props) {
+  const { data: employment, isLoading: empLoading } = useEmployeeEmployment(userId);
+  const { data: timeline, isLoading: timelineLoading } = useEmployeeTimeline(employment?.id);
+
+  const isLoading = empLoading || timelineLoading;
+
+  if (isLoading) {
+    return (
+      <div className="space-y-3">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Skeleton key={i} className="h-16 w-full rounded-xl" />
+        ))}
+      </div>
+    );
+  }
+
+  if (!employment) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <AlertCircle className="h-8 w-8 text-muted-foreground mb-3" />
+        <p className="text-sm text-muted-foreground">No employment record found for this employee.</p>
+      </div>
+    );
+  }
+
+  const entries = timeline?.data ?? [];
+
+  if (entries.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <Clock className="h-8 w-8 text-muted-foreground mb-3" />
+        <p className="text-sm font-medium text-foreground">No timeline events yet</p>
+        <p className="text-xs text-muted-foreground mt-1">Changes and events will appear here as they occur.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative space-y-0 pb-4">
+      <div className="absolute left-[19px] top-0 bottom-0 w-px bg-border" />
+      {entries.map((entry, idx) => {
+        const Icon = entryIcon(entry.type);
+        const colorClass = entryColor(entry.type);
+        return (
+          <motion.div
+            key={entry.id}
+            initial={{ opacity: 0, x: -12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: idx * 0.05, duration: 0.2, ease: "easeOut" }}
+            className="relative flex gap-4 pb-4"
+          >
+            <div className={cn("relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-background", colorClass)}>
+              <Icon className="h-4 w-4" />
+            </div>
+            <Card className="flex-1 rounded-xl border border-border bg-card shadow-sm">
+              <CardContent className="p-3">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-sm font-medium text-foreground leading-snug">{entry.action}</p>
+                  <span className="shrink-0 text-[11px] text-muted-foreground whitespace-nowrap">
+                    {format(new Date(entry.createdAt), "MMM d, yyyy")}
+                  </span>
+                </div>
+                {entry.data && Object.keys(entry.data).length > 0 && (
+                  <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
+                    {Object.entries(entry.data)
+                      .filter(([, v]) => v != null && v !== "")
+                      .slice(0, 4)
+                      .map(([k, v]) => (
+                        <span key={k} className="text-[11px] text-muted-foreground">
+                          <span className="font-medium capitalize">{k.replace(/([A-Z])/g, " $1").trim()}: </span>
+                          {String(v)}
+                        </span>
+                      ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+}

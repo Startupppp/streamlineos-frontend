@@ -1317,6 +1317,10 @@ Never hardcode content-area heights (`h-60`, `min-h-[260px]`, fixed skeleton blo
 - **No overlapped spacing:** a container owns its padding once — children never re-add horizontal padding inside a padded parent; no `space-y-*` combined with child `mt-*`; gaps come from ONE `gap-*` on the parent.
 - **Every page must render real data:** if an API fails, FIX the API/hook (report backend contract mismatches); demo org must have seed rows for every admin page and its detail (`[id]`) pages — check detail pages too, not just lists.
 
+## Blue replaces purple (living rule, added 2026-07-11)
+
+When replacing legacy violet/purple/indigo styling anywhere in the authenticated shell (gradient buttons, progress fills, active indicators, icon tints, chart seeds), the replacement accent is always the **blue family** (`blue-500`/`blue-600`) — never violet, and never a per-module accent substituted in its place. Emerald/amber/red remain semantic-status-only.
+
 ## Per-module identity (added 2026-07-02)
 
 One unified chrome (ink primary, neutral hovers, blue links) across ALL modules. Each module gets an ACCENT used ONLY for identity moments — activity-bar icon tint, active nav indicator, module overview hero tint, chart palette seed — never for buttons/hovers/body text:

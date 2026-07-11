@@ -14,13 +14,17 @@ import {
 import { HR_SCOPE_TYPES, SCOPE_TYPE_LABELS } from "@/types/hr/policies";
 import type { HrPolicyScopeType } from "@/types/hr/policies";
 
+function isScopeType(v: string): v is HrPolicyScopeType {
+  return (HR_SCOPE_TYPES as readonly string[]).includes(v);
+}
+
 export interface ScopeRow {
   scopeType: HrPolicyScopeType;
   scopeValue: string;
 }
 
 interface Props {
-  value: Array<{ scopeType: string; scopeValue: string }>;
+  value: ScopeRow[];
   onChange: (scopes: ScopeRow[]) => void;
   disabled?: boolean;
 }
@@ -63,7 +67,7 @@ export function PolicyScopesEditor({ value, onChange, disabled }: Props) {
         <div key={index} className="flex items-center gap-2">
           <Select
             value={row.scopeType}
-            onValueChange={(v) => handleTypeChange(index, v as HrPolicyScopeType)}
+            onValueChange={(v) => { if (isScopeType(v)) handleTypeChange(index, v); }}
             disabled={disabled}
           >
             <SelectTrigger className="h-8 text-xs w-44 shrink-0">

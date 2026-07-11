@@ -165,7 +165,7 @@ function TravelApprovalCard({
 
   return (
     <motion.div variants={fadeUp}>
-      <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60">
+      <Card className="bg-card border border-border rounded-lg shadow-sm">
         <CardContent className="p-5 space-y-3">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex items-start gap-3 min-w-0">

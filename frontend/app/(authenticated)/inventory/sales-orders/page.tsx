@@ -46,16 +46,28 @@ const STATUS_VARIANT: Record<
 > = {
   DRAFT: "secondary",
   CONFIRMED: "default",
+  PARTIALLY_RESERVED: "outline",
+  RESERVED: "outline",
+  PICKED: "outline",
+  PACKED: "outline",
+  PARTIALLY_SHIPPED: "outline",
   SHIPPED: "outline",
   INVOICED: "default",
+  CLOSED: "secondary",
   CANCELLED: "destructive",
 };
 
 const STATUS_CLASS: Record<SoStatus, string> = {
   DRAFT: "",
   CONFIRMED: "bg-blue-100 text-blue-800 border-blue-200",
+  PARTIALLY_RESERVED: "bg-amber-100 text-amber-800 border-amber-200",
+  RESERVED: "bg-amber-100 text-amber-800 border-amber-200",
+  PICKED: "bg-purple-100 text-purple-800 border-purple-200",
+  PACKED: "bg-purple-100 text-purple-800 border-purple-200",
+  PARTIALLY_SHIPPED: "bg-yellow-100 text-yellow-800 border-yellow-200",
   SHIPPED: "bg-yellow-100 text-yellow-800 border-yellow-200",
   INVOICED: "bg-green-100 text-green-800 border-green-200",
+  CLOSED: "bg-slate-100 text-slate-600 border-slate-200",
   CANCELLED: "",
 };
 

@@ -13,6 +13,12 @@ import type {
   UpdateProfileInput,
   OnboardEmployeeInput,
 } from "@/types/hr";
+import type {
+  HrEmployment,
+  HrTimelineResponse,
+  HrSensitiveData,
+  HrEffectiveDatedChange,
+} from "@/types/hr/core";
 
 export function useHrDepartments() {
   return useQuery({
@@ -202,5 +208,70 @@ export function useManagerScorecard(employeeId: string) {
       apiClient.get<ManagerScorecard>(`/hr/employees/${employeeId}/manager-scorecard`),
     enabled: !!employeeId,
     staleTime: 5 * 60_000,
+  });
+}
+
+export function useEmployeeEmployment(userId: string) {
+  return useQuery({
+    queryKey: queryKeys.hr.employeeEmployment(userId),
+    queryFn: () => apiClient.get<HrEmployment>(`/hr/employees/${userId}/employment`),
+    enabled: !!userId,
+    staleTime: 5 * 60_000,
+  });
+}
+
+export function useEmployeeTimeline(employmentId: number | undefined, params?: { page?: number; limit?: number }) {
+  return useQuery({
+    queryKey: queryKeys.hr.employeeTimeline(employmentId ?? 0, params),
+    queryFn: () => apiClient.get<HrTimelineResponse>(`/hr/employees/${employmentId}/timeline`, params as Record<string, unknown>),
+    enabled: !!employmentId,
+    staleTime: 2 * 60_000,
+  });
+}
+
+export function useEmployeeSensitive(employmentId: number | undefined) {
+  return useQuery({
+    queryKey: queryKeys.hr.employeeSensitive(employmentId ?? 0),
+    queryFn: () => apiClient.get<HrSensitiveData>(`/hr/employees/${employmentId}/sensitive`),
+    enabled: !!employmentId,
+    staleTime: 30_000,
+  });
+}
+
+export function useUpdateSensitive(employmentId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["hr", "employee", "sensitive", "update", employmentId],
+    mutationFn: (data: Partial<HrSensitiveData>) =>
+      apiClient.patch<{ success: boolean }>(`/hr/employees/${employmentId}/sensitive`, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.employeeSensitive(employmentId) }),
+  });
+}
+
+export function useEffectiveChanges(params?: { employmentId?: number; page?: number; limit?: number }) {
+  return useQuery({
+    queryKey: queryKeys.hr.effectiveChanges(params as Record<string, unknown>),
+    queryFn: () => apiClient.get<{ data: HrEffectiveDatedChange[]; pagination: { page: number; limit: number; total: number; totalPages: number } }>("/hr/effective-changes", params as Record<string, unknown>),
+    staleTime: 30_000,
+  });
+}
+
+export function useCreateEffectiveChange() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["hr", "effectiveChange", "create"],
+    mutationFn: (data: { employmentId: number; changeType: string; newValue: Record<string, unknown>; effectiveFrom: string; effectiveTo?: string }) =>
+      apiClient.post<HrEffectiveDatedChange>("/hr/effective-changes", data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.effectiveChanges() }),
+  });
+}
+
+export function useApproveEffectiveChange() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["hr", "effectiveChange", "approve"],
+    mutationFn: (changeId: number) =>
+      apiClient.patch<{ success: boolean }>(`/hr/effective-changes/${changeId}/approve`, {}),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.hr.effectiveChanges() }),
   });
 }

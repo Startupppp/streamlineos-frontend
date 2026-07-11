@@ -107,9 +107,7 @@ export default function EmployeesPage() {
   return (
     <PageWrapper
       title="Employee Directory"
-      subtitle={`${filtered.length} of ${employees.length} employee${
-        employees.length !== 1 ? "s" : ""
-      }`}
+      subtitle="Browse and manage all team members"
       actions={
         <div className="flex items-center gap-2">
           <ViewToggle<ViewMode>

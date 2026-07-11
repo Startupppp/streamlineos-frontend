@@ -24,7 +24,7 @@ import { Separator } from "@/components/ui/separator";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useHrAutomationEvents, useCreateHrAutomation, useUpdateHrAutomation } from "@/hooks/api/hr/hr-automations";
-import type { HrAutomationRule, HrAutomationActionType } from "@/types/hr/automations";
+import type { HrAutomationRule, HrAutomationAction, HrAutomationActionType } from "@/types/hr/automations";
 import { Plus, X } from "lucide-react";
 
 const CONDITION_OPERATORS = [
@@ -71,6 +71,44 @@ type FormValues = z.infer<typeof formSchema>;
 interface Props {
   rule?: HrAutomationRule;
   onClose: () => void;
+}
+
+function buildAction(type: string, configRaw: string): HrAutomationAction {
+  let parsed: Record<string, unknown> = {};
+  try {
+    const result = JSON.parse(configRaw);
+    if (result !== null && typeof result === "object" && !Array.isArray(result)) {
+      parsed = result as Record<string, unknown>;
+    }
+  } catch {
+    parsed = {};
+  }
+  switch (type as HrAutomationActionType) {
+    case "create_task":
+      return { type: "create_task", config: { title: String(parsed.title ?? ""), assigneeId: parsed.assigneeId !== undefined ? String(parsed.assigneeId) : undefined, dueInDays: typeof parsed.dueInDays === "number" ? parsed.dueInDays : undefined } };
+    case "start_workflow":
+      return { type: "start_workflow", config: { workflowId: String(parsed.workflowId ?? "") } };
+    case "send_notification":
+      return { type: "send_notification", config: { title: String(parsed.title ?? ""), message: String(parsed.message ?? ""), link: parsed.link !== undefined ? String(parsed.link) : undefined, roles: Array.isArray(parsed.roles) ? (parsed.roles as unknown[]).map(String) : undefined } };
+    case "send_email":
+      return { type: "send_email", config: { to: String(parsed.to ?? ""), subject: String(parsed.subject ?? ""), body: String(parsed.body ?? "") } };
+    case "assign_document":
+      return { type: "assign_document", config: { documentTypeId: Number(parsed.documentTypeId ?? 0) } };
+    case "generate_letter":
+      return { type: "generate_letter", config: { templateId: Number(parsed.templateId ?? 0) } };
+    case "assign_course":
+      return { type: "assign_course", config: { courseId: Number(parsed.courseId ?? 0) } };
+    case "assign_asset":
+      return { type: "assign_asset", config: { assetTypeId: Number(parsed.assetTypeId ?? 0) } };
+    case "create_hr_case":
+      return { type: "create_hr_case", config: { subject: String(parsed.subject ?? ""), categoryId: typeof parsed.categoryId === "number" ? parsed.categoryId : undefined } };
+    case "update_field":
+      return { type: "update_field", config: { field: String(parsed.field ?? ""), value: (parsed.value as string | number | boolean) ?? "" } };
+    case "call_webhook":
+      return { type: "call_webhook", config: { url: String(parsed.url ?? ""), method: parsed.method === "PUT" ? "PUT" : "POST" } };
+    default:
+      return { type: "create_task", config: { title: "" } };
+  }
 }
 
 function ActionConfigFields({ index, actionType }: { index: number; actionType: string }) {
@@ -141,15 +179,7 @@ export function AutomationUpsertSheet({ rule, onClose }: Props) {
       value: c.operator === "in" ? c.value.split(",").map((v) => v.trim()) : c.value,
     }));
 
-    const actions = values.actions.map((a) => {
-      let config: Record<string, unknown> = {};
-      try {
-        config = JSON.parse(a.configRaw) as Record<string, unknown>;
-      } catch {
-        config = {};
-      }
-      return { type: a.type, config };
-    });
+    const actions = values.actions.map((a) => buildAction(a.type, a.configRaw));
 
     const payload = {
       name: values.name,

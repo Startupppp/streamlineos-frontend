@@ -1,10 +1,20 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { EditEmployeeForm, type EmployeeData } from "./edit-employee-form";
 import { EmployeeAttendanceHistory } from "@/components/hr/employee-attendance-history";
 import { SelfEditProfileForm } from "@/components/hr/self-edit-profile-form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+const EmployeeTimelineTab = dynamic(
+  () => import("@/features/hr/employees/detail/timeline-tab").then(m => ({ default: m.EmployeeTimelineTab })),
+  { loading: () => <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}</div> }
+);
+const EmployeeSensitiveTab = dynamic(
+  () => import("@/features/hr/employees/detail/sensitive-tab").then(m => ({ default: m.EmployeeSensitiveTab })),
+  { loading: () => <div className="space-y-3">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-xl" />)}</div> }
+);
 import {
   useHrEmployeeStats,
   useHrEmployeeProjects,
@@ -39,6 +49,7 @@ import {
   CheckCircle2,
   XCircle,
   AlertCircle,
+  Shield,
 } from "lucide-react";
 import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -303,6 +314,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
   const router = useRouter();
   const { data: session } = useSession();
   const canManageEmployees = useCan("hr:employees:manage");
+  const canViewSensitive = useCan("hr:sensitive:view");
   const [terminateOpen, setTerminateOpen] = useState(false);
   const searchParams = useSearchParams();
   const defaultTab = searchParams.get("tab") ?? "overview";

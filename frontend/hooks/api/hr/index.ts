@@ -44,3 +44,4 @@ export * from "./policies";
 export * from "./hr-workflows";
 export * from "./hr-templates";
 export * from "./hr-automations";
+export * from "./hr-org";

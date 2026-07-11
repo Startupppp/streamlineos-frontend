@@ -7,8 +7,8 @@ export const policyFormSchema = z.object({
   description: z.string().max(2000).optional(),
   effectiveFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date"),
   effectiveTo: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z.literal("")),
-  priority: z.coerce.number().int().min(0).max(9999),
-  rules: z.record(z.unknown()),
+  priority: z.number().int().min(0).max(9999),
+  rules: z.record(z.string(), z.unknown()),
   scopes: z
     .array(
       z.object({

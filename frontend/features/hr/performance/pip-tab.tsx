@@ -373,7 +373,7 @@ export function PIPTab() {
                 </div>
                 <Input placeholder="Goal / objective" value={obj.objective} onChange={(e) => updateObjectiveField(idx, "objective", e.target.value)} className="h-8 text-xs" />
                 <Input placeholder="Success metric" value={obj.metric} onChange={(e) => updateObjectiveField(idx, "metric", e.target.value)} className="h-8 text-xs" />
-                <DatePicker value={obj.deadline ?? ""} onChange={(e) => updateObjectiveField(idx, "deadline", e.target.value)} placeholder="Pick a date" className="h-8 text-xs" />
+                <DatePicker value={obj.deadline ?? ""} onChange={(v) => updateObjectiveField(idx, "deadline", v)} placeholder="Pick a date" className="h-8 text-xs" />
               </div>
             ))}
           </div>

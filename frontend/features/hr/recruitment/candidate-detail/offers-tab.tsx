@@ -412,11 +412,11 @@ export function OffersTab({ candidateId }: Props) {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">Joining Date</label>
-                <DatePicker value={joiningDate ?? ""} onChange={(e) => setJoiningDate(e.target.value)} placeholder="Pick a date" className="h-8 text-sm" />
+                <DatePicker value={joiningDate ?? ""} onChange={(v) => setJoiningDate(v)} placeholder="Pick a date" className="h-8 text-sm" />
               </div>
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">Valid Until</label>
-                <DatePicker value={validUntil ?? ""} onChange={(e) => setValidUntil(e.target.value)} placeholder="Pick a date" className="h-8 text-sm" />
+                <DatePicker value={validUntil ?? ""} onChange={(v) => setValidUntil(v)} placeholder="Pick a date" className="h-8 text-sm" />
               </div>
             </div>
             <div className="space-y-1.5">

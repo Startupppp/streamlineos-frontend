@@ -39,7 +39,7 @@ export default function HrSettingsLayout({
               >
                 {tab.label}
                 {isActive && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600 rounded-full" />
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-full" />
                 )}
               </Link>
             );

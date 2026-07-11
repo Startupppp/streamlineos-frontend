@@ -115,6 +115,15 @@ export const queryKeys = {
     hrTemplate: (id: number) => [...base, "hr", "template", id] as const,
     hrTemplateRenders: (templateId: number) => [...base, "hr", "template", templateId, "renders"] as const,
     hrTemplateVariables: () => [...base, "hr", "templateVariables"] as const,
+    employeeEmployment: (userId: string) => [...base, "hr", "employeeEmployment", userId] as const,
+    employeeTimeline: (employmentId: number, params?: Record<string, unknown>) => [...base, "hr", "employeeTimeline", employmentId, params] as const,
+    employeeSensitive: (employmentId: number) => [...base, "hr", "employeeSensitive", employmentId] as const,
+    effectiveChanges: (params?: Record<string, unknown>) => [...base, "hr", "effectiveChanges", params] as const,
+    orgLocations: () => [...base, "hr", "org", "locations"] as const,
+    orgRoles: () => [...base, "hr", "org", "roles"] as const,
+    orgLevels: () => [...base, "hr", "org", "levels"] as const,
+    orgTeams: () => [...base, "hr", "org", "teams"] as const,
+    orgHeadcount: (groupBy: string) => [...base, "hr", "org", "headcount", groupBy] as const,
   },
 
   leads: {
