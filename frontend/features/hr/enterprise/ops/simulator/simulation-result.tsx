@@ -24,7 +24,7 @@ export function SimulationResult({ result, label }: Props) {
         <FlaskConical className="h-4 w-4 text-blue-600" />
         <p className="text-sm font-medium text-blue-700">Simulation Result</p>
       </div>
-      {result.simulation && (
+      {Boolean(result.simulation) && (
         <p className="text-xs text-blue-600 font-medium">{String(result.simulation)}</p>
       )}
       <div className="rounded-md bg-white/70 border border-blue-100 p-3">

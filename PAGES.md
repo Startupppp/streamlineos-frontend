@@ -681,3 +681,36 @@ Full end-to-end: backend NestJS API → TanStack Query hooks → Next.js pages +
 - [x] `/knowledge/import` — Import & Export: mode toggle (Markdown files / Paste text); file-multiple FileReader parse → {title, contentText}; preview table with per-row dedupe warning + remove; import mutation → useImportKbPages (POST /kb/pages/import); import history table (useKbImportJobs); ExportJobsCard (useKbExportJobs, GET /kb/export-jobs); permission gate useCan("kb:pages:import"); starter templates section on /knowledge/templates (15 types, see features/knowledge-base/lib/starter-templates.ts)
 - [x] `/knowledge-base` → redirect to `/knowledge` (back-compat shim for old DB notification links)
 - [x] `/knowledge-base/pages/[pageId]` → redirect to `/knowledge/pages/[pageId]` (back-compat shim)
+
+---
+
+## HRMS PeopleOS Rebuild (tasks/hrms/ — 44-doc PRD, 2026-07-11)
+
+Full configurable PeopleOS: hardcoded HR rules refactored onto shared engines (policy/workflow/automation/template), all product modules + 15 enterprise packs shipped. Backend + frontend typecheck green. Migrations 0201–0225 (0222 skipped, no table) pending one TTY session — see `tasks/hrms/_reports/MIGRATION-RUNBOOK.md`.
+
+### Shared engines (config, module-owned under /hr/settings)
+- [x] `/hr/settings` — no-code config hub (Overview + Simple/Advanced) · [x] `/hr/settings/policies` — policy engine (15 types, scoped, effective-dated, versioned, preview-why) · [x] `/hr/settings/workflows` — approval workflow engine (multi-step/parallel/delegation/escalation) · [x] `/hr/settings/automations` — event→condition→action engine (loop-guarded, run logs) · [x] `/hr/settings/templates` — 13-kind template engine (lifecycle + variables + renders) · [x] `/hr/settings/forms` — no-code form builder (conditional/workflow-attached/public intake) · [x] `/hr/settings/custom-fields` — dynamic fields · [x] `/hr/settings/preview` — effective-rule "why" · [x] `/hr/settings/versions` — version history + rollback · [x] `/hr/settings/import-export` · [x] `/hr/settings/integrations` — webhooks + Composio apps
+
+### Core people & org
+- [x] `/hr/employees` (list, lifecycle+worker-type filters) · [x] `/hr/employees/[employeeId]` — 360 profile (timeline, gated sensitive tab, change governance) · [x] `/hr/org` — org hub (teams/locations/roles/levels + headcount) · [x] `/hr/org-chart`
+
+### Time, leave, payroll-inputs (policy-driven, hardcode removed)
+- [x] `/hr/attendance` (policy grace/OT/auto-checkout, regularization workflow, geofence) · [x] `/hr/shifts` `/hr/rosters` `/hr/overtime` `/hr/comp-off` `/hr/biometric` `/hr/geofencing` · [x] `/hr/leaves` (ledger-based, policy accrual, workflow approval) · [x] `/payroll/inputs` — buildPayrollInputs contract (build/lock/adjustments, full source traceability)
+
+### Lifecycle
+- [x] `/hr/onboarding` (+`/probation` reviews+confirmation, template-driven) · [x] `/hr/exit` `/hr/termination` `/hr/fnf` (asset-recovery gate, letters via template engine, alumni) · recruitment→employee handoff (no duplicate person)
+
+### Documents, assets, performance, learning
+- [x] `/hr/documents` (letters+e-sign+compliance calendar) `/hr/document-types` `/hr/document-review` `/hr/signatures` `/hr/handbook` · [x] `/hr/assets` `/hr/asset-returns` (+access requests) · [x] `/hr/performance` (calibration/9-box/succession) `/hr/goals` `/hr/kpis` `/hr/feedback` · [x] `/hr/courses` `/hr/training` `/hr/skills` `/hr/certifications` `/hr/career-development` `/hr/learning-paths`
+
+### Engagement, cases, benefits, helpdesk
+- [x] `/hr/engagement` (mood/kudos/badges/polls/communities/campaigns, min-5 anonymity) `/hr/announcements` · [x] `/hr/cases` (grievance/disciplinary, anonymous reporter protected, confidential tier) `/hr/safety` (incidents + wellness) · [x] `/hr/benefits` (plans/enrollment/dependents/claims→payroll) `/hr/travel` `/hr/expenses` `/hr/reimbursements` · [x] `/hr/helpdesk` (categorized/confidential routing + KB suggest)
+
+### Localization, contractors, analytics/AI
+- [x] `/hr/compliance` (work-auth/statutory calendar/IN pack) `/hr/contingent` (contracts, convert-to-employee) · [x] `/hr/analytics` command center (drill-down, permission-gated) `/hr/workforce` planning · AI HR copilot tools in global assistant (policy Q&A w/ citations, review/letter drafts, permission-safe)
+
+### Enterprise packs (PRD 43)
+- [x] `/hr/devices` `/hr/compensation-planning` `/hr/equity` `/hr/workforce-cost` (packs 1-5) · [x] `/hr/legal-holds` `/hr/retention` `/hr/delegations` `/hr/positions` `/hr/labor-relations` (packs 6-10) · [x] `/hr/accommodations` `/hr/emergency` `/hr/identity` `/hr/simulator` `/hr/event-stream` (packs 11-15)
+
+### Cross-cutting
+- [x] One unified `/calendar` (HR events as a toggleable source; `/hr/calendar` removed) · [x] Central notifications for HR events · [x] 107 engine unit/integration tests green (policy/workflow/automation/template/payroll-inputs/leave-ledger/attendance/cases) · [x] blue-accent conformance (violet retired)

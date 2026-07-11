@@ -159,7 +159,7 @@ export function EventStreamPageContent() {
           />
           {dictionary?.immutable && (
             <p className="mt-3 text-xs text-muted-foreground">
-              {dictionary.note ?? "Event stream is immutable."}
+              Event stream is append-only and immutable.
             </p>
           )}
         </TabsContent>

@@ -62,7 +62,7 @@ export default function DevicesPage() {
             {failedLoading ? (
               <div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-12 rounded-lg" />)}</div>
             ) : !failedSyncs?.length ? (
-              <EmptyState illustrationPreset="empty" title="No failed syncs" description="All device syncs completed successfully" compact className="h-48 border-0 shadow-none" />
+              <EmptyState illustrationPreset="default" title="No failed syncs" description="All device syncs completed successfully" compact className="h-48 border-0 shadow-none" />
             ) : (
               <div className="space-y-2">
                 {failedSyncs.map((log) => (
