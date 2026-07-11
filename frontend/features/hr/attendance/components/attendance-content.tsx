@@ -7,6 +7,7 @@ import { AttendanceHeatmap } from "@/features/hr/attendance/attendance-heatmap";
 import { ManageHolidaysCard } from "@/features/hr/attendance/manage-holidays-card";
 import { DailyHistoryTable } from "@/features/hr/attendance/daily-history-table";
 import { TeamAttendanceCard } from "@/features/hr/attendance/team-attendance-card";
+import { AttendanceRegularizationDialog } from "@/features/hr/attendance/attendance-regularization-dialog";
 
 export function AttendanceContent({ userId, isAdmin = false }: { userId: string; isAdmin?: boolean }) {
   return (
@@ -15,6 +16,7 @@ export function AttendanceContent({ userId, isAdmin = false }: { userId: string;
         <div className="space-y-4">
           <TimerCard />
           <WfhBalancesCard />
+          <AttendanceRegularizationDialog />
           {isAdmin && <TeamAttendanceCard />}
         </div>
 

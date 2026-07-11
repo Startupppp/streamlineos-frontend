@@ -252,6 +252,7 @@ export function useEffectiveChanges(params?: { employmentId?: number; page?: num
   return useQuery({
     queryKey: queryKeys.hr.effectiveChanges(params as Record<string, unknown>),
     queryFn: () => apiClient.get<{ data: HrEffectiveDatedChange[]; pagination: { page: number; limit: number; total: number; totalPages: number } }>("/hr/effective-changes", params as Record<string, unknown>),
+    enabled: !!params?.employmentId,
     staleTime: 30_000,
   });
 }

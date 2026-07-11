@@ -1045,6 +1045,16 @@ export const queryKeys = {
     runInputs: (runId: number, params?: Record<string, unknown>) => [...base, "payroll", "run-inputs", runId, "list", params] as const,
   },
 
+  hrPayrollInputs: {
+    all: [...base, "hr-payroll-inputs"] as const,
+    periods: (params?: Record<string, unknown>) => [...base, "hr-payroll-inputs", "periods", params] as const,
+    period: (periodId: number) => [...base, "hr-payroll-inputs", "periods", periodId] as const,
+    section: (periodId: number, section: string, params?: Record<string, unknown>) =>
+      [...base, "hr-payroll-inputs", "periods", periodId, section, params] as const,
+    adjustments: (periodId: number, params?: Record<string, unknown>) =>
+      [...base, "hr-payroll-inputs", "periods", periodId, "adjustments", params] as const,
+  },
+
   feedbucket: {
     all: [...base, "feedbucket"] as const,
     widgets: () => [...base, "feedbucket", "widgets"] as const,

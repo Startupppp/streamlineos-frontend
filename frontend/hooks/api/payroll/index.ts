@@ -1,3 +1,4 @@
+export * from "./payroll-inputs";
 export * from "./templates";
 export * from "./policies";
 export * from "./components";

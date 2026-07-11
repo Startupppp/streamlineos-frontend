@@ -45,3 +45,6 @@ export * from "./hr-workflows";
 export * from "./hr-templates";
 export * from "./hr-automations";
 export * from "./hr-org";
+export * from "./letters";
+export * from "./compliance-calendar";
+export * from "./access-requests";

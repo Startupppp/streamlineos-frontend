@@ -164,6 +164,12 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
     routes: [
       {
+        label: "Approvals Inbox",
+        icon: ClipboardCheck,
+        href: "/hr/approvals",
+        requiredPermission: "hr:workflows:approve",
+      },
+      {
         label: "Employees",
         icon: Users,
         href: "/hr",
@@ -185,6 +191,12 @@ export const NAV_GROUPS: NavGroup[] = [
             label: "Org Chart",
             icon: Network,
             href: "/hr/org-chart",
+            requiredPermission: "hr:employees:view",
+          },
+          {
+            label: "Organization",
+            icon: Building2,
+            href: "/hr/org",
             requiredPermission: "hr:employees:view",
           },
           {

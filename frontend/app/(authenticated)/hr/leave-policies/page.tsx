@@ -71,12 +71,12 @@ function PolicyCard({
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.22, ease: "easeOut", delay: index * 0.08 }}
-      className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 p-5 flex flex-col gap-3 hover:shadow-2xl transition-shadow duration-200"
+      className="bg-card border border-border rounded-lg shadow-sm p-5 flex flex-col gap-3 hover:shadow-md transition-shadow duration-200"
     >
       <div className="flex items-start justify-between">
         <div>
-          <h3 className="font-semibold text-slate-900">{policy.name}</h3>
-          <p className="text-xs text-slate-500 mt-0.5">Leave Type #{policy.leaveTypeId}</p>
+          <h3 className="font-semibold text-foreground">{policy.name}</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">Leave Type #{policy.leaveTypeId}</p>
         </div>
         {canManage && (
           <div className="flex gap-1">
@@ -95,16 +95,16 @@ function PolicyCard({
         )}
       </div>
 
-      <div className="flex items-center gap-2 text-sm text-slate-700">
-        <Clock className="h-4 w-4 text-violet-500 shrink-0" />
+      <div className="flex items-center gap-2 text-sm text-foreground">
+        <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
         <span>
           {policy.accrualRate} {ACCRUAL_LABELS[policy.accrualType] ?? "days"}
         </span>
       </div>
 
       {Number(policy.carryForwardDays) > 0 && (
-        <div className="flex items-center gap-2 text-sm text-slate-600">
-          <Calendar className="h-4 w-4 text-indigo-400 shrink-0" />
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
           <span>Carry forward: {policy.carryForwardDays} days</span>
         </div>
       )}
@@ -125,7 +125,7 @@ function PolicyCard({
         </Badge>
       </div>
 
-      <p className="text-xs text-slate-400 mt-auto pt-2 border-t border-slate-100">
+      <p className="text-xs text-muted-foreground mt-auto pt-2 border-t border-border">
         Effective from {policy.effectiveFrom}
       </p>
     </motion.div>
@@ -140,11 +140,11 @@ function EmptyState({ onCreateClick }: { onCreateClick: () => void }) {
       transition={{ duration: 0.22, ease: "easeOut" }}
       className="flex-1 flex flex-col items-center justify-center text-center py-24"
     >
-      <div className="bg-violet-50 rounded-2xl p-5 mb-4">
-        <Settings2 className="h-10 w-10 text-violet-500" />
+      <div className="bg-muted rounded-lg p-5 mb-4">
+        <Settings2 className="h-10 w-10 text-muted-foreground" />
       </div>
-      <h3 className="text-lg font-semibold text-slate-900">No leave policies yet</h3>
-      <p className="text-slate-500 text-sm mt-1 max-w-xs">
+      <h3 className="text-lg font-semibold text-foreground">No leave policies yet</h3>
+      <p className="text-muted-foreground text-sm mt-1 max-w-xs">
         Define accrual rules and carry-forward policies for each leave type.
       </p>
       <Button className="mt-6" onClick={onCreateClick}>
@@ -269,7 +269,7 @@ export default function LeavePoliciesPage() {
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-52 rounded-2xl" />
+            <Skeleton key={i} className="h-52 rounded-lg" />
           ))}
         </div>
       ) : !policies?.length ? (
@@ -409,7 +409,7 @@ export default function LeavePoliciesPage() {
                     </FormControl>
                     <div>
                       <FormLabel className="font-medium cursor-pointer">Encashable</FormLabel>
-                      <p className="text-xs text-slate-500">Allow leave balance encashment</p>
+                      <p className="text-xs text-muted-foreground">Allow leave balance encashment</p>
                     </div>
                   </FormItem>
                 )}
@@ -424,7 +424,7 @@ export default function LeavePoliciesPage() {
                     </FormControl>
                     <div>
                       <FormLabel className="font-medium cursor-pointer">Probation Restricted</FormLabel>
-                      <p className="text-xs text-slate-500">Restrict during probation period</p>
+                      <p className="text-xs text-muted-foreground">Restrict during probation period</p>
                     </div>
                   </FormItem>
                 )}

@@ -24,7 +24,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { useReviewCycles } from "@/hooks/api/hr";
 import type { ReviewCycle } from "@/types/hr";
 
-const CHART_COLORS = ["#0b1220", "#3b82f6", "#64748b", "#0ea5e9"];
+const CHART_COLORS = ["#1d4ed8", "#06b6d4", "#60a5fa", "#8b5cf6"];
 
 const CYCLE_STATUS_STYLES: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground border-border",
@@ -165,7 +165,7 @@ export default function PerformanceAnalyticsPage() {
                       contentStyle={{ borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }}
                       cursor={{ fill: "#f8f7ff" }}
                     />
-                    <Bar dataKey="count" fill="#0b1220" radius={[6, 6, 0, 0]} />
+                    <Bar dataKey="count" fill="#1d4ed8" radius={[6, 6, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               )}

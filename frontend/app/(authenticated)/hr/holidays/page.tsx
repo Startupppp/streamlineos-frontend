@@ -59,18 +59,18 @@ function HolidayItem({
       initial={{ opacity: 0, x: -8 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.18, ease: "easeOut" }}
-      className="flex items-center gap-3 bg-white/90 backdrop-blur-sm rounded-xl border border-slate-200/80 px-4 py-3 shadow-sm"
+      className="flex items-center gap-3 bg-card border border-border rounded-lg px-4 py-3 shadow-sm"
     >
-      <div className="bg-violet-100 rounded-lg px-2.5 py-1.5 text-center min-w-[48px]">
-        <p className="text-xs font-medium text-violet-600">{format(parseISO(holiday.date), "MMM")}</p>
-        <p className="text-lg font-bold text-violet-800 leading-none">{format(parseISO(holiday.date), "d")}</p>
+      <div className="bg-muted rounded-md px-2.5 py-1.5 text-center min-w-[48px]">
+        <p className="text-xs font-medium text-muted-foreground">{format(parseISO(holiday.date), "MMM")}</p>
+        <p className="text-lg font-bold text-foreground leading-none">{format(parseISO(holiday.date), "d")}</p>
       </div>
       <div className="flex-1 min-w-0">
-        <p className="font-medium text-slate-900 truncate">{holiday.name}</p>
-        <p className="text-xs text-slate-400">{format(parseISO(holiday.date), "EEEE, MMMM d")}</p>
+        <p className="font-medium text-foreground truncate">{holiday.name}</p>
+        <p className="text-xs text-muted-foreground">{format(parseISO(holiday.date), "EEEE, MMMM d")}</p>
       </div>
       {holiday.recurring && (
-        <Badge variant="secondary" className="shrink-0 text-xs bg-indigo-50 text-indigo-700 border-indigo-200">
+        <Badge variant="secondary" className="shrink-0 text-xs">
           <RotateCcw className="h-3 w-3 mr-1" /> Recurring
         </Badge>
       )}
@@ -224,10 +224,10 @@ export default function HolidaysPage() {
       {isLoading ? (
         <div className="space-y-4">
           <Skeleton className="h-10 w-64" />
-          <Skeleton className="h-72 rounded-2xl" />
+          <Skeleton className="h-72 rounded-lg" />
           <div className="space-y-2">
             {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-16 rounded-xl" />
+              <Skeleton key={i} className="h-16 rounded-lg" />
             ))}
           </div>
         </div>
@@ -243,8 +243,8 @@ export default function HolidaysPage() {
           >
             {Object.keys(holidaysByMonth).length === 0 ? (
               <div className="flex flex-col items-center justify-center py-24 text-center">
-                <CalendarDays className="h-10 w-10 text-slate-300 mb-3" />
-                <p className="text-slate-500 font-medium">No holidays added yet</p>
+                <CalendarDays className="h-10 w-10 text-muted-foreground/40 mb-3" />
+                <p className="text-muted-foreground font-medium">No holidays added yet</p>
                 {canManage && (
                   <Button className="mt-4" onClick={handleCreateClick}>
                     <Plus className="h-4 w-4 mr-2" /> Add Holiday
@@ -254,7 +254,7 @@ export default function HolidaysPage() {
             ) : (
               Object.entries(holidaysByMonth).map(([month, items]) => (
                 <div key={month}>
-                  <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">{month}</h3>
+                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{month}</h3>
                   <div className="space-y-2">
                     {items.map((h) => (
                       <HolidayItem
@@ -281,19 +281,19 @@ export default function HolidaysPage() {
             transition={{ duration: 0.22, ease: "easeOut" }}
             className="space-y-4"
           >
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 p-4">
+            <div className="bg-card border border-border rounded-lg shadow-sm p-4">
               <div className="flex items-center justify-between mb-4">
                 <Button variant="ghost" size="icon" onClick={handlePrevMonth}>
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <h2 className="text-lg font-semibold text-slate-900">{format(viewDate, "MMMM yyyy")}</h2>
+                <h2 className="text-lg font-semibold text-foreground">{format(viewDate, "MMMM yyyy")}</h2>
                 <Button variant="ghost" size="icon" onClick={handleNextMonth}>
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
               <div className="grid grid-cols-7 gap-1">
                 {WEEKDAYS.map((day) => (
-                  <div key={day} className="text-center text-xs font-medium text-slate-400 py-1">
+                  <div key={day} className="text-center text-xs font-medium text-muted-foreground py-1">
                     {day}
                   </div>
                 ))}
@@ -306,17 +306,17 @@ export default function HolidaysPage() {
                   return (
                     <div
                       key={day.toISOString()}
-                      className={`relative flex flex-col items-center justify-start rounded-lg p-1.5 min-h-[40px] text-sm ${
-                        isHoliday ? "bg-violet-50 border border-violet-200" : "hover:bg-slate-50"
+                      className={`relative flex flex-col items-center justify-start rounded-md p-1.5 min-h-[40px] text-sm ${
+                        isHoliday ? "bg-blue-50 border border-blue-200" : "hover:bg-muted"
                       }`}
                     >
-                      <span className={`font-medium ${isHoliday ? "text-violet-700" : "text-slate-700"}`}>
+                      <span className={`font-medium ${isHoliday ? "text-primary" : "text-foreground"}`}>
                         {format(day, "d")}
                       </span>
                       {isHoliday && (
                         <div className="flex gap-0.5 mt-0.5">
                           {dayHolidays.slice(0, 2).map((_, idx) => (
-                            <span key={idx} className="w-1.5 h-1.5 rounded-full bg-violet-500" />
+                            <span key={idx} className="w-1.5 h-1.5 rounded-full bg-blue-600" />
                           ))}
                         </div>
                       )}
@@ -327,13 +327,13 @@ export default function HolidaysPage() {
             </div>
 
             <div className="space-y-2">
-              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 {format(viewDate, "MMMM")} Holidays
               </h3>
               {monthHolidays.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center bg-white/60 rounded-2xl border border-slate-200/80">
-                  <CalendarDays className="h-8 w-8 text-slate-300 mb-2" />
-                  <p className="text-slate-400 text-sm">No holidays in {format(viewDate, "MMMM")}</p>
+                <div className="flex flex-col items-center justify-center py-12 text-center bg-muted/20 rounded-lg border border-border">
+                  <CalendarDays className="h-8 w-8 text-muted-foreground/40 mb-2" />
+                  <p className="text-muted-foreground text-sm">No holidays in {format(viewDate, "MMMM")}</p>
                   {canManage && (
                     <Button variant="ghost" size="sm" className="mt-2" onClick={handleCreateClick}>
                       <Plus className="h-3.5 w-3.5 mr-1" /> Add one
@@ -400,7 +400,7 @@ export default function HolidaysPage() {
                     </FormControl>
                     <div>
                       <FormLabel className="font-medium cursor-pointer">Recurring</FormLabel>
-                      <p className="text-xs text-slate-500">Repeat annually on the same date</p>
+                      <p className="text-xs text-muted-foreground">Repeat annually on the same date</p>
                     </div>
                   </FormItem>
                 )}

@@ -39,37 +39,37 @@ import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
-  useAnnouncements,
-  useAllAnnouncements,
-  useCreateAnnouncement,
-  useUpdateAnnouncement,
-  useDeleteAnnouncement,
-  useMarkAnnouncementRead,
-  type Announcement,
-  type CreateAnnouncementData,
+  useHrAnnouncements,
+  useAllHrAnnouncements,
+  useCreateHrAnnouncement,
+  useUpdateHrAnnouncement,
+  useDeleteHrAnnouncement,
+  useMarkHrAnnouncementRead,
+  type HrAnnouncement,
+  type CreateHrAnnouncementData,
 } from "@/hooks/api/hr/announcements";
 
 type ActiveTab = "published" | "all";
 
-const TARGET_TYPE_ICONS: Record<Announcement["targetType"], React.ReactNode> = {
+const TARGET_TYPE_ICONS: Record<HrAnnouncement["targetType"], React.ReactNode> = {
   ALL: <Globe className="h-3 w-3" />,
   DEPARTMENT: <Users className="h-3 w-3" />,
   BRANCH: <Building2 className="h-3 w-3" />,
   ROLE: <Tag className="h-3 w-3" />,
 };
 
-const TARGET_TYPE_LABELS: Record<Announcement["targetType"], string> = {
+const TARGET_TYPE_LABELS: Record<HrAnnouncement["targetType"], string> = {
   ALL: "Everyone",
   DEPARTMENT: "Department",
   BRANCH: "Branch",
   ROLE: "Role",
 };
 
-const STATUS_COLORS: Record<Announcement["status"], string> = {
-  DRAFT: "bg-slate-100 text-slate-600 border-slate-200",
-  SCHEDULED: "bg-blue-50 text-blue-600 border-blue-200",
-  PUBLISHED: "bg-emerald-50 text-emerald-600 border-emerald-200",
-  EXPIRED: "bg-orange-50 text-orange-600 border-orange-200",
+const STATUS_COLORS: Record<HrAnnouncement["status"], string> = {
+  DRAFT: "bg-slate-100 text-slate-700 border-slate-200",
+  SCHEDULED: "bg-blue-50 text-blue-700 border-blue-200",
+  PUBLISHED: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  EXPIRED: "bg-amber-50 text-amber-700 border-amber-200",
 };
 
 function getInitials(id: string): string {
@@ -85,9 +85,9 @@ function formatDate(dateStr: string): string {
 }
 
 interface AnnouncementCardProps {
-  announcement: Announcement;
+  announcement: HrAnnouncement;
   canManage: boolean;
-  onEdit: (a: Announcement) => void;
+  onEdit: (a: HrAnnouncement) => void;
   onDelete: (id: number) => void;
   onMarkRead: (id: number) => void;
 }
@@ -188,7 +188,7 @@ function AnnouncementCard({
             <button
               type="button"
               onClick={handleToggleExpand}
-              className="mt-1.5 flex items-center gap-1 text-[11px] font-medium text-accent hover:text-accent/80 transition-colors"
+              className="mt-1.5 flex items-center gap-1 text-[11px] font-medium text-blue-600 hover:text-blue-700 transition-colors"
             >
               {expanded ? (
                 <>
@@ -209,7 +209,7 @@ function AnnouncementCard({
   );
 }
 
-const EMPTY_FORM: CreateAnnouncementData = {
+const EMPTY_FORM: CreateHrAnnouncementData = {
   title: "",
   content: "",
   targetType: "ALL",
@@ -222,19 +222,19 @@ const EMPTY_FORM: CreateAnnouncementData = {
 function AnnouncementsContent() {
   const canManage = useCan("hr:announcements:manage");
 
-  const { data: published, isLoading: loadingPublished, isError: errorPublished, refetch: refetchPublished } = useAnnouncements();
-  const { data: all, isLoading: loadingAll, isError: errorAll, refetch: refetchAll } = useAllAnnouncements();
+  const { data: published, isLoading: loadingPublished, isError: errorPublished, refetch: refetchPublished } = useHrAnnouncements();
+  const { data: all, isLoading: loadingAll, isError: errorAll, refetch: refetchAll } = useAllHrAnnouncements();
 
-  const create = useCreateAnnouncement();
-  const update = useUpdateAnnouncement();
-  const remove = useDeleteAnnouncement();
-  const markRead = useMarkAnnouncementRead();
+  const create = useCreateHrAnnouncement();
+  const update = useUpdateHrAnnouncement();
+  const remove = useDeleteHrAnnouncement();
+  const markRead = useMarkHrAnnouncementRead();
 
   const [activeTab, setActiveTab] = useState<ActiveTab>("published");
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [editTarget, setEditTarget] = useState<Announcement | null>(null);
+  const [editTarget, setEditTarget] = useState<HrAnnouncement | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
-  const [formData, setFormData] = useState<CreateAnnouncementData>(EMPTY_FORM);
+  const [formData, setFormData] = useState<CreateHrAnnouncementData>(EMPTY_FORM);
 
   const displayedList = useMemo(() => {
     if (activeTab === "all" && canManage) return all ?? [];
@@ -262,7 +262,7 @@ function AnnouncementsContent() {
     setSheetOpen(true);
   }, [resetForm]);
 
-  const handleEdit = useCallback((a: Announcement) => {
+  const handleEdit = useCallback((a: HrAnnouncement) => {
     setEditTarget(a);
     setFormData({
       title: a.title,
@@ -300,11 +300,11 @@ function AnnouncementsContent() {
   }, []);
 
   const handleTargetTypeChange = useCallback((value: string) => {
-    setFormData((prev) => ({ ...prev, targetType: value as Announcement["targetType"] }));
+    setFormData((prev) => ({ ...prev, targetType: value as HrAnnouncement["targetType"] }));
   }, []);
 
   const handleStatusChange = useCallback((value: string) => {
-    setFormData((prev) => ({ ...prev, status: value as Announcement["status"] }));
+    setFormData((prev) => ({ ...prev, status: value as HrAnnouncement["status"] }));
   }, []);
 
   const handlePinnedChange = useCallback((checked: boolean) => {
@@ -609,7 +609,7 @@ function AnnouncementsContent() {
             />
           </div>
 
-          <div className="flex items-center justify-between rounded-xl border border-border bg-slate-50/50 px-4 py-3">
+          <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-4 py-3">
             <div>
               <p className="text-xs font-medium text-foreground">Pin announcement</p>
               <p className="text-[11px] text-muted-foreground mt-0.5">

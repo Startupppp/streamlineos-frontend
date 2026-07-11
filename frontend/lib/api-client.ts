@@ -74,6 +74,7 @@ const MIGRATED_PREFIXES = [
   "/hr/org",
   "/hr/org-chart",
   "/hr/people",
+  "/hr/payroll-inputs",
   "/hr/payroll-reports",
   "/hr/payroll",
   "/hr/payrolls",

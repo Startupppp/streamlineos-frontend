@@ -24,7 +24,7 @@ export function HeadcountStats({ groupBy }: Props) {
 
   if (!data || data.length === 0) return null;
 
-  const total = data.reduce((sum, g) => sum + g.count, 0);
+  const total = data.reduce((sum, g) => sum + g.headcount, 0);
 
   return (
     <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 mb-4">
@@ -46,7 +46,7 @@ export function HeadcountStats({ groupBy }: Props) {
         >
           <CardContent className="p-3">
             <p className="text-xl font-bold tabular-nums text-foreground">
-              {group.count}
+              {group.headcount}
             </p>
             <p className="text-[11px] text-muted-foreground truncate">
               {group.groupName ?? "Unknown"}

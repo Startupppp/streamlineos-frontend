@@ -350,7 +350,7 @@ export default function LearningAnalyticsPage() {
                             dataKey="count"
                             name="Enrollments"
                             radius={[4, 4, 0, 0]}
-                            fill="#0b1220"
+                            fill="#1d4ed8"
                           />
                         </BarChart>
                       </ResponsiveContainer>

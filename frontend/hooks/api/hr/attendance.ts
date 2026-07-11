@@ -197,3 +197,64 @@ export function useHrTeamAttendanceStatus() {
     refetchInterval: 60_000,
   });
 }
+
+export interface AttendanceRegularization {
+  id: number;
+  orgId: string;
+  userId: string;
+  attendanceDate: string;
+  requestedCheckIn: string | null;
+  requestedCheckOut: string | null;
+  reason: string;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  workflowInstanceId: string | null;
+  approvedBy: string | null;
+  approvedAt: string | null;
+  rejectedBy: string | null;
+  rejectedAt: string | null;
+  rejectionReason: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateRegularizationInput {
+  attendanceDate: string;
+  requestedCheckIn?: string;
+  requestedCheckOut?: string;
+  reason: string;
+}
+
+export function useHrRegularizations(params?: {
+  userId?: string;
+  status?: string;
+  startDate?: string;
+  endDate?: string;
+  page?: number;
+  limit?: number;
+}) {
+  return useQuery({
+    queryKey: [...queryKeys.hr.all, "regularizations", params] as const,
+    queryFn: () =>
+      apiClient.get<{ data: AttendanceRegularization[]; page: number; limit: number }>(
+        "/hr/attendance/regularizations",
+        params as Record<string, unknown>,
+      ),
+    staleTime: 30_000,
+  });
+}
+
+export function useCreateRegularization(
+  options?: Omit<UseMutationOptions<AttendanceRegularization, Error, CreateRegularizationInput>, "mutationFn">
+) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["hr", "regularization", "create"],
+    mutationFn: (data: CreateRegularizationInput) =>
+      apiClient.post<AttendanceRegularization>("/hr/attendance/regularizations", data),
+    onSuccess: (...args) => {
+      qc.invalidateQueries({ queryKey: [...queryKeys.hr.all, "regularizations"] });
+      options?.onSuccess?.(...args);
+    },
+    onError: options?.onError,
+  });
+}

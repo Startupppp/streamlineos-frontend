@@ -354,4 +354,12 @@ export type PermissionKey =
   | "hr:templates:manage"
   | "hr:sensitive:view"
   | "hr:sensitive:manage"
-  | "hr:audit:view";
+  | "hr:audit:view"
+  | "hr:exit:view"
+  | "hr:exit:create"
+  | "hr:exit:approve"
+  | "hr:helpdesk:view"
+  | "hr:helpdesk:create"
+  | "hr:helpdesk:manage"
+  | "hr:communications:send"
+  | "hr:attendance:regularize";

@@ -57,7 +57,7 @@ function CircularProgress({ value }: { value: number }) {
         y="36"
         textAnchor="middle"
         dominantBaseline="central"
-        className="fill-slate-700 text-xs font-semibold"
+        className="fill-foreground text-xs font-semibold"
         style={{ transform: "rotate(90deg)", transformOrigin: "36px 36px", fontSize: "11px" }}
       >
         {value}%
@@ -94,10 +94,10 @@ function GoalCard({
             <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">{goal.description}</p>
           )}
           <div className="flex flex-wrap gap-1.5 mt-2">
-            <Badge className={`text-xs ${TYPE_COLORS[goal.type] ?? "bg-slate-100 text-slate-600"}`}>
+            <Badge className={`text-xs ${TYPE_COLORS[goal.type] ?? "bg-muted text-muted-foreground border-border"}`}>
               {goal.type}
             </Badge>
-            <Badge className={`text-xs ${STATUS_COLORS[goal.status] ?? "bg-slate-100 text-slate-600"}`}>
+            <Badge className={`text-xs ${STATUS_COLORS[goal.status] ?? "bg-muted text-muted-foreground border-border"}`}>
               {goal.status.replace("_", " ")}
             </Badge>
           </div>
@@ -114,7 +114,7 @@ function GoalCard({
         </div>
         <div className="h-1.5 bg-muted rounded-full overflow-hidden">
           <div
-            className="h-full bg-primary rounded-full transition-all duration-500"
+            className="h-full bg-blue-600 rounded-full transition-all duration-500"
             style={{ width: `${Math.min(goal.progress, 100)}%` }}
           />
         </div>
@@ -448,7 +448,7 @@ export default function GoalsPage() {
               </div>
               <div className="h-2 bg-muted rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-primary rounded-full transition-all duration-300"
+                  className="h-full bg-blue-600 rounded-full transition-all duration-300"
                   style={{ width: `${progressValue}%` }}
                 />
               </div>

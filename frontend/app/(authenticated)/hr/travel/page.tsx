@@ -101,15 +101,15 @@ function StatusPipeline({ status }: { status: TravelRequest["status"] }) {
               className={cn(
                 "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all",
                 isActive
-                  ? "bg-primary/10 border-primary/30 text-primary"
+                  ? "bg-blue-50 border-blue-200 text-blue-700"
                   : "bg-muted border-border text-muted-foreground",
               )}
             >
-              <div className={cn("h-2 w-2 rounded-full", isActive ? "bg-primary" : "bg-muted-foreground/30")} />
+              <div className={cn("h-2 w-2 rounded-full", isActive ? "bg-blue-600" : "bg-muted-foreground/30")} />
               {step.label}
             </div>
             {!isLast && (
-              <div className={cn("flex-1 h-px mx-1", isActive ? "bg-primary/30" : "bg-border")} />
+              <div className={cn("flex-1 h-px mx-1", isActive ? "bg-blue-200" : "bg-border")} />
             )}
           </div>
         );

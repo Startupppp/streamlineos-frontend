@@ -83,15 +83,15 @@ function SignerProgress({ signers }: { signers: SignatureSigner[] }) {
 
   return (
     <div className="space-y-1">
-      <div className="flex items-center justify-between text-xs text-slate-500">
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span>
           {signed}/{total} signed
         </span>
         <span>{Math.round(pct)}%</span>
       </div>
-      <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 transition-all duration-500 ease-out"
+          className="h-full rounded-full bg-blue-600 transition-all duration-500 ease-out"
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -107,11 +107,11 @@ function AuditTrailSection({ entries }: { entries: SignatureRequest["auditTrail"
   }
 
   return (
-    <div className="mt-3 border-t border-slate-100 pt-2">
+    <div className="mt-3 border-t border-border pt-2">
       <button
         type="button"
         onClick={handleToggle}
-        className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600 transition-colors"
+        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
       >
         {open ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
         Audit trail ({entries.length})
@@ -126,12 +126,12 @@ function AuditTrailSection({ entries }: { entries: SignatureRequest["auditTrail"
             className="mt-2 space-y-1 overflow-hidden"
           >
             {entries.map((entry, idx) => (
-              <li key={idx} className="flex items-center gap-2 text-xs text-slate-500">
+              <li key={idx} className="flex items-center gap-2 text-xs text-muted-foreground">
                 <CheckCircle2 className="h-3 w-3 flex-shrink-0 text-emerald-500" />
                 <span className="font-medium">{entry.action}</span>
                 <span>·</span>
                 <span className="truncate">{entry.userId}</span>
-                <span className="ml-auto text-slate-400 tabular-nums">
+                <span className="ml-auto tabular-nums">
                   {format(new Date(entry.timestamp), "MMM d, HH:mm")}
                 </span>
               </li>
@@ -168,11 +168,11 @@ function SignatureCard({
 
   return (
     <motion.div variants={fadeUp}>
-      <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 overflow-hidden">
+      <Card className="bg-card border border-border rounded-lg shadow-sm overflow-hidden">
         <CardContent className="p-5 space-y-3">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
-              <h3 className="font-semibold text-sm text-slate-900 truncate">{request.title}</h3>
+              <h3 className="font-semibold text-sm text-foreground truncate">{request.title}</h3>
               <div className="flex items-center gap-2 mt-1 flex-wrap">
                 <Badge variant="outline" className="text-[11px] font-medium">
                   {request.documentType}
@@ -181,7 +181,7 @@ function SignatureCard({
                   {statusCfg.label}
                 </Badge>
                 {request.expiresAt && (
-                  <span className="flex items-center gap-1 text-[11px] text-slate-400">
+                  <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
                     <Clock className="h-3 w-3" />
                     Expires {format(new Date(request.expiresAt), "MMM d, yyyy")}
                   </span>
@@ -192,7 +192,7 @@ function SignatureCard({
               href={request.documentUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-shrink-0 text-violet-600 hover:text-violet-800 transition-colors"
+              className="flex-shrink-0 text-blue-600 hover:text-blue-700 transition-colors"
             >
               <ExternalLink className="h-4 w-4" />
             </a>
@@ -206,7 +206,7 @@ function SignatureCard({
                 whileTap={{ scale: 0.97 }}
                 type="button"
                 onClick={handleSign}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
               >
                 <PenLine className="h-3.5 w-3.5" />
                 Sign
@@ -218,7 +218,7 @@ function SignatureCard({
                   whileTap={{ scale: 0.97 }}
                   type="button"
                   onClick={handleVoid}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
                 >
                   <XCircle className="h-3.5 w-3.5" />
                   Void
@@ -236,10 +236,10 @@ function SignatureCard({
 function EmptyState({ message }: { message: string }) {
   return (
     <div className="flex flex-col items-center justify-center flex-1 min-h-[320px] gap-3">
-      <div className="h-14 w-14 rounded-2xl bg-slate-100 flex items-center justify-center">
-        <FileSignature className="h-7 w-7 text-slate-400" />
+      <div className="h-14 w-14 rounded-lg bg-muted flex items-center justify-center">
+        <FileSignature className="h-7 w-7 text-muted-foreground" />
       </div>
-      <p className="text-sm text-slate-500 font-medium">{message}</p>
+      <p className="text-sm text-muted-foreground font-medium">{message}</p>
     </div>
   );
 }
@@ -431,30 +431,27 @@ export default function SignaturesPage() {
       subtitle="Send, sign, and track document signatures"
       actions={
         canManage ? (
-          <motion.div whileTap={{ scale: 0.97 }}>
-            <Button
-              onClick={handleOpenSheet}
-              className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
-            >
-              <Plus className="h-4 w-4 mr-1.5" />
-              New Request
-            </Button>
-          </motion.div>
+          <Button
+            onClick={handleOpenSheet}
+          >
+            <Plus className="h-4 w-4 mr-1.5" />
+            New Request
+          </Button>
         ) : undefined
       }
     >
       <Tabs defaultValue="received" className="space-y-4">
-        <TabsList className="bg-slate-100/80 rounded-xl p-1">
-          <TabsTrigger value="received" className="rounded-lg text-xs">
+        <TabsList>
+          <TabsTrigger value="received" className="text-xs">
             Received
           </TabsTrigger>
-          <TabsTrigger value="sent" className="rounded-lg text-xs">
+          <TabsTrigger value="sent" className="text-xs">
             Sent
           </TabsTrigger>
-          <TabsTrigger value="completed" className="rounded-lg text-xs">
+          <TabsTrigger value="completed" className="text-xs">
             Completed
           </TabsTrigger>
-          <TabsTrigger value="voided" className="rounded-lg text-xs">
+          <TabsTrigger value="voided" className="text-xs">
             Voided
           </TabsTrigger>
         </TabsList>
@@ -463,7 +460,7 @@ export default function SignaturesPage() {
           {receivedLoading ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="h-40 rounded-2xl bg-slate-100 animate-pulse" />
+                <div key={i} className="h-40 rounded-lg bg-muted animate-pulse" />
               ))}
             </div>
           ) : (
@@ -482,7 +479,7 @@ export default function SignaturesPage() {
           {sentLoading ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="h-40 rounded-2xl bg-slate-100 animate-pulse" />
+                <div key={i} className="h-40 rounded-lg bg-muted animate-pulse" />
               ))}
             </div>
           ) : (
@@ -527,13 +524,13 @@ export default function SignaturesPage() {
           </DialogHeader>
           {signDialogRequest && (
             <div className="space-y-4">
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
-                <p className="text-sm font-semibold text-slate-900">{signDialogRequest.title}</p>
+              <div className="p-3 rounded-md bg-muted border border-border space-y-1">
+                <p className="text-sm font-semibold text-foreground">{signDialogRequest.title}</p>
                 <a
                   href={signDialogRequest.documentUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs text-violet-600 hover:text-violet-800"
+                  className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700"
                 >
                   <ExternalLink className="h-3 w-3" />
                   View document
@@ -557,15 +554,13 @@ export default function SignaturesPage() {
             <Button variant="outline" onClick={handleCloseSignDialog} className="text-xs">
               Cancel
             </Button>
-            <motion.div whileTap={{ scale: 0.97 }}>
-              <Button
-                disabled={!typedName.trim() || signMutation.isPending}
-                onClick={handleConfirmSign}
-                className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md text-xs"
-              >
-                {signMutation.isPending ? "Signing…" : "Confirm Signature"}
-              </Button>
-            </motion.div>
+            <Button
+              disabled={!typedName.trim() || signMutation.isPending}
+              onClick={handleConfirmSign}
+              className="text-xs"
+            >
+              {signMutation.isPending ? "Signing…" : "Confirm Signature"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -681,15 +676,13 @@ export default function SignaturesPage() {
             >
               Cancel
             </Button>
-            <motion.div whileTap={{ scale: 0.97 }}>
-              <Button
-                onClick={handleCreateSubmit}
-                disabled={createMutation.isPending}
-                className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md text-xs"
-              >
-                {createMutation.isPending ? "Creating…" : "Create Request"}
-              </Button>
-            </motion.div>
+            <Button
+              onClick={handleCreateSubmit}
+              disabled={createMutation.isPending}
+              className="text-xs"
+            >
+              {createMutation.isPending ? "Creating…" : "Create Request"}
+            </Button>
           </SheetFooter>
         </SheetContent>
       </Sheet>
