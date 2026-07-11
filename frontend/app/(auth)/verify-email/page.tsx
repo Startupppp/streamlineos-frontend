@@ -320,14 +320,6 @@ function VerifyEmailForm() {
         </AuthStatusSection>
 
         <AuthStatusSection className="mt-6 space-y-3">
-          <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-3.5 flex items-start gap-2.5">
-            <AlertCircle
-              className="h-4 w-4 text-destructive mt-0.5 shrink-0"
-              aria-hidden="true"
-            />
-            <p className="text-sm text-destructive text-left">{verifyError}</p>
-          </div>
-
           {email && (
             <Button
               variant="default"
@@ -352,7 +344,7 @@ function VerifyEmailForm() {
           )}
 
           <Button
-            variant="ghost"
+            variant={email ? "outline" : "default"}
             className="w-full h-9 text-sm"
             onClick={handleRetry}
             disabled={verifyEmail.isPending}
