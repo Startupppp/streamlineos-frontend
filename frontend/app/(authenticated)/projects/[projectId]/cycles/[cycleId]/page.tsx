@@ -6,7 +6,7 @@ import { useProject } from "@/hooks/api";
 import { useCycles } from "@/hooks/api/projects";
 import { KanbanBoard } from "@/features/projects/views/kanban-board";
 import { ListView } from "@/features/projects/views/list-view";
-import { ViewSwitcher, type ViewType } from "@/features/projects/views/view-switcher";
+import { ViewSwitcher, parseViewType, type ViewType } from "@/features/projects/views/view-switcher";
 import { DisplayOptionsPanel, DEFAULT_DISPLAY_OPTIONS } from "@/features/projects/views/display-options-panel";
 import type { DisplayOptions, KanbanTicket } from "@/features/projects/shared/types";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -27,7 +27,7 @@ export default function CycleDetailPage({ params }: PageProps) {
 
   const router = useRouter();
   const searchParams = useSearchParams();
-  const view = (searchParams.get("view") as ViewType) ?? "board";
+  const view = parseViewType(searchParams.get("view"));
 
   const [displayOptions, setDisplayOptions] = useState<DisplayOptions>(DEFAULT_DISPLAY_OPTIONS);
 
@@ -42,8 +42,8 @@ export default function CycleDetailPage({ params }: PageProps) {
   );
 
   const statuses = useMemo(() => {
-    if (!projectData || !("statuses" in projectData)) return undefined;
-    return (projectData.statuses as { id: number; name: string; color: string | null; order: number; wipLimit?: number | null; type?: string | null }[]);
+    if (!projectData) return undefined;
+    return projectData.statuses;
   }, [projectData]);
 
   const wipLimits = useMemo<Record<string, number>>(() => {
@@ -57,12 +57,7 @@ export default function CycleDetailPage({ params }: PageProps) {
 
   const allTickets = useMemo<KanbanTicket[]>(() => {
     if (!projectData) return [];
-    return (projectData.tickets || []).map((t) => {
-      const raw = t as typeof t & {
-        cycleId?: number | null;
-        cycle?: { id: number; name: string; status: string; startDate: string; endDate: string } | null;
-      };
-      return {
+    return (projectData.tickets || []).map((t) => ({
         id: t.id,
         title: t.title,
         status: t.status ?? "TODO",
@@ -75,7 +70,7 @@ export default function CycleDetailPage({ params }: PageProps) {
         epicId: t.epicId ?? undefined,
         assigneeId: t.assigneeId ?? undefined,
         sprintId: t.sprintId ?? undefined,
-        cycleId: raw.cycleId ?? null,
+        cycleId: t.cycleId ?? null,
         dueDate: t.dueDate ?? null,
         startDate: t.startDate ?? null,
         sequenceId: t.sequenceId ?? null,
@@ -98,17 +93,16 @@ export default function CycleDetailPage({ params }: PageProps) {
               color: l.label.color,
             },
           })),
-        cycle: raw.cycle
+        cycle: t.cycle
           ? {
-              id: raw.cycle.id,
-              name: raw.cycle.name,
-              status: raw.cycle.status,
-              startDate: raw.cycle.startDate,
-              endDate: raw.cycle.endDate,
+              id: t.cycle.id,
+              name: t.cycle.name,
+              status: t.cycle.status,
+              startDate: t.cycle.startDate,
+              endDate: t.cycle.endDate,
             }
           : null,
-      };
-    });
+      }));
   }, [projectData]);
 
   const cycleTickets = useMemo(

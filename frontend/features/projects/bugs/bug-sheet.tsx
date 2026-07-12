@@ -139,31 +139,17 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
 
   const isPending = create.isPending || update.isPending;
 
-  function SelectField<K extends keyof Pick<FormValues, "severity" | "priority" | "status">>({ name, label, options, labels }: {
-    name: K;
-    label: string;
-    options: ReadonlyArray<FormValues[K]>;
-    labels?: Record<string, string>;
-  }) {
-    function handleValueChange(v: string) {
-      const found = options.find((o) => o === v);
-      if (found !== undefined) form.setValue(name, found);
-    }
-    return (
-      <div className="space-y-1.5">
-        <Label className="text-[11px]">{label}</Label>
-        <Select value={form.watch(name)} onValueChange={handleValueChange}>
-          <SelectTrigger className="h-8 text-[11px]"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            {options.map((o) => (
-              <SelectItem key={o} value={o} className="capitalize">
-                {labels ? (labels[o] ?? o) : o}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-    );
+  function handleSeverityChange(v: string) {
+    const found = SEVERITIES.find((s) => s === v);
+    if (found) form.setValue("severity", found);
+  }
+  function handlePriorityChange(v: string) {
+    const found = PRIORITIES.find((p) => p === v);
+    if (found) form.setValue("priority", found);
+  }
+  function handleStatusChange(v: string) {
+    const found = STATUSES.find((s) => s === v);
+    if (found) form.setValue("status", found);
   }
 
   return (
@@ -196,9 +182,39 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
             </div>
 
             <div className="grid grid-cols-3 gap-3">
-              <SelectField name="severity" label="Severity" options={SEVERITIES} />
-              <SelectField name="priority" label="Priority" options={PRIORITIES} />
-              <SelectField name="status" label="Status" options={STATUSES} labels={STATUS_LABELS} />
+              <div className="space-y-1.5">
+                <Label className="text-[11px]">Severity</Label>
+                <Select value={form.watch("severity")} onValueChange={handleSeverityChange}>
+                  <SelectTrigger className="h-8 text-[11px]"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {SEVERITIES.map((s) => (
+                      <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[11px]">Priority</Label>
+                <Select value={form.watch("priority")} onValueChange={handlePriorityChange}>
+                  <SelectTrigger className="h-8 text-[11px]"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {PRIORITIES.map((p) => (
+                      <SelectItem key={p} value={p} className="capitalize">{p}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[11px]">Status</Label>
+                <Select value={form.watch("status")} onValueChange={handleStatusChange}>
+                  <SelectTrigger className="h-8 text-[11px]"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {STATUSES.map((s) => (
+                      <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="space-y-1.5">

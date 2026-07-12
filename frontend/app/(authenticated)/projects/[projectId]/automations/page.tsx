@@ -31,8 +31,6 @@ import {
   TRIGGER_EVENTS,
   ACTION_TYPES,
   type ProjectAutomation,
-  type AutomationCondition,
-  type AutomationAction,
 } from "@/hooks/api/projects/automations";
 
 const conditionSchema = z.object({
