@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { toast } from "sonner";
 import { queryKeys } from "@/lib/query-keys";
 import { useQueryClient } from "@tanstack/react-query";
@@ -31,6 +32,8 @@ const CANDIDATE_FIELDS = [
 interface ParsedRow {
   [key: string]: string;
 }
+
+type IndexedRow = ParsedRow & { _idx: number };
 
 type Step = "upload" | "map" | "preview" | "done";
 
@@ -178,6 +181,43 @@ export default function BulkImportPage() {
   const requiredMapped = CANDIDATE_FIELDS.filter((f) => f.required).every((f) => fieldMap[f.key]);
   const previewRows = rows.slice(0, 10);
 
+  const previewColumns = useMemo<DataTableColumn<IndexedRow>[]>(
+    () =>
+      CANDIDATE_FIELDS.filter((f) => fieldMap[f.key]).map((f) => ({
+        key: f.key,
+        header: f.label,
+        cell: (row) => {
+          const header = fieldMap[f.key] ?? "";
+          return (
+            <span className="max-w-[160px] truncate block">
+              {row[header] ?? "—"}
+            </span>
+          );
+        },
+        className: "text-xs",
+        headerClassName: "text-left",
+      })),
+    [fieldMap],
+  );
+
+  const indexedPreviewRows = useMemo<IndexedRow[]>(
+    () => previewRows.map((row, i) => ({ ...row, _idx: i })),
+    [previewRows],
+  );
+
+  function handleGoToUpload() { setStep("upload"); }
+  function handleGoToPreview() { setStep("preview"); }
+  function handleGoToMap() { setStep("map"); }
+  function handleViewCandidates() { router.push("/hr/recruitment/candidates"); }
+  function handleImportMore() {
+    setStep("upload");
+    setHeaders([]);
+    setRows([]);
+    setFieldMap({});
+    setImportResult(null);
+  }
+  function handleClickDropzone() { fileInputRef.current?.click(); }
+
   return (
     <PageWrapper
       title="Bulk Import Candidates"
@@ -208,7 +248,7 @@ export default function BulkImportPage() {
               className="border-2 border-dashed rounded-lg p-10 text-center cursor-pointer hover:border-primary/60 transition-colors"
               onDrop={handleDrop}
               onDragOver={handleDragOver}
-              onClick={() => fileInputRef.current?.click()}
+              onClick={handleClickDropzone}
             >
               <svg className="h-10 w-10 mx-auto mb-3 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
@@ -259,8 +299,8 @@ export default function BulkImportPage() {
               ))}
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setStep("upload")}>Back</Button>
-              <Button onClick={() => setStep("preview")} disabled={!requiredMapped}>
+              <Button variant="outline" onClick={handleGoToUpload}>Back</Button>
+              <Button onClick={handleGoToPreview} disabled={!requiredMapped}>
                 Preview ({rows.length} rows)
               </Button>
             </div>
@@ -278,33 +318,15 @@ export default function BulkImportPage() {
             <CardDescription>{rows.length} total rows found</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto rounded-lg border mb-4">
-              <table className="w-full text-xs">
-                <thead className="bg-muted/50">
-                  <tr>
-                    {CANDIDATE_FIELDS.filter((f) => fieldMap[f.key]).map((f) => (
-                      <th key={f.key} className="px-3 py-2 text-left font-medium">{f.label}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {previewRows.map((row, i) => (
-                    <tr key={i} className="border-t">
-                      {CANDIDATE_FIELDS.filter((f) => fieldMap[f.key]).map((f) => {
-                        const header = fieldMap[f.key]!;
-                        return (
-                          <td key={f.key} className="px-3 py-2 max-w-[160px] truncate">
-                            {row[header] ?? "—"}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="mb-4">
+              <DataTable
+                data={indexedPreviewRows}
+                columns={previewColumns}
+                getRowKey={(row) => row._idx}
+              />
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setStep("map")}>Back</Button>
+              <Button variant="outline" onClick={handleGoToMap}>Back</Button>
               <Button onClick={handleImport} disabled={importing}>
                 {importing ? "Importing…" : `Import ${rows.length} Candidates`}
               </Button>
@@ -333,10 +355,10 @@ export default function BulkImportPage() {
               </div>
             </div>
             <div className="flex gap-3 justify-center mt-6">
-              <Button onClick={() => router.push("/hr/recruitment/candidates")}>
+              <Button onClick={handleViewCandidates}>
                 View Candidates
               </Button>
-              <Button variant="outline" onClick={() => { setStep("upload"); setHeaders([]); setRows([]); setFieldMap({}); setImportResult(null); }}>
+              <Button variant="outline" onClick={handleImportMore}>
                 Import More
               </Button>
             </div>

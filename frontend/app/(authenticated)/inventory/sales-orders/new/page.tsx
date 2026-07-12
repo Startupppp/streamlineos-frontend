@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, useFieldArray, useWatch, Controller, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,8 +15,9 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateSalesOrder, useProductVariants, useWarehouses } from "@/hooks/api/inventory";
@@ -41,6 +42,8 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
+type FieldRow = { id: string; _index: number };
+
 type VariantOption = { id: number; productName: string; name: string; sku: string };
 
 function todayIso(): string {
@@ -56,93 +59,14 @@ function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }
 
-interface SoLineRowProps {
-  index: number;
-  control: Control<FormValues>;
-  variants: VariantOption[];
-  isOnly: boolean;
-  onRemoveAt: (index: number) => void;
-}
-
-const SoLineRow = memo(function SoLineRow({ index, control, variants, isOnly, onRemoveAt }: SoLineRowProps) {
+function SoNewLineAmountCell({ index, control }: { index: number; control: Control<FormValues> }) {
   const quantity = useWatch({ control, name: `lines.${index}.quantity` });
   const unitPrice = useWatch({ control, name: `lines.${index}.unitPrice` });
   const taxRate = useWatch({ control, name: `lines.${index}.taxRate` });
-
   const sub = round2(toNum(quantity ?? "") * toNum(unitPrice ?? ""));
   const lineTotal = round2(sub + round2(sub * (toNum(taxRate ?? "") / 100)));
-
-  function handleRemove(): void {
-    onRemoveAt(index);
-  }
-
-  return (
-    <TableRow>
-      <TableCell>
-        <Controller
-          control={control}
-          name={`lines.${index}.variantId`}
-          render={({ field: f }) => (
-            <Select value={f.value} onValueChange={f.onChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select variant" />
-              </SelectTrigger>
-              <SelectContent className="max-h-72">
-                {variants.map((v) => (
-                  <SelectItem key={v.id} value={String(v.id)}>
-                    {v.productName} – {v.name} ({v.sku})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        />
-      </TableCell>
-      <TableCell>
-        <Controller
-          control={control}
-          name={`lines.${index}.quantity`}
-          render={({ field: f }) => (
-            <Input type="number" min="1" step="1" className="text-right tabular-nums" {...f} />
-          )}
-        />
-      </TableCell>
-      <TableCell>
-        <Controller
-          control={control}
-          name={`lines.${index}.unitPrice`}
-          render={({ field: f }) => (
-            <Input type="number" min="0" step="0.01" className="text-right tabular-nums" {...f} />
-          )}
-        />
-      </TableCell>
-      <TableCell>
-        <Controller
-          control={control}
-          name={`lines.${index}.taxRate`}
-          render={({ field: f }) => (
-            <Input type="number" min="0" max="100" step="0.01" className="text-right tabular-nums" {...f} />
-          )}
-        />
-      </TableCell>
-      <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums">
-        {lineTotal.toFixed(2)}
-      </TableCell>
-      <TableCell>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={handleRemove}
-          disabled={isOnly}
-          aria-label={`Remove line ${index + 1}`}
-        >
-          <Trash2 className="size-4" />
-        </Button>
-      </TableCell>
-    </TableRow>
-  );
-});
+  return <span>{lineTotal.toFixed(2)}</span>;
+}
 
 export default function NewSalesOrderPage() {
   const router = useRouter();
@@ -150,7 +74,7 @@ export default function NewSalesOrderPage() {
   const warehousesQuery = useWarehouses();
   const createMutation = useCreateSalesOrder();
 
-  const variants = variantsQuery.data ?? [];
+  const variants: VariantOption[] = variantsQuery.data ?? [];
   const warehouses = warehousesQuery.data ?? [];
 
   const {
@@ -232,6 +156,120 @@ export default function NewSalesOrderPage() {
   if (isLoading) return <LoadingState variant="form" />;
   if (variantsQuery.error) return <ErrorState description={variantsQuery.error.message} onRetry={handleVariantsRetry} />;
   if (warehousesQuery.error) return <ErrorState description={warehousesQuery.error.message} onRetry={handleWarehousesRetry} />;
+
+  const fieldRows: FieldRow[] = fields.map((f, i) => ({ id: f.id, _index: i }));
+
+  const columns: DataTableColumn<FieldRow>[] = [
+    {
+      key: "variant",
+      header: "Product Variant",
+      cell: (row) => (
+        <Controller
+          control={control}
+          name={`lines.${row._index}.variantId`}
+          render={({ field: f }) => (
+            <Select value={f.value} onValueChange={f.onChange}>
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue placeholder="Select variant" />
+              </SelectTrigger>
+              <SelectContent className="max-h-72">
+                {variants.map((v) => (
+                  <SelectItem key={v.id} value={String(v.id)}>
+                    {v.productName} – {v.name} ({v.sku})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
+      ),
+    },
+    {
+      key: "quantity",
+      header: "Qty",
+      headerClassName: "text-right w-[90px]",
+      className: "w-[90px]",
+      cell: (row) => (
+        <Controller
+          control={control}
+          name={`lines.${row._index}.quantity`}
+          render={({ field: f }) => (
+            <Input type="number" min="1" step="1" className="h-8 text-right tabular-nums text-xs" {...f} />
+          )}
+        />
+      ),
+    },
+    {
+      key: "unitPrice",
+      header: "Unit Price",
+      headerClassName: "text-right w-[110px]",
+      className: "w-[110px]",
+      cell: (row) => (
+        <Controller
+          control={control}
+          name={`lines.${row._index}.unitPrice`}
+          render={({ field: f }) => (
+            <Input type="number" min="0" step="0.01" className="h-8 text-right tabular-nums text-xs" {...f} />
+          )}
+        />
+      ),
+    },
+    {
+      key: "taxRate",
+      header: "Tax %",
+      headerClassName: "text-right w-[90px]",
+      className: "w-[90px]",
+      cell: (row) => (
+        <Controller
+          control={control}
+          name={`lines.${row._index}.taxRate`}
+          render={({ field: f }) => (
+            <Input type="number" min="0" max="100" step="0.01" className="h-8 text-right tabular-nums text-xs" {...f} />
+          )}
+        />
+      ),
+    },
+    {
+      key: "lineTotal",
+      header: "Line Total",
+      headerClassName: "text-right w-[110px]",
+      className: "text-right font-mono tabular-nums w-[110px]",
+      cell: (row) => <SoNewLineAmountCell index={row._index} control={control} />,
+    },
+    {
+      key: "remove",
+      header: "",
+      headerClassName: "w-[50px]",
+      className: "w-[50px]",
+      cell: (row) => {
+        function handleRemove(): void {
+          handleRemoveAt(row._index);
+        }
+        return (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={handleRemove}
+            disabled={fields.length === 1}
+            aria-label={`Remove line ${row._index + 1}`}
+          >
+            <Trash2 className="size-3.5" />
+          </Button>
+        );
+      },
+    },
+  ];
+
+  const tableFooter = (
+    <div className="flex items-center justify-between">
+      <Button type="button" variant="outline" size="sm" onClick={handleAddLine}>
+        <Plus className="size-4 mr-1" />
+        Add line
+      </Button>
+    </div>
+  );
 
   return (
     <PageWrapper
@@ -316,38 +354,18 @@ export default function NewSalesOrderPage() {
         </Card>
 
         <Card className="overflow-hidden">
-          <div className="overflow-x-auto">
-            <Table className="min-w-[720px]">
-              <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
-                <TableRow className="border-b-2 border-border hover:bg-transparent">
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Product Variant</TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right w-[90px]">Qty</TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right w-[110px]">Unit Price</TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right w-[90px]">Tax %</TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right w-[110px]">Line Total</TableHead>
-                  <TableHead className="w-[50px]" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {fields.map((field, index) => (
-                  <SoLineRow
-                    key={field.id}
-                    index={index}
-                    control={control}
-                    variants={variants}
-                    isOnly={fields.length === 1}
-                    onRemoveAt={handleRemoveAt}
-                  />
-                ))}
-              </TableBody>
-            </Table>
+          <div className="space-y-2 p-4 pb-0">
+            <Label className="text-[13px] font-medium">
+              Lines <span className="text-destructive">*</span>
+            </Label>
           </div>
-          <div className="p-3 border-t border-border">
-            <Button type="button" variant="outline" size="sm" onClick={handleAddLine}>
-              <Plus className="size-4 mr-1" />
-              Add line
-            </Button>
-          </div>
+          <DataTable
+            data={fieldRows}
+            columns={columns}
+            getRowKey={(row) => row.id}
+            minWidth="720px"
+            footer={tableFooter}
+          />
         </Card>
 
         <Card className="p-4">
@@ -387,13 +405,14 @@ export default function NewSalesOrderPage() {
           >
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             type="submit"
+            isPending={createMutation.isPending}
+            loadingText="Creating…"
             className="w-full sm:w-auto"
-            disabled={createMutation.isPending}
           >
-            {createMutation.isPending ? "Creating…" : "Create Sales Order"}
-          </Button>
+            Create Sales Order
+          </LoadingButton>
         </div>
       </form>
     </PageWrapper>

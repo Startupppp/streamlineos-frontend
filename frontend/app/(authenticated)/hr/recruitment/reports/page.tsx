@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
@@ -21,7 +21,6 @@ import {
 } from "@/components/ui/select";
 import {
   Sheet,
-  
   SheetContent,
   SheetFooter,
   SheetHeader,
@@ -39,14 +38,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -69,6 +61,8 @@ const ENTITY_OPTIONS: { value: ReportEntity; label: string }[] = [
   { value: "interviews", label: "Interviews" },
   { value: "offers", label: "Offers" },
 ];
+
+type IndexedRow = Record<string, unknown> & { _idx: number };
 
 function RecipientBadge({
   email,
@@ -350,42 +344,53 @@ function ScheduledReportsList() {
 }
 
 function ResultTable({ result }: { result: GenerateReportResult }) {
-  const headers =
-    result.fields.length > 0
-      ? result.fields
-      : result.rows[0]
-        ? Object.keys(result.rows[0])
-        : [];
+  const headers = useMemo(
+    () =>
+      result.fields.length > 0
+        ? result.fields
+        : result.rows[0]
+          ? Object.keys(result.rows[0])
+          : [],
+    [result.fields, result.rows],
+  );
+
+  const indexedRows = useMemo<IndexedRow[]>(
+    () => result.rows.slice(0, 100).map((row, i) => ({ ...row, _idx: i })),
+    [result.rows],
+  );
+
+  const columns = useMemo<DataTableColumn<IndexedRow>[]>(
+    () =>
+      headers.map((h) => ({
+        key: h,
+        header: h,
+        cell: (row) => (
+          <span className="whitespace-nowrap">{String(row[h] ?? "")}</span>
+        ),
+        className: "text-xs",
+        headerClassName: "text-xs whitespace-nowrap",
+      })),
+    [headers],
+  );
+
+  const footer =
+    result.total > 100 ? (
+      <span>Showing 100 of {result.total} rows — export to see all</span>
+    ) : undefined;
 
   return (
-    <div className="mt-4 rounded-lg border border-border overflow-auto max-h-[50vh]">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            {headers.map((h) => (
-              <TableHead key={h} className="text-xs whitespace-nowrap">
-                {h}
-              </TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {result.rows.slice(0, 100).map((row, i) => (
-            <TableRow key={i}>
-              {headers.map((h) => (
-                <TableCell key={h} className="text-xs whitespace-nowrap">
-                  {String(row[h] ?? "")}
-                </TableCell>
-              ))}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-      {result.total > 100 && (
-        <p className="text-xs text-muted-foreground text-center py-2 border-t">
-          Showing 100 of {result.total} rows — export to see all
-        </p>
-      )}
+    <div className="mt-4 max-h-[50vh] overflow-auto">
+      <DataTable
+        data={indexedRows}
+        columns={columns}
+        getRowKey={(row) => row._idx}
+        footer={footer}
+        emptyState={
+          <p className="text-sm text-muted-foreground text-center py-8">
+            No data matches the selected filters
+          </p>
+        }
+      />
     </div>
   );
 }
@@ -647,13 +652,7 @@ export default function ReportsPage() {
                 </div>
               </CardHeader>
               <CardContent className="px-4 pb-4">
-                {result.rows.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-8">
-                    No data matches the selected filters
-                  </p>
-                ) : (
-                  <ResultTable result={result} />
-                )}
+                <ResultTable result={result} />
               </CardContent>
             </Card>
           )}

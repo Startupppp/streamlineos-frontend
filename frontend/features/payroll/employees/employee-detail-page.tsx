@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
@@ -15,6 +15,7 @@ import {
   useEmployeeProfileHistory,
 } from "@/hooks/api/payroll/employees";
 import { useCan } from "@/hooks/api/access";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import type {
   EmployeeSalaryProfile,
   SalaryProfileStatus,
@@ -47,18 +48,69 @@ const COMPONENT_TYPE_ORDER: SalaryComponentType[] = [
   "ADJUSTMENT",
 ];
 
+const COMPONENT_COLUMNS: DataTableColumn<ProfileComponent>[] = [
+  {
+    key: "name",
+    header: "Component",
+    cell: (comp) => (
+      <div>
+        <div className="flex items-center gap-1.5">
+          <span className="font-medium text-foreground">{comp.name}</span>
+          {comp.isOverride && (
+            <span className="text-[9px] px-1 rounded bg-amber-100 text-amber-700 border border-amber-200 font-medium">
+              override
+            </span>
+          )}
+        </div>
+        <span className="text-[10px] text-muted-foreground font-mono">{comp.code}</span>
+      </div>
+    ),
+    className: "w-[40%] py-1 pr-2",
+  },
+  {
+    key: "calcMethod",
+    header: "Method",
+    cell: (comp) => <span className="text-muted-foreground">{comp.calcMethod}</span>,
+    className: "w-[20%] py-1 pr-2",
+  },
+  {
+    key: "amount",
+    header: "Amount",
+    cell: (comp) => (
+      <span className="font-mono tabular-nums">
+        {comp.amount !== null ? formatMoney(comp.amount) : "—"}
+      </span>
+    ),
+    className: "w-[20%] py-1 pr-2 text-right",
+    headerClassName: "text-right",
+  },
+  {
+    key: "percent",
+    header: "Percent",
+    cell: (comp) => (
+      <span className="font-mono tabular-nums text-muted-foreground">
+        {comp.percent !== null ? `${comp.percent}%` : "—"}
+      </span>
+    ),
+    className: "w-[20%] py-1 text-right",
+    headerClassName: "text-right",
+  },
+];
+
 function ComponentsBreakdown({ components }: { components: ProfileComponent[] }) {
-  const grouped = COMPONENT_TYPE_ORDER.reduce<Record<SalaryComponentType, ProfileComponent[]>>(
-    (acc, type) => {
-      acc[type] = components.filter((c) => c.type === type);
-      return acc;
-    },
-    { EARNING: [], DEDUCTION: [], EMPLOYER_CONTRIBUTION: [], REIMBURSEMENT: [], TAX: [], ADJUSTMENT: [] },
+  const grouped = useMemo(
+    () =>
+      COMPONENT_TYPE_ORDER.reduce<Record<SalaryComponentType, ProfileComponent[]>>(
+        (acc, type) => {
+          acc[type] = components.filter((c) => c.type === type);
+          return acc;
+        },
+        { EARNING: [], DEDUCTION: [], EMPLOYER_CONTRIBUTION: [], REIMBURSEMENT: [], TAX: [], ADJUSTMENT: [] },
+      ),
+    [components],
   );
 
-  const hasAny = components.length > 0;
-
-  if (!hasAny) {
+  if (components.length === 0) {
     return (
       <p className="text-[11px] text-muted-foreground">No components configured for this profile.</p>
     );
@@ -71,40 +123,12 @@ function ComponentsBreakdown({ components }: { components: ProfileComponent[] })
           <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
             {COMPONENT_TYPE_LABELS[type]}
           </p>
-          <table className="w-full text-[11px]">
-            <thead>
-              <tr className="text-muted-foreground">
-                <th className="text-left font-medium pb-1 w-[40%]">Component</th>
-                <th className="text-left font-medium pb-1 w-[20%]">Method</th>
-                <th className="text-right font-medium pb-1 w-[20%]">Amount</th>
-                <th className="text-right font-medium pb-1 w-[20%]">Percent</th>
-              </tr>
-            </thead>
-            <tbody>
-              {grouped[type].map((comp) => (
-                <tr key={comp.id} className="border-t border-border/50">
-                  <td className="py-1 pr-2">
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-medium text-foreground">{comp.name}</span>
-                      {comp.isOverride && (
-                        <span className="text-[9px] px-1 rounded bg-amber-100 text-amber-700 border border-amber-200 font-medium">
-                          override
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-[10px] text-muted-foreground font-mono">{comp.code}</span>
-                  </td>
-                  <td className="py-1 pr-2 text-muted-foreground">{comp.calcMethod}</td>
-                  <td className="py-1 pr-2 text-right font-mono tabular-nums">
-                    {comp.amount !== null ? formatMoney(comp.amount) : "—"}
-                  </td>
-                  <td className="py-1 text-right font-mono tabular-nums text-muted-foreground">
-                    {comp.percent !== null ? `${comp.percent}%` : "—"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <DataTable
+            data={grouped[type]}
+            columns={COMPONENT_COLUMNS}
+            getRowKey={(comp) => comp.id}
+            className="border-0 rounded-none text-[11px]"
+          />
         </div>
       ))}
     </div>

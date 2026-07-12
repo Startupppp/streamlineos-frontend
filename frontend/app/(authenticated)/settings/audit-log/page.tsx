@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useCallback, useTransition } from "react";
+import { useState, useCallback, useTransition, useMemo } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { format } from "date-fns";
-import { Shield, ChevronLeft, ChevronRight, Activity, Info, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { Shield, Activity, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/shared/error-state";
 import { Input } from "@/components/ui/input";
@@ -15,15 +15,10 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
-import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
 import {
   useAuditLogs,
   useAuditLogActions,
@@ -117,52 +112,6 @@ function actionBadgeClass(action: string) {
   return "bg-muted text-muted-foreground border-border";
 }
 
-interface LogTableRowProps {
-  log: AuditLogRow;
-  onSelect: (log: AuditLogRow) => void;
-}
-
-function LogTableRow({ log, onSelect }: LogTableRowProps) {
-  const handleClick = useCallback(() => onSelect(log), [log, onSelect]);
-  return (
-    <TableRow className="cursor-pointer" onClick={handleClick}>
-      <TableCell className="text-[12px] text-muted-foreground font-mono whitespace-nowrap">
-        {format(new Date(log.createdAt), "dd MMM, HH:mm:ss")}
-      </TableCell>
-      <TableCell>
-        <div className="flex items-center gap-2 min-w-[140px]">
-          <Avatar className="h-6 w-6 shrink-0">
-            <AvatarImage src={resolveImageUrl(log.userImage)} />
-            <AvatarFallback className="text-[9px]">{getInitials(log.userName)}</AvatarFallback>
-          </Avatar>
-          <span className="text-[13px] font-medium truncate max-w-[120px]">
-            {log.userName ?? log.userEmail ?? log.userId}
-          </span>
-        </div>
-      </TableCell>
-      <TableCell className="whitespace-nowrap">
-        <Badge variant="outline" className={`text-[11px] ${actionBadgeClass(log.action)}`}>
-          {formatActionLabel(log.action)}
-        </Badge>
-      </TableCell>
-      <TableCell className="text-[12px] text-muted-foreground capitalize whitespace-nowrap">
-        {log.targetType ?? "—"}
-        {log.targetId && (
-          <span className="text-[11px] opacity-60"> #{log.targetId}</span>
-        )}
-      </TableCell>
-      <TableCell className="text-[12px] font-mono text-muted-foreground whitespace-nowrap">
-        {log.ipAddress ?? "—"}
-      </TableCell>
-      <TableCell>
-        <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="View details">
-          <Info className="h-3.5 w-3.5 text-muted-foreground" />
-        </Button>
-      </TableCell>
-    </TableRow>
-  );
-}
-
 function DetailField({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
@@ -229,6 +178,77 @@ function LogDetailSheet({ log, onClose }: { log: AuditLogRow; onClose: () => voi
   );
 }
 
+const AUDIT_LOG_COLUMNS: DataTableColumn<AuditLogRow>[] = [
+  {
+    key: "createdAt",
+    header: "Timestamp",
+    cell: (log) => (
+      <span className="text-[12px] text-muted-foreground font-mono whitespace-nowrap">
+        {format(new Date(log.createdAt), "dd MMM, HH:mm:ss")}
+      </span>
+    ),
+    className: "w-[170px]",
+  },
+  {
+    key: "user",
+    header: "User",
+    cell: (log) => (
+      <div className="flex items-center gap-2 min-w-[140px]">
+        <Avatar className="h-6 w-6 shrink-0">
+          <AvatarImage src={resolveImageUrl(log.userImage)} />
+          <AvatarFallback className="text-[9px]">{getInitials(log.userName)}</AvatarFallback>
+        </Avatar>
+        <span className="text-[13px] font-medium truncate max-w-[120px]">
+          {log.userName ?? log.userEmail ?? log.userId}
+        </span>
+      </div>
+    ),
+    className: "w-[190px]",
+  },
+  {
+    key: "action",
+    header: "Action",
+    cell: (log) => (
+      <Badge variant="outline" className={`text-[11px] ${actionBadgeClass(log.action)}`}>
+        {formatActionLabel(log.action)}
+      </Badge>
+    ),
+  },
+  {
+    key: "entity",
+    header: "Entity",
+    cell: (log) => (
+      <span className="text-[12px] text-muted-foreground capitalize whitespace-nowrap">
+        {log.targetType ?? "—"}
+        {log.targetId && (
+          <span className="text-[11px] opacity-60"> #{log.targetId}</span>
+        )}
+      </span>
+    ),
+    className: "w-[110px]",
+  },
+  {
+    key: "ipAddress",
+    header: "IP Address",
+    cell: (log) => (
+      <span className="text-[12px] font-mono text-muted-foreground whitespace-nowrap">
+        {log.ipAddress ?? "—"}
+      </span>
+    ),
+    className: "w-[110px]",
+  },
+  {
+    key: "details",
+    header: "",
+    cell: () => (
+      <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="View details">
+        <Info className="h-3.5 w-3.5 text-muted-foreground" />
+      </Button>
+    ),
+    className: "w-[50px]",
+  },
+];
+
 export default function AuditLogPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -276,13 +296,17 @@ export default function AuditLogPage() {
   const totalPages = data?.totalPages ?? 1;
   const total = data?.total ?? 0;
 
-  const filteredLogs = userSearch.trim()
-    ? logs.filter(
-        (log) =>
-          (log.userName ?? "").toLowerCase().includes(userSearch.toLowerCase()) ||
-          (log.userEmail ?? "").toLowerCase().includes(userSearch.toLowerCase()),
-      )
-    : logs;
+  const filteredLogs = useMemo(
+    () =>
+      userSearch.trim()
+        ? logs.filter(
+            (log) =>
+              (log.userName ?? "").toLowerCase().includes(userSearch.toLowerCase()) ||
+              (log.userEmail ?? "").toLowerCase().includes(userSearch.toLowerCase()),
+          )
+        : logs,
+    [logs, userSearch],
+  );
 
   const resetFilters = useCallback(() => {
     updateParams({ action: null, target: null, from: null, to: null, page: null });
@@ -293,19 +317,17 @@ export default function AuditLogPage() {
   const handleTargetTypeFilter = useCallback((v: string) => updateParams({ target: v === "all" ? null : v, page: null }), [updateParams]);
   const handleDateFrom = useCallback((v: string) => updateParams({ from: v || null, page: null }), [updateParams]);
   const handleDateTo = useCallback((v: string) => updateParams({ to: v || null, page: null }), [updateParams]);
-  const handlePrevPage = useCallback(() => updateParams({ page: page <= 2 ? null : String(page - 1) }), [updateParams, page]);
-  const handleNextPage = useCallback(() => updateParams({ page: String(Math.min(totalPages, page + 1)) }), [updateParams, totalPages, page]);
-  const handleFirstPage = useCallback(() => updateParams({ page: null }), [updateParams]);
-  const handleLastPage = useCallback(() => updateParams({ page: String(totalPages) }), [updateParams, totalPages]);
-  const handleUserSearch = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setUserSearch(e.target.value);
-  }, []);
   const handleCloseSheet = useCallback(() => setSelectedLog(null), []);
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleRowClick = useCallback((log: AuditLogRow) => setSelectedLog(log), []);
 
   const handlePageSizeChange = useCallback((v: string) => {
     updateParams({ size: v === "10" ? null : v, page: null });
   }, [updateParams]);
+
+  const handleUserSearchChange = useCallback((value: string) => {
+    setUserSearch(value);
+  }, []);
 
   const handleGoToPageChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setGoToPage(e.target.value);
@@ -320,6 +342,10 @@ export default function AuditLogPage() {
       }
     }
   }, [goToPage, totalPages, updateParams]);
+
+  const handlePageChange = useCallback((p: number) => {
+    updateParams({ page: p <= 1 ? null : String(p) });
+  }, [updateParams]);
 
   const hasActiveFilters = actionFilter !== "all" || targetTypeFilter !== "all" || !!dateFrom || !!dateTo || !!userSearch;
 
@@ -361,20 +387,51 @@ export default function AuditLogPage() {
         <p className="text-[11px] font-medium text-muted-foreground">To</p>
         <DatePicker value={dateTo} onChange={handleDateTo} placeholder="To date" className="w-full" />
       </div>
-      <div className="flex flex-col gap-1 min-w-[140px] flex-1">
-        <p className="text-[11px] font-medium text-muted-foreground">User</p>
-        <Input
-          placeholder="Search by name or email"
-          value={userSearch}
-          onChange={handleUserSearch}
-          className="h-8 text-sm w-full"
-        />
-      </div>
       {hasActiveFilters && (
         <Button variant="ghost" size="sm" onClick={resetFilters} className="h-8 text-sm self-end">
           Clear
         </Button>
       )}
+    </div>
+  );
+
+  const goToPageToolbar = (
+    <div className="hidden md:flex items-center gap-1.5">
+      <span className="text-[12px] text-muted-foreground">Go to</span>
+      <Input
+        type="number"
+        min={1}
+        max={totalPages}
+        value={goToPage}
+        onChange={handleGoToPageChange}
+        onKeyDown={handleGoToPageKeyDown}
+        placeholder="—"
+        className="h-7 w-14 text-xs text-center"
+        aria-label="Go to page"
+      />
+    </div>
+  );
+
+  const pageSizeToolbar = (
+    <div className="flex items-center gap-2">
+      <span className="text-[12px] text-muted-foreground">Rows per page</span>
+      <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
+        <SelectTrigger className="h-7 w-[64px] text-xs">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {PAGE_SIZE_OPTIONS.map((s) => (
+            <SelectItem key={s} value={String(s)} className="text-xs">{s}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+
+  const toolbar = (
+    <div className="flex items-center gap-3">
+      {pageSizeToolbar}
+      {goToPageToolbar}
     </div>
   );
 
@@ -394,23 +451,32 @@ export default function AuditLogPage() {
       filters={filtersBar}
     >
       <div className="flex flex-col gap-4 h-full min-h-0">
-        <Card className="flex-1 min-h-0 overflow-hidden">
-          <CardContent className="p-0 flex flex-col h-full min-h-0">
-            {isLoading ? (
-              <div className="p-4 space-y-2">
-                {Array.from({ length: pageSize }).map((_, i) => (
-                  <Skeleton key={i} className="h-11 w-full" />
-                ))}
-              </div>
-            ) : isError ? (
-              <ErrorState
-                title="Failed to load audit events"
-                description="Something went wrong while fetching audit events. Please try again."
-                onRetry={handleRetry}
-                compact
-                className="m-4"
-              />
-            ) : filteredLogs.length === 0 ? (
+        {isError ? (
+          <ErrorState
+            title="Failed to load audit events"
+            description="Something went wrong while fetching audit events. Please try again."
+            onRetry={handleRetry}
+            compact
+          />
+        ) : isLoading ? (
+          <DataTableSkeleton rows={pageSize} columns={6} />
+        ) : (
+          <DataTable
+            data={filteredLogs}
+            columns={AUDIT_LOG_COLUMNS}
+            getRowKey={(log) => log.id}
+            onRowClick={handleRowClick}
+            minWidth="700px"
+            search={{ value: userSearch, onChange: handleUserSearchChange, placeholder: "Search by name or email" }}
+            toolbar={toolbar}
+            pagination={{
+              mode: "server",
+              page,
+              pageSize,
+              total,
+              onPageChange: handlePageChange,
+            }}
+            emptyState={
               <div className="py-14 flex flex-col items-center gap-3 text-center">
                 <EmptyDocumentsIllustration className="h-40 w-40 opacity-95" />
                 <div className="space-y-1 text-muted-foreground">
@@ -425,118 +491,9 @@ export default function AuditLogPage() {
                   </Button>
                 )}
               </div>
-            ) : (
-              <div className="flex flex-col flex-1 min-h-0">
-                <div className="min-w-[700px] border-b border-border/60 bg-muted/40">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="hover:bg-transparent">
-                        <TableHead className="w-[170px] bg-muted/40 text-xs uppercase tracking-wide">Timestamp</TableHead>
-                        <TableHead className="w-[190px] bg-muted/40 text-xs uppercase tracking-wide">User</TableHead>
-                        <TableHead className="bg-muted/40 text-xs uppercase tracking-wide">Action</TableHead>
-                        <TableHead className="w-[110px] bg-muted/40 text-xs uppercase tracking-wide">Entity</TableHead>
-                        <TableHead className="w-[110px] bg-muted/40 text-xs uppercase tracking-wide">IP Address</TableHead>
-                        <TableHead className="w-[50px] bg-muted/40" />
-                      </TableRow>
-                    </TableHeader>
-                  </Table>
-                </div>
-                <ScrollArea className="w-full flex-1 min-h-0" type="auto">
-                  <div className="min-w-[700px]">
-                    <Table>
-                      <TableBody>
-                        {filteredLogs.map((log) => (
-                          <LogTableRow key={log.id} log={log} onSelect={setSelectedLog} />
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </ScrollArea>
-              </div>
-            )}
-
-            {total > 0 && (
-              <div className="shrink-0 border-t border-border/60 bg-card">
-                <div className="p-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-sm text-muted-foreground">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-[12px]">Rows per page</span>
-                    <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
-                      <SelectTrigger className="h-7 w-[64px] text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {PAGE_SIZE_OPTIONS.map((s) => (
-                          <SelectItem key={s} value={String(s)} className="text-xs">{s}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <span className="text-[12px] tabular-nums">
-                      {((page - 1) * pageSize) + 1}–{Math.min(page * pageSize, total)} of {total.toLocaleString()}
-                    </span>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-7 w-7 hidden sm:inline-flex"
-                      onClick={handleFirstPage}
-                      disabled={page <= 1}
-                      aria-label="First page"
-                    >
-                      <ChevronsLeft className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-7 w-7"
-                      onClick={handlePrevPage}
-                      disabled={page <= 1}
-                      aria-label="Previous page"
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                    <span className="text-sm font-medium tabular-nums px-1">{page} / {totalPages}</span>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-7 w-7"
-                      onClick={handleNextPage}
-                      disabled={page >= totalPages}
-                      aria-label="Next page"
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-7 w-7 hidden sm:inline-flex"
-                      onClick={handleLastPage}
-                      disabled={page >= totalPages}
-                      aria-label="Last page"
-                    >
-                      <ChevronsRight className="h-3.5 w-3.5" />
-                    </Button>
-                    <div className="hidden md:flex items-center gap-1.5 ml-1">
-                      <span className="text-[12px]">Go to</span>
-                      <Input
-                        type="number"
-                        min={1}
-                        max={totalPages}
-                        value={goToPage}
-                        onChange={handleGoToPageChange}
-                        onKeyDown={handleGoToPageKeyDown}
-                        placeholder="—"
-                        className="h-7 w-14 text-xs text-center"
-                        aria-label="Go to page"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+            }
+          />
+        )}
       </div>
 
       {selectedLog && <LogDetailSheet log={selectedLog} onClose={handleCloseSheet} />}

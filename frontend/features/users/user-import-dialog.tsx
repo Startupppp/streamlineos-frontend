@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { getApiError } from "@/lib/api-client";
 import { Upload, FileText, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 
 interface ImportRow {
   email: string;
@@ -38,6 +39,31 @@ interface UserImportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
+type IndexedImportRow = ImportRow & { _idx: number };
+
+const PREVIEW_COLUMNS: DataTableColumn<IndexedImportRow>[] = [
+  {
+    key: "email",
+    header: "Email",
+    cell: (row) => <span className="truncate max-w-[180px] block">{row.email}</span>,
+    className: "px-2 py-1",
+  },
+  {
+    key: "name",
+    header: "Name",
+    cell: (row) => (
+      <span>{[row.firstName, row.lastName].filter(Boolean).join(" ") || "—"}</span>
+    ),
+    className: "px-2 py-1",
+  },
+  {
+    key: "role",
+    header: "Role",
+    cell: (row) => <span>{row.role ?? "MEMBER"}</span>,
+    className: "px-2 py-1",
+  },
+];
 
 function parseCsv(text: string): ImportRow[] {
   const lines = text.split(/\r?\n/).filter((l) => l.trim());
@@ -149,32 +175,20 @@ export function UserImportDialog({ open, onOpenChange }: UserImportDialogProps) 
                   <span className="font-medium text-muted-foreground">{preview.length} users found</span>
                   <Badge variant="secondary" className="text-[10px]">Preview</Badge>
                 </div>
-                <div className="border rounded-md overflow-hidden max-h-40 overflow-y-auto">
-                  <table className="w-full text-xs">
-                    <thead className="bg-muted/40 border-b">
-                      <tr>
-                        <th className="text-left px-2 py-1.5 font-medium">Email</th>
-                        <th className="text-left px-2 py-1.5 font-medium">Name</th>
-                        <th className="text-left px-2 py-1.5 font-medium">Role</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {preview.slice(0, 10).map((row, i) => (
-                        <tr key={i} className="border-b last:border-b-0">
-                          <td className="px-2 py-1 truncate max-w-[180px]">{row.email}</td>
-                          <td className="px-2 py-1">{[row.firstName, row.lastName].filter(Boolean).join(" ") || "—"}</td>
-                          <td className="px-2 py-1">{row.role ?? "MEMBER"}</td>
-                        </tr>
-                      ))}
-                      {preview.length > 10 && (
-                        <tr>
-                          <td colSpan={3} className="px-2 py-1.5 text-muted-foreground text-center">
-                            …and {preview.length - 10} more
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
+                <div className="max-h-40 overflow-y-auto">
+                  <DataTable
+                    data={preview.slice(0, 10).map((row, i) => ({ ...row, _idx: i }))}
+                    columns={PREVIEW_COLUMNS}
+                    getRowKey={(row) => row._idx}
+                    className="text-xs"
+                    footer={
+                      preview.length > 10 ? (
+                        <span className="text-muted-foreground text-center block">
+                          …and {preview.length - 10} more
+                        </span>
+                      ) : undefined
+                    }
+                  />
                 </div>
               </div>
             )}

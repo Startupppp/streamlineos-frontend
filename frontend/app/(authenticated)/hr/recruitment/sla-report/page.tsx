@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo } from "react";
 import { useHrSlaReport } from "@/hooks/api/hr/recruitment";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -8,10 +9,11 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, AlertTriangle, CheckCircle, TrendingUp, AlertCircle } from "lucide-react";
+import { ArrowLeft, AlertTriangle, TrendingUp, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from "recharts";
@@ -35,6 +37,95 @@ function breachBg(pct: number) {
   if (pct >= 50) return "bg-destructive/10";
   if (pct >= 25) return "bg-yellow-50 dark:bg-yellow-950/20";
   return "bg-green-50 dark:bg-green-950/20";
+}
+
+interface SlaStageEntry {
+  stage: string;
+  breachPct: number;
+  breached: number;
+  total: number;
+}
+
+interface SlaReportRow {
+  month: string;
+  label: string;
+  stages: SlaStageEntry[];
+  overall: { breachPct: number; total: number };
+}
+
+function MonthlyBreakdownTable({
+  report,
+  stages,
+}: {
+  report: SlaReportRow[];
+  stages: string[];
+}) {
+  const columns = useMemo<DataTableColumn<SlaReportRow>[]>(() => {
+    const fixedMonth: DataTableColumn<SlaReportRow> = {
+      key: "month",
+      header: "Month",
+      cell: (row) => <span className="font-medium">{row.label}</span>,
+      headerClassName: "text-left",
+    };
+
+    const stageCols: DataTableColumn<SlaReportRow>[] = stages.map((stage) => ({
+      key: `stage_${stage}`,
+      header: stage,
+      cell: (row) => {
+        const st = row.stages.find((s) => s.stage === stage);
+        if (!st || st.total === 0) {
+          return <span className="text-muted-foreground">—</span>;
+        }
+        return (
+          <span className={cn("font-medium", breachColor(st.breachPct))}>
+            {st.breachPct}%
+            <span className="text-muted-foreground font-normal ml-1">
+              ({st.breached}/{st.total})
+            </span>
+          </span>
+        );
+      },
+      className: "text-center",
+      headerClassName: "text-center",
+    }));
+
+    const overallCol: DataTableColumn<SlaReportRow> = {
+      key: "overall",
+      header: "Overall",
+      cell: (row) => {
+        if (row.overall.total === 0) {
+          return <span className="text-muted-foreground">—</span>;
+        }
+        return (
+          <Badge
+            variant={
+              row.overall.breachPct >= 50
+                ? "destructive"
+                : row.overall.breachPct >= 25
+                  ? "secondary"
+                  : "outline"
+            }
+            className="text-[10px]"
+          >
+            {row.overall.breachPct}%
+          </Badge>
+        );
+      },
+      className: "text-center",
+      headerClassName: "text-center",
+    };
+
+    return [fixedMonth, ...stageCols, overallCol];
+  }, [stages]);
+
+  return (
+    <DataTable
+      data={report}
+      columns={columns}
+      getRowKey={(row) => row.month}
+      className="text-[10px] md:text-xs"
+    />
+  );
 }
 
 export default function SlaReportPage() {
@@ -154,53 +245,7 @@ export default function SlaReportPage() {
               <CardTitle className="text-sm">Monthly Breakdown</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <div>
-                <table className="w-full text-[10px] md:text-xs">
-                  <thead>
-                    <tr className="border-b bg-muted/40">
-                      <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Month</th>
-                      {data.stages.map((s) => (
-                        <th key={s} className="px-4 py-2.5 text-center font-medium text-muted-foreground">{s}</th>
-                      ))}
-                      <th className="px-4 py-2.5 text-center font-medium text-muted-foreground">Overall</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.report.map((row) => (
-                      <tr key={row.month} className="border-b last:border-0 hover:bg-muted/20 transition-colors">
-                        <td className="px-4 py-2.5 font-medium">{row.label}</td>
-                        {data.stages.map((stage) => {
-                          const st = row.stages.find((s) => s.stage === stage);
-                          return (
-                            <td key={stage} className="px-4 py-2.5 text-center">
-                              {st && st.total > 0 ? (
-                                <span className={cn("font-medium", breachColor(st.breachPct))}>
-                                  {st.breachPct}%
-                                  <span className="text-muted-foreground font-normal ml-1">({st.breached}/{st.total})</span>
-                                </span>
-                              ) : (
-                                <span className="text-muted-foreground">—</span>
-                              )}
-                            </td>
-                          );
-                        })}
-                        <td className="px-4 py-2.5 text-center">
-                          {row.overall.total > 0 ? (
-                            <Badge
-                              variant={row.overall.breachPct >= 50 ? "destructive" : row.overall.breachPct >= 25 ? "secondary" : "outline"}
-                              className="text-[10px]"
-                            >
-                              {row.overall.breachPct}%
-                            </Badge>
-                          ) : (
-                            <span className="text-muted-foreground">—</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <MonthlyBreakdownTable report={data.report} stages={data.stages} />
             </CardContent>
           </Card>
         </div>

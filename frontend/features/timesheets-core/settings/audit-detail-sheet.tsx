@@ -9,6 +9,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import type { AuditEvent } from "@/features/timesheets-core/types";
 
 function renderValue(value: unknown): string {
@@ -19,13 +20,20 @@ function renderValue(value: unknown): string {
   return str.length > 120 ? str.slice(0, 117) + "..." : str;
 }
 
+interface DiffRow {
+  key: string;
+  prev: unknown;
+  next: unknown;
+  changed: boolean;
+}
+
 interface DiffTableProps {
   before: Record<string, unknown> | null;
   after: Record<string, unknown> | null;
 }
 
 function DiffTable({ before, after }: DiffTableProps) {
-  const rows = useMemo(() => {
+  const rows = useMemo<DiffRow[]>(() => {
     const keys = new Set([
       ...Object.keys(before ?? {}),
       ...Object.keys(after ?? {}),
@@ -33,10 +41,46 @@ function DiffTable({ before, after }: DiffTableProps) {
     return [...keys].map((key) => {
       const prev = before?.[key];
       const next = after?.[key];
-      const changed =
-        JSON.stringify(prev) !== JSON.stringify(next);
+      const changed = JSON.stringify(prev) !== JSON.stringify(next);
       return { key, prev, next, changed };
     });
+  }, [before, after]);
+
+  const columns = useMemo<DataTableColumn<DiffRow>[]>(() => {
+    const cols: DataTableColumn<DiffRow>[] = [
+      {
+        key: "key",
+        header: "Field",
+        cell: (row) => (
+          <span className="font-mono text-[10px] text-muted-foreground truncate block">
+            {row.key}
+          </span>
+        ),
+        className: "w-1/3 py-1.5 pr-3",
+        headerClassName: "w-1/3",
+      },
+    ];
+    if (before !== null) {
+      cols.push({
+        key: "prev",
+        header: "Before",
+        cell: (row) => (
+          <span className="font-mono break-all">{renderValue(row.prev)}</span>
+        ),
+        className: "py-1.5 pr-3",
+      });
+    }
+    if (after !== null) {
+      cols.push({
+        key: "next",
+        header: "After",
+        cell: (row) => (
+          <span className="font-mono break-all">{renderValue(row.next)}</span>
+        ),
+        className: "py-1.5",
+      });
+    }
+    return cols;
   }, [before, after]);
 
   if (rows.length === 0) {
@@ -46,47 +90,13 @@ function DiffTable({ before, after }: DiffTableProps) {
   }
 
   return (
-    <table className="w-full text-xs border-collapse">
-      <thead>
-        <tr className="border-b">
-          <th className="text-left py-1.5 pr-3 font-medium text-muted-foreground w-1/3">
-            Field
-          </th>
-          {before && (
-            <th className="text-left py-1.5 pr-3 font-medium text-muted-foreground">
-              Before
-            </th>
-          )}
-          {after && (
-            <th className="text-left py-1.5 font-medium text-muted-foreground">
-              After
-            </th>
-          )}
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map(({ key, prev, next, changed }) => (
-          <tr
-            key={key}
-            className={changed ? "bg-amber-50 dark:bg-amber-950/20" : ""}
-          >
-            <td className="py-1.5 pr-3 font-mono text-[10px] text-muted-foreground truncate">
-              {key}
-            </td>
-            {before !== null && (
-              <td className="py-1.5 pr-3 font-mono break-all">
-                {renderValue(prev)}
-              </td>
-            )}
-            {after !== null && (
-              <td className="py-1.5 font-mono break-all">
-                {renderValue(next)}
-              </td>
-            )}
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <DataTable
+      data={rows}
+      columns={columns}
+      getRowKey={(row) => row.key}
+      rowClassName={(row) => row.changed ? "bg-amber-50 dark:bg-amber-950/20" : ""}
+      className="border-0 rounded-none text-xs"
+    />
   );
 }
 

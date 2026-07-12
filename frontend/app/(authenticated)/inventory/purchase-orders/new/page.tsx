@@ -1,10 +1,10 @@
 "use client";
 
-import { memo, useCallback, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { useForm, useFieldArray, useWatch, type Control } from "react-hook-form";
+import { useForm, useFieldArray, useWatch, Controller, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -12,10 +12,12 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useVendors, useProductVariants, useCreatePurchaseOrder } from "@/hooks/api/inventory";
@@ -38,6 +40,8 @@ const newPoSchema = z.object({
 
 type NewPoFormValues = z.infer<typeof newPoSchema>;
 
+type FieldRow = { id: string; _index: number };
+
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
 }
@@ -51,115 +55,48 @@ function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }
 
-interface PoLineRowProps {
-  index: number;
-  control: Control<NewPoFormValues>;
-  variants: ProductVariantFlat[];
-  isOnly: boolean;
-  onRemoveAt: (index: number) => void;
-  onVariantChangeAt: (index: number, variantId: string, costPrice: string) => void;
-}
-
-const PoLineRow = memo(function PoLineRow({ index, control, variants, isOnly, onRemoveAt, onVariantChangeAt }: PoLineRowProps) {
+function PoLineAmountCell({ index, control }: { index: number; control: Control<NewPoFormValues> }) {
   const quantity = useWatch({ control, name: `lines.${index}.quantity` });
   const unitCost = useWatch({ control, name: `lines.${index}.unitCost` });
   const amount = round2(num(quantity ?? "") * num(unitCost ?? ""));
+  return <span>{amount.toFixed(2)}</span>;
+}
 
+interface PoLineVariantCellProps {
+  index: number;
+  control: Control<NewPoFormValues>;
+  variants: ProductVariantFlat[];
+  onVariantChangeAt: (index: number, variantId: string, costPrice: string) => void;
+}
+
+function PoLineVariantCell({ index, control, variants, onVariantChangeAt }: PoLineVariantCellProps) {
   function handleVariantSelect(value: string): void {
     const variant = variants.find((v) => String(v.id) === value);
     const costPrice = variant ? String(Number(variant.costPrice).toFixed(2)) : "0";
     onVariantChangeAt(index, value, costPrice);
   }
 
-  function handleRemove(): void {
-    onRemoveAt(index);
-  }
-
   return (
-    <TableRow>
-      <TableCell>
-        <FormField
-          control={control}
-          name={`lines.${index}.productVariantId`}
-          render={({ field }) => (
-            <Select value={field.value} onValueChange={handleVariantSelect}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select product" />
-              </SelectTrigger>
-              <SelectContent className="max-h-72">
-                {variants.map((v) => (
-                  <SelectItem key={v.id} value={String(v.id)}>
-                    {v.productName} — {v.sku}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        />
-      </TableCell>
-      <TableCell>
-        <FormField
-          control={control}
-          name={`lines.${index}.quantity`}
-          render={({ field }) => (
-            <Input
-              type="number"
-              min="0.0001"
-              step="1"
-              className="text-right tabular-nums"
-              {...field}
-            />
-          )}
-        />
-      </TableCell>
-      <TableCell>
-        <FormField
-          control={control}
-          name={`lines.${index}.unitCost`}
-          render={({ field }) => (
-            <Input
-              type="number"
-              min="0"
-              step="0.01"
-              className="text-right tabular-nums"
-              {...field}
-            />
-          )}
-        />
-      </TableCell>
-      <TableCell>
-        <FormField
-          control={control}
-          name={`lines.${index}.taxRate`}
-          render={({ field }) => (
-            <Input
-              type="number"
-              min="0"
-              max="100"
-              step="0.01"
-              className="text-right tabular-nums"
-              {...field}
-            />
-          )}
-        />
-      </TableCell>
-      <TableCell className="text-right font-mono tabular-nums text-[11px] px-2 py-1">
-        {amount.toFixed(2)}
-      </TableCell>
-      <TableCell>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={handleRemove}
-          disabled={isOnly}
-        >
-          <Trash2 className="size-4" />
-        </Button>
-      </TableCell>
-    </TableRow>
+    <Controller
+      control={control}
+      name={`lines.${index}.productVariantId`}
+      render={({ field }) => (
+        <Select value={field.value} onValueChange={handleVariantSelect}>
+          <SelectTrigger className="h-8 text-xs">
+            <SelectValue placeholder="Select product" />
+          </SelectTrigger>
+          <SelectContent className="max-h-72">
+            {variants.map((v) => (
+              <SelectItem key={v.id} value={String(v.id)}>
+                {v.productName} — {v.sku}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+    />
   );
-});
+}
 
 export default function NewPurchaseOrderPage() {
   const router = useRouter();
@@ -265,6 +202,108 @@ export default function NewPurchaseOrderPage() {
   const vendors = vendorsQuery.data?.items ?? [];
   const variants = variantsQuery.data ?? [];
 
+  const fieldRows: FieldRow[] = fields.map((f, i) => ({ id: f.id, _index: i }));
+
+  const columns: DataTableColumn<FieldRow>[] = [
+    {
+      key: "variant",
+      header: "Product / SKU",
+      cell: (row) => (
+        <PoLineVariantCell
+          index={row._index}
+          control={form.control}
+          variants={variants}
+          onVariantChangeAt={handleVariantChangeAt}
+        />
+      ),
+    },
+    {
+      key: "qty",
+      header: "Qty",
+      headerClassName: "text-right w-[100px]",
+      className: "w-[100px]",
+      cell: (row) => (
+        <Controller
+          control={form.control}
+          name={`lines.${row._index}.quantity`}
+          render={({ field: f }) => (
+            <Input type="number" min="0.0001" step="1" className="h-8 text-right tabular-nums text-xs" {...f} />
+          )}
+        />
+      ),
+    },
+    {
+      key: "unitCost",
+      header: "Unit Cost",
+      headerClassName: "text-right w-[130px]",
+      className: "w-[130px]",
+      cell: (row) => (
+        <Controller
+          control={form.control}
+          name={`lines.${row._index}.unitCost`}
+          render={({ field: f }) => (
+            <Input type="number" min="0" step="0.01" className="h-8 text-right tabular-nums text-xs" {...f} />
+          )}
+        />
+      ),
+    },
+    {
+      key: "taxRate",
+      header: "Tax %",
+      headerClassName: "text-right w-[100px]",
+      className: "w-[100px]",
+      cell: (row) => (
+        <Controller
+          control={form.control}
+          name={`lines.${row._index}.taxRate`}
+          render={({ field: f }) => (
+            <Input type="number" min="0" max="100" step="0.01" className="h-8 text-right tabular-nums text-xs" {...f} />
+          )}
+        />
+      ),
+    },
+    {
+      key: "amount",
+      header: "Amount",
+      headerClassName: "text-right w-[130px]",
+      className: "text-right font-mono tabular-nums w-[130px]",
+      cell: (row) => <PoLineAmountCell index={row._index} control={form.control} />,
+    },
+    {
+      key: "remove",
+      header: "",
+      headerClassName: "w-[52px]",
+      className: "w-[52px]",
+      cell: (row) => {
+        function handleRemove(): void {
+          handleRemoveAt(row._index);
+        }
+        return (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={handleRemove}
+            disabled={fields.length === 1}
+            aria-label={`Remove line ${row._index + 1}`}
+          >
+            <Trash2 className="size-3.5" />
+          </Button>
+        );
+      },
+    },
+  ];
+
+  const tableFooter = (
+    <div className="flex items-center justify-between">
+      <Button type="button" variant="outline" size="sm" onClick={handleAddLine}>
+        <Plus className="size-4 mr-1" />
+        Add line
+      </Button>
+    </div>
+  );
+
   return (
     <PageWrapper
       eyebrow="Inventory / Purchase Orders"
@@ -350,39 +389,18 @@ export default function NewPurchaseOrderPage() {
           </Card>
 
           <Card className="overflow-hidden">
-            <div className="overflow-x-auto">
-              <Table className="min-w-[760px]">
-                <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
-                  <TableRow className="border-b-2 border-border">
-                    <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Product / SKU</TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right w-[100px]">Qty</TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right w-[130px]">Unit cost</TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right w-[100px]">Tax %</TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right w-[130px]">Amount</TableHead>
-                    <TableHead className="w-[52px]"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {fields.map((field, index) => (
-                    <PoLineRow
-                      key={field.id}
-                      index={index}
-                      control={form.control}
-                      variants={variants}
-                      isOnly={fields.length === 1}
-                      onRemoveAt={handleRemoveAt}
-                      onVariantChangeAt={handleVariantChangeAt}
-                    />
-                  ))}
-                </TableBody>
-              </Table>
+            <div className="space-y-2 p-4 pb-0">
+              <Label className="text-[13px] font-medium">
+                Lines <span className="text-destructive">*</span>
+              </Label>
             </div>
-            <div className="p-3 border-t border-border">
-              <Button type="button" variant="outline" size="sm" onClick={handleAddLine}>
-                <Plus className="size-4 mr-1" />
-                Add line
-              </Button>
-            </div>
+            <DataTable
+              data={fieldRows}
+              columns={columns}
+              getRowKey={(row) => row.id}
+              minWidth="760px"
+              footer={tableFooter}
+            />
           </Card>
 
           <Card className="p-4">
@@ -408,9 +426,14 @@ export default function NewPurchaseOrderPage() {
             <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={handleCancel}>
               Cancel
             </Button>
-            <Button type="submit" className="w-full sm:w-auto" disabled={createMutation.isPending}>
-              {createMutation.isPending ? "Creating…" : "Create PO"}
-            </Button>
+            <LoadingButton
+              type="submit"
+              isPending={createMutation.isPending}
+              loadingText="Creating…"
+              className="w-full sm:w-auto"
+            >
+              Create PO
+            </LoadingButton>
           </div>
         </form>
       </Form>
