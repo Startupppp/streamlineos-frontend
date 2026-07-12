@@ -166,7 +166,6 @@ export function ActionItemFormSheet({
                   type="button"
                   variant="outline"
                   onClick={() => onOpenChange(false)}
-                  disabled={isPending}
                 >
                   Cancel
                 </Button>

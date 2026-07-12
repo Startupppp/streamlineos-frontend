@@ -14,6 +14,7 @@ import { EmptyActivityIllustration } from "@/components/illustrations";
 import { Download } from "lucide-react";
 import { useMovementsReport, type MovementType } from "@/hooks/api/inventory/reports";
 import { useWarehouses } from "@/hooks/api/inventory/warehouses";
+import { downloadCsv } from "@/features/inventory/lib";
 
 const TYPE_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
   { value: "ALL", label: "All types" },
@@ -145,29 +146,22 @@ function buildMovementsColumns(): DataTableColumn<MovementRow>[] {
 const MOVEMENTS_COLUMNS = buildMovementsColumns();
 
 function exportToCsv(rows: MovementRow[]): void {
-  const headers = ["Date", "Type", "Product", "SKU", "Warehouse", "Location", "Qty", "Balance After", "Reference", "Performed By"];
-  const csvRows = rows.map((r) => [
-    formatDate(r.createdAt),
-    r.type,
-    r.productName,
-    r.sku,
-    r.warehouseName ?? "",
-    r.locationName ?? "",
-    r.quantity,
-    r.balanceAfter ?? "",
-    r.referenceType && r.referenceNumber ? `${r.referenceType} ${r.referenceNumber}` : (r.notes ?? ""),
-    r.performedBy ?? "",
-  ]);
-  const content = [headers, ...csvRows]
-    .map((row) => row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))
-    .join("\n");
-  const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `movements-${new Date().toISOString().slice(0, 10)}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
+  downloadCsv(
+    `movements-${new Date().toISOString().slice(0, 10)}.csv`,
+    ["Date", "Type", "Product", "SKU", "Warehouse", "Location", "Qty", "Balance After", "Reference", "Performed By"],
+    rows.map((r) => [
+      formatDate(r.createdAt),
+      r.type,
+      r.productName,
+      r.sku,
+      r.warehouseName ?? "",
+      r.locationName ?? "",
+      r.quantity,
+      r.balanceAfter ?? "",
+      r.referenceType && r.referenceNumber ? `${r.referenceType} ${r.referenceNumber}` : (r.notes ?? ""),
+      r.performedBy ?? "",
+    ]),
+  );
 }
 
 export default function MovementsReportPage() {

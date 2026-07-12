@@ -14,6 +14,7 @@ import { ErrorState } from "@/components/shared";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyReportIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { useReorderReport, type ReorderReportRow } from "@/hooks/api/inventory/reports";
+import { downloadCsv } from "@/features/inventory/lib";
 
 function UrgencyBadge({ available, reorderPoint }: { available: number; reorderPoint: number }) {
   if (available <= 0) {
@@ -154,28 +155,21 @@ function ReorderReportContent() {
   }
 
   function handleExportClick(): void {
-    const headers = ["Product", "SKU", "Category", "Warehouse", "Vendor", "Available", "Reorder Pt.", "Suggest Qty", "Urgency"];
-    const csvRows = filtered.map((r) => [
-      r.productName,
-      r.sku,
-      r.categoryName ?? "",
-      r.warehouseName ?? "",
-      r.vendorName ?? "",
-      r.availableQty,
-      r.reorderPoint,
-      r.reorderQty ?? "",
-      r.availableQty <= 0 ? "Out of stock" : r.reorderPoint > 0 && r.availableQty / r.reorderPoint <= 0.25 ? "Critical" : "Low",
-    ]);
-    const content = [headers, ...csvRows]
-      .map((row) => row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))
-      .join("\n");
-    const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `reorder-report-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadCsv(
+      `reorder-report-${new Date().toISOString().slice(0, 10)}.csv`,
+      ["Product", "SKU", "Category", "Warehouse", "Vendor", "Available", "Reorder Pt.", "Suggest Qty", "Urgency"],
+      filtered.map((r) => [
+        r.productName,
+        r.sku,
+        r.categoryName ?? "",
+        r.warehouseName ?? "",
+        r.vendorName ?? "",
+        r.availableQty,
+        r.reorderPoint,
+        r.reorderQty ?? "",
+        r.availableQty <= 0 ? "Out of stock" : r.reorderPoint > 0 && r.availableQty / r.reorderPoint <= 0.25 ? "Critical" : "Low",
+      ]),
+    );
   }
 
   const hasData = !query.isLoading && !query.error;

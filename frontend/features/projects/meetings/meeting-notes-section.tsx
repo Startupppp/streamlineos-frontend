@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useUpdateMeeting } from "@/hooks/api/projects";
 import { TiptapEditor } from "@/components/editor/tiptap-editor";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { MeetingDetail } from "@/types/projects";
 
@@ -64,9 +65,9 @@ export function MeetingNotesSection({ meeting, projectId, canManage }: MeetingNo
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold text-foreground">Notes</h3>
           {canManage && dirty && (
-            <Button size="sm" className="h-7 text-xs" onClick={handleSave} disabled={updateMeeting.isPending}>
-              {updateMeeting.isPending ? "Saving…" : "Save Notes"}
-            </Button>
+            <LoadingButton size="sm" className="h-7 text-xs" onClick={handleSave} isPending={updateMeeting.isPending} loadingText="Saving…">
+              Save Notes
+            </LoadingButton>
           )}
         </div>
         <div className="rounded-lg border bg-card overflow-hidden">

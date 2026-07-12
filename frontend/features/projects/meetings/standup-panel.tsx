@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Separator } from "@/components/ui/separator";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
@@ -114,9 +115,9 @@ export function StandupPanel({
                 </FormControl>
               </FormItem>
             )} />
-            <Button type="submit" size="sm" className="h-8 text-xs" disabled={upsertStandup.isPending}>
-              {upsertStandup.isPending ? "Saving…" : "Save Standup"}
-            </Button>
+            <LoadingButton type="submit" size="sm" className="h-8 text-xs" isPending={upsertStandup.isPending} loadingText="Saving…">
+              Save Standup
+            </LoadingButton>
           </form>
         </Form>
       </div>

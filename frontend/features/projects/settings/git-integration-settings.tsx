@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { Plus, ExternalLink } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -270,12 +271,14 @@ export function ProjectsGitIntegrationSettings() {
             <Button variant="outline" onClick={() => handleDialogChange(false)}>
               Cancel
             </Button>
-            <Button
+            <LoadingButton
               onClick={handleCreate}
-              disabled={createConnection.isPending || !repoUrl.trim()}
+              disabled={!repoUrl.trim()}
+              isPending={createConnection.isPending}
+              loadingText="Creating…"
             >
-              {createConnection.isPending ? "Creating..." : "Create connection"}
-            </Button>
+              Create connection
+            </LoadingButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>

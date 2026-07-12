@@ -352,6 +352,7 @@ export default function TransferDetailPage({
                       <TableRow className="bg-muted/80 hover:bg-muted/80">
                         <TableHead className={TH}>Product</TableHead>
                         <TableHead className={TH}>SKU</TableHead>
+                        <TableHead className={TH}>Lot / Serial</TableHead>
                         <TableHead className={cn(TH, "text-right")}>Requested</TableHead>
                         {isCompleted && <TableHead className={cn(TH, "text-right")}>Received</TableHead>}
                         {isCompleted && <TableHead className={cn(TH, "text-right")}>Variance</TableHead>}
@@ -361,6 +362,11 @@ export default function TransferDetailPage({
                     <TableBody>
                       {lines.map((line) => {
                         const variance = line.quantityReceived - line.quantity;
+                        const trackingLabel = line.lotNumber
+                          ? `Lot: ${line.lotNumber}`
+                          : line.serialNumber
+                          ? `S/N: ${line.serialNumber}`
+                          : "—";
                         return (
                           <TableRow key={line.id} className="h-8 hover:bg-muted/30 transition-colors">
                             <TableCell className="px-2 py-1 text-[11px] font-medium max-w-[180px] truncate">
@@ -368,6 +374,9 @@ export default function TransferDetailPage({
                             </TableCell>
                             <TableCell className="px-2 py-1 font-mono text-[11px] text-muted-foreground">
                               {line.sku}
+                            </TableCell>
+                            <TableCell className="px-2 py-1 font-mono text-[11px] text-muted-foreground">
+                              {trackingLabel}
                             </TableCell>
                             <TableCell className="px-2 py-1 text-right font-mono tabular-nums text-[11px]">
                               {line.quantity.toLocaleString()}

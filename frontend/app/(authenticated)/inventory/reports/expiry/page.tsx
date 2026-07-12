@@ -14,7 +14,7 @@ import { InventoryEmptyState } from "@/features/inventory/components/inventory-e
 import { EmptyReportIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { useExpiryReport, type ExpiryReportRow } from "@/hooks/api/inventory/reports";
 import { useWarehouses } from "@/hooks/api/inventory/warehouses";
-import { LOT_STATUS_BADGE, LOT_STATUS_LABEL, type LotStatus } from "@/features/inventory/lib";
+import { LOT_STATUS_BADGE, LOT_STATUS_LABEL, type LotStatus, downloadCsv } from "@/features/inventory/lib";
 
 const LIMIT = 50;
 
@@ -117,26 +117,19 @@ function buildColumns(): DataTableColumn<ExpiryReportRow>[] {
 }
 
 function exportToCsv(rows: ExpiryReportRow[]): void {
-  const headers = ["Lot #", "Product", "SKU", "On Hand", "Expiry Date", "Days Until Expiry", "Status"];
-  const csvRows = rows.map((r) => [
-    r.lotNumber,
-    r.productName,
-    r.variantSku,
-    parseFloat(r.totalOnHand),
-    formatDate(r.expiryDate),
-    r.daysUntilExpiry <= 0 ? "Expired" : r.daysUntilExpiry,
-    LOT_STATUS_LABEL[r.status as LotStatus] ?? r.status,
-  ]);
-  const content = [headers, ...csvRows]
-    .map((row) => row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))
-    .join("\n");
-  const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `expiry-report-${new Date().toISOString().slice(0, 10)}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
+  downloadCsv(
+    `expiry-report-${new Date().toISOString().slice(0, 10)}.csv`,
+    ["Lot #", "Product", "SKU", "On Hand", "Expiry Date", "Days Until Expiry", "Status"],
+    rows.map((r) => [
+      r.lotNumber,
+      r.productName,
+      r.variantSku,
+      parseFloat(r.totalOnHand),
+      formatDate(r.expiryDate),
+      r.daysUntilExpiry <= 0 ? "Expired" : r.daysUntilExpiry,
+      LOT_STATUS_LABEL[r.status as LotStatus] ?? r.status,
+    ]),
+  );
 }
 
 function ExpiryReportContent() {

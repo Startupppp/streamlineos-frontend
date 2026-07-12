@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose,
@@ -211,14 +212,16 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
             <SheetClose asChild>
               <Button variant="outline" size="sm" className="text-[11px]">Cancel</Button>
             </SheetClose>
-            <Button
+            <LoadingButton
               size="sm"
               className="text-[11px]"
               onClick={handleSubmitBug}
-              disabled={createBugFromResult.isPending || !bugTitle.trim()}
+              disabled={!bugTitle.trim()}
+              isPending={createBugFromResult.isPending}
+              loadingText="Creating…"
             >
-              {createBugFromResult.isPending ? "Creating..." : "Create Bug"}
-            </Button>
+              Create Bug
+            </LoadingButton>
           </SheetFooter>
         </SheetContent>
       </Sheet>

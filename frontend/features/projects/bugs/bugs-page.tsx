@@ -39,7 +39,7 @@ const STATUS_STYLES: Record<BugStatus, string> = {
   assigned: "text-blue-600 border-blue-200",
   in_progress: "text-amber-600 border-amber-200",
   fixed: "text-green-600 border-green-200",
-  ready_for_qa: "text-purple-600 border-purple-200",
+  ready_for_qa: "text-blue-600 border-blue-200",
   verified: "text-green-700 border-green-300",
   reopened: "text-orange-600 border-orange-200",
   closed: "text-slate-400 border-slate-200",

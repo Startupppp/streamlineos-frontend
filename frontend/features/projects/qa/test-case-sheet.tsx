@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/select";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { useCreateTestCase, useUpdateTestCase } from "@/hooks/api/projects/qa";
 import { useProject } from "@/hooks/api/projects/projects";
 import { TicketCombobox } from "@/components/ui/ticket-combobox";
@@ -336,15 +337,16 @@ export function TestCaseSheet({
               Cancel
             </Button>
           </SheetClose>
-          <Button
+          <LoadingButton
             type="submit"
             form="tc-form"
             size="sm"
             className="text-[11px]"
-            disabled={isPending}
+            isPending={isPending}
+            loadingText="Saving…"
           >
-            {isPending ? "Saving..." : editCase ? "Save Changes" : "Create"}
-          </Button>
+            {editCase ? "Save Changes" : "Create"}
+          </LoadingButton>
         </SheetFooter>
       </SheetContent>
     </Sheet>

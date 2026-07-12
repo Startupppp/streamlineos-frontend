@@ -16,6 +16,7 @@ import { AllWorkViewSwitcher, AllWorkSkeleton } from "./all-work-view-switcher";
 import { AllWorkListSection } from "./all-work-list-section";
 import { AllWorkTableSection } from "./all-work-table-section";
 import { AllWorkBoardSection } from "./all-work-board-section";
+import { AllWorkViewsMenu } from "./all-work-views-menu";
 import { PaginationFooter } from "./all-work-pagination";
 import { useAllWorkFilters } from "./use-all-work-filters";
 import { useAllWorkBulk } from "./use-all-work-bulk";
@@ -114,6 +115,8 @@ export function AllWorkPage() {
       filters={
         <div className="flex min-h-8 w-full flex-wrap items-center gap-2 sm:gap-3">
           <AllWorkViewSwitcher activeView={view} onViewChange={handleViewChangeWithReset} />
+
+          <AllWorkViewsMenu activeView={view} hasActiveFilters={hasActiveFilters} />
 
           <button
             type="button"

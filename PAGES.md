@@ -147,7 +147,8 @@ Ordered money-path first. Check off each page after fixing.
 - [x] `/accounting/assets` + `/[assetId]` + `/depreciation` — fixed assets, straight-line schedules, depreciation runs, disposal
 - [x] `/accounting/approvals` — finance approval queue (separation of duties)
 - [x] `/accounting/reports` + 10 report pages — reports hub (catalog-driven) + statements, sales/expense analytics, profitability, working capital, burn/runway
-- [x] `/accounting/settings` — finance settings hub: company financial, tax registration, sequences, system accounts, approval policies, exchange rates (+ existing automations tab)
+- [x] `/accounting/settings` — finance settings hub: company financial, tax registration, sequences, system accounts, approval policies, exchange rates, payment terms (+ existing automations tab)
+- [x] `/accounting/setup` — guided 6-step setup wizard (company/currency → tax registration → COA template → system accounts → periods → opening balances) driven by setup-status
 
 ---
 

@@ -13,6 +13,7 @@ import {
   SheetClose,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -246,15 +247,16 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
               Cancel
             </Button>
           </SheetClose>
-          <Button
+          <LoadingButton
             type="submit"
             form="run-form"
             size="sm"
             className="text-[11px]"
-            disabled={create.isPending}
+            isPending={create.isPending}
+            loadingText="Creating…"
           >
-            {create.isPending ? "Creating..." : "Create Run"}
-          </Button>
+            Create Run
+          </LoadingButton>
         </SheetFooter>
       </SheetContent>
     </Sheet>

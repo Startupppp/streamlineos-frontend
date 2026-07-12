@@ -275,6 +275,7 @@ export function FilterCategorySubmenu({
 
   if (category === "assignee") {
     const allMembers = [
+      { id: "@me", displayName: "Me (dynamic)", color: null as string | null },
       { id: "__unassigned__", displayName: "Unassigned", color: null as string | null },
       ...members.map((m) => ({ id: m.id, displayName: getUserDisplayName(m), color: null as string | null })),
     ];

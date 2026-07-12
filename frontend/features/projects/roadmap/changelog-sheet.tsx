@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -130,9 +131,9 @@ export function ChangelogSheet({ entry, onClose }: ChangelogSheetProps) {
         </div>
         <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
           <Button variant="outline" className="flex-1" onClick={onClose}>Cancel</Button>
-          <Button className="flex-1" onClick={handleSave} disabled={isPending || !title.trim()}>
-            {isPending ? "Saving…" : isEdit ? "Save Changes" : "Create Entry"}
-          </Button>
+          <LoadingButton className="flex-1" onClick={handleSave} disabled={!title.trim()} isPending={isPending} loadingText="Saving…">
+            {isEdit ? "Save Changes" : "Create Entry"}
+          </LoadingButton>
         </SheetFooter>
       </SheetContent>
     </Sheet>

@@ -8,6 +8,7 @@ import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -107,15 +108,16 @@ export function PortalCrSheet({ projectId, open, onOpenChange }: PortalCrSheetPr
           <SheetClose asChild>
             <Button variant="outline" size="sm" className="text-[11px]">Cancel</Button>
           </SheetClose>
-          <Button
+          <LoadingButton
             type="submit"
             form="portal-cr-form"
             size="sm"
             className="text-[11px]"
-            disabled={submit.isPending}
+            isPending={submit.isPending}
+            loadingText="Submitting…"
           >
-            {submit.isPending ? "Submitting..." : "Submit Request"}
-          </Button>
+            Submit Request
+          </LoadingButton>
         </SheetFooter>
       </SheetContent>
     </Sheet>

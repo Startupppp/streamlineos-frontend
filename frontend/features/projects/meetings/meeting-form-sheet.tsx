@@ -169,7 +169,7 @@ export function MeetingFormSheet({
             </div>
             <SheetFooter className="px-6 py-4 border-t shrink-0">
               <div className="grid w-full grid-cols-2 gap-2">
-                <Button type="button" variant="outline" size="sm" onClick={() => onOpenChange(false)} disabled={isPending}>
+                <Button type="button" variant="outline" size="sm" onClick={() => onOpenChange(false)}>
                   Cancel
                 </Button>
                 <LoadingButton type="submit" size="sm" isPending={isPending} loadingText="Saving…">

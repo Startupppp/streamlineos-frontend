@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Users } from "lucide-react";
+import { LoadingButton } from "@/components/ui/loading-button";
 import type { UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 import { updateProjectSettingsInputSchema } from "@/lib/validation/projects";
@@ -133,13 +134,14 @@ export function ProjectInfoSection({
           />
         </div>
 
-        <Button
+        <LoadingButton
           type="submit"
-          disabled={isPending}
+          isPending={isPending}
+          loadingText="Saving…"
           className="w-full"
         >
-          {isPending ? "Saving..." : "Save Changes"}
-        </Button>
+          Save Changes
+        </LoadingButton>
       </form>
     </Form>
   );

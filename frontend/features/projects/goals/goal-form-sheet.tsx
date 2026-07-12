@@ -9,6 +9,7 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
@@ -447,14 +448,16 @@ export function GoalFormSheet({
           >
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             type="button"
             className="flex-1 h-9"
-            disabled={isPending || !title.trim()}
+            disabled={!title.trim()}
+            isPending={isPending}
+            loadingText="Saving…"
             onClick={handleSubmit}
           >
-            {isPending ? "Saving..." : isEdit ? "Save Changes" : "Create Goal"}
-          </Button>
+            {isEdit ? "Save Changes" : "Create Goal"}
+          </LoadingButton>
         </SheetFooter>
       </SheetContent>
     </Sheet>
