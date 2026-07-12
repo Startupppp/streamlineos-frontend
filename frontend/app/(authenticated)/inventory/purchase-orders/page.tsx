@@ -29,6 +29,7 @@ import {
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
 import { ErrorState } from "@/components/shared";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyOrdersIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -93,14 +94,14 @@ const PoRowActions = memo(function PoRowActions({ po }: { po: PurchaseOrderSumma
   function handleApprove(): void {
     approveMutation.mutate(undefined, {
       onSuccess: () => toast.success(`PO ${po.poNumber} approved`),
-      onError: (err) => toast.error(err.message),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }
 
   function handleClose(): void {
     closeMutation.mutate(undefined, {
       onSuccess: () => toast.success(`PO ${po.poNumber} closed`),
-      onError: (err) => toast.error(err.message),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }
 
@@ -109,7 +110,7 @@ const PoRowActions = memo(function PoRowActions({ po }: { po: PurchaseOrderSumma
       cancelReason.trim() ? { reason: cancelReason.trim() } : undefined,
       {
         onSuccess: () => { setShowCancel(false); toast.success(`PO ${po.poNumber} cancelled`); },
-        onError: (err) => toast.error(err.message),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }
@@ -388,7 +389,7 @@ export default function PurchaseOrdersListPage() {
         isLoading={query.isLoading}
         emptyState={
           query.error ? (
-            <ErrorState description={query.error.message} onRetry={handleRetry} compact />
+            <ErrorState description={getErrorMessage(query.error)} onRetry={handleRetry} compact />
           ) : (
             <InventoryEmptyState
               illustration={

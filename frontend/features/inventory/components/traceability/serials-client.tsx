@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Search, Eye } from "lucide-react";
+import { Search } from "lucide-react";
+import { EyeIcon } from "@animateicons/react/lucide";
 import { motion } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Input } from "@/components/ui/input";
@@ -30,6 +31,7 @@ import {
   EmptySearchIllustration,
 } from "@/components/illustrations";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useSerials } from "@/hooks/api/inventory/traceability";
 import {
   SERIAL_STATUS_BADGE,
@@ -38,6 +40,21 @@ import {
 } from "@/features/inventory/lib";
 
 const TH = "text-[10px] uppercase tracking-wider font-bold px-2 py-1.5";
+
+function SerialViewButton({ id, serialNumber }: { id: number; serialNumber: string }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button variant="ghost" size="icon" className="h-6 w-6" asChild>
+      <Link
+        href={`/inventory/serials/${id}`}
+        aria-label={`View serial ${serialNumber}`}
+        {...hoverHandlers}
+      >
+        <EyeIcon ref={iconRef} size={14} />
+      </Link>
+    </Button>
+  );
+}
 
 const SERIAL_STATUSES: SerialStatus[] = [
   "IN_STOCK",
@@ -199,14 +216,7 @@ export function SerialsClient() {
                           {new Date(item.createdAt).toLocaleDateString()}
                         </TableCell>
                         <TableCell className="px-2 py-1">
-                          <Button variant="ghost" size="icon" className="h-6 w-6" asChild>
-                            <Link
-                              href={`/inventory/serials/${item.id}`}
-                              aria-label={`View serial ${item.serialNumber}`}
-                            >
-                              <Eye className="h-3.5 w-3.5" />
-                            </Link>
-                          </Button>
+                          <SerialViewButton id={item.id} serialNumber={item.serialNumber} />
                         </TableCell>
                       </TableRow>
                     ))}

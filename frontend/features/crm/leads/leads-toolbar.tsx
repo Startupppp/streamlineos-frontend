@@ -9,20 +9,6 @@ import { cn } from "@/lib/utils";
 import { useCrmOptions } from "@/hooks/api/crm";
 
 const FALLBACK_STATUSES = ["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CONVERTED", "LOST"] as const;
-const FALLBACK_PRIORITIES = [
-  { key: "HOT", label: "Hot" },
-  { key: "WARM", label: "Warm" },
-  { key: "COLD", label: "Cold" },
-] as const;
-const FALLBACK_SOURCES = [
-  { key: "referral", label: "Referral" },
-  { key: "campaign", label: "Campaign" },
-  { key: "cold_call", label: "Cold Call" },
-  { key: "website", label: "Website" },
-  { key: "social_media", label: "Social Media" },
-  { key: "walk_in", label: "Walk In" },
-  { key: "other", label: "Other" },
-] as const;
 
 interface LeadsToolbarProps {
   searchQuery: string;
@@ -45,12 +31,12 @@ export function LeadsToolbar({
   onClearFilters,
 }: LeadsToolbarProps) {
   const { data: statusOptions = [] } = useCrmOptions("lead_status");
-  const { data: priorityOptions = [] } = useCrmOptions("lead_priority");
-  const { data: sourceOptions = [] } = useCrmOptions("lead_source");
+  const { data: priorityOptions = [] } = useCrmOptions("priority");
+  const { data: sourceOptions = [] } = useCrmOptions("source");
 
   const statuses = statusOptions.length > 0 ? statusOptions : FALLBACK_STATUSES.map((s) => ({ key: s, label: s }));
-  const priorities = priorityOptions.length > 0 ? priorityOptions : FALLBACK_PRIORITIES;
-  const sources = sourceOptions.length > 0 ? sourceOptions : FALLBACK_SOURCES;
+  const priorities = priorityOptions.length > 0 ? priorityOptions : [];
+  const sources = sourceOptions.length > 0 ? sourceOptions : [];
 
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => onSearchChange(e.target.value), [onSearchChange]);
   const handleViewTable = useCallback(() => onViewChange("table"), [onViewChange]);

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Lock, Unlock, ChevronDown, ChevronUp } from "lucide-react";
+import { Lock, Unlock } from "lucide-react";
+import { ChevronDownIcon, ChevronUpIcon } from "@animateicons/react/lucide";
 import { motion } from "framer-motion";
 import { PageWrapper, PageSection } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ErrorState, SkeletonTable } from "@/components/shared";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fadeUp } from "@/lib/motion-variants";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useCan } from "@/hooks/api/access";
 import { useLot, useUpdateLotStatus, useTraceability } from "@/hooks/api/inventory/traceability";
 import { LOT_STATUS_LABEL } from "@/features/inventory/lib";
@@ -47,6 +49,7 @@ interface LotDetailClientProps {
 
 export function LotDetailClient({ lotId }: LotDetailClientProps) {
   const [showTraceability, setShowTraceability] = useState(false);
+  const { iconRef: traceChevronRef, hoverHandlers: traceHoverHandlers } = useAnimatedIcon();
 
   const { data: lot, isLoading, isError, refetch } = useLot(lotId);
   const canAdjust = useCan("inventory:stock:adjust");
@@ -183,15 +186,16 @@ export function LotDetailClient({ lotId }: LotDetailClientProps) {
               size="sm"
               className="h-7 text-xs gap-1"
               onClick={handleToggleTraceability}
+              {...traceHoverHandlers}
             >
               {showTraceability ? (
                 <>
-                  <ChevronUp className="h-3.5 w-3.5" aria-hidden="true" />
+                  <ChevronUpIcon ref={traceChevronRef} size={14} aria-hidden="true" />
                   Hide
                 </>
               ) : (
                 <>
-                  <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
+                  <ChevronDownIcon ref={traceChevronRef} size={14} aria-hidden="true" />
                   View Traceability
                 </>
               )}

@@ -2,7 +2,8 @@
 
 import type React from "react";
 import { useState, useCallback, useMemo, Suspense } from "react";
-import { RefreshCw, Plus, Info } from "lucide-react";
+import { Info, RefreshCw } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ import {
   type ThreePlConnection,
 } from "@/hooks/api/inventory/channels";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { ThreePlConnectionSheet } from "@/features/inventory/components/channels/three-pl-connection-sheet";
 
 function formatDate(iso: string | null): string {
@@ -72,6 +74,7 @@ function ThreePlContent() {
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editConnection, setEditConnection] = useState<ThreePlConnection | undefined>(undefined);
+  const { iconRef: addIconRef, hoverHandlers: addHoverHandlers } = useAnimatedIcon();
 
   const handleAddConnection = useCallback(() => {
     setEditConnection(undefined);
@@ -197,8 +200,8 @@ function ThreePlContent() {
   );
 
   const actions = (
-    <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={handleAddConnection}>
-      <Plus className="h-3.5 w-3.5" />
+    <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={handleAddConnection} {...addHoverHandlers}>
+      <PlusIcon ref={addIconRef} size={14} />
       Add Connection
     </Button>
   );

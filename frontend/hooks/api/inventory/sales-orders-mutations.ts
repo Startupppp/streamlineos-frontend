@@ -15,10 +15,10 @@ interface CreateSalesOrderLineInput {
 }
 
 interface CreateSalesOrderInput {
-  customerId?: number;
+  clientId?: number;
   warehouseId?: number;
   orderDate?: string;
-  expectedShipDate?: string;
+  requiredDate?: string;
   currency?: string;
   shippingAddress?: string;
   notes?: string;
@@ -102,9 +102,9 @@ export function useCreateSalesOrder() {
     mutationKey: ["inventory", "salesOrders", "create"],
     mutationFn: (data) =>
       apiClient.post<CreatedSalesOrder>("/inventory/sales-orders", {
-        clientId: data.customerId,
+        clientId: data.clientId,
         orderDate: data.orderDate ?? todayIso(),
-        requiredDate: data.expectedShipDate,
+        requiredDate: data.requiredDate,
         shippingAddress: data.shippingAddress,
         warehouseId: data.warehouseId,
         currency: data.currency,

@@ -3,12 +3,16 @@
 import * as React from "react";
 import Link from "next/link";
 import { WifiOff, Barcode, Clock } from "lucide-react";
+import { SearchIcon } from "@animateicons/react/lucide";
+import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useBarcodeLookup, type BarcodeLookupResult } from "@/hooks/api/inventory/admin";
 
 interface RecentScan {
@@ -64,12 +68,18 @@ function ResultCard({ result }: { result: BarcodeLookupResult }) {
             <p className="text-xs text-muted-foreground mt-0.5">SKU: {result.sku}</p>
           </div>
           <div className="flex gap-2 shrink-0">
-            <Button asChild size="sm" variant="outline">
-              <Link href={`/inventory/products/${result.productId}`}>View Product</Link>
-            </Button>
-            <Button asChild size="sm" variant="outline">
-              <Link href={`/inventory/stock?sku=${encodeURIComponent(result.sku)}`}>View Stock</Link>
-            </Button>
+            <Link
+              href={`/inventory/products/${result.productId}`}
+              className="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 text-xs h-8 hover:bg-accent hover:text-accent-foreground transition-colors"
+            >
+              View Product
+            </Link>
+            <Link
+              href={`/inventory/stock?sku=${encodeURIComponent(result.sku)}`}
+              className="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 text-xs h-8 hover:bg-accent hover:text-accent-foreground transition-colors"
+            >
+              View Stock
+            </Link>
           </div>
         </CardContent>
       </Card>
@@ -86,12 +96,18 @@ function ResultCard({ result }: { result: BarcodeLookupResult }) {
             <p className="text-xs text-muted-foreground mt-0.5">SKU: {result.variantSku}</p>
           </div>
           <div className="flex gap-2 shrink-0">
-            <Button asChild size="sm" variant="outline">
-              <Link href={`/inventory/products/${result.variantId}`}>View Product</Link>
-            </Button>
-            <Button asChild size="sm" variant="outline">
-              <Link href={`/inventory/stock?sku=${encodeURIComponent(result.variantSku)}`}>View Stock</Link>
-            </Button>
+            <Link
+              href={`/inventory/products/${result.variantId}`}
+              className="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 text-xs h-8 hover:bg-accent hover:text-accent-foreground transition-colors"
+            >
+              View Product
+            </Link>
+            <Link
+              href={`/inventory/stock?sku=${encodeURIComponent(result.variantSku)}`}
+              className="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 text-xs h-8 hover:bg-accent hover:text-accent-foreground transition-colors"
+            >
+              View Stock
+            </Link>
           </div>
         </CardContent>
       </Card>
@@ -109,9 +125,12 @@ function ResultCard({ result }: { result: BarcodeLookupResult }) {
               {result.productName} · {result.variantSku}
             </p>
           </div>
-          <Button asChild size="sm" variant="outline">
-            <Link href={`/inventory/lots/${result.lotId}`}>View Lot</Link>
-          </Button>
+          <Link
+            href={`/inventory/lots/${result.lotId}`}
+            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 text-xs h-8 hover:bg-accent hover:text-accent-foreground transition-colors shrink-0"
+          >
+            View Lot
+          </Link>
         </CardContent>
       </Card>
     );
@@ -128,9 +147,12 @@ function ResultCard({ result }: { result: BarcodeLookupResult }) {
               {result.productName} · {result.variantSku}
             </p>
           </div>
-          <Button asChild size="sm" variant="outline">
-            <Link href={`/inventory/serials/${result.serialId}`}>View Serial</Link>
-          </Button>
+          <Link
+            href={`/inventory/serials/${result.serialId}`}
+            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 text-xs h-8 hover:bg-accent hover:text-accent-foreground transition-colors shrink-0"
+          >
+            View Serial
+          </Link>
         </CardContent>
       </Card>
     );
@@ -145,9 +167,12 @@ function ResultCard({ result }: { result: BarcodeLookupResult }) {
             <p className="font-semibold text-sm">{result.locationName}</p>
             <p className="text-xs text-muted-foreground mt-0.5">{result.warehouseName}</p>
           </div>
-          <Button asChild size="sm" variant="outline">
-            <Link href={`/inventory/warehouses`}>View Warehouse</Link>
-          </Button>
+          <Link
+            href="/inventory/warehouses"
+            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 text-xs h-8 hover:bg-accent hover:text-accent-foreground transition-colors shrink-0"
+          >
+            View Warehouse
+          </Link>
         </CardContent>
       </Card>
     );
@@ -156,8 +181,12 @@ function ResultCard({ result }: { result: BarcodeLookupResult }) {
   return null;
 }
 
-function BarcodeResultSection({ code }: { code: string }) {
-  const { data, isLoading, isError } = useBarcodeLookup(code);
+interface BarcodeResultSectionProps {
+  code: string;
+}
+
+function BarcodeResultSection({ code }: BarcodeResultSectionProps) {
+  const { data, isLoading, isError, error } = useBarcodeLookup(code);
 
   if (!code) return null;
 
@@ -166,6 +195,7 @@ function BarcodeResultSection({ code }: { code: string }) {
   }
 
   if (isError || !data) {
+    toast.error(getErrorMessage(error));
     return (
       <Card>
         <CardContent className="py-6 text-center text-sm text-destructive">
@@ -184,7 +214,9 @@ export function BarcodeClient() {
   const [inputValue, setInputValue] = React.useState("");
   const [activeCode, setActiveCode] = React.useState("");
   const [recentScans, setRecentScans] = React.useState<RecentScan[]>([]);
+  const [isPending, setIsPending] = React.useState(false);
   const { data: lookupData } = useBarcodeLookup(activeCode);
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
 
   React.useEffect(function focusInput() {
     inputRef.current?.focus();
@@ -193,6 +225,7 @@ export function BarcodeClient() {
   React.useEffect(
     function recordRecentScan() {
       if (!activeCode || !lookupData) return;
+      setIsPending(false);
       setRecentScans((prev) => {
         const entry: RecentScan = {
           code: activeCode,
@@ -205,24 +238,25 @@ export function BarcodeClient() {
     [activeCode, lookupData],
   );
 
-  function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleInputChange(e: React.ChangeEvent<HTMLInputElement>): void {
     setInputValue(e.target.value);
   }
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const trimmed = inputValue.trim();
+  function submitCode(trimmed: string): void {
     if (!trimmed || !isOnline) return;
+    setIsPending(true);
     setActiveCode(trimmed);
     setInputValue("");
   }
 
-  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+  function handleSubmit(e: React.FormEvent): void {
+    e.preventDefault();
+    submitCode(inputValue.trim());
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>): void {
     if (e.key === "Enter") {
-      const trimmed = inputValue.trim();
-      if (!trimmed || !isOnline) return;
-      setActiveCode(trimmed);
-      setInputValue("");
+      submitCode(inputValue.trim());
     }
   }
 
@@ -242,7 +276,7 @@ export function BarcodeClient() {
 
         <form onSubmit={handleSubmit} className="flex gap-2">
           <div className="relative flex-1">
-            <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             <Input
               ref={inputRef}
               value={inputValue}
@@ -254,9 +288,16 @@ export function BarcodeClient() {
               autoComplete="off"
             />
           </div>
-          <Button type="submit" disabled={!isOnline || !inputValue.trim()}>
+          <LoadingButton
+            type="submit"
+            isPending={isPending && !lookupData}
+            loadingText="Looking up…"
+            disabled={!isOnline || !inputValue.trim()}
+            {...hoverHandlers}
+          >
+            <SearchIcon ref={iconRef} size={14} className="mr-1" />
             Look up
-          </Button>
+          </LoadingButton>
         </form>
 
         {activeCode && <BarcodeResultSection code={activeCode} />}
@@ -282,7 +323,10 @@ export function BarcodeClient() {
                         {scan.resultType}
                       </Badge>
                       <span className="text-xs text-muted-foreground">
-                        {scan.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        {scan.timestamp.toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </span>
                     </div>
                   </div>

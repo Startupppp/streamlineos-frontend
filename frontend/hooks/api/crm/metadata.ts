@@ -356,6 +356,78 @@ export function useDeleteBlueprint() {
   });
 }
 
+export type CreateTransitionInput = {
+  fromStageKey: string;
+  toStageKey: string;
+  requiredFields: string[];
+  requiredActivityTypeKeys: string[];
+  requiresApproval: boolean;
+  requiresQuote: boolean;
+};
+export type UpdateTransitionInput = Partial<CreateTransitionInput>;
+
+export function useBlueprintTransitions(blueprintId: string | null) {
+  return useQuery({
+    queryKey: ["crmMetadata", "blueprints", blueprintId, "transitions"] as const,
+    queryFn: () =>
+      apiClient.get<CrmBlueprintTransition[]>(`/crm/blueprints/${blueprintId}/transitions`),
+    enabled: blueprintId !== null,
+    staleTime: 60_000,
+  });
+}
+
+export function useCreateBlueprintTransition(blueprintId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["crmMetadata", "blueprints", blueprintId, "transitions", "create"] as const,
+    mutationFn: (input: CreateTransitionInput) =>
+      apiClient.post<CrmBlueprintTransition>(`/crm/blueprints/${blueprintId}/transitions`, input),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["crmMetadata", "blueprints", blueprintId, "transitions"] });
+    },
+  });
+}
+
+export function useUpdateBlueprintTransition(blueprintId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["crmMetadata", "blueprints", blueprintId, "transitions", "update"] as const,
+    mutationFn: ({ id, ...data }: { id: string } & UpdateTransitionInput) =>
+      apiClient.patch<CrmBlueprintTransition>(
+        `/crm/blueprints/${blueprintId}/transitions/${id}`,
+        data
+      ),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["crmMetadata", "blueprints", blueprintId, "transitions"] });
+    },
+  });
+}
+
+export function useDeleteBlueprintTransition(blueprintId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["crmMetadata", "blueprints", blueprintId, "transitions", "delete"] as const,
+    mutationFn: (id: string) =>
+      apiClient.delete<{ success: boolean }>(
+        `/crm/blueprints/${blueprintId}/transitions/${id}`
+      ),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["crmMetadata", "blueprints", blueprintId, "transitions"] });
+    },
+  });
+}
+
+export function useTestTransition(blueprintId: string) {
+  return useMutation({
+    mutationKey: ["crmMetadata", "blueprints", blueprintId, "test"] as const,
+    mutationFn: (input: {
+      fromStageKey: string;
+      toStageKey: string;
+      sampleFields: Record<string, string>;
+    }) => apiClient.post<{ allowed: boolean; missing: string[] }>(`/crm/blueprints/${blueprintId}/test`, input),
+  });
+}
+
 export type {
   CrmMetadataResponse,
   CrmPipelineWithStages,

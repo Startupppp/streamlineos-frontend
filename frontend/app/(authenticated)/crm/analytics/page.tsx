@@ -40,7 +40,7 @@ export default function CrmAnalyticsPage() {
     setSelectedSource(src);
   }, []);
 
-  const { data: sourceOptions = [] } = useCrmOptions("lead_source");
+  const { data: sourceOptions = [] } = useCrmOptions("source");
 
   const {
     isLoading,

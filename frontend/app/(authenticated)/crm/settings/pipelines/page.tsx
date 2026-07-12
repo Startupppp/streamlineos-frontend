@@ -24,10 +24,11 @@ import {
 import type { CrmPipelineWithStages, CrmPipelineStage } from "@/types/crm/metadata";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
-import {
-  CreatePipelineDialog, StageAdvancedSheet, AddStageRow, StageCard,
-  getPipelineTypeMeta,
-} from "./pipeline-components";
+import { CreatePipelineDialog } from "@/features/crm/settings/pipelines/create-pipeline-dialog";
+import { StageAdvancedSheet } from "@/features/crm/settings/pipelines/stage-advanced-sheet";
+import { AddStageRow } from "@/features/crm/settings/pipelines/add-stage-row";
+import { StageCard } from "@/features/crm/settings/pipelines/stage-card";
+import { getPipelineTypeMeta } from "@/features/crm/settings/pipelines/pipeline-constants";
 
 export default function PipelinesPage() {
   const { data, isLoading, isError, refetch } = useCrmMetadata();

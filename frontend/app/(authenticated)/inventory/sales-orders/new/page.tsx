@@ -214,12 +214,11 @@ export default function NewSalesOrderPage() {
         currency: values.currency.trim() || undefined,
         shippingAddress: values.shippingAddress?.trim() || undefined,
         notes: values.notes?.trim() || undefined,
-        lines: values.lines.map((ln, index) => ({
+        lines: values.lines.map((ln) => ({
           productVariantId: parseInt(ln.variantId, 10),
           quantity: toNum(ln.quantity),
-          unitPrice: toNum(ln.unitPrice).toFixed(2),
-          taxRate: toNum(ln.taxRate) > 0 ? toNum(ln.taxRate).toFixed(2) : undefined,
-          lineOrder: index,
+          unitPrice: toNum(ln.unitPrice),
+          taxRate: toNum(ln.taxRate) > 0 ? toNum(ln.taxRate) : undefined,
         })),
       });
       toast.success(`Sales order ${result.soNumber} created`);

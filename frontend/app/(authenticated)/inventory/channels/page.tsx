@@ -2,7 +2,8 @@
 
 import { memo, useState, useCallback, useMemo, Suspense } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { Plus, Info, RefreshCw } from "lucide-react";
+import { Info, RefreshCw } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ import {
   type ChannelType,
 } from "@/hooks/api/inventory/channels";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { ChannelSheet } from "@/features/inventory/components/channels/channel-sheet";
 import { ChannelPublicationsPanel } from "@/features/inventory/components/channels/channel-publications-panel";
 
@@ -196,6 +198,7 @@ function ChannelsContent() {
   const [editChannel, setEditChannel] = useState<Channel | undefined>(undefined);
   const [publicationsChannel, setPublicationsChannel] = useState<Channel | null>(null);
   const [publicationsPanelOpen, setPublicationsPanelOpen] = useState(false);
+  const { iconRef: addIconRef, hoverHandlers: addHoverHandlers } = useAnimatedIcon();
 
   const handleNewChannel = useCallback(() => {
     setEditChannel(undefined);
@@ -227,8 +230,8 @@ function ChannelsContent() {
   }
 
   const actions = (
-    <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={handleNewChannel}>
-      <Plus className="h-3.5 w-3.5" />
+    <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={handleNewChannel} {...addHoverHandlers}>
+      <PlusIcon ref={addIconRef} size={14} />
       New Channel
     </Button>
   );
@@ -262,8 +265,8 @@ function ChannelsContent() {
       <PageWrapper
         eyebrow="Inventory · Channels"
         title="Channels"
-        subtitle={`${channels.length} ${channels.length === 1 ? "channel" : "channels"}`}
-        badge={String(channels.length)}
+        subtitle="Manage sales and fulfilment channels"
+        badge={channels.length > 0 ? String(channels.length) : undefined}
         actions={actions}
       >
         {channels.length > 0 ? (

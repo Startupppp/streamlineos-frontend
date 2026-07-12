@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Search, Eye } from "lucide-react";
+import { Search } from "lucide-react";
+import { EyeIcon } from "@animateicons/react/lucide";
 import { motion } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Input } from "@/components/ui/input";
@@ -30,6 +31,7 @@ import {
   EmptySearchIllustration,
 } from "@/components/illustrations";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useLots } from "@/hooks/api/inventory/traceability";
 import {
   LOT_STATUS_BADGE,
@@ -38,6 +40,21 @@ import {
 } from "@/features/inventory/lib";
 
 const TH = "text-[10px] uppercase tracking-wider font-bold px-2 py-1.5";
+
+function LotViewButton({ id, lotNumber }: { id: number; lotNumber: string }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button variant="ghost" size="icon" className="h-6 w-6" asChild>
+      <Link
+        href={`/inventory/lots/${id}`}
+        aria-label={`View lot ${lotNumber}`}
+        {...hoverHandlers}
+      >
+        <EyeIcon ref={iconRef} size={14} />
+      </Link>
+    </Button>
+  );
+}
 
 function getExpiryClass(dateStr: string | null): string {
   if (!dateStr) return "";
@@ -223,14 +240,7 @@ export function LotsClient() {
                           {new Date(item.createdAt).toLocaleDateString()}
                         </TableCell>
                         <TableCell className="px-2 py-1">
-                          <Button variant="ghost" size="icon" className="h-6 w-6" asChild>
-                            <Link
-                              href={`/inventory/lots/${item.id}`}
-                              aria-label={`View lot ${item.lotNumber}`}
-                            >
-                              <Eye className="h-3.5 w-3.5" />
-                            </Link>
-                          </Button>
+                          <LotViewButton id={item.id} lotNumber={item.lotNumber} />
                         </TableCell>
                       </TableRow>
                     ))}

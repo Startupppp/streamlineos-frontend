@@ -15,7 +15,6 @@ import {
 import {
   Form, FormField, FormItem, FormLabel, FormControl, FormMessage,
 } from "@/components/ui/form";
-
 const EDIT_STAGES = [
   { key: "LEAD", label: "Lead" },
   { key: "CONTACTED", label: "Contacted" },
@@ -43,7 +42,7 @@ export type EditFormValues = z.infer<typeof editSchema>;
 export interface DealForEditForm {
   name: string;
   value?: string | null;
-  stage: DealStage;
+  stage: string;
   probability?: number | null;
   contactPerson?: string | null;
   contactEmail?: string | null;

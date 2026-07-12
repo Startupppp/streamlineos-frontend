@@ -246,7 +246,7 @@ export function CreateLeadSheet({
                     Priority
                   </Label>
                   <CrmOptionSelect
-                    type="lead_priority"
+                    type="priority"
                     value={priority}
                     onChange={setPriority}
                     className="w-full h-9"
@@ -257,7 +257,7 @@ export function CreateLeadSheet({
                     Source
                   </Label>
                   <CrmOptionSelect
-                    type="lead_source"
+                    type="source"
                     value={source}
                     onChange={setSource}
                     className="w-full h-9"

@@ -142,9 +142,16 @@ export function SoQueuePage({ status, title, actionNoun, emptyTitle, emptyDescri
         isLoading={query.isLoading}
         emptyState={
           query.error ? (
-            <ErrorState description={query.error.message} onRetry={handleRetry} compact />
+            <ErrorState description={getErrorMessage(query.error)} onRetry={handleRetry} compact />
           ) : (
-            <InventoryEmptyState title={emptyTitle} description={emptyDescription} compact />
+            <InventoryEmptyState
+              illustration={
+                search.trim() ? <EmptySearchIllustration /> : <EmptyOrdersIllustration />
+              }
+              title={search.trim() ? "No orders match your search" : emptyTitle}
+              description={search.trim() ? "Try a different search term." : emptyDescription}
+              compact
+            />
           )
         }
         minWidth="640px"

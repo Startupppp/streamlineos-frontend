@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Eye } from "lucide-react";
+import { EyeIcon } from "@animateicons/react/lucide";
 import { motion } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -25,10 +25,26 @@ import {
 import { ErrorState, SkeletonTable } from "@/components/shared";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useExpiryItems } from "@/hooks/api/inventory/traceability";
 import { cn } from "@/lib/utils";
 
 const TH = "text-[10px] uppercase tracking-wider font-bold px-2 py-1.5";
+
+function ExpiryLotViewButton({ lotId, lotNumber }: { lotId: number; lotNumber: string }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button variant="ghost" size="icon" className="h-6 w-6" asChild>
+      <Link
+        href={`/inventory/lots/${lotId}`}
+        aria-label={`View lot ${lotNumber}`}
+        {...hoverHandlers}
+      >
+        <EyeIcon ref={iconRef} size={14} />
+      </Link>
+    </Button>
+  );
+}
 
 const DAY_OPTIONS = [
   { value: "7", label: "7 days" },
@@ -168,14 +184,7 @@ export function ExpiryClient() {
                             {item.warehouseName ?? "—"}
                           </TableCell>
                           <TableCell className="px-2 py-1">
-                            <Button variant="ghost" size="icon" className="h-6 w-6" asChild>
-                              <Link
-                                href={`/inventory/lots/${item.lotId}`}
-                                aria-label={`View lot ${item.lotNumber}`}
-                              >
-                                <Eye className="h-3.5 w-3.5" />
-                              </Link>
-                            </Button>
+                            <ExpiryLotViewButton lotId={item.lotId} lotNumber={item.lotNumber} />
                           </TableCell>
                         </TableRow>
                       );

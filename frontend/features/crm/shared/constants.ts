@@ -1,8 +1,5 @@
-import {
-  Phone, Target, UserCheck, X, Zap, Eye,
-  Share2, Megaphone, Globe, Footprints, Users, Flame, Sun, Snowflake,
-  Mail, MessageCircle,
-} from "lucide-react";
+import { Phone, Target, UserCheck, X, Zap, Eye } from "lucide-react";
+
 export const PIPELINE_STAGES = [
   { key: "NEW", label: "New", dot: "bg-blue-500", bg: "bg-blue-500/10", color: "#3B82F6", icon: Zap },
   { key: "CONTACTED", label: "Contacted", dot: "bg-sky-500", bg: "bg-sky-500/10", color: "#0EA5E9", icon: Phone },
@@ -22,30 +19,6 @@ export const DEAL_STAGES = [
 ] as const;
 
 export type DealStage = (typeof DEAL_STAGES)[number]["key"];
-
-export const LEAD_SOURCES = [
-  { value: "referral", label: "Referral", icon: Share2 },
-  { value: "campaign", label: "Campaign", icon: Megaphone },
-  { value: "cold_call", label: "Cold Call", icon: Phone },
-  { value: "website", label: "Website", icon: Globe },
-  { value: "social_media", label: "Social Media", icon: Users },
-  { value: "walk_in", label: "Walk-in", icon: Footprints },
-  { value: "other", label: "Other", icon: Target },
-] as const;
-
-export const LEAD_PRIORITIES = [
-  { value: "HOT", label: "Hot", color: "text-red-400", bg: "bg-red-500/15", border: "border-red-500/30", icon: Flame },
-  { value: "WARM", label: "Warm", color: "text-amber-400", bg: "bg-amber-500/15", border: "border-amber-500/30", icon: Sun },
-  { value: "COLD", label: "Cold", color: "text-blue-400", bg: "bg-blue-400/15", border: "border-blue-400/30", icon: Snowflake },
-] as const;
-
-export const ACTIVITY_TYPES = [
-  { value: "call", label: "Call", icon: Phone },
-  { value: "email", label: "Email", icon: Mail },
-  { value: "whatsapp", label: "WhatsApp", icon: MessageCircle },
-  { value: "meeting", label: "Meeting", icon: Users },
-  { value: "site_visit", label: "Site Visit", icon: Eye },
-] as const;
 
 export const CHART_TOOLTIP_STYLE = {
   background: "hsl(var(--card))",

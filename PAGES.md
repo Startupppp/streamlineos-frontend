@@ -116,6 +116,36 @@ Ordered money-path first. Check off each page after fixing.
 - [x] `/accounting/gstr-1` — GSTR-1
 - [x] `/accounting/gstr-3b` — GSTR-3B
 
+> **Accounting & Finance program (2026-07-12)**: full PRD build (tasks/accounting-finance, 21 docs) via ~30 parallel agents — 11 backend modules (accounting-settings, accounting-gl, finance-ar/ap/banking/tax/reports/planning/assets/controls/expenses) on a hardened FinancePostingService contract (balanced/immutable/period-locked/idempotent/multi-currency), 38 new tables (migrations 0240–0247, journaled, NOT applied — need TTY), 58 RBAC keys + ACCOUNTANT role, 21 notification events, finance cron endpoints (recurring-flush/due-checks/depreciation), deterministic AI insights (anomalies/digest/categorize-suggest), 132 passing finance unit/controller specs, authenticated CSV export helper. Full build/typecheck DEFERRED (concurrent sibling sessions) — run after all sessions land.
+
+- [x] `/accounting` — Finance overview dashboard: StatCards + drill links, 12-mo revenue/expense chart, bank accounts, AI insights strip
+- [x] `/accounting/invoices` + `/[invoiceId]` — AR invoice list (stats, filters, record payment w/ allocations, void) + detail (lines, payments, credit notes, collection panel) + Collections tab (aging, risk scores, promise-to-pay)
+- [x] `/accounting/recurring-invoices` — recurring invoice templates CRUD + run-now
+- [x] `/accounting/credit-notes` — credit notes CRUD, post (approval-gated), apply-to-invoice
+- [x] `/accounting/payments-received` — payments list (derived; org-level payments endpoint = known debt)
+- [x] `/accounting/payment-reminders` — reminder policies + send log
+- [x] `/accounting/recurring-bills` — recurring bill templates CRUD + run-now
+- [x] `/accounting/vendor-credits` — vendor credits CRUD, post, apply-to-bill
+- [x] `/accounting/vendor-payments` — vendor payments list + manual multi-bill allocation
+- [x] `/accounting/payment-runs` + `/[runId]` — payment run planning: create from filters → approve → execute (per-item results)
+- [x] `/accounting/banking` + `/[bankAccountId]` — bank accounts hub + transactions
+- [x] `/accounting/banking/import` — 3-step CSV import wizard (mapping, preview, dedupe results)
+- [x] `/accounting/banking/reconciliation` — two-pane reconciliation workspace (scored suggestions, match/split/fee/journal/ignore, rules builder)
+- [x] `/accounting/banking/transfers` — inter-account transfers
+- [x] `/accounting/expenses` (+`/receipts`, `/reimbursements`, `/reimbursements/[batchId]`, `/policies`) — finance expense views: approval flow, receipt inbox, reimbursement batches (approve/pay), policies
+- [x] `/accounting/general-ledger` — GL with running balance, dimension filters, CSV export
+- [x] `/accounting/period-close` — periods, close checklist w/ deep links, close/lock/reopen
+- [x] `/accounting/opening-balances` — opening balance editor (auto-balance to retained earnings)
+- [x] `/accounting/dimensions` — accounting dimensions + values CRUD
+- [x] `/accounting/taxes` (+`/codes`, `/payments`, `/reports`) — tax dashboard, tax codes (GST seed), tax payments, input/output/liability reports w/ drill-down
+- [x] `/accounting/budgets` + `/[budgetId]` — budgets, matrix line editor, revisions, budget-vs-actual
+- [x] `/accounting/forecast` — 13-week scenario-weighted cash forecast + compare
+- [x] `/accounting/scenarios` — cash-flow scenario builder
+- [x] `/accounting/assets` + `/[assetId]` + `/depreciation` — fixed assets, straight-line schedules, depreciation runs, disposal
+- [x] `/accounting/approvals` — finance approval queue (separation of duties)
+- [x] `/accounting/reports` + 10 report pages — reports hub (catalog-driven) + statements, sales/expense analytics, profitability, working capital, burn/runway
+- [x] `/accounting/settings` — finance settings hub: company financial, tax registration, sequences, system accounts, approval policies, exchange rates (+ existing automations tab)
+
 ---
 
 ## HR — Core

@@ -44,15 +44,14 @@ export interface CrmPipelineWithStages extends CrmPipeline {
 
 export type CrmOptionType =
   | "lead_status"
-  | "lead_priority"
-  | "lead_source"
   | "priority"
   | "source"
   | "lost_reason"
   | "activity_type"
   | "competitor"
   | "forecast_category"
-  | "task_type";
+  | "task_type"
+  | "contact_role";
 
 export interface CrmOption {
   id: string;

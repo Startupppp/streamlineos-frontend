@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useState } from "react";
-import { Plus } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { cn } from "@/lib/utils";
 import { EmptyProductsIllustration } from "@/components/illustrations";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -12,6 +12,8 @@ import { InventoryEmptyState } from "@/features/inventory/components/inventory-e
 import { ErrorState } from "@/components/shared";
 import { CarrierSheet } from "@/features/inventory/components/shipping/carrier-sheet";
 import { useCarriers, type Carrier } from "@/hooks/api/inventory/shipping";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 function CarriersPageInner() {
   const [sheetOpen, setSheetOpen] = useState<boolean>(false);
@@ -32,6 +34,7 @@ function CarriersPageInner() {
     if (!open) setSelectedCarrier(undefined);
   }
 
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
   const carriersQuery = useCarriers();
   const items = carriersQuery.data ?? [];
 
@@ -94,8 +97,8 @@ function CarriersPageInner() {
             : "Manage shipping carriers and tracking"
         }
         actions={
-          <Button size="sm" onClick={handleAddCarrier}>
-            <Plus className="mr-1.5 h-3.5 w-3.5" />
+          <Button size="sm" onClick={handleAddCarrier} {...hoverHandlers}>
+            <PlusIcon ref={iconRef} size={14} className="mr-1.5" />
             Add Carrier
           </Button>
         }
@@ -103,7 +106,7 @@ function CarriersPageInner() {
         {carriersQuery.error ? (
           <ErrorState
             title="Failed to load carriers"
-            description={carriersQuery.error.message}
+            description={getErrorMessage(carriersQuery.error)}
             onRetry={handleRetry}
             className="min-h-[40vh]"
           />
