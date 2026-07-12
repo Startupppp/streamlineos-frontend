@@ -1,15 +1,9 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useForm, useFieldArray, type Control } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import {
   DragDropContext, Droppable, Draggable, type DropResult,
 } from "@hello-pangea/dnd";
-import {
-  Plus, Trash2, GripVertical, Eye, CheckCircle2, XCircle,
-} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,90 +15,56 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { EmptyTargetIllustration } from "@/components/illustrations";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
-} from "@/components/ui/dialog";
-import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import {
-  Form, FormField, FormItem, FormLabel, FormControl, FormMessage,
-} from "@/components/ui/form";
+import { Plus, GripVertical, Eye, CheckCircle2, XCircle } from "lucide-react";
+import { UserPenIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
-import {
-  useAssignmentRules, useCreateAssignmentRule, useUpdateAssignmentRule,
-  useDeleteAssignmentRule, useReorderAssignmentRules, usePreviewAssignmentRule,
-  type AssignmentRuleCondition,
-} from "@/hooks/api/crm-settings";
-import { useHrEmployees } from "@/hooks/api/hr";
-import type { Employee, PaginatedEmployees } from "@/types/hr";
 import { toast } from "sonner";
+import { CrmOptionSelect } from "@/features/crm/shared/metadata/crm-option-select";
+import { AssignmentRuleSheet, buildRulePayload, type RuleFormValues } from "@/features/crm/settings/assignment-rule-sheet";
+import {
+  useAssignmentRules,
+  useCreateAssignmentRule,
+  useUpdateAssignmentRule,
+  useDeleteAssignmentRule,
+  useReorderAssignmentRules,
+  usePreviewAssignmentRule,
+  type AssignmentRule,
+  type AssignmentType,
+} from "@/hooks/api/crm-settings";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 
-const FIELDS = [
-  { value: "source", label: "Source" },
-  { value: "priority", label: "Priority" },
-  { value: "city", label: "City" },
-  { value: "company", label: "Company" },
-  { value: "potentialValue", label: "Potential Value" },
-];
+const ASSIGNMENT_TYPE_LABELS: Record<AssignmentType, string> = {
+  assign_user: "Assign User",
+  round_robin: "Round Robin",
+  weighted_round_robin: "Weighted RR",
+  least_loaded: "Least Loaded",
+  territory: "Territory",
+};
 
-const OPERATORS = [
-  { value: "eq", label: "Equals" },
-  { value: "contains", label: "Contains" },
-  { value: "gt", label: "Greater than" },
-  { value: "lt", label: "Less than" },
-  { value: "in", label: "In (comma-sep)" },
-];
-
-const ASSIGNMENT_TYPES = [
-  { value: "assign_user", label: "Assign to User" },
-  { value: "round_robin", label: "Round Robin" },
-  { value: "weighted_round_robin", label: "Weighted Round Robin" },
-  { value: "least_loaded", label: "Least Loaded" },
-  { value: "territory", label: "Territory" },
-];
-
-const conditionSchema = z.object({
-  field: z.string().min(1),
-  operator: z.string().min(1),
-  value: z.string().min(1),
-});
-
-const createRuleSchema = z.object({
-  name: z.string().min(1, "Name required").max(100),
-  assignmentType: z.enum(["assign_user", "round_robin", "weighted_round_robin", "least_loaded", "territory"]),
-  assignToUserId: z.string().optional(),
-  roundRobinUserIds: z.string().optional(),
-  conditions: z.array(conditionSchema).min(1, "At least one condition required"),
-});
-type CreateRuleForm = z.infer<typeof createRuleSchema>;
-
-interface RuleCardProps {
-  rule: {
-    id: number;
-    name: string;
-    isActive: boolean;
-    assignmentType: string;
-    priority: number;
-    conditions: AssignmentRuleCondition[];
-  };
+interface RuleRowProps {
+  rule: AssignmentRule;
   dragHandleProps: Record<string, unknown> | null | undefined;
-  onToggle: (id: number, isActive: boolean) => void;
+  onToggle: (id: number, current: boolean) => void;
+  onEdit: (rule: AssignmentRule) => void;
   onDeleteRequest: (id: number) => void;
 }
 
-function RuleCard({ rule, dragHandleProps, onToggle, onDeleteRequest }: RuleCardProps) {
+function RuleRow({ rule, dragHandleProps, onToggle, onEdit, onDeleteRequest }: RuleRowProps) {
+  const editIcon = useAnimatedIcon();
+  const deleteIcon = useAnimatedIcon();
   const handleToggle = useCallback(() => onToggle(rule.id, rule.isActive), [rule.id, rule.isActive, onToggle]);
-  const handleDeleteRequest = useCallback(() => onDeleteRequest(rule.id), [rule.id, onDeleteRequest]);
-  const typeLabel = ASSIGNMENT_TYPES.find((t) => t.value === rule.assignmentType)?.label ?? rule.assignmentType;
+  const handleEdit = useCallback(() => onEdit(rule), [rule, onEdit]);
+  const handleDelete = useCallback(() => onDeleteRequest(rule.id), [rule.id, onDeleteRequest]);
 
   return (
     <Card className={cn("bg-card rounded-lg border border-border shadow-sm transition-shadow", !rule.isActive && "opacity-60")}>
-      <CardContent className="p-4">
+      <CardContent className="p-3">
         <div className="flex items-center gap-3">
           <div
             {...(dragHandleProps as Record<string, unknown>)}
@@ -115,74 +75,45 @@ function RuleCard({ rule, dragHandleProps, onToggle, onDeleteRequest }: RuleCard
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="text-sm font-medium truncate">{rule.name}</h3>
+              <span className="text-sm font-medium truncate">{rule.name}</span>
+              <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-blue-50 text-blue-700 border-blue-200">
+                {ASSIGNMENT_TYPE_LABELS[rule.assignmentType] ?? rule.assignmentType}
+              </Badge>
               <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-slate-100 text-slate-700 border-slate-200">
                 Priority {rule.priority}
               </Badge>
-              <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-blue-50 text-blue-700 border-blue-200">
-                {typeLabel}
-              </Badge>
             </div>
-            <div className="flex flex-wrap gap-1.5 mt-1.5">
-              {rule.conditions.map((c, ci) => (
-                <Badge key={ci} variant="outline" className="text-[9px] h-4 px-1.5 py-0">
-                  {FIELDS.find((f) => f.value === c.field)?.label ?? c.field} {c.operator} {c.value}
-                </Badge>
-              ))}
-            </div>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {rule.conditions.length} condition{rule.conditions.length !== 1 ? "s" : ""}
+            </p>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 shrink-0">
             <Switch checked={rule.isActive} onCheckedChange={handleToggle} />
-            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={handleDeleteRequest} aria-label="Delete rule">
-              <Trash2 className="h-3.5 w-3.5" />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={handleEdit}
+              aria-label="Edit rule"
+              {...editIcon.hoverHandlers}
+            >
+              <UserPenIcon ref={editIcon.iconRef} size={14} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-destructive"
+              onClick={handleDelete}
+              aria-label="Delete rule"
+              {...deleteIcon.hoverHandlers}
+            >
+              <Trash2Icon ref={deleteIcon.iconRef} size={14} />
             </Button>
           </div>
         </div>
       </CardContent>
     </Card>
   );
-}
-
-interface ConditionRowProps {
-  cField: { id: string };
-  index: number;
-  control: Control<CreateRuleForm>;
-  showRemove: boolean;
-  onRemove: (index: number) => void;
-}
-
-function ConditionRow({ index: i, control, showRemove, onRemove }: ConditionRowProps) {
-  const handleRemove = useCallback(() => onRemove(i), [i, onRemove]);
-  return (
-    <div className="flex items-center gap-2">
-      <FormField control={control} name={`conditions.${i}.field`} render={({ field }) => (
-        <Select onValueChange={field.onChange} value={field.value}>
-          <SelectTrigger className="h-8 w-28 text-xs"><SelectValue placeholder="Field" /></SelectTrigger>
-          <SelectContent>{FIELDS.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}</SelectContent>
-        </Select>
-      )} />
-      <FormField control={control} name={`conditions.${i}.operator`} render={({ field }) => (
-        <Select onValueChange={field.onChange} value={field.value}>
-          <SelectTrigger className="h-8 w-28 text-xs"><SelectValue placeholder="Op" /></SelectTrigger>
-          <SelectContent>{OPERATORS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
-        </Select>
-      )} />
-      <FormField control={control} name={`conditions.${i}.value`} render={({ field }) => (
-        <Input {...field} className="h-8 text-xs flex-1" placeholder="Value" />
-      )} />
-      {showRemove && (
-        <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0" onClick={handleRemove} aria-label="Remove condition">
-          <Trash2 className="h-3.5 w-3.5" />
-        </Button>
-      )}
-    </div>
-  );
-}
-
-function resolveEmployees(raw: Employee[] | PaginatedEmployees | undefined): Employee[] {
-  if (!raw) return [];
-  if (Array.isArray(raw)) return raw;
-  return raw.data;
 }
 
 function PreviewPanel() {
@@ -204,36 +135,57 @@ function PreviewPanel() {
     );
   }, [previewRule, source, priority, score, city]);
 
-  const handleSourceChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSource(e.target.value), []);
-  const handlePriorityChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setPriority(e.target.value), []);
   const handleScoreChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setScore(e.target.value), []);
   const handleCityChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setCity(e.target.value), []);
 
   return (
-    <Card className="bg-card rounded-lg border border-border shadow-sm">
-      <CardHeader className="px-4 py-3">
+    <Card className="bg-card rounded-lg border border-border shadow-sm sticky top-4">
+      <CardHeader className="px-4 py-3 border-b border-border">
         <CardTitle className="text-sm font-semibold flex items-center gap-2">
           <Eye className="h-4 w-4 text-blue-500" />
-          Preview Assignment
+          Assignment Preview
         </CardTitle>
       </CardHeader>
-      <CardContent className="px-4 pb-4 space-y-4">
-        <div className="grid grid-cols-2 gap-3">
+      <CardContent className="px-4 pb-4 pt-4 space-y-4">
+        <div className="space-y-3">
           <div>
-            <label className="text-xs font-medium mb-1 block">Source</label>
-            <Input value={source} onChange={handleSourceChange} placeholder="referral" className="h-8 text-xs" />
+            <label className="text-xs font-medium mb-1 block">Lead Source</label>
+            <CrmOptionSelect
+              type="source"
+              value={source}
+              onChange={setSource}
+              placeholder="Select source…"
+              className="w-full h-8 text-xs"
+            />
           </div>
           <div>
-            <label className="text-xs font-medium mb-1 block">Priority</label>
-            <Input value={priority} onChange={handlePriorityChange} placeholder="HOT" className="h-8 text-xs" />
+            <label className="text-xs font-medium mb-1 block">Lead Priority</label>
+            <CrmOptionSelect
+              type="priority"
+              value={priority}
+              onChange={setPriority}
+              placeholder="Select priority…"
+              className="w-full h-8 text-xs"
+            />
           </div>
           <div>
-            <label className="text-xs font-medium mb-1 block">Score</label>
-            <Input type="number" value={score} onChange={handleScoreChange} placeholder="85" className="h-8 text-xs" />
+            <label className="text-xs font-medium mb-1 block">Lead Score</label>
+            <Input
+              type="number"
+              value={score}
+              onChange={handleScoreChange}
+              placeholder="85"
+              className="h-8 text-xs"
+            />
           </div>
           <div>
             <label className="text-xs font-medium mb-1 block">City</label>
-            <Input value={city} onChange={handleCityChange} placeholder="Mumbai" className="h-8 text-xs" />
+            <Input
+              value={city}
+              onChange={handleCityChange}
+              placeholder="Mumbai"
+              className="h-8 text-xs"
+            />
           </div>
         </div>
         <LoadingButton
@@ -241,13 +193,14 @@ function PreviewPanel() {
           size="sm"
           onClick={handleRunPreview}
           isPending={previewRule.isPending}
-          loadingText="Running..."
+          loadingText="Running…"
+          className="w-full"
         >
-          Run Preview
+          Preview Assignment
         </LoadingButton>
         {previewRule.data && (
           <div className="rounded-lg border border-border bg-muted/40 p-3 text-xs space-y-2">
-            <div className="font-semibold text-[11px] uppercase tracking-wide text-muted-foreground">Trace</div>
+            <p className="font-semibold text-[10px] uppercase tracking-wide text-muted-foreground">Trace</p>
             {previewRule.data.trace.map((step) => (
               <div key={step.ruleId} className="flex items-start gap-2">
                 {step.matched
@@ -274,10 +227,10 @@ function PreviewPanel() {
 }
 
 export default function AssignmentRulesPage() {
+  const qc = useQueryClient();
   const { data: rules, isLoading, isError, refetch } = useAssignmentRules();
-  const { data: rawEmployees } = useHrEmployees();
-  const employees = resolveEmployees(rawEmployees);
-  const [createOpen, setCreateOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [editing, setEditing] = useState<AssignmentRule | null>(null);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 
   const createRule = useCreateAssignmentRule();
@@ -285,64 +238,73 @@ export default function AssignmentRulesPage() {
   const deleteRule = useDeleteAssignmentRule();
   const reorderRules = useReorderAssignmentRules();
 
-  const form = useForm<CreateRuleForm>({
-    resolver: zodResolver(createRuleSchema),
-    defaultValues: {
-      name: "",
-      assignmentType: "assign_user",
-      assignToUserId: "",
-      roundRobinUserIds: "",
-      conditions: [{ field: "", operator: "eq", value: "" }],
-    },
-  });
+  const handleOpenCreate = useCallback(() => {
+    setEditing(null);
+    setSheetOpen(true);
+  }, []);
 
-  const { fields: conditionFields, append: addCondition, remove: removeCondition } = useFieldArray({
-    control: form.control,
-    name: "conditions",
-  });
+  const handleEdit = useCallback((rule: AssignmentRule) => {
+    setEditing(rule);
+    setSheetOpen(true);
+  }, []);
 
-  const assignmentType = form.watch("assignmentType");
-
-  const handleDragEnd = useCallback((result: DropResult) => {
-    if (!result.destination || !rules) return;
-    const reordered = Array.from(rules);
-    const [moved] = reordered.splice(result.source.index, 1);
-    reordered.splice(result.destination.index, 0, moved);
-    reorderRules.mutate(
-      { rules: reordered.map((r, i) => ({ id: r.id, priority: reordered.length - i })) },
-      { onError: (err) => toast.error(getErrorMessage(err)) }
-    );
-  }, [rules, reorderRules]);
-
-  const onCreateSubmit = useCallback((data: CreateRuleForm) => {
-    createRule.mutate(
-      {
-        name: data.name,
-        assignmentType: data.assignmentType as "assign_user" | "round_robin",
-        assignToUserId: data.assignmentType === "assign_user" ? data.assignToUserId || undefined : undefined,
-        roundRobinUserIds: data.assignmentType === "round_robin"
-          ? data.roundRobinUserIds?.split(",").map((s) => s.trim()).filter(Boolean) ?? []
-          : undefined,
-        conditions: data.conditions,
-        priority: rules?.length ?? 0,
-      },
-      {
-        onSuccess: () => { toast.success("Rule created"); setCreateOpen(false); form.reset(); },
-        onError: (err) => toast.error(getErrorMessage(err)),
+  const handleSheetSubmit = useCallback(
+    (data: RuleFormValues) => {
+      const payload = buildRulePayload(data);
+      if (editing) {
+        updateRule.mutate(
+          { id: editing.id, ...payload },
+          {
+            onSuccess: () => { toast.success("Rule updated"); setSheetOpen(false); },
+            onError: (err) => toast.error(getErrorMessage(err)),
+          }
+        );
+      } else {
+        createRule.mutate(
+          { ...payload, priority: rules?.length ?? 0 },
+          {
+            onSuccess: () => { toast.success("Rule created"); setSheetOpen(false); },
+            onError: (err) => toast.error(getErrorMessage(err)),
+          }
+        );
       }
-    );
-  }, [createRule, form, rules]);
+    },
+    [editing, updateRule, createRule, rules]
+  );
 
-  const handleToggleActive = useCallback((id: number, currentActive: boolean) => {
-    updateRule.mutate(
-      { id, isActive: !currentActive },
-      { onSuccess: () => toast.success("Rule updated"), onError: (err) => toast.error(getErrorMessage(err)) }
-    );
-  }, [updateRule]);
+  const handleToggleActive = useCallback(
+    (id: number, current: boolean) => {
+      updateRule.mutate(
+        { id, isActive: !current },
+        {
+          onSuccess: () => toast.success("Rule updated"),
+          onError: (err) => toast.error(getErrorMessage(err)),
+        }
+      );
+    },
+    [updateRule]
+  );
 
-  const handleAddCondition = useCallback(() => {
-    addCondition({ field: "", operator: "eq", value: "" });
-  }, [addCondition]);
+  const handleDragEnd = useCallback(
+    (result: DropResult) => {
+      if (!result.destination || !rules) return;
+      const reordered = Array.from(rules);
+      const [moved] = reordered.splice(result.source.index, 1);
+      reordered.splice(result.destination.index, 0, moved);
+      const reorderPayload = reordered.map((r, i) => ({ id: r.id, priority: reordered.length - i }));
+      qc.setQueryData(queryKeys.crmSettings.assignmentRules(), reordered);
+      reorderRules.mutate(
+        { rules: reorderPayload },
+        {
+          onError: (err) => {
+            toast.error(getErrorMessage(err));
+            qc.invalidateQueries({ queryKey: queryKeys.crmSettings.assignmentRules() });
+          },
+        }
+      );
+    },
+    [rules, reorderRules, qc]
+  );
 
   const handleDeleteRequest = useCallback((id: number) => setDeleteTargetId(id), []);
 
@@ -355,11 +317,10 @@ export default function AssignmentRulesPage() {
   }, [deleteRule, deleteTargetId]);
 
   const handleDeleteCancel = useCallback(() => setDeleteTargetId(null), []);
-  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
   const handleAlertOpenChange = useCallback((open: boolean) => { if (!open) handleDeleteCancel(); }, [handleDeleteCancel]);
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
-  const count = rules?.length ?? 0;
+  const isPending = createRule.isPending || updateRule.isPending;
 
   return (
     <>
@@ -383,103 +344,30 @@ export default function AssignmentRulesPage() {
         </AlertDialogContent>
       </AlertDialog>
 
+      <AssignmentRuleSheet
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        editing={editing}
+        isPending={isPending}
+        onSubmit={handleSheetSubmit}
+      />
+
       <PageWrapper
         title="Assignment Rules"
-        subtitle={isLoading ? undefined : `${count} rule${count !== 1 ? "s" : ""}`}
+        subtitle="Auto-assign incoming leads based on conditions"
         actions={
-          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={handleOpenCreate}>
-                <Plus className="h-4 w-4 mr-2" />
-                New Rule
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Create Assignment Rule</DialogTitle>
-              </DialogHeader>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onCreateSubmit)} className="space-y-4">
-                  <FormField control={form.control} name="name" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Rule Name</FormLabel>
-                      <FormControl><Input {...field} placeholder="e.g. Mumbai Leads to Ravi" /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <div>
-                    <FormLabel className="text-sm">Conditions</FormLabel>
-                    <div className="space-y-2 mt-2">
-                      {conditionFields.map((cField, i) => (
-                        <ConditionRow
-                          key={cField.id}
-                          cField={cField}
-                          index={i}
-                          control={form.control}
-                          showRemove={conditionFields.length > 1}
-                          onRemove={removeCondition}
-                        />
-                      ))}
-                    </div>
-                    <Button type="button" variant="outline" size="sm" className="mt-2 text-xs" onClick={handleAddCondition}>
-                      <Plus className="h-3 w-3 mr-1" /> Add Condition
-                    </Button>
-                  </div>
-                  <FormField control={form.control} name="assignmentType" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Assignment Type</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {ASSIGNMENT_TYPES.map((t) => (
-                            <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  {assignmentType === "assign_user" && (
-                    <FormField control={form.control} name="assignToUserId" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Assign To</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger><SelectValue placeholder="Select user" /></SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {employees.map((e) => (
-                              <SelectItem key={e.id} value={e.id}>{e.name ?? e.email}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-                  )}
-                  {(assignmentType === "round_robin" || assignmentType === "weighted_round_robin") && (
-                    <FormField control={form.control} name="roundRobinUserIds" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>User IDs (comma-separated)</FormLabel>
-                        <FormControl><Input {...field} placeholder="user-id-1, user-id-2, ..." /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-                  )}
-                  <LoadingButton type="submit" className="w-full" isPending={createRule.isPending} loadingText="Creating...">
-                    Create Rule
-                  </LoadingButton>
-                </form>
-              </Form>
-            </DialogContent>
-          </Dialog>
+          <Button onClick={handleOpenCreate}>
+            <Plus className="h-4 w-4 mr-2" />
+            New Rule
+          </Button>
         }
       >
         {isLoading ? (
-          <div className="space-y-3">
-            {[0, 1, 2].map((i) => <Skeleton key={i} className="h-20 w-full" />)}
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
+            <div className="space-y-3">
+              {[0, 1, 2].map((i) => <Skeleton key={i} className="h-16 w-full" />)}
+            </div>
+            <Skeleton className="h-80 w-full" />
           </div>
         ) : isError ? (
           <EmptyState
@@ -489,45 +377,44 @@ export default function AssignmentRulesPage() {
             action={{ label: "Retry", onClick: handleRetry }}
             className="flex-1 min-h-[40vh] border-0 bg-transparent"
           />
-        ) : rules && rules.length > 0 ? (
-          <div className="space-y-6">
-            <DragDropContext onDragEnd={handleDragEnd}>
-              <Droppable droppableId="assignment-rules">
-                {(provided) => (
-                  <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-3">
-                    {rules.map((rule, index) => (
-                      <Draggable key={rule.id} draggableId={String(rule.id)} index={index}>
-                        {(draggableProvided) => (
-                          <div
-                            ref={draggableProvided.innerRef}
-                            {...draggableProvided.draggableProps}
-                          >
-                            <RuleCard
-                              rule={rule}
-                              dragHandleProps={draggableProvided.dragHandleProps}
-                              onToggle={handleToggleActive}
-                              onDeleteRequest={handleDeleteRequest}
-                            />
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            </DragDropContext>
-            <PreviewPanel />
-          </div>
         ) : (
-          <div className="space-y-6">
-            <EmptyState
-              illustration={<EmptyTargetIllustration />}
-              title="No assignment rules"
-              description="Create rules to automatically assign incoming leads to the right people."
-              action={{ label: "New Rule", onClick: handleOpenCreate }}
-              className="flex-1 min-h-[40vh] border-0 bg-transparent"
-            />
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
+            <div>
+              {rules && rules.length > 0 ? (
+                <DragDropContext onDragEnd={handleDragEnd}>
+                  <Droppable droppableId="assignment-rules">
+                    {(provided) => (
+                      <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-3">
+                        {rules.map((rule, index) => (
+                          <Draggable key={rule.id} draggableId={String(rule.id)} index={index}>
+                            {(dp) => (
+                              <div ref={dp.innerRef} {...dp.draggableProps}>
+                                <RuleRow
+                                  rule={rule}
+                                  dragHandleProps={dp.dragHandleProps}
+                                  onToggle={handleToggleActive}
+                                  onEdit={handleEdit}
+                                  onDeleteRequest={handleDeleteRequest}
+                                />
+                              </div>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
+                      </div>
+                    )}
+                  </Droppable>
+                </DragDropContext>
+              ) : (
+                <EmptyState
+                  illustration={<EmptyTargetIllustration />}
+                  title="No assignment rules"
+                  description="Create rules to automatically assign incoming leads to the right people."
+                  action={{ label: "New Rule", onClick: handleOpenCreate }}
+                  className="flex-1 min-h-[40vh] border-0 bg-transparent"
+                />
+              )}
+            </div>
             <PreviewPanel />
           </div>
         )}

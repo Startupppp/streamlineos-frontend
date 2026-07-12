@@ -10,17 +10,9 @@ import {
   Target,
   IndianRupee,
   StickyNote,
-  Share2,
-  Megaphone,
-  Globe,
-  Footprints,
-  Flame,
-  Sun,
-  Snowflake,
-  Users,
   UserPlus,
-  Phone,
   AlertTriangle,
+  Plus,
 } from "lucide-react";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { useCheckLeadDuplicates } from "@/hooks/api/leads";
@@ -38,15 +30,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus } from "lucide-react";
+import { CrmOptionSelect } from "@/features/crm/shared/metadata";
 
 interface CreateLeadSheetProps {
   open: boolean;
@@ -260,76 +245,23 @@ export function CreateLeadSheet({
                   <Label className="text-xs font-medium mb-1.5 block">
                     Priority
                   </Label>
-                  <Select value={priority} onValueChange={setPriority}>
-                    <SelectTrigger className="w-full h-9">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="HOT">
-                        <span className="flex items-center gap-2">
-                          <Flame className="h-3.5 w-3.5 text-red-400" /> Hot
-                        </span>
-                      </SelectItem>
-                      <SelectItem value="WARM">
-                        <span className="flex items-center gap-2">
-                          <Sun className="h-3.5 w-3.5 text-amber-400" /> Warm
-                        </span>
-                      </SelectItem>
-                      <SelectItem value="COLD">
-                        <span className="flex items-center gap-2">
-                          <Snowflake className="h-3.5 w-3.5 text-blue-400" />{" "}
-                          Cold
-                        </span>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <CrmOptionSelect
+                    type="lead_priority"
+                    value={priority}
+                    onChange={setPriority}
+                    className="w-full h-9"
+                  />
                 </div>
                 <div>
                   <Label className="text-xs font-medium mb-1.5 block">
                     Source
                   </Label>
-                  <Select value={source} onValueChange={setSource}>
-                    <SelectTrigger className="w-full h-9">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="referral">
-                        <span className="flex items-center gap-2">
-                          <Share2 className="h-3.5 w-3.5" /> Referral
-                        </span>
-                      </SelectItem>
-                      <SelectItem value="campaign">
-                        <span className="flex items-center gap-2">
-                          <Megaphone className="h-3.5 w-3.5" /> Campaign
-                        </span>
-                      </SelectItem>
-                      <SelectItem value="cold_call">
-                        <span className="flex items-center gap-2">
-                          <Phone className="h-3.5 w-3.5" /> Cold Call
-                        </span>
-                      </SelectItem>
-                      <SelectItem value="website">
-                        <span className="flex items-center gap-2">
-                          <Globe className="h-3.5 w-3.5" /> Website
-                        </span>
-                      </SelectItem>
-                      <SelectItem value="social_media">
-                        <span className="flex items-center gap-2">
-                          <Users className="h-3.5 w-3.5" /> Social Media
-                        </span>
-                      </SelectItem>
-                      <SelectItem value="walk_in">
-                        <span className="flex items-center gap-2">
-                          <Footprints className="h-3.5 w-3.5" /> Walk-in
-                        </span>
-                      </SelectItem>
-                      <SelectItem value="other">
-                        <span className="flex items-center gap-2">
-                          <Target className="h-3.5 w-3.5" /> Other
-                        </span>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <CrmOptionSelect
+                    type="lead_source"
+                    value={source}
+                    onChange={setSource}
+                    className="w-full h-9"
+                  />
                 </div>
 
                 {source === "referral" && (

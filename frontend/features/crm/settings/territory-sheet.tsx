@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback } from "react";
-import { useForm } from "react-hook-form";
+import { useCallback, useRef, useState, KeyboardEvent } from "react";
+import { useForm, useController, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { X } from "lucide-react";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter,
 } from "@/components/ui/sheet";
@@ -11,62 +12,60 @@ import {
   Form, FormField, FormItem, FormLabel, FormControl, FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { cn } from "@/lib/utils";
 import type { Territory, TerritoryCriteria } from "@/hooks/api/crm-settings";
 
 const territorySchema = z.object({
   name: z.string().min(1, "Name required").max(100),
   description: z.string().optional(),
-  priority: z.string().refine(
-    (v) => !isNaN(Number(v)) && Number(v) >= 0 && Number(v) <= 100,
-    "Must be 0–100"
-  ),
+  priority: z
+    .string()
+    .refine((v) => !isNaN(Number(v)) && Number(v) >= 0, "Must be ≥ 0"),
   isActive: z.boolean(),
-  assignedRepIds: z.string(),
-  countries: z.string(),
-  states: z.string(),
-  cities: z.string(),
-  postalCodes: z.string(),
-  industries: z.string(),
-  companySizes: z.string(),
-  productKeys: z.string(),
-  accountTypes: z.string(),
+  countries: z.array(z.string()),
+  states: z.array(z.string()),
+  cities: z.array(z.string()),
+  postalCodes: z.array(z.string()),
+  industries: z.array(z.string()),
+  companySizes: z.array(z.string()),
+  productKeys: z.array(z.string()),
+  accountTypes: z.array(z.string()),
 });
 
 export type TerritoryFormValues = z.infer<typeof territorySchema>;
 
 function criteriaFromForm(form: TerritoryFormValues): TerritoryCriteria {
-  const split = (v: string) => v.split(",").map((s) => s.trim()).filter(Boolean);
   return {
-    countries: split(form.countries),
-    states: split(form.states),
-    cities: split(form.cities),
-    postalCodes: split(form.postalCodes),
-    industries: split(form.industries),
-    companySizes: split(form.companySizes),
-    productKeys: split(form.productKeys),
-    accountTypes: split(form.accountTypes),
+    countries: form.countries.length > 0 ? form.countries : undefined,
+    states: form.states.length > 0 ? form.states : undefined,
+    cities: form.cities.length > 0 ? form.cities : undefined,
+    postalCodes: form.postalCodes.length > 0 ? form.postalCodes : undefined,
+    industries: form.industries.length > 0 ? form.industries : undefined,
+    companySizes: form.companySizes.length > 0 ? form.companySizes : undefined,
+    productKeys: form.productKeys.length > 0 ? form.productKeys : undefined,
+    accountTypes: form.accountTypes.length > 0 ? form.accountTypes : undefined,
   };
 }
 
 function formFromTerritory(t: Territory): TerritoryFormValues {
-  const join = (arr: string[] | undefined) => (arr ?? []).join(", ");
   return {
     name: t.name,
     description: t.description ?? "",
     priority: String(t.priority),
     isActive: t.isActive,
-    assignedRepIds: (t.assignedReps ?? []).join(", "),
-    countries: join(t.criteria.countries),
-    states: join(t.criteria.states ?? t.states),
-    cities: join(t.criteria.cities ?? t.cities),
-    postalCodes: join(t.criteria.postalCodes),
-    industries: join(t.criteria.industries),
-    companySizes: join(t.criteria.companySizes),
-    productKeys: join(t.criteria.productKeys),
-    accountTypes: join(t.criteria.accountTypes),
+    countries: t.criteria.countries ?? [],
+    states: t.criteria.states ?? t.states ?? [],
+    cities: t.criteria.cities ?? t.cities ?? [],
+    postalCodes: t.criteria.postalCodes ?? [],
+    industries: t.criteria.industries ?? [],
+    companySizes: t.criteria.companySizes ?? [],
+    productKeys: t.criteria.productKeys ?? [],
+    accountTypes: t.criteria.accountTypes ?? [],
   };
 }
 
@@ -76,12 +75,130 @@ export function buildTerritoryPayload(data: TerritoryFormValues) {
     description: data.description || undefined,
     priority: Number(data.priority),
     isActive: data.isActive,
-    assignedRepUserIds: data.assignedRepIds
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean),
     criteria: criteriaFromForm(data),
   };
+}
+
+interface ChipInputProps {
+  value: string[];
+  onChange: (v: string[]) => void;
+  placeholder?: string;
+  className?: string;
+}
+
+function ChipInput({ value, onChange, placeholder, className }: ChipInputProps) {
+  const [inputVal, setInputVal] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const addChip = useCallback(
+    (raw: string) => {
+      const trimmed = raw.trim();
+      if (trimmed && !value.includes(trimmed)) {
+        onChange([...value, trimmed]);
+      }
+      setInputVal("");
+    },
+    [value, onChange]
+  );
+
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter" || e.key === ",") {
+        e.preventDefault();
+        addChip(inputVal);
+      } else if (e.key === "Backspace" && inputVal === "" && value.length > 0) {
+        onChange(value.slice(0, -1));
+      }
+    },
+    [inputVal, addChip, value, onChange]
+  );
+
+  const handleBlur = useCallback(() => {
+    if (inputVal.trim()) addChip(inputVal);
+  }, [inputVal, addChip]);
+
+  const handleContainerClick = useCallback(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  const handleRemove = useCallback(
+    (chip: string) => {
+      onChange(value.filter((v) => v !== chip));
+    },
+    [value, onChange]
+  );
+
+  return (
+    <div
+      onClick={handleContainerClick}
+      className={cn(
+        "flex flex-wrap gap-1 min-h-9 w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm ring-offset-background",
+        "focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 cursor-text",
+        className
+      )}
+    >
+      {value.map((chip) => (
+        <Badge
+          key={chip}
+          variant="secondary"
+          className="h-5 px-1.5 text-[10px] gap-0.5 shrink-0"
+        >
+          {chip}
+          <button
+            type="button"
+            aria-label={`Remove ${chip}`}
+            onClick={(e) => { e.stopPropagation(); handleRemove(chip); }}
+            className="ml-0.5 rounded-full hover:bg-muted-foreground/20 p-0.5"
+          >
+            <X className="h-2.5 w-2.5" />
+          </button>
+        </Badge>
+      ))}
+      <input
+        ref={inputRef}
+        value={inputVal}
+        onChange={(e) => setInputVal(e.target.value)}
+        onKeyDown={handleKeyDown}
+        onBlur={handleBlur}
+        placeholder={value.length === 0 ? placeholder : undefined}
+        className="flex-1 min-w-[80px] bg-transparent outline-none text-xs placeholder:text-muted-foreground"
+      />
+    </div>
+  );
+}
+
+type CriteriaFieldName = "countries" | "states" | "cities" | "postalCodes" | "industries" | "companySizes" | "productKeys" | "accountTypes";
+
+interface ChipFieldProps {
+  name: CriteriaFieldName;
+  label: string;
+  placeholder: string;
+  control: Control<TerritoryFormValues>;
+}
+
+function ChipField({ name, label, placeholder, control }: ChipFieldProps) {
+  const { field } = useController({ name, control });
+  const chips: string[] = field.value ?? [];
+
+  return (
+    <FormField
+      control={control}
+      name={name}
+      render={() => (
+        <FormItem>
+          <FormLabel className="text-xs">{label}</FormLabel>
+          <FormControl>
+            <ChipInput
+              value={chips}
+              onChange={(v) => field.onChange(v)}
+              placeholder={placeholder}
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
 }
 
 interface TerritorySheetProps {
@@ -92,6 +209,36 @@ interface TerritorySheetProps {
   onSubmit: (data: TerritoryFormValues) => void;
 }
 
+const EMPTY_DEFAULTS: TerritoryFormValues = {
+  name: "",
+  description: "",
+  priority: "0",
+  isActive: true,
+  countries: [],
+  states: [],
+  cities: [],
+  postalCodes: [],
+  industries: [],
+  companySizes: [],
+  productKeys: [],
+  accountTypes: [],
+};
+
+const CRITERIA_FIELDS: Array<{
+  name: CriteriaFieldName;
+  label: string;
+  placeholder: string;
+}> = [
+  { name: "countries", label: "Countries", placeholder: "India, US… press Enter" },
+  { name: "states", label: "States", placeholder: "Maharashtra, California…" },
+  { name: "cities", label: "Cities", placeholder: "Mumbai, San Francisco…" },
+  { name: "postalCodes", label: "Postal Codes", placeholder: "400001, 94102…" },
+  { name: "industries", label: "Industries", placeholder: "Technology, Finance…" },
+  { name: "companySizes", label: "Company Sizes", placeholder: "1-10, 11-50…" },
+  { name: "productKeys", label: "Products", placeholder: "CRM, ERP…" },
+  { name: "accountTypes", label: "Account Types", placeholder: "enterprise, smb…" },
+];
+
 export function TerritorySheet({
   open,
   onOpenChange,
@@ -101,31 +248,15 @@ export function TerritorySheet({
 }: TerritorySheetProps) {
   const form = useForm<TerritoryFormValues>({
     resolver: zodResolver(territorySchema),
-    defaultValues: editing
-      ? formFromTerritory(editing)
-      : {
-          name: "",
-          description: "",
-          priority: "0",
-          isActive: true,
-          assignedRepIds: "",
-          countries: "",
-          states: "",
-          cities: "",
-          postalCodes: "",
-          industries: "",
-          companySizes: "",
-          productKeys: "",
-          accountTypes: "",
-        },
+    defaultValues: editing ? formFromTerritory(editing) : EMPTY_DEFAULTS,
   });
 
   const handleOpenChange = useCallback(
     (next: boolean) => {
-      if (!next) form.reset();
+      if (!next) form.reset(editing ? formFromTerritory(editing) : EMPTY_DEFAULTS);
       onOpenChange(next);
     },
-    [form, onOpenChange]
+    [form, editing, onOpenChange]
   );
 
   const handleSubmit = useCallback(
@@ -134,17 +265,6 @@ export function TerritorySheet({
     },
     [onSubmit]
   );
-
-  const CRITERIA_FIELDS: Array<{ name: keyof TerritoryFormValues; label: string; placeholder: string }> = [
-    { name: "countries", label: "Countries", placeholder: "India, US, UK" },
-    { name: "states", label: "States", placeholder: "Maharashtra, California" },
-    { name: "cities", label: "Cities", placeholder: "Mumbai, San Francisco" },
-    { name: "postalCodes", label: "Postal Codes", placeholder: "400001, 94102" },
-    { name: "industries", label: "Industries", placeholder: "Technology, Finance" },
-    { name: "companySizes", label: "Company Sizes", placeholder: "1-10, 11-50" },
-    { name: "productKeys", label: "Product Keys", placeholder: "CRM, ERP" },
-    { name: "accountTypes", label: "Account Types", placeholder: "enterprise, smb" },
-  ];
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
@@ -155,56 +275,78 @@ export function TerritorySheet({
         <div className="flex-1 overflow-y-auto py-4 px-1">
           <Form {...form}>
             <form id="territory-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-              <FormField control={form.control} name="name" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl><Input {...field} placeholder="e.g. West India" /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-              <FormField control={form.control} name="description" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl><Input {...field} placeholder="Optional description" /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-              <div className="grid grid-cols-2 gap-4">
-                <FormField control={form.control} name="priority" render={({ field }) => (
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Priority (0–100)</FormLabel>
-                    <FormControl><Input type="number" min={0} max={100} {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="isActive" render={({ field }) => (
-                  <FormItem className="flex flex-col justify-end pb-1">
-                    <FormLabel>Active</FormLabel>
+                    <FormLabel>Name</FormLabel>
                     <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      <Input {...field} placeholder="e.g. West India" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
-                )} />
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        {...field}
+                        placeholder="Optional description"
+                        className="resize-none min-h-[72px]"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="priority"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Priority</FormLabel>
+                      <FormControl>
+                        <Input type="number" min={0} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="isActive"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col justify-end pb-1">
+                      <FormLabel>Active</FormLabel>
+                      <FormControl>
+                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
-              <FormField control={form.control} name="assignedRepIds" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Assigned Rep IDs</FormLabel>
-                  <FormControl><Input {...field} placeholder="1, 2, 3 (comma-separated)" /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
               <div>
-                <p className="text-sm font-medium mb-2">Criteria (comma-separated values)</p>
+                <p className="text-sm font-medium mb-3">Criteria</p>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Type a value and press Enter or comma to add. Click × to remove.
+                </p>
                 <div className="space-y-3">
                   {CRITERIA_FIELDS.map((cf) => (
-                    <FormField key={cf.name} control={form.control} name={cf.name} render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs">{cf.label}</FormLabel>
-                        <FormControl><Input {...field} placeholder={cf.placeholder} className="text-xs h-8" /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
+                    <ChipField
+                      key={cf.name}
+                      name={cf.name}
+                      label={cf.label}
+                      placeholder={cf.placeholder}
+                      control={form.control}
+                    />
                   ))}
                 </div>
               </div>
@@ -215,7 +357,12 @@ export function TerritorySheet({
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <LoadingButton type="submit" form="territory-form" isPending={isPending} loadingText="Saving...">
+          <LoadingButton
+            type="submit"
+            form="territory-form"
+            isPending={isPending}
+            loadingText="Saving..."
+          >
             {editing ? "Save Changes" : "Create Territory"}
           </LoadingButton>
         </SheetFooter>

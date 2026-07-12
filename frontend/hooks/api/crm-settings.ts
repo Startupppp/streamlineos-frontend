@@ -4,19 +4,34 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
+export type AssignmentType =
+  | "assign_user"
+  | "round_robin"
+  | "weighted_round_robin"
+  | "least_loaded"
+  | "territory";
+
 export interface AssignmentRuleCondition {
   field: string;
   operator: string;
   value: string;
 }
 
-interface AssignmentRule {
+export interface WeightedMember {
+  userId: string;
+  weight: number;
+}
+
+export interface AssignmentRule {
   id: number;
   orgId: string;
   name: string;
-  assignmentType: "assign_user" | "round_robin";
+  assignmentType: AssignmentType;
   assignToUserId: string | null;
   roundRobinUserIds: string[] | null;
+  weightedMembers: WeightedMember[] | null;
+  windowHours: number | null;
+  territoryId: number | null;
   conditions: AssignmentRuleCondition[];
   priority: number;
   isActive: boolean;
@@ -24,21 +39,27 @@ interface AssignmentRule {
   updatedAt: string | null;
 }
 
-interface CreateAssignmentRuleInput {
+export interface CreateAssignmentRuleInput {
   name: string;
-  assignmentType: "assign_user" | "round_robin";
+  assignmentType: AssignmentType;
   assignToUserId?: string;
   roundRobinUserIds?: string[];
+  weightedMembers?: WeightedMember[];
+  windowHours?: number;
+  territoryId?: number;
   conditions: AssignmentRuleCondition[];
   priority?: number;
 }
 
-interface UpdateAssignmentRuleInput {
+export interface UpdateAssignmentRuleInput {
   id: number;
   name?: string;
-  assignmentType?: "assign_user" | "round_robin";
+  assignmentType?: AssignmentType;
   assignToUserId?: string;
   roundRobinUserIds?: string[];
+  weightedMembers?: WeightedMember[];
+  windowHours?: number;
+  territoryId?: number;
   conditions?: AssignmentRuleCondition[];
   priority?: number;
   isActive?: boolean;

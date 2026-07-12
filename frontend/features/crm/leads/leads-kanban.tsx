@@ -3,9 +3,19 @@
 import { DragDropContext, Droppable, type DropResult } from "@hello-pangea/dnd";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { STATUSES, STATUS_CONFIG } from "./leads-constants";
+import { useCrmOptions } from "@/hooks/api/crm";
+import { getCrmTokenClasses } from "@/features/crm/shared/metadata";
 import type { BoardLead, LeadStatus } from "./leads-types";
 import { KanbanCard } from "./kanban-card";
+
+const FALLBACK_OPTIONS = [
+  { key: "NEW", label: "New", color: "blue", isTerminal: false },
+  { key: "CONTACTED", label: "Contacted", color: "sky", isTerminal: false },
+  { key: "INTERESTED", label: "Interested", color: "amber", isTerminal: false },
+  { key: "QUALIFIED", label: "Qualified", color: "violet", isTerminal: false },
+  { key: "CONVERTED", label: "Converted", color: "emerald", isTerminal: true },
+  { key: "LOST", label: "Lost", color: "red", isTerminal: true },
+] as const;
 
 interface LeadsKanbanProps {
   filteredBoard: Record<string, BoardLead[]> | null;
@@ -15,37 +25,45 @@ interface LeadsKanbanProps {
 }
 
 export function LeadsKanban({ filteredBoard, onDragEnd, onOpenLead, onMoveStatus }: LeadsKanbanProps) {
+  const { data: metaOptions = [] } = useCrmOptions("lead_status");
+  const columns = metaOptions.length > 0 ? metaOptions : FALLBACK_OPTIONS;
+
   return (
     <div className="pb-4">
       <DragDropContext onDragEnd={onDragEnd}>
         <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-          {STATUSES.map((status) => {
-            const config = STATUS_CONFIG[status];
-            const StatusIcon = config.icon;
-            const columnLeads: BoardLead[] = filteredBoard?.[status] ?? [];
+          {columns.map((option) => {
+            const { dotClass, badgeClass } = getCrmTokenClasses(option.color);
+            const columnLeads: BoardLead[] = filteredBoard?.[option.key] ?? [];
 
             return (
-              <div key={status} className="min-w-0">
-                <div className={cn("rounded-lg border h-full flex flex-col", config.border, "bg-muted/20")}>
-
-                  <div className={cn(
-                    "flex items-center justify-between px-3 py-2.5 rounded-t-lg border-b",
-                    config.border,
-                    config.bg,
-                  )}>
+              <div key={option.key} className="min-w-0">
+                <div className={cn(
+                  "rounded-lg border h-full flex flex-col border-border bg-muted/20",
+                  option.isTerminal && "opacity-80",
+                )}>
+                  <div className="flex items-center justify-between px-3 py-2.5 rounded-t-lg border-b border-border bg-muted/30">
                     <div className="flex items-center gap-2">
-                      <StatusIcon className={cn("h-4 w-4", config.color)} />
-                      <h3 className={cn("text-sm font-semibold", config.color)}>{config.label}</h3>
+                      <span className={cn("size-2 rounded-full shrink-0", dotClass)} />
+                      <h3 className={cn(
+                        "text-sm font-semibold",
+                        option.isTerminal ? "text-muted-foreground" : "text-foreground",
+                      )}>
+                        {option.label}
+                      </h3>
                     </div>
                     <Badge
                       variant="secondary"
-                      className="text-xs tabular-nums h-5 min-w-[20px] flex items-center justify-center"
+                      className={cn(
+                        "text-xs tabular-nums h-5 min-w-[20px] flex items-center justify-center",
+                        badgeClass,
+                      )}
                     >
                       {columnLeads.length}
                     </Badge>
                   </div>
 
-                  <Droppable droppableId={status}>
+                  <Droppable droppableId={option.key}>
                     {(provided, snapshot) => (
                       <div
                         ref={provided.innerRef}
@@ -60,7 +78,7 @@ export function LeadsKanban({ filteredBoard, onDragEnd, onOpenLead, onMoveStatus
                             key={lead.id}
                             lead={lead}
                             index={index}
-                            status={status}
+                            status={option.key}
                             onOpen={onOpenLead}
                             onMoveStatus={onMoveStatus}
                           />

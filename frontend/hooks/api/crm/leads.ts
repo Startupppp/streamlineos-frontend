@@ -58,6 +58,7 @@ interface MergeLeadInput {
 export function useMergeLead() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["leads", "merge"] as const,
     mutationFn: ({ keepLeadId, mergeLeadId }: MergeLeadInput) =>
       apiClient.post<{ merged: boolean; winner: DuplicateLeadEntry }>("/leads/merge", {
         winnerId: keepLeadId,

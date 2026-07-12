@@ -5,6 +5,10 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const TABS = [
+  { label: "Pipelines", href: "/crm/settings/pipelines" },
+  { label: "Options", href: "/crm/settings/options" },
+  { label: "Validation Rules", href: "/crm/settings/validation-rules" },
+  { label: "Blueprints", href: "/crm/settings/blueprints" },
   { label: "Territories", href: "/crm/settings/territories" },
   { label: "Scoring Rules", href: "/crm/settings/scoring-rules" },
   { label: "Assignment Rules", href: "/crm/settings/assignment-rules" },

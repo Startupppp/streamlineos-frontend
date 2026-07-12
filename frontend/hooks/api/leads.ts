@@ -98,6 +98,7 @@ export function useLeadAnalyticsSummary(filters?: {
 export function useCreateLead() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["leads", "create"] as const,
     mutationFn: (input: CreateLeadInput) =>
       apiClient.post<Lead>("/leads", input),
     onSuccess: () => {
@@ -109,9 +110,28 @@ export function useCreateLead() {
 export function useUpdateLead() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["leads", "update"] as const,
     mutationFn: ({ id, ...data }: UpdateLeadInput) =>
       apiClient.patch<Lead>(`/leads/${id}`, data),
-    onSuccess: (_, vars) => {
+    onMutate: async (vars) => {
+      await qc.cancelQueries({ queryKey: queryKeys.leads.list() });
+      const previousList = qc.getQueryData<PaginatedLeads>(queryKeys.leads.list());
+      if (previousList) {
+        qc.setQueryData<PaginatedLeads>(queryKeys.leads.list(), {
+          ...previousList,
+          leads: previousList.leads.map((l) =>
+            l.id === vars.id ? { ...l, ...vars } : l,
+          ),
+        });
+      }
+      return { previousList };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.previousList) {
+        qc.setQueryData(queryKeys.leads.list(), ctx.previousList);
+      }
+    },
+    onSettled: (_data, _err, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.leads.all });
       qc.invalidateQueries({ queryKey: queryKeys.leads.detail(vars.id) });
     },
@@ -121,6 +141,7 @@ export function useUpdateLead() {
 export function useUpdateLeadStatus() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["leads", "updateStatus"] as const,
     mutationFn: (input: UpdateLeadStatusInput) =>
       apiClient.patch<Lead>(`/leads/${input.leadId}/status`, input),
     onMutate: async (vars) => {
@@ -159,6 +180,7 @@ export function useUpdateLeadStatus() {
 export function useLogLeadActivity() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["leads", "activity", "log"] as const,
     mutationFn: (input: LogActivityInput) =>
       apiClient.post<LeadActivity>(`/leads/${input.leadId}/activities`, input),
     onSuccess: (_, vars) => {
@@ -172,6 +194,7 @@ export function useLogLeadActivity() {
 export function useBulkUpdateLeads() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["leads", "bulkUpdate"] as const,
     mutationFn: (input: BulkUpdateLeadsInput) =>
       apiClient.patch<{ updated: number }>("/leads/bulk", input),
     onSuccess: () => {
@@ -183,6 +206,7 @@ export function useBulkUpdateLeads() {
 export function useBulkDeleteLeads() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["leads", "bulkDelete"] as const,
     mutationFn: (input: BulkDeleteLeadsInput) =>
       apiClient.delete<{ deleted: number }>("/leads/bulk", { data: input }),
     onSuccess: () => {
@@ -194,6 +218,7 @@ export function useBulkDeleteLeads() {
 export function useBulkImportLeads() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["leads", "import"] as const,
     mutationFn: (input: BulkImportLeadsInput) =>
       apiClient.post<BulkImportResult>("/leads/import", input),
     onSuccess: () => {
@@ -205,6 +230,7 @@ export function useBulkImportLeads() {
 export function useDistributeLeads() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["leads", "distribute"] as const,
     mutationFn: (input: DistributeLeadsInput) =>
       apiClient.post<DistributeResult>("/leads/distribute", input),
     onSuccess: () => {
@@ -216,6 +242,7 @@ export function useDistributeLeads() {
 export function useSelfAssignLead() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["leads", "selfAssign"] as const,
     mutationFn: (leadId: number) =>
       apiClient.patch<Lead>(`/leads/${leadId}/self-assign`, {}),
     onSuccess: () => {
@@ -227,6 +254,7 @@ export function useSelfAssignLead() {
 export function useAssignLead() {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: ["leads", "assign"] as const,
     mutationFn: (input: AssignLeadInput) =>
       apiClient.patch<Lead>(`/leads/${input.leadId}/assign`, { assignedToId: input.assignedToId }),
     onSuccess: () => {

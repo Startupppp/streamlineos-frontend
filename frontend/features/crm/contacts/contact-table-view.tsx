@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { EmptyPersonIllustration } from "@/components/illustrations";
-import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-
+import { CrmOptionBadge } from "@/features/crm/shared/metadata";
+import { useCrmOptions, resolveOption } from "@/hooks/api/crm/metadata";
 import { fadeUp } from "@/lib/motion-variants";
-import { PAGE_SIZE, SOURCE_LABELS } from "./contacts-constants";
+import { PAGE_SIZE } from "./contacts-constants";
 import { ContactActionsMenu } from "./contact-actions-menu";
 import type { Contact } from "@/types/crm";
 
@@ -42,6 +42,7 @@ export function ContactTableView({
   onPageChange,
   onOpenCreate,
 }: ContactTableViewProps) {
+  const { data: sourceOptions = [] } = useCrmOptions("source");
   const columns: DataTableColumn<Contact>[] = [
     {
       key: "name",
@@ -106,12 +107,7 @@ export function ContactTableView({
       header: "Source",
       cell: (c) =>
         c.source ? (
-          <Badge
-            variant="outline"
-            className="text-[9px] px-1.5 py-0 h-4 bg-slate-50 text-slate-700 border-slate-200"
-          >
-            {SOURCE_LABELS[c.source] ?? c.source}
-          </Badge>
+          <CrmOptionBadge option={resolveOption(sourceOptions, c.source)} />
         ) : (
           <span className="text-muted-foreground">—</span>
         ),

@@ -19,7 +19,8 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import { fadeUp } from "@/lib/motion-variants";
-import { SOURCE_LABELS } from "./contacts-constants";
+import { CrmOptionBadge } from "@/features/crm/shared/metadata";
+import { useCrmOptions, resolveOption } from "@/hooks/api/crm/metadata";
 import { ContactActionsMenu } from "./contact-actions-menu";
 import type { Contact } from "@/types/crm";
 
@@ -50,6 +51,7 @@ export function ContactCardView({
   onPageChange,
   onOpenCreate,
 }: ContactCardViewProps) {
+  const { data: sourceOptions = [] } = useCrmOptions("source");
   const firstItem = total > 0 ? (page - 1) * 20 + 1 : 0;
   const lastItem = Math.min(page * 20, total);
 
@@ -167,12 +169,7 @@ export function ContactCardView({
               )}
               <div className="mt-3 flex flex-wrap items-center gap-1.5">
                 {contact.source && (
-                  <Badge
-                    variant="outline"
-                    className="text-[9px] px-1.5 py-0 h-4 bg-slate-50 text-slate-700 border-slate-200"
-                  >
-                    {SOURCE_LABELS[contact.source] ?? contact.source}
-                  </Badge>
+                  <CrmOptionBadge option={resolveOption(sourceOptions, contact.source)} />
                 )}
                 {contact.tags.slice(0, 2).map((tag) => (
                   <Badge

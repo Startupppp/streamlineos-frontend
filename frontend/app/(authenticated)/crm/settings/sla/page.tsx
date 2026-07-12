@@ -1,46 +1,35 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import {
-  Plus, Trash2, Pencil, Clock, Shield, AlertTriangle,
-  CheckCircle2, XCircle,
-} from "lucide-react";
+import Link from "next/link";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { Shield, CheckCircle2, XCircle, Clock, AlertTriangle, Pencil } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { EmptyTimeIllustration } from "@/components/illustrations";
-import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter,
-} from "@/components/ui/sheet";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import {
-  Form, FormField, FormItem, FormLabel, FormControl, FormMessage,
-} from "@/components/ui/form";
-import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import {
   useSlaPolicies, useSlaReport, useSlaBreachedLeads,
   useCreateSlaPolicy, useUpdateSlaPolicy, useDeleteSlaPolicy,
 } from "@/hooks/api/crm-settings";
+import {
+  SlaPolicySheet, buildSlaPolicyPayload,
+  type SlaPolicyItem, type SlaPolicyFormValues,
+} from "@/features/crm/settings/sla-policy-sheet";
 import { toast } from "sonner";
 
 const PRIORITY_BADGE: Record<string, string> = {
@@ -50,228 +39,145 @@ const PRIORITY_BADGE: Record<string, string> = {
   urgent: "bg-red-50 text-red-700 border-red-200",
 };
 
-const policySchema = z.object({
-  name: z.string().min(1, "Name required").max(100),
-  appliesTo: z.enum(["lead", "deal", "both"]),
-  priority: z.enum(["low", "medium", "high", "urgent"]),
-  firstResponseHours: z
-    .string()
-    .min(1, "Required")
-    .refine((v) => !isNaN(Number(v)) && Number.isInteger(Number(v)) && Number(v) > 0, "Must be a positive integer"),
-  resolutionHours: z
-    .string()
-    .min(1, "Required")
-    .refine((v) => !isNaN(Number(v)) && Number.isInteger(Number(v)) && Number(v) > 0, "Must be a positive integer"),
-  sourcesText: z.string().optional(),
-  prioritiesText: z.string().optional(),
-  businessHours: z.boolean(),
-});
-type PolicyForm = z.infer<typeof policySchema>;
+interface PolicyRowActionsProps {
+  policy: SlaPolicyItem;
+  onEdit: (policy: SlaPolicyItem) => void;
+  onDeleteRequest: (id: number) => void;
+}
 
-type SlaPolicyData = {
-  id: number;
-  name: string;
-  appliesTo: string;
-  priority: string;
-  firstResponseHours: number;
-  resolutionHours: number;
-  conditions?: Record<string, unknown>;
-};
+function PolicyRowActions({ policy, onEdit, onDeleteRequest }: PolicyRowActionsProps) {
+  const editIcon = useAnimatedIcon();
+  const deleteIcon = useAnimatedIcon();
 
-function summarizeConditions(conditions: Record<string, unknown> | undefined): string {
-  if (!conditions) return "";
-  const parts: string[] = [];
-  if (conditions["source"]) parts.push(`Source: ${String(conditions["source"])}`);
-  if (conditions["priority"]) parts.push(`Priority: ${String(conditions["priority"])}`);
-  if (conditions["scoreMin"] !== undefined || conditions["scoreMax"] !== undefined) {
-    parts.push(`Score: ${conditions["scoreMin"] ?? ""}–${conditions["scoreMax"] ?? ""}`);
-  }
-  return parts.join(" | ");
+  const handleEdit = useCallback(() => onEdit(policy), [policy, onEdit]);
+  const handleDeleteRequest = useCallback(() => onDeleteRequest(policy.id), [policy.id, onDeleteRequest]);
+
+  return (
+    <div className="flex items-center justify-end gap-1">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-7 w-7"
+        onClick={handleEdit}
+        aria-label="Edit"
+        {...editIcon.hoverHandlers}
+      >
+        <PencilIcon ref={editIcon.iconRef} size={14} />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-7 w-7 text-destructive"
+        onClick={handleDeleteRequest}
+        aria-label="Delete"
+        {...deleteIcon.hoverHandlers}
+      >
+        <Trash2Icon ref={deleteIcon.iconRef} size={14} />
+      </Button>
+    </div>
+  );
 }
 
 interface SlaTableRowProps {
-  policy: SlaPolicyData;
-  onEdit: (policy: SlaPolicyData) => void;
+  policy: SlaPolicyItem;
+  onEdit: (policy: SlaPolicyItem) => void;
   onDeleteRequest: (id: number) => void;
 }
 
 function SlaTableRow({ policy, onEdit, onDeleteRequest }: SlaTableRowProps) {
-  const handleEdit = useCallback(() => onEdit(policy), [policy, onEdit]);
-  const handleDeleteRequest = useCallback(() => onDeleteRequest(policy.id), [policy.id, onDeleteRequest]);
-  const conditionsSummary = summarizeConditions(policy.conditions);
-
   return (
     <TableRow className="h-8 hover:bg-muted/30 transition-colors">
       <TableCell className="text-[11px] px-2 py-1 font-medium">{policy.name}</TableCell>
       <TableCell className="text-[11px] px-2 py-1">
-        <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-slate-100 text-slate-700 border-slate-200 capitalize">
+        <Badge
+          variant="outline"
+          className="text-[9px] h-4 px-1.5 py-0 bg-slate-100 text-slate-700 border-slate-200 capitalize"
+        >
           {policy.appliesTo}
         </Badge>
       </TableCell>
       <TableCell className="text-[11px] px-2 py-1">
         <Badge
           variant="outline"
-          className={cn("text-[9px] h-4 px-1.5 py-0 capitalize", PRIORITY_BADGE[policy.priority] ?? PRIORITY_BADGE["medium"])}
+          className={cn(
+            "text-[9px] h-4 px-1.5 py-0 capitalize",
+            PRIORITY_BADGE[policy.priority] ?? PRIORITY_BADGE["medium"]
+          )}
         >
           {policy.priority}
         </Badge>
       </TableCell>
-      <TableCell className="text-[11px] px-2 py-1 text-muted-foreground max-w-[180px] truncate">
-        {conditionsSummary || <span className="text-muted-foreground/50">—</span>}
+      <TableCell className="text-[11px] px-2 py-1 text-right font-mono tabular-nums">
+        {policy.firstResponseHours}h
       </TableCell>
-      <TableCell className="text-[11px] px-2 py-1 text-right font-mono tabular-nums">{policy.firstResponseHours}h</TableCell>
-      <TableCell className="text-[11px] px-2 py-1 text-right font-mono tabular-nums">{policy.resolutionHours}h</TableCell>
+      <TableCell className="text-[11px] px-2 py-1 text-right font-mono tabular-nums">
+        {policy.resolutionHours}h
+      </TableCell>
       <TableCell className="text-[11px] px-2 py-1 text-right">
-        <div className="flex items-center justify-end gap-1">
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleEdit} aria-label="Edit">
-            <Pencil className="h-3.5 w-3.5" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={handleDeleteRequest} aria-label="Delete">
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
-        </div>
+        <PolicyRowActions policy={policy} onEdit={onEdit} onDeleteRequest={onDeleteRequest} />
       </TableCell>
     </TableRow>
   );
 }
 
-interface PolicySheetProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  editing: SlaPolicyData | null;
-  isPending: boolean;
-  onSubmit: (data: PolicyForm) => void;
-}
-
-function PolicySheet({ open, onOpenChange, editing, isPending, onSubmit }: PolicySheetProps) {
-  const form = useForm<PolicyForm>({
-    resolver: zodResolver(policySchema),
-    defaultValues: editing
-      ? {
-          name: editing.name,
-          appliesTo: editing.appliesTo as PolicyForm["appliesTo"],
-          priority: editing.priority as PolicyForm["priority"],
-          firstResponseHours: String(editing.firstResponseHours),
-          resolutionHours: String(editing.resolutionHours),
-          sourcesText: "",
-          prioritiesText: "",
-          businessHours: false,
-        }
-      : { name: "", appliesTo: "both", priority: "medium", firstResponseHours: "4", resolutionHours: "24", sourcesText: "", prioritiesText: "", businessHours: false },
-  });
-
-  const handleOpenChange = useCallback((next: boolean) => {
-    if (!next) form.reset();
-    onOpenChange(next);
-  }, [form, onOpenChange]);
-
-  const handleSubmit = useCallback((data: PolicyForm) => onSubmit(data), [onSubmit]);
-
+function BreachedLeadsTable({ leads }: { leads: Array<{ id: number; name: string; status: string; slaDeadline: string | null }> }) {
   return (
-    <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent className="w-full sm:max-w-lg flex flex-col overflow-hidden">
-        <SheetHeader>
-          <SheetTitle>{editing ? "Edit Policy" : "New Policy"}</SheetTitle>
-        </SheetHeader>
-        <div className="flex-1 overflow-y-auto py-4 px-1">
-          <Form {...form}>
-            <form id="sla-policy-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-              <FormField control={form.control} name="name" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Policy Name</FormLabel>
-                  <FormControl><Input {...field} placeholder="e.g. Hot Lead SLA" /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-              <div className="grid grid-cols-2 gap-4">
-                <FormField control={form.control} name="appliesTo" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Applies To</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                      <SelectContent>
-                        <SelectItem value="lead">Lead</SelectItem>
-                        <SelectItem value="deal">Deal</SelectItem>
-                        <SelectItem value="both">Both</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="priority" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Priority</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                      <SelectContent>
-                        <SelectItem value="low">Low</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="high">High</SelectItem>
-                        <SelectItem value="urgent">Urgent</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="firstResponseHours" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>First Response (hrs)</FormLabel>
-                    <FormControl><Input type="number" min={1} {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="resolutionHours" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Resolution (hrs)</FormLabel>
-                    <FormControl><Input type="number" min={1} {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-              </div>
-              <p className="text-sm font-medium">Conditions</p>
-              <FormField control={form.control} name="sourcesText" render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs">Source Keys (comma-separated)</FormLabel>
-                  <FormControl><Input {...field} placeholder="referral, campaign" className="h-8 text-xs" /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-              <FormField control={form.control} name="prioritiesText" render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs">Priority Keys (comma-separated)</FormLabel>
-                  <FormControl><Input {...field} placeholder="HOT, WARM" className="h-8 text-xs" /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-              <FormField control={form.control} name="businessHours" render={({ field }) => (
-                <FormItem className="flex items-center gap-3">
-                  <FormControl>
-                    <Switch checked={field.value} onCheckedChange={field.onChange} />
-                  </FormControl>
-                  <FormLabel className="cursor-pointer">Business Hours Only</FormLabel>
-                  <FormMessage />
-                </FormItem>
-              )} />
-            </form>
-          </Form>
-        </div>
-        <SheetFooter className="border-t pt-4 flex gap-2 justify-end">
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <LoadingButton type="submit" form="sla-policy-form" isPending={isPending} loadingText="Saving...">
-            {editing ? "Save Changes" : "Create Policy"}
-          </LoadingButton>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+    <Card className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+      <CardHeader className="px-4 py-3">
+        <CardTitle className="text-sm font-semibold flex items-center gap-2">
+          <AlertTriangle className="h-4 w-4 text-red-600" />
+          Recent SLA Breaches ({leads.length})
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-0">
+        <Table>
+          <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
+            <TableRow className="border-b-2 border-border hover:bg-transparent">
+              <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Lead</TableHead>
+              <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Status</TableHead>
+              <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Breached At</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {leads.map((lead) => (
+              <TableRow key={lead.id} className="h-8 hover:bg-muted/30 transition-colors">
+                <TableCell className="text-[11px] px-2 py-1 font-medium">
+                  <Link
+                    href={`/crm/leads/${lead.id}`}
+                    className="hover:underline text-foreground"
+                  >
+                    {lead.name}
+                  </Link>
+                </TableCell>
+                <TableCell className="text-[11px] px-2 py-1">
+                  <Badge
+                    variant="outline"
+                    className="text-[9px] h-4 px-1.5 py-0 bg-slate-100 text-slate-700 border-slate-200"
+                  >
+                    {lead.status}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-[11px] px-2 py-1 text-right text-red-700 font-mono tabular-nums">
+                  {lead.slaDeadline
+                    ? new Date(lead.slaDeadline).toLocaleDateString()
+                    : "N/A"}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
   );
 }
 
 export default function SlaPage() {
   const { data: policies, isLoading, isError, refetch } = useSlaPolicies();
   const { data: slaReport, isLoading: reportLoading } = useSlaReport();
-  const { data: breachedLeads } = useSlaBreachedLeads({ limit: 10 });
+  const { data: breachedLeads, isLoading: breachesLoading } = useSlaBreachedLeads({ limit: 10 });
+
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [editingPolicy, setEditingPolicy] = useState<SlaPolicyData | null>(null);
+  const [editingPolicy, setEditingPolicy] = useState<SlaPolicyItem | null>(null);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 
   const createPolicy = useCreateSlaPolicy();
@@ -283,52 +189,64 @@ export default function SlaPage() {
     setSheetOpen(true);
   }, []);
 
-  const handleStartEdit = useCallback((policy: SlaPolicyData) => {
+  const handleStartEdit = useCallback((policy: SlaPolicyItem) => {
     setEditingPolicy(policy);
     setSheetOpen(true);
   }, []);
 
-  const handleSheetSubmit = useCallback((data: PolicyForm) => {
-    const base = {
-      name: data.name,
-      appliesTo: data.appliesTo,
-      priority: data.priority,
-      firstResponseHours: Number(data.firstResponseHours),
-      resolutionHours: Number(data.resolutionHours),
-    };
-    if (editingPolicy) {
-      updatePolicy.mutate(
-        { id: editingPolicy.id, ...base },
-        {
-          onSuccess: () => { toast.success("Policy updated"); setSheetOpen(false); },
+  const handleSheetSubmit = useCallback(
+    (data: SlaPolicyFormValues) => {
+      const payload = buildSlaPolicyPayload(data);
+      if (editingPolicy) {
+        updatePolicy.mutate(
+          { id: editingPolicy.id, ...payload },
+          {
+            onSuccess: () => {
+              toast.success("Policy updated");
+              setSheetOpen(false);
+            },
+            onError: (err) => toast.error(getErrorMessage(err)),
+          }
+        );
+      } else {
+        createPolicy.mutate(payload, {
+          onSuccess: () => {
+            toast.success("SLA policy created");
+            setSheetOpen(false);
+          },
           onError: (err) => toast.error(getErrorMessage(err)),
-        }
-      );
-    } else {
-      createPolicy.mutate(base, {
-        onSuccess: () => { toast.success("SLA policy created"); setSheetOpen(false); },
-        onError: (err) => toast.error(getErrorMessage(err)),
-      });
-    }
-  }, [editingPolicy, updatePolicy, createPolicy]);
+        });
+      }
+    },
+    [editingPolicy, updatePolicy, createPolicy]
+  );
 
   const handleDeleteRequest = useCallback((id: number) => setDeleteTargetId(id), []);
 
   const handleDeleteConfirm = useCallback(() => {
     if (deleteTargetId === null) return;
     deletePolicy.mutate(deleteTargetId, {
-      onSuccess: () => { toast.success("Policy deleted"); setDeleteTargetId(null); },
-      onError: (err) => { toast.error(getErrorMessage(err)); setDeleteTargetId(null); },
+      onSuccess: () => {
+        toast.success("Policy deleted");
+        setDeleteTargetId(null);
+      },
+      onError: (err) => {
+        toast.error(getErrorMessage(err));
+        setDeleteTargetId(null);
+      },
     });
   }, [deletePolicy, deleteTargetId]);
 
   const handleDeleteCancel = useCallback(() => setDeleteTargetId(null), []);
-  const handleOpenCreate = useCallback(() => handleOpenNew(), [handleOpenNew]);
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
-  const handleAlertOpenChange = useCallback((open: boolean) => { if (!open) handleDeleteCancel(); }, [handleDeleteCancel]);
+  const handleAlertOpenChange = useCallback(
+    (open: boolean) => { if (!open) handleDeleteCancel(); },
+    [handleDeleteCancel]
+  );
 
-  const count = policies?.length ?? 0;
+  const newPolicyIcon = useAnimatedIcon();
   const isPending = createPolicy.isPending || updatePolicy.isPending;
+  const pageLoading = isLoading || reportLoading;
 
   return (
     <>
@@ -352,7 +270,7 @@ export default function SlaPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <PolicySheet
+      <SlaPolicySheet
         open={sheetOpen}
         onOpenChange={setSheetOpen}
         editing={editingPolicy}
@@ -362,24 +280,30 @@ export default function SlaPage() {
 
       <PageWrapper
         title="SLA Policies"
-        subtitle={isLoading ? undefined : `${count} polic${count !== 1 ? "ies" : "y"} defined`}
+        subtitle="Define response and resolution time commitments for leads and deals"
         actions={
-          <Button onClick={handleOpenNew}>
-            <Plus className="h-4 w-4 mr-2" />
+          <LoadingButton
+            isPending={false}
+            onClick={handleOpenNew}
+            {...newPolicyIcon.hoverHandlers}
+          >
+            <PlusIcon ref={newPolicyIcon.iconRef} size={14} className="mr-1.5" />
             New Policy
-          </Button>
+          </LoadingButton>
         }
       >
-        {isLoading || reportLoading ? (
+        {pageLoading ? (
           <div className="space-y-4">
             <div className="grid gap-2 grid-cols-2 lg:grid-cols-4">
-              {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-14" />)}
+              {[0, 1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-20 rounded-xl" />
+              ))}
             </div>
-            <Skeleton className="h-64 w-full" />
+            <Skeleton className="h-64 w-full rounded-xl" />
           </div>
         ) : isError ? (
           <EmptyState
-            illustration={<EmptyTimeIllustration />}
+            illustrationPreset="error"
             title="Failed to load SLA policies"
             description="Something went wrong. Please try again."
             action={{ label: "Retry", onClick: handleRetry }}
@@ -389,19 +313,40 @@ export default function SlaPage() {
           <div className="space-y-6">
             {slaReport && (
               <StatCardGrid cols={4}>
-                <StatCard label="Total with SLA" value={slaReport.total} icon={Shield} tone="blue" />
-                <StatCard label="Compliant" value={slaReport.compliant} icon={CheckCircle2} tone="emerald" />
-                <StatCard label="Breached" value={slaReport.breached} icon={XCircle} tone="red" />
+                <StatCard
+                  label="Active Policies"
+                  value={policies?.length ?? 0}
+                  icon={Shield}
+                  tone="blue"
+                />
+                <StatCard
+                  label="Compliant"
+                  value={slaReport.compliant}
+                  icon={CheckCircle2}
+                  tone="emerald"
+                />
+                <StatCard
+                  label="Breached (30d)"
+                  value={slaReport.breached}
+                  icon={XCircle}
+                  tone="red"
+                />
                 <StatCard
                   label="Compliance Rate"
                   value={`${slaReport.complianceRate}%`}
                   icon={Clock}
-                  tone={slaReport.complianceRate >= 80 ? "emerald" : slaReport.complianceRate >= 50 ? "amber" : "red"}
+                  tone={
+                    slaReport.complianceRate >= 80
+                      ? "emerald"
+                      : slaReport.complianceRate >= 50
+                      ? "amber"
+                      : "red"
+                  }
                 />
               </StatCardGrid>
             )}
 
-            <Card className="bg-card rounded-lg border border-border shadow-sm overflow-hidden">
+            <Card className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
               <CardHeader className="px-4 py-3">
                 <CardTitle className="text-sm font-semibold">Policies</CardTitle>
               </CardHeader>
@@ -410,13 +355,24 @@ export default function SlaPage() {
                   <Table>
                     <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
                       <TableRow className="border-b-2 border-border hover:bg-transparent">
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Name</TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Applies To</TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Priority</TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Conditions</TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">First Response</TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Resolution</TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Actions</TableHead>
+                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
+                          Name
+                        </TableHead>
+                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
+                          Applies To
+                        </TableHead>
+                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
+                          Priority
+                        </TableHead>
+                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">
+                          First Response
+                        </TableHead>
+                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">
+                          Resolution
+                        </TableHead>
+                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">
+                          Actions
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -436,7 +392,7 @@ export default function SlaPage() {
                       illustrationPreset="security"
                       title="No SLA policies defined"
                       description="Create a policy to track response and resolution time commitments."
-                      action={{ label: "New Policy", onClick: handleOpenCreate }}
+                      action={{ label: "New Policy", onClick: handleOpenNew }}
                       className="border-0 bg-transparent"
                     />
                   </div>
@@ -444,39 +400,14 @@ export default function SlaPage() {
               </CardContent>
             </Card>
 
-            {breachedLeads && breachedLeads.length > 0 && (
-              <Card className="bg-card rounded-lg border border-border shadow-sm overflow-hidden">
-                <CardHeader className="px-4 py-3">
-                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4 text-red-600" />
-                    SLA Breached Leads ({breachedLeads.length})
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <Table>
-                    <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
-                      <TableRow className="border-b-2 border-border hover:bg-transparent">
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Lead</TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Status</TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Breached Since</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {breachedLeads.map((lead) => (
-                        <TableRow key={lead.id} className="h-8 hover:bg-muted/30 transition-colors">
-                          <TableCell className="text-[11px] px-2 py-1 font-medium">{lead.name}</TableCell>
-                          <TableCell className="text-[11px] px-2 py-1">
-                            <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-slate-100 text-slate-700 border-slate-200">
-                              {lead.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-[11px] px-2 py-1 text-right text-red-700 font-mono tabular-nums">
-                            {lead.slaDeadline ? new Date(lead.slaDeadline).toLocaleDateString() : "N/A"}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+            {breachesLoading ? (
+              <Skeleton className="h-40 w-full rounded-xl" />
+            ) : breachedLeads && breachedLeads.length > 0 ? (
+              <BreachedLeadsTable leads={breachedLeads} />
+            ) : (
+              <Card className="bg-card rounded-xl border border-border shadow-sm">
+                <CardContent className="py-8 px-4 text-center">
+                  <p className="text-sm text-muted-foreground">No SLA breaches in the last 30 days.</p>
                 </CardContent>
               </Card>
             )}

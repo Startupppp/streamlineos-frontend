@@ -931,6 +931,12 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "crm:leads:view",
       },
       {
+        label: "Inbox",
+        icon: Inbox,
+        href: "/crm/inbox",
+        requiredPermission: "crm:leads:view",
+      },
+      {
         label: "Leads",
         icon: Contact2,
         href: "/crm/leads",

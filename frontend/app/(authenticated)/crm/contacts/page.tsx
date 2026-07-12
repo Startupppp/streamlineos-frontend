@@ -6,14 +6,8 @@ import { motion } from "framer-motion";
 import { Download, GitMerge, LayoutGrid, Plus, Search, TableIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { CrmOptionSelect } from "@/features/crm/shared/metadata";
 import { ErrorState, SkeletonTable } from "@/components/shared";
 import { staggerContainer } from "@/lib/motion-variants";
 import { useContacts, useDeleteContact } from "@/hooks/api/crm";
