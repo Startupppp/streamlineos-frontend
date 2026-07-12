@@ -17,7 +17,7 @@ import { EditContactSheet } from "@/features/crm/contacts/edit-contact-sheet";
 import { ContactsCsvImportDialog } from "@/features/crm/contacts/contacts-csv-import-dialog";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { PAGE_SIZE, SOURCE_LABELS } from "@/features/crm/contacts/contacts-constants";
+import { PAGE_SIZE } from "@/features/crm/contacts/contacts-constants";
 import { useEnrichContact } from "@/features/crm/contacts/contact-actions-menu";
 import { ContactTableView } from "@/features/crm/contacts/contact-table-view";
 import { ContactCardView } from "@/features/crm/contacts/contact-card-view";
@@ -264,19 +264,14 @@ export default function ContactsPage() {
               />
             </div>
             <div className="hidden min-w-0 items-center gap-2 sm:flex lg:gap-3">
-              <Select value={sourceFilter} onValueChange={handleSourceChange}>
-                <SelectTrigger className="h-8 min-w-0 w-[140px] text-xs">
-                  <SelectValue placeholder="All sources" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All sources</SelectItem>
-                  {Object.entries(SOURCE_LABELS).map(([value, label]) => (
-                    <SelectItem key={value} value={value}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <CrmOptionSelect
+                type="source"
+                value={sourceFilter}
+                onChange={handleSourceChange}
+                placeholder="All sources"
+                allowAll
+                className="w-[140px]"
+              />
             </div>
             <div className="ml-auto shrink-0">
               <Button

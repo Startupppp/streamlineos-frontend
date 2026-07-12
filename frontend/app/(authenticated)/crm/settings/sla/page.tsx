@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyTimeIllustration } from "@/components/illustrations";
 import { LoadingButton } from "@/components/ui/loading-button";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -46,7 +47,6 @@ interface PolicyRowActionsProps {
 }
 
 function PolicyRowActions({ policy, onEdit, onDeleteRequest }: PolicyRowActionsProps) {
-  const editIcon = useAnimatedIcon();
   const deleteIcon = useAnimatedIcon();
 
   const handleEdit = useCallback(() => onEdit(policy), [policy, onEdit]);
@@ -60,9 +60,8 @@ function PolicyRowActions({ policy, onEdit, onDeleteRequest }: PolicyRowActionsP
         className="h-7 w-7"
         onClick={handleEdit}
         aria-label="Edit"
-        {...editIcon.hoverHandlers}
       >
-        <PencilIcon ref={editIcon.iconRef} size={14} />
+        <Pencil className="h-3.5 w-3.5" />
       </Button>
       <Button
         variant="ghost"
@@ -303,7 +302,7 @@ export default function SlaPage() {
           </div>
         ) : isError ? (
           <EmptyState
-            illustrationPreset="error"
+            illustration={<EmptyTimeIllustration />}
             title="Failed to load SLA policies"
             description="Something went wrong. Please try again."
             action={{ label: "Retry", onClick: handleRetry }}

@@ -37,6 +37,7 @@ import {
 } from "@/hooks/api/inventory";
 import { ReceiveGoodsSheet } from "@/features/inventory/components/receive-goods-sheet";
 import { GrnDetailSheet } from "@/features/inventory/components/procurement/grn-detail-sheet";
+import { PoEditSheet } from "@/features/inventory/components/procurement/po-edit-sheet";
 import { PO_STATUS_BADGE, PO_STATUS_LABEL } from "@/features/inventory/lib";
 import type { PurchaseOrderLine, PurchaseOrderStatus } from "@/types/inventory";
 
@@ -127,6 +128,7 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
   const cancelMutation = useCancelPurchaseOrder(id);
 
   const [receiveSheetOpen, setReceiveSheetOpen] = useState<boolean>(false);
+  const [editSheetOpen, setEditSheetOpen] = useState<boolean>(false);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
   const [selectedGrnId, setSelectedGrnId] = useState<number | null>(null);
 
@@ -150,6 +152,10 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
 
   function handleOpenReceive(): void {
     setReceiveSheetOpen(true);
+  }
+
+  function handleOpenEdit(): void {
+    setEditSheetOpen(true);
   }
 
   function handleRequestCancel(): void {
@@ -220,11 +226,9 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
         canEdit || canApprove || canSend || canReceive || canClose || canCancel ? (
           <div className="flex items-center gap-2 flex-wrap">
             {canEdit && (
-              <Button size="sm" variant="outline" asChild>
-                <Link href={`/inventory/purchase-orders/${poId}/edit`}>
-                  <Pencil className="mr-1 h-3.5 w-3.5" />
-                  Edit
-                </Link>
+              <Button size="sm" variant="outline" onClick={handleOpenEdit}>
+                <Pencil className="mr-1 h-3.5 w-3.5" />
+                Edit
               </Button>
             )}
             {canApprove && (
@@ -381,6 +385,10 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
           </div>
         )}
       </div>
+
+      {canEdit && (
+        <PoEditSheet open={editSheetOpen} onOpenChange={setEditSheetOpen} po={po} />
+      )}
 
       {canReceive && (
         <ReceiveGoodsSheet open={receiveSheetOpen} onOpenChange={setReceiveSheetOpen} po={po} />

@@ -22,14 +22,8 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import type { Contact } from "@/types/crm";
 import { AiAssistantPanel } from "@/features/crm/shared/ai-assistant-panel";
-
-const SOURCE_LABELS: Record<string, string> = {
-  website: "Website",
-  referral: "Referral",
-  cold_call: "Cold Call",
-  social_media: "Social Media",
-  other: "Other",
-};
+import { CrmOptionBadge } from "@/features/crm/shared/metadata";
+import { useCrmOptions, resolveOption } from "@/hooks/api/crm/metadata";
 
 function getInitials(name: string): string {
   return name
@@ -69,6 +63,7 @@ interface ContactInfoCardProps {
 }
 
 export function ContactInfoCard({ contact, onEdit, onSendEmail, onLogCall, entityId }: ContactInfoCardProps) {
+  const { data: sourceOptions = [] } = useCrmOptions("source");
   const hasLinks =
     contact.email ||
     contact.phone ||
@@ -206,11 +201,7 @@ export function ContactInfoCard({ contact, onEdit, onSendEmail, onLogCall, entit
             <InfoRow
               icon={Tag}
               label="Source"
-              value={
-                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
-                  {SOURCE_LABELS[contact.source] ?? contact.source}
-                </Badge>
-              }
+              value={<CrmOptionBadge option={resolveOption(sourceOptions, contact.source)} size="card" />}
             />
           )}
           {contact.createdAt && (

@@ -5,8 +5,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -31,6 +31,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Button } from "@/components/ui/button";
 import { useCategories, useCreateCategory, useCreateUom, useUom } from "@/hooks/api/inventory";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -144,13 +145,9 @@ export function CategorySelect({ value, onChange }: CategorySelectProps) {
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={createMutation.isPending}>
-                  {createMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    "Create"
-                  )}
-                </Button>
+                <LoadingButton type="submit" isPending={createMutation.isPending} loadingText="Creating…">
+                  Create
+                </LoadingButton>
               </DialogFooter>
             </form>
           </Form>
@@ -283,13 +280,9 @@ export function UomSelect({
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={createMutation.isPending}>
-                  {createMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    "Create"
-                  )}
-                </Button>
+                <LoadingButton type="submit" isPending={createMutation.isPending} loadingText="Creating…">
+                  Create
+                </LoadingButton>
               </DialogFooter>
             </form>
           </Form>

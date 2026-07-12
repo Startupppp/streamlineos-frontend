@@ -92,9 +92,12 @@ export interface CreateQuoteInput {
   subject: string;
   description?: string;
   currency?: string;
-  validUntil: string;
+  validUntil?: string;
   termsAndConditions?: string;
   notes?: string;
+  pricebookId?: string;
+  templateId?: string;
+  discountPercent?: number;
   lineItems: QuoteLineItemInput[];
 }
 
@@ -107,5 +110,8 @@ export interface UpdateQuoteInput {
   termsAndConditions?: string;
   notes?: string;
   rejectionReason?: string;
+  pricebookId?: string;
+  templateId?: string;
+  discountPercent?: number;
   lineItems?: QuoteLineItemInput[];
 }

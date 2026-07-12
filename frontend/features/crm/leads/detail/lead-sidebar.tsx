@@ -4,6 +4,7 @@ import { CalendarDays } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { LeadActivityTimeline } from "./lead-activity-timeline";
+import { LeadAiSummaryCard } from "./lead-ai-summary-card";
 import { AiAssistantPanel } from "@/features/crm/shared/ai-assistant-panel";
 
 interface TimelineItem {
@@ -133,6 +134,7 @@ export function LeadSidebar({
       )}
 
       <LeadActivityTimeline timeline={timeline} isLoading={timelineLoading} />
+      <LeadAiSummaryCard leadId={lead.id} leadName={lead.name} />
       <AiAssistantPanel
         entityType="lead"
         entityId={lead.id}

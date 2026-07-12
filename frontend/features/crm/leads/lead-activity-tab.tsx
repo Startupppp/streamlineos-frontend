@@ -6,7 +6,23 @@ import { EmptyActivityIllustration } from "@/components/illustrations";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { timeAgo } from "./leads-constants";
+function timeAgo(date: string | Date) {
+  const now = new Date();
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return "—";
+  const diff = Math.floor((now.getTime() - d.getTime()) / 1000);
+  if (diff < 0) {
+    const absDiff = Math.abs(diff);
+    if (absDiff < 3600) return `in ${Math.floor(absDiff / 60)}m`;
+    if (absDiff < 86400) return `in ${Math.floor(absDiff / 3600)}h`;
+    return `in ${Math.floor(absDiff / 86400)}d`;
+  }
+  if (diff < 60) return "just now";
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
+  return d.toLocaleDateString();
+}
 import type { LeadActivity } from "./leads-types";
 
 interface LeadActivityTabProps {

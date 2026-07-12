@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const LeadScoreSchema = z.object({
   score: z.number().min(0).max(100).describe("Score from 0 (cold) to 100 (hot)"),
+  confidence: z.enum(["low", "medium", "high"]).optional(),
   reasoning: z.string().describe("1-2 sentence explanation of the score"),
   strengths: z.array(z.string()).describe("Top 1-3 strengths of this lead"),
   weaknesses: z.array(z.string()).describe("Top 1-2 weaknesses or risks"),

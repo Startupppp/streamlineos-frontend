@@ -14,10 +14,10 @@ import {
   type ViewType,
 } from "@/features/projects/views/view-switcher";
 import { TicketFilterBar } from "@/features/projects/shared/ticket-filter-bar";
-import { DisplayOptionsPanel, DEFAULT_DISPLAY_OPTIONS } from "@/features/projects/views/display-options-panel";
-import type { DisplayOptions } from "@/features/projects/shared/types";
+import { DisplayOptionsPanel } from "@/features/projects/views/display-options-panel";
+import { hydrateDisplayOptions, useDisplayOptions } from "@/features/projects/views/use-display-options";
 import { CreateTicketDialog } from "@/features/projects/tickets/create-ticket-dialog";
-import { SaveViewDialog } from "@/features/projects/views/save-view-dialog";
+import { SaveViewDialog, type SaveViewMeta } from "@/features/projects/views/save-view-dialog";
 import { buildTicketDetailUrl } from "@/features/projects/ticket-details/build-ticket-detail-url";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
@@ -47,7 +47,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
   const [hideCompleted, setHideCompleted] = useState(true);
   const [saveViewOpen, setSaveViewOpen] = useState(false);
   const [saveViewName, setSaveViewName] = useState("");
-  const [displayOptions, setDisplayOptions] = useState<DisplayOptions>(DEFAULT_DISPLAY_OPTIONS);
+  const [displayOptions, setDisplayOptions] = useDisplayOptions(projectId);
 
   const [importOpen, setImportOpen] = useState(false);
 
@@ -84,8 +84,11 @@ export default function ProjectBoardPage({ params }: PageProps) {
       }
     }
     if (savedView.layoutType) next.set("view", savedView.layoutType);
+    if (savedView.displayOptions && Object.keys(savedView.displayOptions).length > 0) {
+      setDisplayOptions(hydrateDisplayOptions(savedView.displayOptions));
+    }
     router.replace(`?${next.toString()}`, { scroll: false });
-  }, [viewId, views, searchParams, router]);
+  }, [viewId, views, searchParams, router, setDisplayOptions]);
 
   const activeView = viewId ? views?.find((v) => v.id.toString() === viewId) : null;
 
@@ -96,7 +99,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
     router.replace(`?${next.toString()}`, { scroll: false });
   }, [router, searchParams]);
 
-  const handleSaveView = useCallback(() => {
+  const handleSaveView = useCallback((meta?: SaveViewMeta) => {
     const name = saveViewName.trim();
     if (!name) return;
     const filters: Record<string, string> = {};
@@ -105,23 +108,31 @@ export default function ProjectBoardPage({ params }: PageProps) {
     if (filterPriority) filters.priority = filterPriority;
     if (filterType) filters.type = filterType;
     if (filterAssigneeId) filters.assigneeId = filterAssigneeId;
+    if (filterLabels) filters.labels = filterLabels;
+    if (filterCycle) filters.cycle = filterCycle;
     createView.mutate(
-      { projectId, name, filters, layoutType: view as "board" | "list" | "table" | "calendar" | "gantt" },
+      {
+        projectId,
+        name,
+        filters,
+        layoutType: view as "board" | "list" | "table" | "calendar" | "gantt",
+        ...(meta ? { visibility: meta.visibility, displayOptions: meta.displayOptions } : {}),
+      },
       {
         onSuccess: (created) => {
           toast.success("View saved");
           setSaveViewOpen(false);
           setSaveViewName("");
-          if (created && typeof created === "object" && "id" in created && typeof (created as Record<string, unknown>).id === "number") {
+          if (created && typeof created === "object" && "id" in created && typeof created.id === "number") {
             const next = new URLSearchParams(searchParams.toString());
-            next.set("viewId", String((created as Record<string, number>).id));
+            next.set("viewId", String(created.id));
             router.replace(`?${next.toString()}`, { scroll: false });
           }
         },
         onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
-  }, [saveViewName, q, filterStatus, filterPriority, filterType, filterAssigneeId, view, projectId, createView, searchParams, router]);
+  }, [saveViewName, q, filterStatus, filterPriority, filterType, filterAssigneeId, filterLabels, filterCycle, view, projectId, createView, searchParams, router]);
 
   const handleViewChange = useCallback(
     (v: ViewType) => {
@@ -454,6 +465,8 @@ export default function ProjectBoardPage({ params }: PageProps) {
         viewName={saveViewName}
         onViewNameChange={handleSaveViewNameChange}
         onSave={handleSaveView}
+        onSaveWithMeta={handleSaveView}
+        displayOptions={{ ...displayOptions }}
         isSaving={createView.isPending}
         activeLayout={view}
       />

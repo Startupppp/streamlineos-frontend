@@ -2,6 +2,7 @@
 
 import { memo, useMemo, useCallback } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
@@ -9,13 +10,29 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertCircle, CalendarClock, Clock, CheckCircle2, ExternalLink } from "lucide-react";
 import { useMyWork } from "@/hooks/api/projects/my-work";
+import { useAllWork } from "@/hooks/api/projects/all-work";
 import type { MyWorkItem } from "@/types/projects/my-work";
+import type { AllWorkTicket } from "@/types/projects/tasks";
 import { cn } from "@/lib/utils";
 import { isPast, isToday, parseISO } from "date-fns";
 
 type DueBucket = "overdue" | "today" | "upcoming" | "none";
+type WorkTab = "assigned" | "created" | "subscribed" | "recent";
+
+interface WorkRowShape {
+  id: number;
+  projectId: number;
+  projectKey: string;
+  projectName: string;
+  title: string;
+  status: string;
+  priority: string | null;
+  type: string;
+  dueDate: string | null;
+}
 
 const PRIORITY_CLASS: Record<string, string> = {
   URGENT: "text-red-600 border-red-300 bg-red-50",
@@ -33,6 +50,13 @@ const BUCKET_CONFIG: Record<DueBucket, { label: string; icon: React.ComponentTyp
   none: { label: "No Due Date", icon: CheckCircle2, iconClass: "text-muted-foreground" },
 };
 
+const TAB_CONFIG: Record<WorkTab, { label: string }> = {
+  assigned: { label: "Assigned" },
+  created: { label: "Created" },
+  subscribed: { label: "Subscribed" },
+  recent: { label: "Recent" },
+};
+
 function getDueBucket(item: MyWorkItem): DueBucket {
   if (!item.dueDate) return "none";
   try {
@@ -45,7 +69,7 @@ function getDueBucket(item: MyWorkItem): DueBucket {
   }
 }
 
-const WorkItemRow = memo(function WorkItemRow({ item, index }: { item: MyWorkItem; index: number }) {
+const WorkItemRow = memo(function WorkItemRow({ item, index }: { item: WorkRowShape; index: number }) {
   const shouldReduceMotion = useReducedMotion();
 
   return (
@@ -112,10 +136,121 @@ function BucketSection({ bucket, items }: { bucket: DueBucket; items: MyWorkItem
   );
 }
 
+function AllWorkList({ items, isLoading, isError, onRetry, emptyTitle, emptyDescription }: {
+  items: AllWorkTicket[] | undefined;
+  isLoading: boolean;
+  isError: boolean;
+  onRetry: () => void;
+  emptyTitle: string;
+  emptyDescription: string;
+}) {
+  if (isLoading) {
+    return (
+      <div className="space-y-3">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Skeleton key={i} className="h-12 rounded-md" />
+        ))}
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        title="Failed to load tickets"
+        description="Could not fetch tickets. Please try again."
+        onRetry={onRetry}
+      />
+    );
+  }
+
+  if (!items || items.length === 0) {
+    return (
+      <EmptyState
+        illustrationPreset="projects"
+        title={emptyTitle}
+        description={emptyDescription}
+        className="min-h-[40vh]"
+      />
+    );
+  }
+
+  return (
+    <div className="space-y-1">
+      {items.map((item, i) => (
+        <WorkItemRow key={item.id} item={item} index={i} />
+      ))}
+    </div>
+  );
+}
+
+function CreatedTab() {
+  const { data, isLoading, isError, refetch } = useAllWork({ scope: "created", orderBy: "created", orderDir: "desc", limit: 50 });
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
+  return (
+    <AllWorkList
+      items={data?.data}
+      isLoading={isLoading}
+      isError={isError}
+      onRetry={handleRetry}
+      emptyTitle="No tickets created by you"
+      emptyDescription="Tickets you reported or created across all projects will appear here."
+    />
+  );
+}
+
+function SubscribedTab() {
+  const { data, isLoading, isError, refetch } = useAllWork({ scope: "subscribed", orderBy: "updated", orderDir: "desc", limit: 50 });
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
+  return (
+    <AllWorkList
+      items={data?.data}
+      isLoading={isLoading}
+      isError={isError}
+      onRetry={handleRetry}
+      emptyTitle="No subscribed tickets"
+      emptyDescription="Tickets you are watching will appear here."
+    />
+  );
+}
+
+function RecentTab() {
+  const { data, isLoading, isError, refetch } = useAllWork({ scope: "mine", orderBy: "updated", orderDir: "desc", limit: 50 });
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
+  return (
+    <AllWorkList
+      items={data?.data}
+      isLoading={isLoading}
+      isError={isError}
+      onRetry={handleRetry}
+      emptyTitle="No recently updated tickets"
+      emptyDescription="Your recently updated assigned tickets will appear here."
+    />
+  );
+}
+
 export function MyWorkPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const rawTab = searchParams.get("tab");
+  const activeTab: WorkTab = rawTab === "created" || rawTab === "subscribed" || rawTab === "recent" ? rawTab : "assigned";
+
   const { data, isLoading, isError, refetch } = useMyWork();
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
+  const handleTabChange = useCallback((value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value === "assigned") {
+      params.delete("tab");
+    } else {
+      params.set("tab", value);
+    }
+    router.replace(`?${params.toString()}`);
+  }, [router, searchParams]);
 
   const grouped = useMemo(() => {
     if (!data) return null;
@@ -146,7 +281,7 @@ export function MyWorkPage() {
       eyebrow="Projects"
       subtitle="Your assigned tickets across all projects"
     >
-      {!isLoading && !isError && data && data.length > 0 && (
+      {activeTab === "assigned" && !isLoading && !isError && data && data.length > 0 && (
         <StatCardGrid cols={4} className="mb-4">
           <StatCard label="Open" value={totalOpen} icon={CheckCircle2} tone="blue" />
           <StatCard label="Overdue" value={bucketCounts.overdue} icon={AlertCircle} tone={bucketCounts.overdue > 0 ? "red" : "default"} />
@@ -154,34 +289,51 @@ export function MyWorkPage() {
           <StatCard label="Upcoming" value={bucketCounts.upcoming} icon={Clock} tone="emerald" />
         </StatCardGrid>
       )}
-      {isLoading ? (
-        <div className="space-y-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-12 rounded-md" />
+
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+        <TabsList className="mb-4">
+          {(Object.keys(TAB_CONFIG) as WorkTab[]).map((tab) => (
+            <TabsTrigger key={tab} value={tab}>
+              {TAB_CONFIG[tab].label}
+            </TabsTrigger>
           ))}
-        </div>
-      ) : isError ? (
-        <ErrorState
-          title="Failed to load your work"
-          description="Could not fetch your assigned tickets. Please try again."
-          onRetry={handleRetry}
-        />
-      ) : !data || data.length === 0 ? (
-        <EmptyState
-          illustrationPreset="projects"
-          title="Nothing assigned to you"
-          description="Tickets assigned to you across all projects will appear here."
-          className="min-h-[40vh]"
-        />
-      ) : (
-        <div className="space-y-5">
-          {BUCKET_ORDER.map((bucket) => {
-            const items = grouped?.[bucket] ?? [];
-            if (items.length === 0) return null;
-            return <BucketSection key={bucket} bucket={bucket} items={items} />;
-          })}
-        </div>
-      )}
+        </TabsList>
+
+        {activeTab === "assigned" && (
+          isLoading ? (
+            <div className="space-y-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Skeleton key={i} className="h-12 rounded-md" />
+              ))}
+            </div>
+          ) : isError ? (
+            <ErrorState
+              title="Failed to load your work"
+              description="Could not fetch your assigned tickets. Please try again."
+              onRetry={handleRetry}
+            />
+          ) : !data || data.length === 0 ? (
+            <EmptyState
+              illustrationPreset="projects"
+              title="Nothing assigned to you"
+              description="Tickets assigned to you across all projects will appear here."
+              className="min-h-[40vh]"
+            />
+          ) : (
+            <div className="space-y-5">
+              {BUCKET_ORDER.map((bucket) => {
+                const items = grouped?.[bucket] ?? [];
+                if (items.length === 0) return null;
+                return <BucketSection key={bucket} bucket={bucket} items={items} />;
+              })}
+            </div>
+          )
+        )}
+
+        {activeTab === "created" && <CreatedTab />}
+        {activeTab === "subscribed" && <SubscribedTab />}
+        {activeTab === "recent" && <RecentTab />}
+      </Tabs>
     </PageWrapper>
   );
 }

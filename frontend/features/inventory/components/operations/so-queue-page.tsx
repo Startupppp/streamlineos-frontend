@@ -8,6 +8,8 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState } from "@/components/shared";
+import { EmptyOrdersIllustration, EmptySearchIllustration } from "@/components/illustrations";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useSalesOrders } from "@/hooks/api/inventory/sales-orders";

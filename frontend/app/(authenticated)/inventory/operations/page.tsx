@@ -1,31 +1,26 @@
 "use client";
 
 import Link from "next/link";
-import {
-  PackageCheck,
-  ArrowUpFromLine,
-  ListChecks,
-  Package,
-  Truck,
-  RotateCcw,
-} from "lucide-react";
+import { ArrowUpFromLine, ListChecks, Package, Truck, RotateCcw } from "lucide-react";
+import { PackageOpenIcon } from "@animateicons/react/lucide";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { usePurchaseOrders } from "@/hooks/api/inventory";
 import { useSalesOrders } from "@/hooks/api/inventory/sales-orders";
 import {
-  useGoodsReceipts,
   useVendorReturns,
   useCustomerReturns,
 } from "@/hooks/api/inventory/operations";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 
-const QUICK_LINKS = [
-  {
-    href: "/inventory/operations/receipts",
-    title: "Receipts",
-    description: "GRN history and PO receipts",
-    Icon: PackageCheck,
-  },
+interface StaticHubCard {
+  href: string;
+  title: string;
+  description: string;
+  Icon: React.ComponentType<{ className?: string }>;
+}
+
+const STATIC_CARDS: StaticHubCard[] = [
   {
     href: "/inventory/operations/issues",
     title: "Issues",
@@ -56,7 +51,29 @@ const QUICK_LINKS = [
     description: "Vendor and customer returns",
     Icon: RotateCcw,
   },
-] as const;
+];
+
+function ReceiptsCard() {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Link href="/inventory/operations/receipts">
+      <div
+        {...hoverHandlers}
+        className="bg-card rounded-lg border border-border p-4 hover:shadow-md transition-shadow cursor-pointer h-full"
+      >
+        <div className="flex items-center gap-2 mb-1.5">
+          <PackageOpenIcon
+            ref={iconRef}
+            size={16}
+            className="shrink-0 text-muted-foreground"
+          />
+          <span className="text-sm font-medium">Receipts</span>
+        </div>
+        <p className="text-xs text-muted-foreground">GRN history and PO receipts</p>
+      </div>
+    </Link>
+  );
+}
 
 export default function OperationsHubPage() {
   const poToReceive = usePurchaseOrders({ status: "SENT", pageSize: 1 });
@@ -65,20 +82,14 @@ export default function OperationsHubPage() {
   const soPacked = useSalesOrders({ status: "PACKED", limit: 1 });
   const vendorDrafts = useVendorReturns({ status: "DRAFT", pageSize: 1 });
   const customerDrafts = useCustomerReturns({ status: "DRAFT", pageSize: 1 });
-  const openGrns = useGoodsReceipts({ pageSize: 1 });
 
-  const soFulfillmentTotal =
-    (soReserved.data?.total ?? 0) +
-    (soPicked.data?.total ?? 0) +
-    (soPacked.data?.total ?? 0);
+  const soToFulfilTotal =
+    (soReserved.data?.total ?? 0) + (soPicked.data?.total ?? 0);
+
+  const soToShipTotal = soPacked.data?.total ?? 0;
 
   const returnsTotal =
     (vendorDrafts.data?.total ?? 0) + (customerDrafts.data?.total ?? 0);
-
-  const isLoadingPo = poToReceive.isLoading;
-  const isLoadingSo = soReserved.isLoading || soPicked.isLoading || soPacked.isLoading;
-  const isLoadingReturns = vendorDrafts.isLoading || customerDrafts.isLoading;
-  const isLoadingGrns = openGrns.isLoading;
 
   return (
     <PageWrapper
@@ -94,33 +105,34 @@ export default function OperationsHubPage() {
             value={poToReceive.data?.total ?? 0}
             tone="amber"
             href="/inventory/operations/receipts"
-            isLoading={isLoadingPo}
+            isLoading={poToReceive.isLoading}
           />
           <StatCard
             label="SOs to Fulfil"
-            value={soFulfillmentTotal}
+            value={soToFulfilTotal}
             tone="blue"
             href="/inventory/operations/picking"
-            isLoading={isLoadingSo}
+            isLoading={soReserved.isLoading || soPicked.isLoading}
+          />
+          <StatCard
+            label="Orders to Ship"
+            value={soToShipTotal}
+            tone="emerald"
+            href="/inventory/operations/shipping"
+            isLoading={soPacked.isLoading}
           />
           <StatCard
             label="Open Returns"
             value={returnsTotal}
             tone="red"
             href="/inventory/operations/returns"
-            isLoading={isLoadingReturns}
-          />
-          <StatCard
-            label="Recent GRNs"
-            value={openGrns.data?.total ?? 0}
-            tone="emerald"
-            href="/inventory/operations/receipts"
-            isLoading={isLoadingGrns}
+            isLoading={vendorDrafts.isLoading || customerDrafts.isLoading}
           />
         </StatCardGrid>
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {QUICK_LINKS.map(({ href, title, description, Icon }) => (
+          <ReceiptsCard />
+          {STATIC_CARDS.map(({ href, title, description, Icon }) => (
             <Link key={href} href={href}>
               <div className="bg-card rounded-lg border border-border p-4 hover:shadow-md transition-shadow cursor-pointer h-full">
                 <div className="flex items-center gap-2 mb-1.5">

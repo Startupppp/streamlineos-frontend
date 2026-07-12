@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import {
   Table,
   TableBody,
@@ -15,9 +16,25 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { usePurchaseBill, usePostPurchaseBill } from "@/hooks/api/accounting";
+import {
+  useBillSubmitApproval,
+  useBillApprove,
+  useBillCancel,
+} from "@/hooks/api/accounting/ap";
+import { useCan } from "@/hooks/api/access";
 import { RecordVendorPaymentDialog } from "@/features/accounting/record-vendor-payment-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { PurchaseBillStatus } from "@/types/accounting";
@@ -28,6 +45,7 @@ interface PurchaseBillDetailPageProps {
 
 const STATUS_CLASS: Record<PurchaseBillStatus, string> = {
   DRAFT: "bg-amber-50 text-amber-700 border-amber-200/70",
+  PENDING_APPROVAL: "bg-amber-50 text-amber-700 border-amber-200/70",
   POSTED: "bg-blue-50 text-blue-700 border-blue-200/70",
   PARTIALLY_PAID: "bg-sky-50 text-sky-700 border-sky-200/70",
   PAID: "bg-emerald-50 text-emerald-700 border-emerald-200/70",
@@ -36,6 +54,7 @@ const STATUS_CLASS: Record<PurchaseBillStatus, string> = {
 
 const STATUS_LABEL: Record<PurchaseBillStatus, string> = {
   DRAFT: "Draft",
+  PENDING_APPROVAL: "Pending approval",
   POSTED: "Posted",
   PARTIALLY_PAID: "Partially paid",
   PAID: "Paid",
@@ -81,13 +100,22 @@ export default function PurchaseBillDetailPage({
 
   const query = usePurchaseBill(id);
   const postMutation = usePostPurchaseBill(id);
+  const submitApprovalMutation = useBillSubmitApproval(id);
+  const approveMutation = useBillApprove(id);
+  const cancelMutation = useBillCancel(id);
+
+  const canApprove = useCan("accounting:payables:approve");
+  const canManage = useCan("accounting:payables:manage");
 
   const [postDialogOpen, setPostDialogOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
 
   const bill = query.data;
 
   const canPost = bill?.status === "DRAFT";
+  const canSubmitApproval = bill?.status === "DRAFT" && canManage;
+  const isPendingApproval = bill?.status === "PENDING_APPROVAL";
   const amountPaid = Number(bill?.amountPaid ?? 0);
   const total = Number(bill?.total ?? 0);
   const outstanding = total - amountPaid;
@@ -119,6 +147,47 @@ export default function PurchaseBillDetailPage({
     });
   }, [postMutation, bill?.billNumber]);
 
+  const handleSubmitApproval = useCallback(() => {
+    submitApprovalMutation.mutate(
+      {},
+      {
+        onSuccess: () => toast.success("Submitted for approval"),
+        onError: (err) => toast.error(getErrorMessage(err)),
+      },
+    );
+  }, [submitApprovalMutation]);
+
+  const handleApprove = useCallback(() => {
+    approveMutation.mutate(undefined, {
+      onSuccess: () => toast.success(`Bill ${bill?.billNumber ?? ""} approved`),
+      onError: (err) => toast.error(getErrorMessage(err)),
+    });
+  }, [approveMutation, bill?.billNumber]);
+
+  const handleOpenCancelDialog = useCallback(() => {
+    setCancelDialogOpen(true);
+  }, []);
+
+  const handleCancelDialogChange = useCallback(
+    (open: boolean) => {
+      if (!cancelMutation.isPending) setCancelDialogOpen(open);
+    },
+    [cancelMutation.isPending],
+  );
+
+  const handleCancelConfirm = useCallback(() => {
+    cancelMutation.mutate(
+      {},
+      {
+        onSuccess: () => {
+          setCancelDialogOpen(false);
+          toast.success("Bill cancelled");
+        },
+        onError: (err) => toast.error(getErrorMessage(err)),
+      },
+    );
+  }, [cancelMutation]);
+
   const handleOpenPaymentDialog = useCallback(() => {
     setPaymentDialogOpen(true);
   }, []);
@@ -138,6 +207,18 @@ export default function PurchaseBillDetailPage({
       }
       actions={
         <div className="flex items-center gap-2">
+          {canSubmitApproval && (
+            <LoadingButton
+              size="sm"
+              variant="outline"
+              isPending={submitApprovalMutation.isPending}
+              loadingText="Submitting…"
+              onClick={handleSubmitApproval}
+            >
+              <Send className="mr-1 h-4 w-4" />
+              Submit for approval
+            </LoadingButton>
+          )}
           {canPost && (
             <Button
               size="sm"
@@ -183,6 +264,37 @@ export default function PurchaseBillDetailPage({
           />
         ) : (
           <>
+            {isPendingApproval && (
+              <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold text-blue-800">Pending approval</p>
+                  <p className="text-xs text-blue-700 mt-0.5">
+                    This bill is awaiting approval before it can be posted.
+                  </p>
+                </div>
+                <div className="flex gap-2 shrink-0">
+                  {canApprove && (
+                    <LoadingButton
+                      size="sm"
+                      isPending={approveMutation.isPending}
+                      loadingText="Approving…"
+                      onClick={handleApprove}
+                    >
+                      Approve
+                    </LoadingButton>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleOpenCancelDialog}
+                    disabled={cancelMutation.isPending}
+                  >
+                    Cancel bill
+                  </Button>
+                </div>
+              </div>
+            )}
+
             <Card>
               <CardContent className="p-5">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-4 text-sm">
@@ -455,6 +567,27 @@ export default function PurchaseBillDetailPage({
         isPending={postMutation.isPending}
         onConfirm={handlePostConfirm}
       />
+
+      <AlertDialog open={cancelDialogOpen} onOpenChange={handleCancelDialogChange}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel bill {bill?.billNumber}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will cancel the bill and reverse any pending accounting entries. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={cancelMutation.isPending}>Keep bill</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCancelConfirm}
+              disabled={cancelMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {cancelMutation.isPending ? "Cancelling…" : "Cancel bill"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {bill && (
         <RecordVendorPaymentDialog

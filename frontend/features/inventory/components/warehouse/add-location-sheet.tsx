@@ -204,7 +204,7 @@ export function AddLocationSheet({
 
   return (
     <Sheet open={open} onOpenChange={handleSheetOpenChange}>
-      <SheetContent side="right" className="sm:max-w-md w-full flex flex-col gap-0 p-0">
+      <SheetContent side="right" className="sm:max-w-md w-full flex flex-col gap-0 p-0 overflow-hidden">
         <SheetHeader className="shrink-0 px-6 py-4 border-b">
           <SheetTitle>Add Location</SheetTitle>
           <SheetDescription>

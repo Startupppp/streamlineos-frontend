@@ -19,6 +19,7 @@ const TABS = [
   { label: "Pricebooks", href: "/crm/settings/pricebooks" },
   { label: "Quote Settings", href: "/crm/settings/quotes" },
   { label: "Automations", href: "/crm/settings/automations" },
+  { label: "Sequences", href: "/crm/settings/sequences" },
   { label: "AI Settings", href: "/crm/settings/ai" },
   { label: "Import / Export", href: "/crm/settings/import-export" },
   { label: "Audit Log", href: "/crm/settings/audit-log" },

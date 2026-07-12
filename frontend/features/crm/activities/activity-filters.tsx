@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,18 +11,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useCrmOptions } from "@/hooks/api/crm/metadata";
 import type {
   CrmActivityType,
   CrmActivityEntityType,
   CrmActivityStatus,
 } from "@/hooks/api/crm/crm-activities";
 
-const ACTIVITY_TYPES: Array<{ value: CrmActivityType; label: string }> = [
+const FALLBACK_ACTIVITY_TYPES: Array<{ value: CrmActivityType; label: string }> = [
   { value: "CALL",    label: "Calls"    },
   { value: "EMAIL",   label: "Emails"   },
   { value: "MEETING", label: "Meetings" },
   { value: "CUSTOM",  label: "Tasks"    },
 ];
+
+function isCrmActivityType(v: string): v is CrmActivityType {
+  return v === "CALL" || v === "EMAIL" || v === "MEETING" || v === "CUSTOM";
+}
 
 const ENTITY_TYPES: Array<{ value: CrmActivityEntityType; label: string }> = [
   { value: "LEAD",    label: "Leads"    },
@@ -61,13 +66,28 @@ export function ActivityFilters({
   onClear,
   hasActiveFilters,
 }: ActivityFiltersProps) {
+  const { data: activityTypeOptions } = useCrmOptions("activity_type");
+
+  const activityTypes = useMemo<Array<{ value: CrmActivityType; label: string }>>(() => {
+    if (!activityTypeOptions || activityTypeOptions.length === 0) {
+      return FALLBACK_ACTIVITY_TYPES;
+    }
+    const matched: Array<{ value: CrmActivityType; label: string }> = [];
+    for (const o of activityTypeOptions) {
+      if (isCrmActivityType(o.key)) {
+        matched.push({ value: o.key, label: o.label });
+      }
+    }
+    return matched;
+  }, [activityTypeOptions]);
+
   const handleSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => onSearchChange(e.target.value),
     [onSearchChange],
   );
 
   const handleTypeChange = useCallback(
-    (v: string) => onTypeChange(v === "all" ? "" : (v as CrmActivityType)),
+    (v: string) => onTypeChange(v === "all" ? "" : isCrmActivityType(v) ? v : ""),
     [onTypeChange],
   );
 
@@ -99,7 +119,7 @@ export function ActivityFilters({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all" className="text-xs">All Types</SelectItem>
-          {ACTIVITY_TYPES.map((t) => (
+          {activityTypes.map((t) => (
             <SelectItem key={t.value} value={t.value} className="text-xs">
               {t.label}
             </SelectItem>

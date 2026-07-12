@@ -13,8 +13,9 @@ import {
 import {
   CHART_TOOLTIP_STYLE,
   AXIS_TICK,
-  CHART_COLORS,
 } from "@/features/crm/shared/constants";
+
+const SCORE_COLORS = ["#3b82f6", "#60a5fa", "#93c5fd", "#bfdbfe", "#dbeafe"];
 import { AnalyticsChartCard } from "./analytics-chart-card";
 import { EmptyChart } from "./empty-chart";
 import type { ScoreDistributionEntry } from "./use-analytics-data";
@@ -43,7 +44,7 @@ export function ScoreDistributionChart({ data }: ScoreDistributionChartProps) {
             <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
             <Bar dataKey="count" radius={[4, 4, 0, 0]}>
               {data.map((_, i) => (
-                <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                <Cell key={i} fill={SCORE_COLORS[i % SCORE_COLORS.length]} />
               ))}
             </Bar>
           </BarChart>

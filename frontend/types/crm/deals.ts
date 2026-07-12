@@ -1,10 +1,4 @@
-export type DealStage =
-  | "LEAD"
-  | "CONTACTED"
-  | "PROPOSAL"
-  | "NEGOTIATION"
-  | "WON"
-  | "LOST";
+export type DealStage = string;
 
 export type DealActivityType =
   | "note"
@@ -38,6 +32,11 @@ export interface Deal {
   actualCloseDate: string | null;
   lostReason: string | null;
   notes: string | null;
+  pipelineId: string | null;
+  forecastCategory: string | null;
+  nextStep: string | null;
+  healthScore: number | null;
+  followUpNotes: string | null;
   createdAt: string | null;
   updatedAt: string | null;
   assignedTo?: DealUserRef | null;
@@ -89,6 +88,11 @@ export interface UpdateDealInput {
   actualCloseDate?: string | null;
   lostReason?: string;
   notes?: string;
+  pipelineId?: string;
+  forecastCategory?: string;
+  nextStep?: string;
+  healthScore?: number;
+  followUpNotes?: string;
 }
 
 export interface UpdateDealStageInput {
@@ -281,6 +285,89 @@ export interface SalesQuota {
   attainmentPct: number;
   notes: string | null;
   createdAt: string | null;
+}
+
+export interface DealCompetitor {
+  id: string;
+  orgId: string;
+  dealId: number;
+  competitorKey: string;
+  status: string;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateDealCompetitorInput {
+  competitorKey: string;
+  status?: string;
+  notes?: string;
+}
+
+export interface UpdateDealCompetitorInput {
+  status?: string;
+  notes?: string;
+}
+
+export type DealHealthLevel = "healthy" | "at_risk" | "critical" | "unknown";
+
+export interface DealHealth {
+  dealId: number;
+  score: number;
+  level: DealHealthLevel;
+  factors: Array<{ key: string; label: string; impact: "positive" | "negative" | "neutral"; weight: number }>;
+  computedAt: string;
+}
+
+export interface ForecastSnapshotData {
+  byCategory: Array<{ category: string; totalValue: number; weightedValue: number; dealCount: number }>;
+  byRep: Array<{ repId: string; repName: string; totalValue: number; weightedValue: number; dealCount: number }>;
+  totalWeighted: number;
+  totalBestCase: number;
+  totalDeals: number;
+  period: string;
+}
+
+export interface ForecastSnapshot {
+  id: string;
+  orgId: string;
+  period: string;
+  capturedAt: string;
+  createdById: string | null;
+  data: ForecastSnapshotData;
+  createdAt: string;
+}
+
+export interface ForecastSnapshotCompare {
+  period: string;
+  baseline: ForecastSnapshotData;
+  current: ForecastSnapshotData;
+  delta: {
+    totalWeighted: number;
+    totalBestCase: number;
+    totalDeals: number;
+    byCategory: Array<{ category: string; delta: number; pctChange: number }>;
+  };
+}
+
+export interface DealApprovalRule {
+  id: number;
+  orgId: string;
+  fromStage: string;
+  toStage: string;
+  approverType: "role" | "user";
+  approverRole: string | null;
+  approverUserId: string | null;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface PatchNextStepInput {
+  nextStep: string;
+}
+
+export interface CaptureForecastSnapshotInput {
+  period: string;
 }
 
 export interface CrmPersonProfile {

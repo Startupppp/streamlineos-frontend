@@ -15,6 +15,7 @@ import type { InventorySettings } from "@/hooks/api/inventory/admin";
 import { InventorySettingsForm } from "./inventory-settings-form";
 import { NumberSequencesCard } from "./number-sequences-card";
 import { SettingsHealthCard } from "./settings-health-card";
+import { WebhooksSettingsCard } from "./webhooks-settings-card";
 
 const settingsSchema = z.object({
   allowNegativeStock: z.boolean(),
@@ -119,6 +120,7 @@ export function InventorySettingsClient() {
       <div className="mt-6 space-y-6">
         <NumberSequencesCard />
         <SettingsHealthCard />
+        <WebhooksSettingsCard />
       </div>
     </PageWrapper>
   );

@@ -19,14 +19,23 @@ interface Member {
   firstName?: string | null;
 }
 
+interface LabelOption {
+  id: number;
+  name: string;
+  color?: string | null;
+}
+
 interface BulkActionBarProps {
   selectedCount: number;
   members: Member[];
   sprints: Sprint[];
+  labels?: LabelOption[];
+  hideSprint?: boolean;
   onBulkStatus: (value: string) => void;
   onBulkPriority: (value: string) => void;
   onBulkAssignee: (value: string) => void;
   onBulkSprint: (value: string) => void;
+  onBulkLabel?: (value: string) => void;
   onClear: () => void;
 }
 
@@ -34,10 +43,13 @@ export const BulkActionBar = memo(function BulkActionBar({
   selectedCount,
   members,
   sprints,
+  labels,
+  hideSprint = false,
   onBulkStatus,
   onBulkPriority,
   onBulkAssignee,
   onBulkSprint,
+  onBulkLabel,
   onClear,
 }: BulkActionBarProps) {
   return (
@@ -80,17 +92,33 @@ export const BulkActionBar = memo(function BulkActionBar({
             ))}
           </SelectContent>
         </Select>
-        <Select onValueChange={onBulkSprint}>
-          <SelectTrigger className="h-7 text-xs w-40">
-            <SelectValue placeholder="Move to Sprint" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="backlog" className="text-xs">Backlog (remove sprint)</SelectItem>
-            {sprints.filter((s) => s.status !== "COMPLETED").map((s) => (
-              <SelectItem key={s.id} value={String(s.id)} className="text-xs">{s.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {onBulkLabel !== undefined && (labels?.length ?? 0) > 0 && (
+          <Select onValueChange={onBulkLabel}>
+            <SelectTrigger className="h-7 text-xs w-36">
+              <SelectValue placeholder="Add Label" />
+            </SelectTrigger>
+            <SelectContent>
+              {(labels ?? []).map((l) => (
+                <SelectItem key={l.id} value={String(l.id)} className="text-xs">
+                  {l.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+        {!hideSprint && (
+          <Select onValueChange={onBulkSprint}>
+            <SelectTrigger className="h-7 text-xs w-40">
+              <SelectValue placeholder="Move to Sprint" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="backlog" className="text-xs">Backlog (remove sprint)</SelectItem>
+              {sprints.filter((s) => s.status !== "COMPLETED").map((s) => (
+                <SelectItem key={s.id} value={String(s.id)} className="text-xs">{s.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
         <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={onClear}>
           <X className="h-3.5 w-3.5" />
         </Button>

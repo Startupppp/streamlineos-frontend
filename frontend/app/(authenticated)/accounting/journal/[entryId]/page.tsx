@@ -2,11 +2,12 @@
 
 import { use, useCallback, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, Send, Undo2 } from "lucide-react";
+import { Send, Undo2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -25,45 +26,40 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { LoadingState, ErrorState } from "@/components/shared";
+import { FinanceStatusBadge } from "@/features/accounting/shared";
 import {
   useJournalEntry,
   usePostJournalEntry,
   useReverseJournalEntry,
 } from "@/hooks/api/accounting";
+import {
+  useSubmitJournalApproval,
+  useApproveJournal,
+  useRejectJournal,
+} from "@/hooks/api/accounting/core";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type { JournalEntryStatus, JournalLine } from "@/types/accounting";
+import { LoadingButton } from "@/components/ui/loading-button";
+import type { JournalLine } from "@/types/accounting";
 
 interface JournalEntryDetailPageProps {
   params: Promise<{ entryId: string }>;
-}
-
-const STATUS_CLASSES: Record<JournalEntryStatus, string> = {
-  DRAFT: "bg-amber-50 text-amber-700 border border-amber-200/70",
-  POSTED: "bg-emerald-50 text-emerald-700 border border-emerald-200/70",
-  VOID: "bg-slate-100 text-slate-600 border border-slate-200/70",
-};
-
-function StatusBadge({ status }: { status: JournalEntryStatus }) {
-  return (
-    <span
-      className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium tabular-nums ${STATUS_CLASSES[status]}`}
-    >
-      {status}
-    </span>
-  );
 }
 
 function formatDate(value: string): string {
   if (!value) return "";
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return value;
-  return d.toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
-  });
+  return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "2-digit" });
 }
 
 function formatDateTime(value: Date): string {
@@ -84,19 +80,171 @@ function parseAmount(value: string): number {
 }
 
 function formatAmount(value: number): string {
-  return value.toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+  return value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function sumColumn(lines: JournalLine[], key: "debit" | "credit"): number {
   return lines.reduce((total, line) => total + parseAmount(line[key]), 0);
 }
 
-export default function JournalEntryDetailPage({
-  params,
-}: JournalEntryDetailPageProps) {
+interface ApproveDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  entryId: number;
+}
+
+function ApproveDialog({ open, onOpenChange, entryId }: ApproveDialogProps) {
+  const [note, setNote] = useState("");
+  const approveMutation = useApproveJournal(entryId);
+
+  function handleNoteChange(e: React.ChangeEvent<HTMLInputElement>): void {
+    setNote(e.target.value);
+  }
+
+  function handleApprove(): void {
+    approveMutation.mutate(
+      { note: note || undefined },
+      {
+        onSuccess: () => {
+          toast.success("Entry approved");
+          onOpenChange(false);
+          setNote("");
+        },
+        onError: (error) => {
+          toast.error(getErrorMessage(error));
+        },
+      },
+    );
+  }
+
+  function handleClose(isOpen: boolean): void {
+    if (!isOpen) setNote("");
+    onOpenChange(isOpen);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-[360px]">
+        <DialogHeader>
+          <DialogTitle>Approve journal entry?</DialogTitle>
+          <DialogDescription>
+            This entry will be approved and posted to the ledger.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="py-2">
+          <label
+            htmlFor="approve-note"
+            className="text-xs font-medium text-muted-foreground block mb-1.5"
+          >
+            Note (optional)
+          </label>
+          <Input
+            id="approve-note"
+            value={note}
+            onChange={handleNoteChange}
+            placeholder="Approval note…"
+          />
+        </div>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => handleClose(false)}
+            disabled={approveMutation.isPending}
+          >
+            Cancel
+          </Button>
+          <LoadingButton
+            isPending={approveMutation.isPending}
+            loadingText="Approving…"
+            onClick={handleApprove}
+          >
+            Approve
+          </LoadingButton>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+interface RejectDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  entryId: number;
+}
+
+function RejectDialog({ open, onOpenChange, entryId }: RejectDialogProps) {
+  const [note, setNote] = useState("");
+  const rejectMutation = useRejectJournal(entryId);
+
+  function handleNoteChange(e: React.ChangeEvent<HTMLInputElement>): void {
+    setNote(e.target.value);
+  }
+
+  function handleReject(): void {
+    rejectMutation.mutate(
+      { note: note || undefined },
+      {
+        onSuccess: () => {
+          toast.success("Entry rejected");
+          onOpenChange(false);
+          setNote("");
+        },
+        onError: (error) => {
+          toast.error(getErrorMessage(error));
+        },
+      },
+    );
+  }
+
+  function handleClose(isOpen: boolean): void {
+    if (!isOpen) setNote("");
+    onOpenChange(isOpen);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-[360px]">
+        <DialogHeader>
+          <DialogTitle>Reject journal entry?</DialogTitle>
+          <DialogDescription>This entry will be returned to draft status.</DialogDescription>
+        </DialogHeader>
+        <div className="py-2">
+          <label
+            htmlFor="reject-note"
+            className="text-xs font-medium text-muted-foreground block mb-1.5"
+          >
+            Note (optional)
+          </label>
+          <Input
+            id="reject-note"
+            value={note}
+            onChange={handleNoteChange}
+            placeholder="Reason for rejection…"
+          />
+        </div>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => handleClose(false)}
+            disabled={rejectMutation.isPending}
+          >
+            Cancel
+          </Button>
+          <LoadingButton
+            isPending={rejectMutation.isPending}
+            loadingText="Rejecting…"
+            onClick={handleReject}
+            variant="destructive"
+          >
+            Reject
+          </LoadingButton>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export default function JournalEntryDetailPage({ params }: JournalEntryDetailPageProps) {
   const { entryId: entryIdStr } = use(params);
   const entryId = Number.parseInt(entryIdStr, 10);
 
@@ -107,16 +255,21 @@ export default function JournalEntryDetailPage({
   const creditTotal = sumColumn(lines, "credit");
   const isBalanced = Math.abs(debitTotal - creditTotal) < 0.005;
 
-  const canManageJournal = useCan("accounting:manage");
+  const canManageJournal = useCan("accounting:journal:post");
+  const canApproveJournal = useCan("accounting:journal:approve");
 
   const postMutation = usePostJournalEntry(entryId);
   const reverseMutation = useReverseJournalEntry(entryId);
+  const submitApprovalMutation = useSubmitJournalApproval(entryId);
 
   const [postDialogOpen, setPostDialogOpen] = useState(false);
   const [reverseDialogOpen, setReverseDialogOpen] = useState(false);
+  const [approveDialogOpen, setApproveDialogOpen] = useState(false);
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
 
   const isDraft = entry?.status === "DRAFT";
   const isPosted = entry?.status === "POSTED";
+  const isPendingApproval = entry?.status === "PENDING_APPROVAL";
   const isReverseEntry = entry?.sourceEvent === "reverse";
   const canReverse = Boolean(entry) && isPosted && !isReverseEntry;
 
@@ -148,9 +301,7 @@ export default function JournalEntryDetailPage({
     reverseMutation.mutate(undefined, {
       onSuccess: (result) => {
         setReverseDialogOpen(false);
-        const label = result.created
-          ? "Reversing entry created"
-          : "Reversing entry already existed";
+        const label = result.created ? "Reversing entry created" : "Reversing entry already existed";
         toast.success(`${label}: ${result.entryNumber}`);
       },
       onError: (error) => {
@@ -159,22 +310,46 @@ export default function JournalEntryDetailPage({
     });
   }, [reverseMutation]);
 
+  function handleSubmitApproval(): void {
+    submitApprovalMutation.mutate(undefined, {
+      onSuccess: () => toast.success("Submitted for approval"),
+      onError: (error) => toast.error(getErrorMessage(error)),
+    });
+  }
+
+  function handleApproveClick(): void {
+    setApproveDialogOpen(true);
+  }
+
+  function handleRejectClick(): void {
+    setRejectDialogOpen(true);
+  }
+
   return (
     <PageWrapper
       eyebrow="Accounting · Journal"
       title={entry ? entry.entryNumber : "Journal entry"}
       subtitle={entry ? formatDate(entry.entryDate) : "Loading journal entry…"}
+      backHref="/accounting/journal"
       actions={
         <div className="flex items-center gap-2">
           {canManageJournal && isDraft && (
-            <Button
-              size="sm"
-              onClick={handlePostClick}
-              disabled={postMutation.isPending}
-            >
-              <Send className="mr-1 h-4 w-4" />
-              {postMutation.isPending ? "Posting…" : "Post entry"}
-            </Button>
+            <>
+              <LoadingButton
+                size="sm"
+                isPending={submitApprovalMutation.isPending}
+                loadingText="Submitting…"
+                onClick={handleSubmitApproval}
+                variant="outline"
+              >
+                <Send className="mr-1 h-4 w-4" />
+                Submit for approval
+              </LoadingButton>
+              <Button size="sm" onClick={handlePostClick} disabled={postMutation.isPending}>
+                <Send className="mr-1 h-4 w-4" />
+                {postMutation.isPending ? "Posting…" : "Post entry"}
+              </Button>
+            </>
           )}
           {canManageJournal && canReverse && (
             <Button
@@ -187,12 +362,6 @@ export default function JournalEntryDetailPage({
               Reverse this entry
             </Button>
           )}
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/accounting/journal">
-              <ChevronLeft className="mr-1 h-4 w-4" />
-              Back to journal
-            </Link>
-          </Button>
         </div>
       }
     >
@@ -212,32 +381,57 @@ export default function JournalEntryDetailPage({
           />
         ) : (
           <>
+            {isPendingApproval && canApproveJournal && (
+              <div className="flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
+                  <p className="text-sm text-amber-800 font-medium">
+                    This entry is pending approval
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" onClick={handleRejectClick}>
+                    Reject
+                  </Button>
+                  <Button size="sm" onClick={handleApproveClick}>
+                    Approve
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {entry.reversedEntryId && (
+              <div className="text-xs text-muted-foreground">
+                Reversed by{" "}
+                <Link
+                  href={`/accounting/journal/${entry.reversedEntryId}`}
+                  className="text-blue-600 hover:underline font-mono"
+                >
+                  JE-{entry.reversedEntryId}
+                </Link>
+              </div>
+            )}
+
             <Card>
               <CardContent className="p-5">
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                   <div className="min-w-0">
-                    <p className="text-[11px] font-medium text-slate-500 leading-none">
-                      Date
-                    </p>
+                    <p className="text-[11px] font-medium text-slate-500 leading-none">Date</p>
                     <p className="mt-1 text-sm font-medium text-foreground tabular-nums">
                       {formatDate(entry.entryDate)}
                     </p>
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[11px] font-medium text-slate-500 leading-none">
-                      Status
-                    </p>
+                    <p className="text-[11px] font-medium text-slate-500 leading-none">Status</p>
                     <div className="mt-1">
-                      <StatusBadge status={entry.status} />
+                      <FinanceStatusBadge status={entry.status} size="chip" />
                     </div>
                   </div>
                   <div className="min-w-0">
                     <p className="text-[11px] font-medium text-slate-500 leading-none">
                       Source type
                     </p>
-                    <p className="mt-1 text-sm text-foreground">
-                      {entry.sourceType}
-                    </p>
+                    <p className="mt-1 text-sm text-foreground">{entry.sourceType}</p>
                   </div>
                   {entry.sourceId && (
                     <div className="min-w-0">
@@ -254,18 +448,14 @@ export default function JournalEntryDetailPage({
                       <p className="text-[11px] font-medium text-slate-500 leading-none">
                         Source event
                       </p>
-                      <p className="mt-1 text-sm text-foreground">
-                        {entry.sourceEvent}
-                      </p>
+                      <p className="mt-1 text-sm text-foreground">{entry.sourceEvent}</p>
                     </div>
                   )}
                   <div className="min-w-0">
                     <p className="text-[11px] font-medium text-slate-500 leading-none">
                       Created by
                     </p>
-                    <p className="mt-1 text-sm text-foreground truncate">
-                      {entry.createdBy}
-                    </p>
+                    <p className="mt-1 text-sm text-foreground truncate">{entry.createdBy}</p>
                   </div>
                   <div className="min-w-0">
                     <p className="text-[11px] font-medium text-slate-500 leading-none">
@@ -293,16 +483,24 @@ export default function JournalEntryDetailPage({
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-10">#</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[120px]">Code</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Account name</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-10">
+                      #
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[120px]">
+                      Code
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">
+                      Account name
+                    </TableHead>
                     <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[160px] text-right">
                       Debit
                     </TableHead>
                     <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[160px] text-right">
                       Credit
                     </TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Description</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">
+                      Description
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -314,13 +512,9 @@ export default function JournalEntryDetailPage({
                       <TableCell className="font-mono text-xs text-muted-foreground">
                         {line.accountCode}
                       </TableCell>
-                      <TableCell className="text-sm text-foreground">
-                        {line.accountName}
-                      </TableCell>
+                      <TableCell className="text-sm text-foreground">{line.accountName}</TableCell>
                       <TableCell className="text-right font-mono text-sm tabular-nums text-destructive">
-                        {parseAmount(line.debit) > 0
-                          ? formatAmount(parseAmount(line.debit))
-                          : ""}
+                        {parseAmount(line.debit) > 0 ? formatAmount(parseAmount(line.debit)) : ""}
                       </TableCell>
                       <TableCell className="text-right font-mono text-sm tabular-nums text-emerald-600">
                         {parseAmount(line.credit) > 0
@@ -335,9 +529,7 @@ export default function JournalEntryDetailPage({
                   <TableRow className="bg-muted/40 hover:bg-muted/40 border-t border-border">
                     <TableCell />
                     <TableCell />
-                    <TableCell className="font-medium text-foreground text-sm">
-                      Total
-                    </TableCell>
+                    <TableCell className="font-medium text-foreground text-sm">Total</TableCell>
                     <TableCell className="text-right font-mono font-medium tabular-nums text-foreground text-sm">
                       {formatAmount(debitTotal)}
                     </TableCell>
@@ -370,18 +562,12 @@ export default function JournalEntryDetailPage({
           <AlertDialogHeader>
             <AlertDialogTitle>Post this entry?</AlertDialogTitle>
             <AlertDialogDescription>
-              Posting is irreversible. The entry will be locked and recorded in
-              the ledger. You will need to create a reversing entry to undo it.
+              Posting is irreversible. The entry will be locked and recorded in the ledger.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={postMutation.isPending}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handlePostConfirm}
-              disabled={postMutation.isPending}
-            >
+            <AlertDialogCancel disabled={postMutation.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handlePostConfirm} disabled={postMutation.isPending}>
               {postMutation.isPending ? "Posting…" : "Post entry"}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -393,26 +579,31 @@ export default function JournalEntryDetailPage({
           <AlertDialogHeader>
             <AlertDialogTitle>Reverse this entry?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will create a new journal entry with debits and credits
-              swapped. The original entry will remain unchanged. This action
-              cannot be undone.
+              This will create a new journal entry with debits and credits swapped.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={reverseMutation.isPending}>
-              Cancel
-            </AlertDialogCancel>
+            <AlertDialogCancel disabled={reverseMutation.isPending}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleReverseConfirm}
               disabled={reverseMutation.isPending}
             >
-              {reverseMutation.isPending
-                ? "Creating…"
-                : "Create reversing entry"}
+              {reverseMutation.isPending ? "Creating…" : "Create reversing entry"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ApproveDialog
+        open={approveDialogOpen}
+        onOpenChange={setApproveDialogOpen}
+        entryId={entryId}
+      />
+      <RejectDialog
+        open={rejectDialogOpen}
+        onOpenChange={setRejectDialogOpen}
+        entryId={entryId}
+      />
     </PageWrapper>
   );
 }

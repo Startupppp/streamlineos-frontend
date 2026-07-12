@@ -13,17 +13,10 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
-import { useProduct, useStockLevels } from "@/hooks/api/inventory";
+import { useProduct, useStockLevels, type StockLevelRow } from "@/hooks/api/inventory";
 import { ProductEditForm } from "@/features/inventory/components/product-edit-form";
 import {
   AddVariantSheet,
@@ -103,6 +96,28 @@ const BACK_LINK = (
   </Button>
 );
 
+interface VariantEditCellProps {
+  variant: ProductVariantForSheet;
+  onEdit: (v: ProductVariantForSheet) => void;
+}
+
+function VariantEditCell({ variant, onEdit }: VariantEditCellProps) {
+  function handleClick(): void {
+    onEdit(variant);
+  }
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="h-7 w-7"
+      onClick={handleClick}
+      aria-label={`Edit variant ${variant.name}`}
+    >
+      <Pencil className="h-3.5 w-3.5" />
+    </Button>
+  );
+}
+
 export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   const { productId: productIdStr } = use(params);
   const productId = Number.parseInt(productIdStr, 10);
@@ -174,6 +189,84 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   }
 
   const variants = product.variants ?? [];
+
+  const variantColumns: DataTableColumn<ProductVariantForSheet>[] = [
+    {
+      key: "name",
+      header: "Name",
+      cell: (v) => (
+        <span className="font-medium text-foreground">{v.name}</span>
+      ),
+    },
+    {
+      key: "sku",
+      header: "SKU",
+      headerClassName: "w-[140px]",
+      className: "font-mono tabular-nums text-muted-foreground",
+      cell: (v) => v.sku,
+    },
+    {
+      key: "costPrice",
+      header: "Cost Price",
+      headerClassName: "w-[120px] text-right",
+      className: "text-right font-mono tabular-nums text-muted-foreground",
+      cell: (v) => formatPrice(v.costPrice),
+    },
+    {
+      key: "sellingPrice",
+      header: "Selling Price",
+      headerClassName: "w-[120px] text-right",
+      className: "text-right font-mono tabular-nums font-medium",
+      cell: (v) => formatPrice(v.sellingPrice),
+    },
+    {
+      key: "status",
+      header: "Status",
+      headerClassName: "w-[90px]",
+      cell: (v) => (
+        <Badge
+          variant="outline"
+          className={`h-4 text-[9px] px-1.5 py-0 ${v.isActive ? "border-emerald-200 text-emerald-700 bg-emerald-50" : "border-slate-200 text-slate-600 bg-slate-100"}`}
+        >
+          {v.isActive ? "Active" : "Inactive"}
+        </Badge>
+      ),
+    },
+    {
+      key: "actions",
+      header: "",
+      headerClassName: "w-8",
+      cell: (v) => (
+        <VariantEditCell variant={v} onEdit={handleEditVariantClick} />
+      ),
+    },
+  ];
+
+  const stockColumns: DataTableColumn<StockLevelRow>[] = [
+    {
+      key: "warehouse",
+      header: "Warehouse",
+      cell: (row) => (
+        <span className="font-medium text-foreground">
+          {row.warehouseName ?? "—"}
+        </span>
+      ),
+    },
+    {
+      key: "location",
+      header: "Location",
+      cell: (row) => (
+        <span className="text-muted-foreground">{row.locationCode ?? "—"}</span>
+      ),
+    },
+    {
+      key: "onHand",
+      header: "Quantity",
+      headerClassName: "w-[120px] text-right",
+      className: "text-right font-mono tabular-nums font-medium",
+      cell: (row) => row.onHand,
+    },
+  ];
 
   return (
     <PageWrapper
@@ -319,39 +412,12 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                   />
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="hover:bg-transparent">
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 bg-muted/80">
-                          Name
-                        </TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 bg-muted/80 w-[140px]">
-                          SKU
-                        </TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 bg-muted/80 w-[120px] text-right">
-                          Cost Price
-                        </TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 bg-muted/80 w-[120px] text-right">
-                          Selling Price
-                        </TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 bg-muted/80 w-[90px]">
-                          Status
-                        </TableHead>
-                        <TableHead className="bg-muted/80 w-8" />
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {variants.map((variant) => (
-                        <VariantRow
-                          key={variant.id}
-                          variant={variant}
-                          onEdit={handleEditVariantClick}
-                        />
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                <DataTable
+                  data={variants}
+                  columns={variantColumns}
+                  getRowKey={(v) => v.id}
+                  minWidth="560px"
+                />
               )}
             </CardContent>
           </Card>
@@ -387,41 +453,12 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                   />
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="hover:bg-transparent">
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 bg-muted/80">
-                          Warehouse
-                        </TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 bg-muted/80">
-                          Location
-                        </TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 bg-muted/80 w-[120px] text-right">
-                          Quantity
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {stockItems.map((row) => (
-                        <TableRow
-                          key={row.id}
-                          className="h-8 hover:bg-muted/30 transition-colors"
-                        >
-                          <TableCell className="px-2 py-1 text-[11px] font-medium text-foreground">
-                            {row.warehouseName}
-                          </TableCell>
-                          <TableCell className="px-2 py-1 text-[11px] text-muted-foreground">
-                            {row.locationCode ?? "—"}
-                          </TableCell>
-                          <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums font-medium">
-                            {row.onHand}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                <DataTable
+                  data={stockItems}
+                  columns={stockColumns}
+                  getRowKey={(row) => row.id}
+                  minWidth="360px"
+                />
               )}
             </CardContent>
           </Card>
@@ -441,52 +478,5 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
         onOpenChange={handleEditVariantOpenChange}
       />
     </PageWrapper>
-  );
-}
-
-interface VariantRowProps {
-  variant: ProductVariantForSheet;
-  onEdit: (variant: ProductVariantForSheet) => void;
-}
-
-function VariantRow({ variant, onEdit }: VariantRowProps) {
-  function handleEditClick(): void {
-    onEdit(variant);
-  }
-
-  return (
-    <TableRow className="h-8 hover:bg-muted/30 transition-colors">
-      <TableCell className="px-2 py-1 text-[11px] font-medium text-foreground">
-        {variant.name}
-      </TableCell>
-      <TableCell className="px-2 py-1 text-[11px] font-mono tabular-nums text-muted-foreground">
-        {variant.sku}
-      </TableCell>
-      <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums text-muted-foreground">
-        {formatPrice(variant.costPrice)}
-      </TableCell>
-      <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums font-medium">
-        {formatPrice(variant.sellingPrice)}
-      </TableCell>
-      <TableCell className="px-2 py-1">
-        <Badge
-          variant="outline"
-          className={`h-4 text-[9px] px-1.5 py-0 ${variant.isActive ? "border-emerald-200 text-emerald-700 bg-emerald-50" : "border-slate-200 text-slate-600 bg-slate-100"}`}
-        >
-          {variant.isActive ? "Active" : "Inactive"}
-        </Badge>
-      </TableCell>
-      <TableCell className="px-2 py-1">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7"
-          onClick={handleEditClick}
-          aria-label={`Edit variant ${variant.name}`}
-        >
-          <Pencil className="h-3.5 w-3.5" />
-        </Button>
-      </TableCell>
-    </TableRow>
   );
 }

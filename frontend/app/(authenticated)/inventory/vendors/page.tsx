@@ -3,7 +3,9 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Plus, Search, MoreHorizontal } from "lucide-react";
+import { Search } from "lucide-react";
+import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -30,6 +32,7 @@ import type { InventoryVendor } from "@/types/inventory";
 
 function VendorRowActions({ vendor }: { vendor: InventoryVendor }) {
   const toggleMutation = useToggleVendorActive();
+  const { iconRef: ellipsisRef, hoverHandlers: ellipsisHover } = useAnimatedIcon();
 
   function handleToggleActive(): void {
     toggleMutation.mutate(
@@ -55,8 +58,9 @@ function VendorRowActions({ vendor }: { vendor: InventoryVendor }) {
           size="icon"
           className="h-7 w-7"
           aria-label={`Actions for ${vendor.name}`}
+          {...ellipsisHover}
         >
-          <MoreHorizontal className="h-4 w-4" />
+          <EllipsisIcon ref={ellipsisRef} size={14} />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-40">
@@ -82,6 +86,11 @@ export default function VendorsListPage() {
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
   const [sheetOpen, setSheetOpen] = useState<boolean>(false);
+  const { iconRef: plusRef, hoverHandlers: plusHover } = useAnimatedIcon();
+  const [page, setPage] = useState<number>(() => {
+    const p = Number(searchParams.get("page"));
+    return p > 0 ? p : 1;
+  });
 
   const search = searchParams.get("search") ?? "";
   const activeParam = searchParams.get("isActive") ?? "all";
@@ -93,6 +102,8 @@ export default function VendorsListPage() {
     } else {
       params.delete("search");
     }
+    params.delete("page");
+    setPage(1);
     startTransition(() => {
       router.replace(`?${params.toString()}`, { scroll: false });
     });
@@ -105,6 +116,21 @@ export default function VendorsListPage() {
     } else {
       params.set("isActive", value);
     }
+    params.delete("page");
+    setPage(1);
+    startTransition(() => {
+      router.replace(`?${params.toString()}`, { scroll: false });
+    });
+  }
+
+  function handlePageChange(newPage: number): void {
+    const params = new URLSearchParams(searchParams.toString());
+    if (newPage === 1) {
+      params.delete("page");
+    } else {
+      params.set("page", String(newPage));
+    }
+    setPage(newPage);
     startTransition(() => {
       router.replace(`?${params.toString()}`, { scroll: false });
     });
@@ -122,8 +148,8 @@ export default function VendorsListPage() {
     activeParam === "active" ? true : activeParam === "inactive" ? false : undefined;
 
   const query = useVendors({
-    page: 1,
-    limit: 100,
+    page,
+    limit: 20,
     search: search || undefined,
     isActive: isActiveFilter,
   });
@@ -226,14 +252,11 @@ export default function VendorsListPage() {
     <PageWrapper
       eyebrow="Inventory"
       title="Vendors"
-      subtitle={
-        query.data
-          ? `${total} ${total === 1 ? "vendor" : "vendors"}`
-          : "Suppliers for inventory purchase orders."
-      }
+      subtitle="Manage your suppliers and purchase order vendors."
+      badge={query.data ? `${total}` : undefined}
       actions={
-        <Button size="sm" onClick={handleNewVendor}>
-          <Plus className="h-3.5 w-3.5 mr-1" />
+        <Button size="sm" onClick={handleNewVendor} {...plusHover}>
+          <PlusIcon ref={plusRef} size={14} className="mr-1" />
           New vendor
         </Button>
       }
@@ -244,6 +267,7 @@ export default function VendorsListPage() {
         columns={columns}
         getRowKey={(v) => v.id}
         isLoading={query.isLoading}
+        pagination={{ mode: "server", page, pageSize: 20, total, onPageChange: handlePageChange }}
         emptyState={
           query.error ? (
             <ErrorState description={query.error.message} onRetry={handleRetry} compact />

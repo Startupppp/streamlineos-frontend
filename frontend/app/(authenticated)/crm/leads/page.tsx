@@ -33,11 +33,6 @@ import { LeadsKanban } from "@/features/crm/leads/leads-kanban";
 import { LeadsFunnelView } from "@/features/crm/leads/leads-funnel-view";
 import { LeadDetailSheet } from "@/features/crm/leads/lead-detail-sheet";
 import { CreateLeadSheet } from "@/features/crm/leads/create-lead-sheet";
-import {
-  isLeadSource,
-  isLeadPriority,
-  STATUS_CONFIG,
-} from "@/features/crm/leads/leads-constants";
 import type { BoardLead, LeadStatus } from "@/features/crm/leads/leads-types";
 
 export default function LeadsPipelinePage() {
@@ -129,14 +124,14 @@ export default function LeadsPipelinePage() {
     if (!board) return null;
     const result: Record<string, BoardLead[]> = {};
     if (!debouncedSearchQuery) {
-      for (const [status, leads] of Object.entries(board)) {
-        result[status] = leads;
+      for (const [status, col] of Object.entries(board)) {
+        result[status] = col.leads as BoardLead[];
       }
       return result;
     }
     const q = debouncedSearchQuery.toLowerCase();
-    for (const [status, leads] of Object.entries(board)) {
-      result[status] = leads.filter(
+    for (const [status, col] of Object.entries(board)) {
+      result[status] = (col.leads as BoardLead[]).filter(
         (l: BoardLead) =>
           l.name.toLowerCase().includes(q) ||
           l.email?.toLowerCase().includes(q) ||
@@ -183,14 +178,10 @@ export default function LeadsPipelinePage() {
         email: (formData.get("email") as string)?.trim() || undefined,
         phone: (formData.get("phone") as string)?.trim() || undefined,
         company: (formData.get("company") as string)?.trim() || undefined,
-        source: isLeadSource(formData.get("source"))
-          ? (formData.get("source") as "referral" | "campaign" | "cold_call" | "website" | "social_media" | "walk_in" | "other")
-          : "other",
+        source: ((formData.get("source") as string)?.trim() || "other") as "referral" | "campaign" | "cold_call" | "website" | "social_media" | "walk_in" | "other",
         potentialValue: potentialValueRaw || undefined,
         investmentInterest: investmentInterestRaw || undefined,
-        priority: isLeadPriority(formData.get("priority"))
-          ? (formData.get("priority") as "HOT" | "WARM" | "COLD")
-          : ("WARM" as const),
+        priority: ((formData.get("priority") as string)?.trim() || "WARM") as "HOT" | "WARM" | "COLD",
         notes: (formData.get("notes") as string)?.trim() || undefined,
         city: (formData.get("city") as string)?.trim() || undefined,
         referredBy: (formData.get("referredBy") as string)?.trim() || undefined,
@@ -208,10 +199,10 @@ export default function LeadsPipelinePage() {
   );
 
   const handleMoveStatus = useCallback(
-    async (leadId: number, status: LeadStatus, expectedStatus?: LeadStatus) => {
+    async (leadId: number, status: string, expectedStatus?: string) => {
       try {
-        await updateStatus.mutateAsync({ leadId, status, expectedStatus });
-        toast.success(`Lead moved to ${STATUS_CONFIG[status].label}`);
+        await updateStatus.mutateAsync({ leadId, status: status as LeadStatus, expectedStatus: expectedStatus as LeadStatus | undefined });
+        toast.success(`Lead moved to ${status}`);
       } catch (err: unknown) {
         toast.error(getErrorMessage(err));
       }
@@ -311,9 +302,8 @@ export default function LeadsPipelinePage() {
 
   const handlePriorityChange = useCallback(
     (id: number, priority: string) => {
-      if (!isLeadPriority(priority)) return;
       updateLeadMutation.mutate(
-        { id, priority },
+        { id, priority: priority as "HOT" | "WARM" | "COLD" },
         {
           onSuccess: () => toast.success("Priority updated"),
           onError: (err) => toast.error(err.message),

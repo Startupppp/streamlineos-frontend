@@ -145,6 +145,7 @@ function AIScoreDetails({
 }: {
   result: {
     score: number;
+    confidence?: "low" | "medium" | "high";
     reasoning: string;
     strengths: string[];
     weaknesses: string[];
@@ -181,7 +182,19 @@ function AIScoreDetails({
           {result.score}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-medium">AI Score</p>
+          <div className="flex items-center gap-1.5">
+            <p className="text-xs font-medium">AI Score</p>
+            {result.confidence && (
+              <span className={cn(
+                "text-[10px] px-1.5 py-0.5 rounded font-medium capitalize",
+                result.confidence === "high" ? "bg-emerald-50 text-emerald-700" :
+                result.confidence === "medium" ? "bg-amber-50 text-amber-700" :
+                "bg-slate-100 text-slate-600",
+              )}>
+                {result.confidence} confidence
+              </span>
+            )}
+          </div>
           <p className="text-[11px] text-muted-foreground leading-snug">
             {result.reasoning}
           </p>

@@ -150,12 +150,14 @@ export function useUpdateLeadStatus() {
       if (previousBoard && vars.expectedStatus) {
         const from = vars.expectedStatus as keyof LeadBoard;
         const to = vars.status as keyof LeadBoard;
-        const lead = previousBoard[from]?.find((l) => l.id === vars.leadId);
-        if (lead) {
+        const fromCol = previousBoard[from];
+        const lead = fromCol?.leads.find((l) => l.id === vars.leadId);
+        if (lead && fromCol) {
+          const toCol = previousBoard[to];
           qc.setQueryData<LeadBoard>(queryKeys.leads.board(), {
             ...previousBoard,
-            [from]: previousBoard[from].filter((l) => l.id !== vars.leadId),
-            [to]: [...(previousBoard[to] ?? []), { ...lead, status: vars.status }],
+            [from]: { leads: fromCol.leads.filter((l) => l.id !== vars.leadId), total: fromCol.total - 1 },
+            [to]: { leads: [...(toCol?.leads ?? []), { ...lead, status: vars.status }], total: (toCol?.total ?? 0) + 1 },
           });
         }
       }

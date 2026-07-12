@@ -13,6 +13,7 @@ import {
 } from "@/hooks/api/leads";
 import { useDealStats } from "@/hooks/api/crm/deals";
 import { useLeadSourceReport } from "@/hooks/api/crm/leads";
+import { useCrmOptions } from "@/hooks/api/crm/metadata";
 import {
   PERIOD_OPTIONS,
   periodToDateRange,
@@ -46,6 +47,7 @@ export default function CrmReportsPage() {
   const { data: sourceReport, isLoading: sourceLoading } = useLeadSourceReport();
   const { data: leaderboard, isLoading: leaderboardLoading } =
     useSalesLeaderboard();
+  const { data: statusOptions } = useCrmOptions("lead_status");
 
   const isLoading = statsLoading || dealStatsLoading;
 
@@ -117,7 +119,7 @@ export default function CrmReportsPage() {
 
         {stats && (
           <motion.div variants={fadeUp}>
-            <ConversionFunnelCard stats={stats} />
+            <ConversionFunnelCard stats={stats} statusOptions={statusOptions} />
           </motion.div>
         )}
 

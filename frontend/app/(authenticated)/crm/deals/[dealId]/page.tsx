@@ -28,6 +28,7 @@ import {
   useCreateDealMeeting,
   useDeleteDealMeeting,
   useCloneDeal,
+  useCrmStages,
 } from "@/hooks/api/crm";
 import { formatDealId } from "@/lib/format-utils";
 import { toast } from "sonner";
@@ -46,25 +47,6 @@ import { DealSidebarCards } from "@/features/crm/deals/detail/deal-sidebar-cards
 import { DealOrdersSection } from "@/features/crm/deals/deal-orders-section";
 import { DealQuotesSection } from "@/features/crm/deals/deal-quotes-section";
 
-const STAGES = [
-  { key: "LEAD", label: "Lead", badgeClass: "bg-blue-50 text-blue-700 border-blue-200" },
-  { key: "CONTACTED", label: "Contacted", badgeClass: "bg-sky-50 text-sky-700 border-sky-200" },
-  { key: "PROPOSAL", label: "Proposal", badgeClass: "bg-amber-50 text-amber-700 border-amber-200" },
-  { key: "NEGOTIATION", label: "Negotiation", badgeClass: "bg-violet-50 text-violet-700 border-violet-200" },
-  { key: "WON", label: "Won", badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-  { key: "LOST", label: "Lost", badgeClass: "bg-red-50 text-red-700 border-red-200" },
-] as const;
-
-const STAGE_ACTIVE_CLASSES: Record<string, string> = {
-  LEAD: "bg-blue-50 text-blue-700 ring-1 ring-blue-300",
-  CONTACTED: "bg-sky-50 text-sky-700 ring-1 ring-sky-300",
-  PROPOSAL: "bg-amber-50 text-amber-700 ring-1 ring-amber-300",
-  NEGOTIATION: "bg-violet-50 text-violet-700 ring-1 ring-violet-300",
-  WON: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-300",
-  LOST: "bg-red-50 text-red-700 ring-1 ring-red-300",
-};
-
-type DealStage = (typeof STAGES)[number]["key"];
 
 function formatINR(v: number) {
   if (v >= 10000000) return `₹${(v / 10000000).toFixed(1)}Cr`;
@@ -101,6 +83,9 @@ export default function DealDetailPage({
   const deleteMeeting = useDeleteDealMeeting(dealId);
   const updateStage = useUpdateDealStage();
   const cloneDeal = useCloneDeal();
+  const { data: stages = [] } = useCrmStages("deal");
+  const wonStage = useMemo(() => stages.find((s) => s.stageType === "won")?.key ?? "WON", [stages]);
+  const lostStage = useMemo(() => stages.find((s) => s.stageType === "lost")?.key ?? "LOST", [stages]);
 
   const handleClone = useCallback(() => {
     cloneDeal.mutate(dealId, {
@@ -114,15 +99,21 @@ export default function DealDetailPage({
 
   const currentStageIndex = useMemo(() => {
     if (!deal) return -1;
-    return STAGES.findIndex((s) => s.key === deal.stage);
-  }, [deal]);
+    return stages.findIndex((s) => s.key === deal.stage);
+  }, [deal, stages]);
 
   const handleStageChange = useCallback(
-    (stage: DealStage) => {
+    (stage: string) => {
       updateStage.mutate(
         { id: dealId, stage },
         {
-          onSuccess: () => toast.success("Stage updated"),
+          onSuccess: (result) => {
+            if (result && "approvalPending" in result && result.approvalPending) {
+              toast.info("Approval request submitted. Stage will update once approved.");
+            } else {
+              toast.success("Stage updated");
+            }
+          },
           onError: (err) => toast.error(err.message),
         },
       );
@@ -160,13 +151,12 @@ export default function DealDetailPage({
 
   const handleToggleEdit = useCallback(() => setIsEditing((v) => !v), []);
   const handleCancelEdit = useCallback(() => setIsEditing(false), []);
-  const handleMarkWon = useCallback(() => handleStageChange("WON"), [handleStageChange]);
-  const handleMarkLost = useCallback(() => handleStageChange("LOST"), [handleStageChange]);
+  const handleMarkWon = useCallback(() => handleStageChange(wonStage), [handleStageChange, wonStage]);
+  const handleMarkLost = useCallback(() => handleStageChange(lostStage), [handleStageChange, lostStage]);
 
   const handleStagePipelineClick = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
-      const raw = e.currentTarget.dataset.stage;
-      const stage = STAGES.find((s) => s.key === raw)?.key;
+      const stage = e.currentTarget.dataset.stage;
       if (stage) handleStageChange(stage);
     },
     [handleStageChange],
@@ -304,7 +294,9 @@ export default function DealDetailPage({
     );
   }
 
-  const stageConfig = STAGES.find((s) => s.key === deal.stage) ?? STAGES[0];
+  const currentStageInfo = stages.find((s) => s.key === deal.stage);
+  const stageLabel = currentStageInfo?.label ?? deal.stage;
+  const isActiveDeal = !(currentStageInfo?.isTerminal ?? false);
   const dealValue = Number(deal.value ?? 0);
 
   const keyDates = [
@@ -313,8 +305,6 @@ export default function DealDetailPage({
     { label: "Expected Close", value: deal.expectedCloseDate },
     { label: "Actual Close", value: deal.actualCloseDate },
   ];
-
-  const isActiveDeal = deal.stage !== "WON" && deal.stage !== "LOST";
 
   return (
     <PageWrapper
@@ -331,9 +321,14 @@ export default function DealDetailPage({
       badge={
         <Badge
           variant="outline"
-          className={cn("text-xs px-2 py-0.5", stageConfig.badgeClass)}
+          className="text-xs px-2 py-0.5"
+          style={
+            currentStageInfo?.color
+              ? { borderColor: currentStageInfo.color, color: currentStageInfo.color }
+              : undefined
+          }
         >
-          {stageConfig.label}
+          {stageLabel}
         </Badge>
       }
       actions={
@@ -363,7 +358,7 @@ export default function DealDetailPage({
                 </Button>
               </>
             )}
-            {deal.stage === "WON" && (
+            {deal.stage === wonStage && (
               <Button size="sm" variant="outline" onClick={handleOpenCreateProject}>
                 <FolderKanban className="h-3.5 w-3.5 mr-1" />
                 Create Project
@@ -387,7 +382,7 @@ export default function DealDetailPage({
           variants={itemVariants}
           className="flex flex-wrap items-center gap-1 p-2 rounded-lg bg-muted/30 border border-border"
         >
-          {STAGES.map((stage, i) => {
+          {stages.map((stage, i) => {
             const isActive = stage.key === deal.stage;
             const isPast = i < currentStageIndex;
             return (
@@ -398,14 +393,19 @@ export default function DealDetailPage({
                 className={cn(
                   "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap",
                   isActive
-                    ? STAGE_ACTIVE_CLASSES[stage.key]
+                    ? "bg-blue-50 text-blue-700 ring-1 ring-blue-300"
                     : isPast
                       ? "bg-muted/50 text-muted-foreground"
                       : "text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/30",
                 )}
+                style={
+                  isActive && currentStageInfo?.color
+                    ? { backgroundColor: `${currentStageInfo.color}15`, color: currentStageInfo.color }
+                    : undefined
+                }
               >
                 {stage.label}
-                {i < STAGES.length - 1 && (
+                {i < stages.length - 1 && (
                   <ChevronRight className="h-3 w-3 ml-1 text-muted-foreground/30" />
                 )}
               </button>
@@ -453,6 +453,9 @@ export default function DealDetailPage({
               onQuickActionClick={handleQuickActionClick}
               onAddMeeting={handleOpenMeetingDialog}
               onDeleteMeeting={handleDeleteMeeting}
+              healthScore={deal.healthScore}
+              nextStep={deal.nextStep}
+              pipelineId={deal.pipelineId}
             />
             <DealQuotesSection dealId={dealId} />
           </motion.div>

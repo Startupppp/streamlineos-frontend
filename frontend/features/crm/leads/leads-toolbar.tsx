@@ -6,7 +6,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { STATUSES, LEAD_PRIORITIES, LEAD_SOURCES } from "./leads-constants";
+import { useCrmOptions } from "@/hooks/api/crm";
+
+const FALLBACK_STATUSES = ["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CONVERTED", "LOST"] as const;
+const FALLBACK_PRIORITIES = [
+  { key: "HOT", label: "Hot" },
+  { key: "WARM", label: "Warm" },
+  { key: "COLD", label: "Cold" },
+] as const;
+const FALLBACK_SOURCES = [
+  { key: "referral", label: "Referral" },
+  { key: "campaign", label: "Campaign" },
+  { key: "cold_call", label: "Cold Call" },
+  { key: "website", label: "Website" },
+  { key: "social_media", label: "Social Media" },
+  { key: "walk_in", label: "Walk In" },
+  { key: "other", label: "Other" },
+] as const;
 
 interface LeadsToolbarProps {
   searchQuery: string;
@@ -28,13 +44,21 @@ export function LeadsToolbar({
   onStatusFilterChange, onPriorityFilterChange, onSourceFilterChange,
   onClearFilters,
 }: LeadsToolbarProps) {
+  const { data: statusOptions = [] } = useCrmOptions("lead_status");
+  const { data: priorityOptions = [] } = useCrmOptions("lead_priority");
+  const { data: sourceOptions = [] } = useCrmOptions("lead_source");
+
+  const statuses = statusOptions.length > 0 ? statusOptions : FALLBACK_STATUSES.map((s) => ({ key: s, label: s }));
+  const priorities = priorityOptions.length > 0 ? priorityOptions : FALLBACK_PRIORITIES;
+  const sources = sourceOptions.length > 0 ? sourceOptions : FALLBACK_SOURCES;
+
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => onSearchChange(e.target.value), [onSearchChange]);
   const handleViewTable = useCallback(() => onViewChange("table"), [onViewChange]);
   const handleViewKanban = useCallback(() => onViewChange("kanban"), [onViewChange]);
   const handleViewFunnel = useCallback(() => onViewChange("funnel"), [onViewChange]);
-  const handleStatusFilter = useCallback((v: string) => onStatusFilterChange(v ==="all" ? undefined : v), [onStatusFilterChange]);
-  const handlePriorityFilter = useCallback((v: string) => onPriorityFilterChange(v ==="all" ? undefined : v), [onPriorityFilterChange]);
-  const handleSourceFilter = useCallback((v: string) => onSourceFilterChange(v ==="all" ? undefined : v), [onSourceFilterChange]);
+  const handleStatusFilter = useCallback((v: string) => onStatusFilterChange(v === "all" ? undefined : v), [onStatusFilterChange]);
+  const handlePriorityFilter = useCallback((v: string) => onPriorityFilterChange(v === "all" ? undefined : v), [onPriorityFilterChange]);
+  const handleSourceFilter = useCallback((v: string) => onSourceFilterChange(v === "all" ? undefined : v), [onSourceFilterChange]);
 
   const hasFilters = !!(statusFilter || priorityFilter || sourceFilter);
 
@@ -69,32 +93,32 @@ export function LeadsToolbar({
         </Button>
       </div>
 
-      <Select value={statusFilter ||"all"} onValueChange={handleStatusFilter}>
+      <Select value={statusFilter || "all"} onValueChange={handleStatusFilter}>
         <SelectTrigger className="w-[110px] h-8 text-[11px]"><SelectValue placeholder="Status" /></SelectTrigger>
         <SelectContent>
           <SelectItem value="all" className="text-[11px]">All Status</SelectItem>
-          {STATUSES.map(s => (
-            <SelectItem key={s} value={s} className="text-[11px]">{s}</SelectItem>
+          {statuses.map((s) => (
+            <SelectItem key={s.key} value={s.key} className="text-[11px]">{s.label}</SelectItem>
           ))}
         </SelectContent>
       </Select>
 
-      <Select value={priorityFilter ||"all"} onValueChange={handlePriorityFilter}>
+      <Select value={priorityFilter || "all"} onValueChange={handlePriorityFilter}>
         <SelectTrigger className="w-[100px] h-8 text-[11px]"><SelectValue placeholder="Priority" /></SelectTrigger>
         <SelectContent>
           <SelectItem value="all" className="text-[11px]">All Priority</SelectItem>
-          {LEAD_PRIORITIES.map(p => (
-            <SelectItem key={p} value={p} className="text-[11px]">{p}</SelectItem>
+          {priorities.map((p) => (
+            <SelectItem key={p.key} value={p.key} className="text-[11px]">{p.label}</SelectItem>
           ))}
         </SelectContent>
       </Select>
 
-      <Select value={sourceFilter ||"all"} onValueChange={handleSourceFilter}>
+      <Select value={sourceFilter || "all"} onValueChange={handleSourceFilter}>
         <SelectTrigger className="w-[110px] h-8 text-[11px]"><SelectValue placeholder="Source" /></SelectTrigger>
         <SelectContent>
           <SelectItem value="all" className="text-[11px]">All Sources</SelectItem>
-          {LEAD_SOURCES.map(s => (
-            <SelectItem key={s} value={s} className="text-[11px]">{s.replace(/_/g, " ")}</SelectItem>
+          {sources.map((s) => (
+            <SelectItem key={s.key} value={s.key} className="text-[11px]">{s.label}</SelectItem>
           ))}
         </SelectContent>
       </Select>

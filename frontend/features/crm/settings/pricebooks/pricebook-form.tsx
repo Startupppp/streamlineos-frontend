@@ -28,9 +28,9 @@ import type { Pricebook } from "@/types/crm/pricebooks";
 const schema = z.object({
   name: z.string().min(1, "Name is required").max(200),
   description: z.string().optional(),
-  currency: z.string().min(1).default("INR"),
-  isDefault: z.boolean().default(false),
-  isActive: z.boolean().default(true),
+  currency: z.string().min(1),
+  isDefault: z.boolean(),
+  isActive: z.boolean(),
 });
 
 export type PricebookFormValues = z.infer<typeof schema>;

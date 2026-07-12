@@ -18,6 +18,7 @@ import { useCompleteCrmActivity } from "@/hooks/api/crm/crm-activities";
 import type { CrmActivity, CrmActivityEntityType } from "@/hooks/api/crm/crm-activities";
 import { toast } from "sonner";
 import { format, isPast, isToday } from "date-fns";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const ENTITY_PATHS: Record<CrmActivityEntityType, string> = {
   LEAD:    "/crm/leads",
@@ -69,7 +70,7 @@ export function ActivityCard({ activity, index }: ActivityCardProps) {
   const handleComplete = useCallback(() => {
     complete.mutate(activity.id, {
       onSuccess: () => toast.success("Activity marked as complete"),
-      onError: (err) => toast.error(err.message),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [activity.id, complete]);
 

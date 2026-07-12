@@ -1,14 +1,17 @@
 "use client";
 
-import { useState, useCallback, memo } from "react";
+import { useState, useCallback } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Settings2, ShoppingCart } from "lucide-react";
+import { Settings2, ShoppingCart, ClipboardList } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
-import { SkeletonTable, ErrorState } from "@/components/shared";
+import { ErrorState } from "@/components/shared";
 import { useCan } from "@/hooks/api/access";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useReplenishmentSuggestions,
   useGeneratePO,
@@ -26,54 +29,91 @@ function formatDate(dateStr: string | null): string {
   });
 }
 
-interface SuggestionRowProps {
-  suggestion: ReplenishmentSuggestion;
-  selected: boolean;
-  onToggle: (id: number) => void;
-}
-
-const SuggestionRow = memo(function SuggestionRow({ suggestion: s, selected, onToggle }: SuggestionRowProps) {
-  function handleToggle(): void {
-    onToggle(s.id);
-  }
-
-  return (
-    <tr className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
-      <td className="px-4 py-3">
+function buildColumns(
+  selectedIds: Set<number>,
+  handleToggle: (id: number) => void,
+): DataTableColumn<ReplenishmentSuggestion>[] {
+  return [
+    {
+      key: "select",
+      header: "",
+      className: "w-8",
+      cell: (row) => (
         <input
           type="checkbox"
-          checked={selected}
-          onChange={handleToggle}
+          checked={selectedIds.has(row.id)}
+          onChange={() => handleToggle(row.id)}
           className="h-4 w-4 rounded border-border accent-blue-500 cursor-pointer"
-          aria-label={`Select ${s.productName}`}
+          aria-label={`Select ${row.productName}`}
         />
-      </td>
-      <td className="px-4 py-3">
-        <p className="text-sm font-medium text-foreground truncate max-w-[180px]">{s.productName}</p>
-        <p className="text-xs text-muted-foreground font-mono">{s.variantSku}</p>
-      </td>
-      <td className="px-4 py-3 text-sm text-muted-foreground">{s.warehouseName}</td>
-      <td className="px-4 py-3 text-sm tabular-nums">{s.currentStock}</td>
-      <td className="px-4 py-3 text-sm tabular-nums">{s.minQty}</td>
-      <td className="px-4 py-3 text-sm font-semibold tabular-nums text-blue-600">{s.suggestedQty}</td>
-      <td className="px-4 py-3 text-sm text-muted-foreground">{s.vendorName ?? "—"}</td>
-      <td className="px-4 py-3 text-sm text-muted-foreground">{formatDate(s.expectedDate)}</td>
-      <td className="px-4 py-3 text-xs text-muted-foreground max-w-[160px] truncate" title={s.reason}>
-        {s.reason}
-      </td>
-    </tr>
-  );
-});
+      ),
+    },
+    {
+      key: "productName",
+      header: "Product / SKU",
+      cell: (row) => (
+        <div>
+          <p className="text-[11px] font-medium truncate max-w-[180px]">{row.productName}</p>
+          <p className="text-[11px] text-muted-foreground font-mono">{row.variantSku}</p>
+        </div>
+      ),
+    },
+    {
+      key: "warehouseName",
+      header: "Warehouse",
+      cell: (row) => <span className="text-[11px] text-muted-foreground">{row.warehouseName}</span>,
+    },
+    {
+      key: "currentStock",
+      header: "Current Stock",
+      className: "tabular-nums text-[11px]",
+      cell: (row) => row.currentStock,
+    },
+    {
+      key: "minQty",
+      header: "Min Qty",
+      className: "tabular-nums text-[11px]",
+      cell: (row) => row.minQty,
+    },
+    {
+      key: "suggestedQty",
+      header: "Suggested Qty",
+      className: "tabular-nums text-[11px] font-semibold text-blue-600",
+      cell: (row) => row.suggestedQty,
+    },
+    {
+      key: "vendorName",
+      header: "Vendor",
+      cell: (row) => <span className="text-[11px] text-muted-foreground">{row.vendorName ?? "—"}</span>,
+    },
+    {
+      key: "expectedDate",
+      header: "Expected Date",
+      cell: (row) => <span className="text-[11px] text-muted-foreground">{formatDate(row.expectedDate)}</span>,
+    },
+    {
+      key: "reason",
+      header: "Reason",
+      className: "max-w-[160px] truncate",
+      cell: (row) => (
+        <span className="text-[11px] text-muted-foreground" title={row.reason}>
+          {row.reason}
+        </span>
+      ),
+    },
+  ];
+}
 
 export function ReplenishmentClient() {
-  const { data, isLoading, error, refetch } = useReplenishmentSuggestions();
+  const [page, setPage] = useState(1);
+  const { data, isLoading, error, refetch } = useReplenishmentSuggestions({ page });
   const generatePO = useGeneratePO();
   const canCreatePO = useCan("inventory:purchase-orders:create");
 
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const suggestions = data ?? [];
+  const suggestions = data?.items ?? [];
 
   const handleToggle = useCallback(function handleToggle(id: number): void {
     setSelectedIds((prev) => {
@@ -132,8 +172,8 @@ export function ReplenishmentClient() {
           });
           setSelectedIds(new Set());
         },
-        onError: () => {
-          toast.error("Failed to create PO");
+        onError: (err) => {
+          toast.error(getErrorMessage(err));
         },
       });
       return;
@@ -154,6 +194,14 @@ export function ReplenishmentClient() {
   const selectedSuggestions = suggestions.filter((s) => selectedIds.has(s.id));
   const allSelected = suggestions.length > 0 && selectedIds.size === suggestions.length;
 
+  const columns = buildColumns(selectedIds, handleToggle);
+
+  const selectAllToolbar = suggestions.length > 0 ? (
+    <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={handleSelectAll}>
+      {allSelected ? "Deselect all" : "Select all"}
+    </Button>
+  ) : undefined;
+
   return (
     <PageWrapper
       eyebrow="Operations · Inventory"
@@ -172,6 +220,12 @@ export function ReplenishmentClient() {
             </Button>
           )}
           <Button variant="outline" size="sm" asChild>
+            <Link href="/inventory/reports/reorder">
+              <ClipboardList className="h-4 w-4 mr-1.5" />
+              Reorder Report
+            </Link>
+          </Button>
+          <Button variant="outline" size="sm" asChild>
             <Link href="/inventory/replenishment/rules">
               <Settings2 className="h-4 w-4 mr-1.5" />
               Manage Rules
@@ -180,9 +234,7 @@ export function ReplenishmentClient() {
         </div>
       }
     >
-      {isLoading ? (
-        <SkeletonTable rows={6} columns={9} />
-      ) : error ? (
+      {isLoading ? null : error ? (
         <ErrorState onRetry={handleRetry} />
       ) : suggestions.length === 0 ? (
         <InventoryEmptyState
@@ -191,44 +243,28 @@ export function ReplenishmentClient() {
           description="All stock levels are above minimum thresholds."
           className="flex-1 h-full"
         />
-      ) : (
-        <div className="rounded-lg border border-border bg-card overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border bg-muted/30">
-                  <th className="px-4 py-2.5 text-left">
-                    <input
-                      type="checkbox"
-                      checked={allSelected}
-                      onChange={handleSelectAll}
-                      className="h-4 w-4 rounded border-border accent-blue-500 cursor-pointer"
-                      aria-label="Select all"
-                    />
-                  </th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Product / SKU</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Warehouse</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Current Stock</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Min Qty</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Suggested Qty</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Vendor</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Expected Date</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Reason</th>
-                </tr>
-              </thead>
-              <tbody>
-                {suggestions.map((s) => (
-                  <SuggestionRow
-                    key={s.id}
-                    suggestion={s}
-                    selected={selectedIds.has(s.id)}
-                    onToggle={handleToggle}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+      ) : null}
+
+      {!error && (isLoading || suggestions.length > 0) && (
+        <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
+          <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
+            <DataTable
+              data={suggestions}
+              columns={columns}
+              getRowKey={(row) => row.id}
+              isLoading={isLoading}
+              minWidth="760px"
+              toolbar={selectAllToolbar}
+              pagination={{
+                mode: "server",
+                page,
+                pageSize: 50,
+                total: data?.total ?? 0,
+                onPageChange: setPage,
+              }}
+            />
+          </CardContent>
+        </Card>
       )}
 
       <GeneratePODialog

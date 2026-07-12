@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -23,12 +22,15 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { useUpdateProduct } from "@/hooks/api/inventory";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { CategorySelect } from "@/features/inventory/components/product-field-selects";
 import {
-  CategorySelect,
-  UomSelect,
-} from "@/features/inventory/components/product-field-selects";
+  ProductCostingFields,
+  ProductUomFields,
+  ProductReorderFields,
+} from "@/features/inventory/components/product-edit-fields";
 
 interface ProductForEdit {
   name: string;
@@ -48,6 +50,7 @@ interface ProductForEdit {
   trackingMethod?: "NONE" | "LOT" | "SERIAL" | null;
   costingMethod?: "STANDARD" | "WEIGHTED_AVERAGE" | "FIFO" | null;
   reorderEnabled?: boolean;
+  barcode?: string | null;
 }
 
 const SKU_PATTERN = /^[A-Z0-9][A-Z0-9_-]*$/;
@@ -98,9 +101,10 @@ const editSchema = z.object({
   trackingMethod: z.enum(["NONE", "LOT", "SERIAL"]).optional(),
   costingMethod: z.enum(["STANDARD", "WEIGHTED_AVERAGE", "FIFO"]).optional(),
   reorderEnabled: z.boolean().optional(),
+  barcode: z.string().max(100, "Barcode must be 100 characters or fewer").optional(),
 });
 
-type EditFormValues = z.infer<typeof editSchema>;
+export type EditFormValues = z.infer<typeof editSchema>;
 
 interface ProductEditFormProps {
   product: ProductForEdit;
@@ -130,6 +134,7 @@ export function ProductEditForm({ product, productId, onDone }: ProductEditFormP
       trackingMethod: product.trackingMethod ?? "NONE",
       costingMethod: product.costingMethod ?? "WEIGHTED_AVERAGE",
       reorderEnabled: product.reorderEnabled ?? false,
+      barcode: product.barcode ?? "",
     },
   });
 
@@ -157,6 +162,7 @@ export function ProductEditForm({ product, productId, onDone }: ProductEditFormP
         trackingMethod: values.trackingMethod,
         costingMethod: values.costingMethod,
         reorderEnabled: values.reorderEnabled,
+        barcode: values.barcode || undefined,
       });
       toast.success("Product updated");
       onDone();
@@ -236,6 +242,19 @@ export function ProductEditForm({ product, productId, onDone }: ProductEditFormP
                 </FormItem>
               )}
             />
+            <FormField
+              control={form.control}
+              name="barcode"
+              render={({ field }) => (
+                <FormItem className="min-w-0">
+                  <FormLabel>Barcode</FormLabel>
+                  <FormControl>
+                    <Input className="font-mono" maxLength={100} placeholder="Scan or enter barcode" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <div className="sm:col-span-2">
               <FormField
                 control={form.control}
@@ -309,198 +328,15 @@ export function ProductEditForm({ product, productId, onDone }: ProductEditFormP
           </div>
         </div>
 
-        <div>
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-            Costing & Pricing
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="costingMethod"
-              render={({ field }) => (
-                <FormItem className="min-w-0">
-                  <FormLabel>Costing Method</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="STANDARD">Standard</SelectItem>
-                      <SelectItem value="WEIGHTED_AVERAGE">Weighted Average</SelectItem>
-                      <SelectItem value="FIFO">FIFO</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-[10px] text-muted-foreground mt-1">
-                    Cannot change once stock exists
-                  </p>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            {costingMethod === "STANDARD" && (
-              <FormField
-                control={form.control}
-                name="standardCost"
-                render={({ field }) => (
-                  <FormItem className="min-w-0">
-                    <FormLabel>Standard Cost</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.0001"
-                        min="0"
-                        className="tabular-nums"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-            <FormField
-              control={form.control}
-              name="costPrice"
-              render={({ field }) => (
-                <FormItem className="min-w-0">
-                  <FormLabel>Cost Price</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      className="tabular-nums"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="sellingPrice"
-              render={({ field }) => (
-                <FormItem className="min-w-0">
-                  <FormLabel>Selling Price</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      className="tabular-nums"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        </div>
+        <ProductCostingFields control={form.control} costingMethod={costingMethod} />
 
-        <div>
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-            Units of Measure
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <FormField
-              control={form.control}
-              name="uomId"
-              render={({ field }) => (
-                <FormItem className="min-w-0">
-                  <FormLabel>Base UOM</FormLabel>
-                  <UomSelect
-                    value={field.value ?? ""}
-                    onChange={(val) => {
-                      field.onChange(val);
-                      if (!val) {
-                        form.setValue("purchaseUomId", "");
-                        form.setValue("salesUomId", "");
-                      }
-                    }}
-                    placeholder="Select base UOM"
-                  />
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="purchaseUomId"
-              render={({ field }) => (
-                <FormItem className="min-w-0">
-                  <FormLabel>Purchase UOM</FormLabel>
-                  <UomSelect
-                    value={field.value ?? ""}
-                    onChange={field.onChange}
-                    placeholder="Same as base"
-                    disabled={!baseUomValue}
-                  />
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="salesUomId"
-              render={({ field }) => (
-                <FormItem className="min-w-0">
-                  <FormLabel>Sales UOM</FormLabel>
-                  <UomSelect
-                    value={field.value ?? ""}
-                    onChange={field.onChange}
-                    placeholder="Same as base"
-                    disabled={!baseUomValue}
-                  />
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        </div>
+        <ProductUomFields
+          control={form.control}
+          baseUomValue={baseUomValue}
+          setValue={form.setValue}
+        />
 
-        <div>
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-            Reorder
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="reorderEnabled"
-              render={({ field }) => (
-                <FormItem className="flex items-center justify-between rounded-md border p-3">
-                  <FormLabel className="cursor-pointer">Enable Auto-Reorder</FormLabel>
-                  <FormControl>
-                    <Switch checked={field.value ?? false} onCheckedChange={field.onChange} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="reorderPoint"
-              render={({ field }) => (
-                <FormItem className="min-w-0">
-                  <FormLabel>Reorder Point</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      step="1"
-                      min="0"
-                      className="tabular-nums"
-                      disabled={!reorderEnabled}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        </div>
+        <ProductReorderFields control={form.control} reorderEnabled={reorderEnabled} />
 
         <div className="flex justify-end gap-2 pt-2 border-t">
           <Button
@@ -511,9 +347,9 @@ export function ProductEditForm({ product, productId, onDone }: ProductEditFormP
           >
             Cancel
           </Button>
-          <Button type="submit" disabled={updateMutation.isPending}>
-            {updateMutation.isPending ? "Saving…" : "Save changes"}
-          </Button>
+          <LoadingButton type="submit" isPending={updateMutation.isPending} loadingText="Saving…">
+            Save changes
+          </LoadingButton>
         </div>
       </form>
     </Form>

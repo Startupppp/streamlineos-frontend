@@ -16,6 +16,7 @@ import { EmptyWarehouseIllustration } from "@/components/illustrations";
 import { useQualityHolds, useReleaseQualityHold } from "@/hooks/api/inventory/quality";
 import type { QualityHold } from "@/hooks/api/inventory/quality";
 import { HoldCreateSheet } from "@/features/inventory/components/quality/hold-create-sheet";
+import { HoldDetailSheet } from "@/features/inventory/components/quality/hold-detail-sheet";
 import { QUALITY_HOLD_STATUS_BADGE, QUALITY_HOLD_STATUS_LABEL } from "@/features/inventory/lib";
 import type { QualityHoldStatus } from "@/features/inventory/lib";
 import {
@@ -33,6 +34,8 @@ function HoldsPageInner() {
   const searchParams = useSearchParams();
 
   const [createOpen, setCreateOpen] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [selectedHoldId, setSelectedHoldId] = useState<number | null>(null);
 
   const statusParam = searchParams.get("status") ?? "";
   const page = Math.max(1, Number(searchParams.get("page") ?? "1"));
@@ -62,6 +65,16 @@ function HoldsPageInner() {
 
   function handleCreateOpenChange(v: boolean): void {
     setCreateOpen(v);
+  }
+
+  function handleRowClick(row: QualityHold): void {
+    setSelectedHoldId(row.id);
+    setDetailOpen(true);
+  }
+
+  function handleDetailOpenChange(v: boolean): void {
+    setDetailOpen(v);
+    if (!v) setSelectedHoldId(null);
   }
 
   function handleOpenCreate(): void {
@@ -99,13 +112,6 @@ function HoldsPageInner() {
   const hasFilters = !!statusParam;
 
   const columns: DataTableColumn<QualityHold>[] = [
-    {
-      key: "id",
-      header: "ID",
-      headerClassName: "w-[80px]",
-      className: "tabular-nums font-mono text-muted-foreground",
-      cell: (r) => `#${r.id}`,
-    },
     {
       key: "variant",
       header: "Variant",
@@ -213,6 +219,7 @@ function HoldsPageInner() {
             data={items}
             columns={columns}
             getRowKey={(r) => r.id}
+            onRowClick={handleRowClick}
             isLoading={holdsQuery.isLoading}
             emptyState={
               <InventoryEmptyState
@@ -240,6 +247,7 @@ function HoldsPageInner() {
       </PageWrapper>
 
       <HoldCreateSheet open={createOpen} onOpenChange={handleCreateOpenChange} />
+      <HoldDetailSheet open={detailOpen} onOpenChange={handleDetailOpenChange} holdId={selectedHoldId} />
     </>
   );
 }

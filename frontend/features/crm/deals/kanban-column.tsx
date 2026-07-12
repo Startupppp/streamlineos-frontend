@@ -9,7 +9,8 @@ import { DealKanbanCard } from "@/features/crm/deals/deal-kanban-card";
 interface KanbanColumnStage {
   key: string;
   label: string;
-  dot: string;
+  dot?: string;
+  color?: string;
 }
 
 interface KanbanColumnProps {
@@ -54,6 +55,11 @@ const KanbanDraggableCard = memo(function KanbanDraggableCard({
   );
 });
 
+function formatCompactInr(value: number): string {
+  if (value >= 100000) return `₹${(value / 100000).toFixed(1)}L`;
+  return `₹${value.toLocaleString("en-IN")}`;
+}
+
 export const KanbanColumn = memo(function KanbanColumn({
   stage,
   deals,
@@ -67,14 +73,23 @@ export const KanbanColumn = memo(function KanbanColumn({
     <div className="w-56 sm:w-64 md:w-72 flex-shrink-0">
       <div className="mb-3 px-1">
         <div className="flex items-center gap-2">
-          <div className={cn("w-2.5 h-2.5 rounded-full", stage.dot)} />
+          {stage.color ? (
+            <span
+              className="h-2.5 w-2.5 rounded-full shrink-0"
+              style={{ background: stage.color }}
+            />
+          ) : (
+            <div className={cn("w-2.5 h-2.5 rounded-full", stage.dot)} />
+          )}
           <span className="text-sm font-semibold">{stage.label}</span>
+          {stageValue > 0 && (
+            <span className="ml-auto text-xs text-muted-foreground font-medium">
+              {formatCompactInr(stageValue)}
+            </span>
+          )}
         </div>
         <p className="text-xs text-muted-foreground mt-0.5 pl-[18px]">
           {deals.length} {deals.length === 1 ? "deal" : "deals"}
-          {stageValue > 0 && (
-            <> · ₹{stageValue.toLocaleString("en-IN")}</>
-          )}
         </p>
       </div>
       <Droppable droppableId={stage.key}>

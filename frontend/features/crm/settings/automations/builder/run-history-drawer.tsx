@@ -1,0 +1,99 @@
+"use client";
+
+import { memo } from "react";
+import { CheckCircle, XCircle, Clock, SkipForward } from "lucide-react";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { useCrmAutomationRuns } from "@/hooks/api/crm";
+import { cn } from "@/lib/utils";
+import type { AutomationRunStatus } from "@/types/crm";
+
+interface RunHistoryDrawerProps {
+  ruleId: number;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+const statusConfig: Record<AutomationRunStatus, { label: string; icon: React.ComponentType<{ className?: string }>; color: string }> = {
+  queued: { label: "Queued", icon: Clock, color: "text-muted-foreground" },
+  running: { label: "Running", icon: Clock, color: "text-blue-500" },
+  success: { label: "Success", icon: CheckCircle, color: "text-emerald-500" },
+  failed: { label: "Failed", icon: XCircle, color: "text-red-500" },
+  skipped: { label: "Skipped", icon: SkipForward, color: "text-amber-500" },
+};
+
+export const RunHistoryDrawer = memo(function RunHistoryDrawer({ ruleId, open, onOpenChange }: RunHistoryDrawerProps) {
+  const { data, isLoading, error } = useCrmAutomationRuns(ruleId, 1);
+  const runs = data?.runs ?? [];
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" className="w-[440px] sm:w-[480px] p-0 flex flex-col">
+        <SheetHeader className="shrink-0 px-5 py-4 border-b">
+          <SheetTitle className="text-base">Run History</SheetTitle>
+        </SheetHeader>
+        <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-3">
+          {error ? (
+            <p className="text-sm text-destructive">{getErrorMessage(error)}</p>
+          ) : isLoading ? (
+            Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-16 w-full rounded-lg" />
+            ))
+          ) : runs.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">No runs yet.</p>
+          ) : (
+            runs.map((run) => {
+              const cfg = statusConfig[run.status as AutomationRunStatus] ?? statusConfig.queued;
+              const Icon = cfg.icon;
+              return (
+                <div key={run.id} className="rounded-lg border border-border p-3 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Icon className={cn("h-4 w-4 shrink-0", cfg.color)} />
+                      <span className="text-xs font-medium">{run.eventKey}</span>
+                    </div>
+                    <Badge
+                      variant="outline"
+                      className={cn("text-[10px] h-4 px-1.5", cfg.color)}
+                    >
+                      {cfg.label}
+                    </Badge>
+                  </div>
+                  <div className="text-[11px] text-muted-foreground flex gap-3">
+                    <span>{new Date(run.startedAt).toLocaleString()}</span>
+                    <span className="capitalize">{run.entityType} {run.entityId}</span>
+                  </div>
+                  {run.error && (
+                    <p className="text-[11px] text-red-500 bg-red-50 rounded px-2 py-1">{run.error}</p>
+                  )}
+                  {run.steps && run.steps.length > 0 && (
+                    <div className="space-y-1 pl-2 border-l-2 border-border ml-2">
+                      {run.steps.map((step) => (
+                        <div key={step.nodeId} className="flex items-center gap-2">
+                          <span className={cn("h-2 w-2 rounded-full shrink-0", {
+                            "bg-emerald-500": step.status === "ok",
+                            "bg-red-500": step.status === "error",
+                            "bg-amber-400": step.status === "skipped",
+                          })} />
+                          <span className="text-[10px] text-muted-foreground">{step.type}</span>
+                          {step.message && <span className="text-[10px] text-muted-foreground">— {step.message}</span>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+});

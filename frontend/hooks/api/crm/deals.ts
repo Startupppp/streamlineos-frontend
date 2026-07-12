@@ -16,6 +16,14 @@ import type {
   DealMeeting,
   CreateDealMeetingInput,
   WinLossAnalysis,
+  DealCompetitor,
+  CreateDealCompetitorInput,
+  UpdateDealCompetitorInput,
+  DealHealth,
+  ForecastSnapshot,
+  ForecastSnapshotCompare,
+  CaptureForecastSnapshotInput,
+  PatchNextStepInput,
 } from "@/types/crm";
 
 export type {
@@ -123,7 +131,7 @@ export function useUpdateDealStage() {
   return useMutation({
     mutationKey: ["deals", "updateStage"] as const,
     mutationFn: ({ id, stage, lostReason, version }: UpdateDealStageInput) =>
-      apiClient.patch<Deal>(`/deals/${id}`, { stage, lostReason, version }),
+      apiClient.patch<Deal | { approvalPending: true; approvalId: number }>(`/deals/${id}`, { stage, lostReason, version }),
     onMutate: async ({ id, stage }) => {
       await qc.cancelQueries({ queryKey: queryKeys.deals.all });
       const snapshots = qc.getQueriesData<Deal[]>({ queryKey: queryKeys.deals.all });
@@ -271,6 +279,101 @@ export function useResolveDealApproval() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.deals.approvals() });
       qc.invalidateQueries({ queryKey: queryKeys.deals.all });
+    },
+  });
+}
+
+export function useForecastSnapshots(params?: { period?: string; limit?: number }) {
+  return useQuery({
+    queryKey: queryKeys.deals.forecastSnapshots(params as Record<string, unknown>),
+    queryFn: () => apiClient.get<ForecastSnapshot[]>("/deals/forecast/snapshots", params as Record<string, unknown>),
+    staleTime: 2 * 60_000,
+  });
+}
+
+export function useCaptureForecastSnapshot() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["deals", "forecast", "captureSnapshot"] as const,
+    mutationFn: (input: CaptureForecastSnapshotInput) =>
+      apiClient.post<ForecastSnapshot>("/deals/forecast/snapshot", input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.deals.forecastSnapshots() });
+    },
+  });
+}
+
+export function useForecastCompare(period: string) {
+  return useQuery({
+    queryKey: queryKeys.deals.forecastCompare(period),
+    queryFn: () => apiClient.get<ForecastSnapshotCompare>("/deals/forecast/compare", { period }),
+    staleTime: 5 * 60_000,
+    enabled: period.length > 0,
+  });
+}
+
+export function useDealCompetitors(dealId: number) {
+  return useQuery({
+    queryKey: queryKeys.deals.competitors(dealId),
+    queryFn: () => apiClient.get<DealCompetitor[]>(`/deals/${dealId}/competitors`),
+    staleTime: 2 * 60_000,
+    enabled: dealId > 0,
+  });
+}
+
+export function useAddDealCompetitor(dealId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["deals", "competitors", "create", dealId] as const,
+    mutationFn: (input: CreateDealCompetitorInput) =>
+      apiClient.post<DealCompetitor>(`/deals/${dealId}/competitors`, input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.deals.competitors(dealId) });
+    },
+  });
+}
+
+export function useUpdateDealCompetitor(dealId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["deals", "competitors", "update", dealId] as const,
+    mutationFn: ({ id, ...data }: UpdateDealCompetitorInput & { id: string }) =>
+      apiClient.patch<DealCompetitor>(`/deals/${dealId}/competitors/${id}`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.deals.competitors(dealId) });
+    },
+  });
+}
+
+export function useDeleteDealCompetitor(dealId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["deals", "competitors", "delete", dealId] as const,
+    mutationFn: (competitorId: string) =>
+      apiClient.delete<{ success: boolean }>(`/deals/${dealId}/competitors/${competitorId}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.deals.competitors(dealId) });
+    },
+  });
+}
+
+export function useDealHealth(dealId: number) {
+  return useQuery({
+    queryKey: queryKeys.deals.health(dealId),
+    queryFn: () => apiClient.get<DealHealth>(`/deals/${dealId}/health`),
+    staleTime: 5 * 60_000,
+    enabled: dealId > 0,
+  });
+}
+
+export function usePatchNextStep(dealId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["deals", "patchNextStep"] as const,
+    mutationFn: (input: PatchNextStepInput) =>
+      apiClient.patch<Deal>(`/deals/${dealId}`, { nextStep: input.nextStep }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.deals.detail(dealId) });
     },
   });
 }

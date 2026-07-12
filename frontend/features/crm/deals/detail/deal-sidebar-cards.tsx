@@ -7,6 +7,10 @@ import Link from "next/link";
 import { ActivityTimeline } from "./activity-timeline";
 import { MeetingsCard } from "./meetings-card";
 import { DealAiInsightsCard } from "./deal-ai-insights-card";
+import { DealHealthChip } from "./deal-health-chip";
+import { DealNextStepInline } from "./deal-next-step-inline";
+import { DealApprovalBanner } from "./deal-approval-banner";
+import { DealCompetitorsCard } from "./deal-competitors-card";
 import type { DealActivity, DealMeeting } from "@/hooks/api/crm";
 
 interface AssignedTo {
@@ -41,6 +45,13 @@ interface DealSidebarCardsProps {
   onDeleteMeeting: (meetingId: number) => void;
   dealId: number;
   dealName?: string | null;
+  healthScore?: number | null;
+  nextStep?: string | null;
+  pipelineId?: string | null;
+  dealValue?: string | null;
+  dealStage?: string | null;
+  forecastCategory?: string | null;
+  approvalPending?: boolean;
 }
 
 const QUICK_ACTIONS = [
@@ -62,6 +73,9 @@ export function DealSidebarCards({
   onDeleteMeeting,
   dealId,
   dealName,
+  healthScore,
+  nextStep,
+  approvalPending,
 }: DealSidebarCardsProps) {
   return (
     <>
@@ -125,6 +139,23 @@ export function DealSidebarCards({
           </CardContent>
         </Card>
       )}
+
+      {approvalPending && (
+        <DealApprovalBanner dealId={dealId} />
+      )}
+
+      {typeof healthScore === "number" && (
+        <DealHealthChip score={healthScore} dealId={dealId} />
+      )}
+
+      {nextStep !== undefined && (
+        <DealNextStepInline
+          dealId={dealId}
+          nextStep={nextStep ?? null}
+        />
+      )}
+
+      <DealCompetitorsCard dealId={dealId} />
 
       <Card className="shadow-noir">
         <CardHeader>

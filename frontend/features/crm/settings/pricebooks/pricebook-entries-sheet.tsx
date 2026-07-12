@@ -32,17 +32,17 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import type { Pricebook } from "@/types/crm/pricebooks";
 
 const entrySchema = z.object({
-  productId: z.coerce.number().int().positive("Product ID required"),
-  unitPriceCents: z.coerce.number().int().min(0, "Price must be >= 0"),
-  minQuantity: z.coerce.number().int().min(1).default(1),
+  productId: z.string().min(1, "Product ID required"),
+  unitPriceCents: z.string().min(1, "Price required"),
+  minQuantity: z.string(),
 });
 
 type EntryFormValues = z.infer<typeof entrySchema>;
 
 const defaultEntryValues: EntryFormValues = {
-  productId: 0,
-  unitPriceCents: 0,
-  minQuantity: 1,
+  productId: "",
+  unitPriceCents: "",
+  minQuantity: "1",
 };
 
 interface PricebookEntriesSheetProps {
@@ -69,8 +69,12 @@ export function PricebookEntriesSheet({
 
   function handleAddEntry(values: EntryFormValues) {
     if (!pricebookId) return;
+    const productId = Number(values.productId);
+    const unitPriceCents = Number(values.unitPriceCents);
+    const minQuantity = Number(values.minQuantity) || 1;
+    if (!productId || productId <= 0) return;
     upsertEntry.mutate(
-      { pricebookId, ...values },
+      { pricebookId, productId, unitPriceCents, minQuantity },
       {
         onSuccess: () => {
           toast.success("Entry added");

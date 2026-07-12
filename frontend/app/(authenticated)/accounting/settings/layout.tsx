@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const TABS = [
+  { label: "Finance Settings", href: "/accounting/settings" },
   { label: "Automations", href: "/accounting/settings/automations" },
 ] as const;
 
@@ -20,7 +21,10 @@ export default function AccountingSettingsLayout({
       <div className="shrink-0 border-b bg-background/95 backdrop-blur-sm px-1">
         <nav className="flex flex-wrap items-center gap-1" aria-label="Accounting Settings">
           {TABS.map((tab) => {
-            const isActive = pathname === tab.href;
+            const isActive =
+              tab.href === "/accounting/settings"
+                ? pathname === "/accounting/settings"
+                : pathname === tab.href;
             return (
               <Link
                 key={tab.href}
@@ -34,7 +38,7 @@ export default function AccountingSettingsLayout({
               >
                 {tab.label}
                 {isActive && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-violet-600 rounded-full" />
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 rounded-full" />
                 )}
               </Link>
             );

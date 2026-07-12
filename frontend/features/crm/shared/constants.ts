@@ -47,8 +47,6 @@ export const ACTIVITY_TYPES = [
   { value: "site_visit", label: "Site Visit", icon: Eye },
 ] as const;
 
-export const CHART_COLORS = ["#3B82F6", "#8B5CF6", "#F59E0B", "#10B981", "#EF4444", "#0EA5E9", "#EC4899", "#6366F1"];
-
 export const CHART_TOOLTIP_STYLE = {
   background: "hsl(var(--card))",
   border: "1px solid hsl(var(--border))",

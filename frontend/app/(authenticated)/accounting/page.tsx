@@ -1,5 +1,5 @@
-import { AccountingHubClient } from "./accounting-hub-client";
+import { OverviewClient } from "@/features/accounting/overview/overview-client";
 
-export default function AccountingHubPage() {
-  return <AccountingHubClient />;
+export default function AccountingOverviewPage() {
+  return <OverviewClient />;
 }

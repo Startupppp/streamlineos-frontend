@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, type ChangeEvent } from "react";
+import { Suspense, useMemo, type ChangeEvent } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Download, Search } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -8,15 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { SkeletonTable, ErrorState } from "@/components/shared";
+import { Card, CardContent } from "@/components/ui/card";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { ErrorState } from "@/components/shared";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyReportIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { useStockSummary, type StockSummaryRow } from "@/hooks/api/inventory/reports";
@@ -86,27 +80,97 @@ function exportToCsv(rows: StockSummaryRow[]): void {
   URL.revokeObjectURL(url);
 }
 
+const STOCK_SUMMARY_COLUMNS: DataTableColumn<StockSummaryRow>[] = [
+  {
+    key: "productName",
+    header: "Product",
+    cell: (row) => <span className="font-medium text-[11px]">{row.productName}</span>,
+  },
+  {
+    key: "sku",
+    header: "SKU",
+    cell: (row) => <span className="font-mono tabular-nums text-[11px]">{row.sku}</span>,
+  },
+  {
+    key: "categoryName",
+    header: "Category",
+    cell: (row) => <span className="text-[11px]">{row.categoryName ?? "—"}</span>,
+  },
+  {
+    key: "warehouseName",
+    header: "Warehouse",
+    cell: (row) => <span className="text-[11px]">{row.warehouseName ?? "—"}</span>,
+  },
+  {
+    key: "onHandQty",
+    header: "On Hand",
+    headerClassName: "text-right",
+    className: "text-right font-mono tabular-nums text-[11px]",
+    cell: (row) => row.onHandQty,
+  },
+  {
+    key: "reservedQty",
+    header: "Reserved",
+    headerClassName: "text-right",
+    className: "text-right font-mono tabular-nums text-[11px]",
+    cell: (row) => row.reservedQty,
+  },
+  {
+    key: "availableQty",
+    header: "Available",
+    headerClassName: "text-right",
+    className: "text-right font-mono tabular-nums text-[11px]",
+    cell: (row) => row.availableQty,
+  },
+  {
+    key: "reorderPoint",
+    header: "Reorder Pt.",
+    headerClassName: "text-right",
+    className: "text-right font-mono tabular-nums text-[11px]",
+    cell: (row) => row.reorderPoint ?? "—",
+  },
+  {
+    key: "totalValue",
+    header: "Total Value",
+    headerClassName: "text-right",
+    className: "text-right font-mono tabular-nums text-[11px]",
+    cell: (row) => row.totalValue > 0 ? row.totalValue.toFixed(2) : "—",
+  },
+  {
+    key: "status",
+    header: "Status",
+    cell: (row) => <StockLevelBadge available={row.availableQty} reorderPoint={row.reorderPoint} />,
+  },
+];
+
 function StockSummaryContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const query = useStockSummary();
   const warehousesQuery = useWarehouses();
-  const rows = query.data ?? [];
   const warehouses = warehousesQuery.data ?? [];
 
   const search = searchParams.get("q") ?? "";
   const warehouseParam = searchParams.get("warehouse") ?? "all";
+  const currentPage = Number(searchParams.get("page") ?? "1");
 
-  const filtered = rows.filter((r) => {
-    const matchesSearch = !search || (
-      r.productName.toLowerCase().includes(search.toLowerCase()) ||
-      r.sku.toLowerCase().includes(search.toLowerCase()) ||
-      (r.categoryName?.toLowerCase() ?? "").includes(search.toLowerCase()) ||
-      (r.warehouseName?.toLowerCase() ?? "").includes(search.toLowerCase())
-    );
-    const matchesWarehouse = warehouseParam === "all" || r.warehouseName === warehouseParam;
-    return matchesSearch && matchesWarehouse;
-  });
+  const query = useStockSummary({ page: currentPage, limit: 50 });
+  const items = query.data?.items ?? [];
+
+  const filtered = useMemo(
+    () =>
+      items.filter((r) => {
+        const matchesSearch =
+          !search ||
+          r.productName.toLowerCase().includes(search.toLowerCase()) ||
+          r.sku.toLowerCase().includes(search.toLowerCase()) ||
+          (r.categoryName?.toLowerCase() ?? "").includes(search.toLowerCase()) ||
+          (r.warehouseName?.toLowerCase() ?? "").includes(search.toLowerCase());
+        const matchesWarehouse =
+          warehouseParam === "all" || r.warehouseName === warehouseParam;
+        return matchesSearch && matchesWarehouse;
+      }),
+    [items, search, warehouseParam],
+  );
 
   function handleRetry(): void {
     void query.refetch();
@@ -119,12 +183,14 @@ function StockSummaryContent() {
     } else {
       params.delete("q");
     }
+    params.delete("page");
     router.replace(`?${params.toString()}`, { scroll: false });
   }
 
   function handleClearSearch(): void {
     const params = new URLSearchParams(searchParams.toString());
     params.delete("q");
+    params.delete("page");
     router.replace(`?${params.toString()}`, { scroll: false });
   }
 
@@ -135,6 +201,13 @@ function StockSummaryContent() {
     } else {
       params.set("warehouse", value);
     }
+    params.delete("page");
+    router.replace(`?${params.toString()}`, { scroll: false });
+  }
+
+  function handlePageChange(page: number): void {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("page", String(page));
     router.replace(`?${params.toString()}`, { scroll: false });
   }
 
@@ -142,13 +215,17 @@ function StockSummaryContent() {
     exportToCsv(filtered);
   }
 
+  const hasData = !query.isLoading && !query.error;
+  const noResults = hasData && items.length > 0 && filtered.length === 0;
+  const noData = hasData && items.length === 0;
+
   return (
     <PageWrapper
       eyebrow="Inventory · Reports"
       title="Stock Summary"
       subtitle={
         query.data !== undefined
-          ? `${filtered.length} stock record${filtered.length !== 1 ? "s" : ""}`
+          ? `${query.data.total} stock record${query.data.total !== 1 ? "s" : ""}`
           : "Current stock levels across all products"
       }
       filters={
@@ -189,12 +266,11 @@ function StockSummaryContent() {
         </div>
       }
     >
-      {query.isLoading && <SkeletonTable rows={8} columns={10} />}
       {query.error && (
         <ErrorState description={query.error.message} onRetry={handleRetry} className="flex-1" />
       )}
 
-      {!query.isLoading && !query.error && rows.length === 0 && (
+      {noData && (
         <InventoryEmptyState
           illustration={<EmptyReportIllustration />}
           title="No stock data"
@@ -203,60 +279,35 @@ function StockSummaryContent() {
         />
       )}
 
-      {!query.isLoading && !query.error && rows.length > 0 && (
-        <>
-          {filtered.length === 0 ? (
-            <InventoryEmptyState
-              illustration={<EmptySearchIllustration />}
-              title="No results"
-              description="No stock records match your search."
-              action={{ label: "Clear search", onClick: handleClearSearch }}
-              className="min-h-[40vh]"
+      {noResults && (
+        <InventoryEmptyState
+          illustration={<EmptySearchIllustration />}
+          title="No results"
+          description="No stock records match your search."
+          action={{ label: "Clear search", onClick: handleClearSearch }}
+          className="min-h-[40vh]"
+        />
+      )}
+
+      {!query.error && !noData && !noResults && (
+        <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
+          <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
+            <DataTable
+              data={filtered}
+              columns={STOCK_SUMMARY_COLUMNS}
+              getRowKey={(row) => `${row.productId}-${row.warehouseName}`}
+              isLoading={query.isLoading}
+              minWidth="920px"
+              pagination={{
+                mode: "server",
+                page: currentPage,
+                pageSize: 50,
+                total: query.data?.total ?? 0,
+                onPageChange: handlePageChange,
+              }}
             />
-          ) : (
-            <div className="rounded-md border border-border bg-card overflow-x-auto">
-              <Table className="min-w-[920px] text-[11px]">
-                <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
-                  <TableRow className="border-b-2 border-border">
-                    <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Product</TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">SKU</TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Category</TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Warehouse</TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">On Hand</TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Reserved</TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Available</TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Reorder Pt.</TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Total Value</TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filtered.map((row) => (
-                    <TableRow
-                      key={`${row.productId}-${row.warehouseName}`}
-                      className="h-8 hover:bg-muted/30 transition-colors"
-                    >
-                      <TableCell className="px-2 py-1 font-medium">{row.productName}</TableCell>
-                      <TableCell className="px-2 py-1 font-mono tabular-nums">{row.sku}</TableCell>
-                      <TableCell className="px-2 py-1">{row.categoryName ?? "—"}</TableCell>
-                      <TableCell className="px-2 py-1">{row.warehouseName ?? "—"}</TableCell>
-                      <TableCell className="px-2 py-1 text-right font-mono tabular-nums">{row.onHandQty}</TableCell>
-                      <TableCell className="px-2 py-1 text-right font-mono tabular-nums">{row.reservedQty}</TableCell>
-                      <TableCell className="px-2 py-1 text-right font-mono tabular-nums font-medium">{row.availableQty}</TableCell>
-                      <TableCell className="px-2 py-1 text-right font-mono tabular-nums">{row.reorderPoint ?? "—"}</TableCell>
-                      <TableCell className="px-2 py-1 text-right font-mono tabular-nums">
-                        {row.totalValue > 0 ? row.totalValue.toFixed(2) : "—"}
-                      </TableCell>
-                      <TableCell className="px-2 py-1">
-                        <StockLevelBadge available={row.availableQty} reorderPoint={row.reorderPoint} />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </>
+          </CardContent>
+        </Card>
       )}
     </PageWrapper>
   );

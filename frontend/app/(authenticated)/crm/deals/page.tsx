@@ -16,12 +16,11 @@ import { DealTableView } from "@/features/crm/deals/deal-table-view";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { DragDropContext, type DropResult } from "@hello-pangea/dnd";
-import { useDeals, useUpdateDealStage, useDeleteDeal } from "@/hooks/api/crm";
+import { useDeals, useUpdateDealStage, useDeleteDeal, useCrmPipelines } from "@/hooks/api/crm";
 import type { Deal, DealStage } from "@/types/crm";
 import { useHrEmployees } from "@/hooks/api/hr";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { DEAL_STAGES } from "@/features/crm/shared/constants";
 import { DealSidePanel } from "@/features/crm/deals/deal-side-panel";
 import { DealsStatsBar } from "@/features/crm/deals/deals-stats-bar";
 import { DealForecastWidget } from "@/features/crm/deals/deal-forecast-widget";
@@ -33,8 +32,6 @@ import { StageSkipDialog } from "@/features/crm/deals/stage-skip-dialog";
 import { useDealsExport } from "@/features/crm/deals/use-deals-export";
 import { DealsCsvImportDialog } from "@/features/crm/deals/deals-csv-import-dialog";
 import { ErrorState } from "@/components/shared/error-state";
-
-const STAGE_ORDER = ["LEAD", "CONTACTED", "PROPOSAL", "NEGOTIATION"] as const;
 
 export default function DealsPage() {
   const searchParams = useSearchParams();
@@ -72,8 +69,17 @@ export default function DealsPage() {
     return () => clearTimeout(timer);
   }, [searchInput, updateParams]);
 
+  const { data: dealPipelines = [] } = useCrmPipelines("deal");
+  const defaultPipeline = dealPipelines[0];
+  const dealStages = defaultPipeline?.stages ?? [];
+
+  const kanbanStages = useMemo(
+    () => dealStages.filter((s) => !s.isTerminal),
+    [dealStages],
+  );
+
   const stageFromUrl = searchParams.get("stage");
-  const stageFilter = DEAL_STAGES.find((s) => s.key === stageFromUrl)?.key;
+  const stageFilter = dealStages.find((s) => s.key === stageFromUrl)?.key;
 
   const { data: allDeals, isLoading, isError, refetch } = useDeals(
     stageFilter ? { stage: stageFilter as DealStage } : undefined,
@@ -152,11 +158,12 @@ export default function DealsPage() {
       }
       const currentDeal = allDeals?.find((d) => d.id === id);
       const currentStage = currentDeal?.stage;
-      const fromIdx = STAGE_ORDER.indexOf(currentStage as (typeof STAGE_ORDER)[number]);
-      const toIdx = STAGE_ORDER.indexOf(stage as (typeof STAGE_ORDER)[number]);
+      const stageKeys = kanbanStages.map((s) => s.key);
+      const fromIdx = stageKeys.indexOf(currentStage ?? "");
+      const toIdx = stageKeys.indexOf(stage);
       if (fromIdx !== -1 && toIdx !== -1 && toIdx > fromIdx + 1) {
-        const skipped = STAGE_ORDER.slice(fromIdx + 1, toIdx);
-        setStageSkipDialog({ id, from: currentStage!, to: stage, skipped: [...skipped] });
+        const skipped = stageKeys.slice(fromIdx + 1, toIdx);
+        setStageSkipDialog({ id, from: currentStage!, to: stage, skipped });
         return;
       }
       const version = currentDeal?.updatedAt
@@ -170,7 +177,7 @@ export default function DealsPage() {
         },
       );
     },
-    [updateStageMutation, allDeals],
+    [updateStageMutation, allDeals, kanbanStages],
   );
 
   const handleDragEnd = useCallback(
@@ -240,12 +247,12 @@ export default function DealsPage() {
 
   const dealsByStage = useMemo(() => {
     const map: Record<string, Deal[]> = {};
-    for (const s of DEAL_STAGES) map[s.key] = [];
+    for (const s of dealStages) map[s.key] = [];
     for (const d of filteredDeals) {
       if (map[d.stage]) map[d.stage].push(d);
     }
     return map;
-  }, [filteredDeals]);
+  }, [filteredDeals, dealStages]);
 
   const assigneeOptions = useMemo(() => {
     if (!allDeals) return [];
@@ -319,7 +326,7 @@ export default function DealsPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All stages</SelectItem>
-            {DEAL_STAGES.map((s) => (
+            {dealStages.map((s) => (
               <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>
             ))}
           </SelectContent>
@@ -420,11 +427,11 @@ export default function DealsPage() {
               <DragDropContext onDragEnd={handleDragEnd}>
                 <ScrollArea className="w-full" type="auto">
                   <div className="inline-flex gap-3 sm:gap-4 pb-4">
-                    {DEAL_STAGES.map((stage) => (
+                    {kanbanStages.map((s) => (
                       <KanbanColumn
-                        key={stage.key}
-                        stage={stage}
-                        deals={dealsByStage[stage.key] || []}
+                        key={s.key}
+                        stage={{ key: s.key, label: s.label, color: s.color }}
+                        deals={dealsByStage[s.key] ?? []}
                         onStageChange={handleStageChange}
                         onDelete={setDealToDelete}
                         onOpen={setSidePanelDealId}

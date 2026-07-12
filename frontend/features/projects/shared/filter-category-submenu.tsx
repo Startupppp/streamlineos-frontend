@@ -39,7 +39,14 @@ export type FilterCategory =
   | "label"
   | "cycle"
   | "sprint"
-  | "dates";
+  | "dates"
+  | "project";
+
+interface ProjectOption {
+  id: number;
+  name: string;
+  key: string;
+}
 
 interface FilterCategorySubmenuProps {
   category: FilterCategory;
@@ -48,12 +55,14 @@ interface FilterCategorySubmenuProps {
   labels: Label[];
   cycles: Cycle[];
   sprints: Sprint[];
+  projectOptions?: ProjectOption[];
   selectedStatuses: string[];
   selectedPriorities: string[];
   selectedTypes: string[];
   selectedAssignees: string[];
   selectedLabels: string[];
   selectedCycles: string[];
+  selectedProjectIds: string[];
   sprintParam: string;
   dueDateFrom: string;
   dueDateTo: string;
@@ -64,6 +73,7 @@ interface FilterCategorySubmenuProps {
   onToggleLabel: (v: string) => void;
   onToggleCycle: (v: string) => void;
   onToggleSprint: (v: string) => void;
+  onToggleProject: (v: string) => void;
   onDueDateFromChange: (v: string) => void;
   onDueDateToChange: (v: string) => void;
   onClose: () => void;
@@ -141,12 +151,14 @@ export function FilterCategorySubmenu({
   labels,
   cycles,
   sprints,
+  projectOptions,
   selectedStatuses,
   selectedPriorities,
   selectedTypes,
   selectedAssignees,
   selectedLabels,
   selectedCycles,
+  selectedProjectIds,
   sprintParam,
   dueDateFrom,
   dueDateTo,
@@ -157,6 +169,7 @@ export function FilterCategorySubmenu({
   onToggleLabel,
   onToggleCycle,
   onToggleSprint,
+  onToggleProject,
   onDueDateFromChange,
   onDueDateToChange,
   onClose,
@@ -179,7 +192,7 @@ export function FilterCategorySubmenu({
     containerRef.current?.focus();
   }, []);
 
-  const needsSearch = category === "assignee" || category === "label";
+  const needsSearch = category === "assignee" || category === "label" || category === "project";
   const q = search.toLowerCase();
 
   if (category === "status") {
@@ -384,6 +397,42 @@ export function FilterCategorySubmenu({
         {sprints.length === 0 && (
           <p className="px-2 py-3 text-center text-xs text-muted-foreground">No sprints</p>
         )}
+      </div>
+    );
+  }
+
+  if (category === "project") {
+    const projects = projectOptions ?? [];
+    const filtered = projects.filter(
+      (p) => !q || p.name.toLowerCase().includes(q) || p.key.toLowerCase().includes(q),
+    );
+    return (
+      <div
+        ref={containerRef}
+        tabIndex={-1}
+        onKeyDown={handleKeyDown}
+        className="flex min-w-[200px] flex-col outline-none"
+      >
+        {needsSearch && (
+          <SearchInput value={search} onChange={setSearch} placeholder="Search projects..." />
+        )}
+        <div className="max-h-[200px] overflow-y-auto py-1">
+          {filtered.map((p) => {
+            const projectId = String(p.id);
+            function handleClick() { onToggleProject(projectId); }
+            return (
+              <OptionRow
+                key={p.id}
+                active={selectedProjectIds.includes(projectId)}
+                label={p.name}
+                onClick={handleClick}
+              />
+            );
+          })}
+          {filtered.length === 0 && (
+            <p className="px-2 py-3 text-center text-xs text-muted-foreground">No projects</p>
+          )}
+        </div>
       </div>
     );
   }

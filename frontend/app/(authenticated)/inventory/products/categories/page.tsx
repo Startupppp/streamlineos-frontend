@@ -28,14 +28,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { LoadingButton } from "@/components/ui/loading-button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,7 +37,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { LoadingState, ErrorState } from "@/components/shared";
+import { ErrorState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import {
@@ -157,41 +151,27 @@ function CreateCategoryForm({
           </div>
         </div>
         <div className="flex justify-end">
-          <Button type="submit" size="sm" disabled={createMutation.isPending}>
+          <LoadingButton type="submit" size="sm" isPending={createMutation.isPending} loadingText="Creating…">
             <Plus className="mr-1 h-3.5 w-3.5" />
-            {createMutation.isPending ? "Creating…" : "Add Category"}
-          </Button>
+            Add Category
+          </LoadingButton>
         </div>
       </form>
     </Form>
   );
 }
 
-interface CategoryRowProps {
-  cat: InventoryCategory;
-  categoryNameById: Map<number, string>;
-  onEdit: (cat: InventoryCategory) => void;
-  onArchiveToggle: (cat: InventoryCategory) => void;
-}
-
-function CategoryRow({
-  cat,
-  categoryNameById,
-  onEdit,
-  onArchiveToggle,
-}: CategoryRowProps) {
-  function handleEdit(): void {
-    onEdit(cat);
-  }
-
-  function handleArchiveToggle(): void {
-    onArchiveToggle(cat);
-  }
-
-  return (
-    <TableRow className={`h-8 hover:bg-muted/30 transition-colors${!cat.isActive ? " opacity-60" : ""}`}>
-      <TableCell className="px-2 py-1 text-[11px] font-medium text-foreground">
-        <div className="flex items-center gap-2">
+function categoriesColumns(
+  categoryNameById: Map<number, string>,
+  onEdit: (cat: InventoryCategory) => void,
+  onArchiveToggle: (cat: InventoryCategory) => void,
+): DataTableColumn<InventoryCategory>[] {
+  return [
+    {
+      key: "name",
+      header: "Name",
+      cell: (cat) => (
+        <div className="flex items-center gap-2 font-medium text-foreground">
           {cat.name}
           {!cat.isActive && (
             <Badge
@@ -202,16 +182,35 @@ function CategoryRow({
             </Badge>
           )}
         </div>
-      </TableCell>
-      <TableCell className="px-2 py-1 text-[11px] text-muted-foreground">
-        {cat.parentCategoryId != null
-          ? (categoryNameById.get(cat.parentCategoryId) ?? "—")
-          : "—"}
-      </TableCell>
-      <TableCell className="px-2 py-1 text-[11px] text-muted-foreground max-w-xs truncate">
-        {cat.description ?? "—"}
-      </TableCell>
-      <TableCell className="px-2 py-1 w-8">
+      ),
+    },
+    {
+      key: "parentCategory",
+      header: "Parent",
+      headerClassName: "w-[180px]",
+      cell: (cat) => (
+        <span className="text-muted-foreground">
+          {cat.parentCategoryId != null
+            ? (categoryNameById.get(cat.parentCategoryId) ?? "—")
+            : "—"}
+        </span>
+      ),
+    },
+    {
+      key: "description",
+      header: "Description",
+      cell: (cat) => (
+        <span className="text-muted-foreground max-w-xs truncate block">
+          {cat.description ?? "—"}
+        </span>
+      ),
+    },
+    {
+      key: "actions",
+      header: "",
+      headerClassName: "w-8",
+      className: "w-8",
+      cell: (cat) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -224,12 +223,12 @@ function CategoryRow({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={handleEdit}>
+            <DropdownMenuItem onClick={() => onEdit(cat)}>
               <Pencil className="mr-2 h-4 w-4" />
               Edit
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={handleArchiveToggle}
+              onClick={() => onArchiveToggle(cat)}
               variant={cat.isActive ? "destructive" : "default"}
             >
               {cat.isActive ? (
@@ -246,9 +245,9 @@ function CategoryRow({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      </TableCell>
-    </TableRow>
-  );
+      ),
+    },
+  ];
 }
 
 function CategoriesPageInner() {
@@ -382,57 +381,39 @@ function CategoriesPageInner() {
           </CardContent>
         </Card>
 
-        {query.isLoading ? (
-          <LoadingState variant="table" rows={5} />
-        ) : query.error ? (
+        {query.error ? (
           <ErrorState
             title="Failed to load categories"
             description={query.error.message}
             onRetry={handleRetry}
           />
-        ) : filteredCategories.length === 0 ? (
-          <InventoryEmptyState
-            illustration={
-              hasFilters ? <EmptySearchIllustration /> : <EmptyProductsIllustration />
-            }
-            title={hasFilters ? "No categories found" : "No categories yet"}
-            description={
-              hasFilters
-                ? "Try adjusting your search or filters."
-                : "Use the form above to add your first product category."
-            }
-            className="border-0 bg-transparent min-h-[20vh]"
-          />
         ) : (
-          <div className="rounded-md border border-border overflow-x-auto">
-            <Table className="min-w-[560px]">
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 bg-muted/80">
-                    Name
-                  </TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 bg-muted/80 w-[180px]">
-                    Parent
-                  </TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 bg-muted/80">
-                    Description
-                  </TableHead>
-                  <TableHead className="bg-muted/80 w-8" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredCategories.map((cat) => (
-                  <CategoryRow
-                    key={cat.id}
-                    cat={cat}
-                    categoryNameById={categoryNameById}
-                    onEdit={handleEditOpen}
-                    onArchiveToggle={handleArchiveToggle}
+          <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
+            <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
+              <DataTable
+                data={filteredCategories}
+                getRowKey={(cat) => cat.id}
+                isLoading={query.isLoading}
+                rowClassName={(cat) => (!cat.isActive ? "opacity-60" : "")}
+                emptyState={
+                  <InventoryEmptyState
+                    illustration={
+                      hasFilters ? <EmptySearchIllustration /> : <EmptyProductsIllustration />
+                    }
+                    title={hasFilters ? "No categories found" : "No categories yet"}
+                    description={
+                      hasFilters
+                        ? "Try adjusting your search or filters."
+                        : "Use the form above to add your first product category."
+                    }
+                    className="border-0 bg-transparent min-h-[20vh]"
                   />
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                }
+                columns={categoriesColumns(categoryNameById, handleEditOpen, handleArchiveToggle)}
+                minWidth="560px"
+              />
+            </CardContent>
+          </Card>
         )}
       </div>
 

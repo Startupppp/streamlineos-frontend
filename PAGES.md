@@ -43,12 +43,12 @@ Ordered money-path first. Check off each page after fixing.
 - [x] `/crm/leads/smart-search` — AI-powered lead search
 - [x] `/crm/leads/duplicates` — Duplicate detection + merge
 - [x] `/crm/leads/source-report` — Lead source analytics
-- [x] `/crm/deals` — Deals kanban + table, stage management
-- [x] `/crm/deals/[dealId]` — Deal detail: info + activities + meetings + quotes + sidebar stats
-- [x] `/crm/deals/forecast` — Pipeline forecast summary + chart + close-date list
-- [x] `/crm/deals/approvals` — Deal approval workflow
-- [x] `/crm/deals/aging` — Aging deals report
-- [x] `/crm/deals/win-loss` — Win/loss analysis
+- [x] `/crm/deals` — Deals kanban (metadata-driven stages from useCrmPipelines) + table, stage management, optimistic moves
+- [x] `/crm/deals/[dealId]` — Deal detail: info + activities + meetings + sidebar (health chip, next-step inline, approval banner, competitors card); blueprint transition enforcement + won/lost dialog
+- [x] `/crm/deals/forecast` — Pipeline forecast summary + chart + close-date list + snapshot capture/list
+- [x] `/crm/deals/approvals` — Deal approval workflow; approve/reject gated by crm:deals:approve
+- [x] `/crm/deals/aging` — Aging deals report with metadata-driven stage badges
+- [x] `/crm/deals/win-loss` — Win/loss analysis with metadata-driven terminal stage keys
 - [x] `/crm/quotes` — Quotes list with status filters, pagination + CSV export (backend `/quotes` contract)
 - [x] `/crm/quotes/[quoteId]` — Quote detail with line items, totals, status transitions
 - [x] `/crm/contacts` — Contacts list with search/filter, table/card views, CSV import, AI enrich
@@ -68,7 +68,8 @@ Ordered money-path first. Check off each page after fixing.
 - [x] `/crm/settings/sla` — SLA policies + report + breached leads
 - [x] `/crm/settings/products` — Product catalog CRUD
 - [x] `/crm/settings/custom-fields` — Custom field definitions per entity
-- [x] `/crm/settings/automations` — Automation rules CRUD + toggle + run history
+- [x] `/crm/settings/automations` — Automation rules dense list, optimistic enable/disable toggle, run history drawer; builder at `/automations/[automationId]` (DnD node composer, test panel, run history); `CrmAutomationBusService` (emit + depth guard + cooldown), `CrmSequencesRunnerService` (cron flush); migration 0252; `crm:sequences:manage` permission; `POST /cron/crm-sequences-flush`
+- [x] `/crm/settings/sequences` — CRM email sequence CRUD + reorder + enrollments + stop (tab added to settings layout)
 - [x] `/crm/settings/ai` — CRM AI feature flags + usage dashboard
 - [x] `/crm/settings/audit-log` — Audit log with filters + pagination + export
 - [x] `/crm/settings/import-export` — CRM leads/contacts/deals/clients import & export
@@ -254,6 +255,7 @@ Ordered money-path first. Check off each page after fixing.
 - [x] `/projects/resource-allocation` — Resource allocation: compact StatCardGrid + dense member cards with semantic load bars and inline project chips
 - [x] `/projects/command-center` — Command Center: eyebrow on all states, StatCardGrid + PageSection pattern (reference-aligned)
 - [x] `/projects/my-work` — My Work: eyebrow + StatCardGrid (open/overdue/today/upcoming), bucketed list states
+- [x] `/projects/all-work` — All Work: cross-project ticket view (list/table/board via ?view=), server-driven `GET /projects/all-work` (paginated + full filters), project chips per row, Me scope toggle, URL-persisted filters
 - [x] `/projects/portfolio` — Portfolio health view: eyebrow, subtitle, StatCardGrid, filters in PageWrapper, rounded-xl table shell
 - [x] `/projects/[projectId]/releases` — Releases (list + create/edit Sheet w/ TipTap notes, status badges, delete confirm; wired to existing releases API — screen was previously missing)
 - [x] `/projects/[projectId]/workload` — Workload (dedicated route exposing existing `WorkloadView`; was only a hidden view-switcher tab)

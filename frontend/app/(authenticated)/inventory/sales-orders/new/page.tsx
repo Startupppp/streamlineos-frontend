@@ -207,18 +207,19 @@ export default function NewSalesOrderPage() {
   async function onSubmit(values: FormValues): Promise<void> {
     try {
       const result = await createMutation.mutateAsync({
-        customerId: values.customerId ? parseInt(values.customerId, 10) : undefined,
+        clientId: values.customerId ? parseInt(values.customerId, 10) : undefined,
         warehouseId: parseInt(values.warehouseId, 10),
         orderDate: values.orderDate,
-        expectedShipDate: values.expectedShipDate || undefined,
+        requiredDate: values.expectedShipDate || undefined,
         currency: values.currency.trim() || undefined,
         shippingAddress: values.shippingAddress?.trim() || undefined,
         notes: values.notes?.trim() || undefined,
-        lines: values.lines.map((ln) => ({
-          productId: parseInt(ln.variantId, 10),
+        lines: values.lines.map((ln, index) => ({
+          productVariantId: parseInt(ln.variantId, 10),
           quantity: toNum(ln.quantity),
-          unitPrice: toNum(ln.unitPrice),
-          taxRate: toNum(ln.taxRate) || undefined,
+          unitPrice: toNum(ln.unitPrice).toFixed(2),
+          taxRate: toNum(ln.taxRate) > 0 ? toNum(ln.taxRate).toFixed(2) : undefined,
+          lineOrder: index,
         })),
       });
       toast.success(`Sales order ${result.soNumber} created`);

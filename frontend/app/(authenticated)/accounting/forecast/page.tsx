@@ -1,0 +1,445 @@
+"use client";
+
+import { useState, type ChangeEvent } from "react";
+import { toast } from "sonner";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { LoadingButton } from "@/components/ui/loading-button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { LoadingState, ErrorState } from "@/components/shared";
+import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyChartIllustration } from "@/components/illustrations";
+import { Money } from "@/features/accounting/shared";
+import {
+  useForecast,
+  useForecastCompare,
+  useScenarios,
+  useSeedDefaultScenarios,
+} from "@/hooks/api/accounting/planning";
+import { getErrorMessage } from "@/lib/get-error-message";
+import {
+  AreaChart,
+  Area,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  ReferenceLine,
+} from "recharts";
+
+const CHART_TOOLTIP_STYLE = {
+  background: "hsl(var(--card))",
+  border: "1px solid hsl(var(--border))",
+  borderRadius: 8,
+};
+const AXIS_TICK = { fill: "hsl(var(--muted-foreground))", fontSize: 11 };
+const COMPARE_COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
+
+interface ScenarioCheckboxProps {
+  id: number;
+  name: string;
+  checked: boolean;
+  onToggle: (id: number) => void;
+}
+
+function ScenarioCheckbox({ id, name, checked, onToggle }: ScenarioCheckboxProps) {
+  function handleChange(): void {
+    onToggle(id);
+  }
+  return (
+    <label className="flex items-center gap-2 cursor-pointer text-sm">
+      <Checkbox checked={checked} onCheckedChange={handleChange} />
+      {name}
+    </label>
+  );
+}
+
+function formatWeekStart(weekStart: string): string {
+  return new Date(weekStart).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+  });
+}
+
+export default function ForecastPage() {
+  const [selectedScenarioId, setSelectedScenarioId] = useState<
+    number | undefined
+  >(undefined);
+  const [weeks, setWeeks] = useState(13);
+  const [compareMode, setCompareMode] = useState(false);
+  const [compareIds, setCompareIds] = useState<Set<number>>(new Set());
+
+  const scenariosQuery = useScenarios();
+  const scenarios = scenariosQuery.data?.items ?? [];
+
+  const forecastQuery = useForecast({
+    weeks,
+    scenarioId: selectedScenarioId,
+  });
+
+  const compareIdsArray = Array.from(compareIds);
+  const compareQuery = useForecastCompare(compareIdsArray);
+
+  const seedMutation = useSeedDefaultScenarios();
+
+  function handleScenarioChange(value: string): void {
+    setSelectedScenarioId(value === "" ? undefined : Number(value));
+  }
+
+  function handleWeeksChange(e: ChangeEvent<HTMLInputElement>): void {
+    const v = parseInt(e.target.value, 10);
+    if (!Number.isNaN(v) && v >= 4 && v <= 52) setWeeks(v);
+  }
+
+  function handleToggleCompare(): void {
+    setCompareMode((prev) => !prev);
+    setCompareIds(new Set());
+  }
+
+  function handleCompareIdToggle(id: number): void {
+    setCompareIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }
+
+  function handleSeedDefaults(): void {
+    seedMutation.mutate(undefined, {
+      onSuccess: (data) =>
+        toast.success(`Seeded ${data.seeded} default scenario(s)`),
+      onError: (err) => toast.error(getErrorMessage(err)),
+    });
+  }
+
+  function handleRetry(): void {
+    void forecastQuery.refetch();
+  }
+
+  const forecastData = (forecastQuery.data?.weeks ?? []).map((w) => ({
+    weekStart: formatWeekStart(w.weekStart),
+    rawWeekStart: w.weekStart,
+    closingCash: parseFloat(w.closingCash),
+    inflows: parseFloat(w.inflows),
+    outflows: parseFloat(w.outflows),
+    net: parseFloat(w.net),
+    warning: w.minimumBalanceWarning,
+  }));
+
+  const warningWeeks = forecastData.filter((w) => w.warning);
+
+  const compareData = (compareQuery.data?.weeks ?? []).map((w) => {
+    const entry: Record<string, string | number> = {
+      weekStart: formatWeekStart(w.weekStart),
+    };
+    for (const [scenarioId, val] of Object.entries(w.closingCash)) {
+      entry[scenarioId] = parseFloat(val);
+    }
+    return entry;
+  });
+
+  const totalInflows = parseFloat(forecastQuery.data?.totalInflows ?? "0");
+  const totalOutflows = parseFloat(forecastQuery.data?.totalOutflows ?? "0");
+
+  const filtersNode = (
+    <div className="flex flex-wrap items-center gap-2">
+      <Select
+        value={selectedScenarioId !== undefined ? String(selectedScenarioId) : ""}
+        onValueChange={handleScenarioChange}
+      >
+        <SelectTrigger className="h-8 w-[180px] text-xs">
+          <SelectValue placeholder="Default scenario" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="">Default</SelectItem>
+          {scenarios.map((s) => (
+            <SelectItem key={s.id} value={String(s.id)}>
+              {s.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <div className="flex items-center gap-1">
+        <span className="text-xs text-muted-foreground">Weeks:</span>
+        <Input
+          type="number"
+          min={4}
+          max={52}
+          value={weeks}
+          onChange={handleWeeksChange}
+          className="h-8 w-20 text-xs"
+        />
+      </div>
+
+      <Button
+        variant={compareMode ? "default" : "outline"}
+        size="sm"
+        className="h-8 text-xs"
+        onClick={handleToggleCompare}
+      >
+        Compare Scenarios
+      </Button>
+
+      {scenarios.length === 0 && (
+        <LoadingButton
+          variant="outline"
+          size="sm"
+          className="h-8 text-xs"
+          isPending={seedMutation.isPending}
+          loadingText="Seeding…"
+          onClick={handleSeedDefaults}
+        >
+          Seed Defaults
+        </LoadingButton>
+      )}
+    </div>
+  );
+
+  return (
+    <PageWrapper
+      eyebrow="Accounting · Planning"
+      title="Cash Forecast"
+      subtitle="13-week rolling cash forecast"
+      filters={filtersNode}
+    >
+      {compareMode ? (
+        <div className="space-y-4">
+          <Card className="bg-card border border-border rounded-xl shadow-sm">
+            <CardHeader className="pb-2 pt-4 px-4">
+              <CardTitle className="text-sm font-semibold">
+                Select Scenarios to Compare
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-4 pb-4">
+              <div className="flex flex-wrap gap-3">
+                {scenarios.map((s) => (
+                  <ScenarioCheckbox
+                    key={s.id}
+                    id={s.id}
+                    name={s.name}
+                    checked={compareIds.has(s.id)}
+                    onToggle={handleCompareIdToggle}
+                  />
+                ))}
+              </div>
+              {scenarios.length === 0 && (
+                <p className="text-xs text-muted-foreground">
+                  No scenarios available. Seed defaults first.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          {compareIds.size >= 2 && (
+            <Card className="bg-card border border-border rounded-xl shadow-sm">
+              <CardHeader className="pb-2 pt-4 px-4">
+                <CardTitle className="text-sm font-semibold">
+                  Closing Cash by Scenario
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="px-2 pb-4">
+                {compareQuery.isLoading && <LoadingState rows={4} />}
+                {compareQuery.error && (
+                  <ErrorState
+                    title="Failed to load comparison"
+                    description={getErrorMessage(compareQuery.error)}
+                  />
+                )}
+                {!compareQuery.isLoading && !compareQuery.error && compareData.length > 0 && (
+                  <ResponsiveContainer width="100%" height={280}>
+                    <LineChart data={compareData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="weekStart" tick={AXIS_TICK} />
+                      <YAxis tick={AXIS_TICK} width={70} />
+                      <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
+                      {compareQuery.data?.scenarios.map((s, idx) => (
+                        <Line
+                          key={s.id}
+                          type="monotone"
+                          dataKey={String(s.id)}
+                          name={s.name}
+                          stroke={COMPARE_COLORS[idx % COMPARE_COLORS.length]}
+                          strokeWidth={2}
+                          dot={false}
+                        />
+                      ))}
+                    </LineChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {compareIds.size < 2 && (
+            <EmptyState
+              illustration={<EmptyChartIllustration />}
+              title="Select at least 2 scenarios"
+              description="Choose scenarios above to compare their cash projections."
+            />
+          )}
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {forecastQuery.isLoading && <LoadingState rows={6} />}
+          {forecastQuery.error && (
+            <ErrorState
+              title="Failed to load forecast"
+              description={getErrorMessage(forecastQuery.error)}
+              onRetry={handleRetry}
+            />
+          )}
+
+          {!forecastQuery.isLoading && !forecastQuery.error && forecastData.length === 0 && (
+            <EmptyState
+              illustration={<EmptyChartIllustration />}
+              title="No forecast data"
+              description="Seed default scenarios or configure assumptions to generate a forecast."
+            />
+          )}
+
+          {forecastData.length > 0 && (
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                <Card className="bg-card border border-border rounded-xl shadow-sm">
+                  <CardContent className="px-4 py-3">
+                    <p className="text-xs text-muted-foreground mb-1">Total Inflows</p>
+                    <Money value={totalInflows} className="text-base font-semibold text-emerald-600" />
+                  </CardContent>
+                </Card>
+                <Card className="bg-card border border-border rounded-xl shadow-sm">
+                  <CardContent className="px-4 py-3">
+                    <p className="text-xs text-muted-foreground mb-1">Total Outflows</p>
+                    <Money value={totalOutflows} className="text-base font-semibold" />
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card className="bg-card border border-border rounded-xl shadow-sm">
+                <CardHeader className="pb-2 pt-4 px-4">
+                  <CardTitle className="text-sm font-semibold">
+                    Closing Cash Position
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="px-2 pb-4">
+                  <ResponsiveContainer width="100%" height={260}>
+                    <AreaChart data={forecastData}>
+                      <defs>
+                        <linearGradient id="cashGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.18} />
+                          <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="weekStart" tick={AXIS_TICK} />
+                      <YAxis tick={AXIS_TICK} width={70} />
+                      <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
+                      <ReferenceLine y={0} stroke="#ef4444" strokeDasharray="4 4" />
+                      {warningWeeks.map((w) => (
+                        <ReferenceLine
+                          key={w.rawWeekStart}
+                          x={w.weekStart}
+                          stroke="#f59e0b"
+                          strokeDasharray="3 3"
+                        />
+                      ))}
+                      <Area
+                        type="monotone"
+                        dataKey="closingCash"
+                        name="Closing Cash"
+                        stroke="#3b82f6"
+                        strokeWidth={2}
+                        fill="url(#cashGradient)"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              <div className="rounded-lg border border-border overflow-hidden">
+                <div className="overflow-x-auto">
+                  <Table className="min-w-[640px]">
+                    <TableHeader>
+                      <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
+                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Week</TableHead>
+                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Inflows</TableHead>
+                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Outflows</TableHead>
+                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Net</TableHead>
+                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Closing Cash</TableHead>
+                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {forecastQuery.data?.weeks.map((w) => (
+                        <TableRow
+                          key={w.weekIndex}
+                          className="border-b border-border/50 hover:bg-muted/30"
+                        >
+                          <TableCell className="text-sm px-3 py-2 text-foreground">
+                            {formatWeekStart(w.weekStart)}
+                          </TableCell>
+                          <TableCell className="text-sm px-3 py-2 text-right">
+                            <Money value={parseFloat(w.inflows)} />
+                          </TableCell>
+                          <TableCell className="text-sm px-3 py-2 text-right">
+                            <Money value={parseFloat(w.outflows)} />
+                          </TableCell>
+                          <TableCell className="text-sm px-3 py-2 text-right">
+                            <Money
+                              value={parseFloat(w.net)}
+                              className={
+                                parseFloat(w.net) < 0 ? "text-red-600" : undefined
+                              }
+                            />
+                          </TableCell>
+                          <TableCell className="text-sm px-3 py-2 text-right">
+                            <Money value={parseFloat(w.closingCash)} />
+                          </TableCell>
+                          <TableCell className="px-3 py-2">
+                            {w.minimumBalanceWarning && (
+                              <Badge
+                                variant="outline"
+                                className="bg-amber-50 text-amber-700 border-amber-200 text-[9px] px-1.5 py-0 h-4"
+                              >
+                                ⚠ Low
+                              </Badge>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </PageWrapper>
+  );
+}

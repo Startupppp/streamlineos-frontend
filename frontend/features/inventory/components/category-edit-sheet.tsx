@@ -100,7 +100,7 @@ export function CategoryEditSheet({
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md">
+      <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md overflow-hidden">
         <SheetHeader className="shrink-0 px-6 py-4 border-b">
           <SheetTitle>Edit Category</SheetTitle>
           <SheetDescription>

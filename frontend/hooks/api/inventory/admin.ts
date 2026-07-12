@@ -200,3 +200,71 @@ export function useImportJob(id: number, refetchInterval?: number | false) {
   });
 }
 
+export type ExportType = "products" | "stock" | "movements" | "reorder" | "valuation" | "lots-serials";
+
+export interface ExportJob {
+  id: number;
+  orgId: string;
+  jobType: ExportType;
+  status: JobStatus;
+  fileName: string | null;
+  totalRows: number;
+  processedRows: number;
+  errorRows: number;
+  errors: { row: number; field: string; message: string }[] | null;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface ExportJobListResponse {
+  items: ExportJob[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+interface CreateExportJobInput {
+  exportType: ExportType;
+  filters?: Record<string, unknown>;
+}
+
+export function useExportJobs(params?: { page?: number }) {
+  return useQuery<ExportJobListResponse, Error>({
+    queryKey: queryKeys.inventory.exportJobs(params),
+    queryFn: () =>
+      apiClient.get<ExportJobListResponse>("/inventory/export/jobs", {
+        ...(params?.page !== undefined ? { page: String(params.page) } : {}),
+      }),
+    staleTime: 30_000,
+  });
+}
+
+export function useExportJob(id: number, refetchInterval?: number | false) {
+  return useQuery<ExportJob, Error>({
+    queryKey: queryKeys.inventory.exportJob(id),
+    queryFn: () => apiClient.get<ExportJob>(`/inventory/export/jobs/${id}`),
+    enabled: id > 0,
+    staleTime: 15_000,
+    ...(refetchInterval !== undefined ? { refetchInterval } : {}),
+  });
+}
+
+export function useCreateExportJob() {
+  const qc = useQueryClient();
+  return useMutation<ExportJob, Error, CreateExportJobInput>({
+    mutationKey: ["inventory", "export", "job", "create"],
+    mutationFn: (data) => apiClient.post<ExportJob>("/inventory/export/jobs", data),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.inventory.exportJobs() });
+    },
+  });
+}
+
+export function useDownloadExportJob() {
+  return useMutation<Blob, Error, number>({
+    mutationKey: ["inventory", "export", "job", "download"],
+    mutationFn: (jobId) => apiClient.download(`/inventory/export/jobs/${jobId}/download`),
+  });
+}
+

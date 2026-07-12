@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { EntityFormDialog } from "@/components/shared";
@@ -21,7 +21,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useCrmOptions } from "@/hooks/api/crm/metadata";
 import type { LogCrmActivityInput, CrmActivityType, CrmActivityEntityType } from "@/hooks/api/crm/crm-activities";
+
+const FALLBACK_ACTIVITY_TYPES: Array<{ value: CrmActivityType; label: string }> = [
+  { value: "CALL",    label: "Phone Call"   },
+  { value: "EMAIL",   label: "Email"        },
+  { value: "MEETING", label: "Meeting"      },
+  { value: "CUSTOM",  label: "Task / Other" },
+];
+
+function isCrmActivityType(v: string): v is CrmActivityType {
+  return v === "CALL" || v === "EMAIL" || v === "MEETING" || v === "CUSTOM";
+}
 
 const NO_ENTITY_TYPE = "none";
 
@@ -56,6 +68,21 @@ export function LogActivityDialog({
   onSubmit,
   isPending,
 }: LogActivityDialogProps) {
+  const { data: activityTypeOptions, isLoading: typesLoading } = useCrmOptions("activity_type");
+
+  const activityTypes = useMemo<Array<{ value: CrmActivityType; label: string }>>(() => {
+    if (!activityTypeOptions || activityTypeOptions.length === 0) {
+      return FALLBACK_ACTIVITY_TYPES;
+    }
+    const matched: Array<{ value: CrmActivityType; label: string }> = [];
+    for (const o of activityTypeOptions) {
+      if (isCrmActivityType(o.key)) {
+        matched.push({ value: o.key, label: o.label });
+      }
+    }
+    return matched;
+  }, [activityTypeOptions]);
+
   const handleOpenChange = useCallback(
     (v: boolean) => { if (!v) onClose(); },
     [onClose],
@@ -74,7 +101,7 @@ export function LogActivityDialog({
       }
 
       onSubmit({
-        type: data.type as CrmActivityType,
+        type: data.type,
         title: data.title.trim(),
         notes: data.notes?.trim() || undefined,
         entityType,
@@ -113,17 +140,18 @@ export function LogActivityDialog({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Activity Type</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
+                <Select value={field.value} onValueChange={field.onChange} disabled={typesLoading}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="CALL">Phone Call</SelectItem>
-                    <SelectItem value="EMAIL">Email</SelectItem>
-                    <SelectItem value="MEETING">Meeting</SelectItem>
-                    <SelectItem value="CUSTOM">Task / Other</SelectItem>
+                    {activityTypes.map((t) => (
+                      <SelectItem key={t.value} value={t.value}>
+                        {t.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />

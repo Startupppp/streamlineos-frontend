@@ -347,7 +347,7 @@ export function AssignmentRuleSheet({
                               min={0}
                               max={100}
                               step={1}
-                              value={[field.value]}
+                              value={[field.value ?? 50]}
                               onValueChange={([v]) => field.onChange(v)}
                               className="flex-1"
                             />

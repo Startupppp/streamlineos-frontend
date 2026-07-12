@@ -36,11 +36,19 @@ export function useResolvePrice(productId: number, quantity: number, pricebookId
   });
 }
 
+export interface CreatePricebookInput {
+  name: string;
+  description?: string;
+  currency: string;
+  isDefault: boolean;
+  isActive: boolean;
+}
+
 export function useCreatePricebook() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["crm", "pricebooks", "create"],
-    mutationFn: (input: Omit<Pricebook, "id" | "orgId" | "createdAt" | "updatedAt">) =>
+    mutationFn: (input: CreatePricebookInput) =>
       apiClient.post<Pricebook>("/crm/pricebooks", input),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmPricebooks.all });

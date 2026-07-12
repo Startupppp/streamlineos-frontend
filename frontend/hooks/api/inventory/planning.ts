@@ -152,11 +152,26 @@ export function useDeactivateReplenishmentRule() {
   });
 }
 
-export function useReplenishmentSuggestions() {
-  return useQuery<ReplenishmentSuggestion[], Error>({
-    queryKey: queryKeys.inventory.replenishmentRules({ suggestions: true }),
+export interface ReplenishmentSuggestionsResponse {
+  items: ReplenishmentSuggestion[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+interface ReplenishmentSuggestionsParams {
+  page?: number;
+  limit?: number;
+}
+
+export function useReplenishmentSuggestions(params?: ReplenishmentSuggestionsParams) {
+  return useQuery<ReplenishmentSuggestionsResponse, Error>({
+    queryKey: queryKeys.inventory.replenishmentSuggestions(params),
     queryFn: () =>
-      apiClient.get<ReplenishmentSuggestion[]>("/inventory/replenishment/suggestions"),
+      apiClient.get<ReplenishmentSuggestionsResponse>("/inventory/replenishment/suggestions", {
+        ...(params?.page ? { page: String(params.page) } : {}),
+        ...(params?.limit ? { limit: String(params.limit) } : {}),
+      }),
     staleTime: 5 * 60_000,
   });
 }

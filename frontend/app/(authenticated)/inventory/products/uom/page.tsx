@@ -10,7 +10,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
@@ -29,18 +28,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { LoadingState, ErrorState } from "@/components/shared";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { ErrorState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { useUom, useCreateUom } from "@/hooks/api/inventory";
+import type { InventoryUom } from "@/types/inventory";
 
 const uomSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -189,15 +183,58 @@ function CreateUomForm({ onSuccess }: { onSuccess: () => void }) {
           )}
         </div>
         <div className="flex justify-end">
-          <Button type="submit" size="sm" disabled={createMutation.isPending}>
+          <LoadingButton type="submit" size="sm" isPending={createMutation.isPending} loadingText="Creating…">
             <Plus className="mr-1 h-3.5 w-3.5" />
-            {createMutation.isPending ? "Creating…" : "Add UOM"}
-          </Button>
+            Add UOM
+          </LoadingButton>
         </div>
       </form>
     </Form>
   );
 }
+
+const uomColumns: DataTableColumn<InventoryUom>[] = [
+  {
+    key: "name",
+    header: "Name",
+    cell: (uom) => <span className="font-medium text-foreground">{uom.name}</span>,
+  },
+  {
+    key: "abbreviation",
+    header: "Abbreviation",
+    headerClassName: "w-[120px]",
+    cell: (uom) => (
+      <span className="font-mono tabular-nums text-muted-foreground">{uom.abbreviation}</span>
+    ),
+  },
+  {
+    key: "category",
+    header: "Category",
+    headerClassName: "w-[120px]",
+    cell: (uom) => <span className="text-muted-foreground">{uom.category ?? "—"}</span>,
+  },
+  {
+    key: "ratioToBase",
+    header: "Ratio",
+    headerClassName: "w-[100px] text-right",
+    className: "text-right font-mono tabular-nums text-muted-foreground",
+    cell: (uom) => uom.ratioToBase ? `${uom.ratioToBase}:1` : "—",
+  },
+  {
+    key: "isBase",
+    header: "Base?",
+    headerClassName: "w-[70px] text-center",
+    className: "text-center",
+    cell: (uom) =>
+      uom.isBase ? (
+        <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 border-emerald-200 text-emerald-700 bg-emerald-50">
+          Yes
+        </Badge>
+      ) : (
+        <span className="text-[10px] text-muted-foreground">—</span>
+      ),
+  },
+];
 
 function UomPageInner() {
   const router = useRouter();
@@ -299,78 +336,38 @@ function UomPageInner() {
           </CardContent>
         </Card>
 
-        {query.isLoading ? (
-          <LoadingState variant="table" rows={5} />
-        ) : query.error ? (
+        {query.error ? (
           <ErrorState
             title="Failed to load units"
             description={query.error.message}
             onRetry={handleRetry}
           />
-        ) : filteredUom.length === 0 ? (
-          <InventoryEmptyState
-            illustration={
-              hasFilters ? <EmptySearchIllustration /> : <EmptyProductsIllustration />
-            }
-            title={hasFilters ? "No units found" : "No units of measure yet"}
-            description={
-              hasFilters
-                ? "Try adjusting your search or filters."
-                : "Use the form above to add your first unit."
-            }
-            className="border-0 bg-transparent min-h-[20vh]"
-          />
         ) : (
-          <div className="rounded-md border border-border overflow-x-auto">
-            <Table className="min-w-[480px]">
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 bg-muted/80">
-                    Name
-                  </TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 bg-muted/80 w-[120px]">
-                    Abbreviation
-                  </TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 bg-muted/80 w-[120px]">
-                    Category
-                  </TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 bg-muted/80 w-[100px] text-right">
-                    Ratio
-                  </TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 bg-muted/80 w-[70px] text-center">
-                    Base?
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUom.map((uom) => (
-                  <TableRow key={uom.id} className="h-8 hover:bg-muted/30 transition-colors">
-                    <TableCell className="px-2 py-1 text-[11px] font-medium text-foreground">
-                      {uom.name}
-                    </TableCell>
-                    <TableCell className="px-2 py-1 text-[11px] font-mono tabular-nums text-muted-foreground">
-                      {uom.abbreviation}
-                    </TableCell>
-                    <TableCell className="px-2 py-1 text-[11px] text-muted-foreground">
-                      {uom.category ?? "—"}
-                    </TableCell>
-                    <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums text-muted-foreground">
-                      {uom.ratioToBase ? `${uom.ratioToBase}:1` : "—"}
-                    </TableCell>
-                    <TableCell className="px-2 py-1 text-center">
-                      {uom.isBase ? (
-                        <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 border-emerald-200 text-emerald-700 bg-emerald-50">
-                          Yes
-                        </Badge>
-                      ) : (
-                        <span className="text-[10px] text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
+            <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
+              <DataTable
+                data={filteredUom}
+                getRowKey={(uom) => uom.id}
+                isLoading={query.isLoading}
+                emptyState={
+                  <InventoryEmptyState
+                    illustration={
+                      hasFilters ? <EmptySearchIllustration /> : <EmptyProductsIllustration />
+                    }
+                    title={hasFilters ? "No units found" : "No units of measure yet"}
+                    description={
+                      hasFilters
+                        ? "Try adjusting your search or filters."
+                        : "Use the form above to add your first unit."
+                    }
+                    className="border-0 bg-transparent min-h-[20vh]"
+                  />
+                }
+                columns={uomColumns}
+                minWidth="480px"
+              />
+            </CardContent>
+          </Card>
         )}
       </div>
     </PageWrapper>

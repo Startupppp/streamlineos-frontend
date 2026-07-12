@@ -105,13 +105,6 @@ function InspectionsPageInner() {
 
   const columns: DataTableColumn<Inspection>[] = [
     {
-      key: "id",
-      header: "ID",
-      headerClassName: "w-[80px]",
-      className: "tabular-nums font-mono text-muted-foreground",
-      cell: (r) => `#${r.id}`,
-    },
-    {
       key: "status",
       header: "Status",
       cell: (r) => (

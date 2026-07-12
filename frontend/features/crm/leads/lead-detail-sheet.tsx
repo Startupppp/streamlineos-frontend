@@ -24,15 +24,26 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn, resolveImageUrl } from "@/lib/utils";
+import { getInitials } from "@/lib/format-utils";
 import { useLeadDetail, useLogLeadActivity } from "@/hooks/api";
+import { useCrmOptions } from "@/hooks/api/crm";
 import { toast } from "sonner";
-import {
-  STATUSES,
-  STATUS_CONFIG,
-  isActivityType,
-  getInitials,
-} from "./leads-constants";
 import type { LeadStatus } from "./leads-types";
+
+const FALLBACK_STATUSES = ["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CONVERTED", "LOST"] as const;
+const FALLBACK_STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
+  NEW: { label: "New", color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/20" },
+  CONTACTED: { label: "Contacted", color: "text-sky-400", bg: "bg-sky-500/10", border: "border-sky-500/20" },
+  INTERESTED: { label: "Interested", color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/20" },
+  QUALIFIED: { label: "Qualified", color: "text-violet-400", bg: "bg-violet-500/10", border: "border-violet-500/20" },
+  CONVERTED: { label: "Converted", color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
+  LOST: { label: "Lost", color: "text-red-400", bg: "bg-red-500/10", border: "border-red-500/20" },
+};
+
+const ACTIVITY_TYPES = ["call", "email", "whatsapp", "meeting", "site_visit"] as const;
+function isActivityType(v: unknown): v is (typeof ACTIVITY_TYPES)[number] {
+  return typeof v === "string" && (ACTIVITY_TYPES as readonly string[]).includes(v);
+}
 import { ActivityForm } from "./activity-form";
 import { AIScoreButton } from "./ai-score-button";
 import { AIEmailDialog } from "./ai-email-dialog";
@@ -50,19 +61,23 @@ interface LeadDetailSheetProps {
 }
 
 interface StatusMoveButtonProps {
-  status: LeadStatus;
+  statusKey: string;
+  statusLabel: string;
+  statusBorder: string;
   leadId: number;
   onMoveStatus: (leadId: number, status: LeadStatus) => void;
 }
 
 function StatusMoveButton({
-  status: s,
+  statusKey,
+  statusLabel,
+  statusBorder,
   leadId,
   onMoveStatus,
 }: StatusMoveButtonProps) {
   const handleClick = useCallback(
-    () => onMoveStatus(leadId, s),
-    [leadId, s, onMoveStatus],
+    () => onMoveStatus(leadId, statusKey as LeadStatus),
+    [leadId, statusKey, onMoveStatus],
   );
   return (
     <Button
@@ -70,13 +85,13 @@ function StatusMoveButton({
       variant="outline"
       className={cn(
         "text-xs h-8 gap-1.5",
-        STATUS_CONFIG[s].border,
+        statusBorder,
         "hover:bg-muted/50",
       )}
       onClick={handleClick}
     >
       <ArrowRight className="h-3 w-3" />
-      {STATUS_CONFIG[s].label}
+      {statusLabel}
     </Button>
   );
 }
@@ -89,6 +104,14 @@ export function LeadDetailSheet({
 }: LeadDetailSheetProps) {
   const router = useRouter();
   const { data: lead, isLoading } = useLeadDetail(leadId ?? 0);
+  const { data: statusOptions = [] } = useCrmOptions("lead_status");
+  const statusList = statusOptions.length > 0
+    ? statusOptions.map((o) => ({ key: o.key, label: o.label, border: `border-${o.color}-500/20` }))
+    : FALLBACK_STATUSES.map((k) => ({
+        key: k,
+        label: FALLBACK_STATUS_CONFIG[k]?.label ?? k,
+        border: FALLBACK_STATUS_CONFIG[k]?.border ?? "border-border",
+      }));
   const logActivity = useLogLeadActivity();
   const [activityTab, setActivityTab] = useState("details");
 
@@ -180,13 +203,13 @@ export function LeadDetailSheet({
                   <Badge
                     className={cn(
                       "shrink-0",
-                      STATUS_CONFIG[lead.status as LeadStatus]?.bg,
-                      STATUS_CONFIG[lead.status as LeadStatus]?.color,
-                      STATUS_CONFIG[lead.status as LeadStatus]?.border,
+                      FALLBACK_STATUS_CONFIG[lead.status]?.bg ?? "bg-muted/30",
+                      FALLBACK_STATUS_CONFIG[lead.status]?.color ?? "text-foreground",
+                      FALLBACK_STATUS_CONFIG[lead.status]?.border ?? "border-border",
                       "border",
                     )}
                   >
-                    {STATUS_CONFIG[lead.status as LeadStatus]?.label}
+                    {statusList.find((s) => s.key === lead.status)?.label ?? lead.status}
                   </Badge>
                 </div>
               </div>
@@ -225,16 +248,18 @@ export function LeadDetailSheet({
                   Move to
                 </p>
                 <div className="flex gap-2 flex-wrap">
-                  {STATUSES.filter(
-                    (s) => s !== lead.status && s !== "LOST",
-                  ).map((s) => (
-                    <StatusMoveButton
-                      key={s}
-                      status={s}
-                      leadId={lead.id}
-                      onMoveStatus={onMoveStatus}
-                    />
-                  ))}
+                  {statusList
+                    .filter((s) => s.key !== lead.status && s.key !== "LOST")
+                    .map((s) => (
+                      <StatusMoveButton
+                        key={s.key}
+                        statusKey={s.key}
+                        statusLabel={s.label}
+                        statusBorder={s.border}
+                        leadId={lead.id}
+                        onMoveStatus={onMoveStatus}
+                      />
+                    ))}
                 </div>
               </div>
 

@@ -150,6 +150,56 @@ function LowStockAlertSection() {
   );
 }
 
+function ExpiryAlertsCard({ count }: { count: number }) {
+  return (
+    <Card>
+      <CardHeader className="border-b border-border/60 pb-3">
+        <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <Calendar className="h-3.5 w-3.5 text-amber-500" aria-hidden="true" />
+          Expiry Alerts
+        </CardTitle>
+        <CardAction>
+          <Link
+            href="/inventory/reports/expiry"
+            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors font-medium"
+          >
+            View report <ArrowRight className="h-3 w-3" aria-hidden="true" />
+          </Link>
+        </CardAction>
+      </CardHeader>
+      <CardContent className="pt-3">
+        {count === 0 ? (
+          <InventoryEmptyState
+            compact
+            title="No expiring lots"
+            description="No lots expiring within the next 30 days."
+          />
+        ) : (
+          <div className="space-y-2">
+            <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
+              <div className="h-2 w-2 rounded-full bg-amber-500 shrink-0" />
+              <div className="flex-1">
+                <p className="text-[11px] font-semibold text-foreground">
+                  {count} lot{count !== 1 ? "s" : ""} expiring soon
+                </p>
+                <p className="text-[11px] text-muted-foreground">within the next 30 days</p>
+              </div>
+              <Link href="/inventory/expiry">
+                <Badge
+                  variant="outline"
+                  className="text-[10px] h-5 cursor-pointer bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100 transition-colors"
+                >
+                  View lots
+                </Badge>
+              </Link>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export function InventoryDashboardClient() {
   const {
     data: dashboard,
@@ -169,7 +219,6 @@ export function InventoryDashboardClient() {
   const openInspectionsCount = dashboard?.openInspectionsCount ?? 0;
   const activeReservationsCount = dashboard?.activeReservationsCount ?? 0;
   const openShipmentsCount = dashboard?.openShipmentsCount ?? 0;
-  const recentInsights = dashboard?.recentInsights ?? [];
 
   const hasAlerts =
     expiringLotsCount > 0 ||
@@ -251,7 +300,7 @@ export function InventoryDashboardClient() {
               label="Stock Value"
               value={`$${(stockValue / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
               icon={DollarSign}
-              tone="violet"
+              tone="blue"
             />
             <StatCard
               label="Active Reservations"
@@ -347,7 +396,11 @@ export function InventoryDashboardClient() {
           </Card>
         </div>
 
-        <DashboardInsightsPanel insights={recentInsights} />
+        {!isKpiLoading && !kpiError && (
+          <ExpiryAlertsCard count={expiringLotsCount} />
+        )}
+
+        <DashboardInsightsPanel />
       </div>
     </PageWrapper>
   );

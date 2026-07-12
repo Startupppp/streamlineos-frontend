@@ -196,3 +196,48 @@ export function useCancelPurchaseOrder(poId: number) {
   });
 }
 
+interface UpdatePoLineInput {
+  productVariantId: number;
+  quantity: number;
+  unitCost: number;
+  taxRate?: number;
+  lineOrder?: number;
+}
+
+export interface UpdatePurchaseOrderInput {
+  poId: number;
+  vendorId?: number;
+  orderDate?: string;
+  expectedDeliveryDate?: string;
+  warehouseId?: number;
+  currency?: string;
+  notes?: string;
+  lines?: UpdatePoLineInput[];
+}
+
+export function useUpdatePurchaseOrder(poId: number) {
+  const qc = useQueryClient();
+  return useMutation<PurchaseOrderSummary, Error, UpdatePurchaseOrderInput>({
+    mutationKey: ["inventory", "purchase-orders", "update", poId],
+    mutationFn: ({ lines, poId: _id, ...rest }) =>
+      apiClient.patch<PurchaseOrderSummary>(`/inventory/purchase-orders/${poId}`, {
+        ...rest,
+        ...(lines !== undefined
+          ? {
+              lines: lines.map((l, idx) => ({
+                productVariantId: l.productVariantId,
+                quantity: l.quantity,
+                unitCost: l.unitCost.toFixed(4),
+                taxRate: (l.taxRate ?? 0).toFixed(2),
+                lineOrder: l.lineOrder ?? idx,
+              })),
+            }
+          : {}),
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrders() });
+      qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrder(poId) });
+    },
+  });
+}
+

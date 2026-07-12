@@ -169,13 +169,6 @@ function RecallsPageInner() {
 
   const columns: DataTableColumn<Recall>[] = [
     {
-      key: "id",
-      header: "ID",
-      headerClassName: "w-[80px]",
-      className: "tabular-nums font-mono text-muted-foreground",
-      cell: (r) => `#${r.id}`,
-    },
-    {
       key: "title",
       header: "Title",
       cell: (r) => <span className="font-medium">{r.title}</span>,

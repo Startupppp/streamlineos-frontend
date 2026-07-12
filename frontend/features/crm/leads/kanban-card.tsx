@@ -21,18 +21,47 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn, resolveImageUrl } from "@/lib/utils";
-import { formatINRCompact } from "@/lib/format-utils";
+import { formatINRCompact, getInitials } from "@/lib/format-utils";
 import { toast } from "sonner";
 import { useSelfAssignLead } from "@/hooks/api";
 import { useLeadScoreExplanation } from "@/hooks/api/leads";
-import {
-  STATUSES,
-  SOURCE_COLORS,
-  PRIORITY_CONFIG,
-  timeAgo,
-  getInitials,
-} from "./leads-constants";
-import type { BoardLead, LeadStatus } from "./leads-types";
+import type { BoardLead } from "./leads-types";
+
+const FALLBACK_STATUSES = ["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CONVERTED", "LOST"] as const;
+
+const SOURCE_COLORS: Record<string, string> = {
+  referral: "bg-green-500/15 text-green-400 border-green-500/20",
+  campaign: "bg-blue-500/15 text-blue-400 border-blue-500/20",
+  cold_call: "bg-orange-500/15 text-orange-400 border-orange-500/20",
+  website: "bg-purple-500/15 text-purple-400 border-purple-500/20",
+  social_media: "bg-pink-500/15 text-pink-400 border-pink-500/20",
+  walk_in: "bg-cyan-500/15 text-cyan-400 border-cyan-500/20",
+  other: "bg-slate-500/15 text-slate-400 border-slate-500/20",
+};
+
+const PRIORITY_CONFIG: Record<string, string> = {
+  HOT: "bg-red-500/15 text-red-400 border-red-500/30",
+  WARM: "bg-amber-500/15 text-amber-400 border-amber-500/30",
+  COLD: "bg-blue-400/15 text-blue-400 border-blue-400/30",
+};
+
+function timeAgo(date: string | Date) {
+  const now = new Date();
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return "—";
+  const diff = Math.floor((now.getTime() - d.getTime()) / 1000);
+  if (diff < 0) {
+    const absDiff = Math.abs(diff);
+    if (absDiff < 3600) return `in ${Math.floor(absDiff / 60)}m`;
+    if (absDiff < 86400) return `in ${Math.floor(absDiff / 3600)}h`;
+    return `in ${Math.floor(absDiff / 86400)}d`;
+  }
+  if (diff < 60) return "just now";
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
+  return d.toLocaleDateString();
+}
 import { AIScoreButton } from "./ai-score-button";
 import {
   differenceInHours,
@@ -44,12 +73,12 @@ import {
 interface KanbanCardProps {
   lead: BoardLead;
   index: number;
-  status: LeadStatus;
+  status: string;
   onOpen: (id: number) => void;
   onMoveStatus: (
     leadId: number,
-    status: LeadStatus,
-    expectedStatus?: LeadStatus,
+    status: string,
+    expectedStatus?: string,
   ) => void;
 }
 
@@ -213,9 +242,9 @@ export function KanbanCard({
   const handleMoveNext = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      const nextIdx = STATUSES.indexOf(status) + 1;
-      if (nextIdx < STATUSES.length - 1)
-        onMoveStatus(lead.id, STATUSES[nextIdx], status);
+      const nextIdx = (FALLBACK_STATUSES as readonly string[]).indexOf(status) + 1;
+      if (nextIdx < FALLBACK_STATUSES.length - 1)
+        onMoveStatus(lead.id, FALLBACK_STATUSES[nextIdx] as string, status);
     },
     [lead.id, status, onMoveStatus],
   );
@@ -293,9 +322,7 @@ export function KanbanCard({
                       <span
                         className={cn(
                           "text-[10px] px-1.5 py-0.5 rounded-full border font-semibold",
-                          PRIORITY_CONFIG[
-                            lead.priority as keyof typeof PRIORITY_CONFIG
-                          ] ?? PRIORITY_CONFIG.WARM,
+                          PRIORITY_CONFIG[lead.priority] ?? PRIORITY_CONFIG["WARM"],
                         )}
                       >
                         {lead.priority}

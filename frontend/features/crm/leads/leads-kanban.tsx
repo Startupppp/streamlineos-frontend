@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useCrmOptions } from "@/hooks/api/crm";
 import { getCrmTokenClasses } from "@/features/crm/shared/metadata";
-import type { BoardLead, LeadStatus } from "./leads-types";
+import type { BoardLead } from "./leads-types";
 import { KanbanCard } from "./kanban-card";
 
 const FALLBACK_OPTIONS = [
@@ -21,7 +21,7 @@ interface LeadsKanbanProps {
   filteredBoard: Record<string, BoardLead[]> | null;
   onDragEnd: (result: DropResult) => void;
   onOpenLead: (id: number) => void;
-  onMoveStatus: (leadId: number, status: LeadStatus, expectedStatus?: LeadStatus) => void;
+  onMoveStatus: (leadId: number, status: string, expectedStatus?: string) => void;
 }
 
 export function LeadsKanban({ filteredBoard, onDragEnd, onOpenLead, onMoveStatus }: LeadsKanbanProps) {

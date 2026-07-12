@@ -49,6 +49,7 @@ export interface CreateAssignmentRuleInput {
   territoryId?: number;
   conditions: AssignmentRuleCondition[];
   priority?: number;
+  isActive?: boolean;
 }
 
 export interface UpdateAssignmentRuleInput {

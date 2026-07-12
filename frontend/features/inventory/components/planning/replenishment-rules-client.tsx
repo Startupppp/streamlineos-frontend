@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Plus, Pencil, PowerOff } from "lucide-react";
+import { Pencil, PowerOff } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import {
   AlertDialog,
@@ -17,7 +19,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { SkeletonTable, ErrorState, DataTablePagination } from "@/components/shared";
+import { ErrorState } from "@/components/shared";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import {
   useReplenishmentRules,
   useDeactivateReplenishmentRule,
@@ -25,13 +29,13 @@ import {
 } from "@/hooks/api/inventory/planning";
 import { ReplenishmentRuleForm } from "./replenishment-rule-form";
 
-interface RuleRowProps {
+interface RuleActionsProps {
   rule: ReplenishmentRule;
   onEdit: (rule: ReplenishmentRule) => void;
   onDeactivate: (rule: ReplenishmentRule) => void;
 }
 
-function RuleRow({ rule, onEdit, onDeactivate }: RuleRowProps) {
+function RuleActions({ rule, onEdit, onDeactivate }: RuleActionsProps) {
   function handleEdit(): void {
     onEdit(rule);
   }
@@ -41,45 +45,105 @@ function RuleRow({ rule, onEdit, onDeactivate }: RuleRowProps) {
   }
 
   return (
-    <tr className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
-      <td className="px-4 py-3">
-        <p className="text-sm font-medium text-foreground truncate max-w-[180px]">{rule.productName}</p>
-        <p className="text-xs text-muted-foreground font-mono">{rule.variantSku}</p>
-      </td>
-      <td className="px-4 py-3 text-sm text-muted-foreground">{rule.warehouseName}</td>
-      <td className="px-4 py-3 text-sm tabular-nums">{rule.minQty}</td>
-      <td className="px-4 py-3 text-sm tabular-nums">{rule.maxQty}</td>
-      <td className="px-4 py-3 text-sm tabular-nums">{rule.reorderQty}</td>
-      <td className="px-4 py-3 text-sm tabular-nums">{rule.safetyStock ?? "—"}</td>
-      <td className="px-4 py-3 text-sm tabular-nums">
-        {rule.leadTimeDays != null ? `${rule.leadTimeDays}d` : "—"}
-      </td>
-      <td className="px-4 py-3 text-sm text-muted-foreground">{rule.vendorName ?? "—"}</td>
-      <td className="px-4 py-3">
+    <div className="flex items-center gap-1">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-7 w-7"
+        onClick={handleEdit}
+        aria-label="Edit rule"
+      >
+        <Pencil className="h-3.5 w-3.5" />
+      </Button>
+      {rule.isActive && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 text-destructive hover:text-destructive"
+          onClick={handleDeactivate}
+          aria-label="Deactivate rule"
+        >
+          <PowerOff className="h-3.5 w-3.5" />
+        </Button>
+      )}
+    </div>
+  );
+}
+
+function buildColumns(
+  onEdit: (rule: ReplenishmentRule) => void,
+  onDeactivate: (rule: ReplenishmentRule) => void,
+): DataTableColumn<ReplenishmentRule>[] {
+  return [
+    {
+      key: "product",
+      header: "Product / SKU",
+      cell: (rule) => (
+        <div>
+          <p className="text-sm font-medium text-foreground truncate max-w-[180px]">{rule.productName}</p>
+          <p className="text-xs text-muted-foreground font-mono">{rule.variantSku}</p>
+        </div>
+      ),
+    },
+    {
+      key: "warehouse",
+      header: "Warehouse",
+      className: "text-muted-foreground",
+      cell: (rule) => rule.warehouseName,
+    },
+    {
+      key: "minQty",
+      header: "Min",
+      className: "tabular-nums",
+      cell: (rule) => rule.minQty,
+    },
+    {
+      key: "maxQty",
+      header: "Max",
+      className: "tabular-nums",
+      cell: (rule) => rule.maxQty,
+    },
+    {
+      key: "reorderQty",
+      header: "Reorder Qty",
+      className: "tabular-nums",
+      cell: (rule) => rule.reorderQty,
+    },
+    {
+      key: "safetyStock",
+      header: "Safety Stock",
+      className: "tabular-nums",
+      cell: (rule) => rule.safetyStock ?? "—",
+    },
+    {
+      key: "leadTimeDays",
+      header: "Lead Time",
+      className: "tabular-nums",
+      cell: (rule) => rule.leadTimeDays != null ? `${rule.leadTimeDays}d` : "—",
+    },
+    {
+      key: "vendor",
+      header: "Vendor",
+      className: "text-muted-foreground",
+      cell: (rule) => rule.vendorName ?? "—",
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (rule) => (
         <Badge variant={rule.isActive ? "default" : "secondary"} className="text-[11px]">
           {rule.isActive ? "Active" : "Inactive"}
         </Badge>
-      </td>
-      <td className="px-4 py-3">
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleEdit} aria-label="Edit rule">
-            <Pencil className="h-3.5 w-3.5" />
-          </Button>
-          {rule.isActive && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 text-destructive hover:text-destructive"
-              onClick={handleDeactivate}
-              aria-label="Deactivate rule"
-            >
-              <PowerOff className="h-3.5 w-3.5" />
-            </Button>
-          )}
-        </div>
-      </td>
-    </tr>
-  );
+      ),
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      cell: (rule) => (
+        <RuleActions rule={rule} onEdit={onEdit} onDeactivate={onDeactivate} />
+      ),
+    },
+  ];
 }
 
 export function ReplenishmentRulesClient() {
@@ -91,9 +155,10 @@ export function ReplenishmentRulesClient() {
   const [editRule, setEditRule] = useState<ReplenishmentRule | undefined>(undefined);
   const [deactivateTarget, setDeactivateTarget] = useState<ReplenishmentRule | undefined>(undefined);
 
+  const { iconRef: addRef, hoverHandlers: addHandlers } = useAnimatedIcon();
+
   const rules = data?.items ?? [];
   const total = data?.total ?? 0;
-  const totalPages = data?.totalPages ?? 1;
 
   function handleAddRule(): void {
     setEditRule(undefined);
@@ -130,22 +195,26 @@ export function ReplenishmentRulesClient() {
     void refetch();
   }
 
+  function handleAlertOpenChange(open: boolean): void {
+    if (!open) handleDeactivateCancel();
+  }
+
+  const columns = buildColumns(handleEditRule, handleDeactivatePrompt);
+
   return (
     <PageWrapper
       title="Replenishment Rules"
       backHref="/inventory/replenishment"
       actions={
-        <Button size="sm" onClick={handleAddRule}>
-          <Plus className="h-4 w-4 mr-1.5" />
+        <Button size="sm" onClick={handleAddRule} {...addHandlers}>
+          <PlusIcon ref={addRef} size={14} />
           Add Rule
         </Button>
       }
     >
-      {isLoading ? (
-        <SkeletonTable rows={6} columns={10} />
-      ) : error ? (
+      {error ? (
         <ErrorState onRetry={handleRetry} />
-      ) : rules.length === 0 ? (
+      ) : !isLoading && rules.length === 0 ? (
         <InventoryEmptyState
           illustrationPreset="inventory"
           title="No replenishment rules"
@@ -154,48 +223,18 @@ export function ReplenishmentRulesClient() {
           className="flex-1 h-full"
         />
       ) : (
-        <>
-          <div className="rounded-lg border border-border bg-card overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border bg-muted/30">
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Product / SKU</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Warehouse</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Min</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Max</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Reorder Qty</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Safety Stock</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Lead Time</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Vendor</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Status</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rules.map((rule) => (
-                    <RuleRow
-                      key={rule.id}
-                      rule={rule}
-                      onEdit={handleEditRule}
-                      onDeactivate={handleDeactivatePrompt}
-                    />
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {totalPages > 1 && (
-            <DataTablePagination
-              page={page}
-              totalPages={totalPages}
-              total={total}
-              limit={20}
-              onPageChange={setPage}
+        <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
+          <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
+            <DataTable
+              data={rules}
+              columns={columns}
+              getRowKey={(rule) => rule.id}
+              isLoading={isLoading}
+              pagination={{ mode: "server", page, pageSize: 50, total, onPageChange: setPage }}
+              minWidth="900px"
             />
-          )}
-        </>
+          </CardContent>
+        </Card>
       )}
 
       <ReplenishmentRuleForm
@@ -204,10 +243,7 @@ export function ReplenishmentRulesClient() {
         editRule={editRule}
       />
 
-      <AlertDialog
-        open={!!deactivateTarget}
-        onOpenChange={(open) => !open && handleDeactivateCancel()}
-      >
+      <AlertDialog open={!!deactivateTarget} onOpenChange={handleAlertOpenChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Deactivate Rule?</AlertDialogTitle>

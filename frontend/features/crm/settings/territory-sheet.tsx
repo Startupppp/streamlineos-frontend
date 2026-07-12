@@ -79,6 +79,31 @@ export function buildTerritoryPayload(data: TerritoryFormValues) {
   };
 }
 
+interface ChipBadgeProps {
+  chip: string;
+  onRemove: (chip: string) => void;
+}
+
+function ChipBadge({ chip, onRemove }: ChipBadgeProps) {
+  const handleClick = useCallback(
+    (e: React.MouseEvent) => { e.stopPropagation(); onRemove(chip); },
+    [chip, onRemove]
+  );
+  return (
+    <Badge variant="secondary" className="h-5 px-1.5 text-[10px] gap-0.5 shrink-0">
+      {chip}
+      <button
+        type="button"
+        aria-label={`Remove ${chip}`}
+        onClick={handleClick}
+        className="ml-0.5 rounded-full hover:bg-muted-foreground/20 p-0.5"
+      >
+        <X className="h-2.5 w-2.5" />
+      </button>
+    </Badge>
+  );
+}
+
 interface ChipInputProps {
   value: string[];
   onChange: (v: string[]) => void;
@@ -128,6 +153,11 @@ function ChipInput({ value, onChange, placeholder, className }: ChipInputProps) 
     [value, onChange]
   );
 
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setInputVal(e.target.value),
+    []
+  );
+
   return (
     <div
       onClick={handleContainerClick}
@@ -138,26 +168,12 @@ function ChipInput({ value, onChange, placeholder, className }: ChipInputProps) 
       )}
     >
       {value.map((chip) => (
-        <Badge
-          key={chip}
-          variant="secondary"
-          className="h-5 px-1.5 text-[10px] gap-0.5 shrink-0"
-        >
-          {chip}
-          <button
-            type="button"
-            aria-label={`Remove ${chip}`}
-            onClick={(e) => { e.stopPropagation(); handleRemove(chip); }}
-            className="ml-0.5 rounded-full hover:bg-muted-foreground/20 p-0.5"
-          >
-            <X className="h-2.5 w-2.5" />
-          </button>
-        </Badge>
+        <ChipBadge key={chip} chip={chip} onRemove={handleRemove} />
       ))}
       <input
         ref={inputRef}
         value={inputVal}
-        onChange={(e) => setInputVal(e.target.value)}
+        onChange={handleInputChange}
         onKeyDown={handleKeyDown}
         onBlur={handleBlur}
         placeholder={value.length === 0 ? placeholder : undefined}
@@ -180,6 +196,11 @@ function ChipField({ name, label, placeholder, control }: ChipFieldProps) {
   const { field } = useController({ name, control });
   const chips: string[] = field.value ?? [];
 
+  const handleChange = useCallback(
+    (v: string[]) => field.onChange(v),
+    [field]
+  );
+
   return (
     <FormField
       control={control}
@@ -190,7 +211,7 @@ function ChipField({ name, label, placeholder, control }: ChipFieldProps) {
           <FormControl>
             <ChipInput
               value={chips}
-              onChange={(v) => field.onChange(v)}
+              onChange={handleChange}
               placeholder={placeholder}
             />
           </FormControl>
@@ -265,6 +286,8 @@ export function TerritorySheet({
     },
     [onSubmit]
   );
+
+  const handleCancel = useCallback(() => onOpenChange(false), [onOpenChange]);
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
@@ -354,7 +377,7 @@ export function TerritorySheet({
           </Form>
         </div>
         <SheetFooter className="border-t pt-4 flex gap-2 justify-end">
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <Button type="button" variant="outline" onClick={handleCancel}>
             Cancel
           </Button>
           <LoadingButton

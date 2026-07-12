@@ -46,8 +46,10 @@ export function ConversionFunnelCard({ stats, statusOptions }: ConversionFunnelC
         };
       });
 
+  const byStatus = stats.byStatus as Record<string, number>;
+
   const maxCount = stages.length > 0
-    ? Math.max(1, ...(stages.map((s) => stats.byStatus[s.key] ?? 0)))
+    ? Math.max(1, ...(stages.map((s) => byStatus[s.key] ?? 0)))
     : 1;
 
   return (
@@ -61,13 +63,13 @@ export function ConversionFunnelCard({ stats, statusOptions }: ConversionFunnelC
       <CardContent>
         <div className="flex flex-col gap-1.5 py-2">
           {stages.map((stage, i, arr) => {
-            const count = stats.byStatus[stage.key] ?? 0;
+            const count = byStatus[stage.key] ?? 0;
             const widthPct = Math.max(18, (count / maxCount) * 100);
             const prevStage = arr[i - 1];
             const prevCount =
               i === 0 || !prevStage
                 ? stats.total
-                : (stats.byStatus[prevStage.key] ?? count);
+                : (byStatus[prevStage.key] ?? count);
             const convPct =
               prevCount > 0
                 ? ((count / prevCount) * 100).toFixed(0)

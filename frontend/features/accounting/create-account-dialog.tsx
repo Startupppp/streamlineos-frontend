@@ -21,26 +21,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useCreateAccount } from "@/hooks/api/accounting";
+import { useCreateAccount, useUpdateAccount } from "@/hooks/api/accounting";
+import type { AccountTreeNode } from "@/hooks/api/accounting/core";
 
-const ACCOUNT_TYPES = [
-  "ASSET",
-  "LIABILITY",
-  "EQUITY",
-  "INCOME",
-  "EXPENSE",
-] as const;
+const ACCOUNT_TYPES = ["ASSET", "LIABILITY", "EQUITY", "INCOME", "EXPENSE"] as const;
 
-const createAccountSchema = z.object({
+const accountSchema = z.object({
   code: z.string().min(1, "Code is required").max(20),
   name: z.string().min(1, "Name is required").max(120),
   accountType: z.enum(ACCOUNT_TYPES),
   description: z.string().max(500).optional(),
 });
 
-type CreateAccountValues = z.infer<typeof createAccountSchema>;
+type AccountValues = z.infer<typeof accountSchema>;
 
-const DEFAULT_VALUES: CreateAccountValues = {
+const DEFAULT_VALUES: AccountValues = {
   code: "",
   name: "",
   accountType: "EXPENSE",
@@ -50,56 +45,87 @@ const DEFAULT_VALUES: CreateAccountValues = {
 interface CreateAccountDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  editAccount?: AccountTreeNode | null;
 }
 
 export function CreateAccountDialog({
   open,
   onOpenChange,
+  editAccount,
 }: CreateAccountDialogProps) {
   const create = useCreateAccount();
+  const update = useUpdateAccount(editAccount?.id ?? 0);
+  const isEditMode = !!editAccount;
 
-  async function handleSubmit(values: CreateAccountValues): Promise<void> {
+  const defaultValues: AccountValues = isEditMode
+    ? {
+        code: editAccount.code,
+        name: editAccount.name,
+        accountType: editAccount.accountType as AccountValues["accountType"],
+        description: editAccount.description ?? "",
+      }
+    : DEFAULT_VALUES;
+
+  async function handleSubmit(values: AccountValues): Promise<void> {
     try {
-      await create.mutateAsync({
-        code: values.code,
-        name: values.name,
-        accountType: values.accountType,
-        description: values.description ? values.description : undefined,
-      });
-      toast.success("Account created");
+      if (isEditMode) {
+        await update.mutateAsync({
+          name: values.name,
+          description: values.description ? values.description : undefined,
+        });
+        toast.success("Account updated");
+      } else {
+        await create.mutateAsync({
+          code: values.code,
+          name: values.name,
+          accountType: values.accountType,
+          description: values.description ? values.description : undefined,
+        });
+        toast.success("Account created");
+      }
       onOpenChange(false);
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
   }
 
+  const isPending = isEditMode ? update.isPending : create.isPending;
+
   return (
-    <EntityFormDialog<CreateAccountValues>
+    <EntityFormDialog<AccountValues>
       open={open}
       onOpenChange={onOpenChange}
-      title="New account"
-      resolver={zodResolver(createAccountSchema)}
-      defaultValues={DEFAULT_VALUES}
+      title={isEditMode ? "Edit account" : "New account"}
+      resolver={zodResolver(accountSchema)}
+      defaultValues={defaultValues}
       onSubmit={handleSubmit}
-      isSubmitting={create.isPending}
-      submitLabel="Create account"
+      isSubmitting={isPending}
+      submitLabel={isEditMode ? "Save changes" : "Create account"}
       resetOnOpen
     >
       {(form) => (
         <>
-          <FormField
-            control={form.control}
-            name="code"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Code</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="e.g. 6000" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {!isEditMode && (
+            <FormField
+              control={form.control}
+              name="code"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Code</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="e.g. 6000" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+          {isEditMode && (
+            <div>
+              <p className="text-xs font-medium text-muted-foreground mb-1">Code</p>
+              <p className="text-sm text-foreground font-mono">{editAccount.code}</p>
+            </div>
+          )}
           <FormField
             control={form.control}
             name="name"
@@ -113,30 +139,38 @@ export function CreateAccountDialog({
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="accountType"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Type</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pick a type" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="ASSET">Asset</SelectItem>
-                    <SelectItem value="LIABILITY">Liability</SelectItem>
-                    <SelectItem value="EQUITY">Equity</SelectItem>
-                    <SelectItem value="INCOME">Income</SelectItem>
-                    <SelectItem value="EXPENSE">Expense</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {!isEditMode && (
+            <FormField
+              control={form.control}
+              name="accountType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Type</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pick a type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="ASSET">Asset</SelectItem>
+                      <SelectItem value="LIABILITY">Liability</SelectItem>
+                      <SelectItem value="EQUITY">Equity</SelectItem>
+                      <SelectItem value="INCOME">Income</SelectItem>
+                      <SelectItem value="EXPENSE">Expense</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+          {isEditMode && (
+            <div>
+              <p className="text-xs font-medium text-muted-foreground mb-1">Type</p>
+              <p className="text-sm text-foreground">{editAccount.accountType}</p>
+            </div>
+          )}
           <FormField
             control={form.control}
             name="description"

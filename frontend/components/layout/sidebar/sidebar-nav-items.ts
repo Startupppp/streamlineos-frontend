@@ -89,6 +89,15 @@ import {
   HandCoins,
   TrendingDown,
   FileStack,
+  Megaphone,
+  Scan,
+  Boxes,
+  CalendarClock,
+  Container,
+  Upload,
+  RotateCcw,
+  PackageCheck,
+  DollarSign,
 } from "lucide-react";
 
 export interface NavRoute {
@@ -1018,6 +1027,12 @@ export const NAV_GROUPS: NavGroup[] = [
         ],
       },
       {
+        label: "Campaigns",
+        icon: Megaphone,
+        href: "/crm/campaigns",
+        requiredPermission: "crm:campaigns:view",
+      },
+      {
         label: "Activities",
         icon: Activity,
         href: "/crm/activities",
@@ -1475,24 +1490,58 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: Tag,
         href: "/inventory/products",
         requiredPermission: "inventory:products:read",
+        children: [
+          {
+            label: "Categories",
+            icon: Layers,
+            href: "/inventory/products/categories",
+            requiredPermission: "inventory:products:read",
+          },
+          {
+            label: "Units of Measure",
+            icon: Calculator,
+            href: "/inventory/products/uom",
+            requiredPermission: "inventory:products:read",
+          },
+        ],
       },
       {
-        label: "Stock Levels",
+        label: "Stock",
         icon: Warehouse,
         href: "/inventory/stock",
         requiredPermission: "inventory:stock:read",
-      },
-      {
-        label: "Movements",
-        icon: ArrowLeftRight,
-        href: "/inventory/stock/movements",
-        requiredPermission: "inventory:stock:read",
+        children: [
+          {
+            label: "Adjustments",
+            icon: ClipboardList,
+            href: "/inventory/stock/adjustments",
+            requiredPermission: "inventory:stock:read",
+          },
+          {
+            label: "Transfers",
+            icon: ArrowLeftRight,
+            href: "/inventory/stock/transfers",
+            requiredPermission: "inventory:stock:read",
+          },
+          {
+            label: "Movements",
+            icon: History,
+            href: "/inventory/stock/movements",
+            requiredPermission: "inventory:stock:read",
+          },
+        ],
       },
       {
         label: "Warehouses",
         icon: Building2,
         href: "/inventory/warehouses",
         requiredPermission: "inventory:warehouses:read",
+      },
+      {
+        label: "Vendors",
+        icon: Truck,
+        href: "/inventory/vendors",
+        requiredPermission: "inventory:vendors:read",
       },
       {
         label: "Purchase Orders",
@@ -1507,22 +1556,48 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "inventory:sales-orders:read",
       },
       {
-        label: "Vendors",
-        icon: Truck,
-        href: "/inventory/vendors",
-        requiredPermission: "inventory:vendors:read",
+        label: "Operations",
+        icon: Activity,
+        href: "/inventory/operations",
+        requiredPermission: "inventory:stock:read",
       },
       {
         label: "Reports",
         icon: BarChart3,
         href: "/inventory/reports/stock-summary",
         requiredPermission: "inventory:reports:read",
-      },
-      {
-        label: "Operations",
-        icon: Activity,
-        href: "/inventory/operations",
-        requiredPermission: "inventory:stock:read",
+        children: [
+          {
+            label: "Stock Summary",
+            icon: BarChart2,
+            href: "/inventory/reports/stock-summary",
+            requiredPermission: "inventory:reports:read",
+          },
+          {
+            label: "Movements",
+            icon: ArrowLeftRight,
+            href: "/inventory/reports/movements",
+            requiredPermission: "inventory:reports:read",
+          },
+          {
+            label: "Reorder",
+            icon: RefreshCcw,
+            href: "/inventory/reports/reorder",
+            requiredPermission: "inventory:reports:read",
+          },
+          {
+            label: "Slow Moving",
+            icon: TrendingDown,
+            href: "/inventory/reports/slow-moving",
+            requiredPermission: "inventory:reports:read",
+          },
+          {
+            label: "Expiry",
+            icon: CalendarClock,
+            href: "/inventory/reports/expiry",
+            requiredPermission: "inventory:reports:read",
+          },
+        ],
       },
       {
         label: "Quality",
@@ -1535,6 +1610,102 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: Package,
         href: "/inventory/shipments",
         requiredPermission: "inventory:shipments:manage",
+        children: [
+          {
+            label: "Packages",
+            icon: Container,
+            href: "/inventory/packages",
+            requiredPermission: "inventory:shipments:manage",
+          },
+          {
+            label: "Loads",
+            icon: Boxes,
+            href: "/inventory/loads",
+            requiredPermission: "inventory:shipments:manage",
+          },
+          {
+            label: "Carriers",
+            icon: Truck,
+            href: "/inventory/carriers",
+            requiredPermission: "inventory:shipments:manage",
+          },
+          {
+            label: "3PL Connections",
+            icon: Globe,
+            href: "/inventory/3pl",
+            requiredPermission: "inventory:shipments:manage",
+          },
+        ],
+      },
+      {
+        label: "Traceability",
+        icon: Scan,
+        href: "/inventory/lots",
+        requiredPermission: "inventory:stock:read",
+        children: [
+          {
+            label: "Lots",
+            icon: Boxes,
+            href: "/inventory/lots",
+            requiredPermission: "inventory:stock:read",
+          },
+          {
+            label: "Serials",
+            icon: PackageCheck,
+            href: "/inventory/serials",
+            requiredPermission: "inventory:stock:read",
+          },
+          {
+            label: "Expiry",
+            icon: CalendarClock,
+            href: "/inventory/expiry",
+            requiredPermission: "inventory:stock:read",
+          },
+          {
+            label: "Cycle Counts",
+            icon: RotateCcw,
+            href: "/inventory/cycle-counts",
+            requiredPermission: "inventory:stock:read",
+          },
+          {
+            label: "Physical Audits",
+            icon: ClipboardCheck,
+            href: "/inventory/physical-audits",
+            requiredPermission: "inventory:stock:read",
+          },
+        ],
+      },
+      {
+        label: "Planning",
+        icon: TrendingUp,
+        href: "/inventory/replenishment",
+        requiredPermission: "inventory:reports:read",
+        children: [
+          {
+            label: "Replenishment",
+            icon: RefreshCcw,
+            href: "/inventory/replenishment",
+            requiredPermission: "inventory:reports:read",
+          },
+          {
+            label: "Forecasting",
+            icon: BarChart2,
+            href: "/inventory/forecasting",
+            requiredPermission: "inventory:reports:read",
+          },
+          {
+            label: "Valuation",
+            icon: DollarSign,
+            href: "/inventory/valuation",
+            requiredPermission: "inventory:reports:read",
+          },
+          {
+            label: "Costing",
+            icon: Calculator,
+            href: "/inventory/costing",
+            requiredPermission: "inventory:reports:read",
+          },
+        ],
       },
       {
         label: "Channels",
@@ -1543,10 +1714,16 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "inventory:channels:manage",
       },
       {
-        label: "Planning",
-        icon: TrendingUp,
-        href: "/inventory/replenishment",
-        requiredPermission: "inventory:reports:read",
+        label: "Barcode",
+        icon: Scan,
+        href: "/inventory/barcode",
+        requiredPermission: "inventory:stock:read",
+      },
+      {
+        label: "Import",
+        icon: Upload,
+        href: "/inventory/import",
+        requiredPermission: "inventory:products:read",
       },
       {
         label: "Settings",

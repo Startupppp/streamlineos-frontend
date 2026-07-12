@@ -12,7 +12,7 @@ interface CampaignListParams {
 }
 
 interface PaginatedCampaigns {
-  campaigns: CrmCampaign[];
+  items: CrmCampaign[];
   total: number;
   page: number;
   limit: number;
@@ -23,7 +23,7 @@ interface CampaignLeadsParams {
   limit?: number;
 }
 
-type CreateCampaignInput = Omit<CrmCampaign, "id" | "orgId" | "leads" | "spend" | "roi" | "createdAt" | "updatedAt">;
+type CreateCampaignInput = Omit<CrmCampaign, "id" | "orgId" | "leads" | "spend" | "roi" | "status" | "budgetSpent" | "createdAt" | "updatedAt">;
 type UpdateCampaignInput = { id: number } & Partial<CreateCampaignInput>;
 
 export function useCampaigns(params?: CampaignListParams) {
@@ -91,7 +91,7 @@ export function useCampaignLeads(campaignId: number, params?: CampaignLeadsParam
 
   return useQuery({
     queryKey: queryKeys.crmCampaigns.leads(campaignId, p),
-    queryFn: () => apiClient.get<{ leads: unknown[]; total: number }>(`/crm/campaigns/${campaignId}/leads`, p),
+    queryFn: () => apiClient.get<{ items: unknown[]; total: number; page: number; limit: number }>(`/crm/campaigns/${campaignId}/leads`, p),
     staleTime: 60_000,
   });
 }

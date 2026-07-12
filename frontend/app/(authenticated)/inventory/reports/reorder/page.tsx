@@ -1,25 +1,19 @@
 "use client";
 
-import { Suspense, type ChangeEvent } from "react";
+import { Suspense, useMemo, type ChangeEvent } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Package, AlertTriangle, AlertCircle, Search, Download } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { SkeletonTable, ErrorState } from "@/components/shared";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { ErrorState } from "@/components/shared";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyReportIllustration, EmptySearchIllustration } from "@/components/illustrations";
-import { useReorderReport } from "@/hooks/api/inventory/reports";
+import { useReorderReport, type ReorderReportRow } from "@/hooks/api/inventory/reports";
 
 function UrgencyBadge({ available, reorderPoint }: { available: number; reorderPoint: number }) {
   if (available <= 0) {
@@ -44,30 +38,90 @@ function UrgencyBadge({ available, reorderPoint }: { available: number; reorderP
   );
 }
 
+const REORDER_COLUMNS: DataTableColumn<ReorderReportRow>[] = [
+  {
+    key: "productName",
+    header: "Product",
+    cell: (row) => <span className="font-medium text-[11px]">{row.productName}</span>,
+  },
+  {
+    key: "sku",
+    header: "SKU",
+    cell: (row) => <span className="font-mono tabular-nums text-[11px]">{row.sku}</span>,
+  },
+  {
+    key: "categoryName",
+    header: "Category",
+    cell: (row) => <span className="text-[11px]">{row.categoryName ?? "—"}</span>,
+  },
+  {
+    key: "warehouseName",
+    header: "Warehouse",
+    cell: (row) => <span className="text-[11px]">{row.warehouseName ?? "—"}</span>,
+  },
+  {
+    key: "vendorName",
+    header: "Vendor",
+    cell: (row) => <span className="text-[11px]">{row.vendorName ?? "—"}</span>,
+  },
+  {
+    key: "availableQty",
+    header: "Available",
+    headerClassName: "text-right",
+    className: "text-right font-mono tabular-nums text-[11px]",
+    cell: (row) => row.availableQty,
+  },
+  {
+    key: "reorderPoint",
+    header: "Reorder Pt.",
+    headerClassName: "text-right",
+    className: "text-right font-mono tabular-nums text-[11px]",
+    cell: (row) => row.reorderPoint,
+  },
+  {
+    key: "reorderQty",
+    header: "Suggest Qty",
+    headerClassName: "text-right",
+    className: "text-right font-mono tabular-nums text-[11px]",
+    cell: (row) => row.reorderQty ?? "—",
+  },
+  {
+    key: "urgency",
+    header: "Urgency",
+    cell: (row) => <UrgencyBadge available={row.availableQty} reorderPoint={row.reorderPoint} />,
+  },
+];
+
 function ReorderReportContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const query = useReorderReport();
-  const rows = query.data ?? [];
+  const currentPage = Number(searchParams.get("page") ?? "1");
+
+  const query = useReorderReport({ page: currentPage, limit: 50 });
+  const items = query.data?.items ?? [];
 
   const search = searchParams.get("q") ?? "";
 
-  const filtered = search
-    ? rows.filter(
-        (r) =>
-          r.productName.toLowerCase().includes(search.toLowerCase()) ||
-          r.sku.toLowerCase().includes(search.toLowerCase()) ||
-          (r.categoryName?.toLowerCase() ?? "").includes(search.toLowerCase()) ||
-          (r.warehouseName?.toLowerCase() ?? "").includes(search.toLowerCase()) ||
-          (r.vendorName?.toLowerCase() ?? "").includes(search.toLowerCase()),
-      )
-    : rows;
+  const filtered = useMemo(
+    () =>
+      search
+        ? items.filter(
+            (r) =>
+              r.productName.toLowerCase().includes(search.toLowerCase()) ||
+              r.sku.toLowerCase().includes(search.toLowerCase()) ||
+              (r.categoryName?.toLowerCase() ?? "").includes(search.toLowerCase()) ||
+              (r.warehouseName?.toLowerCase() ?? "").includes(search.toLowerCase()) ||
+              (r.vendorName?.toLowerCase() ?? "").includes(search.toLowerCase()),
+          )
+        : items,
+    [items, search],
+  );
 
-  const outOfStock = rows.filter((r) => r.availableQty <= 0).length;
-  const critical = rows.filter(
+  const outOfStock = items.filter((r) => r.availableQty <= 0).length;
+  const critical = items.filter(
     (r) => r.availableQty > 0 && r.reorderPoint > 0 && r.availableQty / r.reorderPoint <= 0.25,
   ).length;
-  const low = rows.filter(
+  const low = items.filter(
     (r) => r.availableQty > 0 && r.reorderPoint > 0 && r.availableQty / r.reorderPoint > 0.25,
   ).length;
 
@@ -82,20 +136,35 @@ function ReorderReportContent() {
     } else {
       params.delete("q");
     }
+    params.delete("page");
     router.replace(`?${params.toString()}`, { scroll: false });
   }
 
   function handleClearSearch(): void {
     const params = new URLSearchParams(searchParams.toString());
     params.delete("q");
+    params.delete("page");
+    router.replace(`?${params.toString()}`, { scroll: false });
+  }
+
+  function handlePageChange(page: number): void {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("page", String(page));
     router.replace(`?${params.toString()}`, { scroll: false });
   }
 
   function handleExportClick(): void {
     const headers = ["Product", "SKU", "Category", "Warehouse", "Vendor", "Available", "Reorder Pt.", "Suggest Qty", "Urgency"];
     const csvRows = filtered.map((r) => [
-      r.productName, r.sku, r.categoryName ?? "", r.warehouseName ?? "", r.vendorName ?? "",
-      r.availableQty, r.reorderPoint, r.reorderQty ?? "", r.availableQty <= 0 ? "Out of stock" : r.availableQty / r.reorderPoint <= 0.25 ? "Critical" : "Low",
+      r.productName,
+      r.sku,
+      r.categoryName ?? "",
+      r.warehouseName ?? "",
+      r.vendorName ?? "",
+      r.availableQty,
+      r.reorderPoint,
+      r.reorderQty ?? "",
+      r.availableQty <= 0 ? "Out of stock" : r.reorderPoint > 0 && r.availableQty / r.reorderPoint <= 0.25 ? "Critical" : "Low",
     ]);
     const content = [headers, ...csvRows]
       .map((row) => row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))
@@ -109,13 +178,17 @@ function ReorderReportContent() {
     URL.revokeObjectURL(url);
   }
 
+  const hasData = !query.isLoading && !query.error;
+  const noData = hasData && items.length === 0;
+  const noResults = hasData && items.length > 0 && filtered.length === 0;
+
   return (
     <PageWrapper
       eyebrow="Inventory · Reports"
       title="Reorder Report"
       subtitle={
         query.data !== undefined
-          ? `${filtered.length} product${filtered.length !== 1 ? "s" : ""} need reordering`
+          ? `${query.data.total} product${query.data.total !== 1 ? "s" : ""} need reordering`
           : "Products below their reorder points"
       }
       filters={
@@ -143,12 +216,11 @@ function ReorderReportContent() {
         </div>
       }
     >
-      {query.isLoading && <SkeletonTable rows={8} columns={9} />}
       {query.error && (
         <ErrorState description={query.error.message} onRetry={handleRetry} className="flex-1" />
       )}
 
-      {!query.isLoading && !query.error && rows.length === 0 && (
+      {noData && (
         <InventoryEmptyState
           illustration={<EmptyReportIllustration />}
           title="No products need reordering"
@@ -157,15 +229,17 @@ function ReorderReportContent() {
         />
       )}
 
-      {!query.isLoading && !query.error && rows.length > 0 && (
-        <div className="space-y-3">
-          <StatCardGrid cols={3}>
-            <StatCard label="Out of stock" value={outOfStock} icon={Package} tone="red" />
-            <StatCard label="Critical (≤25% of reorder pt.)" value={critical} icon={AlertTriangle} tone="red" />
-            <StatCard label="Low stock" value={low} icon={AlertCircle} tone="amber" />
-          </StatCardGrid>
+      {!query.error && !noData && (
+        <div className="flex flex-col gap-3 min-h-0 flex-1">
+          {!query.isLoading && (
+            <StatCardGrid cols={3}>
+              <StatCard label="Out of stock" value={outOfStock} icon={Package} tone="red" />
+              <StatCard label="Critical (≤25% of reorder pt.)" value={critical} icon={AlertTriangle} tone="red" />
+              <StatCard label="Low stock" value={low} icon={AlertCircle} tone="amber" />
+            </StatCardGrid>
+          )}
 
-          {filtered.length === 0 ? (
+          {noResults ? (
             <InventoryEmptyState
               illustration={<EmptySearchIllustration />}
               title="No results"
@@ -174,45 +248,24 @@ function ReorderReportContent() {
               className="min-h-[40vh]"
             />
           ) : (
-            <div className="rounded-md border border-border bg-card overflow-x-auto">
-              <Table className="min-w-[860px] text-[11px]">
-                <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
-                  <TableRow className="border-b-2 border-border">
-                    <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Product</TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">SKU</TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Category</TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Warehouse</TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Vendor</TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Available</TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Reorder Pt.</TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Suggest Qty</TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Urgency</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filtered.map((row) => (
-                    <TableRow
-                      key={`${row.productId}-${row.warehouseName}`}
-                      className="h-8 hover:bg-muted/30 transition-colors"
-                    >
-                      <TableCell className="px-2 py-1 font-medium">{row.productName}</TableCell>
-                      <TableCell className="px-2 py-1 font-mono tabular-nums">{row.sku}</TableCell>
-                      <TableCell className="px-2 py-1">{row.categoryName ?? "—"}</TableCell>
-                      <TableCell className="px-2 py-1">{row.warehouseName ?? "—"}</TableCell>
-                      <TableCell className="px-2 py-1">{row.vendorName ?? "—"}</TableCell>
-                      <TableCell className="px-2 py-1 text-right font-mono tabular-nums">{row.availableQty}</TableCell>
-                      <TableCell className="px-2 py-1 text-right font-mono tabular-nums">{row.reorderPoint}</TableCell>
-                      <TableCell className="px-2 py-1 text-right font-mono tabular-nums font-medium">
-                        {row.reorderQty ?? "—"}
-                      </TableCell>
-                      <TableCell className="px-2 py-1">
-                        <UrgencyBadge available={row.availableQty} reorderPoint={row.reorderPoint} />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
+              <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
+                <DataTable
+                  data={filtered}
+                  columns={REORDER_COLUMNS}
+                  getRowKey={(row) => `${row.productId}-${row.warehouseName}`}
+                  isLoading={query.isLoading}
+                  minWidth="860px"
+                  pagination={{
+                    mode: "server",
+                    page: currentPage,
+                    pageSize: 50,
+                    total: query.data?.total ?? 0,
+                    onPageChange: handlePageChange,
+                  }}
+                />
+              </CardContent>
+            </Card>
           )}
         </div>
       )}

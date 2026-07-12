@@ -35,6 +35,7 @@ export interface Invoice {
   taxAmount: string | null;
   discount: string | null;
   total: string;
+  amountPaid: string;
   currency: string;
   status: InvoiceStatus;
   dueDate: string | null;
@@ -46,6 +47,8 @@ export interface Invoice {
   sentAt: Date | null;
   paidAt: Date | null;
   viewedAt: Date | null;
+  collectionOwnerId: string | null;
+  promiseToPayDate: string | null;
   client: { id: number; name: string } | null;
   project: { id: number; name: string } | null;
   creator: { id: string; name: string | null } | null;

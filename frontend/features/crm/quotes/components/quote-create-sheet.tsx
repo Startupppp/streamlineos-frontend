@@ -4,7 +4,7 @@ import { useEffect, useRef, useCallback } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, AlertTriangle } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -20,6 +20,13 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -28,22 +35,47 @@ import type { Quote, QuoteLineItem } from "@/types/crm/quotes";
 
 const lineItemSchema = z.object({
   description: z.string().min(1, "Required"),
-  quantity: z.coerce.number().min(0.01),
-  unitPrice: z.coerce.number().min(0),
-  taxRate: z.coerce.number().min(0).max(100).optional(),
+  quantity: z.string().min(1, "Required"),
+  unitPrice: z.string().min(1, "Required"),
+  taxRate: z.string().optional(),
 });
 
 const quoteFormSchema = z.object({
   subject: z.string().min(1, "Subject required"),
   description: z.string().optional(),
-  currency: z.string().default("INR"),
-  validUntil: z.string().min(1, "Expiry date required"),
+  currency: z.string(),
+  validUntil: z.string().optional(),
   termsAndConditions: z.string().optional(),
   notes: z.string().optional(),
+  pricebookId: z.string().optional(),
+  templateId: z.string().optional(),
+  discountPercent: z.string().optional(),
   lineItems: z.array(lineItemSchema).min(1, "At least one line item required"),
 });
 
 export type QuoteCreateFormValues = z.infer<typeof quoteFormSchema>;
+
+export interface QuoteSubmitValues {
+  subject: string;
+  description?: string;
+  currency: string;
+  validUntil?: string;
+  termsAndConditions?: string;
+  notes?: string;
+  pricebookId?: string;
+  templateId?: string;
+  discountPercent?: number;
+  dealId?: number;
+  clientId?: number;
+  lineItems: Array<{ description: string; quantity: number; unitPrice: number; taxRate?: number }>;
+}
+
+interface QuoteSettings {
+  maxDiscountPercent: number | null;
+  requirePricebookPrice: boolean;
+  defaultExpiryDays: number;
+  allowPriceOverride: boolean;
+}
 
 interface QuoteCreateSheetProps {
   open: boolean;
@@ -52,27 +84,28 @@ interface QuoteCreateSheetProps {
   dealId?: number;
   clientId?: number;
   isPending: boolean;
-  onSubmit: (values: QuoteCreateFormValues & { dealId?: number; clientId?: number }) => void;
+  onSubmit: (values: QuoteSubmitValues) => void;
+  quoteSettings?: QuoteSettings;
+  pricebooks?: Array<{ id: string; name: string; currency: string }>;
+  quoteTemplates?: Array<{ id: string; name: string }>;
 }
 
-const defaultValues: QuoteCreateFormValues = {
-  subject: "",
-  description: "",
-  currency: "INR",
-  validUntil: "",
-  termsAndConditions: "",
-  notes: "",
-  lineItems: [{ description: "", quantity: 1, unitPrice: 0, taxRate: 0 }],
-};
+function defaultExpiryDate(days: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString().split("T")[0];
+}
 
 function mapLineItem(item: QuoteLineItem) {
   return {
     description: item.description,
-    quantity: Number(item.quantity),
-    unitPrice: Number(item.unitPrice),
-    taxRate: Number(item.taxRate),
+    quantity: String(item.quantity),
+    unitPrice: String(item.unitPrice),
+    taxRate: String(item.taxRate),
   };
 }
+
+const EMPTY_LINE_ITEM = { description: "", quantity: "1", unitPrice: "0", taxRate: "0" };
 
 export function QuoteCreateSheet({
   open,
@@ -82,12 +115,28 @@ export function QuoteCreateSheet({
   clientId,
   isPending,
   onSubmit,
+  quoteSettings,
+  pricebooks,
+  quoteTemplates,
 }: QuoteCreateSheetProps) {
   const resetCalledRef = useRef(false);
 
+  const buildDefaultValues = useCallback((): QuoteCreateFormValues => ({
+    subject: "",
+    description: "",
+    currency: "INR",
+    validUntil: quoteSettings ? defaultExpiryDate(quoteSettings.defaultExpiryDays) : "",
+    termsAndConditions: "",
+    notes: "",
+    pricebookId: undefined,
+    templateId: undefined,
+    discountPercent: undefined,
+    lineItems: [EMPTY_LINE_ITEM],
+  }), [quoteSettings]);
+
   const form = useForm<QuoteCreateFormValues>({
     resolver: zodResolver(quoteFormSchema),
-    defaultValues,
+    defaultValues: buildDefaultValues(),
   });
 
   const { fields, append, remove } = useFieldArray({
@@ -107,40 +156,74 @@ export function QuoteCreateSheet({
         validUntil: editTarget.validUntil ? editTarget.validUntil.slice(0, 10) : "",
         termsAndConditions: editTarget.termsAndConditions ?? "",
         notes: editTarget.notes ?? "",
+        pricebookId: editTarget.pricebookId ?? undefined,
+        templateId: editTarget.templateId ?? undefined,
+        discountPercent: undefined,
         lineItems:
           editTarget.lineItems && editTarget.lineItems.length > 0
             ? editTarget.lineItems.map(mapLineItem)
-            : defaultValues.lineItems,
+            : [EMPTY_LINE_ITEM],
       });
     } else {
-      form.reset(defaultValues);
+      form.reset(buildDefaultValues());
     }
 
     return () => {
       resetCalledRef.current = false;
     };
-  }, [editTarget, form]);
+  }, [editTarget, form, buildDefaultValues]);
 
   const watchedItems = form.watch("lineItems");
   const currency = form.watch("currency");
+  const watchedDiscount = form.watch("discountPercent");
+  const watchedPricebookId = form.watch("pricebookId");
 
-  const grandTotal = watchedItems.reduce((sum, item) => {
-    const qty = Number(item.quantity) || 0;
-    const price = Number(item.unitPrice) || 0;
-    const tax = Number(item.taxRate) || 0;
-    const line = qty * price;
-    return sum + line + line * (tax / 100);
+  const discountNum = Number(watchedDiscount) || 0;
+  const selectedPricebook = pricebooks?.find((pb) => pb.id === watchedPricebookId);
+
+  const subtotal = watchedItems.reduce((sum, item) => {
+    return sum + (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0);
   }, 0);
+  const taxTotal = watchedItems.reduce((sum, item) => {
+    const line = (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0);
+    return sum + line * ((Number(item.taxRate) || 0) / 100);
+  }, 0);
+  const discountAmt = subtotal * (discountNum / 100);
+  const grandTotal = subtotal - discountAmt + taxTotal;
+
+  const exceedsMaxDiscount =
+    quoteSettings?.maxDiscountPercent !== null &&
+    quoteSettings?.maxDiscountPercent !== undefined &&
+    discountNum > quoteSettings.maxDiscountPercent;
 
   const handleSubmit = useCallback(
     (values: QuoteCreateFormValues) => {
-      onSubmit({ ...values, dealId, clientId });
+      const converted: QuoteSubmitValues = {
+        subject: values.subject,
+        description: values.description || undefined,
+        currency: values.currency,
+        validUntil: values.validUntil || undefined,
+        termsAndConditions: values.termsAndConditions || undefined,
+        notes: values.notes || undefined,
+        pricebookId: values.pricebookId || undefined,
+        templateId: values.templateId || undefined,
+        discountPercent: values.discountPercent ? Number(values.discountPercent) : undefined,
+        dealId,
+        clientId,
+        lineItems: values.lineItems.map((item) => ({
+          description: item.description,
+          quantity: Number(item.quantity),
+          unitPrice: Number(item.unitPrice),
+          taxRate: item.taxRate ? Number(item.taxRate) : undefined,
+        })),
+      };
+      onSubmit(converted);
     },
     [onSubmit, dealId, clientId],
   );
 
   const handleAddLineItem = useCallback(() => {
-    append({ description: "", quantity: 1, unitPrice: 0, taxRate: 0 });
+    append(EMPTY_LINE_ITEM);
   }, [append]);
 
   const handleRemoveLineItem = useCallback(
@@ -200,7 +283,6 @@ export function QuoteCreateSheet({
                     </FormItem>
                   )}
                 />
-
                 <FormField
                   control={form.control}
                   name="validUntil"
@@ -215,6 +297,76 @@ export function QuoteCreateSheet({
                   )}
                 />
               </div>
+
+              {(pricebooks && pricebooks.length > 0) || (quoteTemplates && quoteTemplates.length > 0) ? (
+                <div className="grid grid-cols-2 gap-4">
+                  {pricebooks && pricebooks.length > 0 && (
+                    <FormField
+                      control={form.control}
+                      name="pricebookId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Pricebook</FormLabel>
+                          <Select
+                            value={field.value ?? "none"}
+                            onValueChange={(v) => field.onChange(v === "none" ? undefined : v)}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="h-9 text-sm">
+                                <SelectValue placeholder="Select pricebook" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="none">No pricebook</SelectItem>
+                              {pricebooks.map((pb) => (
+                                <SelectItem key={pb.id} value={pb.id}>
+                                  {pb.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {selectedPricebook && (
+                            <p className="text-[10px] text-muted-foreground mt-1">
+                              Prices from: {selectedPricebook.name}
+                            </p>
+                          )}
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                  {quoteTemplates && quoteTemplates.length > 0 && (
+                    <FormField
+                      control={form.control}
+                      name="templateId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Template</FormLabel>
+                          <Select
+                            value={field.value ?? "none"}
+                            onValueChange={(v) => field.onChange(v === "none" ? undefined : v)}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="h-9 text-sm">
+                                <SelectValue placeholder="Select template" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="none">No template</SelectItem>
+                              {quoteTemplates.map((t) => (
+                                <SelectItem key={t.id} value={t.id}>
+                                  {t.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                </div>
+              ) : null}
 
               <FormField
                 control={form.control}
@@ -266,11 +418,7 @@ export function QuoteCreateSheet({
                               render={({ field: f }) => (
                                 <FormItem className="space-y-0">
                                   <FormControl>
-                                    <Input
-                                      placeholder="Description"
-                                      className="h-7 text-xs"
-                                      {...f}
-                                    />
+                                    <Input placeholder="Description" className="h-7 text-xs" {...f} />
                                   </FormControl>
                                   <FormMessage className="text-xs" />
                                 </FormItem>
@@ -284,13 +432,7 @@ export function QuoteCreateSheet({
                               render={({ field: f }) => (
                                 <FormItem className="space-y-0">
                                   <FormControl>
-                                    <Input
-                                      type="number"
-                                      min="0.01"
-                                      step="0.01"
-                                      className="h-7 text-xs"
-                                      {...f}
-                                    />
+                                    <Input type="number" min="0.01" step="0.01" className="h-7 text-xs" {...f} />
                                   </FormControl>
                                   <FormMessage className="text-xs" />
                                 </FormItem>
@@ -304,13 +446,7 @@ export function QuoteCreateSheet({
                               render={({ field: f }) => (
                                 <FormItem className="space-y-0">
                                   <FormControl>
-                                    <Input
-                                      type="number"
-                                      min="0"
-                                      step="0.01"
-                                      className="h-7 text-xs"
-                                      {...f}
-                                    />
+                                    <Input type="number" min="0" step="0.01" className="h-7 text-xs" {...f} />
                                   </FormControl>
                                   <FormMessage className="text-xs" />
                                 </FormItem>
@@ -324,14 +460,7 @@ export function QuoteCreateSheet({
                               render={({ field: f }) => (
                                 <FormItem className="space-y-0">
                                   <FormControl>
-                                    <Input
-                                      type="number"
-                                      min="0"
-                                      max="100"
-                                      step="0.01"
-                                      className="h-7 text-xs"
-                                      {...f}
-                                    />
+                                    <Input type="number" min="0" max="100" step="0.01" className="h-7 text-xs" {...f} />
                                   </FormControl>
                                   <FormMessage className="text-xs" />
                                 </FormItem>
@@ -356,9 +485,7 @@ export function QuoteCreateSheet({
                     </tbody>
                   </table>
                 </div>
-                <FormMessage>
-                  {form.formState.errors.lineItems?.root?.message}
-                </FormMessage>
+                <FormMessage>{form.formState.errors.lineItems?.root?.message}</FormMessage>
                 <Button
                   type="button"
                   variant="outline"
@@ -369,6 +496,38 @@ export function QuoteCreateSheet({
                   <Plus className="h-3.5 w-3.5 mr-1" />
                   Add Line Item
                 </Button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="discountPercent"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Discount %</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.01"
+                          placeholder="0"
+                          {...field}
+                          value={field.value ?? ""}
+                        />
+                      </FormControl>
+                      {exceedsMaxDiscount && (
+                        <div className="flex items-center gap-1 mt-1">
+                          <AlertTriangle className="h-3 w-3 text-amber-600 shrink-0" />
+                          <p className="text-[10px] text-amber-700 font-medium">
+                            Requires approval (max {quoteSettings?.maxDiscountPercent}%)
+                          </p>
+                        </div>
+                      )}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
 
               <FormField
@@ -410,11 +569,24 @@ export function QuoteCreateSheet({
               />
             </div>
 
-            <div className="border-t shrink-0 grid grid-cols-2 px-6 py-4 gap-3 items-center">
-              <p className="text-sm font-semibold tabular-nums">
-                Total: {currency} {grandTotal.toFixed(2)}
-              </p>
-              <div className="flex gap-3 justify-end">
+            <div className="border-t shrink-0 px-6 py-4 space-y-2">
+              <div className="flex flex-col gap-0.5 items-end text-xs tabular-nums font-mono">
+                <span className="text-muted-foreground">
+                  Subtotal: {currency} {subtotal.toFixed(2)}
+                </span>
+                {discountAmt > 0 && (
+                  <span className="text-amber-700">
+                    Discount: -{currency} {discountAmt.toFixed(2)}
+                  </span>
+                )}
+                <span className="text-muted-foreground">
+                  Tax: {currency} {taxTotal.toFixed(2)}
+                </span>
+                <span className="font-semibold text-foreground text-sm">
+                  Total: {currency} {grandTotal.toFixed(2)}
+                </span>
+              </div>
+              <div className="flex gap-3 justify-end pt-2">
                 <Button type="button" variant="outline" onClick={handleCancel}>
                   Cancel
                 </Button>

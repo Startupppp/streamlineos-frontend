@@ -162,13 +162,18 @@ export interface LeadStats {
   thisMonth: number;
 }
 
+export interface LeadBoardColumn {
+  leads: Lead[];
+  total: number;
+}
+
 export interface LeadBoard {
-  NEW: Lead[];
-  CONTACTED: Lead[];
-  INTERESTED: Lead[];
-  QUALIFIED: Lead[];
-  CONVERTED: Lead[];
-  LOST: Lead[];
+  NEW: LeadBoardColumn;
+  CONTACTED: LeadBoardColumn;
+  INTERESTED: LeadBoardColumn;
+  QUALIFIED: LeadBoardColumn;
+  CONVERTED: LeadBoardColumn;
+  LOST: LeadBoardColumn;
 }
 
 export interface SlaAlert {

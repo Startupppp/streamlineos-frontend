@@ -1,19 +1,25 @@
 "use client";
 
-import { useState, memo } from "react";
+import { useState } from "react";
 import { Search } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { ErrorState } from "@/components/shared";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
-import { SkeletonTable, ErrorState, DataTablePagination } from "@/components/shared";
 import { useForecasting, type ForecastRow } from "@/hooks/api/inventory/planning";
 
 type StockoutRisk = ForecastRow["stockoutRisk"];
 
-const RISK_BADGE: Record<StockoutRisk, { label: string; className: string }> = {
+type RiskBadgeEntry = { label: string; className: string };
+
+const RISK_BADGE: Record<StockoutRisk | "NONE", RiskBadgeEntry> = {
   HIGH: { label: "High", className: "bg-red-50 text-red-700 border-red-200" },
   MEDIUM: { label: "Medium", className: "bg-amber-50 text-amber-700 border-amber-200" },
   LOW: { label: "Low", className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  NONE: { label: "None", className: "bg-muted text-muted-foreground border-border" },
 };
 
 function getProjectedQty(row: ForecastRow, week: number): string {
@@ -22,36 +28,70 @@ function getProjectedQty(row: ForecastRow, week: number): string {
   return found.projectedQty.toLocaleString();
 }
 
-interface ForecastTableRowProps {
-  row: ForecastRow;
+function getRiskBadge(risk: string): RiskBadgeEntry {
+  return (RISK_BADGE as Record<string, RiskBadgeEntry>)[risk] ?? RISK_BADGE.NONE;
 }
 
-const ForecastTableRow = memo(function ForecastTableRow({ row }: ForecastTableRowProps) {
-  const risk = RISK_BADGE[row.stockoutRisk];
-  return (
-    <tr className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
-      <td className="px-4 py-3">
+const columns: DataTableColumn<ForecastRow>[] = [
+  {
+    key: "product",
+    header: "Product / SKU",
+    cell: (row) => (
+      <div>
         <p className="text-sm font-medium text-foreground truncate max-w-[180px]">{row.productName}</p>
         <p className="text-xs text-muted-foreground font-mono">{row.variantSku}</p>
-      </td>
-      <td className="px-4 py-3 text-sm tabular-nums">
-        {row.weeklyDemand != null ? row.weeklyDemand.toLocaleString() : "—"}
-      </td>
-      <td className="px-4 py-3 text-sm tabular-nums">{getProjectedQty(row, 1)}</td>
-      <td className="px-4 py-3 text-sm tabular-nums">{getProjectedQty(row, 2)}</td>
-      <td className="px-4 py-3 text-sm tabular-nums">{getProjectedQty(row, 3)}</td>
-      <td className="px-4 py-3 text-sm tabular-nums">{getProjectedQty(row, 4)}</td>
-      <td className="px-4 py-3 text-sm tabular-nums">{row.currentStock.toLocaleString()}</td>
-      <td className="px-4 py-3">
-        <span
-          className={`inline-flex items-center px-2 py-0.5 rounded-md border text-[11px] font-medium ${risk.className}`}
-        >
-          {risk.label}
+      </div>
+    ),
+  },
+  {
+    key: "weeklyDemand",
+    header: "Weekly Demand",
+    className: "tabular-nums",
+    cell: (row) => row.weeklyDemand != null ? row.weeklyDemand.toLocaleString() : "—",
+  },
+  {
+    key: "week1",
+    header: "Week 1",
+    className: "tabular-nums",
+    cell: (row) => getProjectedQty(row, 1),
+  },
+  {
+    key: "week2",
+    header: "Week 2",
+    className: "tabular-nums",
+    cell: (row) => getProjectedQty(row, 2),
+  },
+  {
+    key: "week3",
+    header: "Week 3",
+    className: "tabular-nums",
+    cell: (row) => getProjectedQty(row, 3),
+  },
+  {
+    key: "week4",
+    header: "Week 4",
+    className: "tabular-nums",
+    cell: (row) => getProjectedQty(row, 4),
+  },
+  {
+    key: "currentStock",
+    header: "Current Stock",
+    className: "tabular-nums",
+    cell: (row) => row.currentStock.toLocaleString(),
+  },
+  {
+    key: "stockoutRisk",
+    header: "Stockout Risk",
+    cell: (row) => {
+      const badge = getRiskBadge(row.stockoutRisk);
+      return (
+        <span className={`inline-flex items-center px-2 py-0.5 rounded-md border text-[11px] font-medium ${badge.className}`}>
+          {badge.label}
         </span>
-      </td>
-    </tr>
-  );
-});
+      );
+    },
+  },
+];
 
 export function ForecastingClient() {
   const [search, setSearch] = useState("");
@@ -61,7 +101,6 @@ export function ForecastingClient() {
 
   const rows = data?.items ?? [];
   const total = data?.total ?? 0;
-  const totalPages = data?.totalPages ?? 1;
 
   function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>): void {
     setSearch(e.target.value);
@@ -88,11 +127,9 @@ export function ForecastingClient() {
         </div>
       }
     >
-      {isLoading ? (
-        <SkeletonTable rows={6} columns={8} />
-      ) : error ? (
+      {error ? (
         <ErrorState onRetry={handleRetry} />
-      ) : rows.length === 0 ? (
+      ) : !isLoading && rows.length === 0 ? (
         <InventoryEmptyState
           illustrationPreset="chart"
           title="No forecast data available"
@@ -100,41 +137,18 @@ export function ForecastingClient() {
           className="flex-1 h-full"
         />
       ) : (
-        <>
-          <div className="rounded-lg border border-border bg-card overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border bg-muted/30">
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Product / SKU</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Weekly Demand</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Week 1</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Week 2</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Week 3</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Week 4</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Current Stock</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Stockout Risk</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((row) => (
-                    <ForecastTableRow key={row.variantId} row={row} />
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {totalPages > 1 && (
-            <DataTablePagination
-              page={page}
-              totalPages={totalPages}
-              total={total}
-              limit={20}
-              onPageChange={setPage}
+        <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
+          <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
+            <DataTable
+              data={rows}
+              columns={columns}
+              getRowKey={(row) => row.variantId}
+              isLoading={isLoading}
+              pagination={{ mode: "server", page, pageSize: 25, total, onPageChange: setPage }}
+              minWidth="800px"
             />
-          )}
-        </>
+          </CardContent>
+        </Card>
       )}
     </PageWrapper>
   );

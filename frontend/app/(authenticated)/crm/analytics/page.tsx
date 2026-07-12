@@ -24,15 +24,23 @@ import { MonthlyRevenueChart } from "@/features/crm/analytics/monthly-revenue-ch
 import { RevenueVsGoalChart } from "@/features/crm/analytics/revenue-vs-goal-chart";
 import { WinRateTrendChart } from "@/features/crm/analytics/win-rate-trend-chart";
 import { TaskAnalyticsCard } from "@/features/crm/analytics/task-analytics-card";
+import { useCrmOptions } from "@/hooks/api/crm/metadata";
 
 export default function CrmAnalyticsPage() {
   const [period, setPeriod] = useState<Period>("month");
+  const [selectedSource, setSelectedSource] = useState<string>("all");
 
   const dateRange = useMemo(() => periodToDateRange(period), [period]);
 
   const handlePeriodChange = useCallback((p: Period) => {
     setPeriod(p);
   }, []);
+
+  const handleSourceChange = useCallback((src: string) => {
+    setSelectedSource(src);
+  }, []);
+
+  const { data: sourceOptions = [] } = useCrmOptions("lead_source");
 
   const {
     isLoading,
@@ -52,6 +60,13 @@ export default function CrmAnalyticsPage() {
     scoreDistribution,
     revenueGoalData,
   } = useAnalyticsData(dateRange);
+
+  const filteredSourceBreakdown = useMemo(() => {
+    if (selectedSource === "all") return sourceBreakdown;
+    return sourceBreakdown.filter(
+      (s) => s.name.toLowerCase().replace(/\s+/g, "_") === selectedSource
+    );
+  }, [sourceBreakdown, selectedSource]);
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
@@ -94,7 +109,34 @@ export default function CrmAnalyticsPage() {
         <div className="grid gap-3 md:grid-cols-2">
           <PipelineFunnelChart data={funnelData} />
           <LeadVolumeChart data={leadVolumeTrend} />
-          <SourceBreakdownChart data={sourceBreakdown} />
+          <div className="flex flex-col gap-2">
+            <div className="flex flex-wrap gap-1 px-1">
+              <button
+                onClick={() => handleSourceChange("all")}
+                className={`h-8 rounded-md px-3 text-xs font-medium transition-colors ${
+                  selectedSource === "all"
+                    ? "bg-blue-500 text-white"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                }`}
+              >
+                All sources
+              </button>
+              {sourceOptions.map((opt) => (
+                <button
+                  key={opt.key}
+                  onClick={() => handleSourceChange(opt.key)}
+                  className={`h-8 rounded-md px-3 text-xs font-medium transition-colors ${
+                    selectedSource === opt.key
+                      ? "bg-blue-500 text-white"
+                      : "bg-muted text-muted-foreground hover:bg-muted/80"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            <SourceBreakdownChart data={filteredSourceBreakdown} />
+          </div>
           <RepPerformanceTable leaderboard={leaderboard} />
           <ConversionChart data={wonLostReasons} />
           <DealValueChart data={dealsByStageValue} />

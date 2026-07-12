@@ -25,7 +25,7 @@ export interface JournalLine {
   lineOrder: number;
 }
 
-export type JournalEntryStatus = "DRAFT" | "POSTED" | "VOID";
+export type JournalEntryStatus = "DRAFT" | "POSTED" | "VOID" | "PENDING_APPROVAL";
 
 export interface JournalEntry {
   id: number;
@@ -37,6 +37,7 @@ export interface JournalEntry {
   sourceId: string | null;
   sourceEvent: string | null;
   status: JournalEntryStatus;
+  reversedEntryId?: number | null;
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;
@@ -196,7 +197,7 @@ export interface AgedReceivablesReport {
   };
 }
 
-export type PurchaseBillStatus = "DRAFT" | "POSTED" | "PARTIALLY_PAID" | "PAID" | "CANCELLED";
+export type PurchaseBillStatus = "DRAFT" | "PENDING_APPROVAL" | "POSTED" | "PARTIALLY_PAID" | "PAID" | "CANCELLED";
 
 export interface PurchaseBillItem {
   id: number;

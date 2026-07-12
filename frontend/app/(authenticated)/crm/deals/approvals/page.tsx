@@ -29,6 +29,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared/error-state";
 import { useDealApprovals, useResolveDealApproval } from "@/hooks/api/crm";
+import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -53,30 +54,35 @@ interface ApprovalRowActionsProps {
 }
 
 function ApprovalRowActions({ item, onApprove, onReject }: ApprovalRowActionsProps) {
+  const canApprove = useCan("crm:deals:approve");
   const handleApproveClick = useCallback(() => onApprove(item.id), [item.id, onApprove]);
   const handleRejectClick = useCallback(() => onReject(item.id), [item.id, onReject]);
 
   if (item.status === "pending") {
     return (
       <div className="flex items-center justify-end gap-1.5">
-        <Button
-          size="sm"
-          variant="ghost"
-          className="h-7 text-xs text-emerald-600 hover:text-emerald-700"
-          onClick={handleApproveClick}
-        >
-          <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
-          Approve
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          className="h-7 text-xs text-destructive hover:text-destructive"
-          onClick={handleRejectClick}
-        >
-          <XCircle className="h-3.5 w-3.5 mr-1" />
-          Reject
-        </Button>
+        {canApprove && (
+          <>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 text-xs text-emerald-600 hover:text-emerald-700"
+              onClick={handleApproveClick}
+            >
+              <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+              Approve
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 text-xs text-destructive hover:text-destructive"
+              onClick={handleRejectClick}
+            >
+              <XCircle className="h-3.5 w-3.5 mr-1" />
+              Reject
+            </Button>
+          </>
+        )}
       </div>
     );
   }

@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useCallback } from "react";
+import { use, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useReducedMotion, motion } from "framer-motion";
@@ -16,6 +16,7 @@ import {
   AlertTriangle,
   FileCheck2,
   Receipt,
+  Pencil,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,6 +24,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,6 +44,7 @@ import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { cn } from "@/lib/utils";
 import {
   useQuoteDetail,
+  useUpdateQuote,
   useUpdateQuoteStatus,
   useDeleteQuote,
   useApproveQuote,
@@ -48,10 +52,15 @@ import {
   useConvertQuoteToInvoice,
   useMarkQuoteSigned,
 } from "@/hooks/api/crm/quotes";
-import { useCan } from "@/lib/api/hooks/access";
+import { useCan } from "@/hooks/api/access";
+import { useQuoteSettings, usePricebooks, useQuoteTemplates } from "@/hooks/api/crm/pricebooks";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { QuoteStatusProgress } from "@/features/crm/quotes/components/quote-status-progress";
 import { QuoteLineItemsTable } from "@/features/crm/quotes/components/quote-line-items-table";
+import {
+  QuoteCreateSheet,
+  type QuoteSubmitValues,
+} from "@/features/crm/quotes/components/quote-create-sheet";
 import {
   STATUS_LABELS,
   STATUS_BADGE_CLASSES,
@@ -69,8 +78,20 @@ export default function QuoteDetailPage({
   const router = useRouter();
   const shouldReduceMotion = useReducedMotion();
 
+  const [editOpen, setEditOpen] = useState(false);
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+  const [approvalRejectOpen, setApprovalRejectOpen] = useState(false);
+  const [approvalRejectReason, setApprovalRejectReason] = useState("");
+  const [signedDialogOpen, setSignedDialogOpen] = useState(false);
+  const [signedDocRef, setSignedDocRef] = useState("");
+
   const { data, isLoading, isError, refetch } = useQuoteDetail(quoteId);
+  const { data: settings } = useQuoteSettings();
+  const { data: pricebooks } = usePricebooks();
+  const { data: templates } = useQuoteTemplates();
   const updateStatus = useUpdateQuoteStatus();
+  const updateQuote = useUpdateQuote();
   const deleteQuote = useDeleteQuote();
   const approveQuote = useApproveQuote();
   const rejectQuote = useRejectQuote();
@@ -106,15 +127,18 @@ export default function QuoteDetailPage({
     );
   }, [quoteId, updateStatus]);
 
-  const handleReject = useCallback(() => {
+  const handleRejectOpen = useCallback(() => setRejectDialogOpen(true), []);
+
+  const handleRejectConfirm = useCallback(() => {
+    setRejectDialogOpen(false);
     updateStatus.mutate(
-      { id: quoteId, status: "REJECTED" },
+      { id: quoteId, status: "REJECTED", rejectionReason: rejectReason || undefined },
       {
-        onSuccess: () => toast.success("Quote rejected"),
+        onSuccess: () => { toast.success("Quote rejected"); setRejectReason(""); },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [quoteId, updateStatus]);
+  }, [quoteId, updateStatus, rejectReason]);
 
   const handleDelete = useCallback(() => {
     deleteQuote.mutate(
@@ -139,15 +163,18 @@ export default function QuoteDetailPage({
     );
   }, [quoteId, approveQuote]);
 
-  const handleRejectApproval = useCallback(() => {
+  const handleApprovalRejectOpen = useCallback(() => setApprovalRejectOpen(true), []);
+
+  const handleApprovalRejectConfirm = useCallback(() => {
+    setApprovalRejectOpen(false);
     rejectQuote.mutate(
-      { id: quoteId },
+      { id: quoteId, reason: approvalRejectReason || undefined },
       {
-        onSuccess: () => toast.success("Approval rejected"),
+        onSuccess: () => { toast.success("Approval rejected"); setApprovalRejectReason(""); },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [quoteId, rejectQuote]);
+  }, [quoteId, rejectQuote, approvalRejectReason]);
 
   const handleConvertToInvoice = useCallback(() => {
     convertToInvoice.mutate(
@@ -159,15 +186,29 @@ export default function QuoteDetailPage({
     );
   }, [quoteId, convertToInvoice]);
 
-  const handleMarkSigned = useCallback(() => {
+  const handleMarkSignedOpen = useCallback(() => setSignedDialogOpen(true), []);
+
+  const handleMarkSignedConfirm = useCallback(() => {
+    setSignedDialogOpen(false);
     markSigned.mutate(
-      { id: quoteId },
+      { id: quoteId, documentRef: signedDocRef || undefined },
       {
-        onSuccess: () => toast.success("Quote marked as signed"),
+        onSuccess: () => { toast.success("Quote marked as signed"); setSignedDocRef(""); },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [quoteId, markSigned]);
+  }, [quoteId, markSigned, signedDocRef]);
+
+  const handleEditSubmit = useCallback((values: QuoteSubmitValues) => {
+    const { dealId: _d, clientId: _c, ...rest } = values;
+    updateQuote.mutate(
+      { id: quoteId, ...rest },
+      {
+        onSuccess: () => { toast.success("Quote updated"); setEditOpen(false); },
+        onError: (e) => toast.error(getErrorMessage(e)),
+      },
+    );
+  }, [quoteId, updateQuote]);
 
   if (isLoading) {
     return (
@@ -227,8 +268,8 @@ export default function QuoteDetailPage({
   const canMarkSigned = quote.status === "ACCEPTED" && quote.signedAt === null;
 
   return (
+    <>
     <PageWrapper
-      variant="display"
       title={quote.subject}
       backHref="/crm/quotes"
       subtitle={
@@ -246,12 +287,43 @@ export default function QuoteDetailPage({
       }
       actions={
         <div className="flex items-center gap-2 flex-wrap">
+          {canApprove && quote.approvalStatus === "pending" && (
+            <>
+              <LoadingButton
+                size="sm"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                onClick={handleApprove}
+                isPending={approveQuote.isPending}
+                loadingText="Approving..."
+              >
+                <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
+                Approve
+              </LoadingButton>
+              <LoadingButton
+                size="sm"
+                variant="outline"
+                className="border-red-300 text-red-600 hover:bg-red-50"
+                onClick={handleApprovalRejectOpen}
+                isPending={rejectQuote.isPending}
+                loadingText="Rejecting..."
+              >
+                Reject Approval
+              </LoadingButton>
+            </>
+          )}
+          {quote.status === "DRAFT" && (
+            <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>
+              <Pencil className="h-3.5 w-3.5 mr-1.5" />
+              Edit
+            </Button>
+          )}
           {canSend && (
             <Button
               size="sm"
               variant="outline"
               onClick={handleSend}
               disabled={updateStatus.isPending}
+              title={quote.approvalStatus === "pending" ? "Pending approval" : undefined}
             >
               <Send className="h-3.5 w-3.5 mr-1.5" />
               Send
@@ -273,7 +345,7 @@ export default function QuoteDetailPage({
                 size="sm"
                 variant="outline"
                 className="text-red-600 border-red-200 hover:bg-red-50"
-                onClick={handleReject}
+                onClick={handleRejectOpen}
                 disabled={updateStatus.isPending}
               >
                 <XCircle className="h-3.5 w-3.5 mr-1.5" />
@@ -294,16 +366,14 @@ export default function QuoteDetailPage({
             </LoadingButton>
           )}
           {canMarkSigned && (
-            <LoadingButton
+            <Button
               size="sm"
               variant="outline"
-              onClick={handleMarkSigned}
-              isPending={markSigned.isPending}
-              loadingText="Saving..."
+              onClick={handleMarkSignedOpen}
             >
               <FileCheck2 className="h-3.5 w-3.5 mr-1.5" />
               Mark Signed
-            </LoadingButton>
+            </Button>
           )}
           {canDelete && (
             <AlertDialog>
@@ -363,7 +433,7 @@ export default function QuoteDetailPage({
                 size="sm"
                 variant="outline"
                 className="border-red-300 text-red-600 hover:bg-red-50 h-7 text-xs"
-                onClick={handleRejectApproval}
+                onClick={handleApprovalRejectOpen}
                 isPending={rejectQuote.isPending}
                 loadingText="Rejecting..."
               >
@@ -578,5 +648,91 @@ export default function QuoteDetailPage({
         </motion.div>
       </motion.div>
     </PageWrapper>
+
+    <QuoteCreateSheet
+      open={editOpen}
+      onOpenChange={setEditOpen}
+      editTarget={quote}
+      isPending={updateQuote.isPending}
+      onSubmit={handleEditSubmit}
+      quoteSettings={settings ?? undefined}
+      pricebooks={pricebooks ?? undefined}
+      quoteTemplates={templates ?? undefined}
+    />
+
+    <AlertDialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Reject quote?</AlertDialogTitle>
+          <AlertDialogDescription>Optionally provide a reason for rejection.</AlertDialogDescription>
+        </AlertDialogHeader>
+        <div className="px-6 pb-2">
+          <Textarea
+            placeholder="Rejection reason (optional)"
+            value={rejectReason}
+            onChange={(e) => setRejectReason(e.target.value)}
+            rows={2}
+            className="resize-none text-sm"
+          />
+        </div>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onClick={handleRejectConfirm}
+          >
+            Reject
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+
+    <AlertDialog open={approvalRejectOpen} onOpenChange={setApprovalRejectOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Reject approval request?</AlertDialogTitle>
+          <AlertDialogDescription>Optionally provide a reason.</AlertDialogDescription>
+        </AlertDialogHeader>
+        <div className="px-6 pb-2">
+          <Textarea
+            placeholder="Reason (optional)"
+            value={approvalRejectReason}
+            onChange={(e) => setApprovalRejectReason(e.target.value)}
+            rows={2}
+            className="resize-none text-sm"
+          />
+        </div>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onClick={handleApprovalRejectConfirm}
+          >
+            Reject Approval
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+
+    <AlertDialog open={signedDialogOpen} onOpenChange={setSignedDialogOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Mark as signed?</AlertDialogTitle>
+          <AlertDialogDescription>Optionally attach a document reference.</AlertDialogDescription>
+        </AlertDialogHeader>
+        <div className="px-6 pb-2">
+          <Input
+            placeholder="Document reference (optional)"
+            value={signedDocRef}
+            onChange={(e) => setSignedDocRef(e.target.value)}
+          />
+        </div>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={handleMarkSignedConfirm}>Mark Signed</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }

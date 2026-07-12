@@ -44,6 +44,8 @@ export interface CrmPipelineWithStages extends CrmPipeline {
 
 export type CrmOptionType =
   | "lead_status"
+  | "lead_priority"
+  | "lead_source"
   | "priority"
   | "source"
   | "lost_reason"

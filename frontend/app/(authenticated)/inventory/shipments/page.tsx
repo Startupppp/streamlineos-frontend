@@ -3,6 +3,7 @@
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Plus } from "lucide-react";
+import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { EmptyOrdersIllustration } from "@/components/illustrations";
@@ -136,10 +137,9 @@ function ShipmentsPageInner() {
   const columns: DataTableColumn<Shipment>[] = [
     {
       key: "id",
-      header: "Shipment ID",
-      cell: (s) => (
-        <span className="font-mono tabular-nums text-muted-foreground">#{s.id}</span>
-      ),
+      header: "Shipment",
+      cell: (s) =>
+        s.trackingNumber ?? (s.soId ? `SO-${s.soId}` : format(new Date(s.createdAt), "dd MMM yyyy")),
     },
     {
       key: "status",

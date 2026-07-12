@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Plus, Megaphone } from "lucide-react";
+import { Plus } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { DataTable } from "@/components/ui/data-table";
@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { staggerContainer } from "@/lib/motion-variants";
+import { EmptyReportIllustration } from "@/components/illustrations";
 import { useCampaigns } from "@/hooks/api/crm/campaigns";
 import { formatCurrency } from "@/features/crm/reports/lib/types";
 import { CampaignSheet } from "./campaign-sheet";
@@ -89,6 +90,15 @@ function buildColumns(onRowClick: (id: number) => void): DataTableColumn<CrmCamp
       ),
     },
     {
+      key: "spend",
+      header: "Spend",
+      cell: (row) => (
+        <span className="text-sm font-mono tabular-nums">
+          {row.spend ? formatCurrency(Number(row.spend)) : "—"}
+        </span>
+      ),
+    },
+    {
       key: "leads",
       header: "Leads",
       cell: (row) => (
@@ -98,12 +108,17 @@ function buildColumns(onRowClick: (id: number) => void): DataTableColumn<CrmCamp
       sortValue: (row) => row.leads,
     },
     {
-      key: "spend",
-      header: "Spend",
-      cell: (row) => (
-        <span className="text-sm font-mono tabular-nums">
-          {row.spend ? formatCurrency(Number(row.spend)) : "—"}
-        </span>
+      key: "converted",
+      header: "Converted",
+      cell: () => (
+        <span className="text-sm font-mono tabular-nums text-muted-foreground">—</span>
+      ),
+    },
+    {
+      key: "revenue",
+      header: "Revenue",
+      cell: () => (
+        <span className="text-sm font-mono tabular-nums text-muted-foreground">—</span>
       ),
     },
     {
@@ -133,7 +148,7 @@ export function CampaignListPage() {
     limit: 50,
   });
 
-  const campaigns = data?.campaigns ?? [];
+  const campaigns = data?.items ?? [];
 
   const handleRowClick = useCallback(
     (id: number) => {
@@ -194,10 +209,12 @@ export function CampaignListPage() {
         className="space-y-4"
       >
         {campaigns.length === 0 ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-3 py-24 text-center">
-            <Megaphone className="h-12 w-12 text-muted-foreground/30" />
-            <p className="text-base font-medium text-muted-foreground">No campaigns yet</p>
-            <p className="text-sm text-muted-foreground/70">Create your first campaign to track leads and ROI.</p>
+          <div className="flex flex-1 flex-col items-center justify-center gap-4 py-20">
+            <EmptyReportIllustration className="h-32 w-32 opacity-60" />
+            <div className="text-center">
+              <p className="text-base font-medium text-muted-foreground">No campaigns yet</p>
+              <p className="text-sm text-muted-foreground/70 mt-1">Create your first campaign to track leads and ROI.</p>
+            </div>
             <LoadingButton size="sm" onClick={handleOpenSheet}>
               <Plus className="h-3.5 w-3.5 mr-1.5" />
               Create Campaign

@@ -77,7 +77,7 @@ function AttributionChart({ data }: { data: CampaignAttribution[] }) {
         <YAxis tick={AXIS_TICK} tickFormatter={(v: number) => `₹${(v / 1000).toFixed(0)}K`} />
         <Tooltip
           contentStyle={CHART_TOOLTIP_STYLE}
-          formatter={(v: number) => [`₹${v.toLocaleString("en-IN")}`, "Revenue"]}
+          formatter={(v) => `₹${Number(v).toLocaleString("en-IN")}`}
         />
         <Bar dataKey="revenue" radius={[4, 4, 0, 0]}>
           {chartData.map((entry, i) => (
@@ -98,7 +98,7 @@ export function CampaignDetailPage({ campaignId }: CampaignDetailPageProps) {
   const [attributionTab, setAttributionTab] = useState<"first-touch" | "last-touch">("first-touch");
 
   const { data: listData, isLoading: listLoading } = useCampaigns({ limit: 200 });
-  const campaign = listData?.campaigns.find((c) => c.id === campaignId);
+  const campaign = listData?.items.find((c) => c.id === campaignId);
 
   const { data: roi, isLoading: roiLoading } = useCampaignRoi(campaignId);
   const { data: leadsData, isLoading: leadsLoading } = useCampaignLeads(campaignId, {
@@ -138,7 +138,7 @@ export function CampaignDetailPage({ campaignId }: CampaignDetailPageProps) {
   const attributionData = attributionTab === "first-touch" ? (firstTouch ?? []) : (lastTouch ?? []);
   const attributionLoading = attributionTab === "first-touch" ? firstLoading : lastLoading;
 
-  const leads = leadsData?.leads ?? [];
+  const leads = leadsData?.items ?? [];
   const totalLeads = leadsData?.total ?? 0;
   const totalPages = Math.ceil(totalLeads / 20);
 

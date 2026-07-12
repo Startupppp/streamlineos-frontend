@@ -18,23 +18,14 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared/error-state";
 import { useDealAging } from "@/hooks/api/crm";
 import { formatINR } from "@/lib/format-utils";
-import { cn } from "@/lib/utils";
 import { EmptyDealsIllustration } from "@/components/illustrations";
 
 type AgingDealRow = NonNullable<ReturnType<typeof useDealAging>["data"]>["deals"][number];
 
-const STAGE_BADGE: Record<string, { label: string; className: string }> = {
-  LEAD: { label: "Lead", className: "bg-slate-100 text-slate-700 border-slate-200" },
-  CONTACTED: { label: "Contacted", className: "bg-blue-50 text-blue-700 border-blue-200" },
-  PROPOSAL: { label: "Proposal", className: "bg-violet-50 text-violet-700 border-violet-200" },
-  NEGOTIATION: { label: "Negotiation", className: "bg-amber-50 text-amber-700 border-amber-200" },
-};
-
 function StageBadge({ stage }: { stage: string }) {
-  const badge = STAGE_BADGE[stage] ?? { label: stage, className: "bg-slate-100 text-slate-700 border-slate-200" };
   return (
-    <Badge variant="outline" className={cn("text-[9px] h-4 px-1.5 py-0", badge.className)}>
-      {badge.label}
+    <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-slate-100 text-slate-700 border-slate-200">
+      {stage}
     </Badge>
   );
 }

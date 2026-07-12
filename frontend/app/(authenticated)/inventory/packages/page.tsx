@@ -3,6 +3,7 @@
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Plus } from "lucide-react";
+import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { EmptyOrdersIllustration } from "@/components/illustrations";
@@ -125,10 +126,11 @@ function PackagesPageInner() {
   const columns: DataTableColumn<Package>[] = [
     {
       key: "id",
-      header: "Package ID",
-      cell: (pkg) => (
-        <span className="font-mono tabular-nums text-muted-foreground">#{pkg.id}</span>
-      ),
+      header: "Package",
+      cell: (pkg) =>
+        pkg.shipmentId
+          ? `Pkg · Shipment ${pkg.shipmentId}`
+          : format(new Date(pkg.createdAt), "dd MMM yyyy"),
     },
     {
       key: "status",

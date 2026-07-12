@@ -39,6 +39,7 @@ export const ACCOUNTING_PERMISSIONS: Permission[] = [
   { name: "accounting:taxes:read", resource: "accounting:taxes", action: "read", description: "View tax rates, returns, and filings" },
   { name: "accounting:taxes:manage", resource: "accounting:taxes", action: "manage", description: "Manage tax rates and prepare tax returns" },
   { name: "accounting:taxes:pay", resource: "accounting:taxes", action: "pay", description: "Submit and pay tax returns" },
+  { name: "accounting:reports:read", resource: "accounting:reports", action: "read", description: "View accounting reports and analytics" },
   { name: "accounting:reports:export", resource: "accounting:reports", action: "export", description: "Export accounting reports" },
   { name: "accounting:budgets:read", resource: "accounting:budgets", action: "read", description: "View budgets and actuals" },
   { name: "accounting:budgets:create", resource: "accounting:budgets", action: "create", description: "Create budgets" },

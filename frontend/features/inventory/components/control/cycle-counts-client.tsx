@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Plus, Eye } from "lucide-react";
+import { Eye } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -37,6 +39,8 @@ import {
   CYCLE_COUNT_STATUS_LABEL,
   type CycleCountStatus,
 } from "@/features/inventory/lib/inventory-status";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const STATUS_OPTIONS: CycleCountStatus[] = ["PLANNED", "COUNTING", "REVIEW", "POSTED", "CANCELLED"];
 const PAGE_LIMIT = 20;
@@ -99,11 +103,11 @@ function NewCycleCountSheet({
 
   return (
     <Sheet open={open} onOpenChange={(v) => { if (!v) handleClose(); }}>
-      <SheetContent className="w-full sm:max-w-md">
-        <SheetHeader>
+      <SheetContent side="right" className="w-full sm:max-w-[480px] p-0 flex flex-col overflow-hidden">
+        <SheetHeader className="bg-muted/40 p-6 pb-4 pr-12 border-b text-left">
           <SheetTitle>New Cycle Count</SheetTitle>
         </SheetHeader>
-        <div className="space-y-4 py-4">
+        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="cc-warehouse">Warehouse *</Label>
             <Select value={warehouseId || "none"} onValueChange={handleWarehouseChange}>
@@ -153,16 +157,19 @@ function NewCycleCountSheet({
             </Select>
           </div>
         </div>
-        <SheetFooter>
-          <Button variant="outline" onClick={handleClose} disabled={createMutation.isPending}>
+        <SheetFooter className="border-t px-6 py-4 gap-2 flex-row">
+          <Button variant="outline" className="flex-1" onClick={handleClose} disabled={createMutation.isPending}>
             Cancel
           </Button>
-          <Button
+          <LoadingButton
+            className="flex-1"
             onClick={handleSubmit}
-            disabled={!warehouseId || createMutation.isPending}
+            disabled={!warehouseId}
+            isPending={createMutation.isPending}
+            loadingText="Creating…"
           >
-            {createMutation.isPending ? "Creating…" : "Create Count"}
-          </Button>
+            Create Count
+          </LoadingButton>
         </SheetFooter>
       </SheetContent>
     </Sheet>
@@ -173,6 +180,7 @@ export function CycleCountsClient() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [page, setPage] = useState(1);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const { iconRef: plusRef, hoverHandlers: plusHandlers } = useAnimatedIcon();
 
   const { data, isLoading, error, refetch } = useCycleCounts({
     status: statusFilter === "all" ? undefined : statusFilter,
@@ -284,8 +292,8 @@ export function CycleCountsClient() {
         subtitle="Count inventory by location or category to verify stock accuracy."
         filters={filtersRow}
         actions={
-          <Button size="sm" onClick={handleOpenSheet}>
-            <Plus className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+          <Button size="sm" onClick={handleOpenSheet} {...plusHandlers}>
+            <PlusIcon ref={plusRef} size={14} aria-hidden="true" />
             New Cycle Count
           </Button>
         }
@@ -293,7 +301,7 @@ export function CycleCountsClient() {
         {error ? (
           <ErrorState
             title="Failed to load cycle counts"
-            description={error.message}
+            description={getErrorMessage(error)}
             onRetry={handleRetry}
             className="min-h-[40vh]"
           />

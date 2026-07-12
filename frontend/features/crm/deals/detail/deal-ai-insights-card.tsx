@@ -2,15 +2,17 @@
 
 import { useState, useCallback } from "react";
 import Link from "next/link";
-import { Sparkles, AlertTriangle, Lightbulb } from "lucide-react";
+import { Sparkles, AlertTriangle, Lightbulb, Plus, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { useDealSummary } from "@/hooks/api/crm";
 import { useOrgFeatureFlags } from "@/hooks/api/ai";
+import { useCreateTask } from "@/hooks/api/tasks";
 
 interface DealSummaryResult {
   stage: string;
@@ -26,18 +28,76 @@ interface DealAiInsightsCardProps {
   dealName?: string | null;
 }
 
+function PlayRow({
+  play,
+  dealId,
+  onDismiss,
+}: {
+  play: string;
+  dealId: number;
+  onDismiss: () => void;
+}) {
+  const createTask = useCreateTask();
+
+  const handleAddTask = useCallback(() => {
+    createTask.mutate(
+      { title: play, type: "CUSTOM", entityType: "DEAL", entityId: dealId },
+      {
+        onSuccess: () => toast.success("Task created"),
+        onError: (err) => toast.error(getErrorMessage(err)),
+      },
+    );
+  }, [createTask, play, dealId]);
+
+  return (
+    <li className="flex items-start gap-2 group">
+      <Lightbulb className="h-3.5 w-3.5 text-blue-400 mt-0.5 shrink-0" />
+      <span className="text-xs text-foreground flex-1">{play}</span>
+      <div className="hidden group-hover:flex items-center gap-0.5 shrink-0">
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-5 w-5 p-0 text-blue-600 hover:text-blue-700"
+          title="Add as task"
+          onClick={handleAddTask}
+          disabled={createTask.isPending}
+        >
+          <Plus className="h-3 w-3" />
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-5 w-5 p-0 text-muted-foreground hover:text-foreground"
+          title="Dismiss"
+          onClick={onDismiss}
+        >
+          <X className="h-3 w-3" />
+        </Button>
+      </div>
+    </li>
+  );
+}
+
 export function DealAiInsightsCard({ dealId, dealName }: DealAiInsightsCardProps) {
   const [result, setResult] = useState<DealSummaryResult | null>(null);
+  const [dismissedPlays, setDismissedPlays] = useState<Set<number>>(new Set());
 
   const { data: flags } = useOrgFeatureFlags();
   const { mutate: generate, isPending } = useDealSummary();
 
   const handleGenerate = useCallback(() => {
     generate(dealId, {
-      onSuccess: (data) => setResult(data),
+      onSuccess: (data) => {
+        setResult(data);
+        setDismissedPlays(new Set());
+      },
       onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [generate, dealId]);
+
+  const handleDismissPlay = useCallback((idx: number) => {
+    setDismissedPlays((prev) => new Set(prev).add(idx));
+  }, []);
 
   return (
     <Card className="bg-card border border-border rounded-xl shadow-sm">
@@ -92,18 +152,22 @@ export function DealAiInsightsCard({ dealId, dealName }: DealAiInsightsCardProps
               </div>
             )}
 
-            {result.recommendedPlays.length > 0 && (
+            {result.recommendedPlays.filter((_, i) => !dismissedPlays.has(i)).length > 0 && (
               <div className="space-y-1.5">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                   Recommended Plays
                 </p>
                 <ul className="space-y-1.5">
-                  {result.recommendedPlays.map((play, i) => (
-                    <li key={i} className="flex items-start gap-2">
-                      <Lightbulb className="h-3.5 w-3.5 text-blue-400 mt-0.5 shrink-0" />
-                      <span className="text-xs text-foreground">{play}</span>
-                    </li>
-                  ))}
+                  {result.recommendedPlays.map((play, i) =>
+                    dismissedPlays.has(i) ? null : (
+                      <PlayRow
+                        key={i}
+                        play={play}
+                        dealId={dealId}
+                        onDismiss={() => handleDismissPlay(i)}
+                      />
+                    ),
+                  )}
                 </ul>
               </div>
             )}

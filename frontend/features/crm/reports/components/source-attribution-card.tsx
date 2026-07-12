@@ -26,7 +26,7 @@ export function SourceAttributionCard({
     <Card className="rounded-lg border border-border">
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
-          <Activity className="h-4 w-4 text-violet-600" />
+          <Activity className="h-4 w-4 text-blue-500" />
           Source Attribution
         </CardTitle>
       </CardHeader>

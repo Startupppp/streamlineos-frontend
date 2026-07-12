@@ -17,11 +17,68 @@ export type MovementType =
 
 type ReorderUrgency = "critical" | "high" | "medium";
 
-interface MovementsFilters {
+export interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+interface StockSummaryParams {
+  page?: number;
+  limit?: number;
+}
+
+interface ReorderReportParams {
+  page?: number;
+  limit?: number;
+}
+
+export interface MovementsParams {
   warehouseId?: number;
   type?: string;
   dateFrom?: string;
   dateTo?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface SlowMovingRow {
+  productVariantId: number;
+  variantSku: string;
+  variantName: string;
+  productName: string;
+  onHand: number;
+  averageCost: number;
+  value: number;
+  lastMovement: string | null;
+  daysSinceLastMovement: number | null;
+}
+
+export interface ExpiryReportRow {
+  id: number;
+  lotNumber: string;
+  expiryDate: string;
+  status: string;
+  productVariantId: number;
+  variantSku: string;
+  variantName: string;
+  productName: string;
+  totalOnHand: string;
+  daysUntilExpiry: number;
+}
+
+interface SlowMovingParams {
+  days?: number;
+  page?: number;
+  limit?: number;
+}
+
+interface ExpiryReportParams {
+  withinDays?: number;
+  warehouseId?: number;
+  status?: string;
+  page?: number;
   limit?: number;
 }
 
@@ -39,11 +96,11 @@ interface InventoryDashboardMovement {
 
 export interface AiInsight {
   id: number;
-  type: string;
-  severity: "INFO" | "WARNING" | "CRITICAL";
+  insightType: string;
+  severity: string;
   title: string;
-  description: string;
-  status: "PENDING" | "ACKNOWLEDGED" | "DISMISSED";
+  body: string;
+  status: "NEW" | "ACKNOWLEDGED" | "DISMISSED";
   createdAt: string;
 }
 
@@ -98,7 +155,7 @@ export interface ReorderReportRow {
   urgency: ReorderUrgency;
 }
 
-interface MovementReportRow {
+export interface MovementReportRow {
   id: number;
   type: MovementType;
   productName: string;
@@ -191,6 +248,20 @@ interface RawDashboardResponse {
   failedChannelSyncsCount?: number;
   openInspectionsCount?: number;
   recentInsights?: AiInsight[];
+}
+
+interface RawStockSummaryEnvelope {
+  items: RawStockLevelRow[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+interface RawMovementsEnvelope {
+  items: RawTransactionRow[];
+  total: number;
+  page: number;
+  totalPages: number;
 }
 
 function toNumber(value: string | null | undefined): number {
@@ -321,53 +392,89 @@ export function useInventoryDashboard() {
   });
 }
 
-export function useStockSummary() {
-  return useQuery<StockSummaryRow[], Error>({
-    queryKey: queryKeys.inventory.stockSummary(),
+export function useStockSummary(params?: StockSummaryParams) {
+  return useQuery<PaginatedResponse<StockSummaryRow>, Error>({
+    queryKey: queryKeys.inventory.stockSummary(params),
     queryFn: async () => {
-      const data = await apiClient.get<RawStockLevelRow[]>("/inventory/reports/stock-summary");
-      return (data ?? []).map(toStockSummaryRow);
+      const data = await apiClient.get<RawStockSummaryEnvelope>("/inventory/reports/stock-summary", {
+        ...(params?.page !== undefined ? { page: String(params.page) } : {}),
+        ...(params?.limit !== undefined ? { limit: String(params.limit) } : {}),
+      });
+      const items = (data.items ?? []).map(toStockSummaryRow);
+      return { items, total: data.total, page: data.page, totalPages: data.totalPages };
     },
     staleTime: 5 * 60_000,
   });
 }
 
-export function useReorderReport() {
-  return useQuery<ReorderReportRow[], Error>({
-    queryKey: queryKeys.inventory.reorderReport(),
+export function useReorderReport(params?: ReorderReportParams) {
+  return useQuery<PaginatedResponse<ReorderReportRow>, Error>({
+    queryKey: [...queryKeys.inventory.all, "reorderReport", params ?? {}] as const,
     queryFn: async () => {
-      const data = await apiClient.get<RawStockLevelRow[]>("/inventory/reports/reorder");
-      return (data ?? []).map(toReorderRow);
+      const data = await apiClient.get<RawStockSummaryEnvelope>("/inventory/reports/reorder", {
+        ...(params?.page !== undefined ? { page: String(params.page) } : {}),
+        ...(params?.limit !== undefined ? { limit: String(params.limit) } : {}),
+      });
+      const items = (data.items ?? []).map(toReorderRow);
+      return { items, total: data.total, page: data.page, totalPages: data.totalPages };
     },
     staleTime: 5 * 60_000,
   });
 }
 
-export function useMovementsReport(filters?: MovementsFilters) {
-  return useQuery<MovementReportRow[], Error>({
+export function useMovementsReport(params?: MovementsParams) {
+  return useQuery<PaginatedResponse<MovementReportRow>, Error>({
     queryKey: queryKeys.inventory.movementsReport({
-      warehouseId: filters?.warehouseId ?? null,
-      type: filters?.type ?? null,
-      dateFrom: filters?.dateFrom ?? null,
-      dateTo: filters?.dateTo ?? null,
-      limit: filters?.limit ?? null,
+      warehouseId: params?.warehouseId ?? null,
+      type: params?.type ?? null,
+      dateFrom: params?.dateFrom ?? null,
+      dateTo: params?.dateTo ?? null,
+      page: params?.page ?? null,
+      limit: params?.limit ?? null,
     }),
     queryFn: async () => {
-      const data = await apiClient.get<RawTransactionRow[]>("/inventory/reports/movements", {
-        fromDate: filters?.dateFrom,
-        toDate: filters?.dateTo,
+      const data = await apiClient.get<RawMovementsEnvelope>("/inventory/reports/movements", {
+        ...(params?.dateFrom !== undefined ? { fromDate: params.dateFrom } : {}),
+        ...(params?.dateTo !== undefined ? { toDate: params.dateTo } : {}),
+        ...(params?.warehouseId !== undefined ? { warehouseId: String(params.warehouseId) } : {}),
+        ...(params?.type !== undefined ? { type: params.type } : {}),
+        ...(params?.page !== undefined ? { page: String(params.page) } : {}),
+        ...(params?.limit !== undefined ? { limit: String(params.limit) } : {}),
       });
-      let rows = (data ?? []).map(toMovementRow);
-      if (filters?.warehouseId) {
-        rows = rows.filter((row) => row.warehouseId === filters.warehouseId);
-      }
-      if (filters?.type) {
-        rows = rows.filter((row) => row.type === filters.type);
-      }
-      if (filters?.limit && filters.limit > 0) {
-        rows = rows.slice(0, filters.limit);
-      }
-      return rows;
+      const items = (data.items ?? []).map(toMovementRow);
+      return { items, total: data.total, page: data.page, totalPages: data.totalPages };
+    },
+    staleTime: 5 * 60_000,
+  });
+}
+
+export function useSlowMovingReport(params?: SlowMovingParams) {
+  return useQuery<PaginatedResponse<SlowMovingRow>, Error>({
+    queryKey: [...queryKeys.inventory.all, "slowMovingReport", params ?? {}] as const,
+    queryFn: async () => {
+      const data = await apiClient.get<PaginatedResponse<SlowMovingRow>>("/inventory/reports/slow-moving", {
+        ...(params?.days !== undefined ? { days: String(params.days) } : {}),
+        ...(params?.page !== undefined ? { page: String(params.page) } : {}),
+        ...(params?.limit !== undefined ? { limit: String(params.limit) } : {}),
+      });
+      return data;
+    },
+    staleTime: 5 * 60_000,
+  });
+}
+
+export function useExpiryReport(params?: ExpiryReportParams) {
+  return useQuery<PaginatedResponse<ExpiryReportRow>, Error>({
+    queryKey: [...queryKeys.inventory.all, "expiryReport", params ?? {}] as const,
+    queryFn: async () => {
+      const data = await apiClient.get<PaginatedResponse<ExpiryReportRow>>("/inventory/reports/expiry", {
+        ...(params?.withinDays !== undefined ? { withinDays: String(params.withinDays) } : {}),
+        ...(params?.warehouseId !== undefined ? { warehouseId: String(params.warehouseId) } : {}),
+        ...(params?.status !== undefined ? { status: params.status } : {}),
+        ...(params?.page !== undefined ? { page: String(params.page) } : {}),
+        ...(params?.limit !== undefined ? { limit: String(params.limit) } : {}),
+      });
+      return data;
     },
     staleTime: 5 * 60_000,
   });

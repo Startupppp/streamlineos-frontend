@@ -6,7 +6,6 @@ import { Lock, Search } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Tooltip,
@@ -14,7 +13,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { SkeletonTable, ErrorState, DataTablePagination } from "@/components/shared";
+import { ErrorState } from "@/components/shared";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { useCostingProducts, type CostingProductRow } from "@/hooks/api/inventory/valuation";
 
 type CostingMethod = CostingProductRow["costingMethod"];
@@ -28,7 +29,7 @@ const METHOD_LABEL: Record<CostingMethod, string> = {
 
 const METHOD_BADGE_CLASS: Record<CostingMethod, string> = {
   FIFO: "bg-blue-50 text-blue-700 border-blue-200",
-  LIFO: "bg-violet-50 text-violet-700 border-violet-200",
+  LIFO: "bg-sky-50 text-sky-700 border-sky-200",
   WEIGHTED_AVG: "bg-amber-50 text-amber-700 border-amber-200",
   STANDARD: "bg-emerald-50 text-emerald-700 border-emerald-200",
 };
@@ -83,52 +84,70 @@ function CostingGuidanceCard() {
   );
 }
 
-interface CostingTableRowProps {
-  row: CostingProductRow;
-}
-
-function CostingTableRow({ row }: CostingTableRowProps) {
-  return (
-    <tr className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
-      <td className="px-4 py-3">
+const columns: DataTableColumn<CostingProductRow>[] = [
+  {
+    key: "product",
+    header: "Product / SKU",
+    cell: (row) => (
+      <div>
         <p className="text-sm font-medium text-foreground truncate max-w-[180px]">{row.productName}</p>
         <p className="text-xs text-muted-foreground font-mono">{row.variantSku}</p>
-      </td>
-      <td className="px-4 py-3">
-        <span className={`inline-flex items-center px-2 py-0.5 rounded-md border text-[11px] font-medium ${METHOD_BADGE_CLASS[row.costingMethod]}`}>
-          {METHOD_LABEL[row.costingMethod]}
-        </span>
-      </td>
-      <td className="px-4 py-3 text-sm tabular-nums text-muted-foreground">
-        {row.costingMethod === "STANDARD" && !row.isLocked
-          ? formatCents(row.standardCost)
-          : row.standardCost != null
+      </div>
+    ),
+  },
+  {
+    key: "costingMethod",
+    header: "Costing Method",
+    cell: (row) => (
+      <span className={`inline-flex items-center px-2 py-0.5 rounded-md border text-[11px] font-medium ${METHOD_BADGE_CLASS[row.costingMethod]}`}>
+        {METHOD_LABEL[row.costingMethod]}
+      </span>
+    ),
+  },
+  {
+    key: "standardCost",
+    header: "Standard Cost",
+    className: "tabular-nums text-muted-foreground",
+    cell: (row) =>
+      row.costingMethod === "STANDARD" && !row.isLocked
+        ? formatCents(row.standardCost)
+        : row.standardCost != null
           ? <span className="text-foreground">{formatCents(row.standardCost)}</span>
-          : "—"}
-      </td>
-      <td className="px-4 py-3 text-sm tabular-nums text-muted-foreground">
-        {formatCents(row.averageCost)}
-      </td>
-      <td className="px-4 py-3 text-sm tabular-nums">{row.onHandQty.toLocaleString()}</td>
-      <td className="px-4 py-3">
-        {row.isLocked ? (
-          <TooltipProvider delayDuration={200}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="inline-flex items-center">
-                  <Lock className="h-3.5 w-3.5 text-muted-foreground" aria-label="Method locked while stock exists" />
-                </span>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p className="text-xs">Method locked while stock exists</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        ) : null}
-      </td>
-    </tr>
-  );
-}
+          : "—",
+  },
+  {
+    key: "averageCost",
+    header: "Average Cost",
+    className: "tabular-nums text-muted-foreground",
+    cell: (row) => formatCents(row.averageCost),
+  },
+  {
+    key: "onHandQty",
+    header: "On Hand",
+    className: "tabular-nums",
+    cell: (row) => row.onHandQty.toLocaleString(),
+  },
+  {
+    key: "locked",
+    header: "",
+    headerClassName: "w-10",
+    cell: (row) =>
+      row.isLocked ? (
+        <TooltipProvider delayDuration={200}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-flex items-center">
+                <Lock className="h-3.5 w-3.5 text-muted-foreground" aria-label="Method locked while stock exists" />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="text-xs">Method locked while stock exists</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ) : null,
+  },
+];
 
 export function CostingClient() {
   const [search, setSearch] = useState("");
@@ -141,7 +160,6 @@ export function CostingClient() {
 
   const rows = data?.items ?? [];
   const total = data?.total ?? 0;
-  const totalPages = data?.totalPages ?? 1;
 
   function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>): void {
     setSearch(e.target.value);
@@ -175,11 +193,9 @@ export function CostingClient() {
     >
       <CostingGuidanceCard />
 
-      {isLoading ? (
-        <SkeletonTable rows={6} columns={6} />
-      ) : error ? (
+      {error ? (
         <ErrorState onRetry={handleRetry} />
-      ) : rows.length === 0 ? (
+      ) : !isLoading && rows.length === 0 ? (
         <InventoryEmptyState
           illustrationPreset="inventory"
           title="No products found"
@@ -187,39 +203,18 @@ export function CostingClient() {
           className="flex-1 h-full"
         />
       ) : (
-        <>
-          <div className="rounded-lg border border-border bg-card overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border bg-muted/30">
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Product / SKU</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Costing Method</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Standard Cost</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Average Cost</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">On Hand</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground w-10" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((row) => (
-                    <CostingTableRow key={row.variantId} row={row} />
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {totalPages > 1 && (
-            <DataTablePagination
-              page={page}
-              totalPages={totalPages}
-              total={total}
-              limit={20}
-              onPageChange={setPage}
+        <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
+          <CardContent className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-0">
+            <DataTable
+              data={rows}
+              columns={columns}
+              getRowKey={(row) => row.variantId}
+              isLoading={isLoading}
+              pagination={{ mode: "server", page, pageSize: 20, total, onPageChange: setPage }}
+              minWidth="700px"
             />
-          )}
-        </>
+          </CardContent>
+        </Card>
       )}
     </PageWrapper>
   );

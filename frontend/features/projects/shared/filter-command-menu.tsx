@@ -15,6 +15,7 @@ import {
   RefreshCw,
   Zap,
   CalendarRange,
+  FolderKanban,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -55,9 +56,16 @@ export interface FilterState {
   selectedAssignees: string[];
   selectedLabels: string[];
   selectedCycles: string[];
+  selectedProjectIds: string[];
   sprintParam: string;
   dueDateFrom: string;
   dueDateTo: string;
+}
+
+interface ProjectOption {
+  id: number;
+  name: string;
+  key: string;
 }
 
 export interface FilterCommandMenuProps {
@@ -67,6 +75,7 @@ export interface FilterCommandMenuProps {
   labels: Label[];
   cycles: Cycle[];
   sprints: Sprint[];
+  projectOptions?: ProjectOption[];
   showTypeFilter: boolean;
   showSprintFilter: boolean;
   showAssigneeFilter: boolean;
@@ -78,6 +87,7 @@ export interface FilterCommandMenuProps {
   onToggleLabel: (value: string) => void;
   onToggleCycle: (value: string) => void;
   onToggleSprint: (value: string) => void;
+  onToggleProject: (value: string) => void;
   onDueDateFromChange: (value: string) => void;
   onDueDateToChange: (value: string) => void;
 }
@@ -144,6 +154,7 @@ export function FilterCommandMenu({
   labels,
   cycles,
   sprints,
+  projectOptions,
   showTypeFilter,
   showSprintFilter,
   showAssigneeFilter,
@@ -155,6 +166,7 @@ export function FilterCommandMenu({
   onToggleLabel,
   onToggleCycle,
   onToggleSprint,
+  onToggleProject,
   onDueDateFromChange,
   onDueDateToChange,
 }: FilterCommandMenuProps) {
@@ -171,6 +183,7 @@ export function FilterCommandMenu({
     selectedAssignees,
     selectedLabels,
     selectedCycles,
+    selectedProjectIds,
     sprintParam,
     dueDateFrom,
     dueDateTo,
@@ -235,6 +248,13 @@ export function FilterCommandMenu({
       visible: true,
       activeCount: dueDateFrom || dueDateTo ? 1 : 0,
     },
+    {
+      key: "project",
+      label: "Project",
+      icon: <FolderKanban className="h-3.5 w-3.5" />,
+      visible: (projectOptions?.length ?? 0) > 0,
+      activeCount: selectedProjectIds.length,
+    },
   ];
 
   const visibleCategories = categories.filter((c) => c.visible);
@@ -292,6 +312,7 @@ export function FilterCommandMenu({
   const handleToggleLabel = useCallback((v: string) => { onToggleLabel(v); }, [onToggleLabel]);
   const handleToggleCycle = useCallback((v: string) => { onToggleCycle(v); }, [onToggleCycle]);
   const handleToggleSprint = useCallback((v: string) => { onToggleSprint(v); }, [onToggleSprint]);
+  const handleToggleProject = useCallback((v: string) => { onToggleProject(v); }, [onToggleProject]);
   const handleDueDateFromChange = useCallback((v: string) => { onDueDateFromChange(v); }, [onDueDateFromChange]);
   const handleDueDateToChange = useCallback((v: string) => { onDueDateToChange(v); }, [onDueDateToChange]);
 
@@ -301,12 +322,14 @@ export function FilterCommandMenu({
     labels,
     cycles,
     sprints,
+    projectOptions,
     selectedStatuses,
     selectedPriorities,
     selectedTypes,
     selectedAssignees,
     selectedLabels,
     selectedCycles,
+    selectedProjectIds,
     sprintParam,
     dueDateFrom,
     dueDateTo,
@@ -317,6 +340,7 @@ export function FilterCommandMenu({
     onToggleLabel: handleToggleLabel,
     onToggleCycle: handleToggleCycle,
     onToggleSprint: handleToggleSprint,
+    onToggleProject: handleToggleProject,
     onDueDateFromChange: handleDueDateFromChange,
     onDueDateToChange: handleDueDateToChange,
   };

@@ -25,20 +25,21 @@ import type {
   LogCrmActivityInput,
 } from "@/hooks/api/crm/crm-activities";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { isPast, isToday } from "date-fns";
 
 const PAGE_SIZE = 30;
 
 function isCrmActivityType(v: string): v is CrmActivityType {
-  return ["CALL", "EMAIL", "MEETING", "CUSTOM"].includes(v);
+  return v === "CALL" || v === "EMAIL" || v === "MEETING" || v === "CUSTOM";
 }
 
 function isCrmEntityType(v: string): v is CrmActivityEntityType {
-  return ["LEAD", "DEAL", "CONTACT"].includes(v);
+  return v === "LEAD" || v === "DEAL" || v === "CONTACT";
 }
 
 function isCrmActivityStatus(v: string): v is CrmActivityStatus {
-  return ["pending", "completed", "cancelled"].includes(v);
+  return v === "pending" || v === "completed" || v === "cancelled";
 }
 
 function ActivitiesContent() {
@@ -144,7 +145,7 @@ function ActivitiesContent() {
           toast.success("Activity logged successfully");
           setDialogOpen(false);
         },
-        onError: (err) => toast.error(err.message),
+        onError: (err) => toast.error(getErrorMessage(err)),
       });
     },
     [logActivity],
@@ -170,8 +171,7 @@ function ActivitiesContent() {
   return (
     <PageWrapper
       title="Activities"
-      subtitle={!isLoading && data ? `${totalCount} activities` : undefined}
-      badge={!isLoading && data ? String(totalCount) : undefined}
+      subtitle="Track calls, emails, meetings, and tasks across your pipeline"
       actions={
         <Button onClick={handleOpenDialog} size="sm" className="h-8 px-3 text-xs gap-1.5">
           <Plus className="h-3.5 w-3.5" />

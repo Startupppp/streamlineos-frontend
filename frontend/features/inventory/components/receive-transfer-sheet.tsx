@@ -205,7 +205,7 @@ export function ReceiveTransferSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-lg flex flex-col gap-0 p-0">
+      <SheetContent className="w-full sm:max-w-lg flex flex-col gap-0 p-0 overflow-hidden">
         <SheetHeader className="shrink-0 px-6 py-4 border-b">
           <SheetTitle>Receive Transfer</SheetTitle>
           <SheetDescription>

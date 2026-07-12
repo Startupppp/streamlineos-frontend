@@ -125,6 +125,9 @@ export default function CustomerLedgersPage() {
                     <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[160px] text-right">
                       Outstanding
                     </TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[80px]">
+                      &nbsp;
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -152,6 +155,14 @@ export default function CustomerLedgersPage() {
                       </TableCell>
                       <TableCell className="text-right font-mono text-sm font-medium tabular-nums px-3 py-2">
                         {formatCurrency(row.outstanding)}
+                      </TableCell>
+                      <TableCell className="px-3 py-2">
+                        <Link
+                          href={`/accounting/reports/customer-statement?clientId=${row.clientId}`}
+                          className="text-xs text-blue-600 hover:underline whitespace-nowrap"
+                        >
+                          Statement
+                        </Link>
                       </TableCell>
                     </TableRow>
                   ))}

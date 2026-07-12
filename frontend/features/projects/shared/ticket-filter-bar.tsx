@@ -22,11 +22,18 @@ interface Member {
   email?: string | null;
 }
 
+interface ProjectOption {
+  id: number;
+  name: string;
+  key: string;
+}
+
 interface TicketFilterBarProps {
   sprints?: { id: number; name: string }[];
   members?: Member[];
   statuses?: Array<{ name: string }>;
   projectId?: number;
+  projectOptions?: ProjectOption[];
   showTypeFilter?: boolean;
   showSprintFilter?: boolean;
   showAssigneeFilter?: boolean;
@@ -51,6 +58,7 @@ export function TicketFilterBar({
   members,
   statuses,
   projectId,
+  projectOptions,
   showTypeFilter = true,
   showSprintFilter = true,
   showAssigneeFilter = true,
@@ -75,6 +83,7 @@ export function TicketFilterBar({
   const assigneeParam = searchParams.get("assigneeId") ?? "";
   const labelsParam = searchParams.get("labels") ?? "";
   const cycleParam = searchParams.get("cycle") ?? "";
+  const projectIdsParam = searchParams.get("projectIds") ?? "";
   const dueDateFrom = searchParams.get("dueDateFrom") ?? "";
   const dueDateTo = searchParams.get("dueDateTo") ?? "";
 
@@ -84,6 +93,7 @@ export function TicketFilterBar({
   const selectedAssignees = useMemo(() => parseMulti(assigneeParam), [assigneeParam]);
   const selectedLabels = useMemo(() => parseMulti(labelsParam), [labelsParam]);
   const selectedCycles = useMemo(() => parseMulti(cycleParam), [cycleParam]);
+  const selectedProjectIds = useMemo(() => parseMulti(projectIdsParam), [projectIdsParam]);
 
   const statusOptions =
     statuses && statuses.length > 0
@@ -99,9 +109,10 @@ export function TicketFilterBar({
     if (selectedAssignees.length) count += 1;
     if (selectedLabels.length) count += 1;
     if (selectedCycles.length) count += 1;
+    if (selectedProjectIds.length) count += 1;
     if (dueDateFrom || dueDateTo) count += 1;
     return count;
-  }, [selectedStatuses, selectedPriorities, selectedTypes, sprintParam, selectedAssignees, selectedLabels, selectedCycles, dueDateFrom, dueDateTo]);
+  }, [selectedStatuses, selectedPriorities, selectedTypes, sprintParam, selectedAssignees, selectedLabels, selectedCycles, selectedProjectIds, dueDateFrom, dueDateTo]);
 
   const setParam = useCallback(
     (key: string, value: string) => {
@@ -130,7 +141,7 @@ export function TicketFilterBar({
   const clearAll = useCallback(() => {
     startTransition(() => {
       const params = new URLSearchParams(searchParams.toString());
-      ["status", "priority", "type", "sprintId", "assigneeId", "labels", "cycle", "dueDateFrom", "dueDateTo", "page"].forEach(
+      ["status", "priority", "type", "sprintId", "assigneeId", "labels", "cycle", "projectIds", "dueDateFrom", "dueDateTo", "page"].forEach(
         (k) => params.delete(k),
       );
       const qs = params.toString();
@@ -224,11 +235,26 @@ export function TicketFilterBar({
     };
   }
 
+  function handleToggleProject(id: string) {
+    toggleParam("projectIds", selectedProjectIds, id);
+  }
+
+  function makeRemoveProject(id: string) {
+    return function onRemoveProject() {
+      const next = selectedProjectIds.filter((v) => v !== id);
+      setParam("projectIds", next.join(","));
+    };
+  }
+
   const labelMap = useMemo(() => new Map(labels.map((l) => [String(l.id), l])), [labels]);
   const cycleMap = useMemo(() => new Map(cycles.map((c) => [String(c.id), c])), [cycles]);
   const memberMap = useMemo(
     () => new Map((members ?? []).map((m) => [m.id, m])),
     [members],
+  );
+  const projectMap = useMemo(
+    () => new Map((projectOptions ?? []).map((p) => [String(p.id), p])),
+    [projectOptions],
   );
 
   const filterState: FilterState = {
@@ -238,6 +264,7 @@ export function TicketFilterBar({
     selectedAssignees,
     selectedLabels,
     selectedCycles,
+    selectedProjectIds,
     sprintParam,
     dueDateFrom,
     dueDateTo,
@@ -262,6 +289,7 @@ export function TicketFilterBar({
         labels={labels}
         cycles={cycles}
         sprints={sprints ?? []}
+        projectOptions={projectOptions}
         showTypeFilter={showTypeFilter}
         showSprintFilter={showSprintFilter}
         showAssigneeFilter={showAssigneeFilter}
@@ -273,6 +301,7 @@ export function TicketFilterBar({
         onToggleLabel={handleToggleLabel}
         onToggleCycle={handleToggleCycle}
         onToggleSprint={handleToggleSprint}
+        onToggleProject={handleToggleProject}
         onDueDateFromChange={handleDueDateFromChange}
         onDueDateToChange={handleDueDateToChange}
       />
@@ -304,6 +333,7 @@ export function TicketFilterBar({
         selectedAssignees.length > 0 ||
         selectedLabels.length > 0 ||
         selectedCycles.length > 0 ||
+        selectedProjectIds.length > 0 ||
         activeFilterCount > 0) && (
         <div className="flex flex-wrap items-center gap-1">
           {selectedStatuses.map((s) => (
@@ -334,6 +364,10 @@ export function TicketFilterBar({
           {selectedCycles.map((id) => {
             const c = cycleMap.get(id);
             return <FilterChip key={`cycle-${id}`} label={c?.name ?? id} onRemove={makeRemoveCycle(id)} />;
+          })}
+          {selectedProjectIds.map((id) => {
+            const p = projectMap.get(id);
+            return <FilterChip key={`project-${id}`} label={p?.name ?? id} onRemove={makeRemoveProject(id)} />;
           })}
           {activeFilterCount > 0 && (
             <button

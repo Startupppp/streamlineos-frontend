@@ -27,7 +27,7 @@ import type { QuoteTemplate } from "@/types/crm/pricebooks";
 
 const schema = z.object({
   name: z.string().min(1, "Name is required").max(200),
-  isDefault: z.boolean().default(false),
+  isDefault: z.boolean(),
   terms: z.string().optional(),
 });
 

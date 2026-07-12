@@ -42,6 +42,12 @@ interface Sprint {
   name: string;
 }
 
+interface ProjectOption {
+  id: number;
+  name: string;
+  key: string;
+}
+
 interface FilterFlatSearchProps {
   search: string;
   onSearchChange: (value: string) => void;
@@ -50,6 +56,7 @@ interface FilterFlatSearchProps {
   labels: Label[];
   cycles: Cycle[];
   sprints: Sprint[];
+  projectOptions?: ProjectOption[];
   showTypeFilter: boolean;
   showSprintFilter: boolean;
   showAssigneeFilter: boolean;
@@ -59,6 +66,7 @@ interface FilterFlatSearchProps {
   selectedAssignees: string[];
   selectedLabels: string[];
   selectedCycles: string[];
+  selectedProjectIds: string[];
   sprintParam: string;
   dueDateFrom: string;
   dueDateTo: string;
@@ -69,6 +77,7 @@ interface FilterFlatSearchProps {
   onToggleLabel: (v: string) => void;
   onToggleCycle: (v: string) => void;
   onToggleSprint: (v: string) => void;
+  onToggleProject: (v: string) => void;
   onDueDateFromChange: (v: string) => void;
   onDueDateToChange: (v: string) => void;
 }
@@ -92,6 +101,7 @@ export function FilterFlatSearch({
   labels,
   cycles,
   sprints,
+  projectOptions,
   showTypeFilter,
   showSprintFilter,
   showAssigneeFilter,
@@ -101,6 +111,7 @@ export function FilterFlatSearch({
   selectedAssignees,
   selectedLabels,
   selectedCycles,
+  selectedProjectIds,
   sprintParam,
   dueDateFrom,
   dueDateTo,
@@ -111,6 +122,7 @@ export function FilterFlatSearch({
   onToggleLabel,
   onToggleCycle,
   onToggleSprint,
+  onToggleProject,
   onDueDateFromChange,
   onDueDateToChange,
 }: FilterFlatSearchProps) {
@@ -322,6 +334,38 @@ export function FilterFlatSearch({
                     >
                       <CheckMark active={active} />
                       <span className="text-xs">{s.name}</span>
+                    </CommandItem>
+                  );
+                })}
+            </CommandGroup>
+          </>
+        )}
+
+        {(projectOptions?.length ?? 0) > 0 && (
+          <>
+            <CommandSeparator />
+            <CommandGroup heading="Project">
+              {(projectOptions ?? [])
+                .filter(
+                  (p) =>
+                    p.name.toLowerCase().includes(q) ||
+                    p.key.toLowerCase().includes(q) ||
+                    "project".includes(q),
+                )
+                .map((p) => {
+                  const projectId = String(p.id);
+                  const active = selectedProjectIds.includes(projectId);
+                  function onSelectProject() { onToggleProject(projectId); }
+                  return (
+                    <CommandItem
+                      key={p.id}
+                      value={`Project ${p.name}`}
+                      keywords={["project", p.name, p.key]}
+                      onSelect={onSelectProject}
+                    >
+                      <CheckMark active={active} />
+                      <span className="mr-1 font-mono text-[10px] text-muted-foreground">{p.key}</span>
+                      <span className="text-xs">{p.name}</span>
                     </CommandItem>
                   );
                 })}

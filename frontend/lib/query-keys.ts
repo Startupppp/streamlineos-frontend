@@ -159,6 +159,10 @@ export const queryKeys = {
     winLoss: () => [...base, "deals", "winLoss"] as const,
     meetings: (dealId: number) => [...base, "deals", "meetings", dealId] as const,
     approvals: (params?: Record<string, unknown>) => [...base, "deals", "approvals", params] as const,
+    competitors: (dealId: number) => [...base, "deals", "competitors", dealId] as const,
+    health: (dealId: number) => [...base, "deals", "health", dealId] as const,
+    forecastSnapshots: (params?: Record<string, unknown>) => [...base, "deals", "forecastSnapshots", params] as const,
+    forecastCompare: (period: string) => [...base, "deals", "forecastCompare", period] as const,
   },
 
   contacts: {
@@ -540,6 +544,8 @@ export const queryKeys = {
     vendorLedger: <P extends object>(vendorId: number, params?: P) => [...base, "accounting", "vendorLedger", vendorId, params] as const,
     agedPayables: (params: { asOf: string }) => [...base, "accounting", "agedPayables", params] as const,
     cashFlow: (params: { from: string; to: string }) => [...base, "accounting", "cashFlow", params] as const,
+    coaTemplates: () => [...base, "accounting", "coaTemplates"] as const,
+    setupProgress: () => [...base, "accounting", "setupProgress"] as const,
   },
 
   recurringInvoices: {
@@ -933,7 +939,7 @@ export const queryKeys = {
     salesOrder: (id: number) => [...base, "inventory", "salesOrder", id] as const,
     dashboard: () => [...base, "inventory", "dashboard"] as const,
     stockSummary: (params?: Record<string, unknown>) => [...base, "inventory", "stockSummary", params] as const,
-    reorderReport: () => [...base, "inventory", "reorderReport"] as const,
+    reorderReport: (params?: Record<string, unknown>) => [...base, "inventory", "reorderReport", params] as const,
     movementsReport: (params?: Record<string, unknown>) => [...base, "inventory", "movementsReport", params] as const,
     lots: (params?: Record<string, unknown>) => [...base, "inventory", "lots", params] as const,
     lot: (id: number) => [...base, "inventory", "lot", id] as const,
@@ -952,6 +958,7 @@ export const queryKeys = {
     goodsReceipts: (params?: Record<string, unknown>) => [...base, "inventory", "goodsReceipts", params] as const,
     goodsReceipt: (id: number) => [...base, "inventory", "goodsReceipt", id] as const,
     replenishmentRules: (params?: Record<string, unknown>) => [...base, "inventory", "replenishmentRules", params] as const,
+    replenishmentSuggestions: (params?: Record<string, unknown>) => [...base, "inventory", "replenishmentSuggestions", params] as const,
     forecasting: (params?: Record<string, unknown>) => [...base, "inventory", "forecasting", params] as const,
     valuationReport: (params?: Record<string, unknown>) => [...base, "inventory", "valuationReport", params] as const,
     qualityInspections: (params?: Record<string, unknown>) => [...base, "inventory", "qualityInspections", params] as const,
@@ -972,10 +979,15 @@ export const queryKeys = {
     threePlConnections: () => [...base, "inventory", "threePlConnections"] as const,
     importJobs: (params?: Record<string, unknown>) => [...base, "inventory", "importJobs", params] as const,
     importJob: (id: number) => [...base, "inventory", "importJob", id] as const,
+    exportJobs: (params?: Record<string, unknown>) => [...base, "inventory", "exportJobs", params] as const,
+    exportJob: (id: number) => [...base, "inventory", "exportJob", id] as const,
     settings: () => [...base, "inventory", "settings"] as const,
     numberSequences: () => [...base, "inventory", "numberSequences"] as const,
     aiInsights: (params?: Record<string, unknown>) => [...base, "inventory", "aiInsights", params] as const,
     barcodeLookup: (code: string) => [...base, "inventory", "barcodeLookup", code] as const,
+    qualityHold: (id: number) => [...base, "inventory", "qualityHold", id] as const,
+    webhooks: () => [...base, "inventory", "webhooks"] as const,
+    webhookEvents: (webhookId: number, params?: Record<string, unknown>) => [...base, "inventory", "webhookEvents", webhookId, params] as const,
   },
 
   apiTokens: {

@@ -6,9 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { formatINRCompact } from "@/lib/format-utils";
 import { TrendingUp, Target } from "lucide-react";
-import type { DealStage } from "@/features/crm/shared/constants";
-
-const STAGE_PROBABILITIES: Record<DealStage, number> = {
+const STAGE_PROBABILITIES: Record<string, number> = {
   LEAD: 10,
   CONTACTED: 25,
   PROPOSAL: 50,
@@ -19,7 +17,7 @@ const STAGE_PROBABILITIES: Record<DealStage, number> = {
 
 interface Deal {
   id: number;
-  stage: DealStage;
+  stage: string;
   value: string | null;
   probability: number | null;
   expectedCloseDate: string | null;
@@ -63,15 +61,17 @@ export function DealForecastWidget({ deals }: DealForecastWidgetProps) {
       }
     }
 
-    const stageBreakdown = (Object.keys(stageMap) as DealStage[])
+    const stageOrder = ["LEAD", "CONTACTED", "PROPOSAL", "NEGOTIATION", "WON"];
+    const stageBreakdown = Object.keys(stageMap)
       .map((stage) => ({
         stage,
         probability: STAGE_PROBABILITIES[stage] ?? 0,
         ...stageMap[stage]!,
       }))
       .sort((a, b) => {
-        const order: DealStage[] = ["LEAD", "CONTACTED", "PROPOSAL", "NEGOTIATION", "WON"];
-        return order.indexOf(a.stage) - order.indexOf(b.stage);
+        const ai = stageOrder.indexOf(a.stage);
+        const bi = stageOrder.indexOf(b.stage);
+        return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
       });
 
     const maxWeighted = Math.max(...stageBreakdown.map((s) => s.weighted), 1);
@@ -79,7 +79,7 @@ export function DealForecastWidget({ deals }: DealForecastWidgetProps) {
     return { weightedTotal: total, stageBreakdown, monthlyForecast, maxWeighted };
   }, [deals, thisMonthStart, thisMonthEnd]);
 
-  const STAGE_LABELS: Partial<Record<DealStage, string>> = {
+  const STAGE_LABELS: Record<string, string> = {
     LEAD: "Lead",
     CONTACTED: "Contacted",
     PROPOSAL: "Proposal",
@@ -87,7 +87,7 @@ export function DealForecastWidget({ deals }: DealForecastWidgetProps) {
     WON: "Won",
   };
 
-  const STAGE_COLORS: Partial<Record<DealStage, string>> = {
+  const STAGE_COLORS: Record<string, string> = {
     LEAD: "bg-blue-500",
     CONTACTED: "bg-sky-500",
     PROPOSAL: "bg-amber-500",

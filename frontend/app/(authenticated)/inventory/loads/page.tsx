@@ -274,20 +274,8 @@ function LoadsPageInner() {
   const columns: DataTableColumn<Load>[] = [
     {
       key: "id",
-      header: "Load ID",
-      cell: (l) => (
-        <span className="font-mono tabular-nums text-muted-foreground">#{l.id}</span>
-      ),
-    },
-    {
-      key: "name",
-      header: "Name",
-      cell: (l) =>
-        l.name ? (
-          <span className="text-sm">{l.name}</span>
-        ) : (
-          <span className="text-muted-foreground">—</span>
-        ),
+      header: "Load",
+      cell: (l) => l.name ?? formatDate(l.createdAt),
     },
     {
       key: "status",

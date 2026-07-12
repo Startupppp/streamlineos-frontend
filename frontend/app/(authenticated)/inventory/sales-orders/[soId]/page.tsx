@@ -2,7 +2,7 @@
 
 import { use, useState, type ChangeEvent } from "react";
 import Link from "next/link";
-import { Check, FileText } from "lucide-react";
+import { Check, FileText, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card } from "@/components/ui/card";
@@ -31,6 +31,7 @@ import { useCan } from "@/hooks/api/access";
 import { SO_STATUS_BADGE, SO_STATUS_LABEL, type SoStatus } from "@/features/inventory/lib";
 import { PickSheet } from "@/features/inventory/components/sales/pick-sheet";
 import { ShipSheet } from "@/features/inventory/components/sales/ship-sheet";
+import { SoEditSheet } from "@/features/inventory/components/sales/so-edit-sheet";
 import {
   useSalesOrder,
   useSoAtp,
@@ -131,6 +132,7 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
 
   const [showPickSheet, setShowPickSheet] = useState(false);
   const [showShipSheet, setShowShipSheet] = useState(false);
+  const [showEditSheet, setShowEditSheet] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showPackDialog, setShowPackDialog] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
@@ -202,6 +204,7 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
   function handleRetry(): void { void query.refetch(); }
   function handleOpenPickSheet(): void { setShowPickSheet(true); }
   function handleOpenShipSheet(): void { setShowShipSheet(true); }
+  function handleOpenEditSheet(): void { setShowEditSheet(true); }
   function handleOpenPackDialog(): void { setShowPackDialog(true); }
   function handleOpenCancelDialog(): void { setShowCancelDialog(true); }
 
@@ -237,8 +240,9 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
             {status === "DRAFT" && (
               <>
                 {canUpdate && (
-                  <Button size="sm" variant="outline" asChild>
-                    <Link href={`/inventory/sales-orders/${id}/edit`}>Edit</Link>
+                  <Button size="sm" variant="outline" onClick={handleOpenEditSheet}>
+                    <Pencil className="mr-1 size-3.5" />
+                    Edit
                   </Button>
                 )}
                 {canConfirm && (
@@ -471,6 +475,12 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
         lines={so.lines.map((l) => ({ id: l.id, productName: l.productName, quantity: l.quantity }))}
       />
       <ShipSheet open={showShipSheet} onOpenChange={setShowShipSheet} soId={id} />
+      <SoEditSheet
+        open={showEditSheet}
+        onOpenChange={setShowEditSheet}
+        soId={id}
+        so={so}
+      />
     </PageWrapper>
   );
 }

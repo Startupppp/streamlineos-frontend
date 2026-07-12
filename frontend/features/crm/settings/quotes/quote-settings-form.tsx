@@ -18,9 +18,9 @@ import {
 import type { QuoteSettings } from "@/types/crm/pricebooks";
 
 const schema = z.object({
-  maxDiscountPercent: z.coerce.number().int().min(0).max(100).nullable().optional(),
+  maxDiscountPercent: z.number().int().min(0).max(100).nullable().optional(),
   requirePricebookPrice: z.boolean(),
-  defaultExpiryDays: z.coerce.number().int().min(1).max(365),
+  defaultExpiryDays: z.number().int().min(1).max(365),
   allowPriceOverride: z.boolean(),
 });
 
@@ -66,12 +66,14 @@ export function QuoteSettingsForm({ settings, onSubmit, isPending }: QuoteSettin
                 <FormLabel>Default Quote Expiry (days)</FormLabel>
                 <FormControl>
                   <Input
-                    {...field}
                     type="number"
                     min={1}
                     max={365}
                     value={field.value ?? ""}
-                    onChange={field.onChange}
+                    onChange={(e) => field.onChange(e.target.value === "" ? 30 : Number(e.target.value))}
+                    onBlur={field.onBlur}
+                    name={field.name}
+                    ref={field.ref}
                   />
                 </FormControl>
                 <FormMessage />

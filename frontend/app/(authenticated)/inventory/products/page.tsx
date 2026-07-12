@@ -3,7 +3,9 @@
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Plus, Package, Search, MoreHorizontal } from "lucide-react";
+import { Package, Search } from "lucide-react";
+import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
 import { EmptyProductsIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -115,6 +117,7 @@ function TrackingBadge({ method }: { method: TrackingMethod | null | undefined }
 
 function ProductRowActions({ product }: { product: InventoryProduct }) {
   const [alertOpen, setAlertOpen] = useState<boolean>(false);
+  const { iconRef: ellipsisRef, hoverHandlers: ellipsisHover } = useAnimatedIcon();
   const archiveMutation = useArchiveProduct();
   const restoreMutation = useRestoreProduct();
   const deleteMutation = useDeleteProduct();
@@ -155,8 +158,8 @@ function ProductRowActions({ product }: { product: InventoryProduct }) {
     <AlertDialog open={alertOpen} onOpenChange={handleAlertOpenChange}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-7 w-7">
-            <MoreHorizontal className="h-3.5 w-3.5" />
+          <Button variant="ghost" size="icon" className="h-7 w-7" {...ellipsisHover}>
+            <EllipsisIcon ref={ellipsisRef} size={14} />
             <span className="sr-only">Product actions</span>
           </Button>
         </DropdownMenuTrigger>
@@ -202,6 +205,7 @@ function ProductRowActions({ product }: { product: InventoryProduct }) {
 function ProductsPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { iconRef: plusRef, hoverHandlers: plusHover } = useAnimatedIcon();
 
   const search = searchParams.get("search") ?? "";
   const statusParam = searchParams.get("status") ?? "";
@@ -431,9 +435,9 @@ function ProductsPageInner() {
           : "Manage your product catalogue"
       }
       actions={
-        <Button size="sm" asChild>
+        <Button size="sm" asChild {...plusHover}>
           <Link href="/inventory/products/new">
-            <Plus className="mr-1.5 h-3.5 w-3.5" />
+            <PlusIcon ref={plusRef} size={14} className="mr-1.5" />
             New Product
           </Link>
         </Button>

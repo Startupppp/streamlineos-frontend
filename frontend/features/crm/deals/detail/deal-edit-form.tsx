@@ -4,7 +4,6 @@ import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import type { DealStage } from "@/types/crm";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,18 +17,18 @@ import {
 } from "@/components/ui/form";
 
 const EDIT_STAGES = [
-  { key:"LEAD" as const, label:"Lead" },
-  { key:"CONTACTED" as const, label:"Contacted" },
-  { key:"PROPOSAL" as const, label:"Proposal" },
-  { key:"NEGOTIATION" as const, label:"Negotiation" },
-  { key:"WON" as const, label:"Won" },
-  { key:"LOST" as const, label:"Lost" },
+  { key: "LEAD", label: "Lead" },
+  { key: "CONTACTED", label: "Contacted" },
+  { key: "PROPOSAL", label: "Proposal" },
+  { key: "NEGOTIATION", label: "Negotiation" },
+  { key: "WON", label: "Won" },
+  { key: "LOST", label: "Lost" },
 ];
 
 const editSchema = z.object({
-  name: z.string().min(1,"Name is required"),
+  name: z.string().min(1, "Name is required"),
   value: z.string().optional(),
-  stage: z.enum(["LEAD","CONTACTED","PROPOSAL","NEGOTIATION","WON","LOST"]),
+  stage: z.string().min(1),
   probability: z.string().optional(),
   contactPerson: z.string().optional(),
   contactEmail: z.string().email().optional().or(z.literal("")),

@@ -1,13 +1,17 @@
 "use client";
 
-import { useState, type ChangeEvent } from "react";
+import { useTransition, Suspense } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Plus } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Input } from "@/components/ui/input";
-import { DatePicker } from "@/components/ui/date-picker";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { DatePicker } from "@/components/ui/date-picker";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Select,
   SelectContent,
@@ -16,20 +20,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { LoadingState, ErrorState } from "@/components/shared";
-import { EmptyState } from "@/components/ui/empty-state";
-import { EmptyExpensesIllustration } from "@/components/illustrations";
-import { useSalesOrders, type SalesOrderStatus } from "@/hooks/api/inventory/sales-orders";
+  EmptyOrdersIllustration,
+  EmptySearchIllustration,
+} from "@/components/illustrations";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { cn } from "@/lib/utils";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import { useSalesOrders, type SalesOrderStatus, type SalesOrderListItem } from "@/hooks/api/inventory/sales-orders";
 
-type SoStatus = SalesOrderStatus;
-type StatusFilter = "ALL" | SoStatus;
+type StatusFilter = "ALL" | SalesOrderStatus;
 
 const STATUS_OPTIONS: ReadonlyArray<{ value: StatusFilter; label: string }> = [
   { value: "ALL", label: "All statuses" },
@@ -40,30 +39,27 @@ const STATUS_OPTIONS: ReadonlyArray<{ value: StatusFilter; label: string }> = [
   { value: "CANCELLED", label: "Cancelled" },
 ];
 
-const STATUS_VARIANT: Record<
-  SoStatus,
-  "default" | "secondary" | "destructive" | "outline"
-> = {
-  DRAFT: "secondary",
-  CONFIRMED: "default",
-  PARTIALLY_RESERVED: "outline",
-  RESERVED: "outline",
-  PICKED: "outline",
-  PACKED: "outline",
-  PARTIALLY_SHIPPED: "outline",
-  SHIPPED: "outline",
-  INVOICED: "default",
-  CLOSED: "secondary",
-  CANCELLED: "destructive",
-};
+const VALID_STATUSES = new Set<string>([
+  "DRAFT",
+  "CONFIRMED",
+  "PARTIALLY_RESERVED",
+  "RESERVED",
+  "PICKED",
+  "PACKED",
+  "PARTIALLY_SHIPPED",
+  "SHIPPED",
+  "INVOICED",
+  "CLOSED",
+  "CANCELLED",
+]);
 
-const STATUS_CLASS: Record<SoStatus, string> = {
+const STATUS_CLASS: Record<SalesOrderStatus, string> = {
   DRAFT: "",
   CONFIRMED: "bg-blue-100 text-blue-800 border-blue-200",
   PARTIALLY_RESERVED: "bg-amber-100 text-amber-800 border-amber-200",
   RESERVED: "bg-amber-100 text-amber-800 border-amber-200",
-  PICKED: "bg-purple-100 text-purple-800 border-purple-200",
-  PACKED: "bg-purple-100 text-purple-800 border-purple-200",
+  PICKED: "bg-blue-100 text-blue-800 border-blue-200",
+  PACKED: "bg-blue-100 text-blue-800 border-blue-200",
   PARTIALLY_SHIPPED: "bg-yellow-100 text-yellow-800 border-yellow-200",
   SHIPPED: "bg-yellow-100 text-yellow-800 border-yellow-200",
   INVOICED: "bg-green-100 text-green-800 border-green-200",
@@ -71,45 +67,179 @@ const STATUS_CLASS: Record<SoStatus, string> = {
   CANCELLED: "",
 };
 
-function isStatusFilter(value: string): value is StatusFilter {
-  return STATUS_OPTIONS.some((opt) => opt.value === value);
-}
-
 function formatDate(value: string | null): string {
-  if (!value) return "???";
+  if (!value) return "—";
   const d = new Date(value);
   return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
 }
 
-export default function SalesOrdersListPage() {
-  const [dateFrom, setDateFrom] = useState<string>("");
-  const [dateTo, setDateTo] = useState<string>("");
-  const [status, setStatus] = useState<StatusFilter>("ALL");
+const PAGE_SIZE = 50;
 
-  const query = useSalesOrders({
-    status: status === "ALL" ? undefined : status,
-    dateFrom: dateFrom || undefined,
-    dateTo: dateTo || undefined,
-    limit: 100,
-  });
+const columns: DataTableColumn<SalesOrderListItem>[] = [
+  {
+    key: "soNumber",
+    header: "SO #",
+    cell: (so) => (
+      <Link
+        href={`/inventory/sales-orders/${so.id}`}
+        className="font-mono text-[11px] text-blue-600 hover:underline transition-colors"
+      >
+        {so.soNumber}
+      </Link>
+    ),
+    sortable: true,
+    sortValue: (so) => so.soNumber,
+  },
+  {
+    key: "customerName",
+    header: "Customer",
+    cell: (so) => so.customerName ?? "—",
+  },
+  {
+    key: "orderDate",
+    header: "Order Date",
+    cell: (so) => <span className="font-mono tabular-nums">{formatDate(so.orderDate)}</span>,
+  },
+  {
+    key: "expectedShipDate",
+    header: "Required Date",
+    cell: (so) => (
+      <span className="font-mono tabular-nums">{formatDate(so.expectedShipDate)}</span>
+    ),
+    className: "hidden md:table-cell",
+    headerClassName: "hidden md:table-cell",
+  },
+  {
+    key: "total",
+    header: "Total",
+    cell: (so) => (
+      <span className="font-mono tabular-nums">{Number(so.total).toFixed(2)}</span>
+    ),
+    className: "text-right",
+    headerClassName: "text-right",
+    sortable: true,
+    sortValue: (so) => Number(so.total),
+  },
+  {
+    key: "status",
+    header: "Status",
+    cell: (so) => (
+      <Badge
+        variant="outline"
+        className={cn("h-4 text-[9px] px-1.5 py-0", STATUS_CLASS[so.status])}
+      >
+        {so.status}
+      </Badge>
+    ),
+  },
+  {
+    key: "actions",
+    header: "",
+    cell: (so) => (
+      <Button variant="ghost" size="sm" className="h-7 text-xs" asChild>
+        <Link href={`/inventory/sales-orders/${so.id}`}>View</Link>
+      </Button>
+    ),
+    className: "w-16",
+  },
+];
+
+function SalesOrdersContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [, startTransition] = useTransition();
+
+  const statusParam = searchParams.get("status") ?? "ALL";
+  const dateFrom = searchParams.get("dateFrom") ?? "";
+  const dateTo = searchParams.get("dateTo") ?? "";
+  const page = Math.max(1, Number(searchParams.get("page") ?? "1"));
+
+  const resolvedStatus: SalesOrderStatus | undefined =
+    VALID_STATUSES.has(statusParam) && statusParam !== "ALL"
+      ? (statusParam as SalesOrderStatus)
+      : undefined;
+
+  function updateParams(updates: Record<string, string>): void {
+    const params = new URLSearchParams(searchParams.toString());
+    for (const [key, value] of Object.entries(updates)) {
+      if (value === "ALL" || value === "" || (key === "page" && value === "1")) {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
+    }
+    startTransition(() => {
+      router.replace(`?${params.toString()}`, { scroll: false });
+    });
+  }
 
   function handleStatusChange(value: string): void {
-    if (isStatusFilter(value)) setStatus(value);
+    updateParams({ status: value, page: "1" });
   }
 
   function handleDateFromChange(value: string): void {
-    setDateFrom(value);
+    updateParams({ dateFrom: value, page: "1" });
   }
 
   function handleDateToChange(value: string): void {
-    setDateTo(value);
+    updateParams({ dateTo: value, page: "1" });
   }
+
+  function handlePageChange(nextPage: number): void {
+    updateParams({ page: String(nextPage) });
+  }
+
+  const query = useSalesOrders({
+    status: resolvedStatus,
+    dateFrom: dateFrom || undefined,
+    dateTo: dateTo || undefined,
+    page,
+    limit: PAGE_SIZE,
+  });
 
   const items = query.data?.items ?? [];
+  const total = query.data?.total ?? 0;
+  const totalPages = query.data?.totalPages ?? 1;
+  const hasFilters = statusParam !== "ALL" || dateFrom !== "" || dateTo !== "";
 
-  function handleRetry() {
+  function handleRetry(): void {
     void query.refetch();
   }
+
+  if (query.error) {
+    toast.error(getErrorMessage(query.error));
+  }
+
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+
+  const filterBar = (
+    <div className="flex w-full min-w-0 flex-wrap items-center gap-2">
+      <Select value={statusParam} onValueChange={handleStatusChange}>
+        <SelectTrigger className="h-8 text-xs w-[160px]">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {STATUS_OPTIONS.map((opt) => (
+            <SelectItem key={opt.value} value={opt.value}>
+              {opt.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <DatePicker
+        value={dateFrom}
+        onChange={handleDateFromChange}
+        placeholder="From"
+        className="w-[150px] h-8 text-xs"
+      />
+      <DatePicker
+        value={dateTo}
+        onChange={handleDateToChange}
+        placeholder="To"
+        className="w-[150px] h-8 text-xs"
+      />
+    </div>
+  );
 
   return (
     <PageWrapper
@@ -117,97 +247,65 @@ export default function SalesOrdersListPage() {
       title="Sales Orders"
       subtitle="Manage customer sales orders from creation to invoicing."
       actions={
-        <Button asChild>
+        <Button asChild {...hoverHandlers}>
           <Link href="/inventory/sales-orders/new">
-            <Plus className="size-4 mr-1" />
+            <PlusIcon ref={iconRef} size={14} className="mr-1" />
             New SO
           </Link>
         </Button>
       }
+      filters={filterBar}
     >
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end mb-4">
-        <Select value={status} onValueChange={handleStatusChange}>
-          <SelectTrigger className="w-full sm:max-w-[180px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {STATUS_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <DatePicker value={dateFrom} onChange={handleDateFromChange} placeholder="From" className="w-full sm:max-w-[160px] h-8 text-xs" />
-        <DatePicker value={dateTo} onChange={handleDateToChange} placeholder="To" className="w-full sm:max-w-[160px] h-8 text-xs" />
-      </div>
-
-      {query.isLoading && <LoadingState variant="table" rows={8} />}
-      {query.error && (
-        <ErrorState description={query.error.message} onRetry={handleRetry} />
-      )}
-
-      {!query.isLoading && !query.error && items.length === 0 && (
-        <EmptyState
-          illustration={<EmptyExpensesIllustration />}
-          title="No sales orders yet"
-          description="Create a sales order to start fulfilling customer requests."
-          action={{ label: "New SO", href: "/inventory/sales-orders/new" }}
-        />
-      )}
-
-      {items.length > 0 && (
-        <div className="rounded-xl border border-border/60 bg-card overflow-x-auto">
-          <Table className="min-w-[760px]">
-            <TableHeader>
-              <TableRow>
-                <TableHead>SO #</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Order Date</TableHead>
-                <TableHead>Required Date</TableHead>
-                <TableHead className="text-right">Total</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-[80px]">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {items.map((so) => (
-                <TableRow key={so.id}>
-                  <TableCell className="font-mono text-xs">
-                    <Link
-                      href={`/inventory/sales-orders/${so.id}`}
-                      className="text-foreground hover:text-blue-600 hover:underline"
-                    >
-                      {so.soNumber}
-                    </Link>
-                  </TableCell>
-                  <TableCell>{so.customerName ?? "???"}</TableCell>
-                  <TableCell>{formatDate(so.orderDate)}</TableCell>
-                  <TableCell>{formatDate(so.expectedShipDate)}</TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {Number(so.total).toFixed(2)}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={STATUS_VARIANT[so.status]}
-                      className={STATUS_CLASS[so.status] || undefined}
-                    >
-                      {so.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Button variant="ghost" size="sm" asChild>
-                      <Link href={`/inventory/sales-orders/${so.id}`}>
-                        View
-                      </Link>
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
+      <DataTable
+        data={items}
+        columns={columns}
+        getRowKey={(so) => so.id}
+        isLoading={query.isLoading}
+        emptyState={
+          <EmptyState
+            illustration={
+              hasFilters ? <EmptySearchIllustration /> : <EmptyOrdersIllustration />
+            }
+            title={hasFilters ? "No orders match your filters" : "No sales orders yet"}
+            description={
+              hasFilters
+                ? "Try adjusting the status or date range."
+                : "Create a sales order to start fulfilling customer requests."
+            }
+            action={
+              hasFilters
+                ? {
+                    label: "Clear filters",
+                    onClick: () => {
+                      updateParams({ status: "ALL", dateFrom: "", dateTo: "", page: "1" });
+                    },
+                  }
+                : { label: "New SO", href: "/inventory/sales-orders/new" }
+            }
+          />
+        }
+        pagination={
+          totalPages > 1
+            ? {
+                mode: "server",
+                page,
+                pageSize: PAGE_SIZE,
+                total,
+                onPageChange: handlePageChange,
+              }
+            : undefined
+        }
+        minWidth="640px"
+        className="min-h-[320px]"
+      />
     </PageWrapper>
+  );
+}
+
+export default function SalesOrdersListPage() {
+  return (
+    <Suspense>
+      <SalesOrdersContent />
+    </Suspense>
   );
 }

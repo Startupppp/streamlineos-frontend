@@ -1,21 +1,22 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useForm, useFieldArray } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Plus, MoreHorizontal, Play, Pause, Trash2, History } from "lucide-react";
+import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { EmptyActivityIllustration } from "@/components/illustrations";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,129 +27,81 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { AutomationsIllustration } from "@/components/illustrations";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { SkeletonTable } from "@/components/shared";
-import { ErrorState } from "@/components/shared";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { toast } from "sonner";
-import {
-  type AutomationForm,
-  type AutomationAction,
-  automationSchema,
-  TRIGGERS,
-  ALL_ACTIONS,
-  useAutomationRules,
-  useCreateAutomationRule,
-  useToggleAutomationRule,
-  useDeleteAutomationRule,
-  AutomationCard,
-  ConditionRow,
-  ActionCheckboxItem,
-} from "@/features/crm/settings/automations/automation-card";
+  useCrmAutomationRules,
+  useEnableCrmAutomationRule,
+  useDisableCrmAutomationRule,
+  useDeleteCrmAutomationRule,
+  useAutomationEvents,
+} from "@/hooks/api/crm";
+import type { CrmAutomationRule } from "@/types/crm";
+import { cn } from "@/lib/utils";
+
+const listVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.05 } },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 8 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.18 } },
+};
 
 export default function AutomationsPage() {
-  const { data, isLoading, isError, refetch } = useAutomationRules();
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const router = useRouter();
+  const { data, isLoading, isError, refetch } = useCrmAutomationRules();
+  const { data: eventsData } = useAutomationEvents();
+  const enableRule = useEnableCrmAutomationRule();
+  const disableRule = useDisableCrmAutomationRule();
+  const deleteRule = useDeleteCrmAutomationRule();
+
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
-  const shouldReduceMotion = useReducedMotion();
 
-  const createRule = useCreateAutomationRule();
-  const toggleRule = useToggleAutomationRule();
-  const deleteRule = useDeleteAutomationRule();
-
-  const form = useForm<AutomationForm>({
-    resolver: zodResolver(automationSchema),
-    defaultValues: {
-      name: "",
-      trigger: "lead.created",
-      conditions: [{ field: "", operator: "equals", value: "" }],
-      actions: [],
-      isActive: true,
-    },
-  });
-
-  const { fields: conditionFields, append: appendCondition, remove: removeCondition } = useFieldArray({
-    control: form.control,
-    name: "conditions",
-  });
-
-  const watchedActions = form.watch("actions");
-
-  const onSubmit = useCallback(
-    (values: AutomationForm) => {
-      createRule.mutate(values, {
-        onSuccess: () => {
-          toast.success("Automation created");
-          setSheetOpen(false);
-          form.reset();
-        },
-        onError: (err) => toast.error(err.message),
-      });
-    },
-    [createRule, form],
+  const rules = data?.rules ?? [];
+  const eventMap = Object.fromEntries(
+    (eventsData?.events ?? []).map((e) => [e.key, e.label]),
   );
 
   const handleToggle = useCallback(
-    (id: number, isActive: boolean) => {
-      toggleRule.mutate(
-        { id, isActive: !isActive },
-        {
-          onSuccess: () => toast.success(isActive ? "Automation disabled" : "Automation enabled"),
-          onError: (err) => toast.error(err.message),
-        },
-      );
+    (rule: CrmAutomationRule) => {
+      if (rule.isActive) {
+        disableRule.mutate(rule.id, {
+          onSuccess: () => toast.success("Automation disabled"),
+          onError: (err) => toast.error(getErrorMessage(err)),
+        });
+      } else {
+        enableRule.mutate(rule.id, {
+          onSuccess: () => toast.success("Automation enabled"),
+          onError: (err) => toast.error(getErrorMessage(err)),
+        });
+      }
     },
-    [toggleRule],
+    [enableRule, disableRule],
   );
 
   const handleDeleteRequest = useCallback((id: number) => setDeleteTargetId(id), []);
+  const handleDeleteCancel = useCallback(() => setDeleteTargetId(null), []);
+  const handleAlertOpenChange = useCallback((open: boolean) => { if (!open) setDeleteTargetId(null); }, []);
 
   const handleDeleteConfirm = useCallback(() => {
     if (deleteTargetId === null) return;
     deleteRule.mutate(deleteTargetId, {
-      onSuccess: () => { toast.success("Automation deleted"); setDeleteTargetId(null); },
-      onError: (err) => { toast.error(err.message); setDeleteTargetId(null); },
+      onSuccess: () => {
+        toast.success("Automation deleted");
+        setDeleteTargetId(null);
+      },
+      onError: (err) => {
+        toast.error(getErrorMessage(err));
+        setDeleteTargetId(null);
+      },
     });
   }, [deleteRule, deleteTargetId]);
 
-  const handleDeleteCancel = useCallback(() => setDeleteTargetId(null), []);
-  const handleAlertOpenChange = useCallback((open: boolean) => { if (!open) setDeleteTargetId(null); }, []);
-  const handleAddCondition = useCallback(() => appendCondition({ field: "", operator: "equals", value: "" }), [appendCondition]);
-  const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
-  const handleSheetOpenChange = useCallback((open: boolean) => setSheetOpen(open), []);
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
-
-  const handleActionToggle = useCallback(
-    (action: AutomationAction, checked: boolean) => {
-      const current = form.getValues("actions");
-      form.setValue(
-        "actions",
-        checked ? [...current, action] : current.filter((a) => a !== action),
-        { shouldValidate: true },
-      );
-    },
-    [form],
-  );
-
-  const rules = data?.rules ?? [];
-  const listVariants = shouldReduceMotion ? { hidden: { opacity: 0 }, visible: { opacity: 1 } } : staggerContainer;
-  const itemVariants = shouldReduceMotion ? { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { duration: 0.15 } } } : fadeUp;
+  const handleCreate = useCallback(() => router.push("/crm/settings/automations/new"), [router]);
+  const handleOpenBuilder = useCallback((id: number) => router.push(`/crm/settings/automations/${id}`), [router]);
 
   return (
     <>
@@ -173,194 +126,192 @@ export default function AutomationsPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <Sheet open={sheetOpen} onOpenChange={handleSheetOpenChange}>
-        <SheetContent side="right" className="p-0 flex flex-col overflow-hidden sm:max-w-lg">
-          <SheetHeader className="shrink-0 px-6 py-4 border-b">
-            <SheetTitle>Create Automation</SheetTitle>
-          </SheetHeader>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
-              <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-5">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Automation Name</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="e.g. Notify team on new lead" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="trigger"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Trigger</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger><SelectValue placeholder="Select a trigger" /></SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {TRIGGERS.map(([value, label]) => (
-                            <SelectItem key={value} value={value}>{label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Conditions</Label>
-                  <div className="space-y-2">
-                    {conditionFields.map((cField, i) => (
-                      <ConditionRow
-                        key={cField.id}
-                        cField={cField}
-                        index={i}
-                        control={form.control}
-                        showRemove={conditionFields.length > 1}
-                        onRemove={removeCondition}
-                      />
-                    ))}
-                  </div>
-                  {form.formState.errors.conditions?.root && (
-                    <p className="text-xs text-destructive">
-                      {form.formState.errors.conditions.root.message}
-                    </p>
-                  )}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="mt-1 text-xs"
-                    onClick={handleAddCondition}
-                  >
-                    <Plus className="h-3 w-3 mr-1" />
-                    Add Condition
-                  </Button>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Actions</Label>
-                  <div className="grid grid-cols-2 gap-2.5 rounded-lg border border-border p-3 bg-muted/30">
-                    {ALL_ACTIONS.map((action) => (
-                      <ActionCheckboxItem
-                        key={action}
-                        action={action}
-                        checked={watchedActions.includes(action)}
-                        onToggle={handleActionToggle}
-                      />
-                    ))}
-                  </div>
-                  {form.formState.errors.actions && (
-                    <p className="text-xs text-destructive">
-                      {form.formState.errors.actions.message}
-                    </p>
-                  )}
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="isActive"
-                  render={({ field }) => (
-                    <FormItem>
-                      <div className="flex items-center gap-3 rounded-lg border border-border p-3 bg-muted/30">
-                        <FormControl>
-                          <Switch checked={field.value} onCheckedChange={field.onChange} />
-                        </FormControl>
-                        <div className="space-y-0.5">
-                          <FormLabel className="!mt-0 cursor-pointer">Active immediately</FormLabel>
-                          <p className="text-[11px] text-muted-foreground">
-                            Enable this automation as soon as it is created.
-                          </p>
-                        </div>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="shrink-0 px-6 py-4 border-t">
-                <Button
-                  type="submit"
-                  disabled={createRule.isPending}
-                  className="w-full"
-                >
-                  {createRule.isPending ? "Creating..." : "Create Automation"}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </SheetContent>
-      </Sheet>
-
       <PageWrapper
         title="Automations"
-        subtitle={isLoading ? "Loading..." : `${rules.length} rule${rules.length !== 1 ? "s" : ""}`}
+        subtitle="Trigger actions automatically based on CRM events"
         actions={
-          <Button onClick={handleOpenSheet}>
-            <Plus className="h-4 w-4 mr-2" />
-            Create Automation
+          <Button onClick={handleCreate} className="h-8 text-xs px-3">
+            <Plus className="h-3.5 w-3.5 mr-1.5" />
+            New Automation
           </Button>
         }
       >
         {isError ? (
-          <ErrorState title="Failed to load automations" onRetry={handleRetry} />
+          <EmptyState
+            title="Failed to load automations"
+            description="Could not fetch automation rules."
+            action={{ label: "Retry", onClick: handleRetry }}
+          />
+        ) : isLoading ? (
+          <AutomationsSkeleton />
+        ) : rules.length === 0 ? (
+          <EmptyState
+            className="min-h-[50vh] border-0 bg-transparent"
+            illustration={<AutomationsIllustration />}
+            title="No automations yet"
+            description="Create your first automation to trigger actions on CRM events automatically."
+            action={{ label: "New Automation", onClick: handleCreate }}
+          />
         ) : (
-          <AnimatePresence mode="wait">
-            {isLoading ? (
-              <motion.div
-                key="loading"
-                variants={itemVariants}
-                initial="hidden"
-                animate="visible"
-                exit={{ opacity: 0 }}
-              >
-                <SkeletonTable rows={4} columns={3} />
-              </motion.div>
-            ) : rules.length === 0 ? (
-              <motion.div
-                key="empty"
-                variants={itemVariants}
-                initial="hidden"
-                animate="visible"
-                exit={{ opacity: 0 }}
-              >
-                <EmptyState
-                  className="flex-1 min-h-[50vh] border-0 bg-transparent"
-                  illustration={<EmptyActivityIllustration />}
-                  title="No automations yet"
-                  description="Create your first automation to start saving time on repetitive CRM tasks."
-                  action={{ label: "Create Automation", onClick: handleOpenSheet }}
-                />
-              </motion.div>
-            ) : (
-              <motion.div
-                key="list"
-                className="space-y-3"
-                variants={listVariants}
-                initial="hidden"
-                animate="visible"
-              >
-                {rules.map((rule) => (
-                  <AutomationCard
-                    key={rule.id}
-                    rule={rule}
-                    onToggle={handleToggle}
-                    onDeleteRequest={handleDeleteRequest}
-                  />
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <div className="rounded-lg border border-border overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-muted/40">
+                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground text-xs">Name</th>
+                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground text-xs">Trigger</th>
+                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground text-xs hidden md:table-cell">Runs</th>
+                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground text-xs hidden lg:table-cell">Last Run</th>
+                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground text-xs">Status</th>
+                  <th className="px-4 py-2.5" />
+                </tr>
+              </thead>
+              <AnimatePresence>
+                <motion.tbody
+                  className="divide-y divide-border"
+                  variants={listVariants}
+                  initial="hidden"
+                  animate="visible"
+                >
+                  {rules.map((rule) => (
+                    <AutomationRow
+                      key={rule.id}
+                      rule={rule}
+                      eventLabel={eventMap[rule.trigger] ?? rule.trigger}
+                      onToggle={handleToggle}
+                      onEdit={handleOpenBuilder}
+                      onDeleteRequest={handleDeleteRequest}
+                    />
+                  ))}
+                </motion.tbody>
+              </AnimatePresence>
+            </table>
+          </div>
         )}
       </PageWrapper>
     </>
+  );
+}
+
+interface RowProps {
+  rule: CrmAutomationRule;
+  eventLabel: string;
+  onToggle: (rule: CrmAutomationRule) => void;
+  onEdit: (id: number) => void;
+  onDeleteRequest: (id: number) => void;
+}
+
+function AutomationRow({ rule, eventLabel, onToggle, onEdit, onDeleteRequest }: RowProps) {
+  const handleToggle = useCallback(() => onToggle(rule), [onToggle, rule]);
+  const handleEdit = useCallback(() => onEdit(rule.id), [onEdit, rule.id]);
+  const handleDelete = useCallback(() => onDeleteRequest(rule.id), [onDeleteRequest, rule.id]);
+
+  return (
+    <motion.tr
+      variants={itemVariants}
+      className="hover:bg-muted/30 transition-colors cursor-pointer"
+      onClick={handleEdit}
+    >
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-2">
+          <span className="font-medium text-foreground">{rule.name}</span>
+          {rule.isDraft && (
+            <Badge variant="outline" className="text-[10px] h-4 px-1.5 text-amber-600 border-amber-300">
+              Draft
+            </Badge>
+          )}
+        </div>
+        <div className="text-[11px] text-muted-foreground mt-0.5">v{rule.version}</div>
+      </td>
+      <td className="px-4 py-3">
+        <span className={cn(
+          "inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium",
+          "bg-blue-50 text-blue-700 border border-blue-200",
+        )}>
+          {eventLabel}
+        </span>
+      </td>
+      <td className="px-4 py-3 hidden md:table-cell">
+        <span className="text-xs text-muted-foreground">{rule.executionCount}</span>
+      </td>
+      <td className="px-4 py-3 hidden lg:table-cell">
+        <span className="text-xs text-muted-foreground">
+          {rule.lastRunAt
+            ? new Date(rule.lastRunAt).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
+            : "—"
+          }
+        </span>
+      </td>
+      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+        <Switch
+          checked={rule.isActive}
+          onCheckedChange={handleToggle}
+          aria-label={rule.isActive ? "Disable automation" : "Enable automation"}
+        />
+      </td>
+      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground">
+              <MoreHorizontal className="h-3.5 w-3.5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-44">
+            <DropdownMenuItem onClick={handleEdit}>
+              <Play className="h-3.5 w-3.5 mr-2" />
+              Open Builder
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleEdit}>
+              <History className="h-3.5 w-3.5 mr-2" />
+              Run History
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleToggle}>
+              {rule.isActive ? (
+                <><Pause className="h-3.5 w-3.5 mr-2" />Disable</>
+              ) : (
+                <><Play className="h-3.5 w-3.5 mr-2" />Enable</>
+              )}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive"
+              onClick={handleDelete}
+            >
+              <Trash2 className="h-3.5 w-3.5 mr-2" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </td>
+    </motion.tr>
+  );
+}
+
+function AutomationsSkeleton() {
+  return (
+    <div className="rounded-lg border border-border overflow-hidden">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b bg-muted/40">
+            <th className="px-4 py-2.5 text-left"><Skeleton className="h-3 w-20" /></th>
+            <th className="px-4 py-2.5 text-left"><Skeleton className="h-3 w-16" /></th>
+            <th className="px-4 py-2.5 text-left hidden md:table-cell"><Skeleton className="h-3 w-10" /></th>
+            <th className="px-4 py-2.5 text-left hidden lg:table-cell"><Skeleton className="h-3 w-14" /></th>
+            <th className="px-4 py-2.5 text-left"><Skeleton className="h-3 w-12" /></th>
+            <th className="px-4 py-2.5" />
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-border">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <tr key={i}>
+              <td className="px-4 py-3"><Skeleton className="h-4 w-36" /></td>
+              <td className="px-4 py-3"><Skeleton className="h-5 w-24 rounded-full" /></td>
+              <td className="px-4 py-3 hidden md:table-cell"><Skeleton className="h-4 w-8" /></td>
+              <td className="px-4 py-3 hidden lg:table-cell"><Skeleton className="h-4 w-20" /></td>
+              <td className="px-4 py-3"><Skeleton className="h-5 w-9 rounded-full" /></td>
+              <td className="px-4 py-3"><Skeleton className="h-6 w-6 rounded" /></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }

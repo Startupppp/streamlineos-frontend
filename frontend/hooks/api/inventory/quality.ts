@@ -251,6 +251,15 @@ export function useQualityHolds(params?: QualityHoldsParams) {
   });
 }
 
+export function useQualityHold(holdId: number) {
+  return useQuery<QualityHold, Error>({
+    queryKey: queryKeys.inventory.qualityHold(holdId),
+    queryFn: () => apiClient.get<QualityHold>(`/inventory/quality/holds/${holdId}`),
+    enabled: holdId > 0,
+    staleTime: 60_000,
+  });
+}
+
 export function useCreateQualityHold() {
   const qc = useQueryClient();
   return useMutation<

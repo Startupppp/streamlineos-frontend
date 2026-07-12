@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import {
   DragDropContext, Droppable, Draggable, type DropResult,
+  type DraggableProvidedDragHandleProps,
 } from "@hello-pangea/dnd";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -49,7 +50,7 @@ const ASSIGNMENT_TYPE_LABELS: Record<AssignmentType, string> = {
 
 interface RuleRowProps {
   rule: AssignmentRule;
-  dragHandleProps: Record<string, unknown> | null | undefined;
+  dragHandleProps: DraggableProvidedDragHandleProps | null;
   onToggle: (id: number, current: boolean) => void;
   onEdit: (rule: AssignmentRule) => void;
   onDeleteRequest: (id: number) => void;
@@ -67,7 +68,7 @@ function RuleRow({ rule, dragHandleProps, onToggle, onEdit, onDeleteRequest }: R
       <CardContent className="p-3">
         <div className="flex items-center gap-3">
           <div
-            {...(dragHandleProps as Record<string, unknown>)}
+            {...(dragHandleProps ?? {})}
             className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground shrink-0"
             aria-label="Drag to reorder"
           >

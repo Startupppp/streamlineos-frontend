@@ -24,12 +24,19 @@ import { CONTACT_ROLE_DEFAULTS } from "@/types/crm";
 
 const addRoleSchema = z.object({
   entityType: z.enum(["deal", "company"]),
-  entityId: z.coerce.number().int().positive(),
+  entityId: z.string().transform((v) => parseInt(v, 10)).pipe(z.number().int().positive()),
   roleKey: z.string().min(1),
-  isPrimary: z.boolean().default(false),
+  isPrimary: z.boolean(),
 });
 
-type AddRoleFormValues = z.infer<typeof addRoleSchema>;
+type AddRoleFormInput = {
+  entityType: "deal" | "company";
+  entityId: string;
+  roleKey: string;
+  isPrimary: boolean;
+};
+
+type AddRoleFormValues = z.output<typeof addRoleSchema>;
 
 interface ContactRolesCardProps {
   contactId: number;
@@ -45,9 +52,9 @@ export function ContactRolesCard({ contactId }: ContactRolesCardProps) {
   const removeRole = useRemoveContactRole();
   const { iconRef, hoverHandlers } = useAnimatedIcon();
 
-  const form = useForm<AddRoleFormValues>({
+  const form = useForm<AddRoleFormInput, unknown, AddRoleFormValues>({
     resolver: zodResolver(addRoleSchema),
-    defaultValues: { entityType: "deal", entityId: 0, roleKey: "", isPrimary: false },
+    defaultValues: { entityType: "deal", entityId: "", roleKey: "", isPrimary: false },
   });
 
   const handleSubmit = useCallback(

@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useCallback, useTransition } from "react";
+import { useMemo, useCallback, useTransition, useState } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { motion, useReducedMotion } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -19,13 +20,17 @@ import {
 } from "@/components/ui/select";
 import { List, Table2, LayoutGrid } from "lucide-react";
 import { TicketFilterBar } from "@/features/projects/shared/ticket-filter-bar";
-import { TableView } from "@/features/projects/views/table-view";
 import { ListView } from "@/features/projects/views/list-view";
 import { KanbanBoard } from "@/features/projects/views/kanban-board";
+import { BulkActionBar } from "@/features/projects/backlog/bulk-action-bar";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { AllWorkListSection } from "./all-work-list-section";
 import { ProjectChip } from "./project-chip";
 import { useAllWork } from "@/hooks/api/projects";
 import { useProjects } from "@/hooks/api/projects";
+import { apiClient } from "@/lib/api-client";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import type { AllWorkFilters, AllWorkTicket } from "@/types/projects";
 import type { KanbanTicket } from "@/features/projects/shared/types";
 import { cn } from "@/lib/utils";
@@ -286,11 +291,77 @@ function AllWorkViewSwitcher({
   );
 }
 
+type TableRow = ReturnType<typeof toTableTicket>;
+
+function buildTableColumns(onTicketClick: (id: number) => void): DataTableColumn<TableRow>[] {
+  return [
+    {
+      key: "key",
+      header: "ID",
+      headerClassName: "w-16 text-[10px] uppercase tracking-wider font-bold",
+      className: "font-mono text-[11px] text-muted-foreground",
+      cell: (row) => `${row.sequenceId ?? row.ticketNumber ?? row.id}`,
+    },
+    {
+      key: "title",
+      header: "Title",
+      headerClassName: "text-[10px] uppercase tracking-wider font-bold",
+      cell: (row) => (
+        <button
+          type="button"
+          onClick={() => onTicketClick(row.id)}
+          className="block min-w-0 truncate text-[13px] font-medium text-left hover:underline underline-offset-2"
+        >
+          {row.title}
+        </button>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      headerClassName: "w-28 text-[10px] uppercase tracking-wider font-bold",
+      className: "text-[11px] text-muted-foreground",
+      cell: (row) => row.status.replace(/_/g, " "),
+    },
+    {
+      key: "priority",
+      header: "Priority",
+      headerClassName: "w-24 text-[10px] uppercase tracking-wider font-bold",
+      className: "text-[11px] text-muted-foreground",
+      cell: (row) => row.priority ?? "—",
+    },
+    {
+      key: "assignee",
+      header: "Assignee",
+      headerClassName: "w-32 text-[10px] uppercase tracking-wider font-bold",
+      className: "text-[12px]",
+      cell: (row) => {
+        if (!row.assignee) return <span className="text-muted-foreground text-[11px]">—</span>;
+        const fullName = [row.assignee.firstName, row.assignee.lastName].filter(Boolean).join(" ");
+        const name = row.assignee.name ?? (fullName || (row.assignee.email ?? "—"));
+        return <span className="text-[11px]">{name}</span>;
+      },
+    },
+    {
+      key: "dueDate",
+      header: "Due Date",
+      headerClassName: "w-28 text-[10px] uppercase tracking-wider font-bold",
+      className: "font-mono text-[11px] tabular-nums",
+      cell: (row) =>
+        row.dueDate
+          ? new Date(row.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+          : "—",
+    },
+  ];
+}
+
 export function AllWorkPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
   const [, startTransition] = useTransition();
+  const [tableSelection, setTableSelection] = useState<Set<string | number>>(new Set());
 
   const view = parseView(searchParams.get("view"));
   const page = parseInt(searchParams.get("page") ?? "1", 10) || 1;
@@ -315,6 +386,7 @@ export function AllWorkPage() {
 
   const handleViewChange = useCallback(
     (v: AllWorkView) => {
+      setTableSelection(new Set());
       setParam("view", v);
     },
     [setParam]
@@ -400,9 +472,119 @@ export function AllWorkPage() {
     [tickets, router]
   );
 
+  const allProjects = useMemo(() => projectsData?.data ?? [], [projectsData]);
+
+  const projectOptions = useMemo(
+    () =>
+      allProjects.map((p) => ({
+        id: p.id,
+        name: p.name,
+        key: p.key,
+      })),
+    [allProjects]
+  );
+
+  const deduplicatedMembers = useMemo(
+    () =>
+      allProjects
+        .flatMap((p) => p.members)
+        .filter((m, i, arr) => arr.findIndex((x) => x.id === m.id) === i)
+        .map((m) => ({
+          id: m.id,
+          name: null as string | null,
+          firstName: m.firstName,
+          lastName: m.lastName,
+          image: m.image,
+        })),
+    [allProjects]
+  );
+
+  const selectedTicketIds = useMemo(
+    () => [...tableSelection].map((id) => Number(id)),
+    [tableSelection]
+  );
+
+  const selectedTickets = useMemo(
+    () => tickets.filter((t) => selectedTicketIds.includes(t.id)),
+    [tickets, selectedTicketIds]
+  );
+
+  const ticketsByProject = useMemo(() => {
+    const map = new Map<number, number[]>();
+    for (const t of selectedTickets) {
+      const existing = map.get(t.projectId);
+      if (existing) {
+        existing.push(t.id);
+      } else {
+        map.set(t.projectId, [t.id]);
+      }
+    }
+    return map;
+  }, [selectedTickets]);
+
+  const crossProjectBulkMutation = useMutation({
+    mutationKey: ["projects", "all-work", "bulk-update"],
+    mutationFn: async (payload: {
+      ticketsByProject: Map<number, number[]>;
+      status?: string;
+      priority?: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+      assigneeId?: string;
+    }) => {
+      const calls = [...payload.ticketsByProject.entries()].map(([projectId, ticketIds]) =>
+        apiClient.post<{ updated: number; ticketIds: number[] }>(
+          `/projects/${projectId}/tickets/bulk`,
+          { ticketIds, status: payload.status, priority: payload.priority, assigneeId: payload.assigneeId }
+        )
+      );
+      const results = await Promise.all(calls);
+      return results.reduce((acc, r) => acc + r.updated, 0);
+    },
+    onSuccess: (totalUpdated) => {
+      toast.success(`${totalUpdated} ticket${totalUpdated === 1 ? "" : "s"} updated`);
+      queryClient.invalidateQueries({ queryKey: ["streamlineos", "projects", "all-work"] });
+      setTableSelection(new Set());
+    },
+    onError: (err) => {
+      toast.error(getErrorMessage(err));
+    },
+  });
+
+  const handleBulkAction = useCallback(
+    (payload: { status?: string; priority?: "LOW" | "MEDIUM" | "HIGH" | "URGENT"; assigneeId?: string }) => {
+      crossProjectBulkMutation.mutate({ ticketsByProject, ...payload });
+    },
+    [crossProjectBulkMutation, ticketsByProject]
+  );
+
+  const handleBulkStatus = useCallback(
+    (value: string) => { void handleBulkAction({ status: value }); },
+    [handleBulkAction]
+  );
+
+  const handleBulkPriority = useCallback(
+    (value: string) => { void handleBulkAction({ priority: value as "LOW" | "MEDIUM" | "HIGH" | "URGENT" }); },
+    [handleBulkAction]
+  );
+
+  const handleBulkAssignee = useCallback(
+    (value: string) => { void handleBulkAction({ assigneeId: value }); },
+    [handleBulkAction]
+  );
+
+  const handleBulkSprintNoOp = useCallback((_value: string) => {}, []);
+
+  const handleClearSelection = useCallback(() => {
+    setTableSelection(new Set());
+  }, []);
+
   const shouldReduceMotion = useReducedMotion();
 
-  const allProjects = projectsData?.data ?? [];
+  const tableColumns = useMemo(
+    () => buildTableColumns(handleTicketClickForTable),
+    [handleTicketClickForTable]
+  );
+
+  const tableRows = useMemo(() => tickets.map(toTableTicket), [tickets]);
 
   const subtitleText = isLoading
     ? "Loading..."
@@ -435,16 +617,8 @@ export function AllWorkPage() {
           </button>
 
           <TicketFilterBar
-            members={allProjects
-              .flatMap((p) => p.members)
-              .filter((m, i, arr) => arr.findIndex((x) => x.id === m.id) === i)
-              .map((m) => ({
-                id: m.id,
-                name: null,
-                firstName: m.firstName,
-                lastName: m.lastName,
-                image: m.image,
-              }))}
+            members={deduplicatedMembers}
+            projectOptions={projectOptions}
             showTypeFilter
             showSprintFilter={false}
             showAssigneeFilter
@@ -484,6 +658,19 @@ export function AllWorkPage() {
           </div>
         ) : (
           <>
+            {tableSelection.size > 0 && (
+              <BulkActionBar
+                selectedCount={tableSelection.size}
+                members={deduplicatedMembers}
+                sprints={[]}
+                hideSprint
+                onBulkStatus={handleBulkStatus}
+                onBulkPriority={handleBulkPriority}
+                onBulkAssignee={handleBulkAssignee}
+                onBulkSprint={handleBulkSprintNoOp}
+                onClear={handleClearSelection}
+              />
+            )}
             <div className="flex-1 min-h-0 overflow-y-auto">
               {view === "list" && (
                 <motion.div
@@ -505,9 +692,13 @@ export function AllWorkPage() {
                   transition={{ duration: 0.18, ease: "easeOut" }}
                   className="px-4 pb-2 pt-0"
                 >
-                  <TableView
-                    tickets={tickets.map(toTableTicket)}
-                    onTicketClick={handleTicketClickForTable}
+                  <DataTable
+                    data={tableRows}
+                    columns={tableColumns}
+                    getRowKey={(row) => row.id}
+                    onRowClick={(row) => handleTicketClickForTable(row.id)}
+                    selection={{ selected: tableSelection, onChange: setTableSelection }}
+                    minWidth="640px"
                   />
                 </motion.div>
               )}
