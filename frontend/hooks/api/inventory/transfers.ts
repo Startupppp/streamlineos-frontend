@@ -179,17 +179,33 @@ function toTransferDetail(r: RawTransferDetail): TransferDetail {
   };
 }
 
-export function useTransfers(filters?: { status?: TransferStatus; page?: number; limit?: number }) {
+export interface TransferFilters {
+  status?: TransferStatus;
+  fromWarehouseId?: number;
+  toWarehouseId?: number;
+  fromDate?: string;
+  toDate?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
+export function useTransfers(filters?: TransferFilters) {
   return useQuery<{ items: TransferListItem[]; total: number; page: number; totalPages: number }, Error>({
-    queryKey: queryKeys.inventory.transfers(filters),
+    queryKey: queryKeys.inventory.transfers(filters as Record<string, unknown>),
     queryFn: async () => {
+      const params: Record<string, string | undefined> = {};
+      if (filters?.status) params.status = filters.status;
+      if (filters?.fromWarehouseId) params.fromWarehouseId = String(filters.fromWarehouseId);
+      if (filters?.toWarehouseId) params.toWarehouseId = String(filters.toWarehouseId);
+      if (filters?.fromDate) params.fromDate = filters.fromDate;
+      if (filters?.toDate) params.toDate = filters.toDate;
+      if (filters?.search) params.search = filters.search;
+      if (filters?.page) params.page = String(filters.page);
+      if (filters?.limit) params.limit = String(filters.limit);
       const res = await apiClient.get<{ items: RawTransferListItem[]; total: number; page: number; totalPages: number }>(
         "/inventory/stock/transfers",
-        {
-          status: filters?.status,
-          page: filters?.page,
-          limit: filters?.limit,
-        },
+        params,
       );
       return {
         items: res.items.map(toTransferListItem),

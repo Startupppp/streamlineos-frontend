@@ -3,7 +3,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { Plus } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { EmptyTransferIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { format } from "date-fns";
 import Link from "next/link";
@@ -12,10 +12,13 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
+import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useTransfers, type TransferStatus } from "@/hooks/api/inventory/stock";
+import { useWarehouses } from "@/hooks/api/inventory/warehouses";
 import { NewTransferSheet } from "@/features/inventory/components/stock/new-transfer-sheet";
 import {
   TRANSFER_STATUS_BADGE,
@@ -42,7 +45,7 @@ type TransferRow = {
 };
 
 function buildTransferColumns(
-  onView: (id: number, ref: string) => void,
+  onView: (id: number) => void,
 ): DataTableColumn<TransferRow>[] {
   return [
     {
@@ -105,7 +108,7 @@ function buildTransferColumns(
           variant="ghost"
           size="sm"
           className="h-7 px-2 text-[11px] text-blue-600 hover:text-blue-700"
-          onClick={(e) => { e.stopPropagation(); onView(row.id, row.referenceNumber); }}
+          onClick={(e) => { e.stopPropagation(); onView(row.id); }}
           aria-label={`View transfer ${row.referenceNumber}`}
         >
           View
@@ -121,45 +124,80 @@ export default function TransfersPage() {
 
   const statusParam = searchParams.get("status") ?? "all";
   const searchQ = searchParams.get("q") ?? "";
+  const fromWarehouseParam = searchParams.get("fromWarehouse") ?? "";
+  const toWarehouseParam = searchParams.get("toWarehouse") ?? "";
+  const fromDateParam = searchParams.get("fromDate") ?? "";
+  const toDateParam = searchParams.get("toDate") ?? "";
 
   const [page, setPage] = useState(1);
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const statusFilter = statusParam !== "all" && isTransferStatus(statusParam) ? statusParam : undefined;
+  const fromWarehouseFilter = fromWarehouseParam ? Number(fromWarehouseParam) : undefined;
+  const toWarehouseFilter = toWarehouseParam ? Number(toWarehouseParam) : undefined;
 
   const { data: transfersData, isLoading, isError, refetch } = useTransfers({
     status: statusFilter,
+    search: searchQ || undefined,
+    fromWarehouseId: fromWarehouseFilter,
+    toWarehouseId: toWarehouseFilter,
+    fromDate: fromDateParam || undefined,
+    toDate: toDateParam || undefined,
     page,
     limit: LIMIT,
   });
 
+  const { data: warehouses = [] } = useWarehouses();
+
+  const warehouseOptions = useMemo<ComboboxOption[]>(
+    () => warehouses.map((w) => ({ value: String(w.id), label: w.name, sublabel: w.code })),
+    [warehouses],
+  );
+
   const totalPages = transfersData?.totalPages ?? 1;
   const total = transfersData?.total ?? 0;
+  const transfers = transfersData?.items ?? [];
 
-  const transfers = useMemo(() => {
-    const rawTransfers = transfersData?.items ?? [];
-    if (!searchQ) return rawTransfers;
-    const q = searchQ.toLowerCase();
-    return rawTransfers.filter(
-      (t) =>
-        t.referenceNumber.toLowerCase().includes(q) ||
-        (t.fromLocationName?.toLowerCase().includes(q) ?? false) ||
-        (t.toLocationName?.toLowerCase().includes(q) ?? false),
-    );
-  }, [transfersData?.items, searchQ]);
+  const updateParams = useCallback(
+    (updates: Record<string, string | undefined>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      for (const [key, val] of Object.entries(updates)) {
+        if (val) params.set(key, val);
+        else params.delete(key);
+      }
+      params.delete("page");
+      setPage(1);
+      router.replace(`?${params.toString()}`);
+    },
+    [router, searchParams],
+  );
 
-  const handleStatusChange = useCallback((val: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (val === "all") params.delete("status");
-    else params.set("status", val);
-    params.delete("page");
-    setPage(1);
-    router.replace(`?${params.toString()}`);
-  }, [router, searchParams]);
+  const handleStatusChange = useCallback(
+    (val: string) => updateParams({ status: val === "all" ? undefined : val }),
+    [updateParams],
+  );
+
+  const handleFromWarehouseChange = useCallback(
+    (val: string) => updateParams({ fromWarehouse: val || undefined }),
+    [updateParams],
+  );
+
+  const handleToWarehouseChange = useCallback(
+    (val: string) => updateParams({ toWarehouse: val || undefined }),
+    [updateParams],
+  );
+
+  const handleDateRangeChange = useCallback(
+    (range: { from: string; to: string }) =>
+      updateParams({ fromDate: range.from || undefined, toDate: range.to || undefined }),
+    [updateParams],
+  );
 
   const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
 
-  function handleRetry() { void refetch(); }
+  function handleRetry() {
+    void refetch();
+  }
 
   function handleRowClick(row: TransferRow): void {
     router.push(`/inventory/stock/transfers/${row.id}`);
@@ -169,25 +207,69 @@ export default function TransfersPage() {
     router.push(`/inventory/stock/transfers/${id}`);
   }
 
-  const columns = useMemo(() => buildTransferColumns(handleView), []);
+  const handleClearFilters = useCallback(() => {
+    setPage(1);
+    router.replace("?");
+  }, [router]);
 
-  const hasActiveFilters = searchQ || statusParam !== "all";
-  const subtitle = !isLoading && total > 0 ? `${total} transfer${total !== 1 ? "s" : ""}` : undefined;
+  const hasActiveFilters =
+    !!searchQ || statusParam !== "all" || !!fromWarehouseParam || !!toWarehouseParam || !!fromDateParam || !!toDateParam;
+
+  const columns = useMemo(() => buildTransferColumns(handleView), []);
 
   return (
     <PageWrapper
       title="Stock Transfers"
       eyebrow="Inventory / Stock"
-      subtitle={subtitle}
+      subtitle="Move stock between warehouse locations"
       filters={
-        <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
+        <div className="flex w-full min-w-0 flex-wrap items-center gap-2">
           <Select value={statusParam} onValueChange={handleStatusChange}>
-            <SelectTrigger className="h-8 w-[140px] text-xs"><SelectValue placeholder="All statuses" /></SelectTrigger>
+            <SelectTrigger className="h-8 w-[140px] text-xs">
+              <SelectValue placeholder="All statuses" />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All statuses</SelectItem>
-              {ALL_STATUSES.map((s) => <SelectItem key={s} value={s}>{TRANSFER_STATUS_LABEL[s]}</SelectItem>)}
+              {ALL_STATUSES.map((s) => (
+                <SelectItem key={s} value={s}>{TRANSFER_STATUS_LABEL[s]}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
+          <div className="w-[160px]">
+            <Combobox
+              options={warehouseOptions}
+              value={fromWarehouseParam}
+              onChange={handleFromWarehouseChange}
+              placeholder="From warehouse"
+              searchPlaceholder="Search warehouses…"
+              emptyText="No warehouses found"
+              className="h-8 text-xs"
+            />
+          </div>
+          <div className="w-[160px]">
+            <Combobox
+              options={warehouseOptions}
+              value={toWarehouseParam}
+              onChange={handleToWarehouseChange}
+              placeholder="To warehouse"
+              searchPlaceholder="Search warehouses…"
+              emptyText="No warehouses found"
+              className="h-8 text-xs"
+            />
+          </div>
+          <DateRangePicker
+            from={fromDateParam || undefined}
+            to={toDateParam || undefined}
+            onChange={handleDateRangeChange}
+            placeholder="Date range"
+            className="w-[180px]"
+          />
+          {hasActiveFilters && (
+            <Button variant="ghost" size="sm" className="h-8 text-xs gap-1" onClick={handleClearFilters}>
+              <X className="h-3.5 w-3.5" aria-hidden="true" />
+              Clear filters
+            </Button>
+          )}
         </div>
       }
       actions={
@@ -207,15 +289,15 @@ export default function TransfersPage() {
         <motion.div variants={fadeUp} initial="hidden" animate="visible">
           <InventoryEmptyState
             illustration={hasActiveFilters ? <EmptySearchIllustration /> : <EmptyTransferIllustration />}
-            title={hasActiveFilters ? "No results" : "No transfers found"}
+            title={hasActiveFilters ? "No matching transfers" : "No transfers yet"}
             description={
               hasActiveFilters
-                ? "No transfers match your filters."
+                ? "No transfers match your current filters. Try adjusting your search or filter criteria."
                 : "Create a transfer to move stock between locations."
             }
             action={
               hasActiveFilters
-                ? { label: "Clear Filters", href: "?" }
+                ? { label: "Clear Filters", onClick: handleClearFilters }
                 : { label: "New Transfer", onClick: handleOpenSheet }
             }
             className="flex-1 min-h-[40vh]"
@@ -239,15 +321,8 @@ export default function TransfersPage() {
               }}
               search={{
                 value: searchQ,
-                onChange: (val) => {
-                  const params = new URLSearchParams(searchParams.toString());
-                  if (val) params.set("q", val);
-                  else params.delete("q");
-                  params.delete("page");
-                  setPage(1);
-                  router.replace(`?${params.toString()}`);
-                },
-                placeholder: "Search transfers…",
+                onChange: (val) => updateParams({ q: val || undefined }),
+                placeholder: "Search by ref, warehouse, product, SKU, notes…",
               }}
             />
           </motion.div>

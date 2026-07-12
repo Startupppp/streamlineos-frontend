@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState, useCallback, type ChangeEvent } from "react";
+import { use, useState, useCallback } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,17 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Input } from "@/components/ui/input";
-import { DatePicker } from "@/components/ui/date-picker";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,21 +18,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Plus, Diamond, Trash2, Pencil, CalendarCheck2, CheckCircle2, Clock, AlertCircle } from "lucide-react";
 import {
   useProjectMilestones,
-  useCreateMilestone,
-  useUpdateMilestone,
   useDeleteMilestone,
   type ProjectMilestone,
 } from "@/hooks/api/projects";
+import { MilestoneUpsertSheet } from "@/features/projects/milestones/milestone-upsert-sheet";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { format, isPast, isToday, differenceInDays } from "date-fns";
@@ -53,104 +34,6 @@ const STATUS_CONFIG = {
   ACHIEVED: { label: "Achieved", variant: "default" as const, color: "text-green-600" },
   MISSED: { label: "Missed", variant: "destructive" as const, color: "text-red-600" },
 } as const;
-
-function MilestoneDialog({
-  projectId,
-  milestone,
-  onClose,
-}: {
-  projectId: number;
-  milestone?: ProjectMilestone;
-  onClose: () => void;
-}) {
-  const isEdit = !!milestone;
-  const [name, setName] = useState(milestone?.name ?? "");
-  const [description, setDescription] = useState(milestone?.description ?? "");
-  const [targetDate, setTargetDate] = useState(milestone?.targetDate ?? "");
-  const [status, setStatus] = useState<ProjectMilestone["status"]>(milestone?.status ?? "PENDING");
-
-  const create = useCreateMilestone(projectId);
-  const update = useUpdateMilestone(projectId);
-  const isPending = create.isPending || update.isPending;
-
-  const handleNameChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    setName(e.target.value);
-  }, []);
-
-  const handleDescriptionChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
-    setDescription(e.target.value);
-  }, []);
-
-  const handleTargetDateChange = useCallback((value: string) => {
-    setTargetDate(value);
-  }, []);
-
-  const handleStatusChange = useCallback((v: string) => {
-    if (v === "PENDING" || v === "ACHIEVED" || v === "MISSED") {
-      setStatus(v);
-    }
-  }, []);
-
-  const handleSave = useCallback(() => {
-    if (!name.trim() || !targetDate) return;
-    if (isEdit) {
-      update.mutate(
-        { id: milestone.id, name: name.trim(), description: description.trim() || undefined, targetDate, status },
-        { onSuccess: () => { toast.success("Milestone updated"); onClose(); }, onError: () => toast.error("Failed to update") },
-      );
-    } else {
-      create.mutate(
-        { name: name.trim(), description: description.trim() || undefined, targetDate, status },
-        { onSuccess: () => { toast.success("Milestone created"); onClose(); }, onError: () => toast.error("Failed to create") },
-      );
-    }
-  }, [name, targetDate, isEdit, milestone, description, status, update, create, onClose]);
-
-  return (
-    <Dialog open onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit Milestone" : "New Milestone"}</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4 py-2">
-          <div className="space-y-1">
-            <Label>Name *</Label>
-            <Input placeholder="e.g. MVP Launch" value={name} onChange={handleNameChange} />
-          </div>
-          <div className="space-y-1">
-            <Label>Description</Label>
-            <Textarea rows={2} value={description} onChange={handleDescriptionChange} />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label>Target Date *</Label>
-              <DatePicker value={targetDate} onChange={handleTargetDateChange} placeholder="Pick a date" className="h-8 text-sm" />
-            </div>
-            <div className="space-y-1">
-              <Label>Status</Label>
-              <Select value={status} onValueChange={handleStatusChange}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="PENDING">Pending</SelectItem>
-                  <SelectItem value="ACHIEVED">Achieved</SelectItem>
-                  <SelectItem value="MISSED">Missed</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
-        <DialogFooter>
-          <div className="grid w-full grid-cols-2 gap-2">
-            <Button variant="outline" onClick={onClose}>Cancel</Button>
-            <Button onClick={handleSave} disabled={isPending || !name.trim() || !targetDate}>
-              {isPending ? "Saving…" : isEdit ? "Save Changes" : "Create Milestone"}
-            </Button>
-          </div>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 function MilestoneCard({
   milestone,
@@ -305,10 +188,10 @@ export default function MilestonesPage({ params }: { params: Promise<{ projectId
       </div>
 
       {createOpen && (
-        <MilestoneDialog projectId={projectId} onClose={handleCloseCreate} />
+        <MilestoneUpsertSheet projectId={projectId} onClose={handleCloseCreate} />
       )}
       {editTarget && (
-        <MilestoneDialog
+        <MilestoneUpsertSheet
           projectId={projectId}
           milestone={editTarget}
           onClose={handleCloseEdit}

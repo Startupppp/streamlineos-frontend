@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, MoreHorizontal, Pencil, Archive, RotateCcw, Search } from "lucide-react";
 import { EmptyProductsIllustration, EmptySearchIllustration } from "@/components/illustrations";
@@ -50,9 +50,22 @@ import type { InventoryCategory } from "@/types/inventory";
 
 const NO_PARENT = "none";
 
+const CATEGORY_NAME_MIN = 2;
+const CATEGORY_NAME_MAX = 100;
+const CATEGORY_DESC_MAX = 500;
+const VALID_NAME_RE = /[a-zA-Z0-9]/;
+
 const categorySchema = z.object({
-  name: z.string().min(1, "Category name is required"),
-  description: z.string().optional(),
+  name: z
+    .string()
+    .min(1, "Category name is required.")
+    .max(CATEGORY_NAME_MAX, `Name must be ${CATEGORY_NAME_MAX} characters or fewer.`)
+    .refine((v) => v.trim().length >= CATEGORY_NAME_MIN, `Name must be at least ${CATEGORY_NAME_MIN} characters.`)
+    .refine((v) => VALID_NAME_RE.test(v.trim()), "Name must contain at least one letter or number."),
+  description: z
+    .string()
+    .max(CATEGORY_DESC_MAX, `Description must be ${CATEGORY_DESC_MAX} characters or fewer.`)
+    .optional(),
   parentId: z.string().optional(),
 });
 
@@ -73,14 +86,15 @@ function CreateCategoryForm({
   });
 
   async function onSubmit(values: CategoryFormValues): Promise<void> {
+    const trimmedName = values.name.trim();
     try {
       await createMutation.mutateAsync({
-        name: values.name,
-        description: values.description || undefined,
+        name: trimmedName,
+        description: values.description?.trim() || undefined,
         parentCategoryId:
           values.parentId === NO_PARENT ? undefined : Number(values.parentId),
       });
-      toast.success(`Category "${values.name}" created`);
+      toast.success(`Category "${trimmedName}" created`);
       form.reset();
       onSuccess();
     } catch (error) {
@@ -97,9 +111,14 @@ function CreateCategoryForm({
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Name</FormLabel>
+                <div className="flex items-center justify-between">
+                  <FormLabel>Name</FormLabel>
+                  <span className="text-[10px] text-muted-foreground tabular-nums">
+                    {field.value.length}/{CATEGORY_NAME_MAX}
+                  </span>
+                </div>
                 <FormControl>
-                  <Input placeholder="e.g. Electronics" {...field} />
+                  <Input placeholder="e.g. Electronics" maxLength={CATEGORY_NAME_MAX} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -136,11 +155,17 @@ function CreateCategoryForm({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <div className="flex items-center justify-between">
+                    <FormLabel>Description</FormLabel>
+                    <span className="text-[10px] text-muted-foreground tabular-nums">
+                      {(field.value ?? "").length}/{CATEGORY_DESC_MAX}
+                    </span>
+                  </div>
                   <FormControl>
                     <Textarea
                       rows={2}
                       placeholder="Optional description"
+                      maxLength={CATEGORY_DESC_MAX}
                       {...field}
                     />
                   </FormControl>
@@ -257,16 +282,23 @@ function CategoriesPageInner() {
   const [editingCategory, setEditingCategory] =
     useState<InventoryCategory | null>(null);
 
-  const search = searchParams.get("search") ?? "";
+  const urlSearch = searchParams.get("search") ?? "";
   const statusParam = searchParams.get("status") ?? "all";
+
+  const [searchInput, setSearchInput] = useState<string>(urlSearch);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    setSearchInput(urlSearch);
+  }, [urlSearch]);
 
   const query = useCategories();
   const updateMutation = useUpdateCategory();
   const categories = query.data ?? [];
 
   const filteredCategories = categories.filter((cat) => {
-    const matchesSearch =
-      !search || cat.name.toLowerCase().includes(search.toLowerCase());
+    const term = searchInput.trim().toLowerCase();
+    const matchesSearch = !term || cat.name.toLowerCase().includes(term);
     const matchesStatus =
       statusParam === "all" ||
       (statusParam === "active" && cat.isActive) ||
@@ -291,7 +323,12 @@ function CategoriesPageInner() {
   }
 
   function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>): void {
-    updateParams({ search: e.target.value || null });
+    const value = e.target.value;
+    setSearchInput(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      updateParams({ search: value || null });
+    }, 300);
   }
 
   function handleStatusChange(value: string): void {
@@ -326,14 +363,14 @@ function CategoriesPageInner() {
     }
   }
 
-  const hasFilters = !!(search || (statusParam && statusParam !== "all"));
+  const hasFilters = !!(searchInput || (statusParam && statusParam !== "all"));
 
   const filtersRow = (
     <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
       <div className="relative min-w-0 flex-1 lg:max-w-sm">
         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
         <Input
-          value={search}
+          value={searchInput}
           onChange={handleSearchChange}
           placeholder="Search categories..."
           className="h-8 w-full min-w-0 pl-8 text-xs"

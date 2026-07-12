@@ -3,7 +3,7 @@
 import { memo, useState, useTransition, type ChangeEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Plus, Search, MoreHorizontal } from "lucide-react";
+import { Plus, Search, MoreHorizontal, Store } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -39,6 +39,7 @@ import {
   useClosePurchaseOrder,
   useCancelPurchaseOrder,
 } from "@/hooks/api/inventory/purchase-orders";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import type { PurchaseOrderStatus, PurchaseOrderSummary } from "@/types/inventory";
 
 const STATUS_OPTIONS = [
@@ -254,6 +255,7 @@ export default function PurchaseOrdersListPage() {
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
   const [search, setSearch] = useState<string>("");
+  const debouncedSearch = useDebouncedValue(search, 300);
 
   const statusParam = searchParams.get("status") ?? "all";
   const vendorParam = searchParams.get("vendor") ?? "all";
@@ -299,7 +301,7 @@ export default function PurchaseOrdersListPage() {
     updateParams({ status: "all", vendor: "all", page: "1" });
   }
 
-  const vendorsQuery = useVendors({ isActive: true, limit: 200 });
+  const vendorsQuery = useVendors({ isActive: true, limit: 100 });
   const query = usePurchaseOrders({
     page,
     pageSize: 50,
@@ -311,12 +313,13 @@ export default function PurchaseOrdersListPage() {
   const vendors = vendorsQuery.data?.items ?? [];
   const total = query.data?.total ?? 0;
   const totalPages = query.data?.totalPages ?? 1;
+  const hasNoVendors = !vendorsQuery.isLoading && vendors.length === 0;
 
-  const filteredItems = search.trim()
+  const filteredItems = debouncedSearch.trim()
     ? allItems.filter(
         (po) =>
-          po.poNumber.toLowerCase().includes(search.toLowerCase()) ||
-          (po.vendor?.name ?? "").toLowerCase().includes(search.toLowerCase()),
+          po.poNumber.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+          (po.vendor?.name ?? "").toLowerCase().includes(debouncedSearch.toLowerCase()),
       )
     : allItems;
 
@@ -371,9 +374,9 @@ export default function PurchaseOrdersListPage() {
     <PageWrapper
       eyebrow="Inventory"
       title="Purchase Orders"
-      subtitle={query.data ? `${total} ${total === 1 ? "order" : "orders"}` : undefined}
+      subtitle="Track and manage orders sent to your suppliers."
       actions={
-        <Button asChild size="sm">
+        <Button asChild size="sm" disabled={hasNoVendors}>
           <Link href="/inventory/purchase-orders/new">
             <Plus className="h-3.5 w-3.5 mr-1" />
             New PO
@@ -382,6 +385,20 @@ export default function PurchaseOrdersListPage() {
       }
       filters={filterBar}
     >
+      {hasNoVendors && (
+        <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <Store className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+          <div>
+            <p className="font-medium">No vendors configured</p>
+            <p className="text-amber-700">
+              You need at least one vendor before creating a purchase order.{" "}
+              <Link href="/inventory/vendors/new" className="underline underline-offset-2 font-medium">
+                Create a vendor
+              </Link>
+            </p>
+          </div>
+        </div>
+      )}
       <DataTable
         data={filteredItems}
         columns={columns}
@@ -395,16 +412,18 @@ export default function PurchaseOrdersListPage() {
               illustration={
                 hasFilters ? <EmptySearchIllustration /> : <EmptyOrdersIllustration />
               }
-              title={hasFilters ? "No orders found" : "No purchase orders"}
+              title={hasFilters ? "No orders found" : "No purchase orders yet"}
               description={
                 hasFilters
-                  ? "No results match your filters."
-                  : "Create a PO to start ordering from your suppliers."
+                  ? "No results match your current filters."
+                  : "Create your first purchase order to start ordering from suppliers. Workflow: Create Vendor → New PO → Receive Stock."
               }
               action={
                 hasFilters
                   ? { label: "Clear filters", onClick: handleClearFilters }
-                  : { label: "New PO", href: "/inventory/purchase-orders/new" }
+                  : hasNoVendors
+                    ? { label: "Create a vendor first", href: "/inventory/vendors/new" }
+                    : { label: "New PO", href: "/inventory/purchase-orders/new" }
               }
               compact
             />

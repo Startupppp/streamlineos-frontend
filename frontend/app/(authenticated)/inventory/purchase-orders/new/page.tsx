@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Store } from "lucide-react";
 import { toast } from "sonner";
 import { useForm, useFieldArray, useWatch, Controller, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -103,7 +104,7 @@ export default function NewPurchaseOrderPage() {
   const searchParams = useSearchParams();
   const preselectedVendorId = searchParams.get("vendorId") ?? "";
 
-  const vendorsQuery = useVendors({ isActive: true, limit: 200 });
+  const vendorsQuery = useVendors({ isActive: true, limit: 100 });
   const variantsQuery = useProductVariants({ activeOnly: true });
   const createMutation = useCreatePurchaseOrder();
 
@@ -196,8 +197,8 @@ export default function NewPurchaseOrderPage() {
   }
 
   if (vendorsQuery.isLoading || variantsQuery.isLoading) return <LoadingState variant="form" />;
-  if (vendorsQuery.error) return <ErrorState description={vendorsQuery.error.message} onRetry={handleVendorsRetry} />;
-  if (variantsQuery.error) return <ErrorState description={variantsQuery.error.message} onRetry={handleVariantsRetry} />;
+  if (vendorsQuery.error) return <ErrorState description={getErrorMessage(vendorsQuery.error)} onRetry={handleVendorsRetry} />;
+  if (variantsQuery.error) return <ErrorState description={getErrorMessage(variantsQuery.error)} onRetry={handleVariantsRetry} />;
 
   const vendors = vendorsQuery.data?.items ?? [];
   const variants = variantsQuery.data ?? [];
@@ -304,6 +305,8 @@ export default function NewPurchaseOrderPage() {
     </div>
   );
 
+  const hasNoVendors = vendors.length === 0;
+
   return (
     <PageWrapper
       eyebrow="Inventory / Purchase Orders"
@@ -311,6 +314,21 @@ export default function NewPurchaseOrderPage() {
       subtitle="Create a PO to order products from a supplier."
       backHref="/inventory/purchase-orders"
     >
+      {hasNoVendors && (
+        <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <Store className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+          <div>
+            <p className="font-medium">No vendors found</p>
+            <p className="text-amber-700">
+              You need at least one vendor to create a purchase order.{" "}
+              <Link href="/inventory/vendors/new" className="underline underline-offset-2 font-medium">
+                Create a vendor
+              </Link>{" "}
+              first.
+            </p>
+          </div>
+        </div>
+      )}
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <Card className="p-4">
@@ -431,6 +449,7 @@ export default function NewPurchaseOrderPage() {
               isPending={createMutation.isPending}
               loadingText="Creating…"
               className="w-full sm:w-auto"
+              disabled={hasNoVendors}
             >
               Create PO
             </LoadingButton>

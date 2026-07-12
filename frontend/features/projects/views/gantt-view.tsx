@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect, useCallback, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -9,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarDays, List, Plus } from "lucide-react";
 import { getStatusHexColor } from "../shared/status-badge";
 import { useCriticalPath } from "@/hooks/api/projects/reports";
 import { useProjectMilestones } from "@/hooks/api/projects/milestones";
@@ -38,9 +39,11 @@ interface GanttViewProps {
   tickets: Ticket[];
   projectId: number;
   onTicketClick: (ticketId: number) => void;
+  onCreateTicket?: () => void;
 }
 
-export function GanttView({ tickets, projectId, onTicketClick }: GanttViewProps) {
+export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }: GanttViewProps) {
+  const router = useRouter();
   const [weekOffset, setWeekOffset] = useState(0);
 
   const datedTickets = useMemo(
@@ -129,6 +132,10 @@ export function GanttView({ tickets, projectId, onTicketClick }: GanttViewProps)
     [onTicketClick]
   );
 
+  const handleGoToBacklog = useCallback(() => {
+    router.push(`/projects/${projectId}/backlog`);
+  }, [router, projectId]);
+
   const { data: cpData } = useCriticalPath(projectId);
   const { data: milestones } = useProjectMilestones(projectId);
 
@@ -196,8 +203,31 @@ export function GanttView({ tickets, projectId, onTicketClick }: GanttViewProps)
 
       <div
         ref={chartContainerRef}
-        className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border"
+        className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border relative"
       >
+        {datedTickets.length === 0 && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 bg-background/80 backdrop-blur-[2px]">
+            <div className="flex flex-col items-center gap-2 text-center px-4">
+              <CalendarDays className="h-10 w-10 text-muted-foreground/50" />
+              <p className="text-sm font-medium text-foreground">No work items with dates</p>
+              <p className="text-xs text-muted-foreground max-w-xs">
+                Set start or due dates on tickets to see them here. You can do this from the ticket detail, backlog table, or inline on the board.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              {onCreateTicket && (
+                <Button size="sm" variant="default" onClick={onCreateTicket}>
+                  <Plus className="h-3.5 w-3.5 mr-1.5" />
+                  Create Ticket with Dates
+                </Button>
+              )}
+              <Button size="sm" variant="outline" onClick={handleGoToBacklog}>
+                <List className="h-3.5 w-3.5 mr-1.5" />
+                Go to Backlog
+              </Button>
+            </div>
+          </div>
+        )}
         <div className="min-h-0 flex-1 overflow-auto">
           <div className="min-w-max">
             <svg width={svgWidth} height={svgHeight} className="text-foreground">
@@ -228,19 +258,6 @@ export function GanttView({ tickets, projectId, onTicketClick }: GanttViewProps)
             })}
 
             <line x1={labelWidth} y1={headerHeight} x2={svgWidth} y2={headerHeight} className="stroke-border" />
-
-            {datedTickets.length === 0 && (
-              <text
-                x={svgWidth / 2}
-                y={headerHeight + bodyHeight / 2}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                className="fill-muted-foreground"
-                fontSize={13}
-              >
-                No work items with dates found. Set start/due dates to see them on the Gantt chart.
-              </text>
-            )}
 
             {datedTickets.map((ticket) => {
               const geo = barGeometries.get(ticket.id);

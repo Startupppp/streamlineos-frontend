@@ -16,6 +16,17 @@ const MOVEMENT_TYPE_CONFIG: Record<TransactionType, { label: string; className: 
   RETURN_IN: { label: "Return In", className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
   RETURN_OUT: { label: "Return Out", className: "bg-amber-50 text-amber-700 border-amber-200" },
   GRN: { label: "GRN", className: "bg-blue-50 text-blue-700 border-blue-200" },
+  OPENING_BALANCE: { label: "Opening", className: "bg-violet-50 text-violet-700 border-violet-200" },
+  VENDOR_RETURN: { label: "Vendor Rtn", className: "bg-amber-50 text-amber-700 border-amber-200" },
+  CUSTOMER_RETURN: { label: "Cust Rtn", className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  CYCLE_COUNT_GAIN: { label: "Count Gain", className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  CYCLE_COUNT_LOSS: { label: "Count Loss", className: "bg-red-50 text-red-700 border-red-200" },
+  SCRAP: { label: "Scrap", className: "bg-red-50 text-red-700 border-red-200" },
+  QUARANTINE_IN: { label: "Quar In", className: "bg-amber-50 text-amber-700 border-amber-200" },
+  QUARANTINE_OUT: { label: "Quar Out", className: "bg-blue-50 text-blue-700 border-blue-200" },
+  RESERVATION_CREATE: { label: "Reserved", className: "bg-slate-100 text-slate-700 border-slate-200" },
+  RESERVATION_RELEASE: { label: "Res. Release", className: "bg-slate-100 text-slate-700 border-slate-200" },
+  RESERVATION_CONSUME: { label: "Res. Consume", className: "bg-slate-100 text-slate-700 border-slate-200" },
 };
 
 function formatDateTime(dateStr: string): string {

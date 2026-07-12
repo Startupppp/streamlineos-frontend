@@ -109,6 +109,7 @@ export interface NavRoute {
   requiredPermission?: string | string[];
   children?: NavRoute[];
   module?: ProductKey;
+  exact?: boolean;
 }
 
 export interface NavGroup {
@@ -1472,6 +1473,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Dashboard",
         icon: LayoutDashboard,
         href: "/inventory",
+        exact: true,
         requiredPermission: "inventory:stock:read",
       },
       {

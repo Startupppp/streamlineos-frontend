@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 import Link from "next/link";
-import { User, Settings, Bell, Palette, Key, LogOut } from "lucide-react";
+import { User, Settings, Bell, Key, LogOut } from "lucide-react";
 import { useSession } from "next-auth/react";
 import {
   DropdownMenu,
@@ -112,12 +112,6 @@ export function UserAvatarMenu({ variant = "header" }: UserAvatarMenuProps) {
           </Link>
         </DropdownMenuItem>
         <ThemeMenuSubmenu />
-        <DropdownMenuItem asChild>
-          <Link href="/settings/appearance" className="gap-2 cursor-pointer">
-            <Palette className="h-3.5 w-3.5" />
-            Appearance
-          </Link>
-        </DropdownMenuItem>
         {isAdmin && (
           <>
             <DropdownMenuSeparator />

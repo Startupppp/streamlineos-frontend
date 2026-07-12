@@ -4,7 +4,6 @@ import { use, useState, useCallback } from "react";
 import { useCycles, useCreateCycle } from "@/hooks/api/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Button } from "@/components/ui/button";
 import { EmptyCalendarIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -14,27 +13,67 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Calendar, CheckCircle2, Clock, ArrowRight, ChevronDown, ChevronRight } from "lucide-react";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { Plus, Calendar, CheckCircle2, Clock, ArrowRight, ChevronDown, ChevronRight, AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import type { Cycle } from "@/types/projects";
 
-const createCycleSchema = z.object({
-  name: z.string().min(1, "Name is required").regex(/^[A-Za-z]/, "Name must start with a letter").max(100),
-  description: z.string().optional(),
-  startDate: z.string().min(1, "Start date required").refine(
-    (v) => { const y = new Date(v).getFullYear(); return y >= 2000 && y <= 2099; },
-    "Year must be between 2000 and 2099"
-  ),
-  endDate: z.string().min(1, "End date required").refine(
-    (v) => { const y = new Date(v).getFullYear(); return y >= 2000 && y <= 2099; },
-    "Year must be between 2000 and 2099"
-  ),
-});
+const DESCRIPTION_MAX = 500;
+
+const createCycleSchema = z
+  .object({
+    name: z
+      .string()
+      .min(1, "Name is required")
+      .transform((v) => v.trim())
+      .pipe(
+        z
+          .string()
+          .min(2, "Name must be at least 2 characters")
+          .max(100, "Name must be 100 characters or fewer")
+          .regex(/[A-Za-z0-9]/, "Name must contain at least one letter or number")
+      ),
+    description: z
+      .string()
+      .max(DESCRIPTION_MAX, `Description must be ${DESCRIPTION_MAX} characters or fewer`)
+      .optional(),
+    startDate: z.string().min(1, "Start date is required"),
+    endDate: z.string().min(1, "End date is required"),
+  })
+  .superRefine((data, ctx) => {
+    if (data.startDate && data.endDate) {
+      const start = new Date(data.startDate);
+      const end = new Date(data.endDate);
+      if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && end < start) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "End date must be on or after start date.",
+          path: ["endDate"],
+        });
+      }
+    }
+  });
+
 type CreateCycleForm = z.infer<typeof createCycleSchema>;
+
+const FORM_DEFAULTS: CreateCycleForm = {
+  name: "",
+  description: "",
+  startDate: "",
+  endDate: "",
+};
+
+function hasDuplicateName(cycles: Cycle[] | undefined, name: string): boolean {
+  if (!cycles || !name.trim()) return false;
+  const trimmed = name.trim().toLowerCase();
+  return cycles.some((c) => c.name.trim().toLowerCase() === trimmed);
+}
 
 export default function CyclesPage({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId: projectIdStr } = use(params);
@@ -51,25 +90,54 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
 
   const form = useForm<CreateCycleForm>({
     resolver: zodResolver(createCycleSchema),
+    defaultValues: FORM_DEFAULTS,
   });
+
+  const watchedName = form.watch("name");
+  const watchedDescription = form.watch("description") ?? "";
+  const showDuplicateWarning = hasDuplicateName(cycles, watchedName);
+
+  const handleOpenChange = useCallback(
+    (open: boolean) => {
+      if (!open) {
+        form.reset(FORM_DEFAULTS);
+      }
+      setCreateOpen(open);
+    },
+    [form],
+  );
 
   const handleToggleCompleted = useCallback(() => setShowCompleted((v) => !v), []);
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
-  const handleSetStartDate = useCallback((v: string) => form.setValue("startDate", v), [form]);
-  const handleSetEndDate = useCallback((v: string) => form.setValue("endDate", v), [form]);
+  const handleSetStartDate = useCallback(
+    (v: string) => {
+      form.setValue("startDate", v, { shouldValidate: form.formState.isSubmitted });
+    },
+    [form],
+  );
+  const handleSetEndDate = useCallback(
+    (v: string) => {
+      form.setValue("endDate", v, { shouldValidate: form.formState.isSubmitted });
+    },
+    [form],
+  );
 
-  const onSubmit = useCallback((data: CreateCycleForm) => {
-    createMutation.mutate(
-      { ...data, projectId },
-      {
-        onSuccess: () => {
-          setCreateOpen(false);
-          toast.success("Cycle created");
+  const onSubmit = useCallback(
+    (data: CreateCycleForm) => {
+      createMutation.mutate(
+        { ...data, projectId },
+        {
+          onSuccess: () => {
+            form.reset(FORM_DEFAULTS);
+            setCreateOpen(false);
+            toast.success("Cycle created");
+          },
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
-        onError: (err) => toast.error(getErrorMessage(err)),
-      }
-    );
-  }, [createMutation, projectId]);
+      );
+    },
+    [createMutation, projectId, form],
+  );
 
   if (isLoading) {
     return (
@@ -115,7 +183,7 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
       title="Cycles"
       subtitle="Time-box work into focused iterations"
       actions={
-        <Sheet open={createOpen} onOpenChange={setCreateOpen}>
+        <Sheet open={createOpen} onOpenChange={handleOpenChange}>
           <SheetTrigger asChild>
             <Button size="sm">
               <Plus className="h-4 w-4 mr-1" /> New Cycle
@@ -129,14 +197,28 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
               <form id="cycle-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
                 <div className="space-y-1.5">
                   <Label htmlFor="name">Name</Label>
-                  <Input id="name" placeholder="Enter cycle name..." {...form.register("name")} className="capitalize" />
+                  <Input id="name" placeholder="e.g. Sprint 1, Q3 Planning..." {...form.register("name")} />
                   {form.formState.errors.name && (
                     <p className="text-xs text-destructive mt-1">{form.formState.errors.name.message}</p>
                   )}
+                  {!form.formState.errors.name && showDuplicateWarning && (
+                    <p className="text-xs text-amber-600 flex items-center gap-1 mt-1">
+                      <AlertTriangle className="h-3 w-3 shrink-0" />
+                      A cycle with this name already exists in this project.
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea id="description" placeholder="Optional description..." {...form.register("description")} />
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="description">Description</Label>
+                    <span className={cn("text-xs tabular-nums", watchedDescription.length > DESCRIPTION_MAX ? "text-destructive" : "text-muted-foreground")}>
+                      {watchedDescription.length}/{DESCRIPTION_MAX}
+                    </span>
+                  </div>
+                  <Textarea id="description" placeholder="Optional description..." {...form.register("description")} rows={3} />
+                  {form.formState.errors.description && (
+                    <p className="text-xs text-destructive mt-1">{form.formState.errors.description.message}</p>
+                  )}
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
@@ -157,9 +239,9 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
               </form>
             </div>
             <div className="shrink-0 px-6 py-4 border-t">
-              <Button type="submit" form="cycle-form" disabled={createMutation.isPending} className="w-full">
-                {createMutation.isPending ? "Creating..." : "Create Cycle"}
-              </Button>
+              <LoadingButton type="submit" form="cycle-form" isPending={createMutation.isPending} loadingText="Creating..." className="w-full">
+                Create Cycle
+              </LoadingButton>
             </div>
           </SheetContent>
         </Sheet>

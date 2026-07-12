@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -25,12 +25,21 @@ import {
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useUpdateProduct } from "@/hooks/api/inventory";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError } from "@/lib/api-client";
 import { CategorySelect } from "@/features/inventory/components/product-field-selects";
 import {
   ProductCostingFields,
   ProductUomFields,
   ProductReorderFields,
 } from "@/features/inventory/components/product-edit-fields";
+import {
+  productNameSchema,
+  productSkuSchema,
+  productDescriptionSchema,
+  NAME_MAX,
+  SKU_MAX,
+  DESCRIPTION_MAX,
+} from "@/features/inventory/components/new-product-form";
 
 interface ProductForEdit {
   name: string;
@@ -53,17 +62,12 @@ interface ProductForEdit {
   barcode?: string | null;
 }
 
-const SKU_PATTERN = /^[A-Z0-9][A-Z0-9_-]*$/;
 const DECIMAL_PATTERN = /^\d+(\.\d{1,4})?$/;
 
 const editSchema = z.object({
-  name: z.string().min(1, "Name is required").max(255, "Name must be 255 characters or fewer"),
-  sku: z
-    .string()
-    .min(1, "SKU is required")
-    .max(100, "SKU must be 100 characters or fewer")
-    .regex(SKU_PATTERN, "SKU must be uppercase letters, digits, hyphens, or underscores"),
-  description: z.string().max(2000, "Description must be 2000 characters or fewer").optional(),
+  name: productNameSchema,
+  sku: productSkuSchema,
+  description: productDescriptionSchema,
   categoryId: z.string().optional(),
   uomId: z.string().optional(),
   purchaseUomId: z.string().optional(),
@@ -141,6 +145,8 @@ export function ProductEditForm({ product, productId, onDone }: ProductEditFormP
   const costingMethod = form.watch("costingMethod");
   const reorderEnabled = form.watch("reorderEnabled");
   const baseUomValue = form.watch("uomId");
+  const nameValue = useWatch({ control: form.control, name: "name" });
+  const descriptionValue = useWatch({ control: form.control, name: "description" });
 
   async function onSubmit(values: EditFormValues): Promise<void> {
     try {
@@ -167,6 +173,19 @@ export function ProductEditForm({ product, productId, onDone }: ProductEditFormP
       toast.success("Product updated");
       onDone();
     } catch (error) {
+      if (isApiError(error)) {
+        const msg = error.message.toLowerCase();
+        if (error.status === 409 && msg.includes("sku")) {
+          form.setError("sku", { message: "A product with this SKU already exists." });
+          form.setFocus("sku");
+          return;
+        }
+        if (error.status === 400 && msg.includes("name")) {
+          form.setError("name", { message: "Product name is required." });
+          form.setFocus("name");
+          return;
+        }
+      }
       toast.error(getErrorMessage(error));
     }
   }
@@ -186,9 +205,14 @@ export function ProductEditForm({ product, productId, onDone }: ProductEditFormP
                 <FormItem className="min-w-0">
                   <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input maxLength={255} {...field} />
+                    <Input maxLength={NAME_MAX} {...field} />
                   </FormControl>
-                  <FormMessage />
+                  <div className="flex justify-between items-start">
+                    <FormMessage />
+                    <span className="text-[10px] text-muted-foreground ml-auto shrink-0">
+                      {(nameValue ?? "").length}/{NAME_MAX}
+                    </span>
+                  </div>
                 </FormItem>
               )}
             />
@@ -201,7 +225,7 @@ export function ProductEditForm({ product, productId, onDone }: ProductEditFormP
                   <FormControl>
                     <Input
                       className="font-mono"
-                      maxLength={100}
+                      maxLength={SKU_MAX}
                       {...field}
                       onChange={(e) => field.onChange(e.target.value.toUpperCase())}
                     />
@@ -263,9 +287,14 @@ export function ProductEditForm({ product, productId, onDone }: ProductEditFormP
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Textarea rows={3} maxLength={2000} {...field} />
+                      <Textarea rows={3} maxLength={DESCRIPTION_MAX} {...field} />
                     </FormControl>
-                    <FormMessage />
+                    <div className="flex justify-between items-start">
+                      <FormMessage />
+                      <span className="text-[10px] text-muted-foreground ml-auto shrink-0">
+                        {(descriptionValue ?? "").length}/{DESCRIPTION_MAX}
+                      </span>
+                    </div>
                   </FormItem>
                 )}
               />

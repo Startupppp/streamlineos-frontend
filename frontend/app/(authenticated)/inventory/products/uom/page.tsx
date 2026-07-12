@@ -37,11 +37,16 @@ import { useUom, useCreateUom } from "@/hooks/api/inventory";
 import type { InventoryUom } from "@/types/inventory";
 
 const uomSchema = z.object({
-  name: z.string().min(1, "Name is required"),
+  name: z
+    .string()
+    .min(1, "Unit name is required.")
+    .max(100, "Name must be 100 characters or fewer.")
+    .refine((v) => v.trim().length > 0, "Unit name is required."),
   abbreviation: z
     .string()
-    .min(1, "Abbreviation is required")
-    .max(10, "Abbreviation must be 10 characters or less"),
+    .min(1, "Abbreviation is required.")
+    .max(20, "Abbreviation must be 20 characters or fewer.")
+    .refine((v) => v.trim().length > 0, "Abbreviation is required."),
   category: z.string().optional(),
   isBase: z.boolean(),
   ratioToBase: z
@@ -77,16 +82,18 @@ function CreateUomForm({ onSuccess }: { onSuccess: () => void }) {
   const isBase = form.watch("isBase");
 
   async function onSubmit(values: UomFormValues): Promise<void> {
+    const trimmedName = values.name.trim();
+    const trimmedAbbr = values.abbreviation.trim();
     try {
       await createMutation.mutateAsync({
-        name: values.name,
-        abbreviation: values.abbreviation,
-        category: values.category || undefined,
+        name: trimmedName,
+        abbreviation: trimmedAbbr,
+        category: values.category?.trim() || undefined,
         isBase: values.isBase,
         ratioToBase: values.ratioToBase || undefined,
         roundingPrecision: Number(values.roundingPrecision),
       });
-      toast.success(`Unit "${values.name}" created`);
+      toast.success(`Unit "${trimmedName}" created`);
       form.reset();
       onSuccess();
     } catch (error) {

@@ -97,7 +97,7 @@ export default function ReceiptsPage() {
     void query.refetch();
   }
 
-  const vendorsQuery = useVendors({ isActive: true, limit: 200 });
+  const vendorsQuery = useVendors({ isActive: true, limit: 100 });
   const query = useGoodsReceipts({ vendorId: resolvedVendorId, page, pageSize: 50 });
 
   const items = query.data?.items ?? [];

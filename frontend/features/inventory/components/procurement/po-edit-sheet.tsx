@@ -75,7 +75,7 @@ interface PoEditSheetProps {
 
 export function PoEditSheet({ open, onOpenChange, po }: PoEditSheetProps) {
   const variantsQuery = useProductVariants({ activeOnly: true });
-  const vendorsQuery = useVendors({ isActive: true, limit: 200 });
+  const vendorsQuery = useVendors({ isActive: true, limit: 100 });
   const updateMutation = useUpdatePurchaseOrder(po.id);
 
   const variants = variantsQuery.data ?? [];

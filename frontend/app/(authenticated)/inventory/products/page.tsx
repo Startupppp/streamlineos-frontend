@@ -292,6 +292,7 @@ function ProductsPageInner() {
   }
 
   const hasFilters = !!(search || statusParam || categoryIdParam || productTypeParam);
+  const isFirstLoad = !productsQuery.isLoading && !productsQuery.error && total === 0 && !hasFilters;
 
   const columns: DataTableColumn<InventoryProduct>[] = [
     {
@@ -375,14 +376,14 @@ function ProductsPageInner() {
     },
   ];
 
-  const filtersRow = (
+  const filtersRow = isFirstLoad ? undefined : (
     <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
       <div className="relative min-w-0 flex-1 lg:max-w-md">
         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
         <Input
           value={search}
           onChange={handleSearchChange}
-          placeholder="Search by name or SKU..."
+          placeholder="Search products by name, SKU, or barcode..."
           className="h-8 w-full min-w-0 pl-8 text-xs"
         />
       </div>
@@ -435,12 +436,14 @@ function ProductsPageInner() {
           : "Manage your product catalogue"
       }
       actions={
-        <Button size="sm" asChild {...plusHover}>
-          <Link href="/inventory/products/new">
-            <PlusIcon ref={plusRef} size={14} className="mr-1.5" />
-            New Product
-          </Link>
-        </Button>
+        !isFirstLoad ? (
+          <Button size="sm" asChild {...plusHover}>
+            <Link href="/inventory/products/new">
+              <PlusIcon ref={plusRef} size={14} className="mr-1.5" />
+              New Product
+            </Link>
+          </Button>
+        ) : undefined
       }
       filters={filtersRow}
     >
@@ -451,6 +454,15 @@ function ProductsPageInner() {
           onRetry={handleRetry}
           className="min-h-[40vh]"
         />
+      ) : isFirstLoad ? (
+        <InventoryEmptyState
+          illustration={<EmptyProductsIllustration />}
+          title="Add your first product"
+          description="Start building your product catalogue. Define SKUs, set pricing, configure stock tracking, and manage variants all in one place."
+          action={{ label: "Add Product", href: "/inventory/products/new" }}
+          secondaryAction={{ label: "Import Products", href: "/inventory/import" }}
+          className="min-h-[50vh]"
+        />
       ) : (
         <DataTable
           data={items}
@@ -459,20 +471,10 @@ function ProductsPageInner() {
           isLoading={productsQuery.isLoading}
           emptyState={
             <InventoryEmptyState
-              illustration={
-                hasFilters ? <EmptySearchIllustration /> : <EmptyProductsIllustration />
-              }
-              title={hasFilters ? "No products found" : "No products yet"}
-              description={
-                hasFilters
-                  ? "Try adjusting your search or filters."
-                  : "Add your first product to get started."
-              }
-              action={
-                hasFilters
-                  ? { label: "Clear filters", onClick: handleClearFilters }
-                  : { label: "New Product", href: "/inventory/products/new" }
-              }
+              illustration={<EmptySearchIllustration />}
+              title="No products found"
+              description="Try adjusting your search or filters."
+              action={{ label: "Clear filters", onClick: handleClearFilters }}
               className="border-0 bg-transparent min-h-[40vh]"
             />
           }

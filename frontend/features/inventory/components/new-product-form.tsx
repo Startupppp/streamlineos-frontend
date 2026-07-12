@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Card } from "@/components/ui/card";
@@ -23,7 +23,10 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { toast } from "sonner";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { isApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   CategorySelect,
   UomSelect,
@@ -31,15 +34,45 @@ import {
 
 export const SKU_PATTERN = /^[A-Z0-9][A-Z0-9_-]*$/;
 export const DECIMAL_PATTERN = /^\d+(\.\d{1,4})?$/;
+export const CONTAINS_ALPHANUMERIC = /[A-Za-z0-9]/;
+
+export const NAME_MAX = 100;
+export const SKU_MIN = 2;
+export const SKU_MAX = 50;
+export const DESCRIPTION_MAX = 2000;
+
+export const productNameSchema = z
+  .string()
+  .transform((v) => v.trim())
+  .pipe(
+    z
+      .string()
+      .min(1, "Product name is required.")
+      .max(NAME_MAX, `Name must be ${NAME_MAX} characters or fewer`)
+      .refine((v) => CONTAINS_ALPHANUMERIC.test(v), "Name must contain at least one letter or number."),
+  );
+
+export const productSkuSchema = z
+  .string()
+  .transform((v) => v.trim().toUpperCase())
+  .pipe(
+    z
+      .string()
+      .min(SKU_MIN, `SKU must be at least ${SKU_MIN} characters`)
+      .max(SKU_MAX, `SKU must be ${SKU_MAX} characters or fewer`)
+      .regex(SKU_PATTERN, "SKU may only contain uppercase letters, digits, hyphens, or underscores"),
+  );
+
+export const productDescriptionSchema = z
+  .string()
+  .transform((v) => v.trim())
+  .pipe(z.string().max(DESCRIPTION_MAX, `Description must be ${DESCRIPTION_MAX} characters or fewer`))
+  .optional();
 
 export const productSchema = z.object({
-  name: z.string().min(1, "Name is required").max(255, "Name must be 255 characters or fewer"),
-  sku: z
-    .string()
-    .min(1, "SKU is required")
-    .max(100, "SKU must be 100 characters or fewer")
-    .regex(SKU_PATTERN, "SKU must be uppercase letters, digits, hyphens, or underscores"),
-  description: z.string().max(2000, "Description must be 2000 characters or fewer").optional(),
+  name: productNameSchema,
+  sku: productSkuSchema,
+  description: productDescriptionSchema,
   categoryId: z.string().optional(),
   isActive: z.string().optional(),
   productType: z.enum(["STOCKABLE", "CONSUMABLE", "SERVICE"]),
@@ -115,10 +148,33 @@ export function NewProductForm({ onSubmit, onCancel, isPending }: NewProductForm
   const costingMethod = form.watch("costingMethod");
   const reorderEnabled = form.watch("reorderEnabled");
   const baseUomValue = form.watch("uomId");
+  const nameValue = useWatch({ control: form.control, name: "name" });
+  const descriptionValue = useWatch({ control: form.control, name: "description" });
+
+  async function handleSubmit(values: ProductFormValues): Promise<void> {
+    try {
+      await onSubmit(values);
+    } catch (error) {
+      if (isApiError(error)) {
+        const msg = error.message.toLowerCase();
+        if (error.status === 409 && msg.includes("sku")) {
+          form.setError("sku", { message: "A product with this SKU already exists." });
+          form.setFocus("sku");
+          return;
+        }
+        if (error.status === 400 && msg.includes("name")) {
+          form.setError("name", { message: "Product name is required." });
+          form.setFocus("name");
+          return;
+        }
+      }
+      toast.error(getErrorMessage(error));
+    }
+  }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pb-24">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 pb-24">
         <Card className="p-4">
           <h2 className="text-sm font-semibold text-foreground mb-4">Basic Information</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -129,9 +185,14 @@ export function NewProductForm({ onSubmit, onCancel, isPending }: NewProductForm
                 <FormItem className="min-w-0">
                   <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Product name" maxLength={255} {...field} />
+                    <Input placeholder="Product name" maxLength={NAME_MAX} {...field} />
                   </FormControl>
-                  <FormMessage />
+                  <div className="flex justify-between items-start">
+                    <FormMessage />
+                    <span className="text-[10px] text-muted-foreground ml-auto shrink-0">
+                      {(nameValue ?? "").length}/{NAME_MAX}
+                    </span>
+                  </div>
                 </FormItem>
               )}
             />
@@ -145,7 +206,7 @@ export function NewProductForm({ onSubmit, onCancel, isPending }: NewProductForm
                     <Input
                       placeholder="PROD-001"
                       className="font-mono"
-                      maxLength={100}
+                      maxLength={SKU_MAX}
                       {...field}
                       onChange={(e) => field.onChange(e.target.value.toUpperCase())}
                     />
@@ -215,11 +276,16 @@ export function NewProductForm({ onSubmit, onCancel, isPending }: NewProductForm
                       <Textarea
                         placeholder="Optional product description"
                         rows={3}
-                        maxLength={2000}
+                        maxLength={DESCRIPTION_MAX}
                         {...field}
                       />
                     </FormControl>
-                    <FormMessage />
+                    <div className="flex justify-between items-start">
+                      <FormMessage />
+                      <span className="text-[10px] text-muted-foreground ml-auto shrink-0">
+                        {(descriptionValue ?? "").length}/{DESCRIPTION_MAX}
+                      </span>
+                    </div>
                   </FormItem>
                 )}
               />

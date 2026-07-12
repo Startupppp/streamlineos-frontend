@@ -53,6 +53,15 @@ export interface Warehouse {
   createdAt: string;
   updatedAt: string;
   locations?: WarehouseLocation[];
+  _count?: { locations: number };
+}
+
+export interface WarehouseListFilters {
+  q?: string;
+  status?: "all" | "active" | "inactive";
+  isDefault?: boolean;
+  country?: string;
+  city?: string;
 }
 
 interface CreateWarehouseInput {
@@ -82,10 +91,21 @@ interface CreateLocationInput {
   capacity?: number;
 }
 
-export function useWarehouses() {
+export function useWarehouses(filters?: WarehouseListFilters) {
+  const params: Record<string, unknown> = {};
+  if (filters?.q) params.q = filters.q;
+  if (filters?.status && filters.status !== "all") params.status = filters.status;
+  if (filters?.isDefault !== undefined) params.isDefault = filters.isDefault;
+  if (filters?.country) params.country = filters.country;
+  if (filters?.city) params.city = filters.city;
+
+  const hasActiveFilters = Object.keys(params).length > 0;
+
   return useQuery<Warehouse[], Error>({
-    queryKey: queryKeys.inventory.warehouses(),
-    queryFn: () => apiClient.get<Warehouse[]>("/inventory/warehouses"),
+    queryKey: hasActiveFilters
+      ? [...queryKeys.inventory.warehouses(), params]
+      : queryKeys.inventory.warehouses(),
+    queryFn: () => apiClient.get<Warehouse[]>("/inventory/warehouses", hasActiveFilters ? params : undefined),
     staleTime: 5 * 60_000,
   });
 }

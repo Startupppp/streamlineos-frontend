@@ -12,12 +12,37 @@ import { useCreateSprint } from "@/hooks/api/projects";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 
-const createSprintSchema = z.object({
-  name: z.string().min(1, "Sprint name is required"),
-  startDate: z.string().min(1, "Start date is required"),
-  endDate: z.string().min(1, "End date is required"),
-  goal: z.string().optional(),
-});
+const sprintNameSchema = z
+  .string()
+  .transform((v) => v.trim())
+  .pipe(
+    z
+      .string()
+      .min(2, "Sprint name must be at least 2 characters")
+      .max(100, "Sprint name must be 100 characters or fewer")
+      .regex(/[A-Za-z0-9]/, "Sprint name must contain at least one letter or number"),
+  );
+
+const createSprintSchema = z
+  .object({
+    name: sprintNameSchema,
+    startDate: z.string().min(1, "Start date is required"),
+    endDate: z.string().min(1, "End date is required"),
+    goal: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.startDate && data.endDate) {
+      const start = new Date(data.startDate);
+      const end = new Date(data.endDate);
+      if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && end < start) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "End date must be on or after start date.",
+          path: ["endDate"],
+        });
+      }
+    }
+  });
 
 type CreateSprintInput = z.infer<typeof createSprintSchema>;
 

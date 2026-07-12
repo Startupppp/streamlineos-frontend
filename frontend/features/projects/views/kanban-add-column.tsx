@@ -12,21 +12,40 @@ import { useCan } from "@/hooks/api/access";
 import { ColumnColorPicker } from "../shared/column-color-picker";
 import { DEFAULT_COLUMN_COLOR } from "../shared/column-colors";
 
-interface AddColumnProps {
-  projectId: number;
+const MAX_NAME_LENGTH = 50;
+
+function validateColumnName(name: string, existingNames: string[]): string | null {
+  if (!name) return "Name is required";
+  if (!/[a-zA-Z0-9]/.test(name)) return "Name must contain at least one letter or number";
+  if (name.length > MAX_NAME_LENGTH) return `Name must be ${MAX_NAME_LENGTH} characters or fewer`;
+  const lower = name.toLowerCase();
+  if (existingNames.some((n) => n.toLowerCase() === lower)) return "A column with this name already exists";
+  return null;
 }
 
-export function AddColumn({ projectId }: AddColumnProps) {
+interface AddColumnProps {
+  projectId: number;
+  existingNames?: string[];
+}
+
+export function AddColumn({ projectId, existingNames = [] }: AddColumnProps) {
   const canManage = useCan("projects:manage");
   const [value, setValue] = useState("");
   const [color, setColor] = useState<string>(DEFAULT_COLUMN_COLOR);
   const [isAdding, setIsAdding] = useState(false);
+  const [nameError, setNameError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const createState = useCreateCustomState(projectId);
 
   const handleSubmit = useCallback(() => {
     const name = value.trim();
-    if (!name || createState.isPending) return;
+    const error = validateColumnName(name, existingNames);
+    if (error) {
+      setNameError(error);
+      return;
+    }
+    if (createState.isPending) return;
+    setNameError(null);
     createState.mutate(
       { name, color },
       {
@@ -36,12 +55,15 @@ export function AddColumn({ projectId }: AddColumnProps) {
           setIsAdding(false);
           toast.success(`Column "${name}" added`);
         },
-        onError: (error) => toast.error(getErrorMessage(error)),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
-  }, [value, color, createState]);
+  }, [value, color, existingNames, createState]);
 
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setValue(e.target.value), []);
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setValue(e.target.value);
+    setNameError(null);
+  }, []);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -50,6 +72,7 @@ export function AddColumn({ projectId }: AddColumnProps) {
         setIsAdding(false);
         setValue("");
         setColor(DEFAULT_COLUMN_COLOR);
+        setNameError(null);
       }
     },
     [handleSubmit],
@@ -59,6 +82,7 @@ export function AddColumn({ projectId }: AddColumnProps) {
     setIsAdding(false);
     setValue("");
     setColor(DEFAULT_COLUMN_COLOR);
+    setNameError(null);
   }, []);
 
   const handleAddClick = useCallback(() => {

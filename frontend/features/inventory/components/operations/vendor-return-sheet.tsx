@@ -55,7 +55,7 @@ export interface VendorReturnSheetProps {
 }
 
 export function VendorReturnSheet({ open, onOpenChange }: VendorReturnSheetProps) {
-  const vendorsQuery = useVendors({ isActive: true, limit: 200 });
+  const vendorsQuery = useVendors({ isActive: true, limit: 100 });
   const warehousesQuery = useWarehouses();
   const createMutation = useCreateVendorReturn();
 

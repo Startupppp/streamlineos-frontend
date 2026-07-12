@@ -217,6 +217,7 @@ export const queryKeys = {
     templates: () => [...base, "projects", "templates"] as const,
     qa: {
       suites: (projectId?: number) => [...base, "projects", projectId, "qa", "suites"] as const,
+      casesAll: (projectId?: number) => [...base, "projects", projectId, "qa", "cases"] as const,
       cases: (projectId?: number, params?: Record<string, unknown>) => [...base, "projects", projectId, "qa", "cases", params] as const,
       case: (projectId?: number, id?: number) => [...base, "projects", projectId, "qa", "cases", id] as const,
       runs: (projectId?: number, status?: string) => [...base, "projects", projectId, "qa", "runs", status] as const,

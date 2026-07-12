@@ -40,6 +40,9 @@ interface SidebarSectionProps {
 }
 
 function routeIsActive(route: NavRoute, pathname: string): boolean {
+  if (route.exact || (route.children && route.children.length > 0)) {
+    return pathname === route.href;
+  }
   return pathname === route.href || pathname.startsWith(route.href + "/");
 }
 

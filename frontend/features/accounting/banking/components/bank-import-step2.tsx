@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -10,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { DATE_FORMAT_OPTIONS } from "../lib/parse-csv";
 import type { ParsedCsv } from "../lib/parse-csv";
 
@@ -35,6 +37,8 @@ interface Props {
   isValid: boolean;
 }
 
+type CsvPreviewRow = Record<string, string> & { _rowIdx: number };
+
 export function BankImportStep2({
   parsedCsv,
   mapping,
@@ -52,6 +56,34 @@ export function BankImportStep2({
   const previewRows = parsedCsv.rows.slice(0, 5);
   const dateColIndex = parseInt(mapping.date, 10);
   const descColIndex = parseInt(mapping.description, 10);
+
+  const csvTableData = useMemo<CsvPreviewRow[]>(
+    () => previewRows.map((row, ri) => {
+      const obj: CsvPreviewRow = { _rowIdx: ri };
+      parsedCsv.headers.forEach((_, ci) => {
+        obj[String(ci)] = row[ci] ?? "";
+      });
+      return obj;
+    }),
+    [previewRows, parsedCsv.headers],
+  );
+
+  const csvTableColumns = useMemo<DataTableColumn<CsvPreviewRow>[]>(
+    () =>
+      parsedCsv.headers.map((h, i) => {
+        const isMapped = i === dateColIndex || i === descColIndex;
+        return {
+          key: String(i),
+          header: h || `Col ${i + 1}`,
+          cell: (row) => (
+            <span className="truncate max-w-[120px] block">{row[String(i)]}</span>
+          ),
+          className: isMapped ? "bg-blue-50/50 px-2 py-1" : "px-2 py-1",
+          headerClassName: isMapped ? "bg-blue-50 text-blue-700" : "",
+        };
+      }),
+    [parsedCsv.headers, dateColIndex, descColIndex],
+  );
 
   function handleAmountModeSelect(mode: "single" | "debit-credit") {
     onMappingChange("amountMode", mode);
@@ -224,45 +256,14 @@ export function BankImportStep2({
       </div>
 
       {previewRows.length > 0 && (
-        <div className="border border-border rounded-lg overflow-x-auto">
-          <table className="min-w-full text-[11px]">
-            <thead className="bg-muted/40">
-              <tr>
-                {parsedCsv.headers.map((h, i) => (
-                  <th
-                    key={i}
-                    className={[
-                      "px-2 py-1.5 text-left font-medium text-muted-foreground",
-                      i === dateColIndex || i === descColIndex
-                        ? "bg-blue-50 text-blue-700"
-                        : "",
-                    ].join(" ")}
-                  >
-                    {h || `Col ${i + 1}`}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {previewRows.map((row, ri) => (
-                <tr key={ri} className="border-t border-border/50">
-                  {row.map((cell, ci) => (
-                    <td
-                      key={ci}
-                      className={[
-                        "px-2 py-1 text-foreground truncate max-w-[120px]",
-                        ci === dateColIndex || ci === descColIndex
-                          ? "bg-blue-50/50"
-                          : "",
-                      ].join(" ")}
-                    >
-                      {cell}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="overflow-x-auto">
+          <DataTable
+            data={csvTableData}
+            columns={csvTableColumns}
+            getRowKey={(row) => row._rowIdx}
+            className="text-[11px]"
+            minWidth={`${parsedCsv.headers.length * 120}px`}
+          />
         </div>
       )}
 

@@ -14,7 +14,18 @@ export type TransactionType =
   | "TRANSFER_OUT"
   | "RETURN_IN"
   | "RETURN_OUT"
-  | "GRN";
+  | "GRN"
+  | "OPENING_BALANCE"
+  | "VENDOR_RETURN"
+  | "CUSTOMER_RETURN"
+  | "CYCLE_COUNT_GAIN"
+  | "CYCLE_COUNT_LOSS"
+  | "SCRAP"
+  | "QUARANTINE_IN"
+  | "QUARANTINE_OUT"
+  | "RESERVATION_CREATE"
+  | "RESERVATION_RELEASE"
+  | "RESERVATION_CONSUME";
 
 type StockLevelFilters = {
   warehouseId?: number;
@@ -30,10 +41,15 @@ type StockLevelFilters = {
   limit?: number;
 };
 
-type StockTransactionFilters = {
+export type StockTransactionDirection = "in" | "out";
+
+export type StockTransactionFilters = {
   productVariantId?: number;
+  warehouseId?: number;
   locationId?: number;
   transactionType?: TransactionType;
+  direction?: StockTransactionDirection;
+  search?: string;
   fromDate?: string;
   toDate?: string;
   page?: number;
@@ -85,7 +101,7 @@ export interface StockTransaction {
   referenceType: string | null;
   referenceId: string | null;
   productVariant: StockTransactionVariant | null;
-  location: { id: number; name: string; code: string } | null;
+  location: { id: number; name: string; code: string; warehouse: { id: number; name: string } | null } | null;
   creator: { id: string; name: string | null } | null;
 }
 
@@ -143,7 +159,7 @@ interface RawTransaction {
     sku: string | null;
     product: { id: number; name: string; sku: string } | null;
   } | null;
-  location: { id: number; name: string; code: string } | null;
+  location: { id: number; name: string; code: string; warehouse: { id: number; name: string } | null } | null;
   creator: { id: string; name: string | null } | null;
 }
 
@@ -195,7 +211,14 @@ function toStockTransaction(r: RawTransaction): StockTransaction {
           product: r.productVariant.product,
         }
       : null,
-    location: r.location,
+    location: r.location
+      ? {
+          id: r.location.id,
+          name: r.location.name,
+          code: r.location.code,
+          warehouse: r.location.warehouse ?? null,
+        }
+      : null,
     creator: r.creator,
   };
 }
@@ -248,8 +271,11 @@ export function useStockTransactions(filters?: StockTransactionFilters) {
     queryFn: async () => {
       const res = await apiClient.get<RawTransactionsResponse>("/inventory/stock/transactions", {
         productVariantId: filters?.productVariantId,
+        warehouseId: filters?.warehouseId,
         locationId: filters?.locationId,
         transactionType: filters?.transactionType,
+        direction: filters?.direction,
+        search: filters?.search,
         fromDate: filters?.fromDate,
         toDate: filters?.toDate,
         page: filters?.page,

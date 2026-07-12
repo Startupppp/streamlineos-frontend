@@ -12,10 +12,10 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { LoadingState, ErrorState } from "@/components/shared";
@@ -23,21 +23,30 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateSalesOrder, useProductVariants, useWarehouses } from "@/hooks/api/inventory";
 
 const lineSchema = z.object({
-  variantId: z.string().min(1, "Select a variant"),
-  quantity: z.string().min(1),
-  unitPrice: z.string().min(1),
-  taxRate: z.string(),
+  variantId: z.string().min(1, "Select a product variant"),
+  quantity: z.string().refine(
+    (v) => { const n = parseFloat(v); return Number.isFinite(n) && n > 0; },
+    { message: "Quantity must be greater than 0" },
+  ),
+  unitPrice: z.string().refine(
+    (v) => { const n = parseFloat(v); return Number.isFinite(n) && n >= 0; },
+    { message: "Unit price must be 0 or greater" },
+  ),
+  taxRate: z.string().refine(
+    (v) => { const n = parseFloat(v); return !v || (Number.isFinite(n) && n >= 0 && n <= 100); },
+    { message: "Tax rate must be between 0 and 100" },
+  ),
 });
 
 const schema = z.object({
   customerId: z.string().optional(),
-  warehouseId: z.string().min(1, "Select a warehouse"),
-  orderDate: z.string().min(1, "Required"),
+  warehouseId: z.string().min(1, "Warehouse is required"),
+  orderDate: z.string().min(1, "Order date is required"),
   expectedShipDate: z.string().optional(),
-  currency: z.string(),
-  shippingAddress: z.string().optional(),
-  notes: z.string().optional(),
-  lines: z.array(lineSchema).min(1),
+  currency: z.string().min(1, "Currency is required").max(3, "Currency must be 3 characters"),
+  shippingAddress: z.string().max(500, "Address must be at most 500 characters").optional(),
+  notes: z.string().max(2000, "Notes must be at most 2000 characters").optional(),
+  lines: z.array(lineSchema).min(1, "Add at least one line item"),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -59,6 +68,14 @@ function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }
 
+function isValidVariantName(name: string): boolean {
+  return name.trim().length > 0 && !/^[\s\W\d]+$/.test(name.trim());
+}
+
+function truncateLabel(s: string, max: number): string {
+  return s.length > max ? `${s.slice(0, max)}…` : s;
+}
+
 function SoNewLineAmountCell({ index, control }: { index: number; control: Control<FormValues> }) {
   const quantity = useWatch({ control, name: `lines.${index}.quantity` });
   const unitPrice = useWatch({ control, name: `lines.${index}.unitPrice` });
@@ -74,15 +91,20 @@ export default function NewSalesOrderPage() {
   const warehousesQuery = useWarehouses();
   const createMutation = useCreateSalesOrder();
 
-  const variants: VariantOption[] = variantsQuery.data ?? [];
-  const warehouses = warehousesQuery.data ?? [];
+  const allVariants: VariantOption[] = variantsQuery.data ?? [];
+  const allWarehouses = warehousesQuery.data ?? [];
 
-  const {
-    register,
-    control,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<FormValues>({
+  const variants = useMemo(
+    () => allVariants.filter((v) => isValidVariantName(v.productName)),
+    [allVariants],
+  );
+
+  const warehouses = useMemo(
+    () => allWarehouses.filter((w) => w.isActive),
+    [allWarehouses],
+  );
+
+  const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       customerId: "",
@@ -96,8 +118,8 @@ export default function NewSalesOrderPage() {
     },
   });
 
-  const { fields, append, remove } = useFieldArray({ control, name: "lines" });
-  const watchedLines = useWatch({ control, name: "lines" });
+  const { fields, append, remove } = useFieldArray({ control: form.control, name: "lines" });
+  const watchedLines = useWatch({ control: form.control, name: "lines" });
 
   const { lineTotals, grandTotal } = useMemo(() => {
     const totals = (watchedLines ?? []).map((ln) => {
@@ -129,6 +151,14 @@ export default function NewSalesOrderPage() {
   }
 
   async function onSubmit(values: FormValues): Promise<void> {
+    const validLines = values.lines.filter(
+      (ln) => ln.variantId && toNum(ln.quantity) > 0,
+    );
+    if (validLines.length === 0) {
+      toast.error("Add at least one product line with a valid quantity");
+      return;
+    }
+
     try {
       const result = await createMutation.mutateAsync({
         clientId: values.customerId ? parseInt(values.customerId, 10) : undefined,
@@ -138,7 +168,7 @@ export default function NewSalesOrderPage() {
         currency: values.currency.trim() || undefined,
         shippingAddress: values.shippingAddress?.trim() || undefined,
         notes: values.notes?.trim() || undefined,
-        lines: values.lines.map((ln) => ({
+        lines: validLines.map((ln) => ({
           productVariantId: parseInt(ln.variantId, 10),
           quantity: toNum(ln.quantity),
           unitPrice: toNum(ln.unitPrice),
@@ -154,32 +184,40 @@ export default function NewSalesOrderPage() {
 
   const isLoading = variantsQuery.isLoading || warehousesQuery.isLoading;
   if (isLoading) return <LoadingState variant="form" />;
-  if (variantsQuery.error) return <ErrorState description={variantsQuery.error.message} onRetry={handleVariantsRetry} />;
-  if (warehousesQuery.error) return <ErrorState description={warehousesQuery.error.message} onRetry={handleWarehousesRetry} />;
+  if (variantsQuery.error) return <ErrorState description={getErrorMessage(variantsQuery.error)} onRetry={handleVariantsRetry} />;
+  if (warehousesQuery.error) return <ErrorState description={getErrorMessage(warehousesQuery.error)} onRetry={handleWarehousesRetry} />;
 
   const fieldRows: FieldRow[] = fields.map((f, i) => ({ id: f.id, _index: i }));
 
   const columns: DataTableColumn<FieldRow>[] = [
     {
       key: "variant",
-      header: "Product Variant",
+      header: "Product / SKU",
       cell: (row) => (
         <Controller
-          control={control}
+          control={form.control}
           name={`lines.${row._index}.variantId`}
-          render={({ field: f }) => (
-            <Select value={f.value} onValueChange={f.onChange}>
-              <SelectTrigger className="h-8 text-xs">
-                <SelectValue placeholder="Select variant" />
-              </SelectTrigger>
-              <SelectContent className="max-h-72">
-                {variants.map((v) => (
-                  <SelectItem key={v.id} value={String(v.id)}>
-                    {v.productName} – {v.name} ({v.sku})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          render={({ field: f, fieldState }) => (
+            <div>
+              <Select value={f.value} onValueChange={f.onChange}>
+                <SelectTrigger className={`h-8 text-xs ${fieldState.error ? "border-destructive" : ""}`}>
+                  <SelectValue placeholder="Select product" />
+                </SelectTrigger>
+                <SelectContent className="max-h-72">
+                  {variants.map((v) => {
+                    const label = `${v.productName} – ${v.name} (${v.sku})`;
+                    return (
+                      <SelectItem key={v.id} value={String(v.id)} title={label}>
+                        {truncateLabel(label, 50)}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+              {fieldState.error && (
+                <p className="text-[10px] text-destructive mt-0.5">{fieldState.error.message}</p>
+              )}
+            </div>
           )}
         />
       ),
@@ -191,10 +229,21 @@ export default function NewSalesOrderPage() {
       className: "w-[90px]",
       cell: (row) => (
         <Controller
-          control={control}
+          control={form.control}
           name={`lines.${row._index}.quantity`}
-          render={({ field: f }) => (
-            <Input type="number" min="1" step="1" className="h-8 text-right tabular-nums text-xs" {...f} />
+          render={({ field: f, fieldState }) => (
+            <div>
+              <Input
+                type="number"
+                min="0.0001"
+                step="1"
+                className={`h-8 text-right tabular-nums text-xs ${fieldState.error ? "border-destructive" : ""}`}
+                {...f}
+              />
+              {fieldState.error && (
+                <p className="text-[10px] text-destructive mt-0.5">{fieldState.error.message}</p>
+              )}
+            </div>
           )}
         />
       ),
@@ -206,10 +255,21 @@ export default function NewSalesOrderPage() {
       className: "w-[110px]",
       cell: (row) => (
         <Controller
-          control={control}
+          control={form.control}
           name={`lines.${row._index}.unitPrice`}
-          render={({ field: f }) => (
-            <Input type="number" min="0" step="0.01" className="h-8 text-right tabular-nums text-xs" {...f} />
+          render={({ field: f, fieldState }) => (
+            <div>
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                className={`h-8 text-right tabular-nums text-xs ${fieldState.error ? "border-destructive" : ""}`}
+                {...f}
+              />
+              {fieldState.error && (
+                <p className="text-[10px] text-destructive mt-0.5">{fieldState.error.message}</p>
+              )}
+            </div>
           )}
         />
       ),
@@ -221,10 +281,22 @@ export default function NewSalesOrderPage() {
       className: "w-[90px]",
       cell: (row) => (
         <Controller
-          control={control}
+          control={form.control}
           name={`lines.${row._index}.taxRate`}
-          render={({ field: f }) => (
-            <Input type="number" min="0" max="100" step="0.01" className="h-8 text-right tabular-nums text-xs" {...f} />
+          render={({ field: f, fieldState }) => (
+            <div>
+              <Input
+                type="number"
+                min="0"
+                max="100"
+                step="0.01"
+                className={`h-8 text-right tabular-nums text-xs ${fieldState.error ? "border-destructive" : ""}`}
+                {...f}
+              />
+              {fieldState.error && (
+                <p className="text-[10px] text-destructive mt-0.5">{fieldState.error.message}</p>
+              )}
+            </div>
           )}
         />
       ),
@@ -234,7 +306,7 @@ export default function NewSalesOrderPage() {
       header: "Line Total",
       headerClassName: "text-right w-[110px]",
       className: "text-right font-mono tabular-nums w-[110px]",
-      cell: (row) => <SoNewLineAmountCell index={row._index} control={control} />,
+      cell: (row) => <SoNewLineAmountCell index={row._index} control={form.control} />,
     },
     {
       key: "remove",
@@ -278,143 +350,180 @@ export default function NewSalesOrderPage() {
       subtitle="Create a customer sales order. Confirm it to reserve stock."
       backHref="/inventory/sales-orders"
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <Card className="p-4">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <Label className="text-sm text-muted-foreground mb-1 block">Customer ID (optional)</Label>
-              <Input type="number" min="1" {...register("customerId")} placeholder="Leave blank if walk-in" />
-            </div>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <Card className="p-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <FormField
+                control={form.control}
+                name="customerId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Customer ID <span className="text-muted-foreground font-normal">(optional)</span></FormLabel>
+                    <FormControl>
+                      <Input type="number" min="1" placeholder="Leave blank if walk-in" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <div>
-              <Label className="text-sm text-muted-foreground mb-1 block">
-                Warehouse <span className="text-destructive">*</span>
-              </Label>
-              <Controller
-                control={control}
+              <FormField
+                control={form.control}
                 name="warehouseId"
                 render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select warehouse" />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-72">
-                      {warehouses.map((w) => (
-                        <SelectItem key={w.id} value={String(w.id)}>
-                          {w.name} ({w.code})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormItem>
+                    <FormLabel>Warehouse *</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select warehouse" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="max-h-72">
+                        {warehouses.map((w) => (
+                          <SelectItem key={w.id} value={String(w.id)}>
+                            {w.name} ({w.code})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
                 )}
               />
-              {errors.warehouseId && (
-                <p className="text-xs text-destructive mt-1">{errors.warehouseId.message}</p>
-              )}
-            </div>
 
-            <div>
-              <Label className="text-sm text-muted-foreground mb-1 block">
-                Order Date <span className="text-destructive">*</span>
-              </Label>
-              <Controller
+              <FormField
+                control={form.control}
                 name="orderDate"
-                control={control}
                 render={({ field }) => (
-                  <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+                  <FormItem>
+                    <FormLabel>Order Date *</FormLabel>
+                    <FormControl>
+                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
               />
-              {errors.orderDate && (
-                <p className="text-xs text-destructive mt-1">{errors.orderDate.message}</p>
-              )}
-            </div>
 
-            <div>
-              <Label className="text-sm text-muted-foreground mb-1 block">Expected Ship Date</Label>
-              <Controller
+              <FormField
+                control={form.control}
                 name="expectedShipDate"
-                control={control}
                 render={({ field }) => (
-                  <DatePicker
-                    value={field.value ?? ""}
-                    onChange={field.onChange}
-                    placeholder="Pick a date"
-                    className="h-8 text-sm"
-                    fromDate={parseISO(todayIso())}
-                  />
+                  <FormItem>
+                    <FormLabel>Expected Ship Date</FormLabel>
+                    <FormControl>
+                      <DatePicker
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
+                        placeholder="Pick a date"
+                        className="h-8 text-sm"
+                        fromDate={parseISO(todayIso())}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="currency"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Currency</FormLabel>
+                    <FormControl>
+                      <Input placeholder="INR" maxLength={3} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
               />
             </div>
+          </Card>
 
-            <div>
-              <Label className="text-sm text-muted-foreground mb-1 block">Currency</Label>
-              <Input {...register("currency")} placeholder="INR" />
+          <Card className="overflow-hidden">
+            <div className="space-y-2 p-4 pb-0">
+              <p className="text-[13px] font-medium">
+                Lines <span className="text-destructive">*</span>
+              </p>
             </div>
-          </div>
-        </Card>
+            <DataTable
+              data={fieldRows}
+              columns={columns}
+              getRowKey={(row) => row.id}
+              minWidth="720px"
+              footer={tableFooter}
+            />
+          </Card>
 
-        <Card className="overflow-hidden">
-          <div className="space-y-2 p-4 pb-0">
-            <Label className="text-[13px] font-medium">
-              Lines <span className="text-destructive">*</span>
-            </Label>
-          </div>
-          <DataTable
-            data={fieldRows}
-            columns={columns}
-            getRowKey={(row) => row.id}
-            minWidth="720px"
-            footer={tableFooter}
-          />
-        </Card>
-
-        <Card className="p-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div className="space-y-3">
-              <div>
-                <Label className="text-sm text-muted-foreground mb-1 block">Shipping Address</Label>
-                <Textarea {...register("shippingAddress")} rows={2} />
+          <Card className="p-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <FormField
+                  control={form.control}
+                  name="shippingAddress"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Shipping Address</FormLabel>
+                      <FormControl>
+                        <Textarea rows={2} className="resize-none" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="notes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Notes</FormLabel>
+                      <FormControl>
+                        <Textarea rows={2} className="resize-none" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
-              <div>
-                <Label className="text-sm text-muted-foreground mb-1 block">Notes</Label>
-                <Textarea {...register("notes")} rows={2} />
-              </div>
-            </div>
 
-            <div className="space-y-1 text-sm">
-              {lineTotals.map((total, index) => (
-                <div key={fields[index]?.id ?? index} className="flex justify-between text-muted-foreground">
-                  <span>Line {index + 1}</span>
-                  <span className="font-mono tabular-nums">{total.toFixed(2)}</span>
+              <div className="space-y-1 text-sm">
+                {lineTotals.map((total, index) => (
+                  <div key={fields[index]?.id ?? index} className="flex justify-between text-muted-foreground">
+                    <span>Line {index + 1}</span>
+                    <span className="font-mono tabular-nums">{total.toFixed(2)}</span>
+                  </div>
+                ))}
+                <div className="border-t border-border pt-2 flex justify-between font-medium text-base">
+                  <span>Grand Total</span>
+                  <span className="font-mono tabular-nums">{grandTotal.toFixed(2)}</span>
                 </div>
-              ))}
-              <div className="border-t border-border pt-2 flex justify-between font-medium text-base">
-                <span>Grand Total</span>
-                <span className="font-mono tabular-nums">{grandTotal.toFixed(2)}</span>
               </div>
             </div>
-          </div>
-        </Card>
+          </Card>
 
-        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full sm:w-auto"
-            onClick={handleCancel}
-          >
-            Cancel
-          </Button>
-          <LoadingButton
-            type="submit"
-            isPending={createMutation.isPending}
-            loadingText="Creating…"
-            className="w-full sm:w-auto"
-          >
-            Create Sales Order
-          </LoadingButton>
-        </div>
-      </form>
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={handleCancel}
+            >
+              Cancel
+            </Button>
+            <LoadingButton
+              type="submit"
+              isPending={createMutation.isPending}
+              loadingText="Creating…"
+              className="w-full sm:w-auto"
+            >
+              Create Sales Order
+            </LoadingButton>
+          </div>
+        </form>
+      </Form>
     </PageWrapper>
   );
 }

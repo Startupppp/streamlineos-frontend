@@ -29,9 +29,17 @@ import { getErrorMessage } from "@/lib/get-error-message";
 
 const PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
 
+const MEANINGFUL_TEXT_RE = /[a-zA-Z0-9À-ɏЀ-ӿ一-鿿]/;
+
 const createEpicSchema = z.object({
-  title: z.string().min(1, "Epic title is required"),
-  description: z.string().optional(),
+  title: z
+    .string()
+    .min(1, "Epic title is required")
+    .trim()
+    .min(3, "Title must be at least 3 characters")
+    .max(120, "Title must be 120 characters or fewer")
+    .refine((v) => MEANINGFUL_TEXT_RE.test(v), "Title must contain at least one letter or number"),
+  description: z.string().max(2000, "Description must be 2,000 characters or fewer").optional(),
   priority: z.enum(PRIORITIES),
 });
 

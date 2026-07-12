@@ -30,9 +30,9 @@ import {
 import { RecentMovementsTable } from "./inventory-recent-movements";
 import { DashboardInsightsPanel } from "./dashboard-insights-panel";
 
-const ADD_PRODUCT_ACTION = (
+const ADD_PRODUCT_LINK = (
   <Link
-    href="/inventory/products"
+    href="/inventory/products/new"
     className="inline-flex items-center gap-1.5 h-8 rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
   >
     <Plus className="h-3.5 w-3.5" aria-hidden="true" />
@@ -239,13 +239,14 @@ export function InventoryDashboardClient() {
         eyebrow="Operations · Inventory"
         title="Inventory Dashboard"
         subtitle="Track stock levels, movements, and reorder alerts."
-        actions={ADD_PRODUCT_ACTION}
       >
         <InventoryEmptyState
           illustration={<EmptyProductsIllustration />}
-          title="No inventory data yet"
-          description="Add your first product to start tracking stock levels and movements."
-          action={{ label: "Add Product", href: "/inventory/products" }}
+          title="Set up your inventory"
+          description="Add products, configure warehouses, and start tracking stock levels, movements, and reorder alerts — all in one place."
+          action={{ label: "Add Your First Product", href: "/inventory/products/new" }}
+          secondaryAction={{ label: "Import Products", href: "/inventory/import" }}
+          className="min-h-[50vh]"
         />
       </PageWrapper>
     );
@@ -256,7 +257,7 @@ export function InventoryDashboardClient() {
       eyebrow="Operations · Inventory"
       title="Inventory Dashboard"
       subtitle="Track stock levels, movements, and reorder alerts."
-      actions={ADD_PRODUCT_ACTION}
+      actions={ADD_PRODUCT_LINK}
     >
       <div className="space-y-6">
         {isKpiLoading ? (

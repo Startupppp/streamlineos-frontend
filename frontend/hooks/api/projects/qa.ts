@@ -100,7 +100,7 @@ export function useCreateTestCase() {
     mutationFn: ({ projectId, ...data }: CreateTestCaseInput & { projectId: number }) =>
       apiClient.post<TestCase>(`/projects/${projectId}/test-cases`, data),
     onSuccess: (_data, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.qa.cases(vars.projectId) });
+      qc.invalidateQueries({ queryKey: queryKeys.projects.qa.casesAll(vars.projectId) });
     },
   });
 }
@@ -116,8 +116,7 @@ export function useUpdateTestCase() {
     }: UpdateTestCaseInput & { projectId: number; id: number }) =>
       apiClient.patch<TestCase>(`/projects/${projectId}/test-cases/${id}`, data),
     onSuccess: (_data, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.qa.cases(vars.projectId) });
-      qc.invalidateQueries({ queryKey: queryKeys.projects.qa.case(vars.projectId, vars.id) });
+      qc.invalidateQueries({ queryKey: queryKeys.projects.qa.casesAll(vars.projectId) });
     },
   });
 }
@@ -129,7 +128,7 @@ export function useDeleteTestCase() {
     mutationFn: ({ projectId, id }: { projectId: number; id: number }) =>
       apiClient.delete<unknown>(`/projects/${projectId}/test-cases/${id}`),
     onSuccess: (_data, vars) => {
-      qc.invalidateQueries({ queryKey: queryKeys.projects.qa.cases(vars.projectId) });
+      qc.invalidateQueries({ queryKey: queryKeys.projects.qa.casesAll(vars.projectId) });
     },
   });
 }

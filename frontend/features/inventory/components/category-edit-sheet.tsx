@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -35,10 +36,23 @@ import { getErrorMessage } from "@/lib/get-error-message";
 
 const NO_PARENT = "none";
 
+const CATEGORY_NAME_MIN = 2;
+const CATEGORY_NAME_MAX = 100;
+const CATEGORY_DESC_MAX = 500;
+const VALID_NAME_RE = /[a-zA-Z0-9]/;
+
 const editCategorySchema = z.object({
-  name: z.string().min(1, "Name is required"),
+  name: z
+    .string()
+    .min(1, "Category name is required.")
+    .max(CATEGORY_NAME_MAX, `Name must be ${CATEGORY_NAME_MAX} characters or fewer.`)
+    .refine((v) => v.trim().length >= CATEGORY_NAME_MIN, `Name must be at least ${CATEGORY_NAME_MIN} characters.`)
+    .refine((v) => VALID_NAME_RE.test(v.trim()), "Name must contain at least one letter or number."),
   parentId: z.string().optional(),
-  description: z.string().max(500).optional(),
+  description: z
+    .string()
+    .max(CATEGORY_DESC_MAX, `Description must be ${CATEGORY_DESC_MAX} characters or fewer.`)
+    .optional(),
 });
 
 type EditCategoryFormValues = z.infer<typeof editCategorySchema>;
@@ -79,10 +93,10 @@ export function CategoryEditSheet({
       await updateMutation.mutateAsync({
         categoryId: category.id,
         data: {
-          name: values.name,
+          name: values.name.trim(),
           parentCategoryId:
             values.parentId === NO_PARENT ? null : Number(values.parentId),
-          description: values.description || null,
+          description: values.description?.trim() || null,
         },
       });
       toast.success("Category updated");
@@ -118,9 +132,14 @@ export function CategoryEditSheet({
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Name</FormLabel>
+                    <div className="flex items-center justify-between">
+                      <FormLabel>Name</FormLabel>
+                      <span className="text-[10px] text-muted-foreground tabular-nums">
+                        {field.value.length}/{CATEGORY_NAME_MAX}
+                      </span>
+                    </div>
                     <FormControl>
-                      <Input placeholder="e.g. Electronics" {...field} />
+                      <Input placeholder="e.g. Electronics" maxLength={CATEGORY_NAME_MAX} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -158,11 +177,17 @@ export function CategoryEditSheet({
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description</FormLabel>
+                    <div className="flex items-center justify-between">
+                      <FormLabel>Description</FormLabel>
+                      <span className="text-[10px] text-muted-foreground tabular-nums">
+                        {(field.value ?? "").length}/{CATEGORY_DESC_MAX}
+                      </span>
+                    </div>
                     <FormControl>
                       <Textarea
                         rows={3}
                         placeholder="Optional description"
+                        maxLength={CATEGORY_DESC_MAX}
                         {...field}
                       />
                     </FormControl>
@@ -181,9 +206,9 @@ export function CategoryEditSheet({
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={updateMutation.isPending}>
-                  {updateMutation.isPending ? "Saving…" : "Save Changes"}
-                </Button>
+                <LoadingButton type="submit" isPending={updateMutation.isPending} loadingText="Saving…">
+                  Save Changes
+                </LoadingButton>
               </div>
             </div>
           </form>
