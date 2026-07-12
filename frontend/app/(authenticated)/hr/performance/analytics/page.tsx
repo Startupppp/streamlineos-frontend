@@ -290,40 +290,12 @@ export default function PerformanceAnalyticsPage() {
             <div className="px-6 py-4 border-b border-border">
               <h2 className="text-base font-semibold text-foreground">Review Cycles</h2>
             </div>
-            {cycles.length === 0 ? (
-              <ChartEmptyState message="No review cycles found" height={220} compact />
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-border bg-muted/50">
-                      <th className="text-left text-xs font-medium text-muted-foreground px-6 py-3">Name</th>
-                      <th className="text-left text-xs font-medium text-muted-foreground px-6 py-3">Type</th>
-                      <th className="text-left text-xs font-medium text-muted-foreground px-6 py-3">Status</th>
-                      <th className="text-left text-xs font-medium text-muted-foreground px-6 py-3">Period</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {cycles.map((cycle: ReviewCycle) => (
-                      <tr key={cycle.id} className="border-b border-border hover:bg-muted/40 transition-colors">
-                        <td className="px-6 py-3 text-sm font-medium text-foreground">{cycle.name}</td>
-                        <td className="px-6 py-3">
-                          <Badge variant="outline" className="text-xs">{cycle.type}</Badge>
-                        </td>
-                        <td className="px-6 py-3">
-                          <Badge variant="outline" className={`text-xs ${CYCLE_STATUS_STYLES[cycle.status ?? ""] ?? "bg-muted text-muted-foreground border-border"}`}>
-                            {cycle.status}
-                          </Badge>
-                        </td>
-                        <td className="px-6 py-3 text-sm text-muted-foreground">
-                          {new Date(cycle.periodStart).toLocaleDateString()} — {new Date(cycle.periodEnd).toLocaleDateString()}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+            <DataTable<ReviewCycle>
+              data={cycles}
+              columns={REVIEW_CYCLE_COLUMNS}
+              getRowKey={(c) => c.id}
+              emptyState={<ChartEmptyState message="No review cycles found" height={220} compact />}
+            />
           </motion.div>
         </div>
       )}
