@@ -14,7 +14,6 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { ViewCard } from "@/features/projects/views/saved-views/view-card";
 import { CreateViewSheet } from "@/features/projects/views/saved-views/create-view-sheet";
-import type { ViewItem } from "@/features/projects/views/saved-views/view-card";
 
 export default function ViewsPage({
   params,
@@ -113,7 +112,7 @@ export default function ViewsPage({
                   {pinnedViews.map((view) => (
                     <ViewCard
                       key={view.id}
-                      view={view as ViewItem}
+                      view={view}
                       isPinned
                       currentUserId={currentUserId}
                       onNavigate={handleNavigateToView}
@@ -135,7 +134,7 @@ export default function ViewsPage({
                   {unpinnedViews.map((view) => (
                     <ViewCard
                       key={view.id}
-                      view={view as ViewItem}
+                      view={view}
                       isPinned={false}
                       currentUserId={currentUserId}
                       onNavigate={handleNavigateToView}

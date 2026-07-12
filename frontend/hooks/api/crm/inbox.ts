@@ -34,6 +34,7 @@ export function useSnoozeCrmTask() {
       const snapshot = qc.getQueryData<CrmInboxResponse>(queryKeys.crmInbox.data());
       if (snapshot) {
         qc.setQueryData<CrmInboxResponse>(queryKeys.crmInbox.data(), {
+          ...snapshot,
           sections: snapshot.sections.map((s) => ({
             ...s,
             items: s.items.filter((i) => !(i.entityType === "task" && i.id === taskId)),
@@ -67,6 +68,7 @@ export function useCompleteCrmTask() {
       const snapshot = qc.getQueryData<CrmInboxResponse>(queryKeys.crmInbox.data());
       if (snapshot) {
         qc.setQueryData<CrmInboxResponse>(queryKeys.crmInbox.data(), {
+          ...snapshot,
           sections: snapshot.sections.map((s) => ({
             ...s,
             items: s.items.filter((i) => !(i.entityType === "task" && i.id === taskId)),

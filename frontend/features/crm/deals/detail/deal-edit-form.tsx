@@ -15,14 +15,7 @@ import {
 import {
   Form, FormField, FormItem, FormLabel, FormControl, FormMessage,
 } from "@/components/ui/form";
-const EDIT_STAGES = [
-  { key: "LEAD", label: "Lead" },
-  { key: "CONTACTED", label: "Contacted" },
-  { key: "PROPOSAL", label: "Proposal" },
-  { key: "NEGOTIATION", label: "Negotiation" },
-  { key: "WON", label: "Won" },
-  { key: "LOST", label: "Lost" },
-];
+import { useCrmStages } from "@/hooks/api/crm/metadata";
 
 const editSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -60,6 +53,7 @@ interface DealEditFormProps {
 }
 
 export function DealEditForm({ deal, isPending, onSubmit, onCancel }: DealEditFormProps) {
+  const { data: dealStages = [] } = useCrmStages("deal");
   const form = useForm<EditFormValues>({
     resolver: zodResolver(editSchema),
     values: {
@@ -114,7 +108,7 @@ export function DealEditForm({ deal, isPending, onSubmit, onCancel }: DealEditFo
                       <SelectTrigger><SelectValue /></SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {EDIT_STAGES.map(s => (
+                      {dealStages.map(s => (
                         <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>
                       ))}
                     </SelectContent>

@@ -43,7 +43,7 @@ function toQuery<P extends object>(params: P): Record<string, string> {
   return out;
 }
 
-export interface ListApprovalPoliciesParams {
+interface ListApprovalPoliciesParams {
   page?: number;
   pageSize?: number;
 }
@@ -60,7 +60,7 @@ export function useApprovalPolicies(params: ListApprovalPoliciesParams = {}) {
   });
 }
 
-export interface CreateApprovalPolicyInput {
+interface CreateApprovalPolicyInput {
   recordType: ApprovalRecordType;
   minAmount?: string;
   approverRole?: string;
@@ -80,7 +80,7 @@ export function useCreateApprovalPolicy() {
   });
 }
 
-export type UpdateApprovalPolicyInput = Partial<CreateApprovalPolicyInput>;
+type UpdateApprovalPolicyInput = Partial<CreateApprovalPolicyInput>;
 
 export function useUpdateApprovalPolicy(id: number) {
   const queryClient = useQueryClient();
@@ -106,7 +106,7 @@ export function useDeleteApprovalPolicy() {
   });
 }
 
-export interface ListApprovalsParams {
+interface ListApprovalsParams {
   status?: ApprovalStatus;
   recordType?: string;
   page?: number;
@@ -125,7 +125,7 @@ export function useApprovals(params: ListApprovalsParams = {}) {
   });
 }
 
-export interface ApprovalCounts {
+interface ApprovalCounts {
   PENDING: number;
   APPROVED: number;
   REJECTED: number;
@@ -139,7 +139,7 @@ export function useApprovalCounts() {
   });
 }
 
-export interface ApprovalDecisionInput {
+interface ApprovalDecisionInput {
   comment?: string;
 }
 
@@ -173,7 +173,7 @@ export function useRejectRequest(requestId: number) {
   });
 }
 
-export interface ListExchangeRatesParams {
+interface ListExchangeRatesParams {
   page?: number;
   pageSize?: number;
 }
@@ -190,7 +190,7 @@ export function useExchangeRates(params: ListExchangeRatesParams = {}) {
   });
 }
 
-export interface UpsertExchangeRateInput {
+interface UpsertExchangeRateInput {
   fromCurrency: string;
   toCurrency: string;
   rate: string;

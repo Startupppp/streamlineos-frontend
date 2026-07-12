@@ -24,13 +24,6 @@ import {
 import { useCrmOptions } from "@/hooks/api/crm/metadata";
 import type { LogCrmActivityInput, CrmActivityType, CrmActivityEntityType } from "@/hooks/api/crm/crm-activities";
 
-const FALLBACK_ACTIVITY_TYPES: Array<{ value: CrmActivityType; label: string }> = [
-  { value: "CALL",    label: "Phone Call"   },
-  { value: "EMAIL",   label: "Email"        },
-  { value: "MEETING", label: "Meeting"      },
-  { value: "CUSTOM",  label: "Task / Other" },
-];
-
 function isCrmActivityType(v: string): v is CrmActivityType {
   return v === "CALL" || v === "EMAIL" || v === "MEETING" || v === "CUSTOM";
 }
@@ -71,9 +64,7 @@ export function LogActivityDialog({
   const { data: activityTypeOptions, isLoading: typesLoading } = useCrmOptions("activity_type");
 
   const activityTypes = useMemo<Array<{ value: CrmActivityType; label: string }>>(() => {
-    if (!activityTypeOptions || activityTypeOptions.length === 0) {
-      return FALLBACK_ACTIVITY_TYPES;
-    }
+    if (!activityTypeOptions) return [];
     const matched: Array<{ value: CrmActivityType; label: string }> = [];
     for (const o of activityTypeOptions) {
       if (isCrmActivityType(o.key)) {

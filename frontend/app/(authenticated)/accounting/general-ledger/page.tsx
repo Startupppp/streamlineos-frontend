@@ -28,6 +28,7 @@ import { useCustomersOutstanding, useVendorsOutstanding } from "@/hooks/api/acco
 import { useCan } from "@/hooks/api/access";
 import { cn } from "@/lib/utils";
 import { downloadCsv } from "@/features/accounting/shared";
+import { getErrorMessage } from "@/lib/get-error-message";
 import type { GlRow } from "@/hooks/api/accounting/core";
 
 function getMonthStart(): string {
@@ -241,7 +242,7 @@ export default function GeneralLedgerPage() {
         ) : glQuery.isLoading ? (
           <LoadingState variant="table" rows={8} />
         ) : glQuery.error ? (
-          <ErrorState title="Failed to load ledger" description={glQuery.error.message} onRetry={handleRetry} />
+          <ErrorState title="Failed to load ledger" description={getErrorMessage(glQuery.error)} onRetry={handleRetry} />
         ) : rows.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/20 py-10 px-6 text-center">
             <h3 className="text-sm font-semibold text-foreground">No transactions found</h3>

@@ -21,16 +21,17 @@ const TOOLTIP_STYLE = {
 
 const AXIS_TICK = { fill: "hsl(var(--muted-foreground))", fontSize: 11 } as const;
 
-type ChartValue = number | string | ReadonlyArray<number | string>;
-
-function revenueFormatter(value: ChartValue): [string, string] {
-  const n = Number(Array.isArray(value) ? value[0] : (value ?? 0));
-  return [formatINRCompact(n), "Revenue"];
+function toChartNumber(value: unknown): number {
+  if (Array.isArray(value)) return Number(value[0] ?? 0);
+  return Number(value ?? 0);
 }
 
-function expensesFormatter(value: ChartValue): [string, string] {
-  const n = Number(Array.isArray(value) ? value[0] : (value ?? 0));
-  return [formatINRCompact(n), "Expenses"];
+function revenueFormatter(value: unknown): [string, string] {
+  return [formatINRCompact(toChartNumber(value)), "Revenue"];
+}
+
+function expensesFormatter(value: unknown): [string, string] {
+  return [formatINRCompact(toChartNumber(value)), "Expenses"];
 }
 
 interface TrendPoint {
@@ -74,7 +75,7 @@ export function RevenueTrendChart({ data }: RevenueTrendChartProps) {
           <YAxis tick={AXIS_TICK} tickFormatter={(v: number) => formatINRCompact(v)} width={64} />
           <Tooltip
             contentStyle={TOOLTIP_STYLE}
-            formatter={(value: ChartValue, name: string) =>
+            formatter={(value: unknown, name: unknown) =>
               name === "revenue" ? revenueFormatter(value) : expensesFormatter(value)
             }
           />

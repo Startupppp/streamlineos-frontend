@@ -232,6 +232,7 @@ export function FilterFlatSearch({
             <CommandSeparator />
             <CommandGroup heading="Assignee">
               {[
+                { id: "@me", displayName: "Me (dynamic)" },
                 { id: "__unassigned__", displayName: "Unassigned" },
                 ...members.map((m) => ({ id: m.id, displayName: getUserDisplayName(m) })),
               ]

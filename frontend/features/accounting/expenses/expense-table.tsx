@@ -22,10 +22,17 @@ function formatDate(value: string | null | undefined): string {
 
 type ExpenseWithExtras = ExpenseWithRelations & { policyFlag?: string; taxAmount?: string };
 
+const EXPENSE_STATUS_VALUES: ReadonlyArray<string> = ["DRAFT", "SUBMITTED", "APPROVED", "REIMBURSEMENT_PENDING", "REIMBURSED", "REJECTED"];
+
+function isExpenseStatus(v: string | null | undefined): v is ExpenseStatus {
+  if (!v) return false;
+  return EXPENSE_STATUS_VALUES.includes(v);
+}
+
 interface ExpenseTableProps {
-  data: ExpenseWithRelations[];
+  data: ExpenseWithExtras[];
   isLoading?: boolean;
-  onRowClick: (row: ExpenseWithRelations) => void;
+  onRowClick: (row: ExpenseWithExtras) => void;
   page: number;
   pageSize: number;
   total: number;
@@ -33,7 +40,7 @@ interface ExpenseTableProps {
   emptyState: ReactNode;
 }
 
-const COLUMNS: DataTableColumn<ExpenseWithRelations>[] = [
+const COLUMNS: DataTableColumn<ExpenseWithExtras>[] = [
   {
     key: "employee",
     header: "Employee",
@@ -78,7 +85,7 @@ const COLUMNS: DataTableColumn<ExpenseWithRelations>[] = [
     headerClassName: "text-right",
     className: "text-right",
     cell: (row) => {
-      const tax = (row as ExpenseWithExtras).taxAmount;
+      const tax = row.taxAmount;
       return tax ? (
         <Money value={parseFloat(tax)} className="text-xs text-muted-foreground" />
       ) : (
@@ -90,9 +97,8 @@ const COLUMNS: DataTableColumn<ExpenseWithRelations>[] = [
     key: "status",
     header: "Status",
     cell: (row) => {
-      const status = row.status as ExpenseStatus | null;
-      if (!status) return null;
-      return <FinanceStatusBadge status={status} />;
+      if (!isExpenseStatus(row.status)) return null;
+      return <FinanceStatusBadge status={row.status} />;
     },
   },
   {
@@ -100,7 +106,7 @@ const COLUMNS: DataTableColumn<ExpenseWithRelations>[] = [
     header: "",
     className: "w-12",
     cell: (row) => {
-      const flag = (row as ExpenseWithExtras).policyFlag;
+      const flag = row.policyFlag;
       const hasReceipt = !!row.receiptUrl;
       return (
         <div className="flex items-center gap-1">
@@ -142,7 +148,7 @@ export function ExpenseTable({
   onPageChange,
   emptyState,
 }: ExpenseTableProps) {
-  const getRowKey = useCallback((row: ExpenseWithRelations) => row.id, []);
+  const getRowKey = useCallback((row: ExpenseWithExtras) => row.id, []);
 
   return (
     <DataTable

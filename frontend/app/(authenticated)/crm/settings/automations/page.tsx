@@ -157,11 +157,11 @@ export default function AutomationsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-muted/40">
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground text-xs">Name</th>
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground text-xs">Trigger</th>
+                  <th className="text-left px-4 py-2.5 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Name</th>
+                  <th className="text-left px-4 py-2.5 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Trigger</th>
                   <th className="text-left px-4 py-2.5 font-medium text-muted-foreground text-xs hidden md:table-cell">Runs</th>
                   <th className="text-left px-4 py-2.5 font-medium text-muted-foreground text-xs hidden lg:table-cell">Last Run</th>
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground text-xs">Status</th>
+                  <th className="text-left px-4 py-2.5 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Status</th>
                   <th className="px-4 py-2.5" />
                 </tr>
               </thead>

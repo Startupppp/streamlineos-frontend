@@ -54,7 +54,7 @@ export function ActivitySummary({
           label="Emails"
           value={totals ? totals.emails.toLocaleString() : "—"}
           icon={Mail}
-          color="violet"
+          color="blue"
           index={1}
         />
         <StatCard

@@ -3,6 +3,7 @@
 import { memo, useState, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { CustomState } from "@/hooks/api/projects/custom-states";
@@ -71,15 +72,16 @@ export const WipRow = memo(function WipRow({ status, projectId, canManage }: Wip
               className="h-7 w-24 text-xs text-right"
               disabled={updateWip.isPending}
             />
-            <Button
+            <LoadingButton
               size="sm"
               variant="outline"
               className="h-7 text-xs"
               onClick={handleSave}
-              disabled={updateWip.isPending}
+              isPending={updateWip.isPending}
+              loadingText="Saving…"
             >
               Save
-            </Button>
+            </LoadingButton>
           </>
         ) : (
           <span className="text-xs text-muted-foreground">

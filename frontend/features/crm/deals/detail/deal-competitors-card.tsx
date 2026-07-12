@@ -11,6 +11,7 @@ import {
   useAddDealCompetitor,
   useDeleteDealCompetitor,
 } from "@/hooks/api/crm";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 
 interface DealCompetitorsCardProps {
@@ -34,7 +35,7 @@ export function DealCompetitorsCard({ dealId }: DealCompetitorsCardProps) {
           setDraft("");
           setAdding(false);
         },
-        onError: (err) => toast.error(err.message),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }, [draft, addCompetitor]);
@@ -55,7 +56,7 @@ export function DealCompetitorsCard({ dealId }: DealCompetitorsCardProps) {
     (id: string) => {
       deleteCompetitor.mutate(id, {
         onSuccess: () => toast.success("Competitor removed"),
-        onError: () => toast.error("Failed to remove competitor"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       });
     },
     [deleteCompetitor],

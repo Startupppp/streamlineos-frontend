@@ -1,14 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import {
-  Upload,
-  FileText,
-  Download,
-  CheckCircle2,
-  AlertCircle,
-  ChevronLeft,
-} from "lucide-react";
+import { Upload, FileText, Download } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -17,19 +10,15 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
-import { CsvFieldMapper } from "@/features/crm/leads/csv-field-mapper";
+import { DealsMappingStep, matchHeader, extractCSV, extractExcel } from "./deals-csv-mapping-step";
+import type { ParsedDeal } from "./deals-csv-mapping-step";
+import { DealsPreviewStep } from "./deals-csv-preview-step";
+
+export type { ParsedDeal };
 
 const VALID_STAGES = [
   "NEW",
@@ -47,125 +36,8 @@ function isValidStage(s: string): s is ValidStage {
 
 const ACCEPTED_EXTENSIONS = [".csv", ".xlsx", ".xls"];
 
-interface ParsedDeal {
-  name: string;
-  value?: number;
-  stage?: string;
-  ownerEmail?: string;
-  expectedCloseDate?: string;
-  contactEmail?: string;
-  companyName?: string;
-  description?: string;
-}
-
-const DEAL_FIELDS: { value: string; label: string }[] = [
-  { value: "_skip", label: "— Skip —" },
-  { value: "name", label: "Deal Name (required)" },
-  { value: "value", label: "Value / Amount" },
-  { value: "stage", label: "Stage (NEW/QUALIFIED/PROPOSAL/…)" },
-  { value: "owner_email", label: "Owner Email" },
-  { value: "expected_close_date", label: "Expected Close Date" },
-  { value: "contact_email", label: "Contact Email" },
-  { value: "company_name", label: "Company Name" },
-  { value: "description", label: "Description" },
-];
-
-const HEADER_ALIASES: Record<string, string[]> = {
-  name: ["name", "deal name", "dealname", "title", "deal title", "dealtitle"],
-  value: ["value", "amount", "deal value", "dealvalue", "budget", "price"],
-  stage: ["stage", "deal stage", "dealstage", "status", "pipeline stage"],
-  owner_email: [
-    "owner email",
-    "owneremail",
-    "owner",
-    "assigned to",
-    "assignedto",
-    "sales rep email",
-    "rep email",
-  ],
-  expected_close_date: [
-    "expected close date",
-    "expectedclosedate",
-    "close date",
-    "closedate",
-    "closing date",
-    "closingdate",
-    "due date",
-    "duedate",
-  ],
-  contact_email: [
-    "contact email",
-    "contactemail",
-    "customer email",
-    "customeremail",
-    "client email",
-    "clientemail",
-  ],
-  company_name: [
-    "company name",
-    "companyname",
-    "company",
-    "organization",
-    "account",
-    "account name",
-    "accountname",
-  ],
-  description: ["description", "notes", "details", "summary", "remarks"],
-};
-
-function matchHeader(header: string): string | null {
-  const h = header.toLowerCase().trim().replace(/[_-]/g, "");
-  for (const [field, aliases] of Object.entries(HEADER_ALIASES)) {
-    const normalizedAliases = aliases.map((a) => a.replace(/[_-]/g, ""));
-    if (normalizedAliases.includes(h)) return field;
-  }
-  return null;
-}
-
 function getFileExtension(name: string): string {
   return name.slice(name.lastIndexOf(".")).toLowerCase();
-}
-
-function extractCSV(text: string): { headers: string[]; rows: string[][] } {
-  const lines = text
-    .split("\n")
-    .map((l) => l.trim())
-    .filter(Boolean);
-  if (lines.length < 2) return { headers: [], rows: [] };
-  const headers = lines[0]
-    .split(",")
-    .map((h) => h.trim().replace(/['"]/g, ""));
-  const rows = lines
-    .slice(1)
-    .map((l) => l.split(",").map((c) => c.trim().replace(/^["']|["']$/g, "")));
-  return { headers, rows };
-}
-
-async function extractExcel(
-  buffer: ArrayBuffer,
-): Promise<{ headers: string[]; rows: string[][] }> {
-  const ExcelJS = (await import("exceljs")).default;
-  const workbook = new ExcelJS.Workbook();
-  await workbook.xlsx.load(buffer);
-  const sheet = workbook.worksheets[0];
-  if (!sheet || sheet.rowCount < 2) return { headers: [], rows: [] };
-
-  const headerRow = sheet.getRow(1);
-  const headers: string[] = [];
-  headerRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-    headers[colNumber - 1] = String(cell.value ?? "").trim();
-  });
-
-  const rows: string[][] = [];
-  for (let rowIdx = 2; rowIdx <= sheet.rowCount; rowIdx++) {
-    const row = sheet.getRow(rowIdx);
-    const cols: string[] = [];
-    row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-      cols[colNumber - 1] = String(cell.value ?? "").trim();
-    });
-    if (!cols.every((c) => !c)) rows.push(cols);
-  }
-  return { headers, rows };
 }
 
 function applyMapping(
@@ -230,152 +102,6 @@ function useBulkImportDeals() {
         { deals },
       ),
   });
-}
-
-interface DealsPreviewProps {
-  fileName: string;
-  parsed: ParsedDeal[];
-  parseErrors: string[];
-  importResult: { created: number; failed: number } | null;
-  isImporting: boolean;
-  onEditMapping: () => void;
-  onImport: () => void;
-  onClose: () => void;
-}
-
-function DealsPreview({
-  fileName,
-  parsed,
-  parseErrors,
-  importResult,
-  isImporting,
-  onEditMapping,
-  onImport,
-  onClose,
-}: DealsPreviewProps) {
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <FileText className="h-4 w-4 text-blue-600" />
-          <span className="text-sm font-medium">{fileName}</span>
-          <Badge variant="secondary">{parsed.length} deals</Badge>
-        </div>
-        {!importResult && (
-          <Button variant="ghost" size="sm" onClick={onEditMapping}>
-            <ChevronLeft className="h-4 w-4 mr-1" />
-            Edit Mapping
-          </Button>
-        )}
-      </div>
-
-      {parseErrors.length > 0 && (
-        <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-3">
-          <div className="flex items-center gap-2 mb-1">
-            <AlertCircle className="h-4 w-4 text-destructive" />
-            <span className="text-sm font-medium text-destructive">
-              {parseErrors.length} warnings
-            </span>
-          </div>
-          {parseErrors.slice(0, 5).map((err, i) => (
-            <p key={i} className="text-xs text-muted-foreground">
-              {err}
-            </p>
-          ))}
-          {parseErrors.length > 5 && (
-            <p className="text-xs text-muted-foreground mt-1">
-              ...and {parseErrors.length - 5} more
-            </p>
-          )}
-        </div>
-      )}
-
-      {parsed.length > 0 && (
-        <div className="border rounded-lg overflow-hidden max-h-[260px] overflow-y-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="text-xs">Name</TableHead>
-                <TableHead className="text-xs">Value</TableHead>
-                <TableHead className="text-xs">Stage</TableHead>
-                <TableHead className="text-xs">Owner Email</TableHead>
-                <TableHead className="text-xs">Close Date</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {parsed.slice(0, 20).map((deal, i) => (
-                <TableRow key={i}>
-                  <TableCell className="text-xs font-medium">
-                    {deal.name}
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {deal.value !== undefined
-                      ? `₹${deal.value.toLocaleString()}`
-                      : "—"}
-                  </TableCell>
-                  <TableCell className="text-xs">
-                    {deal.stage ? (
-                      <Badge variant="outline" className="text-[10px]">
-                        {deal.stage}
-                      </Badge>
-                    ) : (
-                      "—"
-                    )}
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {deal.ownerEmail || "—"}
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {deal.expectedCloseDate || "—"}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          {parsed.length > 20 && (
-            <p className="text-xs text-center text-muted-foreground py-2">
-              ...and {parsed.length - 20} more
-            </p>
-          )}
-        </div>
-      )}
-
-      {importResult ? (
-        <div className="space-y-3">
-          <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 space-y-1">
-            <p className="text-sm font-medium text-green-700 dark:text-green-400">
-              Import Complete
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {importResult.created} deals created
-              {importResult.failed > 0 ? `, ${importResult.failed} failed` : ""}
-            </p>
-          </div>
-          <Button className="w-full" variant="outline" onClick={onClose}>
-            Close
-          </Button>
-        </div>
-      ) : (
-        <Button
-          className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
-          onClick={onImport}
-          disabled={isImporting || !parsed.length}
-        >
-          {isImporting ? (
-            <span className="flex items-center gap-2">
-              <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              Importing...
-            </span>
-          ) : (
-            <>
-              <CheckCircle2 className="h-4 w-4 mr-2" />
-              Import {parsed.length} Deals
-            </>
-          )}
-        </Button>
-      )}
-    </div>
-  );
 }
 
 export function DealsCsvImportDialog({ onSuccess }: { onSuccess?: () => void }) {
@@ -474,7 +200,7 @@ export function DealsCsvImportDialog({ onSuccess }: { onSuccess?: () => void }) 
           toast.warning("No deals were imported");
         }
       },
-      onError: (err) => toast.error(err.message),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [parsed, bulkImport, onSuccess]);
 
@@ -623,9 +349,7 @@ export function DealsCsvImportDialog({ onSuccess }: { onSuccess?: () => void }) 
         )}
 
         {step === "mapping" && (
-          <CsvFieldMapper
-            fields={DEAL_FIELDS}
-            requiredFieldLabel="Deal Name"
+          <DealsMappingStep
             fileName={fileName}
             rawHeaders={rawHeaders}
             rawRows={rawRows}
@@ -638,7 +362,7 @@ export function DealsCsvImportDialog({ onSuccess }: { onSuccess?: () => void }) 
         )}
 
         {step === "preview" && parsed !== null && (
-          <DealsPreview
+          <DealsPreviewStep
             fileName={fileName}
             parsed={parsed}
             parseErrors={parseErrors}

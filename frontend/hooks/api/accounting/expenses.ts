@@ -20,9 +20,9 @@ import type { ExpenseWithRelations, ExpenseStats, ExpenseCategoryRecord } from "
 
 const expenseKeys = {
   all: [...queryKeys.accounting.all, "expenses"] as const,
-  team: (params?: Record<string, unknown>) => [...queryKeys.accounting.all, "expenses", "team", params] as const,
-  receipts: (params?: Record<string, unknown>) => [...queryKeys.accounting.all, "expenses", "receipts", params] as const,
-  batches: (params?: Record<string, unknown>) => [...queryKeys.accounting.all, "expenses", "batches", params] as const,
+  team: (params?: object) => [...queryKeys.accounting.all, "expenses", "team", params] as const,
+  receipts: (params?: object) => [...queryKeys.accounting.all, "expenses", "receipts", params] as const,
+  batches: (params?: object) => [...queryKeys.accounting.all, "expenses", "batches", params] as const,
   batch: (id: number) => [...queryKeys.accounting.all, "expenses", "batches", id] as const,
   policies: () => [...queryKeys.accounting.all, "expenses", "policies"] as const,
   bankAccounts: () => [...queryKeys.accounting.all, "expenses", "bankAccounts"] as const,

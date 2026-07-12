@@ -7,6 +7,14 @@ import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/components/ui/table";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   Select,
@@ -32,7 +40,7 @@ import {
   useVendorCredit,
   usePostVendorCredit,
 } from "@/hooks/api/accounting/ap";
-import type { VendorCreditSummary, VendorCreditStatus } from "@/hooks/api/accounting/ap";
+import type { VendorCreditSummary } from "@/hooks/api/accounting/ap";
 import { useVendorsOutstanding } from "@/hooks/api/accounting";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -49,6 +57,12 @@ const STATUS_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "APPLIED", label: "Applied" },
   { value: "VOID", label: "Void" },
 ];
+
+const VENDOR_CREDIT_STATUSES: ReadonlyArray<string> = ["DRAFT", "POSTED", "APPLIED", "VOID"];
+
+function isVendorCreditStatus(value: string): value is VendorCreditSummary["status"] {
+  return VENDOR_CREDIT_STATUSES.includes(value);
+}
 
 interface CreditRowActionsProps {
   credit: VendorCreditSummary;
@@ -138,26 +152,26 @@ function CreditDetailSheet({
           </div>
           {credit.items.length > 0 && (
             <div className="rounded-md border border-border overflow-hidden">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="bg-muted/40 border-b border-border">
-                    <th className="px-3 py-1.5 text-left font-medium text-muted-foreground">Description</th>
-                    <th className="px-3 py-1.5 text-right font-medium text-muted-foreground">Qty</th>
-                    <th className="px-3 py-1.5 text-right font-medium text-muted-foreground">Rate</th>
-                    <th className="px-3 py-1.5 text-right font-medium text-muted-foreground">Amount</th>
-                  </tr>
-                </thead>
-                <tbody>
+              <Table className="text-xs">
+                <TableHeader>
+                  <TableRow className="bg-muted/40 border-b border-border">
+                    <TableHead className="px-3 py-1.5 text-left font-medium text-muted-foreground">Description</TableHead>
+                    <TableHead className="px-3 py-1.5 text-right font-medium text-muted-foreground">Qty</TableHead>
+                    <TableHead className="px-3 py-1.5 text-right font-medium text-muted-foreground">Rate</TableHead>
+                    <TableHead className="px-3 py-1.5 text-right font-medium text-muted-foreground">Amount</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {credit.items.map((item) => (
-                    <tr key={item.id} className="border-b border-border/50 last:border-0">
-                      <td className="px-3 py-1.5">{item.description}</td>
-                      <td className="px-3 py-1.5 text-right tabular-nums">{item.quantity}</td>
-                      <td className="px-3 py-1.5 text-right tabular-nums">{item.rate}</td>
-                      <td className="px-3 py-1.5 text-right tabular-nums font-medium">{item.amount}</td>
-                    </tr>
+                    <TableRow key={item.id} className="border-b border-border/50 last:border-0">
+                      <TableCell className="px-3 py-1.5">{item.description}</TableCell>
+                      <TableCell className="px-3 py-1.5 text-right tabular-nums">{item.quantity}</TableCell>
+                      <TableCell className="px-3 py-1.5 text-right tabular-nums">{item.rate}</TableCell>
+                      <TableCell className="px-3 py-1.5 text-right tabular-nums font-medium">{item.amount}</TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
           )}
         </div>
@@ -181,7 +195,7 @@ export default function VendorCreditsPage() {
     page: 1,
     pageSize: 50,
     vendorId: vendorFilter !== "all" ? Number(vendorFilter) : undefined,
-    status: statusFilter !== "all" ? (statusFilter as VendorCreditStatus) : undefined,
+    status: statusFilter !== "all" && isVendorCreditStatus(statusFilter) ? statusFilter : undefined,
   });
 
   const vendors = vendorsQuery.data?.items ?? [];

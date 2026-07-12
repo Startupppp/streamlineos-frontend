@@ -179,7 +179,7 @@ export function TraceabilityTimeline({
       )}
 
       {result.events.length > 0 && (
-        <TimelineSection dotClass="bg-purple-400" label="Other Events">
+        <TimelineSection dotClass="bg-blue-400" label="Other Events">
           <div className="space-y-0.5">
             {result.events.map((e) => (
               <EventRow key={e.id} event={e} />

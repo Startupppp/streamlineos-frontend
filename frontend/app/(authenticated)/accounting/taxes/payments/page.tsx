@@ -1,10 +1,7 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import Link from "next/link";
-import { z } from "zod";
-import { Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -15,15 +12,6 @@ import { LoadingState, ErrorState, EntityFormDialog, EntityFormSheet } from "@/c
 import { Money } from "@/features/accounting/shared";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import {
@@ -32,35 +20,20 @@ import {
   useDeleteTaxPayment,
   useCreateTaxAdjustment,
 } from "@/hooks/api/accounting/taxes";
-import type { TaxPayment, TaxType } from "@/types/accounting/taxes";
-
-const TAX_TYPES: TaxType[] = [
-  "GST",
-  "CGST_SGST",
-  "IGST",
-  "VAT",
-  "TDS",
-  "TCS",
-  "EXEMPT",
-  "ZERO_RATED",
-];
-
-const TAX_TYPE_OPTIONS: { value: TaxType; label: string }[] = [
-  { value: "GST", label: "GST" },
-  { value: "CGST_SGST", label: "CGST/SGST" },
-  { value: "IGST", label: "IGST" },
-  { value: "VAT", label: "VAT" },
-  { value: "TDS", label: "TDS" },
-  { value: "TCS", label: "TCS" },
-  { value: "EXEMPT", label: "Exempt" },
-  { value: "ZERO_RATED", label: "Zero Rated" },
-];
-
-const SYSTEM_PURPOSE_OPTIONS = [
-  { value: "TAX_PAYABLE", label: "Tax Payable" },
-  { value: "TAX_RECEIVABLE", label: "Tax Receivable" },
-  { value: "CUSTOM", label: "Custom" },
-] as const;
+import {
+  TaxPaymentFormFields,
+  paymentSchema,
+  PAYMENT_DEFAULTS,
+} from "@/features/accounting/taxes/tax-payment-form-fields";
+import {
+  TaxAdjustmentFormFields,
+  adjustmentSchema,
+  ADJUSTMENT_DEFAULTS,
+} from "@/features/accounting/taxes/tax-adjustment-form-fields";
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { TaxPayment } from "@/types/accounting/taxes";
+import type { AdjustmentFormValues } from "@/features/accounting/taxes/tax-adjustment-form-fields";
+import type { PaymentFormValues } from "@/features/accounting/taxes/tax-payment-form-fields";
 
 function todayStr(): string {
   return new Date().toISOString().slice(0, 10);
@@ -72,33 +45,6 @@ function formatDate(value: string): string {
     ? value
     : d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "2-digit" });
 }
-
-const paymentSchema = z.object({
-  taxType: z.enum(TAX_TYPES as [TaxType, ...TaxType[]]),
-  periodStart: z.string().min(1, "Required"),
-  periodEnd: z.string().min(1, "Required"),
-  amount: z.string().regex(/^\d+(\.\d{1,2})?$/, "Enter a valid amount"),
-  paidDate: z.string().min(1, "Required"),
-  reference: z.string().min(1, "Required"),
-});
-
-type PaymentFormValues = z.infer<typeof paymentSchema>;
-
-const lineSchema = z.object({
-  systemPurpose: z.enum(["TAX_PAYABLE", "TAX_RECEIVABLE", "CUSTOM"]),
-  debit: z.string().min(1, "Required"),
-  credit: z.string().min(1, "Required"),
-  lineDescription: z.string().min(1, "Required"),
-});
-
-const adjustmentSchema = z.object({
-  entryDate: z.string().min(1, "Required"),
-  description: z.string().min(1, "Required"),
-  line1: lineSchema,
-  line2: lineSchema,
-});
-
-type AdjustmentFormValues = z.infer<typeof adjustmentSchema>;
 
 interface DeletePaymentButtonProps {
   payment: TaxPayment;
@@ -122,22 +68,6 @@ function DeletePaymentButton({ payment, isPending, onDelete }: DeletePaymentButt
     </LoadingButton>
   );
 }
-
-const PAYMENT_DEFAULTS: PaymentFormValues = {
-  taxType: "GST",
-  periodStart: "",
-  periodEnd: "",
-  amount: "",
-  paidDate: "",
-  reference: "",
-};
-
-const ADJUSTMENT_DEFAULTS: AdjustmentFormValues = {
-  entryDate: "",
-  description: "",
-  line1: { systemPurpose: "TAX_PAYABLE", debit: "", credit: "", lineDescription: "" },
-  line2: { systemPurpose: "TAX_RECEIVABLE", debit: "", credit: "", lineDescription: "" },
-};
 
 export default function TaxPaymentsPage() {
   const [paymentSheetOpen, setPaymentSheetOpen] = useState(false);
@@ -311,24 +241,21 @@ export default function TaxPaymentsPage() {
       {isLoading ? (
         <LoadingState variant="table" rows={8} />
       ) : isError ? (
-        <ErrorState
-          title="Failed to load tax payments"
-          onRetry={handleRetry}
-        />
+        <ErrorState title="Failed to load tax payments" onRetry={handleRetry} />
       ) : (
-      <DataTable
-        data={payments}
-        columns={columns}
-        getRowKey={(row) => row.id}
-        emptyState={
-          <EmptyState
-            illustration={<EmptyApprovalIllustration />}
-            title="No tax payments yet"
-            description="Recorded payments will appear here."
-          />
-        }
-        minWidth="720px"
-      />
+        <DataTable
+          data={payments}
+          columns={columns}
+          getRowKey={(row) => row.id}
+          emptyState={
+            <EmptyState
+              illustration={<EmptyApprovalIllustration />}
+              title="No tax payments yet"
+              description="Recorded payments will appear here."
+            />
+          }
+          minWidth="720px"
+        />
       )}
 
       <EntityFormSheet
@@ -343,79 +270,7 @@ export default function TaxPaymentsPage() {
         submitLabel="Record Payment"
         resetOnOpen
       >
-        {(form) => (
-          <>
-            <div className="space-y-1">
-              <Label>Tax Type</Label>
-              <Controller
-                control={form.control}
-                name="taxType"
-                render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {TAX_TYPE_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              {form.formState.errors.taxType && (
-                <p className="text-xs text-red-500">{form.formState.errors.taxType.message}</p>
-              )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label>Period Start</Label>
-                <Input type="date" {...form.register("periodStart")} />
-                {form.formState.errors.periodStart && (
-                  <p className="text-xs text-red-500">
-                    {form.formState.errors.periodStart.message}
-                  </p>
-                )}
-              </div>
-              <div className="space-y-1">
-                <Label>Period End</Label>
-                <Input type="date" {...form.register("periodEnd")} />
-                {form.formState.errors.periodEnd && (
-                  <p className="text-xs text-red-500">
-                    {form.formState.errors.periodEnd.message}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <Label>Amount</Label>
-              <Input type="text" placeholder="e.g. 1500.00" {...form.register("amount")} />
-              {form.formState.errors.amount && (
-                <p className="text-xs text-red-500">{form.formState.errors.amount.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-1">
-              <Label>Paid Date</Label>
-              <Input type="date" {...form.register("paidDate")} />
-              {form.formState.errors.paidDate && (
-                <p className="text-xs text-red-500">{form.formState.errors.paidDate.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-1">
-              <Label>Reference</Label>
-              <Input placeholder="Challan / UTR number" {...form.register("reference")} />
-              {form.formState.errors.reference && (
-                <p className="text-xs text-red-500">{form.formState.errors.reference.message}</p>
-              )}
-            </div>
-          </>
-        )}
+        {(form) => <TaxPaymentFormFields form={form} />}
       </EntityFormSheet>
 
       <EntityFormDialog
@@ -431,99 +286,7 @@ export default function TaxPaymentsPage() {
         resetOnOpen
         className="max-w-2xl"
       >
-        {(form) => (
-          <>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label>Entry Date</Label>
-                <Input type="date" {...form.register("entryDate")} />
-                {form.formState.errors.entryDate && (
-                  <p className="text-xs text-red-500">
-                    {form.formState.errors.entryDate.message}
-                  </p>
-                )}
-              </div>
-              <div className="space-y-1">
-                <Label>Description</Label>
-                <Input placeholder="Adjustment reason" {...form.register("description")} />
-                {form.formState.errors.description && (
-                  <p className="text-xs text-red-500">
-                    {form.formState.errors.description.message}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {(["line1", "line2"] as const).map((lineKey, idx) => (
-              <div key={lineKey} className="rounded-lg border border-border p-3 space-y-3">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  Line {idx + 1}
-                </p>
-                <div className="space-y-1">
-                  <Label>Purpose</Label>
-                  <Controller
-                    control={form.control}
-                    name={`${lineKey}.systemPurpose`}
-                    render={({ field }) => (
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select purpose" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {SYSTEM_PURPOSE_OPTIONS.map((opt) => (
-                            <SelectItem key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label>Debit</Label>
-                    <Input
-                      type="text"
-                      placeholder="0.00"
-                      {...form.register(`${lineKey}.debit`)}
-                    />
-                    {form.formState.errors[lineKey]?.debit && (
-                      <p className="text-xs text-red-500">
-                        {form.formState.errors[lineKey]?.debit?.message}
-                      </p>
-                    )}
-                  </div>
-                  <div className="space-y-1">
-                    <Label>Credit</Label>
-                    <Input
-                      type="text"
-                      placeholder="0.00"
-                      {...form.register(`${lineKey}.credit`)}
-                    />
-                    {form.formState.errors[lineKey]?.credit && (
-                      <p className="text-xs text-red-500">
-                        {form.formState.errors[lineKey]?.credit?.message}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <Label>Line Description</Label>
-                  <Input
-                    placeholder="e.g. Tax payable reversal"
-                    {...form.register(`${lineKey}.lineDescription`)}
-                  />
-                  {form.formState.errors[lineKey]?.lineDescription && (
-                    <p className="text-xs text-red-500">
-                      {form.formState.errors[lineKey]?.lineDescription?.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-            ))}
-          </>
-        )}
+        {(form) => <TaxAdjustmentFormFields form={form} />}
       </EntityFormDialog>
     </PageWrapper>
   );

@@ -14,6 +14,8 @@ import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Table,
   TableBody,
@@ -39,6 +41,7 @@ import {
 } from "@/components/ui/form";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { useCan } from "@/hooks/api/access";
 import {
   useAccounts,
   useCreateJournalEntry,
@@ -187,6 +190,7 @@ function LineRow({
 }
 
 export default function NewJournalEntryPage() {
+  const canCreate = useCan("accounting:journal:create");
   const router = useRouter();
   const accountsQuery = useAccounts({
     page: 1,
@@ -316,9 +320,20 @@ export default function NewJournalEntryPage() {
   if (accountsQuery.error) {
     return (
       <ErrorState
-        description={accountsQuery.error.message}
+        description={getErrorMessage(accountsQuery.error)}
         onRetry={handleAccountsRetry}
       />
+    );
+  }
+  if (!canCreate) {
+    return (
+      <PageWrapper eyebrow="Accounting · Journal" title="New journal entry" subtitle="Record a manual journal entry. Debits must equal credits before posting.">
+        <EmptyState
+          illustrationPreset="security"
+          title="Access restricted"
+          description="You don't have permission to create journal entries."
+        />
+      </PageWrapper>
     );
   }
 
@@ -463,16 +478,14 @@ export default function NewJournalEntryPage() {
             <Button type="button" variant="outline" onClick={handleCancel}>
               Cancel
             </Button>
-            <Button
+            <LoadingButton
               type="submit"
-              disabled={createMutation.isPending || !totals.balanced}
+              isPending={createMutation.isPending}
+              disabled={!totals.balanced}
+              loadingText="Saving…"
             >
-              {createMutation.isPending
-                ? "Saving…"
-                : watchedStatus === "POSTED"
-                  ? "Create and post"
-                  : "Save as draft"}
-            </Button>
+              {watchedStatus === "POSTED" ? "Create and post" : "Save as draft"}
+            </LoadingButton>
           </div>
         </form>
       </Form>

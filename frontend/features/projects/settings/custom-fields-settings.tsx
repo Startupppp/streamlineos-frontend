@@ -7,6 +7,7 @@ import {
   useDeleteProjectCustomField,
 } from "@/hooks/api/projects/custom-fields";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -309,14 +310,16 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
                     </div>
                   )}
                   <div className="flex gap-2">
-                    <Button
+                    <LoadingButton
                       size="sm"
                       onClick={handleCreate}
-                      disabled={!fieldName.trim() || createField.isPending}
+                      disabled={!fieldName.trim()}
+                      isPending={createField.isPending}
+                      loadingText="Creating…"
                       className="h-7 text-xs"
                     >
-                      {createField.isPending ? "Creating..." : "Create Field"}
-                    </Button>
+                      Create Field
+                    </LoadingButton>
                     <Button
                       size="sm"
                       variant="ghost"

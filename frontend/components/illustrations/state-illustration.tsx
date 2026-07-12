@@ -35,7 +35,10 @@ export type StateIllustrationPreset =
   | "onboarding"
   | "alert"
   | "archive"
-  | "devices";
+  | "devices"
+  | "tasks"
+  | "orders"
+  | "permissions";
 
 const PRESET_TO_ILLUSTRATION: Record<StateIllustrationPreset, IllustrationName> = {
   default: "empty-search",
@@ -72,6 +75,9 @@ const PRESET_TO_ILLUSTRATION: Record<StateIllustrationPreset, IllustrationName> 
   alert: "empty-ticket",
   archive: "empty-documents",
   devices: "empty-devices",
+  tasks: "empty-projects",
+  orders: "empty-documents",
+  permissions: "security",
 };
 
 export function StateIllustration({

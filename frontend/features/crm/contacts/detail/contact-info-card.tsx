@@ -217,7 +217,7 @@ export function ContactInfoCard({ contact, onEdit, onSendEmail, onLogCall, entit
                 <Badge
                   key={tag}
                   variant="outline"
-                  className="text-[10px] px-1.5 py-0 h-4 border-violet-200 text-violet-700"
+                  className="text-[10px] px-1.5 py-0 h-4 border-blue-200 text-blue-700"
                 >
                   {tag}
                 </Badge>
@@ -258,7 +258,7 @@ export function ContactInfoCard({ contact, onEdit, onSendEmail, onLogCall, entit
                 className="w-full gap-1.5 text-xs"
                 onClick={onLogCall}
               >
-                <Phone className="h-3 w-3 text-violet-500" />
+                <Phone className="h-3 w-3 text-blue-500" />
                 Log Call
               </Button>
             </motion.div>

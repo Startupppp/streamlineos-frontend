@@ -346,8 +346,12 @@ export function TicketFilterBar({
             <FilterChip key={`type-${t}`} label={t.charAt(0) + t.slice(1).toLowerCase()} onRemove={makeRemoveType(t)} />
           ))}
           {selectedAssignees.map((id) => {
-            const m = id === "__unassigned__" ? null : memberMap.get(id);
-            const label = id === "__unassigned__" ? "Unassigned" : (m ? getUserDisplayName(m) : id);
+            const label =
+              id === "@me"
+                ? "Me"
+                : id === "__unassigned__"
+                ? "Unassigned"
+                : (memberMap.get(id) ? getUserDisplayName(memberMap.get(id)!) : id);
             return <FilterChip key={`assignee-${id}`} label={label} onRemove={makeRemoveAssignee(id)} />;
           })}
           {selectedLabels.map((id) => {

@@ -18,13 +18,6 @@ import type {
   CrmActivityStatus,
 } from "@/hooks/api/crm/crm-activities";
 
-const FALLBACK_ACTIVITY_TYPES: Array<{ value: CrmActivityType; label: string }> = [
-  { value: "CALL",    label: "Calls"    },
-  { value: "EMAIL",   label: "Emails"   },
-  { value: "MEETING", label: "Meetings" },
-  { value: "CUSTOM",  label: "Tasks"    },
-];
-
 function isCrmActivityType(v: string): v is CrmActivityType {
   return v === "CALL" || v === "EMAIL" || v === "MEETING" || v === "CUSTOM";
 }
@@ -69,9 +62,7 @@ export function ActivityFilters({
   const { data: activityTypeOptions } = useCrmOptions("activity_type");
 
   const activityTypes = useMemo<Array<{ value: CrmActivityType; label: string }>>(() => {
-    if (!activityTypeOptions || activityTypeOptions.length === 0) {
-      return FALLBACK_ACTIVITY_TYPES;
-    }
+    if (!activityTypeOptions) return [];
     const matched: Array<{ value: CrmActivityType; label: string }> = [];
     for (const o of activityTypeOptions) {
       if (isCrmActivityType(o.key)) {

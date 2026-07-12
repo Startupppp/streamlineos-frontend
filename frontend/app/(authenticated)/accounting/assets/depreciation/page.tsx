@@ -180,7 +180,6 @@ export default function DepreciationRunsPage() {
         eyebrow="Fixed Assets"
         title="Depreciation Runs"
         subtitle="View and manage monthly depreciation postings"
-        backHref="/accounting/assets"
         actions={
           canManage && (
             <Button size="sm" onClick={() => setCreateOpen(true)}>

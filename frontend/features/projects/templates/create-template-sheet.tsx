@@ -5,6 +5,7 @@ import type { ChangeEvent } from "react";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -178,18 +179,16 @@ export function CreateTemplateSheet({ open, onClose }: CreateTemplateSheetProps)
                 Cancel
               </Button>
             </SheetClose>
-            <Button
+            <LoadingButton
               size="sm"
               onClick={handleCreate}
-              disabled={
-                create.isPending ||
-                !name.trim() ||
-                tickets.some((t) => !t.title.trim())
-              }
+              disabled={!name.trim() || tickets.some((t) => !t.title.trim())}
+              isPending={create.isPending}
+              loadingText="Creating…"
               className="w-full active:scale-[0.98]"
             >
-              {create.isPending ? "Creating…" : "Create Template"}
-            </Button>
+              Create Template
+            </LoadingButton>
           </div>
         </div>
       </SheetContent>

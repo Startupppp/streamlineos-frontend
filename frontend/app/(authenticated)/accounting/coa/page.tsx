@@ -14,6 +14,8 @@ import {
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ListToolbar, LoadingState, ErrorState } from "@/components/shared";
 import { useCoaTree, useSetupStatus } from "@/hooks/api/accounting/core";
+import { useCan } from "@/hooks/api/access";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { CreateAccountDialog } from "@/features/accounting/create-account-dialog";
 import { CoaTreeRow } from "@/features/accounting/core/coa-tree-row";
 import { ApplyTemplateDialog } from "@/features/accounting/core/apply-template-dialog";
@@ -22,7 +24,7 @@ import type { AccountTreeNode } from "@/hooks/api/accounting/core";
 
 type TypeFilter = "ALL" | "ASSET" | "LIABILITY" | "EQUITY" | "INCOME" | "EXPENSE";
 
-const TYPE_FILTER_VALUES: ReadonlyArray<TypeFilter> = [
+const TYPE_FILTER_VALUES: ReadonlyArray<string> = [
   "ALL",
   "ASSET",
   "LIABILITY",
@@ -32,7 +34,7 @@ const TYPE_FILTER_VALUES: ReadonlyArray<TypeFilter> = [
 ];
 
 function isTypeFilter(value: string): value is TypeFilter {
-  return (TYPE_FILTER_VALUES as ReadonlyArray<string>).includes(value);
+  return TYPE_FILTER_VALUES.includes(value);
 }
 
 interface FlatNode {
@@ -88,6 +90,7 @@ function countNodes(nodes: AccountTreeNode[]): number {
 }
 
 export default function ChartOfAccountsPage() {
+  const canManage = useCan("accounting:accounts:manage");
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("ALL");
   const [search, setSearch] = useState<string>("");
   const [createOpen, setCreateOpen] = useState<boolean>(false);
@@ -162,18 +165,19 @@ export default function ChartOfAccountsPage() {
       eyebrow="Accounting"
       title="Chart of Accounts"
       subtitle="Manage ledger accounts grouped by type."
-      badge={totalCount > 0 ? `${totalCount}` : undefined}
       actions={
-        <div className="flex items-center gap-2">
-          <Button size="sm" variant="outline" onClick={handleOpenApplyTemplate}>
-            <LayoutTemplate className="size-3.5 mr-1.5" />
-            Apply template
-          </Button>
-          <Button size="sm" onClick={handleOpenCreate}>
-            <Plus className="size-3.5 mr-1.5" />
-            New account
-          </Button>
-        </div>
+        canManage ? (
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" onClick={handleOpenApplyTemplate}>
+              <LayoutTemplate className="size-3.5 mr-1.5" />
+              Apply template
+            </Button>
+            <Button size="sm" onClick={handleOpenCreate}>
+              <Plus className="size-3.5 mr-1.5" />
+              New account
+            </Button>
+          </div>
+        ) : undefined
       }
       filters={
         <div className="flex items-center gap-2">
@@ -208,7 +212,7 @@ export default function ChartOfAccountsPage() {
         ) : query.error ? (
           <ErrorState
             title="Failed to load accounts"
-            description={query.error.message}
+            description={getErrorMessage(query.error)}
             onRetry={handleRetry}
           />
         ) : flatNodes.length === 0 ? (

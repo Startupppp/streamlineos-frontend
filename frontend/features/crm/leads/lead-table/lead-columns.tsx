@@ -14,10 +14,10 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
   Lead, TeamMember,
-  STATUSES, PRIORITIES,
-  STATUS_COLORS, PRIORITY_COLORS, SOURCE_COLORS,
   formatINR, timeAgo, formatDate, formatLeadId,
 } from "./types";
+import { useCrmOptions, resolveOption } from "@/hooks/api/crm/metadata";
+import { CrmOptionBadge } from "@/features/crm/shared/metadata";
 import { AIScoreButton } from "../ai-score-button";
 
 interface SortIconProps {
@@ -58,6 +58,9 @@ export function useLeadCellRenderer({
   onAssign,
 }: Omit<RenderCellOptions, "lead" | "colKey">) {
   const router = useRouter();
+  const { data: statusOptions = [] } = useCrmOptions("lead_status");
+  const { data: priorityOptions = [] } = useCrmOptions("priority");
+  const { data: sourceOptions = [] } = useCrmOptions("source");
 
   return function renderCell(lead: Lead, colKey: string): React.ReactNode {
     const isEditing = editingCell?.leadId === lead.id && editingCell?.column === colKey;
@@ -127,14 +130,13 @@ export function useLeadCellRenderer({
         return <span className="text-[11px]">{lead.city || "—"}</span>;
 
       case "source":
-        return lead.source ? (
-          <Badge
-            variant="outline"
-            className={cn("text-[9px] px-1.5 py-0 h-5 border-0 font-medium", SOURCE_COLORS[lead.source] || SOURCE_COLORS.other)}
-          >
-            {lead.source.replace("_", " ")}
-          </Badge>
-        ) : <span className="text-[11px] text-muted-foreground/50">—</span>;
+        if (!lead.source) return <span className="text-[11px] text-muted-foreground/50">—</span>;
+        return (
+          <CrmOptionBadge
+            option={resolveOption(sourceOptions, lead.source)}
+            size="table"
+          />
+        );
 
       case "status":
         if (isEditing) {
@@ -148,28 +150,30 @@ export function useLeadCellRenderer({
             >
               <SelectTrigger className="h-6 text-[10px] w-[100px]"><SelectValue /></SelectTrigger>
               <SelectContent>
-                {STATUSES.map((s) => (
-                  <SelectItem key={s} value={s} className="text-[11px]">{s}</SelectItem>
+                {statusOptions.map((s) => (
+                  <SelectItem key={s.id} value={s.key} className="text-[11px]">{s.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           );
         }
         return (
-          <Badge
-            variant="outline"
-            className={cn("text-[9px] px-1.5 py-0 h-5 cursor-pointer border font-medium", STATUS_COLORS[lead.status])}
+          <div
+            className="cursor-pointer"
             onDoubleClick={() => setEditingCell({ leadId: lead.id, column: "status" })}
           >
-            {lead.status}
-          </Badge>
+            <CrmOptionBadge
+              option={resolveOption(statusOptions, lead.status)}
+              size="table"
+            />
+          </div>
         );
 
       case "priority":
         if (isEditing) {
           return (
             <Select
-              defaultValue={lead.priority || "WARM"}
+              defaultValue={lead.priority || ""}
               onValueChange={(v) => {
                 onPriorityChange(lead.id, v);
                 setEditingCell(null);
@@ -177,22 +181,25 @@ export function useLeadCellRenderer({
             >
               <SelectTrigger className="h-6 text-[10px] w-[80px]"><SelectValue /></SelectTrigger>
               <SelectContent>
-                {PRIORITIES.map((p) => (
-                  <SelectItem key={p} value={p} className="text-[11px]">{p}</SelectItem>
+                {priorityOptions.map((p) => (
+                  <SelectItem key={p.id} value={p.key} className="text-[11px]">{p.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           );
         }
-        return lead.priority ? (
-          <Badge
-            variant="outline"
-            className={cn("text-[9px] px-1.5 py-0 h-5 cursor-pointer border font-medium", PRIORITY_COLORS[lead.priority])}
+        if (!lead.priority) return <span className="text-[11px] text-muted-foreground/50">—</span>;
+        return (
+          <div
+            className="cursor-pointer"
             onDoubleClick={() => setEditingCell({ leadId: lead.id, column: "priority" })}
           >
-            {lead.priority}
-          </Badge>
-        ) : <span className="text-[11px] text-muted-foreground/50">—</span>;
+            <CrmOptionBadge
+              option={resolveOption(priorityOptions, lead.priority)}
+              size="table"
+            />
+          </div>
+        );
 
       case "notes":
         return lead.notes ? (

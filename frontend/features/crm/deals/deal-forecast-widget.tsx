@@ -91,7 +91,7 @@ export function DealForecastWidget({ deals }: DealForecastWidgetProps) {
     LEAD: "bg-blue-500",
     CONTACTED: "bg-sky-500",
     PROPOSAL: "bg-amber-500",
-    NEGOTIATION: "bg-purple-500",
+    NEGOTIATION: "bg-blue-500",
     WON: "bg-emerald-500",
   };
 

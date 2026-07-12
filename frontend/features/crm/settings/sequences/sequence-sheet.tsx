@@ -59,7 +59,7 @@ const sequenceSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
   entityType: z.enum(["lead", "deal", "contact"]),
-  isActive: z.boolean().default(false),
+  isActive: z.boolean(),
 });
 
 type SequenceFormValues = z.infer<typeof sequenceSchema>;

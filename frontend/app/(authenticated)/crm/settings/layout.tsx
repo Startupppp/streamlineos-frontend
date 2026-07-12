@@ -8,6 +8,7 @@ const TABS = [
   { label: "Pipelines", href: "/crm/settings/pipelines" },
   { label: "Options", href: "/crm/settings/options" },
   { label: "Validation Rules", href: "/crm/settings/validation-rules" },
+  { label: "Data Quality", href: "/crm/settings/data-quality" },
   { label: "Blueprints", href: "/crm/settings/blueprints" },
   { label: "Territories", href: "/crm/settings/territories" },
   { label: "Scoring Rules", href: "/crm/settings/scoring-rules" },

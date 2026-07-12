@@ -31,7 +31,7 @@ export function SetupProgressBanner({ steps }: SetupProgressBannerProps) {
     <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 flex items-start gap-3">
       <div className="flex-1 min-w-0">
         <p className="text-xs font-semibold text-amber-800 mb-2">Complete your accounting setup</p>
-        <div className="flex flex-wrap gap-x-4 gap-y-1">
+        <div className="flex flex-wrap gap-x-4 gap-y-1 mb-3">
           {steps.map((step) => {
             const href = STEP_LINKS[step.key];
             return (
@@ -55,6 +55,12 @@ export function SetupProgressBanner({ steps }: SetupProgressBannerProps) {
             );
           })}
         </div>
+        <Link
+          href="/accounting/setup"
+          className="inline-flex items-center rounded-md bg-amber-700 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-amber-800 transition-colors"
+        >
+          Complete setup →
+        </Link>
       </div>
       <Button
         variant="ghost"

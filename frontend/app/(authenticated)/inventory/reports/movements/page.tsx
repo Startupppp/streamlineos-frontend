@@ -14,6 +14,7 @@ import { EmptyActivityIllustration } from "@/components/illustrations";
 import { Download } from "lucide-react";
 import { useMovementsReport, type MovementType } from "@/hooks/api/inventory/reports";
 import { useWarehouses } from "@/hooks/api/inventory/warehouses";
+import { downloadCsv } from "@/features/inventory/lib";
 
 const TYPE_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
   { value: "ALL", label: "All types" },
@@ -36,8 +37,8 @@ const TYPE_CLASS: Record<MovementType, string> = {
   ADJUSTMENT_OUT: "bg-yellow-100 text-yellow-800 border-yellow-200",
   TRANSFER_IN: "bg-cyan-100 text-cyan-800 border-cyan-200",
   TRANSFER_OUT: "bg-orange-100 text-orange-800 border-orange-200",
-  RETURN_IN: "bg-purple-100 text-purple-800 border-purple-200",
-  RETURN_OUT: "bg-purple-100 text-purple-800 border-purple-200",
+  RETURN_IN: "bg-blue-100 text-blue-800 border-blue-200",
+  RETURN_OUT: "bg-blue-100 text-blue-800 border-blue-200",
 };
 
 function formatDate(value: string): string {
@@ -145,29 +146,22 @@ function buildMovementsColumns(): DataTableColumn<MovementRow>[] {
 const MOVEMENTS_COLUMNS = buildMovementsColumns();
 
 function exportToCsv(rows: MovementRow[]): void {
-  const headers = ["Date", "Type", "Product", "SKU", "Warehouse", "Location", "Qty", "Balance After", "Reference", "Performed By"];
-  const csvRows = rows.map((r) => [
-    formatDate(r.createdAt),
-    r.type,
-    r.productName,
-    r.sku,
-    r.warehouseName ?? "",
-    r.locationName ?? "",
-    r.quantity,
-    r.balanceAfter ?? "",
-    r.referenceType && r.referenceNumber ? `${r.referenceType} ${r.referenceNumber}` : (r.notes ?? ""),
-    r.performedBy ?? "",
-  ]);
-  const content = [headers, ...csvRows]
-    .map((row) => row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))
-    .join("\n");
-  const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `movements-${new Date().toISOString().slice(0, 10)}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
+  downloadCsv(
+    `movements-${new Date().toISOString().slice(0, 10)}.csv`,
+    ["Date", "Type", "Product", "SKU", "Warehouse", "Location", "Qty", "Balance After", "Reference", "Performed By"],
+    rows.map((r) => [
+      formatDate(r.createdAt),
+      r.type,
+      r.productName,
+      r.sku,
+      r.warehouseName ?? "",
+      r.locationName ?? "",
+      r.quantity,
+      r.balanceAfter ?? "",
+      r.referenceType && r.referenceNumber ? `${r.referenceType} ${r.referenceNumber}` : (r.notes ?? ""),
+      r.performedBy ?? "",
+    ]),
+  );
 }
 
 export default function MovementsReportPage() {

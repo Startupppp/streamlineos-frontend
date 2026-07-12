@@ -17,6 +17,7 @@ import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTimeIllustration } from "@/components/illustrations";
 import { useProfitLoss } from "@/hooks/api/accounting";
+import { getErrorMessage } from "@/lib/get-error-message";
 import type { ProfitLossRow } from "@/types/accounting";
 
 function pad2(n: number): string {
@@ -159,7 +160,7 @@ export default function ProfitLossPage() {
         ) : query.error ? (
           <ErrorState
             title="Failed to load profit & loss"
-            description={query.error.message}
+            description={getErrorMessage(query.error)}
             onRetry={handleRetry}
           />
         ) : !pnl || !hasAnyRows ? (

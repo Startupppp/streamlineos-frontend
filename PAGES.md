@@ -35,8 +35,10 @@ Ordered money-path first. Check off each page after fixing.
 
 ---
 
+> **CRM metadata-first program (2026-07-12)**: Recheck of the prior CRM wave found migrations 0251/0252 unapplied + the CRM metadata seed never run (empty pipelines/options across all 41 orgs) — applied 0251-0255 live, backfilled seed (41/41 orgs) + RBAC grants (crm keys). Then closed the 22-doc PRD gap set via ~13 parallel agents. **Metadata-driven everywhere**: deleted `PIPELINE_STAGES`/`DEAL_STAGES`/`STATUS_COLORS`/`PRIORITY_COLORS`/`SOURCE_COLORS`/`PIPELINE_COLORS`/`FUNNEL_STAGES` hardcodes — leads/deals tables, kanban, reports, CRM-home widget, company detail all render from `useCrmOptions`/`useCrmStages` + `CrmOptionBadge`/`CrmStageBadge` with token colors; backend killed hardcoded board statuses, priority→SLA map, dashboard stage-name filters, `negotiation` auto-channel literal (→ `stageType`+probability signal), and status/priority Zod enums in reports+AI tools. **Blueprint enforcement**: lead status changes + deal stage changes now assert transitions (allowedNext, requiredFields, requiresQuote, requiredActivityTypeKeys); deals now run the configurable validation engine. **Leads engine**: 3 new routing modes (weighted_round_robin/least_loaded/territory, mig 0254), per-dimension scoring, `lead.score_changed` emit. **Automation studio**: graph/branch execution walker (50-node cap + cycle detection), 4 new runner actions (assign_owner/update_field allowlist/add_tag/remove_tag), sequence stopOn (converted), FE branch/exit builder nodes + run-log branchTaken (16 new green tests). **Event emits wired**: form.submitted, invoice.paid, task.overdue cron (email.replied deferred — no inbound infra). **New surfaces**: Data Quality dashboard (`/crm/settings/data-quality`, 8 aggregates), inbox AI-recommended-actions section, deal stakeholders card + forecast manager-override (mig 0255), Customer 360 projects + signed-documents sections. **AI hardening**: all 15 CRM AI endpoints feature-flag-gated + audited. **UX pass**: purple→blue purge, getErrorMessage sweep, sheet anatomy fixes, LoadingButton/animated-icons, split 7 files >500 lines, added loading/error states to inbox + 6 settings routes. FE tsc ✓ BE tsc ✓ (email.replied stopOn + wait-node scheduling + send_whatsapp/create_deal/create_quote actions documented as deferred).
+
 ## CRM — Leads & Pipeline
-- [x] `/crm` — Replaced all-deals fetch with dedicated stats endpoint; added error state; fixed empty state and timeAgo in CrmRecentActivity; added staleTime to useDeals
+- [x] `/crm` — Dedicated stats endpoint; error state; metadata-driven pipeline-mini widget (useCrmOptions, no PIPELINE_STAGES constant)
 - [x] `/crm/leads` — Leads pipeline with kanban + table view, stats bar, filters, create/edit sheet
 - [x] `/crm/leads/[leadId]` — Lead detail: info + activities + quick actions + sidebar
 - [x] `/crm/leads/distribute` — Lead distribution to team members
@@ -73,6 +75,7 @@ Ordered money-path first. Check off each page after fixing.
 - [x] `/crm/settings/ai` — CRM AI feature flags + usage dashboard
 - [x] `/crm/settings/audit-log` — Audit log with filters + pagination + export
 - [x] `/crm/settings/import-export` — CRM leads/contacts/deals/clients import & export
+- [x] `/crm/settings/data-quality` — Data quality dashboard: 8 severity-tinted aggregates (missing email, invalid phone, duplicate leads/companies, stale deals, no next activity, no owner, missing stage-required fields) with deep-link offender lists; `crm:data-quality:view`
 
 ---
 
@@ -144,7 +147,8 @@ Ordered money-path first. Check off each page after fixing.
 - [x] `/accounting/assets` + `/[assetId]` + `/depreciation` — fixed assets, straight-line schedules, depreciation runs, disposal
 - [x] `/accounting/approvals` — finance approval queue (separation of duties)
 - [x] `/accounting/reports` + 10 report pages — reports hub (catalog-driven) + statements, sales/expense analytics, profitability, working capital, burn/runway
-- [x] `/accounting/settings` — finance settings hub: company financial, tax registration, sequences, system accounts, approval policies, exchange rates (+ existing automations tab)
+- [x] `/accounting/settings` — finance settings hub: company financial, tax registration, sequences, system accounts, approval policies, exchange rates, payment terms (+ existing automations tab)
+- [x] `/accounting/setup` — guided 6-step setup wizard (company/currency → tax registration → COA template → system accounts → periods → opening balances) driven by setup-status
 
 ---
 
@@ -384,6 +388,7 @@ All reconciled (hook URLs↔routes, chat signatures, PermissionKeys). Build not 
 ---
 
 ## Inventory
+> 2026-07-12 — full-module overhaul via 14 parallel agents: NAV (all 19 unreachable routes now in sidebar tree; operations hub packing/shipping links fixed; zero 404 hrefs verified), P0 contract fixes (SO create sent productId/customerId/number-prices vs backend productVariantId/clientId/string-prices — fixed end-to-end; PO+SO broken /edit links → DRAFT edit sheets; adjustment raw-ID inputs → variant+location selectors), NEW: reports/slow-moving + reports/expiry pages, Export-jobs UI (Import & Export tabs), webhooks management in settings, holds detail sheet + GET holds/:holdId, ai.ts/webhooks.ts hooks. BACKEND: 17 controllers got missing ModuleGuard, {items,total,page,totalPages} pagination on stock-summary/reorder/movements/suggestions (+cache), GRN/shipSo/returns N+1s batched + wrapped in transactions (idempotency-replay-safe narrowed ConflictException catch), reservation consumption moved into ReservationService.consumeReservationsBatch (engine encapsulation restored), channels bulk upserts, migration 0253 applied + verified live (composite stock indexes + 6 pg_trgm search indexes; journal untouched — sibling owns it). UI: 13 raw tables → DataTable, server pagination on SO/vendors/reports/suggestions lists, 8 sheets fixed to 3-zone, LoadingButton + animated-icon sweep, 60/60 routes have loading.tsx, violet fully purged, 4 oversized files split ≤500. Inventory jest 181/181 green; full build deferred (sibling sessions in flight — backend needs nest build + restart to serve changes).
 > 2026-07-03 — full UI/UX conformance pass (all 24 pages): PageWrapper + URL-synced filters everywhere, DataTable/condensed table density, StatCard adoption, semantic badges, skeleton/empty/error states with themed illustrations, sheet 3-zone anatomy, gradients/violet removed, mutationKeys + calibrated staleTimes, dashboard client moved to `features/inventory` and de-cast (2 redundant queries dropped), dead assets deleted. tsc green.
 - [x] `/inventory` — Inventory overview
 - [x] `/inventory/products` — Products list

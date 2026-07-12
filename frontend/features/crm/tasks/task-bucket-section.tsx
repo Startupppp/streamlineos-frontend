@@ -28,8 +28,8 @@ const BUCKET_CONFIG: Record<
   },
   UPCOMING: {
     label: "Upcoming",
-    badgeClass: "bg-violet-100 text-violet-700 border-violet-200",
-    borderClass: "border-l-violet-400",
+    badgeClass: "bg-blue-100 text-blue-700 border-blue-200",
+    borderClass: "border-l-blue-400",
   },
   NO_DATE: {
     label: "No Date",

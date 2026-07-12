@@ -58,11 +58,13 @@ export function GeneratePODialog({ suggestions, open, onClose }: GeneratePODialo
     generatePO.mutate(
       {
         vendorId: group.vendorId,
-        suggestions: group.items.map((s) => ({
-          variantId: s.variantId,
-          warehouseId: s.warehouseId,
-          qty: s.suggestedQty,
-        })),
+        suggestions: group.items
+          .filter((s): s is typeof s & { warehouseId: number } => s.warehouseId !== null)
+          .map((s) => ({
+            variantId: s.variantId,
+            warehouseId: s.warehouseId,
+            qty: s.suggestedQty,
+          })),
       },
       {
         onSuccess: (result) => {

@@ -23,12 +23,18 @@ const METHOD_OPTIONS: ReadonlyArray<{ value: DepreciationMethod; label: string }
   { value: "UNITS_OF_PRODUCTION", label: "Units of Production" },
 ];
 
+const DEPRECIATION_METHODS_LIST: ReadonlyArray<string> = ["STRAIGHT_LINE", "DECLINING_BALANCE", "UNITS_OF_PRODUCTION"];
+
+function isDepreciationMethod(v: string): v is DepreciationMethod {
+  return DEPRECIATION_METHODS_LIST.includes(v);
+}
+
 const editAssetSchema = z.object({
   name: z.string().min(1, "Name is required"),
   acquisitionDate: z.string().min(1, "Date is required"),
-  acquisitionCost: z.coerce.number().min(0),
-  salvageValue: z.coerce.number().min(0),
-  usefulLifeMonths: z.coerce.number().min(1, "Useful life required"),
+  acquisitionCost: z.number().min(0),
+  salvageValue: z.number().min(0),
+  usefulLifeMonths: z.number().min(1, "Useful life required"),
   depreciationMethod: z.enum(["STRAIGHT_LINE", "DECLINING_BALANCE", "UNITS_OF_PRODUCTION"]),
 });
 
@@ -67,14 +73,19 @@ export function EditAssetSheet({ open, onOpenChange, asset, onSuccess }: EditAss
         acquisitionCost: parseFloat(asset.acquisitionCost),
         salvageValue: parseFloat(asset.salvageValue),
         usefulLifeMonths: asset.usefulLifeMonths,
-        depreciationMethod: asset.depreciationMethod as DepreciationMethod,
+        depreciationMethod: isDepreciationMethod(asset.depreciationMethod) ? asset.depreciationMethod : "STRAIGHT_LINE",
       }}
       onSubmit={handleSubmit}
       isSubmitting={updateMutation.isPending}
       submitLabel="Update Asset"
       resetOnOpen
     >
-      {(form) => (
+      {(form) => {
+        function handleDepreciationMethodChange(v: string): void {
+          if (isDepreciationMethod(v)) form.setValue("depreciationMethod", v, { shouldValidate: true });
+        }
+
+        return (
         <>
           <div className="space-y-1.5">
             <Label htmlFor="edit-name">Name</Label>
@@ -90,23 +101,23 @@ export function EditAssetSheet({ open, onOpenChange, asset, onSuccess }: EditAss
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="edit-cost">Acquisition Cost</Label>
-              <Input id="edit-cost" type="number" min={0} step="0.01" {...form.register("acquisitionCost")} />
+              <Input id="edit-cost" type="number" min={0} step="0.01" {...form.register("acquisitionCost", { valueAsNumber: true })} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="edit-salvage">Salvage Value</Label>
-              <Input id="edit-salvage" type="number" min={0} step="0.01" {...form.register("salvageValue")} />
+              <Input id="edit-salvage" type="number" min={0} step="0.01" {...form.register("salvageValue", { valueAsNumber: true })} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="edit-life">Useful Life (months)</Label>
-              <Input id="edit-life" type="number" min={1} {...form.register("usefulLifeMonths")} />
+              <Input id="edit-life" type="number" min={1} {...form.register("usefulLifeMonths", { valueAsNumber: true })} />
             </div>
             <div className="space-y-1.5">
               <Label>Depreciation Method</Label>
               <Select
                 value={form.watch("depreciationMethod")}
-                onValueChange={(v) => form.setValue("depreciationMethod", v as DepreciationMethod)}
+                onValueChange={handleDepreciationMethodChange}
               >
                 <SelectTrigger className="h-9 text-sm">
                   <SelectValue />
@@ -120,7 +131,8 @@ export function EditAssetSheet({ open, onOpenChange, asset, onSuccess }: EditAss
             </div>
           </div>
         </>
-      )}
+        );
+      }}
     </EntityFormSheet>
   );
 }

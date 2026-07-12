@@ -29,6 +29,13 @@ interface TicketRelationsProps {
   projectId: number;
 }
 
+const RELATION_TYPES: readonly WorkItemRelationType[] = [
+  "blocks",
+  "blocked_by",
+  "duplicate_of",
+  "relates_to",
+];
+
 const RELATION_LABELS: Record<WorkItemRelationType, { label: string; icon: React.ReactNode; color: string }> = {
   blocks: {
     label: "Blocks",
@@ -91,16 +98,21 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
     [removeRelation]
   );
 
-  const handleTypeChange = (v: string) => setSelectedType(v as WorkItemRelationType);
+  const handleTypeChange = (v: string) => {
+    const match = RELATION_TYPES.find((t) => t === v);
+    if (match) setSelectedType(match);
+  };
 
   if (isLoading) return null;
 
-  const grouped = (relations ?? []).reduce<Record<WorkItemRelationType, typeof relations>>((acc, r) => {
-    const t = r.relationType as WorkItemRelationType;
-    if (!acc[t]) acc[t] = [];
-    acc[t]!.push(r);
-    return acc;
-  }, {} as Record<WorkItemRelationType, typeof relations>);
+  const grouped = (relations ?? []).reduce<Partial<Record<WorkItemRelationType, typeof relations>>>(
+    (acc, r) => {
+      const t = r.relationType;
+      acc[t] = [...(acc[t] ?? []), r];
+      return acc;
+    },
+    {},
+  );
 
   return (
     <div>
@@ -120,7 +132,7 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
             <Select value={selectedType} onValueChange={handleTypeChange}>
               <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
               <SelectContent>
-                {(Object.keys(RELATION_LABELS) as WorkItemRelationType[]).map((t) => (
+                {RELATION_TYPES.map((t) => (
                   <SelectItem key={t} value={t} className="text-xs">
                     {RELATION_LABELS[t].label}
                   </SelectItem>
@@ -164,7 +176,8 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
         <p className="text-xs text-muted-foreground py-1">No relations yet.</p>
       ) : (
         <div className="space-y-1.5">
-          {(Object.entries(grouped) as [WorkItemRelationType, typeof relations][]).map(([type, rels]) => {
+          {RELATION_TYPES.map((type) => {
+            const rels = grouped[type];
             const meta = RELATION_LABELS[type];
             if (!rels?.length) return null;
             return (

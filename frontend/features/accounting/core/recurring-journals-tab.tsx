@@ -32,6 +32,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { LoadingState, ErrorState } from "@/components/shared";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   useRecurringJournals,
   useDeleteRecurringJournal,
@@ -184,20 +185,16 @@ export function RecurringJournalsTab() {
       ) : query.error ? (
         <ErrorState
           title="Failed to load templates"
-          description={query.error.message}
+          description={getErrorMessage(query.error)}
           onRetry={handleRetry}
         />
       ) : items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/20 py-10 px-6 text-center">
-          <h3 className="text-sm font-semibold text-foreground">No recurring templates</h3>
-          <p className="mt-1 text-sm text-muted-foreground max-w-xs">
-            Create a template to auto-generate journal entries on a schedule.
-          </p>
-          <Button size="sm" className="mt-4" onClick={handleOpenCreate}>
-            <Plus className="mr-2 h-4 w-4" />
-            New template
-          </Button>
-        </div>
+        <EmptyState
+          illustrationPreset="documents"
+          title="No recurring templates"
+          description="Create a template to auto-generate journal entries on a schedule."
+          action={{ label: "New template", onClick: handleOpenCreate }}
+        />
       ) : (
         <div className="rounded-lg border border-border overflow-hidden">
           <Table>

@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { useAIScoreLead } from "@/hooks/api/ai";
 import { useFeature } from "@/lib/billing/use-feature";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 interface AIScoreButtonProps {
   leadId: number;
@@ -44,7 +45,7 @@ export function AIScoreButton({
       return;
     }
     scoreMutation.mutate(leadId, {
-      onError: (err) => toast.error(err.message || "AI scoring failed"),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [featureEnabled, requiredPlan, scoreMutation, leadId]);
 

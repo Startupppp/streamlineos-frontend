@@ -61,6 +61,7 @@ const STATUS_VARIANT: Record<
   POSTED: "default",
   DRAFT: "secondary",
   VOID: "destructive",
+  PENDING_APPROVAL: "secondary",
 };
 
 const editAccountSchema = z.object({

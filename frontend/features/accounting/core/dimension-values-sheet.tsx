@@ -6,13 +6,7 @@ import { Plus, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from "@/components/ui/sheet";
+import { AppSheet } from "@/components/shared/app-sheet";
 import {
   Table,
   TableBody,
@@ -63,89 +57,117 @@ function ActiveToggle({
   );
 }
 
+interface DimensionValueRowProps {
+  value: AccountingDimensionValue;
+  canManage: boolean;
+  onEdit: (v: AccountingDimensionValue) => void;
+}
+
+function DimensionValueRow({ value, canManage, onEdit }: DimensionValueRowProps) {
+  function handleEdit(): void {
+    onEdit(value);
+  }
+
+  return (
+    <TableRow key={value.id}>
+      <TableCell className="font-mono text-xs">{value.code}</TableCell>
+      <TableCell>{value.name}</TableCell>
+      <TableCell className="text-right">
+        <ActiveToggle value={value} canManage={canManage} />
+      </TableCell>
+      {canManage && (
+        <TableCell>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-7"
+            onClick={handleEdit}
+            aria-label={`Edit ${value.name}`}
+          >
+            <Pencil className="size-3.5" />
+          </Button>
+        </TableCell>
+      )}
+    </TableRow>
+  );
+}
+
 export function DimensionValuesSheet({ open, onOpenChange, dimension, canManage }: Props) {
   const { data, isLoading } = useDimensionValues(dimension.id, open);
   const [addOpen, setAddOpen] = useState(false);
   const [editValue, setEditValue] = useState<AccountingDimensionValue | undefined>();
 
+  function handleAddOpen(): void {
+    setAddOpen(true);
+  }
+
+  function handleEditValueOpenChange(o: boolean): void {
+    if (!o) setEditValue(undefined);
+  }
+
   return (
     <>
-      <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="w-[480px] sm:max-w-[480px] flex flex-col">
-          <SheetHeader>
-            <SheetTitle>{dimension.name} — Values</SheetTitle>
-            <SheetDescription className="font-mono text-xs">{dimension.key}</SheetDescription>
-          </SheetHeader>
+      <AppSheet
+        open={open}
+        onOpenChange={onOpenChange}
+        title={`${dimension.name} — Values`}
+        description={dimension.key}
+        className="w-[480px] sm:max-w-[480px]"
+      >
+        <div className="space-y-3">
+          {canManage && (
+            <div className="flex justify-end">
+              <Button size="sm" variant="outline" onClick={handleAddOpen}>
+                <Plus className="size-3.5 mr-1" />
+                Add Value
+              </Button>
+            </div>
+          )}
 
-          <div className="flex-1 overflow-y-auto mt-4 space-y-3">
-            {canManage && (
-              <div className="flex justify-end">
-                <Button size="sm" variant="outline" onClick={() => setAddOpen(true)}>
-                  <Plus className="size-3.5 mr-1" />
-                  Add Value
+          {isLoading ? (
+            <div className="space-y-2">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-10 w-full" />
+              ))}
+            </div>
+          ) : !data?.items.length ? (
+            <div className="flex flex-col items-center justify-center py-10 text-center">
+              <p className="text-sm text-muted-foreground">No values yet.</p>
+              {canManage && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="mt-2"
+                  onClick={handleAddOpen}
+                >
+                  Add the first value
                 </Button>
-              </div>
-            )}
-
-            {isLoading ? (
-              <div className="space-y-2">
-                {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} className="h-10 w-full" />
+              )}
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Code</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead className="text-right">Active</TableHead>
+                  {canManage && <TableHead className="w-10" />}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.items.map((v) => (
+                  <DimensionValueRow
+                    key={v.id}
+                    value={v}
+                    canManage={canManage}
+                    onEdit={setEditValue}
+                  />
                 ))}
-              </div>
-            ) : !data?.items.length ? (
-              <div className="flex flex-col items-center justify-center py-10 text-center">
-                <p className="text-sm text-muted-foreground">No values yet.</p>
-                {canManage && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="mt-2"
-                    onClick={() => setAddOpen(true)}
-                  >
-                    Add the first value
-                  </Button>
-                )}
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Code</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead className="text-right">Active</TableHead>
-                    {canManage && <TableHead className="w-10" />}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data.items.map((v) => (
-                    <TableRow key={v.id}>
-                      <TableCell className="font-mono text-xs">{v.code}</TableCell>
-                      <TableCell>{v.name}</TableCell>
-                      <TableCell className="text-right">
-                        <ActiveToggle value={v} canManage={canManage} />
-                      </TableCell>
-                      {canManage && (
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="size-7"
-                            onClick={() => setEditValue(v)}
-                            aria-label={`Edit ${v.name}`}
-                          >
-                            <Pencil className="size-3.5" />
-                          </Button>
-                        </TableCell>
-                      )}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </div>
-        </SheetContent>
-      </Sheet>
+              </TableBody>
+            </Table>
+          )}
+        </div>
+      </AppSheet>
 
       {addOpen && (
         <DimensionValueFormDialog
@@ -158,7 +180,7 @@ export function DimensionValuesSheet({ open, onOpenChange, dimension, canManage 
       {editValue && (
         <DimensionValueFormDialog
           open={!!editValue}
-          onOpenChange={(o) => { if (!o) setEditValue(undefined); }}
+          onOpenChange={handleEditValueOpenChange}
           dimensionId={dimension.id}
           value={editValue}
         />

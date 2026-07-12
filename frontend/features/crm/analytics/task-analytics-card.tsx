@@ -34,7 +34,7 @@ export function TaskAnalyticsCard({ taskAnalytics }: TaskAnalyticsCardProps) {
       <Card>
         <CardHeader className="px-4 py-3 border-b">
           <div className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-violet-600" />
+            <TrendingUp className="h-4 w-4 text-blue-600" />
             <h3 className="text-sm font-semibold">Task Analytics (Last 30 Days)</h3>
           </div>
         </CardHeader>

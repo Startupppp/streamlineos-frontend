@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useCallback, type ChangeEvent } from "react";
+import { useState, type ChangeEvent } from "react";
 import Link from "next/link";
 import { Plus, Search, MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { LoadingButton } from "@/components/ui/loading-button";
 import {
   Select,
   SelectContent,
@@ -15,14 +14,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,7 +31,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { LoadingState, ErrorState } from "@/components/shared";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { FinanceStatusBadge } from "@/features/accounting/shared";
@@ -196,10 +188,73 @@ function BillRowActions({ bill, canApprove }: BillRowActionsProps) {
   );
 }
 
+function buildColumns(canApprove: boolean): DataTableColumn<PurchaseBillSummary>[] {
+  return [
+    {
+      key: "billNumber",
+      header: "Bill #",
+      cell: (bill) => (
+        <Link
+          href={`/accounting/purchase-bills/${bill.id}`}
+          className="font-mono text-xs text-foreground hover:text-blue-600 hover:underline"
+        >
+          {bill.billNumber}
+        </Link>
+      ),
+    },
+    {
+      key: "vendorName",
+      header: "Vendor",
+      cell: (bill) => bill.vendorName ?? "—",
+      sortable: true,
+      sortValue: (bill) => bill.vendorName ?? "",
+    },
+    {
+      key: "billDate",
+      header: "Bill date",
+      cell: (bill) => (
+        <span className="text-muted-foreground">{formatDate(bill.billDate)}</span>
+      ),
+      sortable: true,
+      sortValue: (bill) => bill.billDate ?? "",
+    },
+    {
+      key: "dueDate",
+      header: "Due date",
+      cell: (bill) => (
+        <span className="text-muted-foreground">{formatDate(bill.dueDate)}</span>
+      ),
+      sortable: true,
+      sortValue: (bill) => bill.dueDate ?? "",
+    },
+    {
+      key: "total",
+      header: "Total",
+      headerClassName: "text-right",
+      className: "text-right tabular-nums font-medium",
+      cell: (bill) => Number(bill.total).toFixed(2),
+      sortable: true,
+      sortValue: (bill) => Number(bill.total),
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (bill) => <FinanceStatusBadge status={bill.status} />,
+    },
+    {
+      key: "actions",
+      header: "",
+      className: "w-10",
+      cell: (bill) => <BillRowActions bill={bill} canApprove={canApprove} />,
+    },
+  ];
+}
+
 export default function PurchaseBillsListPage() {
   const [search, setSearch] = useState<string>("");
   const [status, setStatus] = useState<StatusFilter>("ALL");
   const canApprove = useCan("accounting:payables:approve");
+  const canManage = useCan("accounting:payables:manage");
 
   const query = usePurchaseBills({
     page: 1,
@@ -208,9 +263,9 @@ export default function PurchaseBillsListPage() {
     status: status === "ALL" ? undefined : status,
   });
 
-  const handleSearchChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+  function handleSearchChange(event: ChangeEvent<HTMLInputElement>): void {
     setSearch(event.target.value);
-  }, []);
+  }
 
   function handleStatusChange(value: string): void {
     if (isStatusFilter(value)) setStatus(value);
@@ -221,6 +276,7 @@ export default function PurchaseBillsListPage() {
   }
 
   const items = query.data?.items ?? [];
+  const columns = buildColumns(canApprove);
 
   return (
     <PageWrapper
@@ -228,12 +284,14 @@ export default function PurchaseBillsListPage() {
       title="Purchase Bills"
       subtitle="Vendor bills and accounts payable."
       actions={
-        <Button size="sm" asChild>
-          <Link href="/accounting/purchase-bills/new">
-            <Plus className="size-4 mr-1" />
-            New bill
-          </Link>
-        </Button>
+        canManage ? (
+          <Button size="sm" asChild>
+            <Link href="/accounting/purchase-bills/new">
+              <Plus className="size-4 mr-1" />
+              New bill
+            </Link>
+          </Button>
+        ) : undefined
       }
       filters={
         <div className="flex flex-wrap items-center gap-2">
@@ -261,7 +319,6 @@ export default function PurchaseBillsListPage() {
         </div>
       }
     >
-      {query.isLoading && <LoadingState variant="table" rows={8} />}
       {query.error && (
         <ErrorState
           title="Failed to load purchase bills"
@@ -270,80 +327,22 @@ export default function PurchaseBillsListPage() {
         />
       )}
 
-      {!query.isLoading && !query.error && items.length === 0 && (
-        <EmptyState
-          illustration={<EmptyExpensesIllustration />}
-          title="No purchase bills yet"
-          description="Record a vendor bill to start tracking accounts payable."
-          action={{ label: "New bill", href: "/accounting/purchase-bills/new" }}
+      {!query.error && (
+        <DataTable<PurchaseBillSummary>
+          data={items}
+          columns={columns}
+          getRowKey={(row) => row.id}
+          isLoading={query.isLoading}
+          minWidth="680px"
+          emptyState={
+            <EmptyState
+              illustration={<EmptyExpensesIllustration />}
+              title="No purchase bills yet"
+              description="Record a vendor bill to start tracking accounts payable."
+              action={{ label: "New bill", href: "/accounting/purchase-bills/new" }}
+            />
+          }
         />
-      )}
-
-      {items.length > 0 && (
-        <div className="rounded-lg border border-border overflow-hidden">
-          <div className="overflow-x-auto">
-            <Table className="min-w-[680px]">
-              <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">
-                    Bill #
-                  </TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">
-                    Vendor
-                  </TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 hidden md:table-cell">
-                    Bill date
-                  </TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 hidden md:table-cell">
-                    Due date
-                  </TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">
-                    Total
-                  </TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">
-                    Status
-                  </TableHead>
-                  <TableHead className="w-10 px-2 py-2" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {items.map((bill) => (
-                  <TableRow
-                    key={bill.id}
-                    className="border-b border-border/50 hover:bg-muted/30"
-                  >
-                    <TableCell className="font-mono text-xs px-3 py-2">
-                      <Link
-                        href={`/accounting/purchase-bills/${bill.id}`}
-                        className="text-foreground hover:text-blue-600 hover:underline"
-                      >
-                        {bill.billNumber}
-                      </Link>
-                    </TableCell>
-                    <TableCell className="text-sm px-3 py-2">
-                      {bill.vendorName ?? "—"}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground px-3 py-2 hidden md:table-cell">
-                      {formatDate(bill.billDate)}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground px-3 py-2 hidden md:table-cell">
-                      {formatDate(bill.dueDate)}
-                    </TableCell>
-                    <TableCell className="text-sm text-right tabular-nums font-medium px-3 py-2">
-                      {Number(bill.total).toFixed(2)}
-                    </TableCell>
-                    <TableCell className="px-3 py-2">
-                      <FinanceStatusBadge status={bill.status} />
-                    </TableCell>
-                    <TableCell className="px-2 py-2">
-                      <BillRowActions bill={bill} canApprove={canApprove} />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
       )}
     </PageWrapper>
   );

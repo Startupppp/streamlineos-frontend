@@ -108,7 +108,6 @@ export function DelegateDialog({
                 variant="outline"
                 size="sm"
                 onClick={() => handleOpenChange(false)}
-                disabled={isPending}
               >
                 Cancel
               </Button>

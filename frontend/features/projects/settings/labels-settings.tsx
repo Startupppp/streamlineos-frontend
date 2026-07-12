@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -228,14 +229,16 @@ export function LabelsSettings() {
             </div>
             <LabelColorPicker value={color} onChange={setColor} />
             <div className="flex gap-2">
-              <Button
+              <LoadingButton
                 size="sm"
                 onClick={handleCreate}
-                disabled={!name.trim() || createLabel.isPending}
+                disabled={!name.trim()}
+                isPending={createLabel.isPending}
+                loadingText="Creating…"
                 className="h-7 text-xs"
               >
-                {createLabel.isPending ? "Creating..." : "Create"}
-              </Button>
+                Create
+              </LoadingButton>
               <Button
                 size="sm"
                 variant="ghost"

@@ -24,6 +24,10 @@ import type {
   ForecastSnapshotCompare,
   CaptureForecastSnapshotInput,
   PatchNextStepInput,
+  DealStakeholder,
+  CreateStakeholderInput,
+  UpdateStakeholderInput,
+  OverrideForecastInput,
 } from "@/types/crm";
 
 export type {
@@ -374,6 +378,92 @@ export function usePatchNextStep(dealId: number) {
       apiClient.patch<Deal>(`/deals/${dealId}`, { nextStep: input.nextStep }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.deals.detail(dealId) });
+    },
+  });
+}
+
+export function useStakeholders(dealId: number) {
+  return useQuery({
+    queryKey: queryKeys.deals.stakeholders(dealId),
+    queryFn: () => apiClient.get<DealStakeholder[]>(`/deals/${dealId}/stakeholders`),
+    staleTime: 2 * 60_000,
+    enabled: dealId > 0,
+  });
+}
+
+export function useCreateStakeholder(dealId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["deals", "stakeholders", "create", dealId] as const,
+    mutationFn: (input: CreateStakeholderInput) =>
+      apiClient.post<DealStakeholder>(`/deals/${dealId}/stakeholders`, input),
+    onMutate: async () => {
+      await qc.cancelQueries({ queryKey: queryKeys.deals.stakeholders(dealId) });
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.deals.stakeholders(dealId) });
+    },
+  });
+}
+
+export function useUpdateStakeholder(dealId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["deals", "stakeholders", "update", dealId] as const,
+    mutationFn: ({ id, ...data }: UpdateStakeholderInput & { id: string }) =>
+      apiClient.patch<DealStakeholder>(`/deals/${dealId}/stakeholders/${id}`, data),
+    onMutate: async ({ id, ...data }) => {
+      await qc.cancelQueries({ queryKey: queryKeys.deals.stakeholders(dealId) });
+      const snapshot = qc.getQueryData<DealStakeholder[]>(queryKeys.deals.stakeholders(dealId));
+      qc.setQueryData<DealStakeholder[]>(queryKeys.deals.stakeholders(dealId), (old) =>
+        old ? old.map((s) => (s.id === id ? { ...s, ...data } : s)) : old,
+      );
+      return { snapshot };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.snapshot) {
+        qc.setQueryData(queryKeys.deals.stakeholders(dealId), context.snapshot);
+      }
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.deals.stakeholders(dealId) });
+    },
+  });
+}
+
+export function useDeleteStakeholder(dealId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["deals", "stakeholders", "delete", dealId] as const,
+    mutationFn: (stakeholderId: string) =>
+      apiClient.delete<{ deleted: boolean }>(`/deals/${dealId}/stakeholders/${stakeholderId}`),
+    onMutate: async (stakeholderId) => {
+      await qc.cancelQueries({ queryKey: queryKeys.deals.stakeholders(dealId) });
+      const snapshot = qc.getQueryData<DealStakeholder[]>(queryKeys.deals.stakeholders(dealId));
+      qc.setQueryData<DealStakeholder[]>(queryKeys.deals.stakeholders(dealId), (old) =>
+        old ? old.filter((s) => s.id !== stakeholderId) : old,
+      );
+      return { snapshot };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.snapshot) {
+        qc.setQueryData(queryKeys.deals.stakeholders(dealId), context.snapshot);
+      }
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.deals.stakeholders(dealId) });
+    },
+  });
+}
+
+export function useOverrideForecast() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["deals", "forecast", "override"] as const,
+    mutationFn: ({ snapshotId, ...data }: OverrideForecastInput & { snapshotId: string }) =>
+      apiClient.patch<ForecastSnapshot>(`/deals/forecast/${snapshotId}/override`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.deals.forecastSnapshots() });
     },
   });
 }

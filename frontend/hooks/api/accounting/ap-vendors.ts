@@ -5,11 +5,11 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
 const apVendorKeys = {
-  vendorCredits: (params?: Record<string, unknown>) =>
+  vendorCredits: (params?: object) =>
     ["streamlineos", "accounting", "ap", "vendor-credits", params] as const,
   vendorCredit: (id: number) =>
     ["streamlineos", "accounting", "ap", "vendor-credits", id] as const,
-  recurringBills: (params?: Record<string, unknown>) =>
+  recurringBills: (params?: object) =>
     ["streamlineos", "accounting", "ap", "recurring-bills", params] as const,
   recurringBill: (id: number) =>
     ["streamlineos", "accounting", "ap", "recurring-bills", id] as const,

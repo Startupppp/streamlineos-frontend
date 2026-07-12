@@ -185,6 +185,12 @@ const ACTIVITY_TYPE_LABELS: Record<CollectionActivityType, string> = {
   EMAIL: "Email",
 };
 
+const COLLECTION_ACTIVITY_TYPE_KEYS: CollectionActivityType[] = ["NOTE", "PROMISE_TO_PAY", "CALL", "EMAIL"];
+
+function isCollectionActivityType(v: string): v is CollectionActivityType {
+  return v in ACTIVITY_TYPE_LABELS;
+}
+
 export function CollectionsTab() {
   const summary = useCollectionsSummary();
   const createActivity = useCreateCollectionActivity();
@@ -216,7 +222,7 @@ export function CollectionsTab() {
   }
 
   function handleActivityTypeChange(value: string): void {
-    setActivityType(value as CollectionActivityType);
+    if (isCollectionActivityType(value)) setActivityType(value);
   }
 
   function handleActivityNoteChange(e: React.ChangeEvent<HTMLTextAreaElement>): void {
@@ -403,9 +409,7 @@ export function CollectionsTab() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {(
-                  Object.keys(ACTIVITY_TYPE_LABELS) as CollectionActivityType[]
-                ).map((key) => (
+                {COLLECTION_ACTIVITY_TYPE_KEYS.map((key) => (
                   <SelectItem key={key} value={key}>
                     {ACTIVITY_TYPE_LABELS[key]}
                   </SelectItem>

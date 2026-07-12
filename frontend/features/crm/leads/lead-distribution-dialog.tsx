@@ -13,9 +13,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Loader2, Users, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Users, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { useDistributeLeads } from "@/hooks/api/leads";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { LoadingButton } from "@/components/ui/loading-button";
 
 interface LeadDistributionDialogProps {
   open: boolean;
@@ -53,7 +55,7 @@ export function LeadDistributionDialog({
           );
           onSuccess?.();
         },
-        onError: (err) => toast.error(err.message),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }, [distributeMutation, leadIds, skipAbsent, onSuccess]);
@@ -118,15 +120,13 @@ export function LeadDistributionDialog({
               <Button variant="outline" onClick={handleClose}>
                 Cancel
               </Button>
-              <Button
+              <LoadingButton
                 onClick={handleDistribute}
-                disabled={distributeMutation.isPending}
+                isPending={distributeMutation.isPending}
+                loadingText="Distributing..."
               >
-                {distributeMutation.isPending && (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                )}
                 Distribute Now
-              </Button>
+              </LoadingButton>
             </DialogFooter>
           </>
         ) : (

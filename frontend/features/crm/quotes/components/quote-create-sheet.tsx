@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useCallback } from "react";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, Trash2, AlertTriangle } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -32,6 +32,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import type { Quote, QuoteLineItem } from "@/types/crm/quotes";
+import { QuoteLineItemsEditor } from "./quote-line-items-editor";
+import { QuoteSheetTotals } from "./quote-sheet-totals";
 
 const lineItemSchema = z.object({
   description: z.string().min(1, "Required"),
@@ -93,7 +95,7 @@ interface QuoteCreateSheetProps {
 function defaultExpiryDate(days: number): string {
   const d = new Date();
   d.setDate(d.getDate() + days);
-  return d.toISOString().split("T")[0];
+  return d.toISOString().split("T")[0] ?? "";
 }
 
 function mapLineItem(item: QuoteLineItem) {
@@ -137,11 +139,6 @@ export function QuoteCreateSheet({
   const form = useForm<QuoteCreateFormValues>({
     resolver: zodResolver(quoteFormSchema),
     defaultValues: buildDefaultValues(),
-  });
-
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: "lineItems",
   });
 
   useEffect(() => {
@@ -222,20 +219,10 @@ export function QuoteCreateSheet({
     [onSubmit, dealId, clientId],
   );
 
-  const handleAddLineItem = useCallback(() => {
-    append(EMPTY_LINE_ITEM);
-  }, [append]);
+  const handleCancel = useCallback(() => { onOpenChange(false); }, [onOpenChange]);
 
-  const handleRemoveLineItem = useCallback(
-    (index: number) => {
-      remove(index);
-    },
-    [remove],
-  );
-
-  const handleCancel = useCallback(() => {
-    onOpenChange(false);
-  }, [onOpenChange]);
+  const hasPricebooks = pricebooks && pricebooks.length > 0;
+  const hasTemplates = quoteTemplates && quoteTemplates.length > 0;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -298,9 +285,9 @@ export function QuoteCreateSheet({
                 />
               </div>
 
-              {(pricebooks && pricebooks.length > 0) || (quoteTemplates && quoteTemplates.length > 0) ? (
+              {(hasPricebooks || hasTemplates) && (
                 <div className="grid grid-cols-2 gap-4">
-                  {pricebooks && pricebooks.length > 0 && (
+                  {hasPricebooks && (
                     <FormField
                       control={form.control}
                       name="pricebookId"
@@ -335,7 +322,7 @@ export function QuoteCreateSheet({
                       )}
                     />
                   )}
-                  {quoteTemplates && quoteTemplates.length > 0 && (
+                  {hasTemplates && (
                     <FormField
                       control={form.control}
                       name="templateId"
@@ -366,7 +353,7 @@ export function QuoteCreateSheet({
                     />
                   )}
                 </div>
-              ) : null}
+              )}
 
               <FormField
                 control={form.control}
@@ -387,116 +374,10 @@ export function QuoteCreateSheet({
                 )}
               />
 
-              <div className="space-y-2">
-                <FormLabel>Line Items</FormLabel>
-                <div className="border rounded-lg overflow-hidden">
-                  <table className="w-full text-sm">
-                    <thead className="bg-muted/50">
-                      <tr>
-                        <th className="text-left px-3 py-2 font-medium text-xs text-muted-foreground">
-                          Description
-                        </th>
-                        <th className="text-left px-3 py-2 font-medium text-xs text-muted-foreground w-20">
-                          Qty
-                        </th>
-                        <th className="text-left px-3 py-2 font-medium text-xs text-muted-foreground w-28">
-                          Unit Price
-                        </th>
-                        <th className="text-left px-3 py-2 font-medium text-xs text-muted-foreground w-20">
-                          Tax %
-                        </th>
-                        <th className="w-8" />
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y">
-                      {fields.map((field, index) => (
-                        <tr key={field.id}>
-                          <td className="px-3 py-1.5">
-                            <FormField
-                              control={form.control}
-                              name={`lineItems.${index}.description`}
-                              render={({ field: f }) => (
-                                <FormItem className="space-y-0">
-                                  <FormControl>
-                                    <Input placeholder="Description" className="h-7 text-xs" {...f} />
-                                  </FormControl>
-                                  <FormMessage className="text-xs" />
-                                </FormItem>
-                              )}
-                            />
-                          </td>
-                          <td className="px-3 py-1.5">
-                            <FormField
-                              control={form.control}
-                              name={`lineItems.${index}.quantity`}
-                              render={({ field: f }) => (
-                                <FormItem className="space-y-0">
-                                  <FormControl>
-                                    <Input type="number" min="0.01" step="0.01" className="h-7 text-xs" {...f} />
-                                  </FormControl>
-                                  <FormMessage className="text-xs" />
-                                </FormItem>
-                              )}
-                            />
-                          </td>
-                          <td className="px-3 py-1.5">
-                            <FormField
-                              control={form.control}
-                              name={`lineItems.${index}.unitPrice`}
-                              render={({ field: f }) => (
-                                <FormItem className="space-y-0">
-                                  <FormControl>
-                                    <Input type="number" min="0" step="0.01" className="h-7 text-xs" {...f} />
-                                  </FormControl>
-                                  <FormMessage className="text-xs" />
-                                </FormItem>
-                              )}
-                            />
-                          </td>
-                          <td className="px-3 py-1.5">
-                            <FormField
-                              control={form.control}
-                              name={`lineItems.${index}.taxRate`}
-                              render={({ field: f }) => (
-                                <FormItem className="space-y-0">
-                                  <FormControl>
-                                    <Input type="number" min="0" max="100" step="0.01" className="h-7 text-xs" {...f} />
-                                  </FormControl>
-                                  <FormMessage className="text-xs" />
-                                </FormItem>
-                              )}
-                            />
-                          </td>
-                          <td className="px-3 py-1.5">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7 text-destructive hover:text-destructive"
-                              onClick={() => handleRemoveLineItem(index)}
-                              disabled={fields.length === 1}
-                              aria-label="Remove line item"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <FormMessage>{form.formState.errors.lineItems?.root?.message}</FormMessage>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-7 text-xs"
-                  onClick={handleAddLineItem}
-                >
-                  <Plus className="h-3.5 w-3.5 mr-1" />
-                  Add Line Item
-                </Button>
-              </div>
+              <QuoteLineItemsEditor
+                control={form.control}
+                rootError={form.formState.errors.lineItems?.root?.message}
+              />
 
               <div className="grid grid-cols-2 gap-4">
                 <FormField
@@ -535,7 +416,7 @@ export function QuoteCreateSheet({
                 name="termsAndConditions"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Terms & Conditions</FormLabel>
+                    <FormLabel>Terms &amp; Conditions</FormLabel>
                     <FormControl>
                       <Textarea
                         placeholder="Optional terms and conditions"
@@ -570,22 +451,13 @@ export function QuoteCreateSheet({
             </div>
 
             <div className="border-t shrink-0 px-6 py-4 space-y-2">
-              <div className="flex flex-col gap-0.5 items-end text-xs tabular-nums font-mono">
-                <span className="text-muted-foreground">
-                  Subtotal: {currency} {subtotal.toFixed(2)}
-                </span>
-                {discountAmt > 0 && (
-                  <span className="text-amber-700">
-                    Discount: -{currency} {discountAmt.toFixed(2)}
-                  </span>
-                )}
-                <span className="text-muted-foreground">
-                  Tax: {currency} {taxTotal.toFixed(2)}
-                </span>
-                <span className="font-semibold text-foreground text-sm">
-                  Total: {currency} {grandTotal.toFixed(2)}
-                </span>
-              </div>
+              <QuoteSheetTotals
+                currency={currency}
+                subtotal={subtotal}
+                discountAmt={discountAmt}
+                taxTotal={taxTotal}
+                grandTotal={grandTotal}
+              />
               <div className="flex gap-3 justify-end pt-2">
                 <Button type="button" variant="outline" onClick={handleCancel}>
                   Cancel

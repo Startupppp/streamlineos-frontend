@@ -56,7 +56,7 @@ export function ProjectCardProgressRing({
           strokeDasharray={circumference}
           strokeDashoffset={offset}
           className={cn(
-            "transition-[stroke-dashoffset] duration-500 ease-out motion-reduce:transition-none",
+            "transition-[stroke-dashoffset] duration-300 ease-out motion-reduce:transition-none",
             isComplete ? "stroke-emerald-500" : "stroke-blue-500",
           )}
         />

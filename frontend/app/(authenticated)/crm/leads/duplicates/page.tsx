@@ -46,7 +46,7 @@ function statusBadgeClass(status: string): string {
   const map: Record<string, string> = {
     NEW: "bg-blue-50 text-blue-700 border-blue-200",
     CONTACTED: "bg-amber-50 text-amber-700 border-amber-200",
-    INTERESTED: "bg-violet-50 text-violet-700 border-violet-200",
+    INTERESTED: "bg-blue-50 text-blue-700 border-blue-200",
     QUALIFIED: "bg-emerald-50 text-emerald-700 border-emerald-200",
     CONVERTED: "bg-emerald-50 text-emerald-700 border-emerald-200",
     LOST: "bg-red-50 text-red-700 border-red-200",

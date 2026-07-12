@@ -24,11 +24,11 @@ import Link from "next/link";
 const CATEGORY_DOT_COLORS: Record<string, string> = {
   meeting: "bg-blue-500",
   call: "bg-green-500",
-  demo: "bg-indigo-500",
+  demo: "bg-blue-500",
   general: "bg-amber-500",
   other: "bg-slate-400",
   deadline: "bg-red-500",
-  reminder: "bg-purple-500",
+  reminder: "bg-blue-600",
 };
 
 const ENTITY_PATHS: Record<string, string> = {

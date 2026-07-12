@@ -10,6 +10,7 @@ import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { RichNotesEditor } from "@/features/crm/shared/rich-notes-editor";
 import { useUpdateContact } from "@/hooks/api/crm";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 interface ContactNotesProps {
   contactId: number;
@@ -39,7 +40,7 @@ export function ContactNotes({ contactId, initialNotes }: ContactNotesProps) {
           toast.success("Notes saved");
           setEditing(false);
         },
-        onError: (e) => toast.error(e.message),
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }, [contactId, notes, updateMutation]);

@@ -257,6 +257,54 @@ interface RawStockSummaryEnvelope {
   totalPages: number;
 }
 
+interface RawReorderRow {
+  productVariantId: number;
+  variantSku: string;
+  variantName: string;
+  productId: number;
+  productName: string;
+  productSku: string;
+  onHand: number;
+  onOrder: number;
+  committed: number;
+  reorderPoint: number;
+  minStockLevel: number;
+  reorderRuleId: number | null;
+  minQty: number | null;
+  maxQty: number | null;
+  reorderQty: number | null;
+  suggestedQty: number;
+  vendorId: number | null;
+  leadTimeDays: number | null;
+}
+
+interface RawReorderEnvelope {
+  items: RawReorderRow[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+function toReorderRowFromFlat(row: RawReorderRow): ReorderReportRow {
+  const deficit = Math.max(row.reorderPoint - row.onHand, 0);
+  return {
+    productId: row.productId,
+    productName: row.productName,
+    sku: row.productSku,
+    variantSku: row.variantSku,
+    categoryName: null,
+    warehouseName: null,
+    onHand: row.onHand,
+    availableQty: row.onHand - row.committed,
+    reorderPoint: row.reorderPoint,
+    reorderQty: row.suggestedQty > 0 ? row.suggestedQty : (deficit > 0 ? deficit : null),
+    deficit,
+    costPrice: null,
+    vendorName: null,
+    urgency: reorderUrgency(row.onHand, row.reorderPoint),
+  };
+}
+
 interface RawMovementsEnvelope {
   items: RawTransactionRow[];
   total: number;
@@ -300,31 +348,6 @@ function toStockSummaryRow(row: RawStockLevelRow): StockSummaryRow {
   };
 }
 
-function toReorderRow(row: RawStockLevelRow): ReorderReportRow {
-  const variant = row.productVariant;
-  const product = variant?.product ?? null;
-  const onHand = toNumber(row.onHand);
-  const reservedQty = toNumber(row.committed);
-  const reorderPoint = product?.reorderPoint != null ? toNumber(product.reorderPoint) : 0;
-  const deficit = Math.max(reorderPoint - onHand, 0);
-  const variantSku = variant?.sku ?? "—";
-  return {
-    productId: product?.id ?? variant?.id ?? 0,
-    productName: product?.name ?? variant?.name ?? "—",
-    sku: variantSku,
-    variantSku,
-    categoryName: null,
-    warehouseName: row.location?.warehouse?.name ?? null,
-    onHand,
-    availableQty: onHand - reservedQty,
-    reorderPoint,
-    reorderQty: deficit > 0 ? deficit : null,
-    deficit,
-    costPrice: variant?.costPrice ?? null,
-    vendorName: null,
-    urgency: reorderUrgency(onHand, reorderPoint),
-  };
-}
 
 function toMovementRow(row: RawTransactionRow): MovementReportRow {
   const variant = row.productVariant;
@@ -411,11 +434,11 @@ export function useReorderReport(params?: ReorderReportParams) {
   return useQuery<PaginatedResponse<ReorderReportRow>, Error>({
     queryKey: [...queryKeys.inventory.all, "reorderReport", params ?? {}] as const,
     queryFn: async () => {
-      const data = await apiClient.get<RawStockSummaryEnvelope>("/inventory/reports/reorder", {
+      const data = await apiClient.get<RawReorderEnvelope>("/inventory/reports/reorder", {
         ...(params?.page !== undefined ? { page: String(params.page) } : {}),
         ...(params?.limit !== undefined ? { limit: String(params.limit) } : {}),
       });
-      const items = (data.items ?? []).map(toReorderRow);
+      const items = (data.items ?? []).map(toReorderRowFromFlat);
       return { items, total: data.total, page: data.page, totalPages: data.totalPages };
     },
     staleTime: 5 * 60_000,

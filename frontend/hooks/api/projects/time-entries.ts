@@ -17,9 +17,9 @@ export function useTimeEntries(
   options?: Omit<UseQueryOptions<TimeEntryWithUser[]>, "queryKey" | "queryFn">
 ) {
   return useQuery<TimeEntryWithUser[]>({
-    queryKey: queryKeys.projects.timeEntries(filters as Record<string, unknown>),
+    queryKey: queryKeys.projects.timeEntries(filters ? { ...filters } : undefined),
     queryFn: () =>
-      apiClient.get<TimeEntryWithUser[]>("/projects/time-entries", filters as Record<string, unknown>),
+      apiClient.get<TimeEntryWithUser[]>("/projects/time-entries", filters ? { ...filters } : undefined),
     staleTime: 30_000,
     ...options,
   });
@@ -35,7 +35,7 @@ export function useMyTimeEntries(
     queryFn: () =>
       apiClient.get<TimeEntryWithUser[]>("/projects/time-entries", {
         userId,
-        ...(filters as Record<string, unknown>),
+        ...filters,
       }),
     enabled: !!userId,
     staleTime: 30_000,
@@ -107,9 +107,9 @@ export function useAllTeamTimesheets(
   options?: Omit<UseQueryOptions<TimeEntryWithUser[]>, "queryKey" | "queryFn">
 ) {
   return useQuery<TimeEntryWithUser[]>({
-    queryKey: [...queryKeys.projects.timeEntries(filters as Record<string, unknown>), "team"] as const,
+    queryKey: [...queryKeys.projects.timeEntries(filters ? { ...filters } : undefined), "team"] as const,
     queryFn: () =>
-      apiClient.get<TimeEntryWithUser[]>("/projects/time-entries/team", filters as Record<string, unknown>),
+      apiClient.get<TimeEntryWithUser[]>("/projects/time-entries/team", filters ? { ...filters } : undefined),
     staleTime: 30_000,
     ...options,
   });

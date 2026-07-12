@@ -12,6 +12,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { SkeletonTable } from "@/components/shared/skeletons/skeleton-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCan } from "@/hooks/api/access";
@@ -179,13 +180,14 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
       filters={filtersBar}
       actions={
         canManage ? (
-          <Button
+          <LoadingButton
             size="sm" className="h-8 text-xs"
             onClick={handleNewForm}
-            disabled={createForm.isPending}
+            isPending={createForm.isPending}
+            loadingText="Creating…"
           >
-            {createForm.isPending ? "Creating…" : "New Form"}
-          </Button>
+            New Form
+          </LoadingButton>
         ) : undefined
       }
     >

@@ -3,14 +3,14 @@
 import { useCallback, useState } from "react";
 import {
   Plus,
-  ArrowRight,
-  X,
   GripVertical,
   Building2,
   Clock,
   AlertTriangle,
   Info,
 } from "lucide-react";
+import { XIcon, MoveRightIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Draggable } from "@hello-pangea/dnd";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -33,7 +33,7 @@ const SOURCE_COLORS: Record<string, string> = {
   referral: "bg-green-500/15 text-green-400 border-green-500/20",
   campaign: "bg-blue-500/15 text-blue-400 border-blue-500/20",
   cold_call: "bg-orange-500/15 text-orange-400 border-orange-500/20",
-  website: "bg-purple-500/15 text-purple-400 border-purple-500/20",
+  website: "bg-blue-500/15 text-blue-400 border-blue-500/20",
   social_media: "bg-pink-500/15 text-pink-400 border-pink-500/20",
   walk_in: "bg-cyan-500/15 text-cyan-400 border-cyan-500/20",
   other: "bg-slate-500/15 text-slate-400 border-slate-500/20",
@@ -74,6 +74,7 @@ interface KanbanCardProps {
   lead: BoardLead;
   index: number;
   status: string;
+  allStatusKeys?: string[];
   onOpen: (id: number) => void;
   onMoveStatus: (
     leadId: number,
@@ -217,10 +218,13 @@ export function KanbanCard({
   lead,
   index,
   status,
+  allStatusKeys,
   onOpen,
   onMoveStatus,
 }: KanbanCardProps) {
   const selfAssign = useSelfAssignLead();
+  const lostIconAnim = useAnimatedIcon();
+  const nextIconAnim = useAnimatedIcon();
 
   const handleOpen = useCallback(() => onOpen(lead.id), [lead.id, onOpen]);
   const handleSelfAssign = useCallback(
@@ -242,11 +246,12 @@ export function KanbanCard({
   const handleMoveNext = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      const nextIdx = (FALLBACK_STATUSES as readonly string[]).indexOf(status) + 1;
-      if (nextIdx < FALLBACK_STATUSES.length - 1)
-        onMoveStatus(lead.id, FALLBACK_STATUSES[nextIdx] as string, status);
+      const keys = allStatusKeys ?? (FALLBACK_STATUSES as readonly string[]);
+      const nextIdx = keys.indexOf(status) + 1;
+      if (nextIdx > 0 && nextIdx < keys.length - 1)
+        onMoveStatus(lead.id, keys[nextIdx] as string, status);
     },
-    [lead.id, status, onMoveStatus],
+    [lead.id, status, allStatusKeys, onMoveStatus],
   );
 
   const priorityBorder = lead.priority
@@ -377,15 +382,17 @@ export function KanbanCard({
                             onClick={handleMarkLost}
                             className="h-5 w-5 rounded flex items-center justify-center hover:bg-red-500/20 transition-colors"
                             aria-label="Mark as lost"
+                            {...lostIconAnim.hoverHandlers}
                           >
-                            <X className="h-3 w-3 text-red-400" />
+                            <XIcon ref={lostIconAnim.iconRef} className="h-3 w-3 text-red-400" size={12} />
                           </button>
                           <button
                             onClick={handleMoveNext}
                             className="h-5 w-5 rounded flex items-center justify-center hover:bg-blue-500/20 transition-colors"
                             aria-label="Move to next stage"
+                            {...nextIconAnim.hoverHandlers}
                           >
-                            <ArrowRight className="h-3 w-3 text-blue-600" />
+                            <MoveRightIcon ref={nextIconAnim.iconRef} className="h-3 w-3 text-blue-600" size={12} />
                           </button>
                         </>
                       )}

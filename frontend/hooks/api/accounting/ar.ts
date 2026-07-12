@@ -6,6 +6,7 @@ import { queryKeys } from "@/lib/query-keys";
 import type {
   ArInvoice,
   ArPayment,
+  ArPaymentMethod,
   CreditNote,
   CreditNoteStatus,
   RecurringInvoiceTemplate,
@@ -136,34 +137,22 @@ export function useCustomerStatement(
 }
 
 export interface ArPaymentsParams {
+  method?: ArPaymentMethod;
+  clientId?: number;
+  from?: string;
+  to?: string;
   page?: number;
   pageSize?: number;
 }
 
 export function useArPayments(params: ArPaymentsParams = {}) {
-  const page = params.page ?? 1;
-  const limit = (params.pageSize ?? 50) * page;
-  return useQuery<ArPayment[], Error>({
+  return useQuery<ListResponse<ArPayment>, Error>({
     queryKey: arKeys.arPayments.list(params),
-    queryFn: async () => {
-      const response = await apiClient.get<ListResponse<ArInvoice>>(
-        "/invoices",
-        toQuery({ page: 1, limit }),
-      );
-      const payments: ArPayment[] = [];
-      for (const inv of response.items) {
-        if (inv.payments) {
-          for (const p of inv.payments) {
-            payments.push(p);
-          }
-        }
-      }
-      payments.sort(
-        (a, b) =>
-          new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime(),
-      );
-      return payments;
-    },
+    queryFn: () =>
+      apiClient.get<ListResponse<ArPayment>>(
+        "/accounting/ar-payments",
+        toQuery(params),
+      ),
     staleTime: 30_000,
   });
 }

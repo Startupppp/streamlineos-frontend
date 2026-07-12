@@ -475,4 +475,5 @@ export type PermissionKey =
   | "crm:deals:update"
   | "crm:deals:delete"
   | "crm:deals:approve"
-  | "crm:deals:forecast";
+  | "crm:deals:forecast"
+  | "crm:deals:manage";

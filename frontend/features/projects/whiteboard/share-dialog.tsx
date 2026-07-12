@@ -30,6 +30,8 @@ const VISIBILITY_OPTIONS: { value: WhiteboardVisibility; label: string; icon: ty
   { value: "public", label: "Public link", icon: Globe, desc: "Anyone with the link" },
 ];
 
+const SHARE_ROLES: readonly WhiteboardShareRole[] = ["viewer", "editor"];
+
 const EXPIRY_OPTIONS = [
   { value: "never", label: "Never" },
   { value: "1d", label: "1 day" },
@@ -38,6 +40,8 @@ const EXPIRY_OPTIONS = [
 ] as const;
 
 type ExpiryPreset = typeof EXPIRY_OPTIONS[number]["value"];
+
+const EXPIRY_PRESETS: readonly ExpiryPreset[] = EXPIRY_OPTIONS.map((o) => o.value);
 
 function computeExpiry(preset: ExpiryPreset): string | null {
   if (preset === "never") return null;
@@ -84,7 +88,8 @@ export function ShareDialog({ projectId, whiteboard, open, onOpenChange }: Share
     });
   }
   function handleAddMember(userId: string) {
-    const newShares = [...shares.map((s) => ({ userId: s.userId, role: s.role })), { userId, role: "viewer" as WhiteboardShareRole }];
+    const defaultRole: WhiteboardShareRole = "viewer";
+    const newShares = [...shares.map((s) => ({ userId: s.userId, role: s.role })), { userId, role: defaultRole }];
     setShares.mutate({ id: whiteboard.id, shares: newShares }, {
       onSuccess: () => { toast.success("Member added"); setPickerOpen(false); setSearchInput(""); },
       onError: () => toast.error("Failed to add member"),
@@ -198,7 +203,14 @@ export function ShareDialog({ projectId, whiteboard, open, onOpenChange }: Share
                       <p className="text-sm truncate">{share.name ?? share.email ?? share.userId}</p>
                       {share.name && <p className="text-xs text-muted-foreground truncate">{share.email}</p>}
                     </div>
-                    <Select value={share.role} onValueChange={(v) => handleRoleChange(share.userId, v as WhiteboardShareRole)} disabled={setShares.isPending || share.userId === currentUserId}>
+                    <Select
+                      value={share.role}
+                      onValueChange={(v) => {
+                        const role = SHARE_ROLES.find((r) => r === v);
+                        if (role) handleRoleChange(share.userId, role);
+                      }}
+                      disabled={setShares.isPending || share.userId === currentUserId}
+                    >
                       <SelectTrigger className="h-7 w-24 text-xs"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="viewer"><Eye className="h-3 w-3 inline mr-1" />Viewer</SelectItem>
@@ -225,7 +237,14 @@ export function ShareDialog({ projectId, whiteboard, open, onOpenChange }: Share
               </div>
               <div className="flex items-center justify-between gap-3">
                 <Label className="text-xs text-muted-foreground shrink-0">Anyone can</Label>
-                <Select value={sharing.publicAccess} onValueChange={(v) => handlePublicAccessChange(v as WhiteboardShareRole)} disabled={updateSharing.isPending}>
+                <Select
+                  value={sharing.publicAccess}
+                  onValueChange={(v) => {
+                    const role = SHARE_ROLES.find((r) => r === v);
+                    if (role) handlePublicAccessChange(role);
+                  }}
+                  disabled={updateSharing.isPending}
+                >
                   <SelectTrigger className="h-7 w-28 text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="viewer">View</SelectItem>
@@ -235,7 +254,13 @@ export function ShareDialog({ projectId, whiteboard, open, onOpenChange }: Share
               </div>
               <div className="flex items-center justify-between gap-3">
                 <Label className="text-xs text-muted-foreground shrink-0">Link expires</Label>
-                <Select onValueChange={(v) => handleExpiryChange(v as ExpiryPreset)} disabled={updateSharing.isPending}>
+                <Select
+                  onValueChange={(v) => {
+                    const preset = EXPIRY_PRESETS.find((p) => p === v);
+                    if (preset) handleExpiryChange(preset);
+                  }}
+                  disabled={updateSharing.isPending}
+                >
                   <SelectTrigger className="h-7 w-28 text-xs">
                     <SelectValue placeholder={sharing.linkExpiresAt ? new Date(sharing.linkExpiresAt).toLocaleDateString() : "Never"} />
                   </SelectTrigger>

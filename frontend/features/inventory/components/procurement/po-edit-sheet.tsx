@@ -169,7 +169,7 @@ export function PoEditSheet({ open, onOpenChange, po }: PoEditSheetProps) {
         variantId: String(l.productVariant?.id ?? ""),
         quantity: String(parseFloat(l.quantity)),
         unitCost: String(parseFloat(l.unitCost)),
-        taxRate: "0",
+        taxRate: l.taxRate ? String(parseFloat(l.taxRate)) : "0",
       })),
     },
   });

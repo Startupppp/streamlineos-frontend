@@ -8,6 +8,7 @@ import { LoadingState, ErrorState } from "@/components/shared";
 import { FinanceStatusBadge } from "@/features/accounting/shared";
 import type { FinanceStatus } from "@/features/accounting/shared";
 import { useOpeningBalance } from "@/hooks/api/accounting/core";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { OpeningBalancesEditor } from "@/features/accounting/core/opening-balances-editor";
 
 const KNOWN_FINANCE_STATUSES: readonly FinanceStatus[] = [
@@ -56,7 +57,7 @@ export default function OpeningBalancesPage() {
       <PageWrapper eyebrow="Accounting" title="Opening Balances" subtitle="Set starting account balances.">
         <ErrorState
           title="Failed to load opening balances"
-          description={query.error.message}
+          description={getErrorMessage(query.error)}
           onRetry={handleRetry}
         />
       </PageWrapper>

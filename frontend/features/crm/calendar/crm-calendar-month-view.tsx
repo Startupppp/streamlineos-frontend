@@ -15,10 +15,10 @@ interface CrmCalendarMonthViewProps {
 const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
   meeting: { bg: "bg-blue-100 text-blue-700", text: "blue" },
   call: { bg: "bg-green-100 text-green-700", text: "green" },
-  demo: { bg: "bg-indigo-100 text-indigo-700", text: "indigo" },
+  demo: { bg: "bg-blue-100 text-blue-700", text: "blue" },
   deadline: { bg: "bg-red-100 text-red-700", text: "red" },
   general: { bg: "bg-amber-100 text-amber-700", text: "amber" },
-  reminder: { bg: "bg-purple-100 text-purple-700", text: "purple" },
+  reminder: { bg: "bg-blue-50 text-blue-600", text: "blue" },
   other: { bg: "bg-amber-100 text-amber-700", text: "amber" },
 }
 

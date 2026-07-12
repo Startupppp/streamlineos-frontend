@@ -15,6 +15,7 @@ import { InventoryEmptyState } from "@/features/inventory/components/inventory-e
 import { EmptyReportIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { useStockSummary, type StockSummaryRow } from "@/hooks/api/inventory/reports";
 import { useWarehouses } from "@/hooks/api/inventory/warehouses";
+import { downloadCsv } from "@/features/inventory/lib";
 
 function StockLevelBadge({
   available,
@@ -45,39 +46,28 @@ function StockLevelBadge({
 }
 
 function exportToCsv(rows: StockSummaryRow[]): void {
-  const headers = [
-    "Product", "SKU", "Category", "UOM", "Warehouse",
-    "On Hand", "Reserved", "Available", "Reorder Point",
-    "Cost Price", "Total Value", "Status",
-  ];
-  const csvRows = rows.map((r) => [
-    r.productName,
-    r.sku,
-    r.categoryName ?? "",
-    r.uom ?? "",
-    r.warehouseName ?? "",
-    r.onHandQty,
-    r.reservedQty,
-    r.availableQty,
-    r.reorderPoint ?? "",
-    r.costPrice ? Number(r.costPrice).toFixed(2) : "",
-    r.totalValue > 0 ? r.totalValue.toFixed(2) : "",
-    r.reorderPoint !== null && r.availableQty <= 0
-      ? "Out of stock"
-      : r.reorderPoint !== null && r.availableQty <= r.reorderPoint
-        ? "Low stock"
-        : "OK",
-  ]);
-  const content = [headers, ...csvRows]
-    .map((row) => row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))
-    .join("\n");
-  const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `stock-summary-${new Date().toISOString().slice(0, 10)}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
+  downloadCsv(
+    `stock-summary-${new Date().toISOString().slice(0, 10)}.csv`,
+    ["Product", "SKU", "Category", "UOM", "Warehouse", "On Hand", "Reserved", "Available", "Reorder Point", "Cost Price", "Total Value", "Status"],
+    rows.map((r) => [
+      r.productName,
+      r.sku,
+      r.categoryName ?? "",
+      r.uom ?? "",
+      r.warehouseName ?? "",
+      r.onHandQty,
+      r.reservedQty,
+      r.availableQty,
+      r.reorderPoint ?? "",
+      r.costPrice ? Number(r.costPrice).toFixed(2) : "",
+      r.totalValue > 0 ? r.totalValue.toFixed(2) : "",
+      r.reorderPoint !== null && r.availableQty <= 0
+        ? "Out of stock"
+        : r.reorderPoint !== null && r.availableQty <= r.reorderPoint
+          ? "Low stock"
+          : "OK",
+    ]),
+  );
 }
 
 const STOCK_SUMMARY_COLUMNS: DataTableColumn<StockSummaryRow>[] = [

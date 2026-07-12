@@ -84,6 +84,9 @@ export const RunHistoryDrawer = memo(function RunHistoryDrawer({ ruleId, open, o
                           })} />
                           <span className="text-[10px] text-muted-foreground">{step.type}</span>
                           {step.message && <span className="text-[10px] text-muted-foreground">— {step.message}</span>}
+                          {step.branchTaken && (
+                            <span className="text-[10px] text-blue-500 font-medium">→ {step.branchTaken}</span>
+                          )}
                         </div>
                       ))}
                     </div>

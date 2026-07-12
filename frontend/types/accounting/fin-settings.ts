@@ -1,4 +1,4 @@
-export type AccountingBasis = "ACCRUAL" | "CASH";
+﻿export type AccountingBasis = "ACCRUAL" | "CASH";
 
 export type SequenceEntityType =
   | "journal"
@@ -9,6 +9,17 @@ export type SequenceEntityType =
   | "payment"
   | "asset";
 
+export interface PaymentTerm {
+  key: string;
+  label: string;
+  days: number;
+  isDefault?: boolean;
+}
+
+export interface UpdatePaymentTermsInput {
+  terms: PaymentTerm[];
+}
+
 export interface AccountingSettings {
   id: number;
   orgId: string;
@@ -17,6 +28,7 @@ export interface AccountingSettings {
   accountingBasis: AccountingBasis;
   taxRegistration: Record<string, unknown> | null;
   coaTemplate: string | null;
+  paymentTerms?: PaymentTerm[];
   createdAt: string;
   updatedAt: string;
 }
@@ -51,7 +63,9 @@ export type SystemAccountPurpose =
   | "REIMBURSEMENT_PAYABLE"
   | "FX_GAIN_LOSS"
   | "DEPRECIATION_EXPENSE"
-  | "ACCUM_DEPRECIATION";
+  | "ACCUM_DEPRECIATION"
+  | "SALARY_EXPENSE"
+  | "ASSET_DISPOSAL_GAIN_LOSS";
 
 export interface SystemAccountMapping {
   purpose: SystemAccountPurpose;
@@ -77,3 +91,4 @@ export interface UpdateSequenceInput {
   padding?: number;
   nextNumber?: number;
 }
+

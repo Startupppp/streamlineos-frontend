@@ -8,7 +8,6 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -22,7 +21,8 @@ import { DealEditForm, type EditFormValues } from "./detail/deal-edit-form";
 import { toast } from "sonner";
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
-import { DEAL_STAGES } from "@/features/crm/shared/constants";
+import { useCrmStages } from "@/hooks/api/crm/metadata";
+import { CrmStageBadge } from "@/features/crm/shared/metadata";
 import { formatINRCompact } from "@/lib/format-utils";
 
 interface DealSidePanelProps {
@@ -38,8 +38,9 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
     dealId ?? 0,
   );
   const updateDeal = useUpdateDeal();
+  const { data: dealStages = [] } = useCrmStages("deal");
 
-  const stage = deal ? DEAL_STAGES.find((s) => s.key === deal.stage) : null;
+  const stage = deal ? dealStages.find((s) => s.key === deal.stage) ?? null : null;
 
   const handleSave = useCallback(
     (values: EditFormValues) => {
@@ -94,14 +95,7 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
                     {deal.name}
                   </SheetTitle>
                   <div className="flex items-center gap-2">
-                    {stage && (
-                      <Badge
-                        variant="secondary"
-                        className={`text-[11px] ${stage.bg}`}
-                      >
-                        {stage.label}
-                      </Badge>
-                    )}
+                    {stage && <CrmStageBadge stage={stage} size="card" />}
                     <span className="text-sm font-semibold text-blue-600">
                       {formatINRCompact(Number(deal.value ?? 0))}
                     </span>

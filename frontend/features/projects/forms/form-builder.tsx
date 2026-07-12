@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -130,9 +131,9 @@ export function FormBuilder({ form, onSave, isPending, readOnly = false }: FormB
 
       {!readOnly && (
         <div className="flex justify-end pt-2">
-          <Button size="sm" onClick={handleSave} disabled={isPending || !name.trim()}>
-            {isPending ? "Saving…" : "Save Form"}
-          </Button>
+          <LoadingButton size="sm" onClick={handleSave} disabled={!name.trim()} isPending={isPending} loadingText="Saving…">
+            Save Form
+          </LoadingButton>
         </div>
       )}
     </div>

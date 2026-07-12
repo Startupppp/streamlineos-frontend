@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { useGenerateEmail } from "@/hooks/api/ai";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useFeature } from "@/lib/billing/use-feature";
 import type { EmailTone } from "@/lib/ai/schemas";
 
@@ -75,7 +76,7 @@ export function AIEmailDialog({
         context: context || undefined,
       },
       {
-        onError: (err) => toast.error(err.message || "Email generation failed"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }, [

@@ -44,7 +44,7 @@ const RULE_TYPE_COLORS: Record<CrmValidationRuleType, string> = {
   email: "bg-blue-50 text-blue-700 border-blue-200",
   phone: "bg-blue-50 text-blue-700 border-blue-200",
   url: "bg-blue-50 text-blue-700 border-blue-200",
-  regex: "bg-violet-50 text-violet-700 border-violet-200",
+  regex: "bg-blue-50 text-blue-700 border-blue-200",
   numeric_min: "bg-amber-50 text-amber-700 border-amber-200",
   numeric_max: "bg-amber-50 text-amber-700 border-amber-200",
   currency_min: "bg-amber-50 text-amber-700 border-amber-200",

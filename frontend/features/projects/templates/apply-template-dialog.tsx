@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import type { ChangeEvent } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import {
   Dialog,
   DialogContent,
@@ -137,13 +138,15 @@ export function ApplyTemplateDialog({ template, onClose }: ApplyTemplateDialogPr
           >
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             onClick={handleApply}
-            disabled={apply.isPending || !name.trim()}
+            disabled={!name.trim()}
+            isPending={apply.isPending}
+            loadingText="Creating…"
             className="active:scale-[0.98]"
           >
-            {apply.isPending ? "Creating…" : "Create Project"}
-          </Button>
+            Create Project
+          </LoadingButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -258,11 +258,9 @@ export function TicketSidebar({
         <LabelPicker
           ticketId={ticketId}
           projectId={projectId}
-          currentLabels={
-            (ticket.labels || []).filter((l) => !!l.label) as Array<{
-              label: { id: number; name: string; color: string | null };
-            }>
-          }
+          currentLabels={(ticket.labels ?? []).filter(
+            (l): l is { label: { id: number; name: string; color: string | null } } => l.label != null,
+          )}
         />
       </div>
 

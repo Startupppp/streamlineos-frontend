@@ -1,11 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format, parseISO, addHours, differenceInMinutes } from "date-fns";
-import { motion, useReducedMotion } from "framer-motion";
 import {
   Sheet,
   SheetContent,
@@ -14,21 +13,8 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { DatePicker } from "@/components/ui/date-picker";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import {
   useCreateCalendarEvent,
@@ -39,8 +25,12 @@ import {
 } from "@/hooks/api/calendar";
 import type { CalendarListItem } from "@/hooks/api/calendar";
 import { EventAttendeesPicker } from "@/features/calendar/event-attendees-picker";
-
-const NO_ENTITY_TYPE = "none";
+import { getErrorMessage } from "@/lib/get-error-message";
+import {
+  CrmEventFormFields,
+  NO_ENTITY_TYPE,
+  type CrmEventFieldValues,
+} from "./crm-event-form-fields";
 
 const eventSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters").max(100, "Title too long"),
@@ -59,30 +49,6 @@ const eventSchema = z.object({
 });
 
 type EventFormValues = z.infer<typeof eventSchema>;
-
-const COLOR_OPTIONS = [
-  { value: "blue" as const },
-  { value: "green" as const },
-  { value: "red" as const },
-  { value: "yellow" as const },
-  { value: "purple" as const },
-];
-
-const COLOR_BG_CLASSES: Record<string, string> = {
-  blue: "bg-blue-500",
-  green: "bg-green-500",
-  red: "bg-red-500",
-  yellow: "bg-amber-500",
-  purple: "bg-purple-500",
-};
-
-const COLOR_RING_CLASSES: Record<string, string> = {
-  blue: "ring-blue-500",
-  green: "ring-green-500",
-  red: "ring-red-500",
-  yellow: "ring-yellow-500",
-  purple: "ring-purple-500",
-};
 
 function buildDefaults(date?: Date | null): EventFormValues {
   const start = date ?? new Date();
@@ -138,7 +104,6 @@ export function CrmEventDialog({
   event,
 }: CrmEventDialogProps) {
   const isEdit = !!event;
-  const shouldReduceMotion = useReducedMotion();
 
   const numericId = useMemo(
     () => (isEdit && event?.id ? extractEventNumericId(event.id) : null),
@@ -251,8 +216,8 @@ export function CrmEventDialog({
         toast.success("Meeting created");
       }
       onOpenChange(false);
-    } catch {
-      toast.error(isEdit ? "Failed to update meeting" : "Failed to create meeting");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     }
   });
 
@@ -270,228 +235,17 @@ export function CrmEventDialog({
           </SheetTitle>
         </SheetHeader>
 
-        <ScrollArea className="flex-1 min-h-0">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           <form id="crm-event-form" onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="title" className="text-[13px] font-medium text-foreground">
-                Title <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="title"
-                placeholder="Meeting title"
-                {...form.register("title")}
-                className={cn(
-                  "h-9",
-                  form.formState.errors.title && "border-destructive focus-visible:ring-destructive",
-                )}
-              />
-              {form.formState.errors.title && (
-                <p className="text-xs text-destructive">{form.formState.errors.title.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-[13px] font-medium text-foreground">Category</Label>
-              <Controller
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger className="h-9">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="meeting">Meeting</SelectItem>
-                      <SelectItem value="call">Call</SelectItem>
-                      <SelectItem value="demo">Demo</SelectItem>
-                      <SelectItem value="general">General</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-            </div>
-
-            <div className="flex items-center justify-between rounded-lg border border-border bg-muted/40 px-4 py-3">
-              <div>
-                <p className="text-[13px] font-medium text-foreground">All Day</p>
-                <p className="text-xs text-muted-foreground">Event spans the entire day</p>
-              </div>
-              <Controller
-                control={form.control}
-                name="allDay"
-                render={({ field }) => (
-                  <Switch checked={field.value} onCheckedChange={field.onChange} />
-                )}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="startDate" className="text-[13px] font-medium text-foreground">
-                  Start Date <span className="text-destructive">*</span>
-                </Label>
-                <Controller
-                  name="startDate"
-                  control={form.control}
-                  render={({ field }) => (
-                    <DatePicker
-                      id="startDate"
-                      value={field.value ?? ""}
-                      onChange={field.onChange}
-                      placeholder="Pick a date"
-                      className={cn("h-8 text-sm", form.formState.errors.startDate && "border-destructive")}
-                    />
-                  )}
-                />
-                {form.formState.errors.startDate && (
-                  <p className="text-xs text-destructive">
-                    {form.formState.errors.startDate.message}
-                  </p>
-                )}
-              </div>
-              {!allDay && (
-                <div className="space-y-1.5">
-                  <Label htmlFor="startTime" className="text-[13px] font-medium text-foreground">
-                    Start Time
-                  </Label>
-                  <Input
-                    id="startTime"
-                    type="time"
-                    {...form.register("startTime")}
-                    className="h-9"
-                  />
-                </div>
-              )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="endDate" className="text-[13px] font-medium text-foreground">
-                  End Date <span className="text-destructive">*</span>
-                </Label>
-                <Controller
-                  name="endDate"
-                  control={form.control}
-                  render={({ field }) => (
-                    <DatePicker
-                      id="endDate"
-                      value={field.value ?? ""}
-                      onChange={field.onChange}
-                      placeholder="Pick a date"
-                      className={cn("h-8 text-sm", form.formState.errors.endDate && "border-destructive")}
-                    />
-                  )}
-                />
-                {form.formState.errors.endDate && (
-                  <p className="text-xs text-destructive">
-                    {form.formState.errors.endDate.message}
-                  </p>
-                )}
-              </div>
-              {!allDay && (
-                <div className="space-y-1.5">
-                  <Label htmlFor="endTime" className="text-[13px] font-medium text-foreground">
-                    End Time
-                  </Label>
-                  <Input
-                    id="endTime"
-                    type="time"
-                    {...form.register("endTime")}
-                    className="h-9"
-                  />
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="location" className="text-[13px] font-medium text-foreground">
-                Location
-              </Label>
-              <Input
-                id="location"
-                placeholder="Add location or meeting link"
-                {...form.register("location")}
-                className="h-9"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="description" className="text-[13px] font-medium text-foreground">
-                Description
-              </Label>
-              <Textarea
-                id="description"
-                placeholder="Add a description..."
-                rows={3}
-                {...form.register("description")}
-                className="resize-none text-sm"
-              />
-              {form.formState.errors.description && (
-                <p className="text-xs text-destructive">
-                  {form.formState.errors.description.message}
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-[13px] font-medium text-foreground">Color</Label>
-              <div className="flex gap-2.5">
-                {COLOR_OPTIONS.map((color) => (
-                  <button
-                    key={color.value}
-                    type="button"
-                    data-color={color.value}
-                    onClick={handleColorButtonClick}
-                    className={cn(
-                      "h-7 w-7 rounded-full transition-all duration-150",
-                      COLOR_BG_CLASSES[color.value],
-                      watchedColor === color.value &&
-                        `ring-2 ring-offset-1 ${COLOR_RING_CLASSES[color.value]}`,
-                    )}
-                    aria-label={`Select ${color.value} color`}
-                  />
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-3 rounded-lg border border-border bg-muted/40 px-4 py-4">
-              <p className="text-[13px] font-medium text-foreground">CRM Entity</p>
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Entity Type</Label>
-                <Controller
-                  control={form.control}
-                  name="entityType"
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger className="h-9 bg-card">
-                        <SelectValue placeholder="None" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={NO_ENTITY_TYPE}>None</SelectItem>
-                        <SelectItem value="LEAD">Lead</SelectItem>
-                        <SelectItem value="DEAL">Deal</SelectItem>
-                        <SelectItem value="CONTACT">Contact</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-              </div>
-
-              {watchedEntityType && watchedEntityType !== NO_ENTITY_TYPE && (
-                <div className="space-y-1.5">
-                  <Label htmlFor="entityId" className="text-xs text-muted-foreground">
-                    Entity ID
-                  </Label>
-                  <Input
-                    id="entityId"
-                    placeholder="Enter entity ID"
-                    {...form.register("entityId")}
-                    className="h-9 bg-card"
-                  />
-                </div>
-              )}
-            </div>
+            <CrmEventFormFields
+              control={form.control}
+              register={form.register}
+              errors={form.formState.errors}
+              allDay={allDay}
+              watchedColor={watchedColor}
+              watchedEntityType={watchedEntityType}
+              onColorClick={handleColorButtonClick}
+            />
 
             <div className="space-y-2">
               <Label className="text-[13px] font-medium text-foreground">Attendees</Label>
@@ -502,18 +256,20 @@ export function CrmEventDialog({
               />
             </div>
           </form>
-        </ScrollArea>
+        </div>
 
         <SheetFooter className="shrink-0 px-6 py-4 border-t flex flex-row gap-2 justify-end">
           <Button type="button" variant="outline" onClick={handleClose} disabled={isPending}>
             Cancel
           </Button>
-          <motion.div whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}>
-            <Button type="submit" form="crm-event-form" disabled={isPending}>
-              {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-              {isEdit ? "Save Changes" : "Create Meeting"}
-            </Button>
-          </motion.div>
+          <LoadingButton
+            type="submit"
+            form="crm-event-form"
+            isPending={isPending}
+            loadingText={isEdit ? "Saving..." : "Creating..."}
+          >
+            {isEdit ? "Save Changes" : "Create Meeting"}
+          </LoadingButton>
         </SheetFooter>
       </SheetContent>
     </Sheet>

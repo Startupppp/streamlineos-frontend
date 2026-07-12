@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/form";
 import { useCreateCrmOrganization } from "@/hooks/api/crm";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const COMPANY_SIZES = ["1-10", "11-50", "51-200", "201-1000", "1000+"] as const;
 
@@ -62,7 +63,7 @@ export function CreateOrgDialog({ open, onOpenChange }: CreateOrgDialogProps) {
             toast.success("Company created");
             onOpenChange(false);
           },
-          onError: (err) => toast.error(err.message),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },

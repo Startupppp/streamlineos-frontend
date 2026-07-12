@@ -9,6 +9,8 @@ import {
   ReceiptText,
   Headphones,
   ClipboardList,
+  FolderOpen,
+  FileBadge,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -86,6 +88,21 @@ const SECTION_CONFIG: SectionConfig[] = [
     icon: ClipboardList,
     href: (item) => `/crm/surveys/${item.id}`,
     getLabel: (item) => String(item["title"] ?? item.id),
+  },
+  {
+    key: "projects",
+    title: "Projects",
+    icon: FolderOpen,
+    href: (item) => `/projects/${item.id}`,
+    getLabel: (item) => String(item["name"] ?? item.id),
+    statTone: "blue",
+  },
+  {
+    key: "signedDocuments",
+    title: "Signed Documents",
+    icon: FileBadge,
+    href: (item) => `/crm/quotes/${item.id}`,
+    getLabel: (item) => String(item["subject"] ?? item["quoteNumber"] ?? item.id),
   },
 ];
 

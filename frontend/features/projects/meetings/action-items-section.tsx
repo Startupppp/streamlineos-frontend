@@ -57,7 +57,7 @@ const ActionItemRow = memo(function ActionItemRow({
           </span>
           <ActionItemStatusBadge status={item.status} />
           {item.convertedTicketId != null && (
-            <Badge variant="outline" className="text-[9px] px-1.5 py-0.5 text-violet-600 border-violet-200">
+            <Badge variant="outline" className="text-[9px] px-1.5 py-0.5 text-blue-600 border-blue-200">
               → TASK-{item.convertedTicketId}
             </Badge>
           )}

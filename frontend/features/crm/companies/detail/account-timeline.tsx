@@ -13,7 +13,7 @@ const eventConfig: Record<
 > = {
   contact_created: { icon: UserPlus, color: "text-blue-600", bg: "bg-blue-50" },
   deal_created: { icon: TrendingUp, color: "text-blue-700", bg: "bg-blue-50" },
-  lead_linked: { icon: Link2, color: "text-violet-600", bg: "bg-violet-50" },
+  lead_linked: { icon: Link2, color: "text-blue-600", bg: "bg-blue-50" },
   note_added: { icon: FileText, color: "text-emerald-600", bg: "bg-emerald-50" },
 };
 

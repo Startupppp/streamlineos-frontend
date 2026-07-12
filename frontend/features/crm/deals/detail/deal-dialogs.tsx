@@ -116,7 +116,6 @@ export function MeetingDialog({ open, onOpenChange, onSubmit, isPending }: Meeti
           <Button
             onClick={handleSubmit}
             disabled={isPending}
-            className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
           >
             {isPending ? "Saving..." : "Save Meeting"}
           </Button>
@@ -186,7 +185,6 @@ export function CreateProjectDialog({ open, onOpenChange, defaultName, onSubmit,
           <Button
             onClick={handleSubmit}
             disabled={isPending}
-            className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
           >
             {isPending ? "Creating..." : "Create Project"}
           </Button>

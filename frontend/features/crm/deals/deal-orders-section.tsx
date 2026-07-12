@@ -326,7 +326,7 @@ export function DealOrdersSection({ dealId, dealStage }: DealOrdersSectionProps)
           {isWon && (
             <Button
               size="sm"
-              className="h-7 text-xs bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
+              className="h-7 text-xs"
               onClick={handleOpenCreate}
             >
               <Plus className="h-3 w-3 mr-1" />
@@ -425,7 +425,6 @@ export function DealOrdersSection({ dealId, dealStage }: DealOrdersSectionProps)
                 <Button
                   type="submit"
                   disabled={createOrder.isPending}
-                  className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
                 >
                   {createOrder.isPending ? "Creating..." : "Create Order"}
                 </Button>

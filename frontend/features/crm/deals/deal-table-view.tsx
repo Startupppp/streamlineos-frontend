@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import {
   TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -13,6 +12,8 @@ import {
 import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDealId } from "@/lib/format-utils";
+import { useCrmStages, resolveStage } from "@/hooks/api/crm/metadata";
+import { CrmStageBadge } from "@/features/crm/shared/metadata";
 import { AIPredictDealButton } from "./ai-predict-deal-button";
 
 interface Deal {
@@ -37,18 +38,7 @@ interface DealTableViewProps {
   isLoading: boolean;
 }
 
-const STAGES = ["LEAD", "CONTACTED", "PROPOSAL", "NEGOTIATION", "WON", "LOST"];
-
 const stopPropagation = (e: React.MouseEvent) => e.stopPropagation();
-
-const STAGE_COLORS: Record<string, string> = {
-  LEAD: "bg-blue-50 text-blue-700 border-blue-200",
-  CONTACTED: "bg-sky-50 text-sky-700 border-sky-200",
-  PROPOSAL: "bg-amber-50 text-amber-700 border-amber-200",
-  NEGOTIATION: "bg-violet-50 text-violet-700 border-violet-200",
-  WON: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  LOST: "bg-red-50 text-red-700 border-red-200",
-};
 
 function formatINR(val: string | number | null | undefined): string {
   if (!val) return "—";
@@ -141,6 +131,7 @@ interface StageCellProps {
 }
 
 function StageCell({ deal, isEditing, onStageChange, onStartEdit }: StageCellProps) {
+  const { data: stages = [] } = useCrmStages("deal");
   const handleValueChange = useCallback((v: string) => onStageChange(deal.id, v), [deal.id, onStageChange]);
   const handleDoubleClick = useCallback(() => onStartEdit(deal.id), [deal.id, onStartEdit]);
   if (isEditing) {
@@ -148,19 +139,16 @@ function StageCell({ deal, isEditing, onStageChange, onStartEdit }: StageCellPro
       <Select defaultValue={deal.stage} onValueChange={handleValueChange}>
         <SelectTrigger className="h-6 text-[10px] w-[100px]"><SelectValue /></SelectTrigger>
         <SelectContent>
-          {STAGES.map(s => <SelectItem key={s} value={s} className="text-[11px]">{s}</SelectItem>)}
+          {stages.map(s => <SelectItem key={s.key} value={s.key} className="text-[11px]">{s.label}</SelectItem>)}
         </SelectContent>
       </Select>
     );
   }
+  const stageObj = resolveStage(stages, deal.stage);
   return (
-    <Badge
-      variant="outline"
-      className={cn("text-[9px] px-1.5 py-0 h-4 cursor-pointer border font-medium", STAGE_COLORS[deal.stage])}
-      onDoubleClick={handleDoubleClick}
-    >
-      {deal.stage}
-    </Badge>
+    <span onDoubleClick={handleDoubleClick} className="cursor-pointer">
+      <CrmStageBadge stage={stageObj} size="table" />
+    </span>
   );
 }
 

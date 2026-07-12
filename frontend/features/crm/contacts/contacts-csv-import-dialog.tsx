@@ -1,14 +1,7 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
-import {
-  Upload,
-  FileText,
-  Download,
-  CheckCircle2,
-  AlertCircle,
-  ChevronLeft,
-} from "lucide-react";
+import { useState, useCallback } from "react";
+import { Upload, FileText, Download } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -17,58 +10,15 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { toast } from "sonner";
-import { CsvFieldMapper } from "@/features/crm/leads/csv-field-mapper";
-
-const VALID_SOURCES = [
-  "referral",
-  "campaign",
-  "cold_call",
-  "website",
-  "social_media",
-  "walk_in",
-  "other",
-] as const;
-type ValidSource = (typeof VALID_SOURCES)[number];
-
-function isValidSource(s: string): s is ValidSource {
-  return (VALID_SOURCES as readonly string[]).includes(s);
-}
+import { getErrorMessage } from "@/lib/get-error-message";
+import { CsvColumnMapper } from "@/features/crm/contacts/csv-column-mapper";
+import { CsvContactsPreview, isValidSource } from "@/features/crm/contacts/csv-contacts-preview";
+import type { ParsedContact } from "@/features/crm/contacts/csv-contacts-preview";
 
 const ACCEPTED_EXTENSIONS = [".csv", ".xlsx", ".xls"];
-
-interface ParsedContact {
-  name: string;
-  email?: string;
-  phone?: string;
-  company?: string;
-  title?: string;
-  source?: ValidSource;
-  notes?: string;
-}
-
-const CONTACT_FIELDS: { value: string; label: string }[] = [
-  { value: "_skip", label: "— Skip —" },
-  { value: "first_name", label: "First Name (required)" },
-  { value: "last_name", label: "Last Name" },
-  { value: "email", label: "Email" },
-  { value: "phone", label: "Phone" },
-  { value: "company", label: "Company" },
-  { value: "title", label: "Job Title" },
-  { value: "source", label: "Source" },
-  { value: "notes", label: "Notes" },
-];
 
 const HEADER_ALIASES: Record<string, string[]> = {
   first_name: ["firstname", "first name", "fname", "givenname", "given name"],
@@ -204,154 +154,6 @@ function useBulkImportContacts() {
   });
 }
 
-interface ContactsPreviewProps {
-  fileName: string;
-  parsed: ParsedContact[];
-  parseErrors: string[];
-  importResult: { created: number; failed: number } | null;
-  isImporting: boolean;
-  onEditMapping: () => void;
-  onImport: () => void;
-  onClose: () => void;
-}
-
-function ContactsPreview({
-  fileName,
-  parsed,
-  parseErrors,
-  importResult,
-  isImporting,
-  onEditMapping,
-  onImport,
-  onClose,
-}: ContactsPreviewProps) {
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <FileText className="h-4 w-4 text-blue-600" />
-          <span className="text-sm font-medium">{fileName}</span>
-          <Badge variant="secondary">{parsed.length} contacts</Badge>
-        </div>
-        {!importResult && (
-          <Button variant="ghost" size="sm" onClick={onEditMapping}>
-            <ChevronLeft className="h-4 w-4 mr-1" />
-            Edit Mapping
-          </Button>
-        )}
-      </div>
-
-      {parseErrors.length > 0 && (
-        <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-3">
-          <div className="flex items-center gap-2 mb-1">
-            <AlertCircle className="h-4 w-4 text-destructive" />
-            <span className="text-sm font-medium text-destructive">
-              {parseErrors.length} warnings
-            </span>
-          </div>
-          {parseErrors.slice(0, 5).map((err, i) => (
-            <p key={i} className="text-xs text-muted-foreground">
-              {err}
-            </p>
-          ))}
-          {parseErrors.length > 5 && (
-            <p className="text-xs text-muted-foreground mt-1">
-              ...and {parseErrors.length - 5} more
-            </p>
-          )}
-        </div>
-      )}
-
-      {parsed.length > 0 && (
-        <div className="border rounded-lg overflow-hidden max-h-[260px] overflow-y-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="text-xs">Name</TableHead>
-                <TableHead className="text-xs">Email</TableHead>
-                <TableHead className="text-xs">Phone</TableHead>
-                <TableHead className="text-xs">Company</TableHead>
-                <TableHead className="text-xs">Title</TableHead>
-                <TableHead className="text-xs">Source</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {parsed.slice(0, 20).map((contact, i) => (
-                <TableRow key={i}>
-                  <TableCell className="text-xs font-medium">
-                    {contact.name}
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {contact.email || "—"}
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {contact.phone || "—"}
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {contact.company || "—"}
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {contact.title || "—"}
-                  </TableCell>
-                  <TableCell className="text-xs">
-                    {contact.source ? (
-                      <Badge variant="outline" className="text-[10px]">
-                        {contact.source}
-                      </Badge>
-                    ) : (
-                      "—"
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          {parsed.length > 20 && (
-            <p className="text-xs text-center text-muted-foreground py-2">
-              ...and {parsed.length - 20} more
-            </p>
-          )}
-        </div>
-      )}
-
-      {importResult ? (
-        <div className="space-y-3">
-          <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 space-y-1">
-            <p className="text-sm font-medium text-green-700 dark:text-green-400">
-              Import Complete
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {importResult.created} contacts created
-              {importResult.failed > 0 ? `, ${importResult.failed} failed` : ""}
-            </p>
-          </div>
-          <Button className="w-full" variant="outline" onClick={onClose}>
-            Close
-          </Button>
-        </div>
-      ) : (
-        <Button
-          className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
-          onClick={onImport}
-          disabled={isImporting || !parsed.length}
-        >
-          {isImporting ? (
-            <span className="flex items-center gap-2">
-              <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              Importing...
-            </span>
-          ) : (
-            <>
-              <CheckCircle2 className="h-4 w-4 mr-2" />
-              Import {parsed.length} Contacts
-            </>
-          )}
-        </Button>
-      )}
-    </div>
-  );
-}
-
 export function ContactsCsvImportDialog({
   onSuccess,
 }: {
@@ -426,11 +228,6 @@ export function ContactsCsvImportDialog({
     [handleFile],
   );
 
-  const hasFirstNameMapped = useMemo(
-    () => Object.values(fieldMappings).includes("first_name"),
-    [fieldMappings],
-  );
-
   const handleConfirmMapping = useCallback(() => {
     const { contacts, errors } = applyMapping(
       rawHeaders,
@@ -456,7 +253,7 @@ export function ContactsCsvImportDialog({
           toast.warning("No contacts were imported");
         }
       },
-      onError: (err) => toast.error(err.message),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [parsed, bulkImport, onSuccess]);
 
@@ -601,14 +398,11 @@ export function ContactsCsvImportDialog({
         )}
 
         {step === "mapping" && (
-          <CsvFieldMapper
-            fields={CONTACT_FIELDS}
-            requiredFieldLabel="First Name"
+          <CsvColumnMapper
             fileName={fileName}
             rawHeaders={rawHeaders}
             rawRows={rawRows}
             fieldMappings={fieldMappings}
-            hasNameMapped={hasFirstNameMapped}
             onMappingChange={setFieldMappings}
             onConfirm={handleConfirmMapping}
             onBack={reset}
@@ -616,7 +410,7 @@ export function ContactsCsvImportDialog({
         )}
 
         {step === "preview" && parsed !== null && (
-          <ContactsPreview
+          <CsvContactsPreview
             fileName={fileName}
             parsed={parsed}
             parseErrors={parseErrors}

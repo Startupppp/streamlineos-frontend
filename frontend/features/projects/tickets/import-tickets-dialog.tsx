@@ -16,6 +16,8 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useImportTickets, type ImportTicketRow } from "@/hooks/api/projects/import-export";
 
 const CSV_COLUMNS = ["title", "type", "status", "priority", "points", "assigneeEmail", "dueDate"] as const;
+const TICKET_TYPES = ["TASK", "BUG", "STORY", "EPIC"] as const;
+const TICKET_PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
 type CsvColumn = (typeof CSV_COLUMNS)[number];
 
 const MAX_ROWS = 500;
@@ -61,9 +63,8 @@ function parseCSV(raw: string): ImportTicketRow[] {
     const row: ImportTicketRow = { title };
 
     const typeVal = colIndex.type >= 0 ? cells[colIndex.type]?.trim().toUpperCase() : undefined;
-    if (typeVal && ["TASK", "BUG", "STORY", "EPIC"].includes(typeVal)) {
-      row.type = typeVal as ImportTicketRow["type"];
-    }
+    const matchedType = TICKET_TYPES.find((t) => t === typeVal);
+    if (matchedType) row.type = matchedType;
 
     if (colIndex.status >= 0) {
       const v = cells[colIndex.status]?.trim();
@@ -71,9 +72,8 @@ function parseCSV(raw: string): ImportTicketRow[] {
     }
 
     const priVal = colIndex.priority >= 0 ? cells[colIndex.priority]?.trim().toUpperCase() : undefined;
-    if (priVal && ["LOW", "MEDIUM", "HIGH", "URGENT"].includes(priVal)) {
-      row.priority = priVal as ImportTicketRow["priority"];
-    }
+    const matchedPriority = TICKET_PRIORITIES.find((p) => p === priVal);
+    if (matchedPriority) row.priority = matchedPriority;
 
     if (colIndex.points >= 0) {
       const v = parseInt(cells[colIndex.points]?.trim() ?? "");

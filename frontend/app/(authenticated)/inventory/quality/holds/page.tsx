@@ -114,15 +114,15 @@ function HoldsPageInner() {
   const columns: DataTableColumn<QualityHold>[] = [
     {
       key: "variant",
-      header: "Variant",
-      cell: (r) => r.variantName,
+      header: "Variant ID",
+      cell: (r) => r.productVariantId,
     },
     {
       key: "qty",
       header: "Qty",
       headerClassName: "w-[80px] text-right",
       className: "text-right tabular-nums",
-      cell: (r) => r.qty,
+      cell: (r) => r.quantity,
     },
     {
       key: "reason",

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Copy, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -233,13 +234,15 @@ export function FormBuilderTab({ projectId, formId }: FormBuilderTabProps) {
         <>
           <Separator />
           <div className="flex justify-end">
-            <Button
+            <LoadingButton
               size="sm"
               onClick={handleSave}
-              disabled={updateForm.isPending || !effectiveName.trim()}
+              disabled={!effectiveName.trim()}
+              isPending={updateForm.isPending}
+              loadingText="Saving…"
             >
-              {updateForm.isPending ? "Saving…" : "Save Form"}
-            </Button>
+              Save Form
+            </LoadingButton>
           </div>
         </>
       )}

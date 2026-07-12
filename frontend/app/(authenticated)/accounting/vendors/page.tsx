@@ -6,19 +6,72 @@ import { Search } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { LoadingState } from "@/components/shared/loading-state";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTeamIllustration } from "@/components/illustrations";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useVendorsOutstanding } from "@/hooks/api/accounting";
+import type { VendorOutstanding } from "@/types/accounting";
+
+const columns: DataTableColumn<VendorOutstanding>[] = [
+  {
+    key: "vendorName",
+    header: "Vendor",
+    cell: (row) => (
+      <Link
+        href={`/accounting/vendors/${row.vendorId}`}
+        className="text-sm font-medium text-foreground hover:text-blue-600 hover:underline"
+      >
+        {row.vendorName}
+      </Link>
+    ),
+  },
+  {
+    key: "state",
+    header: "State",
+    cell: (row) => (
+      <span className="text-muted-foreground">{row.state ?? "—"}</span>
+    ),
+  },
+  {
+    key: "gstin",
+    header: "GSTIN",
+    cell: (row) => (
+      <span className="font-mono text-xs text-muted-foreground">
+        {row.gstin ?? "—"}
+      </span>
+    ),
+  },
+  {
+    key: "billCount",
+    header: "Bills",
+    headerClassName: "text-right",
+    className: "text-right tabular-nums",
+    cell: (row) => row.billCount,
+    sortable: true,
+    sortValue: (row) => row.billCount,
+  },
+  {
+    key: "outstanding",
+    header: "Outstanding",
+    headerClassName: "text-right",
+    className: "text-right font-mono tabular-nums font-medium",
+    cell: (row) => Number(row.outstanding).toFixed(2),
+    sortable: true,
+    sortValue: (row) => Number(row.outstanding),
+  },
+];
+
+const emptyStateNode = (
+  <EmptyState
+    illustration={<EmptyTeamIllustration />}
+    title="No vendors found"
+    description="Mark CRM clients as vendors and record purchase bills to see them here."
+    action={{ label: "Record a bill", href: "/accounting/purchase-bills/new" }}
+    compact
+  />
+);
 
 export default function VendorsListPage() {
   const [search, setSearch] = useState<string>("");
@@ -73,79 +126,22 @@ export default function VendorsListPage() {
         </div>
       }
     >
-      {query.isLoading && <LoadingState variant="table" />}
-        {query.error && (
-          <ErrorState
-            title="Failed to load vendors"
-            description={query.error.message}
-            onRetry={handleRetry}
-          />
-        )}
-
-        {!query.isLoading && !query.error && items.length === 0 && (
-          <EmptyState
-            illustration={<EmptyTeamIllustration />}
-            title="No vendors found"
-            description="Mark CRM clients as vendors and record purchase bills to see them here."
-          />
-        )}
-
-        {items.length > 0 && (
-          <div className="rounded-lg border border-border overflow-hidden">
-            <div className="overflow-x-auto">
-              <Table className="min-w-[480px]">
-                <TableHeader>
-                  <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">
-                      Vendor
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 hidden md:table-cell">
-                      State
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 hidden md:table-cell">
-                      GSTIN
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">
-                      Bills
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">
-                      Outstanding
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {items.map((v) => (
-                    <TableRow
-                      key={v.vendorId}
-                      className="border-b border-border/50 hover:bg-muted/30"
-                    >
-                      <TableCell className="px-3 py-2">
-                        <Link
-                          href={`/accounting/vendors/${v.vendorId}`}
-                          className="text-sm font-medium text-foreground hover:text-violet-600 hover:underline"
-                        >
-                          {v.vendorName}
-                        </Link>
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground px-3 py-2 hidden md:table-cell">
-                        {v.state ?? "—"}
-                      </TableCell>
-                      <TableCell className="font-mono text-xs text-muted-foreground px-3 py-2 hidden md:table-cell">
-                        {v.gstin ?? "—"}
-                      </TableCell>
-                      <TableCell className="text-right text-sm tabular-nums px-3 py-2">
-                        {v.billCount}
-                      </TableCell>
-                      <TableCell className="text-right font-mono text-sm tabular-nums font-medium px-3 py-2">
-                        {Number(v.outstanding).toFixed(2)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
-        )}
+      {query.error ? (
+        <ErrorState
+          title="Failed to load vendors"
+          description={getErrorMessage(query.error)}
+          onRetry={handleRetry}
+        />
+      ) : (
+        <DataTable
+          data={items}
+          columns={columns}
+          getRowKey={(row) => row.vendorId}
+          isLoading={query.isLoading}
+          pagination={{ pageSize: 100 }}
+          emptyState={emptyStateNode}
+        />
+      )}
     </PageWrapper>
   );
 }

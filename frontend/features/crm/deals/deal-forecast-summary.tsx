@@ -1,9 +1,15 @@
 "use client";
 
-import { useMemo } from "react";
-import { TrendingUp, Target, Handshake } from "lucide-react";
+import { useMemo, useState, useCallback } from "react";
+import { TrendingUp, Target, Handshake, Pencil, X, Check } from "lucide-react";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { formatINRCompact } from "@/lib/format-utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { useCan } from "@/hooks/api/access";
+import { useForecastSnapshots, useOverrideForecast } from "@/hooks/api/crm/deals";
 import type { Deal } from "@/types/crm";
 
 const STAGE_PROBABILITY: Record<string, number> = {
@@ -19,7 +25,93 @@ interface DealForecastSummaryProps {
   deals: Deal[];
 }
 
+interface SnapshotOverrideRowProps {
+  snapshotId: string;
+  period: string;
+  totalWeighted: number;
+  overrideAmount: string | null | undefined;
+}
+
+function SnapshotOverrideRow({ snapshotId, period, totalWeighted, overrideAmount }: SnapshotOverrideRowProps) {
+  const [editing, setEditing] = useState(false);
+  const [amount, setAmount] = useState("");
+  const [note, setNote] = useState("");
+  const overrideForecast = useOverrideForecast();
+
+  const handleStartEdit = useCallback(() => {
+    setAmount(overrideAmount ?? "");
+    setNote("");
+    setEditing(true);
+  }, [overrideAmount]);
+
+  const handleCancel = useCallback(() => setEditing(false), []);
+
+  const handleAmountChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setAmount(e.target.value), []);
+  const handleNoteChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setNote(e.target.value), []);
+
+  const handleSave = useCallback(() => {
+    const parsed = Number(amount);
+    if (amount && Number.isNaN(parsed)) {
+      toast.error("Enter a valid number");
+      return;
+    }
+    overrideForecast.mutate(
+      { snapshotId, overrideAmount: amount ? parsed : undefined, overrideNote: note || undefined },
+      {
+        onSuccess: () => {
+          toast.success("Override saved");
+          setEditing(false);
+        },
+        onError: (err) => toast.error(getErrorMessage(err)),
+      },
+    );
+  }, [amount, note, snapshotId, overrideForecast]);
+
+  return (
+    <div className="flex items-center justify-between gap-2 py-2 border-b last:border-0 text-sm">
+      <div className="min-w-0">
+        <p className="font-medium text-xs">{period}</p>
+        <p className="text-xs text-muted-foreground">
+          Weighted: {formatINRCompact(totalWeighted)}
+          {overrideAmount && (
+            <span className="ml-2 text-blue-600">Override: {formatINRCompact(Number(overrideAmount))}</span>
+          )}
+        </p>
+      </div>
+      {editing ? (
+        <div className="flex items-center gap-1">
+          <Input
+            value={amount}
+            onChange={handleAmountChange}
+            placeholder="Override amount"
+            className="h-6 w-24 text-xs"
+          />
+          <Input
+            value={note}
+            onChange={handleNoteChange}
+            placeholder="Note"
+            className="h-6 w-20 text-xs"
+          />
+          <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleSave} disabled={overrideForecast.isPending}>
+            <Check className="h-3 w-3" />
+          </Button>
+          <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleCancel}>
+            <X className="h-3 w-3" />
+          </Button>
+        </div>
+      ) : (
+        <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleStartEdit}>
+          <Pencil className="h-3 w-3" />
+        </Button>
+      )}
+    </div>
+  );
+}
+
 export function DealForecastSummary({ deals }: DealForecastSummaryProps) {
+  const canManage = useCan("crm:deals:manage");
+  const { data: snapshots = [] } = useForecastSnapshots({ limit: 5 });
+
   const { totalPipeline, weightedForecast, commitForecast } = useMemo(() => {
     const open = deals.filter((d) => d.stage !== "LOST");
     let pipeline = 0;
@@ -45,25 +137,42 @@ export function DealForecastSummary({ deals }: DealForecastSummaryProps) {
   }, [deals]);
 
   return (
-    <StatCardGrid cols={3}>
-      <StatCard
-        label="Total Pipeline"
-        value={formatINRCompact(totalPipeline)}
-        icon={TrendingUp}
-        tone="blue"
-      />
-      <StatCard
-        label="Weighted Forecast"
-        value={formatINRCompact(weightedForecast)}
-        icon={Target}
-        tone="violet"
-      />
-      <StatCard
-        label="Commit Forecast"
-        value={formatINRCompact(commitForecast)}
-        icon={Handshake}
-        tone="emerald"
-      />
-    </StatCardGrid>
+    <div className="space-y-4">
+      <StatCardGrid cols={3}>
+        <StatCard
+          label="Total Pipeline"
+          value={formatINRCompact(totalPipeline)}
+          icon={TrendingUp}
+          tone="blue"
+        />
+        <StatCard
+          label="Weighted Forecast"
+          value={formatINRCompact(weightedForecast)}
+          icon={Target}
+          tone="blue"
+        />
+        <StatCard
+          label="Commit Forecast"
+          value={formatINRCompact(commitForecast)}
+          icon={Handshake}
+          tone="emerald"
+        />
+      </StatCardGrid>
+
+      {canManage && snapshots.length > 0 && (
+        <div className="rounded-md border p-3">
+          <p className="text-xs font-semibold mb-2 text-muted-foreground">Forecast Snapshots</p>
+          {snapshots.map((s) => (
+            <SnapshotOverrideRow
+              key={s.id}
+              snapshotId={s.id}
+              period={s.period}
+              totalWeighted={s.data.totalWeighted}
+              overrideAmount={s.overrideAmount}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

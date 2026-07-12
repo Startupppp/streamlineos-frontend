@@ -12,7 +12,7 @@ const FALLBACK_OPTIONS = [
   { key: "NEW", label: "New", color: "blue", isTerminal: false },
   { key: "CONTACTED", label: "Contacted", color: "sky", isTerminal: false },
   { key: "INTERESTED", label: "Interested", color: "amber", isTerminal: false },
-  { key: "QUALIFIED", label: "Qualified", color: "violet", isTerminal: false },
+  { key: "QUALIFIED", label: "Qualified", color: "blue", isTerminal: false },
   { key: "CONVERTED", label: "Converted", color: "emerald", isTerminal: true },
   { key: "LOST", label: "Lost", color: "red", isTerminal: true },
 ] as const;
@@ -79,6 +79,7 @@ export function LeadsKanban({ filteredBoard, onDragEnd, onOpenLead, onMoveStatus
                             lead={lead}
                             index={index}
                             status={option.key}
+                            allStatusKeys={columns.map((c) => c.key)}
                             onOpen={onOpenLead}
                             onMoveStatus={onMoveStatus}
                           />

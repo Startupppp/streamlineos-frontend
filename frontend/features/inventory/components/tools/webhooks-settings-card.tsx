@@ -28,9 +28,21 @@ import {
   type Webhook, type WebhookEvent,
 } from "@/hooks/api/inventory/webhooks";
 
+const WEBHOOK_EVENT_VALUES = [
+  "inventory.product.created",
+  "inventory.stock.changed",
+  "inventory.stock.low",
+  "inventory.po.created",
+  "inventory.po.received",
+  "inventory.so.reserved",
+  "inventory.so.shipped",
+  "inventory.transfer.completed",
+  "inventory.adjustment.posted",
+] as const;
+
 const webhookSchema = z.object({
   url: z.string().url("Must be a valid HTTPS URL"),
-  events: z.array(z.string()).min(1, "Select at least one event"),
+  events: z.array(z.enum(WEBHOOK_EVENT_VALUES)).min(1, "Select at least one event"),
   isActive: z.boolean(),
 });
 type WebhookFormValues = z.infer<typeof webhookSchema>;
@@ -143,17 +155,21 @@ export function WebhooksSettingsCard() {
 
   function handleEventToggle(evt: string, checked: boolean): void {
     const current = form.getValues("events");
-    const next = checked ? [...current, evt] : current.filter((e) => e !== evt);
+    const isValidEvent = (v: string): v is WebhookFormValues["events"][number] =>
+      (WEBHOOK_EVENT_VALUES as readonly string[]).includes(v);
+    const next = checked
+      ? isValidEvent(evt) ? [...current, evt] : current
+      : current.filter((e) => e !== evt);
     form.setValue("events", next, { shouldValidate: true });
   }
 
   async function onSubmit(values: WebhookFormValues): Promise<void> {
     try {
       if (editingWebhook) {
-        await updateMut.mutateAsync({ webhookId: editingWebhook.id, url: values.url, events: values.events as WebhookFormValues["events"], isActive: values.isActive });
+        await updateMut.mutateAsync({ webhookId: editingWebhook.id, url: values.url, events: values.events, isActive: values.isActive });
         toast.success("Webhook updated");
       } else {
-        await createMut.mutateAsync({ url: values.url, events: values.events as WebhookFormValues["events"], isActive: values.isActive });
+        await createMut.mutateAsync({ url: values.url, events: values.events, isActive: values.isActive });
         toast.success("Webhook created");
       }
       setSheetOpen(false);

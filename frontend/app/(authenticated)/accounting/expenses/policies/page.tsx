@@ -144,7 +144,6 @@ export default function PoliciesPage() {
       eyebrow="Accounting · Expenses"
       title="Expense Policies"
       subtitle="Define rules and limits for employee expense submissions."
-      backHref="/accounting/expenses"
       actions={
         canManage ? (
           <LoadingButton size="sm" onClick={handleOpenCreate} isPending={false}>

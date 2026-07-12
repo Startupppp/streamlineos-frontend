@@ -19,31 +19,16 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { getInitials } from "@/lib/format-utils";
 import { useLeadDetail, useLogLeadActivity } from "@/hooks/api";
-import { useCrmOptions } from "@/hooks/api/crm";
+import { useCrmOptions, resolveOption } from "@/hooks/api/crm/metadata";
+import { CrmOptionBadge, getCrmTokenClasses } from "@/features/crm/shared/metadata";
 import { toast } from "sonner";
 import type { LeadStatus } from "./leads-types";
-
-const FALLBACK_STATUSES = ["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CONVERTED", "LOST"] as const;
-const FALLBACK_STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  NEW: { label: "New", color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/20" },
-  CONTACTED: { label: "Contacted", color: "text-sky-400", bg: "bg-sky-500/10", border: "border-sky-500/20" },
-  INTERESTED: { label: "Interested", color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/20" },
-  QUALIFIED: { label: "Qualified", color: "text-violet-400", bg: "bg-violet-500/10", border: "border-violet-500/20" },
-  CONVERTED: { label: "Converted", color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
-  LOST: { label: "Lost", color: "text-red-400", bg: "bg-red-500/10", border: "border-red-500/20" },
-};
-
-const ACTIVITY_TYPES = ["call", "email", "whatsapp", "meeting", "site_visit"] as const;
-function isActivityType(v: unknown): v is (typeof ACTIVITY_TYPES)[number] {
-  return typeof v === "string" && (ACTIVITY_TYPES as readonly string[]).includes(v);
-}
 import { ActivityForm } from "./activity-form";
 import { AIScoreButton } from "./ai-score-button";
 import { AIEmailDialog } from "./ai-email-dialog";
@@ -105,13 +90,12 @@ export function LeadDetailSheet({
   const router = useRouter();
   const { data: lead, isLoading } = useLeadDetail(leadId ?? 0);
   const { data: statusOptions = [] } = useCrmOptions("lead_status");
-  const statusList = statusOptions.length > 0
-    ? statusOptions.map((o) => ({ key: o.key, label: o.label, border: `border-${o.color}-500/20` }))
-    : FALLBACK_STATUSES.map((k) => ({
-        key: k,
-        label: FALLBACK_STATUS_CONFIG[k]?.label ?? k,
-        border: FALLBACK_STATUS_CONFIG[k]?.border ?? "border-border",
-      }));
+  const { data: activityTypeOptions = [] } = useCrmOptions("activity_type");
+  const statusList = statusOptions.map((o) => ({
+    key: o.key,
+    label: o.label,
+    border: getCrmTokenClasses(o.color).badgeClass,
+  }));
   const logActivity = useLogLeadActivity();
   const [activityTab, setActivityTab] = useState("details");
 
@@ -126,7 +110,8 @@ export function LeadDetailSheet({
       if (!leadId) return;
       try {
         const activityType = formData.get("activityType");
-        if (!isActivityType(activityType)) {
+        const validTypes = activityTypeOptions.map((o) => o.key);
+        if (typeof activityType !== "string" || !validTypes.includes(activityType)) {
           toast.error("Invalid activity type");
           return;
         }
@@ -149,7 +134,7 @@ export function LeadDetailSheet({
         toast.error("Failed to log activity");
       }
     },
-    [leadId, logActivity],
+    [leadId, logActivity, activityTypeOptions],
   );
 
   const handleSheetClose = useCallback(
@@ -200,17 +185,11 @@ export function LeadDetailSheet({
                     <Edit3 className="h-3.5 w-3.5" />
                     Edit
                   </Button>
-                  <Badge
-                    className={cn(
-                      "shrink-0",
-                      FALLBACK_STATUS_CONFIG[lead.status]?.bg ?? "bg-muted/30",
-                      FALLBACK_STATUS_CONFIG[lead.status]?.color ?? "text-foreground",
-                      FALLBACK_STATUS_CONFIG[lead.status]?.border ?? "border-border",
-                      "border",
-                    )}
-                  >
-                    {statusList.find((s) => s.key === lead.status)?.label ?? lead.status}
-                  </Badge>
+                  <CrmOptionBadge
+                    option={resolveOption(statusOptions, lead.status)}
+                    size="card"
+                    className="shrink-0"
+                  />
                 </div>
               </div>
             </div>

@@ -12,11 +12,16 @@ const DEFAULT_PREFS: ProjectSidebarPrefs = {
   hiddenItems: [],
 };
 
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && v !== null && !Array.isArray(v);
+}
+
 function loadPrefs(): ProjectSidebarPrefs {
   try {
     const raw = localStorage.getItem(PREFS_KEY);
     if (!raw) return { ...DEFAULT_PREFS };
-    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    const parsed: unknown = JSON.parse(raw);
+    if (!isRecord(parsed)) return { ...DEFAULT_PREFS };
     return {
       hiddenItems: Array.isArray(parsed.hiddenItems)
         ? parsed.hiddenItems.filter((v): v is string => typeof v === "string")

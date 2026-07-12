@@ -9,13 +9,13 @@ const coreKeys = {
   coaTree: () => [...coreKeys.all, "coa-tree"] as const,
   coaTemplates: () => [...coreKeys.all, "coa-templates"] as const,
   setupStatus: () => [...coreKeys.all, "setup-status"] as const,
-  gl: (params: Record<string, unknown>) => [...coreKeys.all, "gl", params] as const,
-  glAccounts: (params: Record<string, unknown>) => [...coreKeys.all, "gl-accounts", params] as const,
+  gl: (params: object) => [...coreKeys.all, "gl", params] as const,
+  glAccounts: (params: object) => [...coreKeys.all, "gl-accounts", params] as const,
   periods: () => [...coreKeys.all, "periods"] as const,
   period: (id: number) => [...coreKeys.all, "periods", id] as const,
   periodChecklist: (id: number) => [...coreKeys.all, "period-checklist", id] as const,
   openingBalance: () => [...coreKeys.all, "opening-balance"] as const,
-  recurringJournals: (params: Record<string, unknown>) => [...coreKeys.all, "recurring-journals", params] as const,
+  recurringJournals: (params: object) => [...coreKeys.all, "recurring-journals", params] as const,
 };
 
 function toQuery<P extends object>(params: P): Record<string, string> {
@@ -280,7 +280,7 @@ export function useApplyTemplate() {
 
 export function useGeneralLedger(params: GlParams) {
   return useQuery<GlResponse, Error>({
-    queryKey: coreKeys.gl(params as Record<string, unknown>),
+    queryKey: coreKeys.gl(params),
     queryFn: () =>
       apiClient.get<GlResponse>("/accounting/general-ledger", toQuery(params)),
     enabled: !!params.from && !!params.to,
@@ -290,7 +290,7 @@ export function useGeneralLedger(params: GlParams) {
 
 export function useGlAccounts(params: GlAccountsParams) {
   return useQuery<{ items: GlAccount[] }, Error>({
-    queryKey: coreKeys.glAccounts(params as Record<string, unknown>),
+    queryKey: coreKeys.glAccounts(params),
     queryFn: () =>
       apiClient.get<{ items: GlAccount[] }>("/accounting/general-ledger/accounts", toQuery(params)),
     enabled: !!params.from && !!params.to,
@@ -422,7 +422,7 @@ export function useRejectJournal(entryId: number) {
 
 export function useRecurringJournals(params: RecurringJournalParams = {}) {
   return useQuery<{ items: RecurringJournal[]; total: number }, Error>({
-    queryKey: coreKeys.recurringJournals(params as Record<string, unknown>),
+    queryKey: coreKeys.recurringJournals(params),
     queryFn: () =>
       apiClient.get<{ items: RecurringJournal[]; total: number }>(
         "/accounting/recurring-journals",

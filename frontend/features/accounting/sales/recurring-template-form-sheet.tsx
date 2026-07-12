@@ -28,9 +28,9 @@ const recurringTemplateSchema = z.object({
   frequency: z.enum(["DAILY", "WEEKLY", "MONTHLY", "QUARTERLY", "YEARLY"]),
   nextRunDate: z.string().optional(),
   endDate: z.string().optional(),
-  currency: z.string().min(1).default("INR"),
+  currency: z.string().min(1),
   notes: z.string().optional(),
-  isActive: z.boolean().default(true),
+  isActive: z.boolean(),
 });
 
 type TemplateFormValues = z.infer<typeof recurringTemplateSchema>;
@@ -134,7 +134,17 @@ export function RecurringTemplateFormSheet({
       submitLabel={isEdit ? "Save changes" : "Create"}
       resetOnOpen
     >
-      {(form) => (
+      {(form) => {
+        function handleFrequencyChange(v: string): void {
+          const FREQUENCY_VALUES: ReadonlyArray<string> = ["DAILY", "WEEKLY", "MONTHLY", "QUARTERLY", "YEARLY"];
+          type FrequencyValue = "DAILY" | "WEEKLY" | "MONTHLY" | "QUARTERLY" | "YEARLY";
+          function isFrequency(val: string): val is FrequencyValue {
+            return FREQUENCY_VALUES.includes(val);
+          }
+          if (isFrequency(v)) form.setValue("frequency", v, { shouldValidate: true });
+        }
+
+        return (
         <div className="space-y-4 px-6 py-4">
           <div className="space-y-1.5">
             <Label htmlFor="name" className="text-xs font-medium">
@@ -171,11 +181,7 @@ export function RecurringTemplateFormSheet({
               </Label>
               <Select
                 value={form.watch("frequency")}
-                onValueChange={(v) =>
-                  form.setValue("frequency", v as TemplateFormValues["frequency"], {
-                    shouldValidate: true,
-                  })
-                }
+                onValueChange={handleFrequencyChange}
               >
                 <SelectTrigger id="frequency" className="h-8 text-sm">
                   <SelectValue />
@@ -271,7 +277,8 @@ export function RecurringTemplateFormSheet({
             />
           </div>
         </div>
-      )}
+        );
+      }}
     </EntityFormSheet>
   );
 }

@@ -56,17 +56,25 @@ export interface ArInvoiceStats {
   totalPaid: number;
 }
 
+export interface ArPaymentAllocation {
+  invoiceId: number;
+  amount: string;
+}
+
 export interface ArPayment {
   id: number;
   invoiceId: number;
-  orgId: number;
+  invoiceNumber: string;
+  clientId: number | null;
+  clientName: string | null;
+  orgId: string;
   amount: string;
   paymentDate: string;
-  paymentMethod: string;
+  paymentMethod: ArPaymentMethod;
   referenceNumber: string | null;
   notes: string | null;
-  creator: { id: number; name: string } | null;
   createdAt: string;
+  allocations: ArPaymentAllocation[];
 }
 
 export interface PaymentAllocation {

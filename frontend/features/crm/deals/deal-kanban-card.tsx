@@ -12,7 +12,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { formatINRCompact, formatDealId } from "@/lib/format-utils";
-import { DEAL_STAGES } from "@/features/crm/shared/constants";
+import { useCrmStages } from "@/hooks/api/crm/metadata";
+import { getCrmTokenClasses } from "@/features/crm/shared/metadata";
 import type { Deal } from "@/types/crm";
 import { AIPredictDealButton } from "./ai-predict-deal-button";
 
@@ -60,6 +61,7 @@ function StageMenuItem({
 
 export function DealKanbanCard({ deal, onStageChange, onDelete, onOpen }: DealKanbanCardProps) {
   const router = useRouter();
+  const { data: dealStages = [] } = useCrmStages("deal");
   const handleDelete = useCallback(() => onDelete(deal.id), [deal.id, onDelete]);
   const handleNavigate = useCallback(() => {
     if (onOpen) {
@@ -87,16 +89,19 @@ export function DealKanbanCard({ deal, onStageChange, onDelete, onOpen }: DealKa
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              {DEAL_STAGES.filter(s => s.key !== deal.stage).map(s => (
-                <StageMenuItem
-                  key={s.key}
-                  stageKey={s.key}
-                  dot={s.dot}
-                  label={s.label}
-                  dealId={deal.id}
-                  onStageChange={onStageChange}
-                />
-              ))}
+              {dealStages.filter(s => s.key !== deal.stage).map(s => {
+                const { dotClass } = getCrmTokenClasses(s.color);
+                return (
+                  <StageMenuItem
+                    key={s.key}
+                    stageKey={s.key}
+                    dot={dotClass}
+                    label={s.label}
+                    dealId={deal.id}
+                    onStageChange={onStageChange}
+                  />
+                );
+              })}
               <DropdownMenuItem variant="destructive" onClick={handleDelete}>
                 <Trash2 className="h-3.5 w-3.5 mr-2" />
                 Delete

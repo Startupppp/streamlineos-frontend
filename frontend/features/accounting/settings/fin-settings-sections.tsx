@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/table";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { useDeleteApprovalPolicy } from "@/hooks/api/accounting/settings";
 import type { NumberSequence, SystemAccountMapping, SystemAccountPurpose } from "@/types/accounting/fin-settings";
 import type { ApprovalPolicy, ExchangeRate } from "@/types/accounting/taxes";
@@ -25,6 +26,9 @@ import {
   PolicyDialog,
   RateDialog,
 } from "./fin-settings-dialogs";
+
+export type { PaymentTermsSectionProps } from "./payment-terms-section";
+export { PaymentTermsSection } from "./payment-terms-section";
 
 export const PURPOSE_LABELS: Record<SystemAccountPurpose, string> = {
   AR: "Accounts Receivable",
@@ -43,7 +47,35 @@ export const PURPOSE_LABELS: Record<SystemAccountPurpose, string> = {
   FX_GAIN_LOSS: "FX Gain / Loss",
   DEPRECIATION_EXPENSE: "Depreciation Expense",
   ACCUM_DEPRECIATION: "Accumulated Depreciation",
+  SALARY_EXPENSE: "Salary Expense",
+  ASSET_DISPOSAL_GAIN_LOSS: "Asset Disposal Gain / Loss",
 };
+
+interface SequenceEditRowProps {
+  seq: NumberSequence;
+  canManage: boolean;
+  onEdit: (s: NumberSequence) => void;
+}
+
+function SequenceEditRow({ seq, canManage, onEdit }: SequenceEditRowProps) {
+  function handleEdit(): void {
+    onEdit(seq);
+  }
+
+  return (
+    <TableRow className="border-b border-border/50 hover:bg-muted/30">
+      <TableCell className="text-xs px-3 py-2 font-mono capitalize">{seq.entityType.replace(/_/g, " ")}</TableCell>
+      <TableCell className="text-xs px-3 py-2 font-mono">{seq.prefix}</TableCell>
+      <TableCell className="text-xs px-3 py-2 tabular-nums">{seq.padding}</TableCell>
+      <TableCell className="text-xs px-3 py-2 tabular-nums">{seq.nextNumber}</TableCell>
+      {canManage && (
+        <TableCell className="px-2 py-2">
+          <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={handleEdit}>Edit</Button>
+        </TableCell>
+      )}
+    </TableRow>
+  );
+}
 
 export interface SequencesSectionProps {
   sequences: NumberSequence[];
@@ -52,6 +84,10 @@ export interface SequencesSectionProps {
 
 export function SequencesSection({ sequences, canManage }: SequencesSectionProps) {
   const [editSeq, setEditSeq] = useState<NumberSequence | null>(null);
+
+  function handleSeqDialogOpenChange(v: boolean): void {
+    if (!v) setEditSeq(null);
+  }
 
   return (
     <>
@@ -73,17 +109,7 @@ export function SequencesSection({ sequences, canManage }: SequencesSectionProps
               </TableHeader>
               <TableBody>
                 {sequences.map((seq) => (
-                  <TableRow key={seq.entityType} className="border-b border-border/50 hover:bg-muted/30">
-                    <TableCell className="text-xs px-3 py-2 font-mono capitalize">{seq.entityType.replace(/_/g, " ")}</TableCell>
-                    <TableCell className="text-xs px-3 py-2 font-mono">{seq.prefix}</TableCell>
-                    <TableCell className="text-xs px-3 py-2 tabular-nums">{seq.padding}</TableCell>
-                    <TableCell className="text-xs px-3 py-2 tabular-nums">{seq.nextNumber}</TableCell>
-                    {canManage && (
-                      <TableCell className="px-2 py-2">
-                        <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setEditSeq(seq)}>Edit</Button>
-                      </TableCell>
-                    )}
-                  </TableRow>
+                  <SequenceEditRow key={seq.entityType} seq={seq} canManage={canManage} onEdit={setEditSeq} />
                 ))}
               </TableBody>
             </Table>
@@ -95,10 +121,40 @@ export function SequencesSection({ sequences, canManage }: SequencesSectionProps
         <SequenceEditDialog
           seq={editSeq}
           open={!!editSeq}
-          onOpenChange={(v) => { if (!v) setEditSeq(null); }}
+          onOpenChange={handleSeqDialogOpenChange}
         />
       )}
     </>
+  );
+}
+
+interface SystemAccountRowProps {
+  mapping: SystemAccountMapping;
+  canManage: boolean;
+  onMap: (m: SystemAccountMapping) => void;
+}
+
+function SystemAccountRow({ mapping, canManage, onMap }: SystemAccountRowProps) {
+  function handleMap(): void {
+    onMap(mapping);
+  }
+
+  return (
+    <TableRow className={cn("border-b border-border/50 hover:bg-muted/30", !mapping.accountId && "bg-amber-50/60")}>
+      <TableCell className="text-xs px-3 py-2">{PURPOSE_LABELS[mapping.purpose]}</TableCell>
+      <TableCell className="text-xs px-3 py-2">
+        {mapping.account ? (
+          <span className="font-mono">{mapping.account.code} â€” {mapping.account.name}</span>
+        ) : (
+          <span className="text-amber-600 font-medium">Not mapped</span>
+        )}
+      </TableCell>
+      {canManage && (
+        <TableCell className="px-2 py-2">
+          <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={handleMap}>Map</Button>
+        </TableCell>
+      )}
+    </TableRow>
   );
 }
 
@@ -109,6 +165,10 @@ export interface SystemAccountsSectionProps {
 
 export function SystemAccountsSection({ systemAccounts, canManage }: SystemAccountsSectionProps) {
   const [editMapping, setEditMapping] = useState<SystemAccountMapping | null>(null);
+
+  function handleMappingDialogOpenChange(v: boolean): void {
+    if (!v) setEditMapping(null);
+  }
 
   return (
     <>
@@ -128,24 +188,7 @@ export function SystemAccountsSection({ systemAccounts, canManage }: SystemAccou
               </TableHeader>
               <TableBody>
                 {systemAccounts.map((m) => (
-                  <TableRow
-                    key={m.purpose}
-                    className={cn("border-b border-border/50 hover:bg-muted/30", !m.accountId && "bg-amber-50/60")}
-                  >
-                    <TableCell className="text-xs px-3 py-2">{PURPOSE_LABELS[m.purpose]}</TableCell>
-                    <TableCell className="text-xs px-3 py-2">
-                      {m.account ? (
-                        <span className="font-mono">{m.account.code} — {m.account.name}</span>
-                      ) : (
-                        <span className="text-amber-600 font-medium">Not mapped</span>
-                      )}
-                    </TableCell>
-                    {canManage && (
-                      <TableCell className="px-2 py-2">
-                        <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setEditMapping(m)}>Map</Button>
-                      </TableCell>
-                    )}
-                  </TableRow>
+                  <SystemAccountRow key={m.purpose} mapping={m} canManage={canManage} onMap={setEditMapping} />
                 ))}
               </TableBody>
             </Table>
@@ -157,10 +200,57 @@ export function SystemAccountsSection({ systemAccounts, canManage }: SystemAccou
         <SystemAccountMapDialog
           mapping={editMapping}
           open={!!editMapping}
-          onOpenChange={(v) => { if (!v) setEditMapping(null); }}
+          onOpenChange={handleMappingDialogOpenChange}
         />
       )}
     </>
+  );
+}
+
+interface PolicyRowProps {
+  policy: ApprovalPolicy;
+  canManage: boolean;
+  isDeleting: boolean;
+  onEdit: (p: ApprovalPolicy) => void;
+  onDelete: (id: number) => void;
+}
+
+function PolicyRow({ policy, canManage, isDeleting, onEdit, onDelete }: PolicyRowProps) {
+  function handleEdit(): void {
+    onEdit(policy);
+  }
+
+  function handleDelete(): void {
+    onDelete(policy.id);
+  }
+
+  return (
+    <TableRow className="border-b border-border/50 hover:bg-muted/30">
+      <TableCell className="text-xs px-3 py-2 font-mono">{policy.recordType.replace(/_/g, " ")}</TableCell>
+      <TableCell className="text-xs px-3 py-2 tabular-nums">{policy.minAmount ?? "â€”"}</TableCell>
+      <TableCell className="text-xs px-3 py-2">{policy.approverRole ?? "â€”"}</TableCell>
+      <TableCell className="px-3 py-2">
+        <Badge variant={policy.isActive ? "default" : "secondary"} className="text-[10px]">
+          {policy.isActive ? "Active" : "Inactive"}
+        </Badge>
+      </TableCell>
+      {canManage && (
+        <TableCell className="px-2 py-2">
+          <div className="flex gap-1">
+            <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={handleEdit}>Edit</Button>
+            <LoadingButton
+              variant="ghost"
+              size="sm"
+              className="h-6 text-xs text-destructive hover:text-destructive"
+              onClick={handleDelete}
+              isPending={isDeleting}
+            >
+              Delete
+            </LoadingButton>
+          </div>
+        </TableCell>
+      )}
+    </TableRow>
   );
 }
 
@@ -174,15 +264,19 @@ export function PoliciesSection({ policies, canManage }: PoliciesSectionProps) {
   const [addPolicyOpen, setAddPolicyOpen] = useState(false);
   const deletePolicy = useDeleteApprovalPolicy();
 
-  function handleDeletePolicy(id: number) {
+  function handleDeletePolicy(id: number): void {
     deletePolicy.mutate(id, {
       onSuccess: () => toast.success("Policy deleted"),
       onError: (err) => toast.error(getErrorMessage(err)),
     });
   }
 
-  function handleClosePolicyDialog(v: boolean) {
+  function handleClosePolicyDialog(v: boolean): void {
     if (!v) { setAddPolicyOpen(false); setEditPolicy(undefined); }
+  }
+
+  function handleAddPolicyOpen(): void {
+    setAddPolicyOpen(true);
   }
 
   return (
@@ -191,7 +285,7 @@ export function PoliciesSection({ policies, canManage }: PoliciesSectionProps) {
         <CardHeader className="pb-2 flex flex-row items-center justify-between">
           <CardTitle className="text-sm font-semibold">Approval Policies</CardTitle>
           {canManage && (
-            <Button size="sm" className="h-7 text-xs" onClick={() => setAddPolicyOpen(true)}>Add policy</Button>
+            <Button size="sm" className="h-7 text-xs" onClick={handleAddPolicyOpen}>Add policy</Button>
           )}
         </CardHeader>
         <CardContent className="p-0">
@@ -215,32 +309,14 @@ export function PoliciesSection({ policies, canManage }: PoliciesSectionProps) {
                   </TableRow>
                 )}
                 {policies.map((p) => (
-                  <TableRow key={p.id} className="border-b border-border/50 hover:bg-muted/30">
-                    <TableCell className="text-xs px-3 py-2 font-mono">{p.recordType.replace(/_/g, " ")}</TableCell>
-                    <TableCell className="text-xs px-3 py-2 tabular-nums">{p.minAmount ?? "—"}</TableCell>
-                    <TableCell className="text-xs px-3 py-2">{p.approverRole ?? "—"}</TableCell>
-                    <TableCell className="px-3 py-2">
-                      <Badge variant={p.isActive ? "default" : "secondary"} className="text-[10px]">
-                        {p.isActive ? "Active" : "Inactive"}
-                      </Badge>
-                    </TableCell>
-                    {canManage && (
-                      <TableCell className="px-2 py-2">
-                        <div className="flex gap-1">
-                          <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setEditPolicy(p)}>Edit</Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 text-xs text-destructive hover:text-destructive"
-                            onClick={() => handleDeletePolicy(p.id)}
-                            disabled={deletePolicy.isPending}
-                          >
-                            Delete
-                          </Button>
-                        </div>
-                      </TableCell>
-                    )}
-                  </TableRow>
+                  <PolicyRow
+                    key={p.id}
+                    policy={p}
+                    canManage={canManage}
+                    isDeleting={deletePolicy.isPending}
+                    onEdit={setEditPolicy}
+                    onDelete={handleDeletePolicy}
+                  />
                 ))}
               </TableBody>
             </Table>
@@ -321,14 +397,16 @@ export function QuickLinks() {
         href="/accounting/period-close"
         className="rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium hover:bg-muted/30 transition-colors"
       >
-        Period Close →
+        Period Close â†’
       </Link>
       <Link
         href="/accounting/audit"
         className="rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium hover:bg-muted/30 transition-colors"
       >
-        Audit →
+        Audit â†’
       </Link>
     </div>
   );
 }
+
+

@@ -50,7 +50,7 @@ export function ContactStatsBar({ contactId, openDealsCount }: ContactStatsBarPr
         label="Open Deals"
         value={openDealsCount}
         icon={TrendingUp}
-        color="violet"
+        color="blue"
         index={0}
       />
       <StatCard

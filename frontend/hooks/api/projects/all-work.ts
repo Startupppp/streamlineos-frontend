@@ -11,9 +11,9 @@ export function useAllWork(
   options?: Omit<UseQueryOptions<PaginatedResponse<AllWorkTicket>>, "queryKey" | "queryFn">
 ) {
   return useQuery<PaginatedResponse<AllWorkTicket>>({
-    queryKey: queryKeys.projects.allWork(filters as Record<string, unknown>),
+    queryKey: queryKeys.projects.allWork(filters ? { ...filters } : undefined),
     queryFn: () =>
-      apiClient.get<PaginatedResponse<AllWorkTicket>>("/projects/all-work", filters as Record<string, unknown>),
+      apiClient.get<PaginatedResponse<AllWorkTicket>>("/projects/all-work", filters ? { ...filters } : undefined),
     staleTime: 30_000,
     placeholderData: (prev) => prev,
     ...options,

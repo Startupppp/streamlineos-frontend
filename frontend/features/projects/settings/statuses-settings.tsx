@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -222,14 +223,16 @@ export function StatusesSettings({ projectId }: { projectId: number }) {
               ))}
             </div>
             <div className="flex gap-2">
-              <Button
+              <LoadingButton
                 size="sm"
                 onClick={handleCreate}
-                disabled={!name.trim() || createState.isPending}
+                disabled={!name.trim()}
+                isPending={createState.isPending}
+                loadingText="Creating…"
                 className="h-7 text-xs"
               >
-                {createState.isPending ? "Creating..." : "Create"}
-              </Button>
+                Create
+              </LoadingButton>
               <Button
                 size="sm"
                 variant="ghost"

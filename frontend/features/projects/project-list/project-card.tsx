@@ -234,7 +234,7 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
                 <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
                   <div
                     className={cn(
-                      "h-full rounded-full transition-[width] duration-500 ease-out motion-reduce:transition-none",
+                      "h-full rounded-full transition-[width] duration-300 ease-out motion-reduce:transition-none",
                       progressValue >= 100 ? "bg-emerald-500" : "bg-blue-500",
                     )}
                     style={{ width: `${progressValue}%` }}

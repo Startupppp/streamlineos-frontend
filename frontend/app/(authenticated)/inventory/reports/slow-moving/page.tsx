@@ -12,6 +12,7 @@ import { SkeletonTable, ErrorState } from "@/components/shared";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyReportIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { useSlowMovingReport, type SlowMovingRow } from "@/hooks/api/inventory/reports";
+import { downloadCsv } from "@/features/inventory/lib";
 
 const DAYS_OPTIONS = [
   { value: "30", label: "Inactive >30 days" },
@@ -96,26 +97,19 @@ function buildColumns(): DataTableColumn<SlowMovingRow>[] {
 }
 
 function exportToCsv(rows: SlowMovingRow[]): void {
-  const headers = ["Product", "SKU", "On Hand", "Avg Cost", "Value", "Last Movement", "Days Inactive"];
-  const csvRows = rows.map((r) => [
-    r.productName,
-    r.variantSku,
-    r.onHand,
-    r.averageCost.toFixed(2),
-    r.value.toFixed(2),
-    formatDate(r.lastMovement),
-    r.daysSinceLastMovement ?? "Never moved",
-  ]);
-  const content = [headers, ...csvRows]
-    .map((row) => row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))
-    .join("\n");
-  const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `slow-moving-${new Date().toISOString().slice(0, 10)}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
+  downloadCsv(
+    `slow-moving-${new Date().toISOString().slice(0, 10)}.csv`,
+    ["Product", "SKU", "On Hand", "Avg Cost", "Value", "Last Movement", "Days Inactive"],
+    rows.map((r) => [
+      r.productName,
+      r.variantSku,
+      r.onHand,
+      r.averageCost.toFixed(2),
+      r.value.toFixed(2),
+      formatDate(r.lastMovement),
+      r.daysSinceLastMovement ?? "Never moved",
+    ]),
+  );
 }
 
 function SlowMovingReportContent() {

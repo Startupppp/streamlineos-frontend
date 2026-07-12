@@ -21,7 +21,7 @@ function ProviderLabel({ provider }: { provider: GitProvider }) {
 
 function RefTypeIcon({ refType }: { refType: GitRefType }) {
   if (refType === "commit") return <GitCommit className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />;
-  if (refType === "pull_request") return <GitMerge className="h-3.5 w-3.5 shrink-0 text-violet-500" />;
+  if (refType === "pull_request") return <GitMerge className="h-3.5 w-3.5 shrink-0 text-blue-500" />;
   return <GitBranch className="h-3.5 w-3.5 shrink-0 text-blue-500" />;
 }
 

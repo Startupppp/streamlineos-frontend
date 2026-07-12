@@ -33,13 +33,16 @@ export type PeriodStatus = "OPEN" | "CLOSING" | "CLOSED" | "LOCKED";
 
 export type ApprovalStatus = "PENDING" | "APPROVED" | "REJECTED";
 
+export type CreditStatus = "DRAFT" | "POSTED" | "APPLIED" | "VOID";
+
 export type FinanceStatus =
   | InvoiceStatus
   | BillStatus
   | JournalStatus
   | ExpenseStatus
   | PeriodStatus
-  | ApprovalStatus;
+  | ApprovalStatus
+  | CreditStatus;
 
 const STATUS_CLASSES: Record<FinanceStatus, string> = {
   DRAFT: "bg-blue-50 text-blue-700 border-blue-200",
@@ -61,6 +64,7 @@ const STATUS_CLASSES: Record<FinanceStatus, string> = {
   CLOSED: "bg-slate-100 text-slate-700 border-slate-200",
   LOCKED: "bg-slate-100 text-slate-700 border-slate-200",
   PENDING: "bg-amber-50 text-amber-700 border-amber-200",
+  APPLIED: "bg-emerald-50 text-emerald-700 border-emerald-200",
 };
 
 const STATUS_LABELS: Record<FinanceStatus, string> = {
@@ -83,6 +87,7 @@ const STATUS_LABELS: Record<FinanceStatus, string> = {
   CLOSED: "Closed",
   LOCKED: "Locked",
   PENDING: "Pending",
+  APPLIED: "Applied",
 };
 
 type BadgeSize = "row" | "chip";

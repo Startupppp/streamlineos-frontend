@@ -127,7 +127,6 @@ export function DecideDialog({
                 variant="outline"
                 size="sm"
                 onClick={() => handleOpenChange(false)}
-                disabled={isPending}
               >
                 Cancel
               </Button>

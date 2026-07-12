@@ -40,7 +40,7 @@ const STATUS_LABEL: Record<RiskStatus, string> = {
 const STATUS_STYLE: Record<RiskStatus, string> = {
   open: "text-blue-600 border-blue-200",
   mitigating: "text-amber-600 border-amber-200",
-  monitoring: "text-violet-600 border-violet-200",
+  monitoring: "text-blue-600 border-blue-200",
   accepted: "text-slate-500 border-slate-200",
   closed: "text-emerald-600 border-emerald-200",
 };

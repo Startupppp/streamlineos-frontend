@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
@@ -206,9 +207,9 @@ export function DynamicFormRenderer({
       </div>
 
       <div className="flex justify-end pt-2">
-        <Button size="sm" onClick={handleSubmit} disabled={isPending}>
-          {isPending ? "Submitting…" : "Submit"}
-        </Button>
+        <LoadingButton size="sm" onClick={handleSubmit} isPending={isPending} loadingText="Submitting…">
+          Submit
+        </LoadingButton>
       </div>
     </div>
   );

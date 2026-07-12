@@ -19,6 +19,7 @@ import {
 import { LoadingState, ErrorState } from "@/components/shared";
 import { DS } from "@/lib/design-system";
 import { useCustomerLedger } from "@/hooks/api/accounting";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 interface CustomerLedgerDetailPageProps {
   params: Promise<{ clientId: string }>;
@@ -153,7 +154,7 @@ export default function CustomerLedgerDetailPage({
         ) : query.error ? (
           <ErrorState
             title="Failed to load ledger"
-            description={query.error.message}
+            description={getErrorMessage(query.error)}
             onRetry={handleRetry}
           />
         ) : lines.length === 0 ? (

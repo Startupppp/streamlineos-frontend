@@ -27,6 +27,10 @@ interface TransferDetailLine {
   quantity: number;
   quantityReceived: number;
   notes: string | null;
+  lotId: number | null;
+  lotNumber: string | null;
+  serialId: number | null;
+  serialNumber: string | null;
 }
 
 interface TransferLocationRef {
@@ -52,6 +56,8 @@ export interface TransferDetail {
 interface CreateTransferLineInput {
   productVariantId: number;
   quantity: number;
+  lotId?: number;
+  serialId?: number;
 }
 
 interface CreateTransferInput {
@@ -95,6 +101,10 @@ interface RawTransferDetailLine {
   quantity: string;
   quantityReceived: string;
   notes: string | null;
+  lotId: number | null;
+  serialId: number | null;
+  lot: { id: number; lotNumber: string } | null;
+  serial: { id: number; serialNumber: string } | null;
   productVariant: {
     id: number;
     name: string | null;
@@ -161,6 +171,10 @@ function toTransferDetail(r: RawTransferDetail): TransferDetail {
       quantity: Number(l.quantity),
       quantityReceived: Number(l.quantityReceived),
       notes: l.notes,
+      lotId: l.lotId,
+      lotNumber: l.lot?.lotNumber ?? null,
+      serialId: l.serialId,
+      serialNumber: l.serial?.serialNumber ?? null,
     })),
   };
 }
@@ -211,7 +225,12 @@ export function useCreateTransfer() {
         fromLocationId: data.fromLocationId,
         toLocationId: data.toLocationId,
         notes: data.notes,
-        lines: data.lines.map((l) => ({ productVariantId: l.productVariantId, quantity: l.quantity })),
+        lines: data.lines.map((l) => ({
+          productVariantId: l.productVariantId,
+          quantity: l.quantity,
+          lotId: l.lotId,
+          serialId: l.serialId,
+        })),
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.transfers() });

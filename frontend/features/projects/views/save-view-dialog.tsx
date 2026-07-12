@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -121,9 +122,9 @@ export function SaveViewDialog({
             <Button variant="outline" size="sm" onClick={handleCancel} disabled={isSaving}>
               Cancel
             </Button>
-            <Button size="sm" onClick={handleSave} disabled={!viewName.trim() || isSaving}>
-              {isSaving ? "Saving..." : "Save view"}
-            </Button>
+            <LoadingButton size="sm" onClick={handleSave} disabled={!viewName.trim()} isPending={isSaving} loadingText="Saving...">
+              Save view
+            </LoadingButton>
           </div>
         </div>
       </DialogContent>

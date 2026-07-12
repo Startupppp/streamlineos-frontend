@@ -70,6 +70,8 @@ export interface Customer360Response {
   supportTickets?: Customer360Section;
   surveys?: Customer360Section;
   activities?: Customer360Section;
+  projects?: Customer360Section;
+  signedDocuments?: Customer360Section;
 }
 
 export interface TimelineEvent {

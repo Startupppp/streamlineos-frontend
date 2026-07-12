@@ -20,7 +20,6 @@ import {
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper, PageSection } from "@/components/ui/page-wrapper";
@@ -36,6 +35,7 @@ import {
   useDeleteCrmOrganization,
   useCompany360,
 } from "@/hooks/api/crm";
+import { useCrmOptions, resolveOption } from "@/hooks/api/crm/metadata";
 import { AccountHealthBadge, computeHealthScore } from "@/features/crm/companies/detail/account-health-badge";
 import { HierarchyTree } from "@/features/crm/companies/detail/hierarchy-tree";
 import { AccountTimeline } from "@/features/crm/companies/detail/account-timeline";
@@ -43,42 +43,11 @@ import { AccountNotes } from "@/features/crm/companies/detail/account-notes";
 import { LinkParentDialog } from "@/features/crm/companies/detail/link-parent-dialog";
 import { Customer360Section } from "@/features/crm/shared/customer-360-section";
 import { Customer360Timeline } from "@/features/crm/shared/customer-360-timeline";
+import { CrmOptionBadge } from "@/features/crm/shared/metadata";
 import { formatCurrency } from "@/lib/format-utils";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import type { RelatedLead } from "@/types/crm";
-
-function LeadStatusBadge({ status }: { status: string }) {
-  const upper = status.toUpperCase();
-  const colorMap: Record<string, string> = {
-    NEW: "bg-blue-50 text-blue-700 border-blue-200",
-    CONTACTED: "bg-blue-50 text-blue-700 border-blue-200",
-    QUALIFIED: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    DISQUALIFIED: "bg-red-50 text-red-700 border-red-200",
-    CONVERTED: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    LOST: "bg-slate-100 text-slate-700 border-slate-200",
-  };
-  const classes = colorMap[upper] ?? "bg-slate-100 text-slate-700 border-slate-200";
-  return (
-    <Badge variant="outline" className={cn("text-[9px] px-1.5 py-0 h-4 capitalize", classes)}>
-      {status.toLowerCase().replace(/_/g, " ")}
-    </Badge>
-  );
-}
-
-function LeadPriorityBadge({ priority }: { priority: string }) {
-  const upper = priority.toUpperCase();
-  const colorMap: Record<string, string> = {
-    HIGH: "bg-red-50 text-red-700 border-red-200",
-    MEDIUM: "bg-amber-50 text-amber-700 border-amber-200",
-    LOW: "bg-slate-100 text-slate-700 border-slate-200",
-  };
-  const classes = colorMap[upper] ?? "bg-slate-100 text-slate-700 border-slate-200";
-  return (
-    <Badge variant="outline" className={cn("text-[9px] px-1.5 py-0 h-4 capitalize", classes)}>
-      {priority.toLowerCase()}
-    </Badge>
-  );
-}
 
 function InfoRow({
   icon: Icon,
@@ -100,45 +69,6 @@ function InfoRow({
   );
 }
 
-const relatedLeadsColumns: DataTableColumn<RelatedLead>[] = [
-  {
-    key: "name",
-    header: "Name",
-    cell: (lead) => (
-      <div className="flex items-center gap-2">
-        <div className="h-5 w-5 rounded-full bg-blue-50 flex items-center justify-center text-[9px] font-semibold text-blue-600 shrink-0">
-          {(lead.name ?? "?")[0]?.toUpperCase()}
-        </div>
-        <div className="min-w-0">
-          <p className="font-medium truncate">{lead.name ?? "—"}</p>
-          {lead.email && (
-            <p className="text-[10px] text-muted-foreground truncate">{lead.email}</p>
-          )}
-        </div>
-      </div>
-    ),
-  },
-  {
-    key: "status",
-    header: "Status",
-    cell: (lead) => <LeadStatusBadge status={lead.status} />,
-  },
-  {
-    key: "priority",
-    header: "Priority",
-    cell: (lead) => <LeadPriorityBadge priority={lead.priority} />,
-  },
-  {
-    key: "source",
-    header: "Source",
-    cell: (lead) => (
-      <span className="capitalize text-muted-foreground">
-        {lead.source?.toLowerCase().replace(/_/g, " ") ?? "—"}
-      </span>
-    ),
-  },
-];
-
 function DetailPageSkeleton() {
   return (
     <PageWrapper title="Company" subtitle="Loading..." backHref="/crm/companies">
@@ -147,7 +77,7 @@ function DetailPageSkeleton() {
           <StatCard label="Total Deal Value" value="" icon={DollarSign} tone="emerald" isLoading />
           <StatCard label="Active Deals" value="" icon={TrendingUp} tone="blue" isLoading />
           <StatCard label="Open Leads" value="" icon={Inbox} tone="amber" isLoading />
-          <StatCard label="Total Contacts" value="" icon={Users} tone="violet" isLoading />
+          <StatCard label="Total Contacts" value="" icon={Users} tone="blue" isLoading />
         </StatCardGrid>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="space-y-4">
@@ -194,7 +124,52 @@ export default function CompanyDetailPage({
   const { data: timeline } = useCrmOrgTimeline(id);
   const { data: relatedLeads } = useCrmOrgRelatedLeads(id);
   const { data: company360, isLoading: company360Loading } = useCompany360(id);
+  const { data: leadStatusOptions = [] } = useCrmOptions("lead_status");
+  const { data: priorityOptions = [] } = useCrmOptions("priority");
   const deleteMutation = useDeleteCrmOrganization();
+
+  const relatedLeadsColumns: DataTableColumn<RelatedLead>[] = [
+    {
+      key: "name",
+      header: "Name",
+      cell: (lead) => (
+        <div className="flex items-center gap-2">
+          <div className="h-5 w-5 rounded-full bg-blue-50 flex items-center justify-center text-[9px] font-semibold text-blue-600 shrink-0">
+            {(lead.name ?? "?")[0]?.toUpperCase()}
+          </div>
+          <div className="min-w-0">
+            <p className="font-medium truncate">{lead.name ?? "—"}</p>
+            {lead.email && (
+              <p className="text-[10px] text-muted-foreground truncate">{lead.email}</p>
+            )}
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (lead) => (
+        <CrmOptionBadge option={resolveOption(leadStatusOptions, lead.status)} />
+      ),
+    },
+    {
+      key: "priority",
+      header: "Priority",
+      cell: (lead) => (
+        <CrmOptionBadge option={resolveOption(priorityOptions, lead.priority)} />
+      ),
+    },
+    {
+      key: "source",
+      header: "Source",
+      cell: (lead) => (
+        <span className="capitalize text-muted-foreground">
+          {lead.source?.toLowerCase().replace(/_/g, " ") ?? "—"}
+        </span>
+      ),
+    },
+  ];
 
   const handleOpenLinkParent = useCallback(() => setLinkParentOpen(true), []);
   const handleLinkParentOpenChange = useCallback((open: boolean) => setLinkParentOpen(open), []);
@@ -207,7 +182,7 @@ export default function CompanyDetailPage({
         toast.success("Company deleted");
         router.push("/crm/companies");
       },
-      onError: (e) => toast.error(e.message),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [id, deleteMutation, router]);
 
@@ -283,7 +258,7 @@ export default function CompanyDetailPage({
             label="Total Contacts"
             value={rollup?.totalContacts ?? "—"}
             icon={Users}
-            color="violet"
+            color="blue"
           />
         </StatCardGrid>
 
