@@ -30,6 +30,8 @@ interface SessionData {
   enabledModules: string[];
   permissions: string[];
   plan: Plan | null;
+  orgOnboardingCompletedAt: string | null;
+  userOnboardingCompletedAt: string | null;
 }
 
 async function fetchSessionData(userId: string): Promise<SessionData | null> {
@@ -138,6 +140,8 @@ function buildUserFromSessionData(
     permissions: sessionData.permissions,
     plan: sessionData.plan ?? null,
     enabledModules: sessionData.enabledModules,
+    orgOnboardingCompletedAt: sessionData.orgOnboardingCompletedAt,
+    userOnboardingCompletedAt: sessionData.userOnboardingCompletedAt,
     ...(extra?.daysUntilExpiry !== undefined
       ? { daysUntilExpiry: extra.daysUntilExpiry }
       : {}),
@@ -297,6 +301,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           user.permissions = sessionData.permissions;
           user.plan = sessionData.plan ?? null;
           user.enabledModules = sessionData.enabledModules;
+          user.orgOnboardingCompletedAt = sessionData.orgOnboardingCompletedAt;
+          user.userOnboardingCompletedAt = sessionData.userOnboardingCompletedAt;
           user.isPlatformAdmin = isPlatformAdminEmail(sessionData.email);
         }
       }
