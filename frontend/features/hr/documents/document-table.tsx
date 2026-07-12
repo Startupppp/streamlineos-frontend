@@ -17,6 +17,7 @@ import {
   Pencil,
   Loader2,
   ArrowUpDown,
+  FileSignature,
 } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
@@ -172,18 +173,21 @@ export interface DocumentTableProps {
   onDelete: (documentId: number) => Promise<void>;
   onEdit: (doc: Document) => void;
   onOpenUpload: () => void;
+  onSendForSignature: (doc: Document) => void;
 }
 
 interface DocumentRowProps {
   doc: Document;
   onDelete: (id: number) => Promise<void>;
   onEdit: (doc: Document) => void;
+  onSendForSignature: (doc: Document) => void;
 }
 
 const DocumentRow = memo(function DocumentRow({
   doc,
   onDelete,
   onEdit,
+  onSendForSignature,
 }: DocumentRowProps) {
   const fileConfig = getFileIconConfig(doc.fileName ?? doc.name);
   const FileIcon = fileConfig.icon;
@@ -243,6 +247,14 @@ const DocumentRow = memo(function DocumentRow({
   const handleMenuTriggerClick = useCallback(
     (e: React.MouseEvent) => e.stopPropagation(),
     [],
+  );
+
+  const handleSendForSignature = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onSendForSignature(doc);
+    },
+    [onSendForSignature, doc],
   );
 
   return (
@@ -356,6 +368,10 @@ const DocumentRow = memo(function DocumentRow({
                 <Pencil className="mr-2 h-3.5 w-3.5" />
                 Edit details
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleSendForSignature}>
+                <FileSignature className="mr-2 h-3.5 w-3.5" />
+                Send for e-signature
+              </DropdownMenuItem>
               {(doc.version ?? 1) > 1 && (
                 <DropdownMenuItem onClick={handleVersionHistory}>
                   <History className="mr-2 h-3.5 w-3.5" />
@@ -392,6 +408,7 @@ export function DocumentTable({
   onDelete,
   onEdit,
   onOpenUpload,
+  onSendForSignature,
 }: DocumentTableProps) {
   const [isZipping, setIsZipping] = useState(false);
 
@@ -544,6 +561,7 @@ export function DocumentTable({
                       doc={doc}
                       onDelete={onDelete}
                       onEdit={onEdit}
+                      onSendForSignature={onSendForSignature}
                     />
                   ))
                 )}

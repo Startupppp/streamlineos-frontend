@@ -20,15 +20,36 @@ type CreateEnvelopeValues = z.infer<typeof createEnvelopeSchema>;
 interface CreateEnvelopeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  defaultTitle?: string;
+  sourceModule?: string;
+  sourceEntityType?: string;
+  sourceEntityId?: string;
+  dialogTitle?: string;
+  dialogDescription?: string;
 }
 
-export function CreateEnvelopeDialog({ open, onOpenChange }: CreateEnvelopeDialogProps) {
+export function CreateEnvelopeDialog({
+  open,
+  onOpenChange,
+  defaultTitle,
+  sourceModule,
+  sourceEntityType,
+  sourceEntityId,
+  dialogTitle,
+  dialogDescription,
+}: CreateEnvelopeDialogProps) {
   const router = useRouter();
   const createEnvelope = useCreateSignEnvelope();
 
   async function handleSubmit(values: CreateEnvelopeValues) {
     try {
-      const envelope = await createEnvelope.mutateAsync({ title: values.title, message: values.message });
+      const envelope = await createEnvelope.mutateAsync({
+        title: values.title,
+        message: values.message,
+        sourceModule,
+        sourceEntityType,
+        sourceEntityId,
+      });
       onOpenChange(false);
       router.push(`/sign/envelopes/${envelope.id}`);
     } catch (error) {
@@ -40,10 +61,10 @@ export function CreateEnvelopeDialog({ open, onOpenChange }: CreateEnvelopeDialo
     <EntityFormDialog<CreateEnvelopeValues>
       open={open}
       onOpenChange={onOpenChange}
-      title="New envelope"
-      description="Start with a title — you'll upload the document and add signers next."
+      title={dialogTitle ?? "New envelope"}
+      description={dialogDescription ?? "Start with a title — you'll upload the document and add signers next."}
       resolver={zodResolver(createEnvelopeSchema)}
-      defaultValues={{ title: "", message: "" }}
+      defaultValues={{ title: defaultTitle ?? "", message: "" }}
       onSubmit={handleSubmit}
       isSubmitting={createEnvelope.isPending}
       submitLabel="Create envelope"

@@ -485,12 +485,6 @@ export const NAV_GROUPS: NavGroup[] = [
             requiredPermission: "hr:documents:view",
           },
           {
-            label: "Digital Signatures",
-            icon: ShieldCheck,
-            href: "/hr/signatures",
-            requiredPermission: "hr:documents:view",
-          },
-          {
             label: "Email Templates",
             icon: MailOpen,
             href: "/hr/email-templates",
