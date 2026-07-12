@@ -273,20 +273,6 @@ export interface WinLossAnalysis {
   lostByReason: Array<{ reason: string; count: number; totalValue: number }>;
 }
 
-export interface SalesQuota {
-  id: number;
-  userId: string;
-  userName: string | null;
-  period: string;
-  startDate: string;
-  endDate: string;
-  targetRevenue: string;
-  actualRevenue: string;
-  attainmentPct: number;
-  notes: string | null;
-  createdAt: string | null;
-}
-
 export interface DealCompetitor {
   id: string;
   orgId: string;
@@ -351,18 +337,6 @@ export interface ForecastSnapshotCompare {
     totalDeals: number;
     byCategory: Array<{ category: string; delta: number; pctChange: number }>;
   };
-}
-
-export interface DealApprovalRule {
-  id: number;
-  orgId: string;
-  fromStage: string;
-  toStage: string;
-  approverType: "role" | "user";
-  approverRole: string | null;
-  approverUserId: string | null;
-  isActive: boolean;
-  createdAt: string;
 }
 
 export interface PatchNextStepInput {

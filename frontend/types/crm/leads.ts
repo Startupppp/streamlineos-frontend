@@ -71,102 +71,12 @@ export interface PaginatedClientAccounts {
   totalPages: number;
 }
 
-export interface ClientAccountStats {
-  total: number;
-  accountOpening: number;
-  queries: number;
-  planSelected: number;
-  invested: number;
-}
-
-export interface UpdateClientAccountStatusInput {
-  id: number;
-  status: ClientAccountStatus;
-  investmentAmount?: string;
-  planName?: string;
-  investmentDate?: string;
-  transactionRef?: string;
-}
-
 export interface LogClientActivityInput {
   clientAccountId: number;
   activityType: string;
   title: string;
   description?: string;
   metadata?: Record<string, unknown>;
-}
-
-export interface Target {
-  id: number;
-  orgId: string;
-  userId: string;
-  metricType: string;
-  targetValue: string;
-  currentValue: string | null;
-  period: string | null;
-  startDate: string;
-  endDate: string;
-  setById: string | null;
-  branchId: number | null;
-  parentTargetId: number | null;
-  notes: string | null;
-  createdAt: string | null;
-  updatedAt: string | null;
-  user?: { id: string; name: string | null; image: string | null } | null;
-}
-
-export interface TargetHistory {
-  id: number;
-  targetId: number;
-  orgId: string;
-  changedById: string;
-  field: string;
-  oldValue: string | null;
-  newValue: string | null;
-  createdAt: string | null;
-  changedBy?: { id: string; name: string | null; image: string | null } | null;
-}
-
-export interface TargetFilters {
-  userId?: string;
-  period?: string;
-  limit?: number;
-  offset?: number;
-}
-
-export interface TargetLeaderboardEntry {
-  userId: string;
-  name: string;
-  image: string | null;
-  totalTarget: number;
-  totalCurrent: number;
-  progress: number;
-}
-
-export interface CreateTargetInput {
-  userId?: string;
-  userIds?: string[];
-  metricType: string;
-  targetValue: string;
-  period?: string;
-  startDate: string;
-  endDate: string;
-  notes?: string;
-  branchId?: number;
-  parentTargetId?: number;
-}
-
-export interface UpdateTargetInput {
-  id: number;
-  targetValue?: string;
-  currentValue?: string;
-  notes?: string;
-}
-
-export interface LogTargetProgressInput {
-  id: number;
-  currentValue: string;
-  notes?: string;
 }
 
 export interface RelatedLead {

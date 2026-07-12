@@ -212,36 +212,6 @@ export interface CustomerExecutiveDashboard {
 }
 
 
-export interface CampaignItem {
-  name: string;
-  status: "active" | "paused" | "completed";
-  leads: number;
-  spend: number;
-  roi: number;
-}
-
-export interface ChannelBreakdownItem {
-  label: string;
-  value: number;
-  color: string;
-}
-
-export interface ContentPerformanceItem {
-  title: string;
-  type: string;
-  views: number;
-  leads: number;
-  convRate: number;
-}
-
-export interface UpcomingEventItem {
-  name: string;
-  date: string;
-  type: string;
-  status: "planning" | "confirmed" | "completed";
-}
-
-
 export interface SupportDashboardStats {
   openTickets: StatWithTrend;
   avgResolution: StatWithTrend<string>;
