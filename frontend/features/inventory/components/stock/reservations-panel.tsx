@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -12,14 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,7 +28,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { SkeletonTable } from "@/components/shared/skeletons/skeleton-table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { MoreHorizontal } from "lucide-react";
 import { useReservations, useReleaseReservation } from "@/hooks/api/inventory/stock";
@@ -50,85 +42,17 @@ import type { StockReservationStatus } from "@/types/inventory";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 
-const TH = "text-[10px] uppercase tracking-wider font-bold px-2 py-1.5";
-
-interface ReservationRowProps {
-  reservation: {
-    id: number;
-    sourceType: string;
-    sourceId: string;
-    reservedQty: string;
-    status: StockReservationStatus;
-    expiresAt: string | null;
-    createdAt: string;
-    productVariant: { id: number; sku: string; name: string | null } | null;
-    warehouse: { id: number; name: string } | null;
-  };
-  canRelease: boolean;
-  onRelease: (id: number) => void;
-}
-
-const ReservationRow = memo(function ReservationRow({ reservation, canRelease, onRelease }: ReservationRowProps) {
-  const status = reservation.status as ReservationStatus;
-  const soLink = reservation.sourceType === "sales_order"
-    ? `/inventory/sales-orders/${reservation.sourceId}`
-    : null;
-
-  function handleRelease(): void {
-    onRelease(reservation.id);
-  }
-
-  return (
-    <TableRow className="h-8 border-b border-border/50 hover:bg-muted/30 transition-colors">
-      <TableCell className="px-2 py-1 text-[11px] text-muted-foreground font-mono">
-        {soLink ? (
-          <Link href={soLink} className="text-accent hover:underline">
-            {reservation.sourceType}/{reservation.sourceId}
-          </Link>
-        ) : (
-          `${reservation.sourceType}/${reservation.sourceId}`
-        )}
-      </TableCell>
-      <TableCell className="px-2 py-1 text-[11px]">
-        <div className="font-medium truncate max-w-[140px]">
-          {reservation.productVariant?.name ?? "—"}
-        </div>
-        <div className="font-mono text-muted-foreground">{reservation.productVariant?.sku ?? "—"}</div>
-      </TableCell>
-      <TableCell className="px-2 py-1 text-right font-mono tabular-nums text-[11px]">
-        {Number(reservation.reservedQty).toLocaleString(undefined, { maximumFractionDigits: 4 })}
-      </TableCell>
-      <TableCell className="px-2 py-1">
-        <Badge
-          variant="outline"
-          className={cn("h-4 text-[9px] px-1.5 py-0 border", RESERVATION_STATUS_BADGE[status])}
-        >
-          {RESERVATION_STATUS_LABEL[status]}
-        </Badge>
-      </TableCell>
-      <TableCell className="px-2 py-1 text-[11px] text-muted-foreground hidden md:table-cell">
-        {reservation.expiresAt ? new Date(reservation.expiresAt).toLocaleDateString() : "—"}
-      </TableCell>
-      <TableCell className="px-2 py-1 text-[11px] text-muted-foreground hidden lg:table-cell">
-        {new Date(reservation.createdAt).toLocaleDateString()}
-      </TableCell>
-      <TableCell className="px-2 py-1">
-        {canRelease && reservation.status === "ACTIVE" && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="Actions">
-                <MoreHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onSelect={handleRelease}>Release</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
-      </TableCell>
-    </TableRow>
-  );
-});
+type ReservationItem = {
+  id: number;
+  sourceType: string;
+  sourceId: string;
+  reservedQty: string;
+  status: StockReservationStatus;
+  expiresAt: string | null;
+  createdAt: string;
+  productVariant: { id: number; sku: string; name: string | null } | null;
+  warehouse: { id: number; name: string } | null;
+};
 
 const PAGE_LIMIT = 50;
 
@@ -149,7 +73,6 @@ export function ReservationsPanel() {
   const { data, isLoading } = useReservations(filters);
   const items = data?.items ?? [];
   const total = data?.total ?? 0;
-  const totalPages = data?.totalPages ?? 1;
 
   const handleRelease = useCallback((id: number) => {
     setReleaseId(id);
@@ -178,13 +101,96 @@ export function ReservationsPanel() {
     setReleaseId(null);
   }
 
-  function handlePrevPage(): void {
-    setPage((p) => Math.max(1, p - 1));
-  }
-
-  function handleNextPage(): void {
-    setPage((p) => Math.min(totalPages, p + 1));
-  }
+  const columns = useMemo<DataTableColumn<ReservationItem>[]>(() => [
+    {
+      key: "source",
+      header: "Source",
+      className: "text-muted-foreground font-mono",
+      cell: (row) => {
+        const soLink = row.sourceType === "sales_order"
+          ? `/inventory/sales-orders/${row.sourceId}`
+          : null;
+        return soLink ? (
+          <Link href={soLink} className="text-accent hover:underline">
+            {row.sourceType}/{row.sourceId}
+          </Link>
+        ) : (
+          `${row.sourceType}/${row.sourceId}`
+        );
+      },
+    },
+    {
+      key: "product",
+      header: "Product / Variant",
+      cell: (row) => (
+        <>
+          <div className="font-medium truncate max-w-[140px]">
+            {row.productVariant?.name ?? "—"}
+          </div>
+          <div className="font-mono text-muted-foreground">{row.productVariant?.sku ?? "—"}</div>
+        </>
+      ),
+    },
+    {
+      key: "qty",
+      header: "Qty",
+      headerClassName: "text-right",
+      className: "text-right font-mono tabular-nums",
+      cell: (row) => Number(row.reservedQty).toLocaleString(undefined, { maximumFractionDigits: 4 }),
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (row) => {
+        const status = row.status as ReservationStatus;
+        return (
+          <Badge
+            variant="outline"
+            className={cn("h-4 text-[9px] px-1.5 py-0 border", RESERVATION_STATUS_BADGE[status])}
+          >
+            {RESERVATION_STATUS_LABEL[status]}
+          </Badge>
+        );
+      },
+    },
+    {
+      key: "expires",
+      header: "Expires",
+      className: "text-muted-foreground hidden md:table-cell",
+      headerClassName: "hidden md:table-cell",
+      cell: (row) => row.expiresAt ? new Date(row.expiresAt).toLocaleDateString() : "—",
+    },
+    {
+      key: "created",
+      header: "Created",
+      className: "text-muted-foreground hidden lg:table-cell",
+      headerClassName: "hidden lg:table-cell",
+      cell: (row) => new Date(row.createdAt).toLocaleDateString(),
+    },
+    {
+      key: "actions",
+      header: "",
+      headerClassName: "w-8",
+      cell: (row) => {
+        if (!canRelease || row.status !== "ACTIVE") return null;
+        function handleSelect(): void {
+          handleRelease(row.id);
+        }
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="Actions">
+                <MoreHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onSelect={handleSelect}>Release</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
+    },
+  ], [canRelease, handleRelease]);
 
   return (
     <>
@@ -208,61 +214,26 @@ export function ReservationsPanel() {
         )}
       </div>
 
-      {isLoading ? (
-        <SkeletonTable rows={6} columns={6} />
-      ) : items.length === 0 ? (
-        <InventoryEmptyState
-          title="No active reservations"
-          description="Reservations will appear here when stock is reserved for sales orders or other sources."
-          className="flex-1 min-h-[30vh]"
-        />
-      ) : (
-        <>
-          <div className="rounded-md border border-border overflow-hidden bg-card">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/80 hover:bg-muted/80">
-                    <TableHead className={TH}>Source</TableHead>
-                    <TableHead className={TH}>Product / Variant</TableHead>
-                    <TableHead className={cn(TH, "text-right")}>Qty</TableHead>
-                    <TableHead className={TH}>Status</TableHead>
-                    <TableHead className={cn(TH, "hidden md:table-cell")}>Expires</TableHead>
-                    <TableHead className={cn(TH, "hidden lg:table-cell")}>Created</TableHead>
-                    <TableHead className={cn(TH, "w-8")} />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {items.map((r) => (
-                    <ReservationRow
-                      key={r.id}
-                      reservation={r}
-                      canRelease={canRelease}
-                      onRelease={handleRelease}
-                    />
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
-
-          {totalPages > 1 && (
-            <div className="mt-3 flex items-center justify-between px-1 py-2">
-              <span className="text-xs text-muted-foreground">
-                Page {page} of {totalPages}
-              </span>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="h-7 text-xs" disabled={page <= 1} onClick={handlePrevPage}>
-                  Previous
-                </Button>
-                <Button variant="outline" size="sm" className="h-7 text-xs" disabled={page >= totalPages} onClick={handleNextPage}>
-                  Next
-                </Button>
-              </div>
-            </div>
-          )}
-        </>
-      )}
+      <DataTable
+        data={items}
+        columns={columns}
+        getRowKey={(row) => row.id}
+        isLoading={isLoading}
+        emptyState={
+          <InventoryEmptyState
+            title="No active reservations"
+            description="Reservations will appear here when stock is reserved for sales orders or other sources."
+            className="flex-1 min-h-[30vh]"
+          />
+        }
+        pagination={{
+          mode: "server",
+          page,
+          pageSize: PAGE_LIMIT,
+          total,
+          onPageChange: setPage,
+        }}
+      />
 
       <AlertDialog open={releaseId !== null} onOpenChange={(o) => { if (!o) setReleaseId(null); }}>
         <AlertDialogContent>

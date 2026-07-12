@@ -2,7 +2,6 @@
 
 import { useState, memo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Command,
@@ -23,7 +22,7 @@ import { PriorityBadge } from "../shared/priority-badge";
 import { popoverOptionBaseClass, popoverOptionSelectedClass } from "../shared/popover-option-classes";
 import { buildStatusConfig, getStatusEntry } from "../shared/types";
 import type { TicketPriority } from "@/types/projects";
-import { AlertTriangle, ArrowUp, Minus, ArrowDown, Check, User } from "lucide-react";
+import { AlertTriangle, ArrowUp, Minus, ArrowDown, Check, User, Gauge } from "lucide-react";
 
 const PRIORITIES: { value: TicketPriority; label: string; Icon: typeof Minus }[] = [
   { value: "URGENT", label: "Urgent", Icon: AlertTriangle },
@@ -238,16 +237,23 @@ export const InlineEstimate = memo(function InlineEstimate({
         <PopoverTrigger asChild>
           <button
             type="button"
-            className="inline-flex items-center rounded hover:bg-muted/60 transition-colors"
+            className="inline-flex items-center gap-1 rounded px-1 py-0.5 hover:bg-muted/60 transition-colors"
             aria-label="Change estimate"
           >
-            {display != null ? (
-              <Badge variant="secondary" className="h-4 px-1 py-0 text-[9px] font-mono cursor-pointer">
-                {display}
-              </Badge>
-            ) : (
-              <span className="text-[9px] text-muted-foreground/50 font-mono px-1">pts</span>
-            )}
+            <Gauge
+              className={cn(
+                "h-3 w-3 shrink-0",
+                display != null ? "text-foreground" : "text-muted-foreground/50",
+              )}
+            />
+            <span
+              className={cn(
+                "text-[10px] font-mono",
+                display != null ? "text-foreground" : "text-muted-foreground/50",
+              )}
+            >
+              {display != null ? `${display} pts` : "pts"}
+            </span>
           </button>
         </PopoverTrigger>
         <PopoverContent className="w-28 p-2" align="start">

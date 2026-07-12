@@ -19,14 +19,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -81,6 +74,53 @@ function fmt(amount: string | number) {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
+}
+
+type Payment = {
+  id: number;
+  paymentDate: string;
+  paymentMethod: string;
+  referenceNumber: string | null;
+  creator?: { name?: string | null } | null;
+  amount: string | number;
+};
+
+const paymentColumns: DataTableColumn<Payment>[] = [
+  {
+    key: "paymentDate",
+    header: "Date",
+    className: "text-sm",
+    cell: (p) => format(new Date(p.paymentDate), "dd MMM yyyy"),
+  },
+  {
+    key: "paymentMethod",
+    header: "Method",
+    className: "text-sm capitalize",
+    cell: (p) => p.paymentMethod.replace("_", " "),
+  },
+  {
+    key: "referenceNumber",
+    header: "Reference",
+    className: "text-sm text-muted-foreground font-mono",
+    cell: (p) => p.referenceNumber ?? "—",
+  },
+  {
+    key: "creator",
+    header: "Recorded by",
+    className: "text-sm text-muted-foreground",
+    cell: (p) => p.creator?.name ?? "—",
+  },
+  {
+    key: "amount",
+    header: "Amount",
+    headerClassName: "text-right",
+    className: "text-right font-mono text-sm font-medium text-emerald-600",
+    cell: (p) => fmt(p.amount),
+  },
+];
+
+function getPaymentKey(p: Payment) {
+  return p.id;
 }
 
 function InvoiceDetailSkeleton() {
@@ -516,38 +556,12 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
                 </Button>
               )}
             </div>
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Date</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Method</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Reference</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Recorded by</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Amount</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {(invoice.payments ?? []).map((p) => (
-                  <TableRow key={p.id} className="border-b border-border/50 hover:bg-muted/30">
-                    <TableCell className="text-sm">
-                      {format(new Date(p.paymentDate), "dd MMM yyyy")}
-                    </TableCell>
-                    <TableCell className="text-sm capitalize">
-                      {p.paymentMethod.replace("_", " ")}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground font-mono">
-                      {p.referenceNumber ?? "—"}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {p.creator?.name ?? "—"}
-                    </TableCell>
-                    <TableCell className="text-right font-mono text-sm font-medium text-emerald-600">
-                      {fmt(p.amount)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <DataTable
+              data={invoice.payments ?? []}
+              columns={paymentColumns}
+              getRowKey={getPaymentKey}
+              className="border-0 rounded-none"
+            />
           </div>
         )}
 

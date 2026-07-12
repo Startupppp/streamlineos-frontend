@@ -13,7 +13,7 @@ import { popoverOptionBaseClass, popoverOptionSelectedClass } from "../shared/po
 import { typeConfig } from "../shared/types";
 import { TicketTypeIcon } from "../shared/ticket-type-icon";
 import { InlineFieldWrapper } from "./card-inline-fields";
-import { Check, Tag, RotateCcw, Zap } from "lucide-react";
+import { Check, Tag, RefreshCw, Zap } from "lucide-react";
 
 const INLINE_TYPES = ["TASK", "BUG", "STORY", "EPIC"] as const;
 
@@ -187,7 +187,12 @@ export const InlineCycle = memo(function InlineCycle({
             className="inline-flex items-center gap-1 rounded px-1 py-0.5 hover:bg-muted/60 transition-colors"
             aria-label="Change cycle"
           >
-            <RotateCcw className="h-3 w-3 shrink-0 text-muted-foreground" />
+            <RefreshCw
+              className={cn(
+                "h-3 w-3 shrink-0",
+                currentCycle ? "text-foreground" : "text-muted-foreground/50",
+              )}
+            />
             <span
               className={cn(
                 "max-w-[60px] truncate text-[10px]",
@@ -204,7 +209,7 @@ export const InlineCycle = memo(function InlineCycle({
             onClick={makeCycleHandler(null)}
             className={cn(popoverOptionBaseClass, !currentCycleId && popoverOptionSelectedClass)}
           >
-            <RotateCcw className="h-3 w-3 shrink-0 text-muted-foreground" />
+            <RefreshCw className="h-3 w-3 shrink-0 text-muted-foreground" />
             No cycle
             {!currentCycleId && <Check className="ml-auto h-3 w-3" />}
           </button>
@@ -218,7 +223,7 @@ export const InlineCycle = memo(function InlineCycle({
                 currentCycleId === cycle.id && popoverOptionSelectedClass,
               )}
             >
-              <RotateCcw className="h-3 w-3 shrink-0 text-muted-foreground" />
+              <RefreshCw className="h-3 w-3 shrink-0 text-muted-foreground" />
               <span className="truncate">{cycle.name}</span>
               {currentCycleId === cycle.id && <Check className="ml-auto h-3 w-3 shrink-0" />}
             </button>

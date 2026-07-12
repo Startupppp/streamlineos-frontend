@@ -6,15 +6,6 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
-import { LoadingButton } from "@/components/ui/loading-button";
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from "@/components/ui/table";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   Select,
@@ -41,6 +32,7 @@ import {
   usePostVendorCredit,
 } from "@/hooks/api/accounting/ap";
 import type { VendorCreditSummary } from "@/hooks/api/accounting/ap";
+import type { VendorCreditItem } from "@/hooks/api/accounting/ap-vendors";
 import { useVendorsOutstanding } from "@/hooks/api/accounting";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -103,6 +95,35 @@ function CreditRowActions({ credit, onViewDetail, onApply }: CreditRowActionsPro
   );
 }
 
+const creditItemColumns: DataTableColumn<VendorCreditItem>[] = [
+  {
+    key: "description",
+    header: "Description",
+    cell: (row) => <span>{row.description}</span>,
+  },
+  {
+    key: "quantity",
+    header: "Qty",
+    headerClassName: "text-right",
+    className: "text-right tabular-nums",
+    cell: (row) => <span>{row.quantity}</span>,
+  },
+  {
+    key: "rate",
+    header: "Rate",
+    headerClassName: "text-right",
+    className: "text-right tabular-nums",
+    cell: (row) => <span>{row.rate}</span>,
+  },
+  {
+    key: "amount",
+    header: "Amount",
+    headerClassName: "text-right",
+    className: "text-right tabular-nums font-medium",
+    cell: (row) => <span>{row.amount}</span>,
+  },
+];
+
 function CreditDetailSheet({
   creditId,
   open,
@@ -151,28 +172,11 @@ function CreditDetailSheet({
             )}
           </div>
           {credit.items.length > 0 && (
-            <div className="rounded-md border border-border overflow-hidden">
-              <Table className="text-xs">
-                <TableHeader>
-                  <TableRow className="bg-muted/40 border-b border-border">
-                    <TableHead className="px-3 py-1.5 text-left font-medium text-muted-foreground">Description</TableHead>
-                    <TableHead className="px-3 py-1.5 text-right font-medium text-muted-foreground">Qty</TableHead>
-                    <TableHead className="px-3 py-1.5 text-right font-medium text-muted-foreground">Rate</TableHead>
-                    <TableHead className="px-3 py-1.5 text-right font-medium text-muted-foreground">Amount</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {credit.items.map((item) => (
-                    <TableRow key={item.id} className="border-b border-border/50 last:border-0">
-                      <TableCell className="px-3 py-1.5">{item.description}</TableCell>
-                      <TableCell className="px-3 py-1.5 text-right tabular-nums">{item.quantity}</TableCell>
-                      <TableCell className="px-3 py-1.5 text-right tabular-nums">{item.rate}</TableCell>
-                      <TableCell className="px-3 py-1.5 text-right tabular-nums font-medium">{item.amount}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            <DataTable
+              data={credit.items}
+              columns={creditItemColumns}
+              getRowKey={(row) => row.id}
+            />
           )}
         </div>
       )}

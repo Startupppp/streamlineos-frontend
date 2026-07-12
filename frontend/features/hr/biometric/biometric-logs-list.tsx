@@ -2,78 +2,77 @@
 
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { useBiometricLogs } from "@/hooks/api/hr/biometric";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { useBiometricLogs, type BiometricLog } from "@/hooks/api/hr/biometric";
 import { format } from "date-fns";
+
+const columns: DataTableColumn<BiometricLog>[] = [
+  {
+    key: "device",
+    header: "Device",
+    cell: (log) => <span className="text-sm">Device #{log.deviceId}</span>,
+  },
+  {
+    key: "employee",
+    header: "Employee",
+    cell: (log) => <span className="text-sm">{log.userId ?? "—"}</span>,
+  },
+  {
+    key: "punchTime",
+    header: "Punch Time",
+    cell: (log) => (
+      <span className="text-sm">
+        {format(new Date(log.punchTime), "dd MMM yyyy, HH:mm")}
+      </span>
+    ),
+  },
+  {
+    key: "type",
+    header: "Type",
+    cell: (log) => (
+      <Badge
+        variant={log.punchType === "IN" ? "default" : "secondary"}
+        className="text-[11px]"
+      >
+        {log.punchType}
+      </Badge>
+    ),
+  },
+  {
+    key: "processed",
+    header: "Processed",
+    cell: (log) => (
+      <span
+        className={`text-xs font-medium ${log.processed ? "text-emerald-600" : "text-amber-600"}`}
+      >
+        {log.processed ? "Yes" : "Pending"}
+      </span>
+    ),
+  },
+];
+
+function getRowKey(log: BiometricLog) {
+  return log.id;
+}
 
 export function BiometricLogsList() {
   const { data: logs, isLoading } = useBiometricLogs();
 
-  if (isLoading) {
-    return (
-      <div className="space-y-2">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} className="h-12 rounded-lg" />
-        ))}
-      </div>
-    );
-  }
-
-  if (!logs?.length) {
-    return (
-      <EmptyState
-        illustrationPreset="activity"
-        title="No punch logs"
-        description="Biometric punch records will appear here after syncing"
-        className="border-0 bg-transparent shadow-none h-64"
-        compact
-      />
-    );
-  }
-
   return (
-    <div className="rounded-xl border border-slate-200/80 overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-slate-50/80">
-            <TableHead className="text-xs font-semibold">Device</TableHead>
-            <TableHead className="text-xs font-semibold">Employee</TableHead>
-            <TableHead className="text-xs font-semibold">Punch Time</TableHead>
-            <TableHead className="text-xs font-semibold">Type</TableHead>
-            <TableHead className="text-xs font-semibold">Processed</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {logs.map((log) => (
-            <TableRow key={log.id}>
-              <TableCell className="text-sm">Device #{log.deviceId}</TableCell>
-              <TableCell className="text-sm">{log.userId ?? "—"}</TableCell>
-              <TableCell className="text-sm">{format(new Date(log.punchTime), "dd MMM yyyy, HH:mm")}</TableCell>
-              <TableCell>
-                <Badge
-                  variant={log.punchType === "IN" ? "default" : "secondary"}
-                  className="text-[11px]"
-                >
-                  {log.punchType}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                <span className={`text-xs font-medium ${log.processed ? "text-emerald-600" : "text-amber-600"}`}>
-                  {log.processed ? "Yes" : "Pending"}
-                </span>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+    <DataTable
+      data={logs ?? []}
+      columns={columns}
+      getRowKey={getRowKey}
+      isLoading={isLoading}
+      emptyState={
+        <EmptyState
+          illustrationPreset="activity"
+          title="No punch logs"
+          description="Biometric punch records will appear here after syncing"
+          className="border-0 bg-transparent shadow-none h-64"
+          compact
+        />
+      }
+    />
   );
 }

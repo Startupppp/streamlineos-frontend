@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
@@ -39,66 +40,69 @@ export function SubmissionsDataTable({ formId, submissions, canManage }: Submiss
     if (!open) setViewSub(null);
   }
 
-  if (submissions.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <p className="text-sm text-muted-foreground">No submissions yet.</p>
-      </div>
-    );
-  }
+  const columns: DataTableColumn<HrFormSubmission>[] = [
+    {
+      key: "submittedBy",
+      header: "Submitted by",
+      cell: (row) => row.submittedByName ?? row.submittedBy ?? "Anonymous",
+    },
+    {
+      key: "date",
+      header: "Date",
+      cell: (row) => (
+        <span className="text-muted-foreground text-xs">
+          {new Date(row.createdAt).toLocaleDateString()}
+        </span>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (row) =>
+        canManage ? (
+          <Select
+            value={row.status}
+            onValueChange={(v) => handleStatusChange(row.id, v as HrFormSubmissionStatus)}
+          >
+            <SelectTrigger className="h-7 text-xs w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(SUBMISSION_STATUS_LABELS).map(([v, l]) => (
+                <SelectItem key={v} value={v} className="text-xs">{l}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : (
+          <Badge variant="outline" className={"text-[11px] " + (SUBMISSION_STATUS_COLORS[row.status] ?? "")}>
+            {SUBMISSION_STATUS_LABELS[row.status] ?? row.status}
+          </Badge>
+        ),
+    },
+    {
+      key: "actions",
+      header: "",
+      className: "w-24",
+      cell: (row) => (
+        <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => handleViewClick(row)}>
+          View
+        </Button>
+      ),
+    },
+  ];
 
   return (
     <>
-      <div className="rounded-lg border border-border overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b bg-muted/50">
-              <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Submitted by</th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Date</th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Status</th>
-              <th className="w-24" />
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {submissions.map((sub) => (
-              <tr key={sub.id} className="hover:bg-muted/30 transition-colors">
-                <td className="px-4 py-3">
-                  {sub.submittedByName ?? sub.submittedBy ?? "Anonymous"}
-                </td>
-                <td className="px-4 py-3 text-muted-foreground text-xs">
-                  {new Date(sub.createdAt).toLocaleDateString()}
-                </td>
-                <td className="px-4 py-3">
-                  {canManage ? (
-                    <Select
-                      value={sub.status}
-                      onValueChange={(v) => handleStatusChange(sub.id, v as HrFormSubmissionStatus)}
-                    >
-                      <SelectTrigger className="h-7 text-xs w-32">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(SUBMISSION_STATUS_LABELS).map(([v, l]) => (
-                          <SelectItem key={v} value={v} className="text-xs">{l}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <Badge variant="outline" className={`text-[11px] ${SUBMISSION_STATUS_COLORS[sub.status] ?? ""}`}>
-                      {SUBMISSION_STATUS_LABELS[sub.status] ?? sub.status}
-                    </Badge>
-                  )}
-                </td>
-                <td className="px-4 py-3">
-                  <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => handleViewClick(sub)}>
-                    View
-                  </Button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <DataTable
+        data={submissions}
+        columns={columns}
+        getRowKey={(row) => row.id}
+        emptyState={
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <p className="text-sm text-muted-foreground">No submissions yet.</p>
+          </div>
+        }
+      />
 
       <Sheet open={viewSub !== null} onOpenChange={handleSheetOpenChange}>
         <SheetContent className="w-full sm:max-w-lg overflow-y-auto">

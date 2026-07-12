@@ -11,13 +11,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Plus, CheckCircle2, Laptop, AlertCircle } from "lucide-react";
@@ -74,6 +71,93 @@ const CONDITION_META: Record<string, { badge: string }> = {
     badge: "bg-rose-100 border-rose-200 text-rose-700 dark:bg-rose-900/40 dark:border-rose-800 dark:text-rose-300",
   },
 };
+
+function buildAssetReturnColumns(
+  isAdmin: boolean,
+  onMark: (id: number) => void,
+): DataTableColumn<AssetReturn>[] {
+  const cols: DataTableColumn<AssetReturn>[] = [
+    {
+      key: "asset",
+      header: "Asset",
+      cell: (ar) => (
+        <div className="flex items-center gap-2.5">
+          <div className="h-7 w-7 rounded-lg bg-slate-100 dark:bg-slate-950/40 flex items-center justify-center shrink-0">
+            <Laptop className="h-3.5 w-3.5 text-slate-600 dark:text-slate-400" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-foreground truncate">{ar.assetName}</p>
+            {ar.assetType && <p className="text-[10px] text-muted-foreground">{ar.assetType}</p>}
+            {ar.serialNumber && <p className="text-[10px] font-mono text-muted-foreground">S/N: {ar.serialNumber}</p>}
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "employee",
+      header: "Employee",
+      cell: (ar) => (
+        <span className="text-sm text-foreground">
+          {ar.employeeName ?? <span className="text-muted-foreground">—</span>}
+        </span>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (ar) => {
+        const statusMeta = STATUS_META[ar.status ?? "PENDING"] ?? STATUS_META.PENDING;
+        return (
+          <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border", statusMeta.badge)}>
+            {statusMeta.label}
+          </span>
+        );
+      },
+      sortable: true,
+      sortValue: (ar) => ar.status ?? "",
+    },
+    {
+      key: "condition",
+      header: "Condition",
+      cell: (ar) => {
+        const conditionMeta = ar.condition ? CONDITION_META[ar.condition] : null;
+        return conditionMeta ? (
+          <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border", conditionMeta.badge)}>
+            {ar.condition}
+          </span>
+        ) : (
+          <span className="text-muted-foreground text-xs">—</span>
+        );
+      },
+    },
+    {
+      key: "date",
+      header: "Date",
+      cell: (ar) => (
+        <span className="text-xs text-muted-foreground">
+          {ar.createdAt ? format(new Date(ar.createdAt), "MMM d, yyyy") : "—"}
+        </span>
+      ),
+      sortable: true,
+      sortValue: (ar) => ar.createdAt ?? "",
+    },
+  ];
+
+  if (isAdmin) {
+    cols.push({
+      key: "actions",
+      header: "",
+      headerClassName: "text-right",
+      className: "text-right",
+      cell: (ar) =>
+        ar.status !== "RETURNED" ? (
+          <AssetReturnActionButton id={ar.id} onMark={onMark} />
+        ) : null,
+    });
+  }
+
+  return cols;
+}
 
 function AssetReturnActionButton({ id, onMark }: { id: number; onMark: (id: number) => void }) {
   const handleClick = useCallback(() => onMark(id), [id, onMark]);
@@ -258,99 +342,24 @@ export default function AssetReturnsPage() {
         ) : undefined
       }
     >
-      {!items?.length ? (
-        <EmptyState
-          illustrationPreset="devices"
-          title="No asset returns tracked"
-          description="Log an asset return when an employee returns company equipment."
-          action={isAdmin ? { label: "Log Return", onClick: handleOpenSheet } : undefined}
-        />
-      ) : (
-        <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-          <ScrollArea className="w-full" type="auto">
-            <div className="min-w-[640px]">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/40 hover:bg-muted/40">
-                    <TableHead className="font-semibold text-foreground/80">Asset</TableHead>
-                    <TableHead className="font-semibold text-foreground/80">Employee</TableHead>
-                    <TableHead className="font-semibold text-foreground/80">Status</TableHead>
-                    <TableHead className="font-semibold text-foreground/80">Condition</TableHead>
-                    <TableHead className="font-semibold text-foreground/80">Date</TableHead>
-                    {isAdmin && (
-                      <TableHead className="font-semibold text-foreground/80 text-right">Actions</TableHead>
-                    )}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {items.map((ar: AssetReturn) => {
-                    const status = ar.status ?? "PENDING";
-                    const statusMeta = STATUS_META[status] ?? STATUS_META.PENDING;
-                    const conditionMeta = ar.condition ? CONDITION_META[ar.condition] : null;
-
-                    return (
-                      <TableRow key={ar.id} className={cn(
-                        "border-l-4 transition-colors duration-200",
-                        statusMeta.accent,
-                      )}>
-                        <TableCell>
-                          <div className="flex items-center gap-2.5">
-                            <div className="h-7 w-7 rounded-lg bg-slate-100 dark:bg-slate-950/40 flex items-center justify-center shrink-0">
-                              <Laptop className="h-3.5 w-3.5 text-slate-600 dark:text-slate-400" />
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-sm font-semibold text-foreground truncate">{ar.assetName}</p>
-                              {ar.assetType && (
-                                <p className="text-[10px] text-muted-foreground">{ar.assetType}</p>
-                              )}
-                              {ar.serialNumber && (
-                                <p className="text-[10px] font-mono text-muted-foreground">S/N: {ar.serialNumber}</p>
-                              )}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-sm text-foreground">
-                          {ar.employeeName ?? <span className="text-muted-foreground">—</span>}
-                        </TableCell>
-                        <TableCell>
-                          <span className={cn(
-                            "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
-                            statusMeta.badge,
-                          )}>
-                            {statusMeta.label}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          {conditionMeta ? (
-                            <span className={cn(
-                              "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
-                              conditionMeta.badge,
-                            )}>
-                              {ar.condition}
-                            </span>
-                          ) : (
-                            <span className="text-muted-foreground text-xs">—</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-xs text-muted-foreground">
-                          {ar.createdAt ? format(new Date(ar.createdAt), "MMM d, yyyy") : "—"}
-                        </TableCell>
-                        {isAdmin && (
-                          <TableCell className="text-right">
-                            {ar.status !== "RETURNED" && (
-                              <AssetReturnActionButton id={ar.id} onMark={handleSetReturnId} />
-                            )}
-                          </TableCell>
-                        )}
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          </ScrollArea>
-        </div>
-      )}
+      <DataTable<AssetReturn>
+        data={items ?? []}
+        columns={buildAssetReturnColumns(isAdmin, handleSetReturnId)}
+        getRowKey={(row) => row.id}
+        rowClassName={(ar) => {
+          const statusMeta = STATUS_META[ar.status ?? "PENDING"] ?? STATUS_META.PENDING;
+          return cn("border-l-4", statusMeta.accent);
+        }}
+        minWidth="640px"
+        emptyState={
+          <EmptyState
+            illustrationPreset="devices"
+            title="No asset returns tracked"
+            description="Log an asset return when an employee returns company equipment."
+            action={isAdmin ? { label: "Log Return", onClick: handleOpenSheet } : undefined}
+          />
+        }
+      />
 
       <HrSheet
         open={sheetOpen}

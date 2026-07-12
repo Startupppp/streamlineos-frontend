@@ -2,21 +2,24 @@
 
 import { useState, useRef, useCallback } from "react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateCustomState } from "@/hooks/api/projects/custom-states";
 import { useCan } from "@/hooks/api/access";
-
-const DEFAULT_COLUMN_COLOR = "#94a3b8";
+import { ColumnColorPicker } from "../shared/column-color-picker";
+import { DEFAULT_COLUMN_COLOR } from "../shared/column-colors";
 
 interface AddColumnProps {
   projectId: number;
 }
 
 export function AddColumn({ projectId }: AddColumnProps) {
-  const canManage = useCan("projects:workflow:manage");
+  const canManage = useCan("projects:manage");
   const [value, setValue] = useState("");
+  const [color, setColor] = useState<string>(DEFAULT_COLUMN_COLOR);
   const [isAdding, setIsAdding] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const createState = useCreateCustomState(projectId);
@@ -25,17 +28,18 @@ export function AddColumn({ projectId }: AddColumnProps) {
     const name = value.trim();
     if (!name || createState.isPending) return;
     createState.mutate(
-      { name, color: DEFAULT_COLUMN_COLOR },
+      { name, color },
       {
         onSuccess: () => {
           setValue("");
+          setColor(DEFAULT_COLUMN_COLOR);
           setIsAdding(false);
           toast.success(`Column "${name}" added`);
         },
         onError: (error) => toast.error(getErrorMessage(error)),
       },
     );
-  }, [value, createState]);
+  }, [value, color, createState]);
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setValue(e.target.value), []);
 
@@ -45,21 +49,25 @@ export function AddColumn({ projectId }: AddColumnProps) {
       if (e.key === "Escape") {
         setIsAdding(false);
         setValue("");
+        setColor(DEFAULT_COLUMN_COLOR);
       }
     },
     [handleSubmit],
   );
 
-  const handleBlur = useCallback(() => {
-    if (!value.trim()) {
-      setIsAdding(false);
-      setValue("");
-    }
-  }, [value]);
+  const handleCancel = useCallback(() => {
+    setIsAdding(false);
+    setValue("");
+    setColor(DEFAULT_COLUMN_COLOR);
+  }, []);
 
   const handleAddClick = useCallback(() => {
     setIsAdding(true);
     setTimeout(() => inputRef.current?.focus(), 50);
+  }, []);
+
+  const handleColorChange = useCallback((nextColor: string) => {
+    setColor(nextColor);
   }, []);
 
   if (!canManage) return null;
@@ -67,7 +75,7 @@ export function AddColumn({ projectId }: AddColumnProps) {
   return (
     <div className="w-72 min-w-[280px] shrink-0">
       {isAdding ? (
-        <div className="rounded-lg border bg-muted/20 p-2">
+        <div className="rounded-lg border bg-muted/20 p-2 space-y-2">
           <Input
             ref={inputRef}
             value={value}
@@ -75,9 +83,30 @@ export function AddColumn({ projectId }: AddColumnProps) {
             placeholder="Column name..."
             className="h-8 text-sm"
             onKeyDown={handleKeyDown}
-            onBlur={handleBlur}
             disabled={createState.isPending}
           />
+          <ColumnColorPicker value={color} onChange={handleColorChange} showLabel={false} />
+          <div className="flex gap-1.5">
+            <LoadingButton
+              size="sm"
+              onClick={handleSubmit}
+              disabled={!value.trim()}
+              isPending={createState.isPending}
+              loadingText="Adding…"
+              className="h-7 text-xs flex-1"
+            >
+              Add
+            </LoadingButton>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={handleCancel}
+              disabled={createState.isPending}
+              className="h-7 text-xs"
+            >
+              Cancel
+            </Button>
+          </div>
         </div>
       ) : (
         <button

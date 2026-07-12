@@ -3,11 +3,11 @@
 import { useState, useCallback, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Shield } from "lucide-react";
+import { Plus, Shield, Pencil, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
@@ -18,21 +18,26 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Form } from "@/components/ui/form";
-import {
-  Table, TableBody, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   useSlaPoliciesList, useCreateSlaPolicy, useUpdateSlaPolicy, useDeleteSlaPolicy,
-  type SlaPolicy,
+  type SlaPolicy, type SlaPolicyPriority,
 } from "@/hooks/api/support/sla-policies";
 import { useBusinessHoursList } from "@/hooks/api/support/business-hours";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import {
   policySchema, DEFAULT_FORM_VALUES, policyToFormValues, buildCreatePayload, buildUpdatePayload,
   type PolicyForm,
 } from "@/features/support/settings/sla-policy-form.schema";
 import { PolicyFormFields, type BusinessHoursOption } from "@/features/support/settings/sla-policy-form-fields";
-import { SlaTableRow } from "@/features/support/settings/sla-policy-table-row";
+
+const PRIORITY_BADGE: Record<SlaPolicyPriority, string> = {
+  LOW: "bg-blue-50 text-blue-700 border-blue-200",
+  MEDIUM: "bg-amber-50 text-amber-700 border-amber-200",
+  HIGH: "bg-orange-50 text-orange-700 border-orange-200",
+  URGENT: "bg-red-50 text-red-700 border-red-200",
+};
 
 export default function SupportSlaPage() {
   const { data: policies, isLoading, isError, refetch } = useSlaPoliciesList();
@@ -107,6 +112,97 @@ export default function SupportSlaPage() {
 
   const count = policies?.length ?? 0;
   const enabledCount = policies?.filter((p) => p.isEnabled).length ?? 0;
+
+  function makeEditHandler(policy: SlaPolicy) {
+    return function handleEdit() { handleStartEdit(policy); };
+  }
+
+  function makeDeleteHandler(id: number) {
+    return function handleDelete() { handleDeleteRequest(id); };
+  }
+
+  const columns = useMemo<DataTableColumn<SlaPolicy>[]>(() => [
+    {
+      key: "name",
+      header: "Name",
+      cell: (policy) => <span className="text-[11px] font-medium">{policy.name}</span>,
+    },
+    {
+      key: "priority",
+      header: "Priority",
+      cell: (policy) => policy.priority ? (
+        <Badge
+          variant="outline"
+          className={cn("text-[9px] h-4 px-1.5 py-0 capitalize", PRIORITY_BADGE[policy.priority])}
+        >
+          {policy.priority}
+        </Badge>
+      ) : (
+        <span className="text-muted-foreground text-[11px]">Any</span>
+      ),
+    },
+    {
+      key: "category",
+      header: "Category",
+      cell: (policy) => <span className="text-[11px]">{policy.category ?? "—"}</span>,
+    },
+    {
+      key: "businessHours",
+      header: "Business Hours",
+      cell: (policy) => (
+        <span className="text-[11px]">
+          {policy.businessHoursId !== null ? (businessHoursNameById.get(policy.businessHoursId) ?? "24/7") : "24/7"}
+        </span>
+      ),
+    },
+    {
+      key: "firstResponse",
+      header: "First Response",
+      headerClassName: "text-right",
+      className: "text-right font-mono tabular-nums",
+      cell: (policy) => <span className="text-[11px] font-mono tabular-nums">{policy.firstResponseTargetMins}m</span>,
+    },
+    {
+      key: "resolution",
+      header: "Resolution",
+      headerClassName: "text-right",
+      className: "text-right font-mono tabular-nums",
+      cell: (policy) => <span className="text-[11px] font-mono tabular-nums">{policy.resolutionTargetMins}m</span>,
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (policy) => (
+        <Badge
+          variant="outline"
+          className={cn(
+            "text-[9px] h-4 px-1.5 py-0",
+            policy.isEnabled
+              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+              : "bg-slate-100 text-slate-600 border-slate-200",
+          )}
+        >
+          {policy.isEnabled ? "Enabled" : "Disabled"}
+        </Badge>
+      ),
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      headerClassName: "text-right",
+      className: "text-right",
+      cell: (policy) => (
+        <div className="flex items-center justify-end gap-1">
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={makeEditHandler(policy)} aria-label="Edit">
+            <Pencil className="h-3.5 w-3.5" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={makeDeleteHandler(policy.id)} aria-label="Delete">
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      ),
+    },
+  ], [businessHoursNameById, handleStartEdit, handleDeleteRequest]);
 
   return (
     <>

@@ -1,19 +1,17 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import type { ReactNode } from "react";
 import { MapPin, Plus, Trash2, Pencil, Eye } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTargetIllustration } from "@/components/illustrations";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
+import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -40,51 +38,6 @@ function summarizeCriteria(t: Territory): string {
     parts.push(`States: ${st.slice(0, 2).join(", ")}${st.length > 2 ? "…" : ""}`);
   }
   return parts.length > 0 ? parts.join(" | ") : "No criteria";
-}
-
-interface TerritoryRowProps {
-  territory: Territory;
-  onEdit: (t: Territory) => void;
-  onToggle: (id: number, isActive: boolean) => void;
-  onDeleteRequest: (id: number) => void;
-}
-
-function TerritoryRow({ territory, onEdit, onToggle, onDeleteRequest }: TerritoryRowProps) {
-  const handleEdit = useCallback(() => onEdit(territory), [territory, onEdit]);
-  const handleToggle = useCallback(() => onToggle(territory.id, territory.isActive), [territory.id, territory.isActive, onToggle]);
-  const handleDeleteRequest = useCallback(() => onDeleteRequest(territory.id), [territory.id, onDeleteRequest]);
-
-  return (
-    <TableRow className={cn("h-9 hover:bg-muted/30 transition-colors", !territory.isActive && "opacity-60")}>
-      <TableCell className="text-[11px] px-2 py-1 font-medium">
-        <div className="flex items-center gap-1.5">
-          <MapPin className="h-3 w-3 text-muted-foreground shrink-0" />
-          {territory.name}
-        </div>
-      </TableCell>
-      <TableCell className="text-[11px] px-2 py-1 text-muted-foreground max-w-[220px] truncate">
-        {summarizeCriteria(territory)}
-      </TableCell>
-      <TableCell className="text-[11px] px-2 py-1 text-center">
-        <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-muted text-muted-foreground border-border">
-          {territory.priority}
-        </Badge>
-      </TableCell>
-      <TableCell className="text-[11px] px-2 py-1 text-center">
-        <Switch checked={territory.isActive} onCheckedChange={handleToggle} />
-      </TableCell>
-      <TableCell className="text-[11px] px-2 py-1 text-right">
-        <div className="flex items-center justify-end gap-1">
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleEdit} aria-label="Edit territory">
-            <Pencil className="h-3.5 w-3.5" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={handleDeleteRequest} aria-label="Delete territory">
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
-        </div>
-      </TableCell>
-    </TableRow>
-  );
 }
 
 function PreviewPanel() {
@@ -173,6 +126,75 @@ function PreviewPanel() {
   );
 }
 
+function buildColumns(
+  onEdit: (t: Territory) => void,
+  onToggle: (id: number, isActive: boolean) => void,
+  onDeleteRequest: (id: number) => void,
+): DataTableColumn<Territory>[] {
+  return [
+    {
+      key: "name",
+      header: "Name",
+      cell: (row): ReactNode => (
+        <div className="flex items-center gap-1.5 text-[11px] font-medium">
+          <MapPin className="h-3 w-3 text-muted-foreground shrink-0" />
+          {row.name}
+        </div>
+      ),
+    },
+    {
+      key: "criteria",
+      header: "Criteria",
+      cell: (row): ReactNode => (
+        <span className="text-[11px] text-muted-foreground max-w-[220px] truncate block">
+          {summarizeCriteria(row)}
+        </span>
+      ),
+    },
+    {
+      key: "priority",
+      header: "Priority",
+      headerClassName: "text-center",
+      className: "text-center",
+      cell: (row): ReactNode => (
+        <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-muted text-muted-foreground border-border">
+          {row.priority}
+        </Badge>
+      ),
+    },
+    {
+      key: "active",
+      header: "Active",
+      headerClassName: "text-center",
+      className: "text-center",
+      cell: (row): ReactNode => {
+        const handleToggle = () => onToggle(row.id, row.isActive);
+        return <Switch checked={row.isActive} onCheckedChange={handleToggle} />;
+      },
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      headerClassName: "text-right",
+      className: "text-right",
+      cell: (row): ReactNode => {
+        const handleEdit = () => onEdit(row);
+        const handleDelete = () => onDeleteRequest(row.id);
+        return (
+          <div className="flex items-center justify-end gap-1">
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleEdit} aria-label="Edit territory">
+              <Pencil className="h-3.5 w-3.5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={handleDelete} aria-label="Delete territory">
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        );
+      },
+    },
+  ];
+}
+
 export default function TerritoriesPage() {
   const { data: territories, isLoading, isError, refetch } = useTerritories();
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -239,8 +261,23 @@ export default function TerritoriesPage() {
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
+  const getTerritoryKey = useCallback((t: Territory) => String(t.id), []);
+  const getTerritoryRowClassName = useCallback((t: Territory) => cn(!t.isActive && "opacity-60"), []);
+
+  const columns = buildColumns(handleStartEdit, handleToggleActive, handleDeleteRequest);
+
   const count = territories?.length ?? 0;
   const isPending = createTerritory.isPending || updateTerritory.isPending;
+
+  const emptyState = (
+    <EmptyState
+      illustration={<EmptyTargetIllustration />}
+      title="No territories"
+      description="Define geographic or segment-based territories to automatically route leads to the right reps."
+      action={{ label: "New Territory", onClick: handleOpenNew }}
+      className="flex-1 min-h-[40vh] border-0 bg-transparent"
+    />
+  );
 
   return (
     <>
@@ -284,7 +321,7 @@ export default function TerritoriesPage() {
       >
         {isLoading ? (
           <div className="space-y-3">
-            {[0, 1, 2].map((i) => <Skeleton key={i} className="h-16 w-full" />)}
+            <DataTableSkeleton rows={3} columns={5} />
           </div>
         ) : isError ? (
           <EmptyState
@@ -296,42 +333,15 @@ export default function TerritoriesPage() {
           />
         ) : (
           <div className="space-y-6">
-            {territories && territories.length > 0 ? (
-              <Card className="bg-card rounded-lg border border-border shadow-sm overflow-hidden">
-                <CardContent className="p-0">
-                  <Table>
-                    <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
-                      <TableRow className="border-b-2 border-border hover:bg-transparent">
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Name</TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Criteria</TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-center">Priority</TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-center">Active</TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {territories.map((t) => (
-                        <TerritoryRow
-                          key={t.id}
-                          territory={t}
-                          onEdit={handleStartEdit}
-                          onToggle={handleToggleActive}
-                          onDeleteRequest={handleDeleteRequest}
-                        />
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            ) : (
-              <EmptyState
-                illustration={<EmptyTargetIllustration />}
-                title="No territories"
-                description="Define geographic or segment-based territories to automatically route leads to the right reps."
-                action={{ label: "New Territory", onClick: handleOpenNew }}
-                className="flex-1 min-h-[40vh] border-0 bg-transparent"
+            <Card className="bg-card rounded-lg border border-border shadow-sm">
+              <DataTable
+                data={territories ?? []}
+                columns={columns}
+                getRowKey={getTerritoryKey}
+                rowClassName={getTerritoryRowClassName}
+                emptyState={emptyState}
               />
-            )}
+            </Card>
             <PreviewPanel />
           </div>
         )}

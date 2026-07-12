@@ -1,17 +1,9 @@
 "use client";
 
-import { useCallback } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Money } from "@/features/accounting/shared";
 import type { FinExpensePolicy } from "@/types/accounting/expenses";
 
@@ -24,108 +16,97 @@ interface PolicyTableProps {
 }
 
 export function PolicyTable({ policies, onEdit, onDelete, onToggleActive, togglingId }: PolicyTableProps) {
-  const handleEdit = useCallback(
-    (policy: FinExpensePolicy) => () => onEdit(policy),
-    [onEdit],
-  );
+  function getPolicyRowKey(policy: FinExpensePolicy): number {
+    return policy.id;
+  }
 
-  const handleDelete = useCallback(
-    (policy: FinExpensePolicy) => () => onDelete(policy),
-    [onDelete],
-  );
-
-  const handleToggle = useCallback(
-    (policy: FinExpensePolicy) => (checked: boolean) => onToggleActive(policy, checked),
-    [onToggleActive],
-  );
+  const columns: DataTableColumn<FinExpensePolicy>[] = [
+    {
+      key: "name",
+      header: "Policy name",
+      cell: (row) => <span className="text-sm font-medium">{row.name}</span>,
+    },
+    {
+      key: "category",
+      header: "Category",
+      className: "hidden md:table-cell",
+      headerClassName: "hidden md:table-cell",
+      cell: (row) => (
+        <span className="text-sm text-muted-foreground">{row.category?.name ?? "—"}</span>
+      ),
+    },
+    {
+      key: "maxAmount",
+      header: "Max amount",
+      cell: (row) =>
+        row.maxAmount ? (
+          <Money value={parseFloat(row.maxAmount)} className="text-sm" />
+        ) : (
+          <span className="text-muted-foreground text-xs">—</span>
+        ),
+    },
+    {
+      key: "requiresReceiptAbove",
+      header: "Receipt above",
+      className: "hidden lg:table-cell",
+      headerClassName: "hidden lg:table-cell",
+      cell: (row) =>
+        row.requiresReceiptAbove ? (
+          <Money value={parseFloat(row.requiresReceiptAbove)} className="text-sm text-muted-foreground" />
+        ) : (
+          <span className="text-muted-foreground text-xs">—</span>
+        ),
+    },
+    {
+      key: "requiresApprovalAbove",
+      header: "Approval above",
+      className: "hidden lg:table-cell",
+      headerClassName: "hidden lg:table-cell",
+      cell: (row) =>
+        row.requiresApprovalAbove ? (
+          <Money value={parseFloat(row.requiresApprovalAbove)} className="text-sm text-muted-foreground" />
+        ) : (
+          <span className="text-muted-foreground text-xs">—</span>
+        ),
+    },
+    {
+      key: "isActive",
+      header: "Active",
+      cell: (row) => (
+        <Switch
+          checked={row.isActive}
+          onCheckedChange={(checked) => onToggleActive(row, checked)}
+          disabled={togglingId === row.id}
+        />
+      ),
+    },
+    {
+      key: "actions",
+      header: "",
+      cell: (row) => (
+        <div className="flex items-center gap-0.5">
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEdit(row)}>
+            <Pencil className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-destructive hover:text-destructive"
+            onClick={() => onDelete(row)}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   return (
-    <div className="rounded-lg border border-border overflow-hidden">
-      <div className="overflow-x-auto">
-        <Table className="min-w-[640px]">
-          <TableHeader>
-            <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">
-                Policy name
-              </TableHead>
-              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 hidden md:table-cell">
-                Category
-              </TableHead>
-              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">
-                Max amount
-              </TableHead>
-              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right hidden lg:table-cell">
-                Receipt above
-              </TableHead>
-              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right hidden lg:table-cell">
-                Approval above
-              </TableHead>
-              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">
-                Active
-              </TableHead>
-              <TableHead className="w-16 px-2 py-2" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {policies.map((policy) => (
-              <TableRow key={policy.id} className="border-b border-border/50 hover:bg-muted/30">
-                <TableCell className="px-3 py-2 text-sm font-medium">{policy.name}</TableCell>
-                <TableCell className="px-3 py-2 text-sm text-muted-foreground hidden md:table-cell">
-                  {policy.category?.name ?? "—"}
-                </TableCell>
-                <TableCell className="px-3 py-2 text-right">
-                  {policy.maxAmount ? (
-                    <Money value={parseFloat(policy.maxAmount)} className="text-sm" />
-                  ) : (
-                    <span className="text-muted-foreground text-xs">—</span>
-                  )}
-                </TableCell>
-                <TableCell className="px-3 py-2 text-right hidden lg:table-cell">
-                  {policy.requiresReceiptAbove ? (
-                    <Money value={parseFloat(policy.requiresReceiptAbove)} className="text-sm text-muted-foreground" />
-                  ) : (
-                    <span className="text-muted-foreground text-xs">—</span>
-                  )}
-                </TableCell>
-                <TableCell className="px-3 py-2 text-right hidden lg:table-cell">
-                  {policy.requiresApprovalAbove ? (
-                    <Money value={parseFloat(policy.requiresApprovalAbove)} className="text-sm text-muted-foreground" />
-                  ) : (
-                    <span className="text-muted-foreground text-xs">—</span>
-                  )}
-                </TableCell>
-                <TableCell className="px-3 py-2">
-                  <Switch
-                    checked={policy.isActive}
-                    onCheckedChange={handleToggle(policy)}
-                    disabled={togglingId === policy.id}
-                  />
-                </TableCell>
-                <TableCell className="px-2 py-2">
-                  <div className="flex items-center gap-0.5">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7"
-                      onClick={handleEdit(policy)}
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 text-destructive hover:text-destructive"
-                      onClick={handleDelete(policy)}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
+    <DataTable
+      data={policies}
+      columns={columns}
+      getRowKey={getPolicyRowKey}
+      minWidth="640px"
+    />
   );
 }

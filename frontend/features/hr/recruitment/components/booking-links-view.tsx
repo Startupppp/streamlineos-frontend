@@ -1,19 +1,15 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { EmptyCalendarIllustration } from "@/components/illustrations";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   useHrBookingLinks, useRevokeBookingLink, type HrBookingLink,
 } from "@/hooks/api/hr/recruitment";
@@ -86,12 +82,86 @@ export function BookingLinksView({ baseUrl }: { baseUrl: string }) {
     [revoke]
   );
 
-  if (isLoading) {
-    return (
-      <PageWrapper title="Interview Booking Links" subtitle="Manage self-scheduling links sent to candidates">
-        <Card><CardContent className="pt-6 space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}</CardContent></Card>
-      </PageWrapper>
-    );
+  const columns = useMemo<DataTableColumn<HrBookingLink>[]>(() => [
+    {
+      key: "candidate",
+      header: "Candidate",
+      cell: (link) => (
+        <div className="font-medium">
+          {link.candidate
+            ? `${link.candidate.firstName} ${link.candidate.lastName}`
+            : `Candidate #${link.candidateId}`}
+          {link.candidate?.email && (
+            <p className="text-xs text-muted-foreground">{link.candidate.email}</p>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "job",
+      header: "Job",
+      cell: (link) => (
+        <span className="text-sm text-muted-foreground">{link.jobPosting?.title ?? "—"}</span>
+      ),
+    },
+    {
+      key: "link",
+      header: "Link",
+      cell: (link) => {
+        const bookingUrl = `${baseUrl}/interview-booking/${link.token}`;
+        return (
+          <div className="flex items-center gap-1 max-w-[200px]">
+            <span className="text-xs text-muted-foreground truncate">{bookingUrl}</span>
+            <CopyButton text={bookingUrl} />
+          </div>
+        );
+      },
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (link) => {
+        const isExpired = new Date(link.expiresAt) < new Date();
+        const effectiveStatus = isExpired && link.status === "pending" ? "expired" : link.status;
+        return <StatusBadgeCell status={effectiveStatus as HrBookingLink["status"]} />;
+      },
+    },
+    {
+      key: "expires",
+      header: "Expires",
+      cell: (link) => (
+        <span className="text-xs text-muted-foreground">
+          {format(new Date(link.expiresAt), "MMM d, yyyy")}
+        </span>
+      ),
+    },
+    {
+      key: "createdBy",
+      header: "Created By",
+      cell: (link) => (
+        <span className="text-xs text-muted-foreground">{link.creator?.name ?? "—"}</span>
+      ),
+    },
+    {
+      key: "actions",
+      header: "",
+      className: "w-[80px]",
+      cell: (link) => {
+        const isExpired = new Date(link.expiresAt) < new Date();
+        if (link.status !== "pending" || isExpired) return null;
+        return (
+          <RevokeButton
+            linkId={link.id}
+            onRevoke={handleRevoke}
+            disabled={revoke.isPending}
+          />
+        );
+      },
+    },
+  ], [baseUrl, handleRevoke, revoke.isPending]);
+
+  function getRowKey(link: HrBookingLink) {
+    return link.id;
   }
 
   return (
@@ -100,82 +170,24 @@ export function BookingLinksView({ baseUrl }: { baseUrl: string }) {
       subtitle="Manage self-scheduling links sent to candidates"
       badge={`${links?.length ?? 0} links`}
     >
-      {!links?.length ? (
-        <RecruitmentEmptyState
-          illustration={<EmptyCalendarIllustration />}
-          title="No booking links yet"
-          description="Send self-scheduling links to candidates from their profile or the interviews page."
-        />
-      ) : (
-        <Card>
-          <CardContent className="p-0">
-            <ScrollArea className="w-full" type="auto">
-              <div className="min-w-[900px]">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Candidate</TableHead>
-                      <TableHead>Job</TableHead>
-                      <TableHead>Link</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Expires</TableHead>
-                      <TableHead>Created By</TableHead>
-                      <TableHead className="w-[80px]" />
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {links.map((link) => {
-                      const bookingUrl = `${baseUrl}/interview-booking/${link.token}`;
-                      const isExpired = new Date(link.expiresAt) < new Date();
-                      const effectiveStatus = isExpired && link.status === "pending" ? "expired" : link.status;
-
-                      return (
-                        <TableRow key={link.id}>
-                          <TableCell className="font-medium">
-                            {link.candidate
-                              ? `${link.candidate.firstName} ${link.candidate.lastName}`
-                              : `Candidate #${link.candidateId}`}
-                            {link.candidate?.email && (
-                              <p className="text-xs text-muted-foreground">{link.candidate.email}</p>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {link.jobPosting?.title ?? "—"}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-1 max-w-[200px]">
-                              <span className="text-xs text-muted-foreground truncate">{bookingUrl}</span>
-                              <CopyButton text={bookingUrl} />
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <StatusBadgeCell status={effectiveStatus as HrBookingLink["status"]} />
-                          </TableCell>
-                          <TableCell className="text-xs text-muted-foreground">
-                            {format(new Date(link.expiresAt), "MMM d, yyyy")}
-                          </TableCell>
-                          <TableCell className="text-xs text-muted-foreground">
-                            {link.creator?.name ?? "—"}
-                          </TableCell>
-                          <TableCell>
-                            {link.status === "pending" && !isExpired && (
-                              <RevokeButton
-                                linkId={link.id}
-                                onRevoke={handleRevoke}
-                                disabled={revoke.isPending}
-                              />
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
-      )}
+      <Card>
+        <CardContent className="p-0">
+          <DataTable
+            data={links ?? []}
+            columns={columns}
+            getRowKey={getRowKey}
+            isLoading={isLoading}
+            minWidth="900px"
+            emptyState={
+              <RecruitmentEmptyState
+                illustration={<EmptyCalendarIllustration />}
+                title="No booking links yet"
+                description="Send self-scheduling links to candidates from their profile or the interviews page."
+              />
+            }
+          />
+        </CardContent>
+      </Card>
     </PageWrapper>
   );
 }

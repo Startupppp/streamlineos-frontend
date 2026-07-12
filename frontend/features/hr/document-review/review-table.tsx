@@ -1,21 +1,13 @@
 "use client";
 
-import { useCallback } from "react";
+import { useMemo } from "react";
 import { Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 
 export interface EmployeeDocSummary {
   userId: string;
@@ -106,18 +98,12 @@ function ProgressBar({ approved, total }: { approved: number; total: number }) {
   );
 }
 
-interface ReviewTableRowProps {
-  emp: EmployeeDocSummary;
-  canReview: boolean;
-  onOpenReview: (emp: EmployeeDocSummary) => void;
-}
-
-function ReviewTableRow({ emp, canReview, onOpenReview }: ReviewTableRowProps) {
-  const handleOpenReviewClick = useCallback(() => onOpenReview(emp), [emp, onOpenReview]);
-
-  return (
-    <TableRow className="hover:bg-muted/30 transition-colors duration-200">
-      <TableCell className="py-3">
+export function ReviewTable({ list, canReview, onOpenReview }: ReviewTableProps) {
+  const columns = useMemo<DataTableColumn<EmployeeDocSummary>[]>(() => [
+    {
+      key: "employee",
+      header: "Employee",
+      cell: (emp) => (
         <div className="flex items-center gap-2.5">
           <Avatar className="h-8 w-8 shrink-0">
             {emp.userImage && (
@@ -137,11 +123,19 @@ function ReviewTableRow({ emp, canReview, onOpenReview }: ReviewTableRowProps) {
             </p>
           </div>
         </div>
-      </TableCell>
-      <TableCell className="py-3">
+      ),
+    },
+    {
+      key: "progress",
+      header: "Progress",
+      cell: (emp) => (
         <ProgressBar approved={emp.totalApproved} total={emp.totalRequired} />
-      </TableCell>
-      <TableCell className="py-3">
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (emp) => (
         <span
           className={cn(
             "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
@@ -150,58 +144,46 @@ function ReviewTableRow({ emp, canReview, onOpenReview }: ReviewTableRowProps) {
         >
           {getStatusLabel(emp.onboardingDocStatus)}
         </span>
-      </TableCell>
-      <TableCell className="py-3 text-right">
-        <Button
-          size="sm"
-          variant="outline"
-          className="h-7 gap-1.5 text-xs"
-          onClick={handleOpenReviewClick}
-          aria-label={`${canReview ? "Review" : "View"} documents for ${emp.userName}`}
-        >
-          <Eye className="h-3.5 w-3.5" />
-          {canReview ? "Review" : "View"}
-        </Button>
-      </TableCell>
-    </TableRow>
-  );
-}
+      ),
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      headerClassName: "text-right",
+      className: "text-right",
+      cell: (emp) => {
+        function handleClick() { onOpenReview(emp); }
+        return (
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 gap-1.5 text-xs"
+            onClick={handleClick}
+            aria-label={`${canReview ? "Review" : "View"} documents for ${emp.userName}`}
+          >
+            <Eye className="h-3.5 w-3.5" />
+            {canReview ? "Review" : "View"}
+          </Button>
+        );
+      },
+    },
+  ], [canReview, onOpenReview]);
 
-export function ReviewTable({ list, canReview, onOpenReview }: ReviewTableProps) {
-  if (list.length === 0) {
-    return (
-      <EmptyState
-        illustration={<EmptyDocumentsIllustration className="h-40 w-40" />}
-        title="No documents to review"
-        description="Once employees submit onboarding documents, they will appear here."
-      />
-    );
-  }
+  const emptyState = (
+    <EmptyState
+      illustration={<EmptyDocumentsIllustration className="h-40 w-40" />}
+      title="No documents to review"
+      description="Once employees submit onboarding documents, they will appear here."
+    />
+  );
 
   return (
-    <ScrollArea className="w-full" type="auto">
-      <div className="min-w-[640px]">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/40 hover:bg-muted/40">
-              <TableHead className="font-semibold text-foreground/80">Employee</TableHead>
-              <TableHead className="font-semibold text-foreground/80">Progress</TableHead>
-              <TableHead className="font-semibold text-foreground/80">Status</TableHead>
-              <TableHead className="text-right font-semibold text-foreground/80">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {list.map((emp) => (
-              <ReviewTableRow
-                key={emp.userId}
-                emp={emp}
-                canReview={canReview}
-                onOpenReview={onOpenReview}
-              />
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    </ScrollArea>
+    <DataTable
+      data={list}
+      columns={columns}
+      getRowKey={(emp) => emp.userId}
+      emptyState={emptyState}
+      minWidth="640px"
+    />
   );
 }

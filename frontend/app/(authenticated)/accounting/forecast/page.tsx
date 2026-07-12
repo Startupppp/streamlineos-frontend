@@ -16,15 +16,9 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { LoadingButton } from "@/components/ui/loading-button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { LoadingState, ErrorState } from "@/components/shared";
+import type { ForecastWeek } from "@/types/accounting/planning";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyChartIllustration } from "@/components/illustrations";
 import { Money } from "@/features/accounting/shared";
@@ -55,6 +49,64 @@ const CHART_TOOLTIP_STYLE = {
 };
 const AXIS_TICK = { fill: "hsl(var(--muted-foreground))", fontSize: 11 };
 const COMPARE_COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
+
+function formatWeekStartCell(weekStart: string) {
+  return <span className="text-sm text-foreground">{formatWeekStart(weekStart)}</span>;
+}
+
+const forecastWeekColumns: DataTableColumn<ForecastWeek>[] = [
+  {
+    key: "week",
+    header: "Week",
+    cell: (row) => formatWeekStartCell(row.weekStart),
+  },
+  {
+    key: "inflows",
+    header: "Inflows",
+    cell: (row) => <div className="text-right"><Money value={parseFloat(row.inflows)} /></div>,
+    className: "text-right",
+    sortable: true,
+    sortValue: (row) => parseFloat(row.inflows),
+  },
+  {
+    key: "outflows",
+    header: "Outflows",
+    cell: (row) => <div className="text-right"><Money value={parseFloat(row.outflows)} /></div>,
+    className: "text-right",
+    sortable: true,
+    sortValue: (row) => parseFloat(row.outflows),
+  },
+  {
+    key: "net",
+    header: "Net",
+    cell: (row) => (
+      <div className="text-right">
+        <Money value={parseFloat(row.net)} className={parseFloat(row.net) < 0 ? "text-red-600" : undefined} />
+      </div>
+    ),
+    className: "text-right",
+    sortable: true,
+    sortValue: (row) => parseFloat(row.net),
+  },
+  {
+    key: "closingCash",
+    header: "Closing Cash",
+    cell: (row) => <div className="text-right"><Money value={parseFloat(row.closingCash)} /></div>,
+    className: "text-right",
+    sortable: true,
+    sortValue: (row) => parseFloat(row.closingCash),
+  },
+  {
+    key: "status",
+    header: "Status",
+    cell: (row) =>
+      row.minimumBalanceWarning ? (
+        <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-[9px] px-1.5 py-0 h-4">
+          ⚠ Low
+        </Badge>
+      ) : null,
+  },
+];
 
 interface ScenarioCheckboxProps {
   id: number;
@@ -306,7 +358,6 @@ export default function ForecastPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {forecastQuery.isLoading && <LoadingState rows={6} />}
           {forecastQuery.error && (
             <ErrorState
               title="Failed to load forecast"
@@ -381,61 +432,13 @@ export default function ForecastPage() {
                 </CardContent>
               </Card>
 
-              <div className="rounded-lg border border-border overflow-hidden">
-                <div className="overflow-x-auto">
-                  <Table className="min-w-[640px]">
-                    <TableHeader>
-                      <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Week</TableHead>
-                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Inflows</TableHead>
-                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Outflows</TableHead>
-                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Net</TableHead>
-                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Closing Cash</TableHead>
-                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {forecastQuery.data?.weeks.map((w) => (
-                        <TableRow
-                          key={w.weekIndex}
-                          className="border-b border-border/50 hover:bg-muted/30"
-                        >
-                          <TableCell className="text-sm px-3 py-2 text-foreground">
-                            {formatWeekStart(w.weekStart)}
-                          </TableCell>
-                          <TableCell className="text-sm px-3 py-2 text-right">
-                            <Money value={parseFloat(w.inflows)} />
-                          </TableCell>
-                          <TableCell className="text-sm px-3 py-2 text-right">
-                            <Money value={parseFloat(w.outflows)} />
-                          </TableCell>
-                          <TableCell className="text-sm px-3 py-2 text-right">
-                            <Money
-                              value={parseFloat(w.net)}
-                              className={
-                                parseFloat(w.net) < 0 ? "text-red-600" : undefined
-                              }
-                            />
-                          </TableCell>
-                          <TableCell className="text-sm px-3 py-2 text-right">
-                            <Money value={parseFloat(w.closingCash)} />
-                          </TableCell>
-                          <TableCell className="px-3 py-2">
-                            {w.minimumBalanceWarning && (
-                              <Badge
-                                variant="outline"
-                                className="bg-amber-50 text-amber-700 border-amber-200 text-[9px] px-1.5 py-0 h-4"
-                              >
-                                ⚠ Low
-                              </Badge>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
+              <DataTable
+                data={forecastQuery.data?.weeks ?? []}
+                columns={forecastWeekColumns}
+                getRowKey={(row) => row.weekIndex}
+                isLoading={forecastQuery.isLoading}
+                minWidth="640px"
+              />
             </>
           )}
         </div>

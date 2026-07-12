@@ -27,7 +27,6 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
   isDragging,
   dragStartRef,
   onSelect,
-  projectStatuses,
   displayOptions,
 }: KanbanTicketCardProps) {
   const handleMouseDown = useCallback(
@@ -98,14 +97,6 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
         <TicketQuickActions
           ticketId={ticket.id}
           projectId={projectId}
-          currentStatus={ticket.status}
-          currentPriority={ticket.priority}
-          currentAssigneeId={ticket.assigneeId ?? ticket.assignees?.[0]?.user?.id ?? ticket.assignee?.id}
-          currentType={ticket.type}
-          currentLabelIds={ticket.labels?.flatMap((l) => (l.label ? [l.label.id] : [])) ?? []}
-          currentCycleId={ticket.cycleId}
-          currentSprintId={ticket.sprintId}
-          projectStatuses={projectStatuses}
           className="opacity-0 group-hover:opacity-100 transition-opacity -mt-0.5 -mr-1"
         />
       </div>

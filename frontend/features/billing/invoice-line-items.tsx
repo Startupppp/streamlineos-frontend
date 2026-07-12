@@ -13,14 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { toast } from "sonner";
 import { useUpdateInvoice } from "@/hooks/api/invoice";
 
@@ -55,6 +48,39 @@ interface InvoiceLineItemsProps {
   onEditOpenChange: (open: boolean) => void;
 }
 
+const lineItemColumns: DataTableColumn<LineItem>[] = [
+  {
+    key: "description",
+    header: "Description",
+    cell: (row) => <span className="text-sm">{row.description}</span>,
+  },
+  {
+    key: "quantity",
+    header: "Qty",
+    headerClassName: "text-right w-20",
+    className: "text-right text-sm",
+    cell: (row) => row.quantity,
+  },
+  {
+    key: "rate",
+    header: "Rate",
+    headerClassName: "text-right w-28",
+    className: "text-right font-mono text-sm",
+    cell: (row) => fmt(row.rate),
+  },
+  {
+    key: "amount",
+    header: "Amount",
+    headerClassName: "text-right w-28",
+    className: "text-right font-mono text-sm font-medium",
+    cell: (row) => fmt(row.amount),
+  },
+];
+
+function getLineItemKey(_row: LineItem, i: number) {
+  return i;
+}
+
 export function InvoiceLineItems({
   invoiceId,
   lineItems,
@@ -84,7 +110,6 @@ export function InvoiceLineItems({
 
   useEffect(() => {
     if (editOpen) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setEditLineItems(
         lineItems.map((i) => ({
           description: i.description,
@@ -196,32 +221,12 @@ export function InvoiceLineItems({
         <div className="px-4 py-3 border-b border-border">
           <p className="text-sm font-semibold">Line Items</p>
         </div>
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Description</TableHead>
-              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right w-20">Qty</TableHead>
-              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right w-28">Rate</TableHead>
-              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right w-28">Amount</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {lineItems.map((item, i) => (
-              <TableRow key={i} className="border-b border-border/50 hover:bg-muted/30">
-                <TableCell className="text-sm">{item.description}</TableCell>
-                <TableCell className="text-right text-sm">
-                  {item.quantity}
-                </TableCell>
-                <TableCell className="text-right font-mono text-sm">
-                  {fmt(item.rate)}
-                </TableCell>
-                <TableCell className="text-right font-mono text-sm font-medium">
-                  {fmt(item.amount)}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <DataTable
+          data={lineItems}
+          columns={lineItemColumns}
+          getRowKey={getLineItemKey}
+          className="border-0 rounded-none"
+        />
         <div className="px-4 py-3 border-t border-border space-y-1.5 text-sm">
           <div className="flex justify-between text-muted-foreground">
             <span>Subtotal</span>

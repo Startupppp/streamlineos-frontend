@@ -45,8 +45,37 @@ export function useUpdateCustomState(projectId: number) {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["projects", projectId, "custom-states", "update"],
-    mutationFn: ({ stateId, ...data }: { stateId: number; name?: string; color?: string; type?: string }) =>
+    mutationFn: ({
+      stateId,
+      ...data
+    }: {
+      stateId: number;
+      name?: string;
+      color?: string;
+      order?: number;
+      type?: string;
+    }) =>
       apiClient.patch<CustomState>(`/projects/${projectId}/custom-states/${stateId}`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: stateKeys(projectId) });
+      qc.invalidateQueries({ queryKey: queryKeys.projects.detail(projectId) });
+    },
+  });
+}
+
+export function useReorderCustomStates(projectId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["projects", projectId, "custom-states", "reorder"],
+    mutationFn: async (items: { stateId: number; order: number }[]) => {
+      await Promise.all(
+        items.map(({ stateId, order }) =>
+          apiClient.patch<CustomState>(`/projects/${projectId}/custom-states/${stateId}`, {
+            order,
+          }),
+        ),
+      );
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: stateKeys(projectId) });
       qc.invalidateQueries({ queryKey: queryKeys.projects.detail(projectId) });

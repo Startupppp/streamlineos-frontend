@@ -1,9 +1,7 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 
 export default function HrAssetsLoading() {
   return (
@@ -27,31 +25,7 @@ export default function HrAssetsLoading() {
           ))}
         </div>
         <Skeleton className="h-9 w-72 rounded-md" />
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-5 w-40" />
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  {Array.from({ length: 6 }).map((_, i) => (
-                    <TableHead key={i}><Skeleton className="h-4 w-20" /></TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <TableRow key={i}>
-                    {Array.from({ length: 6 }).map((_, j) => (
-                      <TableCell key={j}><Skeleton className="h-4 w-20" /></TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+        <DataTableSkeleton rows={6} columns={8} />
       </div>
     </PageWrapper>
   );

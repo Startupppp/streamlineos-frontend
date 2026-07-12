@@ -10,10 +10,10 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   Sheet,
   SheetContent,
@@ -36,14 +36,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -86,31 +78,6 @@ const STATUS_CLASSES: Record<"Active" | "Inactive" | "Expired", string> = {
   Inactive: "bg-slate-500/10 text-slate-600 border-slate-500/20",
   Expired: "bg-red-500/10 text-red-600 border-red-500/20",
 };
-
-function TableSkeleton() {
-  return (
-    <div className="rounded-lg border border-border overflow-hidden">
-      <div className="border-b border-border px-4 py-3 bg-muted/30">
-        <div className="grid grid-cols-7 gap-3">
-          {["Code", "Type", "Value", "Usage", "Plans", "Expires", "Status"].map(
-            (h) => (
-              <Skeleton key={h} className="h-3 w-full" />
-            ),
-          )}
-        </div>
-      </div>
-      {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="px-4 py-3 border-b border-border last:border-0">
-          <div className="grid grid-cols-7 gap-3">
-            {Array.from({ length: 7 }).map((__, j) => (
-              <Skeleton key={j} className="h-4 w-full" />
-            ))}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
 
 interface CreateCouponSheetProps {
   open: boolean;
@@ -373,6 +340,113 @@ export default function CouponsPage() {
     void refetch();
   }
 
+  function getCouponRowKey(coupon: Coupon) {
+    return coupon.id;
+  }
+
+  const columns: DataTableColumn<Coupon>[] = [
+    {
+      key: "code",
+      header: "Code",
+      cell: (coupon) => (
+        <span className="font-mono text-xs font-medium">{coupon.code}</span>
+      ),
+    },
+    {
+      key: "type",
+      header: "Type",
+      cell: (coupon) => (
+        <span className="text-xs text-muted-foreground">
+          {coupon.type === "PERCENTAGE" ? "Percentage" : "Fixed"}
+        </span>
+      ),
+    },
+    {
+      key: "value",
+      header: "Value",
+      cell: (coupon) => (
+        <span className="text-xs tabular-nums">
+          {coupon.type === "PERCENTAGE"
+            ? `${coupon.value}%`
+            : `₹${Number(coupon.value).toLocaleString("en-IN")}`}
+        </span>
+      ),
+    },
+    {
+      key: "usage",
+      header: "Usage",
+      cell: (coupon) => (
+        <span className="text-xs tabular-nums text-muted-foreground">
+          {coupon.usedCount}
+          {coupon.maxUses !== null ? ` / ${coupon.maxUses}` : " / ∞"}
+        </span>
+      ),
+    },
+    {
+      key: "plans",
+      header: "Plans",
+      cell: (coupon) =>
+        coupon.applicablePlans && coupon.applicablePlans.length > 0 ? (
+          <span className="text-xs text-muted-foreground">
+            {coupon.applicablePlans.join(", ")}
+          </span>
+        ) : (
+          <span className="text-xs text-muted-foreground/60">All</span>
+        ),
+    },
+    {
+      key: "expires",
+      header: "Expires",
+      cell: (coupon) => (
+        <span className="text-xs text-muted-foreground tabular-nums">
+          {coupon.expiresAt
+            ? format(new Date(coupon.expiresAt), "dd MMM yyyy")
+            : "—"}
+        </span>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (coupon) => {
+        const status = getCouponStatus(coupon);
+        return (
+          <span
+            className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium border ${STATUS_CLASSES[status]}`}
+          >
+            {status}
+          </span>
+        );
+      },
+    },
+    {
+      key: "actions",
+      header: "",
+      cell: (coupon) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-7 w-7">
+              <MoreHorizontal className="h-3.5 w-3.5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => handleCopyCode(coupon.code)}>
+              <Copy className="h-3.5 w-3.5 mr-2" />
+              Copy code
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => handleToggleActive(coupon)}
+              disabled={updateCoupon.isPending}
+            >
+              {coupon.isActive ? "Deactivate" : "Reactivate"}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ),
+      className: "w-10",
+    },
+  ];
+
   if (!canManage) {
     return (
       <PageWrapper title="Coupons & Promotions" subtitle="Create and manage discount codes">
@@ -413,123 +487,29 @@ export default function CouponsPage() {
             <StatCard label="Expiring in 7 days" value={comingDue} icon={Clock} tone="amber" />
           </StatCardGrid>
 
-          {isLoading ? (
-            <TableSkeleton />
-          ) : isError ? (
+          {isError ? (
             <div className="flex flex-col items-center justify-center py-12 gap-3">
-              <p className="text-sm text-muted-foreground">
-                Failed to load coupons
-              </p>
+              <p className="text-sm text-muted-foreground">Failed to load coupons</p>
               <Button variant="outline" size="sm" onClick={handleRetry}>
                 <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
                 Retry
               </Button>
             </div>
-          ) : coupons.length === 0 ? (
-            <EmptyState
-              illustration={<EmptyDocumentsIllustration />}
-              title="No coupons yet"
-              description="Create discount codes to offer promotions to your customers."
-              action={{ label: "Create Coupon", onClick: handleOpenSheet }}
-            />
           ) : (
-            <div className="rounded-lg border border-border overflow-hidden">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Code</TableHead>
-                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Type</TableHead>
-                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Value</TableHead>
-                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Usage</TableHead>
-                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Plans</TableHead>
-                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Expires</TableHead>
-                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Status</TableHead>
-                      <TableHead className="w-10 px-3 py-2" />
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {coupons.map((coupon) => {
-                      const status = getCouponStatus(coupon);
-                      return (
-                        <TableRow key={coupon.id} className="border-b border-border/50 hover:bg-muted/30">
-                          <TableCell className="font-mono text-xs font-medium">
-                            {coupon.code}
-                          </TableCell>
-                          <TableCell className="text-xs text-muted-foreground">
-                            {coupon.type === "PERCENTAGE"
-                              ? "Percentage"
-                              : "Fixed"}
-                          </TableCell>
-                          <TableCell className="text-xs tabular-nums">
-                            {coupon.type === "PERCENTAGE"
-                              ? `${coupon.value}%`
-                              : `₹${Number(coupon.value).toLocaleString("en-IN")}`}
-                          </TableCell>
-                          <TableCell className="text-xs tabular-nums text-muted-foreground">
-                            {coupon.usedCount}
-                            {coupon.maxUses !== null
-                              ? ` / ${coupon.maxUses}`
-                              : " / ∞"}
-                          </TableCell>
-                          <TableCell className="text-xs">
-                            {coupon.applicablePlans &&
-                            coupon.applicablePlans.length > 0 ? (
-                              <span className="text-muted-foreground">
-                                {coupon.applicablePlans.join(", ")}
-                              </span>
-                            ) : (
-                              <span className="text-muted-foreground/60">
-                                All
-                              </span>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-xs text-muted-foreground tabular-nums">
-                            {coupon.expiresAt
-                              ? format(new Date(coupon.expiresAt), "dd MMM yyyy")
-                              : "—"}
-                          </TableCell>
-                          <TableCell>
-                            <span
-                              className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium border ${STATUS_CLASSES[status]}`}
-                            >
-                              {status}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7"
-                                >
-                                  <MoreHorizontal className="h-3.5 w-3.5" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                  onClick={() => handleCopyCode(coupon.code)}
-                                >
-                                  <Copy className="h-3.5 w-3.5 mr-2" />
-                                  Copy code
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => handleToggleActive(coupon)}
-                                  disabled={updateCoupon.isPending}
-                                >
-                                  {coupon.isActive ? "Deactivate" : "Reactivate"}
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
+            <DataTable
+              data={coupons}
+              columns={columns}
+              getRowKey={getCouponRowKey}
+              isLoading={isLoading}
+              emptyState={
+                <EmptyState
+                  illustration={<EmptyDocumentsIllustration />}
+                  title="No coupons yet"
+                  description="Create discount codes to offer promotions to your customers."
+                  action={{ label: "Create Coupon", onClick: handleOpenSheet }}
+                />
+              }
+            />
           )}
         </div>
       </PageWrapper>

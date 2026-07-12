@@ -90,6 +90,7 @@ export interface KanbanTicket {
 
 export interface KanbanColumn {
   id: string;
+  statusId?: number;
   name: string;
   color: string | null;
   order: number;

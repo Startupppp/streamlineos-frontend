@@ -1,16 +1,15 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import {
   FileSpreadsheet, CheckCircle2, AlertCircle, Loader2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
 
 const ALLOWED_CATEGORIES = [
   "Travel", "Food", "Office Supplies", "Software", "Hardware", "Marketing",
@@ -26,6 +25,10 @@ interface ParsedRow {
   expenseDate: string;
   valid: boolean;
   error?: string;
+}
+
+interface ParsedRowWithIndex extends ParsedRow {
+  _index: number;
 }
 
 interface CategoryMappingRowProps {
@@ -72,6 +75,53 @@ export function ImportValidationPreview({
 }: ImportValidationPreviewProps) {
   const validCount = parsedRows.filter((r) => r.valid).length;
   const invalidCount = parsedRows.filter((r) => !r.valid).length;
+
+  const displayRows = useMemo<ParsedRowWithIndex[]>(
+    () => parsedRows.slice(0, 50).map((row, idx) => ({ ...row, _index: idx })),
+    [parsedRows],
+  );
+
+  const columns = useMemo<DataTableColumn<ParsedRowWithIndex>[]>(() => [
+    {
+      key: "num",
+      header: "#",
+      cell: (row) => <span className="text-muted-foreground">{row._index + 1}</span>,
+    },
+    {
+      key: "expenseDate",
+      header: "Date",
+      cell: (row) => <span>{row.expenseDate || "—"}</span>,
+    },
+    {
+      key: "category",
+      header: "Category",
+      cell: (row) => <span>{row.category}</span>,
+    },
+    {
+      key: "amount",
+      header: "Amount",
+      headerClassName: "text-right",
+      className: "text-right",
+      cell: (row) => (
+        <span className="font-medium">
+          {row.amount > 0 ? `₹${row.amount.toLocaleString("en-IN")}` : "—"}
+        </span>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (row) =>
+        row.valid ? (
+          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+        ) : (
+          <span className="text-destructive" title={row.error}>
+            <AlertCircle className="h-3.5 w-3.5 inline mr-1" />
+            {row.error}
+          </span>
+        ),
+    },
+  ], []);
 
   return (
     <div className="rounded-lg border border-dashed border-border p-4 space-y-3">
@@ -124,41 +174,13 @@ export function ImportValidationPreview({
           )}
 
           <div className="pl-8">
-            <ScrollArea className="h-48 rounded-md border">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="border-b bg-muted/50">
-                    <th className="px-2 py-1.5 text-left font-medium">#</th>
-                    <th className="px-2 py-1.5 text-left font-medium">Date</th>
-                    <th className="px-2 py-1.5 text-left font-medium">Category</th>
-                    <th className="px-2 py-1.5 text-right font-medium">Amount</th>
-                    <th className="px-2 py-1.5 text-left font-medium">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {parsedRows.slice(0, 50).map((row, idx) => (
-                    <tr key={idx} className={cn("border-b", !row.valid && "bg-destructive/5")}>
-                      <td className="px-2 py-1 text-muted-foreground">{idx + 1}</td>
-                      <td className="px-2 py-1">{row.expenseDate || "—"}</td>
-                      <td className="px-2 py-1">{row.category}</td>
-                      <td className="px-2 py-1 text-right font-medium">
-                        {row.amount > 0 ? `₹${row.amount.toLocaleString("en-IN")}` : "—"}
-                      </td>
-                      <td className="px-2 py-1">
-                        {row.valid ? (
-                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                        ) : (
-                          <span className="text-destructive" title={row.error}>
-                            <AlertCircle className="h-3.5 w-3.5 inline mr-1" />
-                            {row.error}
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </ScrollArea>
+            <DataTable
+              data={displayRows}
+              columns={columns}
+              getRowKey={(row) => row._index}
+              className="h-48 text-xs"
+              rowClassName={(row) => row.valid ? "" : "bg-destructive/5"}
+            />
             {parsedRows.length > 50 && (
               <p className="text-xs text-muted-foreground mt-1 text-center">
                 Showing first 50 of {parsedRows.length} rows

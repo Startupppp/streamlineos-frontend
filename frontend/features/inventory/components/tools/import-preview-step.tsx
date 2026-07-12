@@ -4,14 +4,7 @@ import * as React from "react";
 import { Upload, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import type { ImportPreviewResult } from "@/hooks/api/inventory/admin";
 import type { ImportType } from "./import-type-step";
 
@@ -23,6 +16,10 @@ interface ImportPreviewStepProps {
   onConfirm: () => void;
   isConfirming: boolean;
 }
+
+type PreviewRow = Record<string, unknown> & { _idx: number };
+
+type ErrorRow = { row: number | string; field: string; message: string; _idx: number };
 
 export function ImportPreviewStep({
   importType,
@@ -43,6 +40,47 @@ export function ImportPreviewStep({
   function handleBrowseClick() {
     fileInputRef.current?.click();
   }
+
+  const previewData: PreviewRow[] = React.useMemo(() => {
+    if (!preview) return [];
+    return preview.sample.slice(0, 5).map((row, i) => ({ ...(row as Record<string, unknown>), _idx: i }));
+  }, [preview]);
+
+  const previewColumns: DataTableColumn<PreviewRow>[] = React.useMemo(() => {
+    if (!preview) return [];
+    return preview.columns.map((col) => ({
+      key: col,
+      header: col,
+      className: "text-xs",
+      cell: (row) => String(row[col] ?? ""),
+    }));
+  }, [preview]);
+
+  const errorData: ErrorRow[] = React.useMemo(() => {
+    if (!preview) return [];
+    return preview.errors.map((e, i) => ({ ...e, _idx: i }));
+  }, [preview]);
+
+  const errorColumns: DataTableColumn<ErrorRow>[] = [
+    {
+      key: "row",
+      header: "Row",
+      className: "text-xs text-red-700",
+      cell: (e) => e.row,
+    },
+    {
+      key: "field",
+      header: "Field",
+      className: "text-xs text-red-700",
+      cell: (e) => e.field,
+    },
+    {
+      key: "message",
+      header: "Message",
+      className: "text-xs text-red-700",
+      cell: (e) => e.message,
+    },
+  ];
 
   return (
     <div className="space-y-4">
@@ -84,57 +122,19 @@ export function ImportPreviewStep({
           </div>
 
           {preview.sample.length > 0 && (
-            <div className="overflow-x-auto rounded-lg border border-border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    {preview.columns.map(function renderHead(col) {
-                      return <TableHead key={col}>{col}</TableHead>;
-                    })}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {preview.sample.slice(0, 5).map(function renderRow(row, idx) {
-                    return (
-                      <TableRow key={idx}>
-                        {preview.columns.map(function renderCell(col) {
-                          return (
-                            <TableCell key={col} className="text-xs">
-                              {String(row[col] ?? "")}
-                            </TableCell>
-                          );
-                        })}
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
+            <DataTable
+              data={previewData}
+              columns={previewColumns}
+              getRowKey={(row) => row._idx}
+            />
           )}
 
           {preview.errors.length > 0 && (
-            <div className="rounded-lg border border-red-200 overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Row</TableHead>
-                    <TableHead>Field</TableHead>
-                    <TableHead>Message</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {preview.errors.map(function renderError(err, idx) {
-                    return (
-                      <TableRow key={idx}>
-                        <TableCell className="text-xs text-red-700">{err.row}</TableCell>
-                        <TableCell className="text-xs text-red-700">{err.field}</TableCell>
-                        <TableCell className="text-xs text-red-700">{err.message}</TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
+            <DataTable
+              data={errorData}
+              columns={errorColumns}
+              getRowKey={(e) => e._idx}
+            />
           )}
 
           <Button

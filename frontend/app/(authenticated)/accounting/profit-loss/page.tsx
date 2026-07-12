@@ -1,18 +1,9 @@
 "use client";
 
-import { useState, type ChangeEvent } from "react";
+import { useState } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTimeIllustration } from "@/components/illustrations";
@@ -35,6 +26,28 @@ function lastOfMonth(): string {
   return `${last.getFullYear()}-${pad2(last.getMonth() + 1)}-${pad2(last.getDate())}`;
 }
 
+const profitLossColumns: DataTableColumn<ProfitLossRow>[] = [
+  {
+    key: "code",
+    header: "Code",
+    cell: (row) => <span className="font-mono text-xs text-muted-foreground">{row.code}</span>,
+    className: "w-20",
+  },
+  {
+    key: "name",
+    header: "Account",
+    cell: (row) => <span className="text-sm">{row.name}</span>,
+  },
+  {
+    key: "amount",
+    header: "Amount",
+    cell: (row) => <span className="text-sm text-right tabular-nums font-medium font-mono block">{row.amount}</span>,
+    className: "text-right",
+    sortable: true,
+    sortValue: (row) => parseFloat(row.amount),
+  },
+];
+
 interface ReportCardProps {
   title: string;
   rows: ProfitLossRow[];
@@ -48,58 +61,13 @@ function ReportCard({ title, rows, totalLabel, totalAmount }: ReportCardProps) {
       <h3 className="text-sm font-semibold border-b border-border pb-2 mb-2">
         {title}
       </h3>
-      {rows.length === 0 ? (
-        <p className="py-6 text-center text-sm text-muted-foreground">
-          No {title.toLowerCase()} accounts for this range.
-        </p>
-      ) : (
-        <div className="overflow-x-auto">
-          <Table className="min-w-[320px]">
-            <TableHeader>
-              <TableRow className="hover:bg-transparent border-0">
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-2 py-1 w-20">
-                  Code
-                </TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-2 py-1">
-                  Account
-                </TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-2 py-1 text-right">
-                  Amount
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rows.map((row, idx) => (
-                <TableRow
-                  key={row.accountId}
-                  className={`border-0 ${idx % 2 === 0 ? "bg-transparent" : "bg-muted/20"}`}
-                >
-                  <TableCell className="font-mono text-xs text-muted-foreground px-2 py-1.5 w-20">
-                    {row.code}
-                  </TableCell>
-                  <TableCell className="text-sm px-2 py-1.5">{row.name}</TableCell>
-                  <TableCell className="text-sm text-right tabular-nums font-medium font-mono px-2 py-1.5">
-                    {row.amount}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-            <TableFooter>
-              <TableRow>
-                <TableCell
-                  colSpan={2}
-                  className="text-sm font-semibold px-2 py-2"
-                >
-                  {totalLabel}
-                </TableCell>
-                <TableCell className="text-right tabular-nums font-bold text-base px-2 py-2">
-                  {totalAmount}
-                </TableCell>
-              </TableRow>
-            </TableFooter>
-          </Table>
-        </div>
-      )}
+      <DataTable
+        data={rows}
+        columns={profitLossColumns}
+        getRowKey={(row) => row.accountId}
+        emptyState={<p className="py-6 text-center text-sm text-muted-foreground">No {title.toLowerCase()} accounts for this range.</p>}
+        footer={<div className="flex items-center justify-between text-sm font-semibold"><span>{totalLabel}</span><span className="tabular-nums font-bold text-base font-mono">{totalAmount}</span></div>}
+      />
     </div>
   );
 }

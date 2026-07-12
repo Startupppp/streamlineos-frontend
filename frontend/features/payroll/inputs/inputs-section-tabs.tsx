@@ -1,12 +1,10 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
-import { useState } from "react";
+import { Plus } from "lucide-react";
+import { useState, type ReactNode } from "react";
 import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
 import { SourceRefsPopover } from "./source-refs-popover";
 import {
@@ -20,6 +18,7 @@ import {
   type PayrollAdjustment,
 } from "@/hooks/api/payroll/payroll-inputs";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 
 function resolveDisplayName(row: PayrollInputSnapshot | PayrollAdjustment): string {
   return getUserDisplayName({
@@ -30,200 +29,195 @@ function resolveDisplayName(row: PayrollInputSnapshot | PayrollAdjustment): stri
   });
 }
 
-function TableSkeleton({ cols }: { cols: number }) {
-  return (
-    <div className="space-y-1">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="flex gap-3 h-8 items-center px-2">
-          {Array.from({ length: cols }).map((_, j) => (
-            <Skeleton key={j} className="h-3 flex-1" />
-          ))}
-        </div>
-      ))}
-    </div>
-  );
-}
+const attendanceColumns: DataTableColumn<PayrollInputSnapshot>[] = [
+  {
+    key: "employee",
+    header: "Employee",
+    cell: (row) => <span className="font-medium">{resolveDisplayName(row)}</span>,
+  },
+  {
+    key: "payableDays",
+    header: "Payable",
+    headerClassName: "text-right",
+    className: "text-right",
+    cell: (row) => {
+      const p = row.payload as { payableDays?: number };
+      return p.payableDays ?? 0;
+    },
+  },
+  {
+    key: "presentDays",
+    header: "Present",
+    headerClassName: "text-right",
+    className: "text-right",
+    cell: (row) => {
+      const p = row.payload as { presentDays?: number };
+      return p.presentDays ?? 0;
+    },
+  },
+  {
+    key: "absentDays",
+    header: "Absent",
+    headerClassName: "text-right",
+    className: "text-right",
+    cell: (row) => {
+      const p = row.payload as { absentDays?: number };
+      return p.absentDays ?? 0;
+    },
+  },
+  {
+    key: "lateCount",
+    header: "Late",
+    headerClassName: "text-right",
+    className: "text-right",
+    cell: (row) => {
+      const p = row.payload as { lateCount?: number };
+      return p.lateCount ?? 0;
+    },
+  },
+  {
+    key: "overtimeMinutes",
+    header: "OT (min)",
+    headerClassName: "text-right",
+    className: "text-right",
+    cell: (row) => {
+      const p = row.payload as { overtimeMinutes?: number };
+      return p.overtimeMinutes ?? 0;
+    },
+  },
+  {
+    key: "refs",
+    header: "",
+    className: "w-6",
+    cell: (row) => <SourceRefsPopover refs={row.sourceRefs} />,
+  },
+];
 
-function PaginationRow({ page, totalPages, onPage }: { page: number; totalPages: number; onPage: (p: number) => void }) {
-  if (totalPages <= 1) return null;
-  return (
-    <div className="flex items-center justify-between pt-2 text-xs text-muted-foreground">
-      <span>Page {page} of {totalPages}</span>
-      <div className="flex gap-1">
-        <Button variant="outline" size="sm" className="h-6 px-2" disabled={page <= 1} onClick={() => onPage(page - 1)}>
-          <ChevronLeft className="h-3 w-3" />
-        </Button>
-        <Button variant="outline" size="sm" className="h-6 px-2" disabled={page >= totalPages} onClick={() => onPage(page + 1)}>
-          <ChevronRight className="h-3 w-3" />
-        </Button>
-      </div>
-    </div>
-  );
-}
+const leaveColumns: DataTableColumn<PayrollInputSnapshot>[] = [
+  {
+    key: "employee",
+    header: "Employee",
+    cell: (row) => <span className="font-medium">{resolveDisplayName(row)}</span>,
+  },
+  {
+    key: "paidLeaveDays",
+    header: "Paid Leave",
+    headerClassName: "text-right",
+    className: "text-right",
+    cell: (row) => {
+      const p = row.payload as { paidLeaveDays?: number };
+      return p.paidLeaveDays ?? 0;
+    },
+  },
+  {
+    key: "unpaidLeaveDays",
+    header: "Unpaid",
+    headerClassName: "text-right",
+    className: "text-right",
+    cell: (row) => {
+      const p = row.payload as { unpaidLeaveDays?: number };
+      return p.unpaidLeaveDays ?? 0;
+    },
+  },
+  {
+    key: "halfDayCount",
+    header: "Half Days",
+    headerClassName: "text-right",
+    className: "text-right",
+    cell: (row) => {
+      const p = row.payload as { halfDayCount?: number };
+      return p.halfDayCount ?? 0;
+    },
+  },
+  {
+    key: "encashmentDays",
+    header: "Encashment",
+    headerClassName: "text-right",
+    className: "text-right",
+    cell: (row) => {
+      const p = row.payload as { encashmentDays?: number };
+      return p.encashmentDays ?? 0;
+    },
+  },
+  {
+    key: "refs",
+    header: "",
+    className: "w-6",
+    cell: (row) => <SourceRefsPopover refs={row.sourceRefs} />,
+  },
+];
 
-function AttendanceTab({ periodId }: { periodId: number }) {
-  const [page, setPage] = useState(1);
-  const { data, isLoading } = useAttendanceSnapshot(periodId, { page, limit: 25 });
-  if (isLoading) return <TableSkeleton cols={6} />;
-  const rows = data?.data ?? [];
-  return (
-    <>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Employee</TableHead>
-            <TableHead className="text-right">Payable</TableHead>
-            <TableHead className="text-right">Present</TableHead>
-            <TableHead className="text-right">Absent</TableHead>
-            <TableHead className="text-right">Late</TableHead>
-            <TableHead className="text-right">OT (min)</TableHead>
-            <TableHead className="w-6" />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.map((row) => {
-            const p = row.payload as { payableDays?: number; presentDays?: number; absentDays?: number; lateCount?: number; overtimeMinutes?: number };
-            return (
-              <TableRow key={row.id}>
-                <TableCell className="font-medium text-sm">{resolveDisplayName(row)}</TableCell>
-                <TableCell className="text-right text-sm">{p.payableDays ?? 0}</TableCell>
-                <TableCell className="text-right text-sm">{p.presentDays ?? 0}</TableCell>
-                <TableCell className="text-right text-sm">{p.absentDays ?? 0}</TableCell>
-                <TableCell className="text-right text-sm">{p.lateCount ?? 0}</TableCell>
-                <TableCell className="text-right text-sm">{p.overtimeMinutes ?? 0}</TableCell>
-                <TableCell><SourceRefsPopover refs={row.sourceRefs} /></TableCell>
-              </TableRow>
-            );
-          })}
-          {rows.length === 0 && (
-            <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground text-sm py-6">No data — build the period first</TableCell></TableRow>
-          )}
-        </TableBody>
-      </Table>
-      <PaginationRow page={page} totalPages={data?.pagination.totalPages ?? 1} onPage={setPage} />
-    </>
-  );
-}
+const overtimeColumns: DataTableColumn<PayrollInputSnapshot>[] = [
+  {
+    key: "employee",
+    header: "Employee",
+    cell: (row) => <span className="font-medium">{resolveDisplayName(row)}</span>,
+  },
+  {
+    key: "approvedRequests",
+    header: "Approved Requests",
+    headerClassName: "text-right",
+    className: "text-right",
+    cell: (row) => {
+      const p = row.payload as { approvedRequests?: unknown[] };
+      return p.approvedRequests?.length ?? 0;
+    },
+  },
+  {
+    key: "totalHours",
+    header: "Total Hours",
+    headerClassName: "text-right",
+    className: "text-right",
+    cell: (row) => {
+      const p = row.payload as { totalHours?: number };
+      return `${(p.totalHours ?? 0).toFixed(1)}h`;
+    },
+  },
+  {
+    key: "refs",
+    header: "",
+    className: "w-6",
+    cell: (row) => <SourceRefsPopover refs={row.sourceRefs} />,
+  },
+];
 
-function LeaveTab({ periodId }: { periodId: number }) {
-  const [page, setPage] = useState(1);
-  const { data, isLoading } = useLeaveSnapshot(periodId, { page, limit: 25 });
-  if (isLoading) return <TableSkeleton cols={5} />;
-  const rows = data?.data ?? [];
-  return (
-    <>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Employee</TableHead>
-            <TableHead className="text-right">Paid Leave</TableHead>
-            <TableHead className="text-right">Unpaid</TableHead>
-            <TableHead className="text-right">Half Days</TableHead>
-            <TableHead className="text-right">Encashment</TableHead>
-            <TableHead className="w-6" />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.map((row) => {
-            const p = row.payload as { paidLeaveDays?: number; unpaidLeaveDays?: number; halfDayCount?: number; encashmentDays?: number };
-            return (
-              <TableRow key={row.id}>
-                <TableCell className="font-medium text-sm">{resolveDisplayName(row)}</TableCell>
-                <TableCell className="text-right text-sm">{p.paidLeaveDays ?? 0}</TableCell>
-                <TableCell className="text-right text-sm">{p.unpaidLeaveDays ?? 0}</TableCell>
-                <TableCell className="text-right text-sm">{p.halfDayCount ?? 0}</TableCell>
-                <TableCell className="text-right text-sm">{p.encashmentDays ?? 0}</TableCell>
-                <TableCell><SourceRefsPopover refs={row.sourceRefs} /></TableCell>
-              </TableRow>
-            );
-          })}
-          {rows.length === 0 && (
-            <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground text-sm py-6">No data — build the period first</TableCell></TableRow>
-          )}
-        </TableBody>
-      </Table>
-      <PaginationRow page={page} totalPages={data?.pagination.totalPages ?? 1} onPage={setPage} />
-    </>
-  );
-}
-
-function OvertimeTab({ periodId }: { periodId: number }) {
-  const [page, setPage] = useState(1);
-  const { data, isLoading } = useOvertimeSnapshot(periodId, { page, limit: 25 });
-  if (isLoading) return <TableSkeleton cols={3} />;
-  const rows = data?.data ?? [];
-  return (
-    <>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Employee</TableHead>
-            <TableHead className="text-right">Approved Requests</TableHead>
-            <TableHead className="text-right">Total Hours</TableHead>
-            <TableHead className="w-6" />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.map((row) => {
-            const p = row.payload as { approvedRequests?: unknown[]; totalHours?: number };
-            return (
-              <TableRow key={row.id}>
-                <TableCell className="font-medium text-sm">{resolveDisplayName(row)}</TableCell>
-                <TableCell className="text-right text-sm">{p.approvedRequests?.length ?? 0}</TableCell>
-                <TableCell className="text-right text-sm">{(p.totalHours ?? 0).toFixed(1)}h</TableCell>
-                <TableCell><SourceRefsPopover refs={row.sourceRefs} /></TableCell>
-              </TableRow>
-            );
-          })}
-          {rows.length === 0 && (
-            <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground text-sm py-6">No approved overtime this period</TableCell></TableRow>
-          )}
-        </TableBody>
-      </Table>
-      <PaginationRow page={page} totalPages={data?.pagination.totalPages ?? 1} onPage={setPage} />
-    </>
-  );
-}
-
-function ReimbursementsTab({ periodId }: { periodId: number }) {
-  const [page, setPage] = useState(1);
-  const { data, isLoading } = useReimbursementSnapshot(periodId, { page, limit: 25 });
-  if (isLoading) return <TableSkeleton cols={3} />;
-  const rows = data?.data ?? [];
-  return (
-    <>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Employee</TableHead>
-            <TableHead className="text-right">Claims</TableHead>
-            <TableHead className="text-right">Total Amount</TableHead>
-            <TableHead className="w-6" />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.map((row) => {
-            const p = row.payload as { items?: unknown[]; totalAmount?: number };
-            return (
-              <TableRow key={row.id}>
-                <TableCell className="font-medium text-sm">{resolveDisplayName(row)}</TableCell>
-                <TableCell className="text-right text-sm">{p.items?.length ?? 0}</TableCell>
-                <TableCell className="text-right text-sm">
-                  {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(p.totalAmount ?? 0)}
-                </TableCell>
-                <TableCell><SourceRefsPopover refs={row.sourceRefs} /></TableCell>
-              </TableRow>
-            );
-          })}
-          {rows.length === 0 && (
-            <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground text-sm py-6">No approved reimbursements this period</TableCell></TableRow>
-          )}
-        </TableBody>
-      </Table>
-      <PaginationRow page={page} totalPages={data?.pagination.totalPages ?? 1} onPage={setPage} />
-    </>
-  );
-}
+const reimbursementColumns: DataTableColumn<PayrollInputSnapshot>[] = [
+  {
+    key: "employee",
+    header: "Employee",
+    cell: (row) => <span className="font-medium">{resolveDisplayName(row)}</span>,
+  },
+  {
+    key: "claims",
+    header: "Claims",
+    headerClassName: "text-right",
+    className: "text-right",
+    cell: (row) => {
+      const p = row.payload as { items?: unknown[] };
+      return p.items?.length ?? 0;
+    },
+  },
+  {
+    key: "totalAmount",
+    header: "Total Amount",
+    headerClassName: "text-right",
+    className: "text-right",
+    cell: (row) => {
+      const p = row.payload as { totalAmount?: number };
+      return new Intl.NumberFormat("en-IN", {
+        style: "currency",
+        currency: "INR",
+        maximumFractionDigits: 0,
+      }).format(p.totalAmount ?? 0);
+    },
+  },
+  {
+    key: "refs",
+    header: "",
+    className: "w-6",
+    cell: (row) => <SourceRefsPopover refs={row.sourceRefs} />,
+  },
+];
 
 const ADJ_STATUS_STYLES: Record<string, string> = {
   pending: "bg-amber-50 text-amber-700 border-amber-200",
@@ -231,65 +225,192 @@ const ADJ_STATUS_STYLES: Record<string, string> = {
   applied: "bg-blue-50 text-blue-700 border-blue-200",
 };
 
+function buildAdjustmentColumns(
+  isLocked: boolean,
+  approve: { isPending: boolean; mutate: (id: number) => void },
+): DataTableColumn<PayrollAdjustment>[] {
+  const cols: DataTableColumn<PayrollAdjustment>[] = [
+    {
+      key: "employee",
+      header: "Employee",
+      cell: (row) => <span className="font-medium">{resolveDisplayName(row)}</span>,
+    },
+    {
+      key: "adjustmentType",
+      header: "Type",
+      className: "capitalize",
+      cell: (row) => row.adjustmentType,
+    },
+    {
+      key: "section",
+      header: "Section",
+      className: "capitalize",
+      cell: (row) => row.section.replace(/_/g, " "),
+    },
+    {
+      key: "reason",
+      header: "Reason",
+      className: "max-w-48 truncate",
+      cell: (row) => row.reason,
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (row) => (
+        <Badge variant="outline" className={ADJ_STATUS_STYLES[row.status] ?? ""}>
+          {row.status}
+        </Badge>
+      ),
+    },
+  ];
+
+  if (!isLocked) {
+    cols.push({
+      key: "actions",
+      header: "",
+      cell: (row) =>
+        row.status === "pending" ? (
+          <LoadingButton
+            variant="outline"
+            size="sm"
+            className="h-6 text-xs"
+            isPending={approve.isPending}
+            onClick={() => approve.mutate(row.id)}
+          >
+            Approve
+          </LoadingButton>
+        ) : null,
+    });
+  }
+
+  return cols;
+}
+
+const EMPTY_NO_DATA: ReactNode = (
+  <p className="text-center text-muted-foreground text-sm py-6">No data — build the period first</p>
+);
+const EMPTY_NO_OT: ReactNode = (
+  <p className="text-center text-muted-foreground text-sm py-6">No approved overtime this period</p>
+);
+const EMPTY_NO_REIMB: ReactNode = (
+  <p className="text-center text-muted-foreground text-sm py-6">No approved reimbursements this period</p>
+);
+const EMPTY_NO_ADJ: ReactNode = (
+  <p className="text-center text-muted-foreground text-sm py-6">No adjustments for this period</p>
+);
+
+function AttendanceTab({ periodId }: { periodId: number }) {
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useAttendanceSnapshot(periodId, { page, limit: 25 });
+  const rows = data?.data ?? [];
+  return (
+    <DataTable
+      data={rows}
+      columns={attendanceColumns}
+      getRowKey={(row) => row.id}
+      isLoading={isLoading}
+      emptyState={EMPTY_NO_DATA}
+      pagination={{
+        mode: "server",
+        page,
+        pageSize: 25,
+        total: (data?.pagination.totalPages ?? 1) * 25,
+        onPageChange: setPage,
+      }}
+    />
+  );
+}
+
+function LeaveTab({ periodId }: { periodId: number }) {
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useLeaveSnapshot(periodId, { page, limit: 25 });
+  const rows = data?.data ?? [];
+  return (
+    <DataTable
+      data={rows}
+      columns={leaveColumns}
+      getRowKey={(row) => row.id}
+      isLoading={isLoading}
+      emptyState={EMPTY_NO_DATA}
+      pagination={{
+        mode: "server",
+        page,
+        pageSize: 25,
+        total: (data?.pagination.totalPages ?? 1) * 25,
+        onPageChange: setPage,
+      }}
+    />
+  );
+}
+
+function OvertimeTab({ periodId }: { periodId: number }) {
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useOvertimeSnapshot(periodId, { page, limit: 25 });
+  const rows = data?.data ?? [];
+  return (
+    <DataTable
+      data={rows}
+      columns={overtimeColumns}
+      getRowKey={(row) => row.id}
+      isLoading={isLoading}
+      emptyState={EMPTY_NO_OT}
+      pagination={{
+        mode: "server",
+        page,
+        pageSize: 25,
+        total: (data?.pagination.totalPages ?? 1) * 25,
+        onPageChange: setPage,
+      }}
+    />
+  );
+}
+
+function ReimbursementsTab({ periodId }: { periodId: number }) {
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useReimbursementSnapshot(periodId, { page, limit: 25 });
+  const rows = data?.data ?? [];
+  return (
+    <DataTable
+      data={rows}
+      columns={reimbursementColumns}
+      getRowKey={(row) => row.id}
+      isLoading={isLoading}
+      emptyState={EMPTY_NO_REIMB}
+      pagination={{
+        mode: "server",
+        page,
+        pageSize: 25,
+        total: (data?.pagination.totalPages ?? 1) * 25,
+        onPageChange: setPage,
+      }}
+    />
+  );
+}
+
 function AdjustmentsTab({ periodId, isLocked }: { periodId: number; isLocked: boolean }) {
   const [page, setPage] = useState(1);
   const { data, isLoading } = usePayrollAdjustments(periodId, { page, limit: 25 });
   const approve = useApprovePayrollAdjustment();
   const rows = data?.data ?? [];
-  if (isLoading) return <TableSkeleton cols={5} />;
+  const columns = buildAdjustmentColumns(isLocked, {
+    isPending: approve.isPending,
+    mutate: (id) => approve.mutate(id),
+  });
   return (
-    <>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Employee</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>Section</TableHead>
-            <TableHead>Reason</TableHead>
-            <TableHead>Status</TableHead>
-            {!isLocked && <TableHead />}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.map((row) => (
-            <TableRow key={row.id}>
-              <TableCell className="font-medium text-sm">{resolveDisplayName(row)}</TableCell>
-              <TableCell className="text-sm capitalize">{row.adjustmentType}</TableCell>
-              <TableCell className="text-sm capitalize">{row.section.replace(/_/g, " ")}</TableCell>
-              <TableCell className="text-sm max-w-48 truncate">{row.reason}</TableCell>
-              <TableCell>
-                <Badge variant="outline" className={ADJ_STATUS_STYLES[row.status] ?? ""}>
-                  {row.status}
-                </Badge>
-              </TableCell>
-              {!isLocked && (
-                <TableCell>
-                  {row.status === "pending" && (
-                    <LoadingButton
-                      variant="outline"
-                      size="sm"
-                      className="h-6 text-xs"
-                      isPending={approve.isPending}
-                      onClick={() => approve.mutate(row.id)}
-                    >
-                      Approve
-                    </LoadingButton>
-                  )}
-                </TableCell>
-              )}
-            </TableRow>
-          ))}
-          {rows.length === 0 && (
-            <TableRow>
-              <TableCell colSpan={isLocked ? 5 : 6} className="text-center text-muted-foreground text-sm py-6">
-                No adjustments for this period
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-      <PaginationRow page={page} totalPages={data?.pagination.totalPages ?? 1} onPage={setPage} />
-    </>
+    <DataTable
+      data={rows}
+      columns={columns}
+      getRowKey={(row) => row.id}
+      isLoading={isLoading}
+      emptyState={EMPTY_NO_ADJ}
+      pagination={{
+        mode: "server",
+        page,
+        pageSize: 25,
+        total: (data?.pagination.totalPages ?? 1) * 25,
+        onPageChange: setPage,
+      }}
+    />
   );
 }
 

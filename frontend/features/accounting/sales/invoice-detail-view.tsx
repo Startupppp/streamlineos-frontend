@@ -1,20 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared";
 import { FinanceStatusBadge, Money } from "@/features/accounting/shared";
@@ -50,57 +43,110 @@ function formatDate(value: string | Date | null | undefined): string {
   return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleDateString();
 }
 
+const PAYMENT_COLUMNS: DataTableColumn<Payment>[] = [
+  {
+    key: "date",
+    header: "Date",
+    cell: (p) => (
+      <span className="text-xs tabular-nums">{formatDate(p.paymentDate)}</span>
+    ),
+  },
+  {
+    key: "method",
+    header: "Method",
+    cell: (p) => (
+      <span className="text-xs capitalize">{p.paymentMethod.replace(/_/g, " ")}</span>
+    ),
+  },
+  {
+    key: "reference",
+    header: "Reference",
+    cell: (p) => (
+      <span className="text-xs font-mono text-muted-foreground">
+        {p.referenceNumber ?? "—"}
+      </span>
+    ),
+  },
+  {
+    key: "amount",
+    header: "Amount",
+    headerClassName: "text-right",
+    className: "text-right",
+    cell: (p) => (
+      <span className="text-xs tabular-nums">
+        <Money value={Number(p.amount)} compact />
+      </span>
+    ),
+  },
+];
+
+function getPaymentRowKey(p: Payment): string | number {
+  return p.id;
+}
+
 interface PaymentsTableProps {
   payments: Payment[];
 }
 
 function PaymentsTable({ payments }: PaymentsTableProps) {
-  if (payments.length === 0) {
-    return (
-      <EmptyState illustrationPreset="expenses" title="No payments recorded" compact />
-    );
-  }
-
   return (
-    <div className="overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-muted/40 hover:bg-muted/40">
-            <TableHead className="text-xs uppercase font-semibold tracking-wider text-muted-foreground px-3 py-2">
-              Date
-            </TableHead>
-            <TableHead className="text-xs uppercase font-semibold tracking-wider text-muted-foreground px-3 py-2">
-              Method
-            </TableHead>
-            <TableHead className="text-xs uppercase font-semibold tracking-wider text-muted-foreground px-3 py-2">
-              Reference
-            </TableHead>
-            <TableHead className="text-xs uppercase font-semibold tracking-wider text-muted-foreground px-3 py-2 text-right">
-              Amount
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {payments.map((p) => (
-            <TableRow key={p.id} className="border-b border-border/50">
-              <TableCell className="text-xs tabular-nums px-3 py-2">
-                {formatDate(p.paymentDate)}
-              </TableCell>
-              <TableCell className="text-xs px-3 py-2 capitalize">
-                {p.paymentMethod.replace(/_/g, " ")}
-              </TableCell>
-              <TableCell className="text-xs font-mono px-3 py-2 text-muted-foreground">
-                {p.referenceNumber ?? "—"}
-              </TableCell>
-              <TableCell className="text-xs text-right tabular-nums px-3 py-2">
-                <Money value={Number(p.amount)} compact />
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+    <DataTable
+      data={payments}
+      columns={PAYMENT_COLUMNS}
+      getRowKey={getPaymentRowKey}
+      emptyState={
+        <EmptyState illustrationPreset="expenses" title="No payments recorded" compact />
+      }
+    />
   );
+}
+
+const CREDIT_NOTE_COLUMNS: DataTableColumn<CreditNote>[] = [
+  {
+    key: "creditNoteNumber",
+    header: "#",
+    cell: (cn) => (
+      <span className="text-xs font-mono">{cn.creditNoteNumber}</span>
+    ),
+  },
+  {
+    key: "status",
+    header: "Status",
+    cell: (cn) =>
+      cn.status === "APPLIED" ? (
+        <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 text-[10px] h-4 px-1.5">
+          Applied
+        </Badge>
+      ) : (
+        <FinanceStatusBadge status={toFinanceStatus(cn.status)} />
+      ),
+  },
+  {
+    key: "total",
+    header: "Total",
+    headerClassName: "text-right",
+    className: "text-right",
+    cell: (cn) => (
+      <span className="text-xs tabular-nums">
+        <Money value={Number(cn.total)} compact />
+      </span>
+    ),
+  },
+  {
+    key: "appliedAmount",
+    header: "Applied",
+    headerClassName: "text-right",
+    className: "text-right",
+    cell: (cn) => (
+      <span className="text-xs tabular-nums">
+        <Money value={Number(cn.appliedAmount)} compact />
+      </span>
+    ),
+  },
+];
+
+function getCreditNoteRowKey(cn: CreditNote): string | number {
+  return cn.id;
 }
 
 interface LinkedCreditNotesProps {
@@ -127,50 +173,11 @@ function LinkedCreditNotes({ clientId, invoiceId }: LinkedCreditNotesProps) {
   }
 
   return (
-    <div className="overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-muted/40 hover:bg-muted/40">
-            <TableHead className="text-xs uppercase font-semibold tracking-wider text-muted-foreground px-3 py-2">
-              #
-            </TableHead>
-            <TableHead className="text-xs uppercase font-semibold tracking-wider text-muted-foreground px-3 py-2">
-              Status
-            </TableHead>
-            <TableHead className="text-xs uppercase font-semibold tracking-wider text-muted-foreground px-3 py-2 text-right">
-              Total
-            </TableHead>
-            <TableHead className="text-xs uppercase font-semibold tracking-wider text-muted-foreground px-3 py-2 text-right">
-              Applied
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {linked.map((cn: CreditNote) => (
-            <TableRow key={cn.id} className="border-b border-border/50">
-              <TableCell className="text-xs font-mono px-3 py-2">
-                {cn.creditNoteNumber}
-              </TableCell>
-              <TableCell className="px-3 py-2">
-                {cn.status === "APPLIED" ? (
-                  <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 text-[10px] h-4 px-1.5">
-                    Applied
-                  </Badge>
-                ) : (
-                  <FinanceStatusBadge status={toFinanceStatus(cn.status)} />
-                )}
-              </TableCell>
-              <TableCell className="text-xs text-right tabular-nums px-3 py-2">
-                <Money value={Number(cn.total)} compact />
-              </TableCell>
-              <TableCell className="text-xs text-right tabular-nums px-3 py-2">
-                <Money value={Number(cn.appliedAmount)} compact />
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+    <DataTable
+      data={linked}
+      columns={CREDIT_NOTE_COLUMNS}
+      getRowKey={getCreditNoteRowKey}
+    />
   );
 }
 
@@ -248,6 +255,12 @@ interface InvoiceDetailContentProps {
   invoiceId: number;
 }
 
+type IndexedLineItem = Invoice["lineItems"][number] & { _idx: number };
+
+function getLineItemRowKey(item: IndexedLineItem): number {
+  return item._idx;
+}
+
 export function InvoiceDetailContent({ invoiceId }: InvoiceDetailContentProps) {
   const router = useRouter();
   const { data: invoice, isLoading, error, refetch } = useInvoice(invoiceId);
@@ -268,6 +281,53 @@ export function InvoiceDetailContent({ invoiceId }: InvoiceDetailContentProps) {
   function handleClosePayment(): void {
     setPaymentOpen(false);
   }
+
+  const lineItemColumns = useMemo<DataTableColumn<IndexedLineItem>[]>(
+    () => [
+      {
+        key: "description",
+        header: "Description",
+        cell: (item) => <span className="text-xs">{item.description}</span>,
+      },
+      {
+        key: "quantity",
+        header: "Qty",
+        headerClassName: "text-right w-20",
+        className: "text-right w-20",
+        cell: (item) => (
+          <span className="text-xs tabular-nums">{item.quantity}</span>
+        ),
+      },
+      {
+        key: "rate",
+        header: "Rate",
+        headerClassName: "text-right w-28",
+        className: "text-right w-28",
+        cell: (item) => (
+          <span className="text-xs tabular-nums">
+            <Money value={item.rate} currency={invoice?.currency} compact />
+          </span>
+        ),
+      },
+      {
+        key: "amount",
+        header: "Amount",
+        headerClassName: "text-right w-28",
+        className: "text-right w-28 font-medium",
+        cell: (item) => (
+          <span className="text-xs tabular-nums">
+            <Money value={item.amount} currency={invoice?.currency} compact />
+          </span>
+        ),
+      },
+    ],
+    [invoice?.currency],
+  );
+
+  const indexedLineItems = useMemo<IndexedLineItem[]>(
+    () => (invoice?.lineItems ?? []).map((item, i) => ({ ...item, _idx: i })),
+    [invoice?.lineItems],
+  );
 
   if (isLoading) {
     return <InvoiceDetailSkeleton />;
@@ -369,42 +429,12 @@ export function InvoiceDetailContent({ invoiceId }: InvoiceDetailContentProps) {
           <div className="px-4 py-3 border-b border-border">
             <h2 className="text-sm font-semibold">Line Items</h2>
           </div>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40">
-                  <TableHead className="text-xs uppercase font-semibold tracking-wider text-muted-foreground px-3 py-2">
-                    Description
-                  </TableHead>
-                  <TableHead className="text-xs uppercase font-semibold tracking-wider text-muted-foreground px-3 py-2 text-right w-20">
-                    Qty
-                  </TableHead>
-                  <TableHead className="text-xs uppercase font-semibold tracking-wider text-muted-foreground px-3 py-2 text-right w-28">
-                    Rate
-                  </TableHead>
-                  <TableHead className="text-xs uppercase font-semibold tracking-wider text-muted-foreground px-3 py-2 text-right w-28">
-                    Amount
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {invoice.lineItems.map((item, i) => (
-                  <TableRow key={i} className="border-b border-border/50">
-                    <TableCell className="text-xs px-3 py-2">{item.description}</TableCell>
-                    <TableCell className="text-xs text-right tabular-nums px-3 py-2">
-                      {item.quantity}
-                    </TableCell>
-                    <TableCell className="text-xs text-right tabular-nums px-3 py-2">
-                      <Money value={item.rate} currency={invoice.currency} compact />
-                    </TableCell>
-                    <TableCell className="text-xs text-right tabular-nums px-3 py-2 font-medium">
-                      <Money value={item.amount} currency={invoice.currency} compact />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <DataTable
+            data={indexedLineItems}
+            columns={lineItemColumns}
+            getRowKey={getLineItemRowKey}
+            className="rounded-none border-0 border-t border-border"
+          />
           <div className="px-4 py-3 border-t border-border space-y-1.5 flex flex-col items-end">
             <div className="flex items-center gap-8 text-xs text-muted-foreground">
               <span>Subtotal</span>

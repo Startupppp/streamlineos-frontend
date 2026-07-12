@@ -11,14 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,6 +35,12 @@ import {
 } from "@/hooks/api/accounting/assets";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { DepreciationRun } from "@/types/accounting/assets";
+
+function formatDate(value: string | null | undefined): string {
+  if (!value) return "—";
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
+}
 
 const PERIOD_PATTERN = /^\d{4}-\d{2}$/;
 
@@ -151,6 +150,73 @@ export default function DepreciationRunsPage() {
 
   const createRunMutation = useCreateDepreciationRun();
 
+  const depreciationRunColumns: DataTableColumn<DepreciationRun>[] = [
+    {
+      key: "periodKey",
+      header: "Period",
+      cell: (run) => (
+        <span className="font-mono text-xs font-medium">{run.periodKey}</span>
+      ),
+    },
+    {
+      key: "assetCount",
+      header: "Assets",
+      className: "text-right tabular-nums",
+      headerClassName: "text-right",
+      cell: (run) => run.assetCount,
+    },
+    {
+      key: "totalDepreciation",
+      header: "Total Depr.",
+      className: "text-right",
+      headerClassName: "text-right",
+      cell: (run) => <Money value={parseFloat(run.totalDepreciation)} />,
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (run) => <RunStatusBadge status={run.status} />,
+    },
+    {
+      key: "journalEntryId",
+      header: "Journal",
+      className: "hidden md:table-cell",
+      headerClassName: "hidden md:table-cell",
+      cell: (run) =>
+        run.journalEntryId ? (
+          <Link
+            href={`/accounting/journal/${run.journalEntryId}`}
+            className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline"
+          >
+            JE-{run.journalEntryId}
+            <ExternalLink className="h-3 w-3" />
+          </Link>
+        ) : (
+          <span className="text-xs text-muted-foreground">—</span>
+        ),
+    },
+    {
+      key: "postedBy",
+      header: "Posted By",
+      className: "hidden lg:table-cell text-muted-foreground",
+      headerClassName: "hidden lg:table-cell",
+      cell: (run) => run.postedBy ?? "—",
+    },
+    {
+      key: "postedAt",
+      header: "Posted At",
+      className: "hidden lg:table-cell text-muted-foreground",
+      headerClassName: "hidden lg:table-cell",
+      cell: (run) => formatDate(run.postedAt),
+    },
+    {
+      key: "actions",
+      header: "",
+      className: "w-28 text-right",
+      cell: (run) => <ReverseRow run={run} canManage={canManage} />,
+    },
+  ];
+
   function handleRetry(): void {
     void runsQuery.refetch();
   }
@@ -168,12 +234,6 @@ export default function DepreciationRunsPage() {
     );
   }
 
-  function formatDate(value: string | null | undefined): string {
-    if (!value) return "—";
-    const d = new Date(value);
-    return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
-  }
-
   return (
     <>
       <PageWrapper
@@ -189,7 +249,6 @@ export default function DepreciationRunsPage() {
           )
         }
       >
-        {runsQuery.isLoading && <LoadingState variant="table" rows={8} />}
         {runsQuery.error && (
           <ErrorState
             title="Failed to load depreciation runs"
@@ -198,74 +257,26 @@ export default function DepreciationRunsPage() {
           />
         )}
 
-        {!runsQuery.isLoading && !runsQuery.error && runs.length === 0 && (
-          <EmptyState
-            illustration={<EmptyReportIllustration />}
-            title="No depreciation runs yet"
-            description="Run depreciation for a period to post entries for all active assets."
-            action={
-              canManage
-                ? { label: "Run Depreciation", onClick: () => setCreateOpen(true) }
-                : undefined
+        {!runsQuery.error && (
+          <DataTable
+            data={runs}
+            columns={depreciationRunColumns}
+            getRowKey={(row) => row.id}
+            isLoading={runsQuery.isLoading}
+            emptyState={
+              <EmptyState
+                illustration={<EmptyReportIllustration />}
+                title="No depreciation runs yet"
+                description="Run depreciation for a period to post entries for all active assets."
+                action={
+                  canManage
+                    ? { label: "Run Depreciation", onClick: () => setCreateOpen(true) }
+                    : undefined
+                }
+              />
             }
+            minWidth="640px"
           />
-        )}
-
-        {runs.length > 0 && (
-          <div className="rounded-lg border border-border overflow-hidden">
-            <div className="overflow-x-auto">
-              <Table className="min-w-[640px]">
-                <TableHeader>
-                  <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Period</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Assets</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Total Depr.</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Status</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 hidden md:table-cell">Journal</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 hidden lg:table-cell">Posted By</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 hidden lg:table-cell">Posted At</TableHead>
-                    <TableHead className="w-28 px-3 py-2" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {runs.map((run) => (
-                    <TableRow key={run.id} className="border-b border-border/50 hover:bg-muted/30">
-                      <TableCell className="font-mono text-xs px-3 py-2 font-medium">{run.periodKey}</TableCell>
-                      <TableCell className="text-sm text-right tabular-nums px-3 py-2">{run.assetCount}</TableCell>
-                      <TableCell className="text-sm text-right px-3 py-2">
-                        <Money value={parseFloat(run.totalDepreciation)} />
-                      </TableCell>
-                      <TableCell className="px-3 py-2">
-                        <RunStatusBadge status={run.status} />
-                      </TableCell>
-                      <TableCell className="px-3 py-2 hidden md:table-cell">
-                        {run.journalEntryId ? (
-                          <Link
-                            href={`/accounting/journal/${run.journalEntryId}`}
-                            className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline"
-                          >
-                            JE-{run.journalEntryId}
-                            <ExternalLink className="h-3 w-3" />
-                          </Link>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground px-3 py-2 hidden lg:table-cell">
-                        {run.postedBy ?? "—"}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground px-3 py-2 hidden lg:table-cell">
-                        {formatDate(run.postedAt)}
-                      </TableCell>
-                      <TableCell className="px-3 py-2 text-right">
-                        <ReverseRow run={run} canManage={canManage} />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
         )}
       </PageWrapper>
 

@@ -15,6 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useSignOut } from "@/hooks/common/auth-hooks";
 import { useCan } from "@/hooks/api/access";
 import { useIsMobile } from "@/hooks/common/use-mobile";
+import { ThemeMenuSubmenu } from "@/components/theme/theme-switcher";
 import { resolveImageUrl, cn } from "@/lib/utils";
 
 interface UserAvatarMenuProps {
@@ -110,6 +111,7 @@ export function UserAvatarMenu({ variant = "header" }: UserAvatarMenuProps) {
             Notification Preferences
           </Link>
         </DropdownMenuItem>
+        <ThemeMenuSubmenu />
         <DropdownMenuItem asChild>
           <Link href="/settings/appearance" className="gap-2 cursor-pointer">
             <Palette className="h-3.5 w-3.5" />

@@ -1,25 +1,18 @@
 "use client";
 
-import { use, useState, useCallback, type ChangeEvent } from "react";
+import { use, useState, useCallback } from "react";
 import Link from "next/link";
 import { Receipt, Wallet, AlertCircle, ArrowLeft } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
-import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { DS } from "@/lib/design-system";
 import { useVendorLedger } from "@/hooks/api/accounting";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { type VendorLedgerLine } from "@/types/accounting";
 
 function formatCurrency(value: string): string {
   const n = Number(value);
@@ -46,6 +39,84 @@ function formatSource(sourceType: string, sourceEvent: string | null): string {
   if (sourceEvent) return `${sourceType} · ${sourceEvent}`;
   return sourceType;
 }
+
+const vendorLedgerColumns: DataTableColumn<VendorLedgerLine>[] = [
+  {
+    key: "date",
+    header: "Date",
+    headerClassName: "w-[120px]",
+    cell: (row) => (
+      <span className="text-sm text-muted-foreground tabular-nums">
+        {formatDate(row.date)}
+      </span>
+    ),
+  },
+  {
+    key: "entryNumber",
+    header: "Entry #",
+    headerClassName: "w-[160px]",
+    cell: (row) => (
+      <Link
+        href={`/accounting/journal/${row.entryId}`}
+        className="font-mono text-xs text-foreground hover:text-blue-600 hover:underline"
+      >
+        {row.entryNumber}
+      </Link>
+    ),
+  },
+  {
+    key: "source",
+    header: "Source",
+    headerClassName: "w-[180px]",
+    cell: (row) => (
+      <span className="text-sm text-muted-foreground">
+        {formatSource(row.sourceType, row.sourceEvent)}
+      </span>
+    ),
+  },
+  {
+    key: "description",
+    header: "Description",
+    cell: (row) => (
+      <span className="text-sm text-foreground">
+        {row.billNumber ? (
+          <Link
+            href={`/accounting/purchase-bills/${row.billId}`}
+            className="font-mono text-xs text-muted-foreground mr-2 hover:text-blue-600 hover:underline"
+          >
+            {row.billNumber}
+          </Link>
+        ) : null}
+        {row.description ?? ""}
+      </span>
+    ),
+  },
+  {
+    key: "debit",
+    header: "Debit",
+    headerClassName: "w-[120px] text-right",
+    className: "text-right font-mono text-sm tabular-nums text-destructive",
+    cell: (row) => (
+      <>{Number(row.debit) > 0 ? formatCurrency(row.debit) : "—"}</>
+    ),
+  },
+  {
+    key: "credit",
+    header: "Credit",
+    headerClassName: "w-[120px] text-right",
+    className: "text-right font-mono text-sm tabular-nums text-emerald-600",
+    cell: (row) => (
+      <>{Number(row.credit) > 0 ? formatCurrency(row.credit) : "—"}</>
+    ),
+  },
+  {
+    key: "runningBalance",
+    header: "Running Balance",
+    headerClassName: "w-[140px] text-right",
+    className: "text-right font-mono text-sm font-medium tabular-nums",
+    cell: (row) => <>{formatCurrency(row.runningBalance)}</>,
+  },
+];
 
 function parseVendorId(value: string): number {
   const n = Number(value);
@@ -166,79 +237,27 @@ export default function VendorLedgerDetailPage({ params }: PageProps) {
             description={getErrorMessage(query.error)}
             onRetry={handleRetry}
           />
-        ) : lines.length === 0 ? (
-          <div className="flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/20 py-14 px-6 text-center">
-            <Receipt className="h-10 w-10 text-muted-foreground/40 mb-3" />
-            <h3 className="text-sm font-semibold text-foreground">
-              No ledger entries
-            </h3>
-            <p className="mt-1 text-sm text-muted-foreground max-w-xs">
-              No accounts-payable journal lines for this vendor in the selected
-              range.
-            </p>
-          </div>
         ) : (
-          <div className="rounded-lg border border-border overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[120px]">Date</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[160px]">Entry #</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[180px]">Source</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Description</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[120px] text-right">Debit</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[120px] text-right">Credit</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[140px] text-right">
-                    Running Balance
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {lines.map((line, idx) => (
-                  <TableRow key={`${line.entryId}-${idx}`} className="border-b border-border/50 hover:bg-muted/30">
-                    <TableCell className="text-sm text-muted-foreground tabular-nums">
-                      {formatDate(line.date)}
-                    </TableCell>
-                    <TableCell className="font-mono text-xs">
-                      <Link
-                        href={`/accounting/journal/${line.entryId}`}
-                        className="text-foreground hover:text-blue-600 hover:underline"
-                      >
-                        {line.entryNumber}
-                      </Link>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {formatSource(line.sourceType, line.sourceEvent)}
-                    </TableCell>
-                    <TableCell className="text-sm text-foreground">
-                      {line.billNumber ? (
-                        <Link
-                          href={`/accounting/purchase-bills/${line.billId}`}
-                          className="font-mono text-xs text-muted-foreground mr-2 hover:text-blue-600 hover:underline"
-                        >
-                          {line.billNumber}
-                        </Link>
-                      ) : null}
-                      {line.description ?? ""}
-                    </TableCell>
-                    <TableCell className="text-right font-mono text-sm tabular-nums text-destructive">
-                      {Number(line.debit) > 0
-                        ? formatCurrency(line.debit)
-                        : "—"}
-                    </TableCell>
-                    <TableCell className="text-right font-mono text-sm tabular-nums text-emerald-600">
-                      {Number(line.credit) > 0
-                        ? formatCurrency(line.credit)
-                        : "—"}
-                    </TableCell>
-                    <TableCell className="text-right font-mono text-sm font-medium tabular-nums">
-                      {formatCurrency(line.runningBalance)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <DataTable
+            data={lines}
+            columns={vendorLedgerColumns}
+            getRowKey={(row) =>
+              `${row.entryId}-${row.entryNumber}-${row.debit}-${row.credit}`
+            }
+            emptyState={
+              <div className="flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/20 py-14 px-6 text-center">
+                <Receipt className="h-10 w-10 text-muted-foreground/40 mb-3" />
+                <h3 className="text-sm font-semibold text-foreground">
+                  No ledger entries
+                </h3>
+                <p className="mt-1 text-sm text-muted-foreground max-w-xs">
+                  No accounts-payable journal lines for this vendor in the
+                  selected range.
+                </p>
+              </div>
+            }
+            minWidth="780px"
+          />
         )}
       </div>
     </PageWrapper>

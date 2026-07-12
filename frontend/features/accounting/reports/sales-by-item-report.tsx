@@ -2,12 +2,10 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyReportIllustration } from "@/components/illustrations";
-import { LoadingState, ErrorState } from "@/components/shared";
+import { ErrorState } from "@/components/shared";
 import { ReportShell } from "./report-shell";
 import { DateRangeFilter } from "./date-range-filter";
 import { useSalesByItem } from "@/hooks/api/accounting/reports";
@@ -20,6 +18,41 @@ function currentMonthRange(): { from: string; to: string } {
   const from = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
   const to = now.toISOString().slice(0, 10);
   return { from, to };
+}
+
+type SalesByItemRow = NonNullable<ReturnType<typeof useSalesByItem>["data"]>[number];
+
+const SALES_BY_ITEM_COLUMNS: DataTableColumn<SalesByItemRow>[] = [
+  {
+    key: "description",
+    header: "Description",
+    cell: (row) => row.description,
+  },
+  {
+    key: "totalQuantity",
+    header: "Quantity",
+    cell: (row) => row.totalQuantity,
+    className: "text-right tabular-nums",
+    headerClassName: "text-right",
+  },
+  {
+    key: "totalAmount",
+    header: "Amount",
+    cell: (row) => formatCurrencyFull(Number(row.totalAmount)),
+    className: "text-right font-mono tabular-nums font-medium",
+    headerClassName: "text-right",
+  },
+  {
+    key: "invoiceCount",
+    header: "Invoices",
+    cell: (row) => row.invoiceCount,
+    className: "text-right tabular-nums",
+    headerClassName: "text-right",
+  },
+];
+
+function getSalesByItemRowKey(row: SalesByItemRow): string {
+  return row.description;
 }
 
 export function SalesByItemReport() {
@@ -72,48 +105,28 @@ export function SalesByItemReport() {
         />
       }
     >
-      {isLoading ? (
-        <LoadingState variant="table" rows={8} />
-      ) : error ? (
+      {error ? (
         <ErrorState
           title="Failed to load report"
           description={getErrorMessage(error)}
           onRetry={handleRetry}
         />
-      ) : !data || data.length === 0 ? (
-        <EmptyState
-          illustration={<EmptyReportIllustration />}
-          title="No sales data"
-          description="No invoice line items found in the selected date range."
-          compact
-        />
       ) : (
-        <div className="rounded-lg border border-border overflow-hidden">
-          <div className="overflow-x-auto">
-            <Table className="min-w-[540px]">
-              <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40">
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Description</TableHead>
-                  <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Quantity</TableHead>
-                  <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Amount</TableHead>
-                  <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Invoices</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.map((row, i) => (
-                  <TableRow key={i} className="border-b border-border/50 hover:bg-muted/30">
-                    <TableCell className="text-sm text-foreground px-3 py-2">{row.description}</TableCell>
-                    <TableCell className="text-right text-sm tabular-nums px-3 py-2">{row.totalQuantity}</TableCell>
-                    <TableCell className="text-right text-sm font-mono tabular-nums font-medium px-3 py-2">
-                      {formatCurrencyFull(Number(row.totalAmount))}
-                    </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums px-3 py-2">{row.invoiceCount}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
+        <DataTable
+          data={data ?? []}
+          columns={SALES_BY_ITEM_COLUMNS}
+          getRowKey={getSalesByItemRowKey}
+          isLoading={isLoading}
+          minWidth="540px"
+          emptyState={
+            <EmptyState
+              illustration={<EmptyReportIllustration />}
+              title="No sales data"
+              description="No invoice line items found in the selected date range."
+              compact
+            />
+          }
+        />
       )}
     </ReportShell>
   );

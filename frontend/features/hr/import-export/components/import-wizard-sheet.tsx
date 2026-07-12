@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { AlertCircle, CheckCircle2, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   useCreateImportJob,
   useCommitImportJob,
@@ -163,7 +164,14 @@ export function ImportWizardSheet({
   }, [commitJob, job, entityLabel, handleOpenChange]);
 
   const previewHeaders = parsedRows.length > 0 ? Object.keys(parsedRows[0]) : [];
-  const previewRows = parsedRows.slice(0, 5);
+  const previewRows = parsedRows.slice(0, 5).map((row, i) => ({ ...row, _rowIdx: i }));
+
+  const previewColumns: DataTableColumn<Record<string, string> & { _rowIdx: number }>[] =
+    previewHeaders.map((h) => ({
+      key: h,
+      header: h,
+      cell: (row) => row[h] ?? "",
+    }));
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
@@ -246,36 +254,12 @@ export function ImportWizardSheet({
               <p className="text-xs text-muted-foreground">
                 Showing first 5 rows. Verify the data looks correct before validating.
               </p>
-              <div className="rounded-lg border border-border overflow-auto max-h-64">
-                <table className="w-full text-xs">
-                  <thead className="bg-muted/50 sticky top-0">
-                    <tr>
-                      {previewHeaders.map((h) => (
-                        <th
-                          key={h}
-                          className="px-2 py-1.5 text-left font-medium text-muted-foreground whitespace-nowrap"
-                        >
-                          {h}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {previewRows.map((row, idx) => (
-                      <tr key={idx} className="border-t border-border/50">
-                        {previewHeaders.map((h) => (
-                          <td
-                            key={h}
-                            className="px-2 py-1.5 max-w-[120px] truncate"
-                          >
-                            {row[h] ?? ""}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <DataTable
+                data={previewRows}
+                columns={previewColumns}
+                getRowKey={(row) => row._rowIdx}
+                className="max-h-64 overflow-auto"
+              />
             </div>
           )}
 

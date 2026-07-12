@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, type ReactNode } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
 import {
@@ -14,14 +14,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -66,6 +59,65 @@ function monthlyValue(invoice: RecurringInvoice): number {
       (invoice.recurringInterval ?? "monthly").trim().toLowerCase()
     ] ?? 1;
   return Number(invoice.total) * factor;
+}
+
+const RECURRING_COLUMNS: DataTableColumn<RecurringInvoice>[] = [
+  {
+    key: "invoiceNumber",
+    header: "Invoice #",
+    cell: (invoice): ReactNode => (
+      <Link
+        href={`/billing/invoices/${invoice.id}`}
+        className="text-blue-600 hover:underline"
+      >
+        {invoice.invoiceNumber}
+      </Link>
+    ),
+  },
+  {
+    key: "clientName",
+    header: "Customer",
+    cell: (invoice): ReactNode => (
+      <span className="text-sm">{invoice.clientName ?? "—"}</span>
+    ),
+  },
+  {
+    key: "total",
+    header: "Amount",
+    headerClassName: "text-right",
+    className: "text-right font-mono text-sm tabular-nums",
+    cell: (invoice): ReactNode =>
+      formatCurrencyFull(invoice.total, invoice.currency),
+  },
+  {
+    key: "recurringInterval",
+    header: "Frequency",
+    cell: (invoice): ReactNode => intervalLabel(invoice.recurringInterval),
+  },
+  {
+    key: "nextRecurringDate",
+    header: "Next date",
+    cell: (invoice): ReactNode =>
+      invoice.nextRecurringDate ? (
+        <Badge variant={invoice.overdue ? "destructive" : "secondary"}>
+          {format(new Date(invoice.nextRecurringDate), "MMM d, yyyy")}
+          {invoice.overdue ? " · Due" : ""}
+        </Badge>
+      ) : (
+        <span className="text-muted-foreground">—</span>
+      ),
+  },
+  {
+    key: "status",
+    header: "Status",
+    cell: (invoice): ReactNode => (
+      <Badge variant="outline">{invoice.status}</Badge>
+    ),
+  },
+];
+
+function getRecurringRowKey(invoice: RecurringInvoice): string | number {
+  return invoice.id;
 }
 
 export default function RecurringInvoicesPage() {
@@ -187,59 +239,12 @@ export default function RecurringInvoicesPage() {
           </div>
 
           <div className="rounded-lg border border-border overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Invoice #</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Customer</TableHead>
-                  <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Amount</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Frequency</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Next date</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recurring.map((invoice) => (
-                  <TableRow key={invoice.id} className="border-b border-border/50 hover:bg-muted/30">
-                    <TableCell className="font-medium">
-                      <Link
-                        href={`/billing/invoices/${invoice.id}`}
-                        className="text-blue-600 hover:underline"
-                      >
-                        {invoice.invoiceNumber}
-                      </Link>
-                    </TableCell>
-                    <TableCell>{invoice.clientName ?? "—"}</TableCell>
-                    <TableCell className="text-right font-mono text-sm tabular-nums">
-                      {formatCurrencyFull(invoice.total, invoice.currency)}
-                    </TableCell>
-                    <TableCell>
-                      {intervalLabel(invoice.recurringInterval)}
-                    </TableCell>
-                    <TableCell>
-                      {invoice.nextRecurringDate ? (
-                        <Badge
-                          variant={
-                            invoice.overdue ? "destructive" : "secondary"
-                          }
-                        >
-                          {format(
-                            new Date(invoice.nextRecurringDate),
-                            "MMM d, yyyy",
-                          )}
-                          {invoice.overdue ? " · Due" : ""}
-                        </Badge>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{invoice.status}</Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <DataTable
+              data={recurring}
+              columns={RECURRING_COLUMNS}
+              getRowKey={getRecurringRowKey}
+              className="border-0 rounded-none"
+            />
           </div>
         </div>
       )}

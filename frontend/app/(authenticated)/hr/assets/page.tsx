@@ -20,14 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   Select,
   SelectContent,
@@ -51,7 +44,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2 } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
@@ -171,6 +163,147 @@ function buildEmployeeOptions(employees: Employee[]): ComboboxOption[] {
     label: `${emp.firstName ?? ""} ${emp.lastName ?? ""}`.trim() || emp.email,
     sublabel: emp.designation ?? emp.email,
   }));
+}
+
+function ASSET_COLUMNS(
+  employees: Employee[],
+  onAssign: (asset: Asset) => void,
+  onEdit: (asset: Asset) => void,
+  onRetire: (id: number) => void,
+  canManage: boolean,
+): DataTableColumn<Asset>[] {
+  return [
+    {
+      key: "name",
+      header: "Asset",
+      cell: (asset) => (
+        <div>
+          <p className="font-semibold text-sm text-foreground">{asset.name}</p>
+          {(asset.brand || asset.model) && (
+            <p className="text-xs text-muted-foreground">
+              {[asset.brand, asset.model].filter(Boolean).join(" · ")}
+            </p>
+          )}
+        </div>
+      ),
+      sortable: true,
+      sortValue: (a) => a.name,
+    },
+    {
+      key: "type",
+      header: "Type",
+      cell: (asset) => (
+        <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-slate-100 border-slate-200 text-slate-700 dark:bg-slate-900/40 dark:border-slate-700 dark:text-slate-300">
+          {asset.type}
+        </span>
+      ),
+    },
+    {
+      key: "serialNumber",
+      header: "Serial #",
+      cell: (asset) => (
+        <span className="font-mono text-xs text-muted-foreground">
+          {asset.serialNumber ?? "—"}
+        </span>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (asset) => {
+        const meta = STATUS_META[asset.status ?? "AVAILABLE"] ?? STATUS_META.AVAILABLE;
+        return (
+          <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border", meta.badge)}>
+            {meta.label}
+          </span>
+        );
+      },
+      sortable: true,
+      sortValue: (a) => a.status ?? "",
+    },
+    {
+      key: "assignedTo",
+      header: "Assigned To",
+      cell: (asset) => {
+        const assignedEmployee = employees.find((e) => e.id === asset.assignedTo);
+        const assignedName = assignedEmployee
+          ? `${assignedEmployee.firstName ?? ""} ${assignedEmployee.lastName ?? ""}`.trim() || assignedEmployee.email
+          : null;
+        const assignedInitial = assignedName?.[0]?.toUpperCase() ?? "?";
+        return assignedName ? (
+          <div className="flex items-center gap-2">
+            <Avatar className="h-6 w-6">
+              <AvatarFallback className="text-[9px] bg-primary/10 text-primary">
+                {assignedInitial}
+              </AvatarFallback>
+            </Avatar>
+            <span className="text-sm text-foreground truncate max-w-[120px]">{assignedName}</span>
+          </div>
+        ) : (
+          <span className="text-muted-foreground text-xs">Unassigned</span>
+        );
+      },
+    },
+    {
+      key: "purchaseCost",
+      header: "Cost",
+      headerClassName: "text-right",
+      className: "text-right",
+      cell: (asset) => (
+        <span className="text-sm font-medium">{fmtCost(asset.purchaseCost)}</span>
+      ),
+      sortable: true,
+      sortValue: (a) => Number(a.purchaseCost ?? 0),
+    },
+    {
+      key: "purchaseDate",
+      header: "Purchased",
+      cell: (asset) => (
+        <span className="text-xs text-muted-foreground">
+          {asset.purchaseDate ? format(new Date(asset.purchaseDate), "dd MMM yyyy") : "—"}
+        </span>
+      ),
+      sortable: true,
+      sortValue: (a) => a.purchaseDate ?? "",
+    },
+    ...(canManage ? [{
+      key: "actions",
+      header: "",
+      headerClassName: "text-right",
+      className: "text-right",
+      cell: (asset: Asset) => (
+        <div className="flex items-center justify-end gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            title={asset.assignedTo ? "Reassign / Unassign" : "Assign Employee"}
+            onClick={(e) => { e.stopPropagation(); onAssign(asset); }}
+          >
+            {asset.assignedTo ? <UserMinus className="h-3.5 w-3.5" /> : <UserPlus className="h-3.5 w-3.5" />}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            title="Edit asset"
+            onClick={(e) => { e.stopPropagation(); onEdit(asset); }}
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-destructive hover:text-destructive"
+            title="Retire asset"
+            onClick={(e) => { e.stopPropagation(); onRetire(asset.id); }}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      ),
+    }] as DataTableColumn<Asset>[] : []),
+  ];
 }
 
 function AssetForm({
@@ -731,203 +864,30 @@ export default function HrAssetsPage() {
             <Button variant="outline" size="sm" onClick={handleRetry}>Try Again</Button>
           </div>
         ) : (
-          <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-          <ScrollArea className="w-full" type="auto">
-            <div className="min-w-[900px]">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/40 hover:bg-muted/40">
-                    <TableHead className="font-semibold text-foreground/80">
-                      Asset
-                    </TableHead>
-                    <TableHead className="font-semibold text-foreground/80">
-                      Type
-                    </TableHead>
-                    <TableHead className="font-semibold text-foreground/80">
-                      Serial #
-                    </TableHead>
-                    <TableHead className="font-semibold text-foreground/80">
-                      Status
-                    </TableHead>
-                    <TableHead className="font-semibold text-foreground/80">
-                      Assigned To
-                    </TableHead>
-                    <TableHead className="font-semibold text-foreground/80 text-right">
-                      Cost
-                    </TableHead>
-                    <TableHead className="font-semibold text-foreground/80">
-                      Purchased
-                    </TableHead>
-                    <TableHead className="font-semibold text-foreground/80 text-right">
-                      Actions
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isLoading ? (
-                    Array.from({ length: 5 }).map((_, i) => (
-                      <TableRow key={i}>
-                        {Array.from({ length: 8 }).map((__, j) => (
-                          <TableCell key={j}>
-                            <div className="h-4 rounded bg-muted animate-pulse" />
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))
-                  ) : filteredItems.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={8}>
-                        <EmptyState
-                          illustration={
-                            <Package className="h-8 w-8 text-muted-foreground" />
-                          }
-                          title="No assets found"
-                          description={
-                            statusFilter
-                              ? `No ${statusFilter.toLowerCase()} assets.`
-                              : "Register your first company asset."
-                          }
-                          action={
-                            !statusFilter
-                              ? {
-                                  label: "Register Asset",
-                                  onClick: handleOpenAdd,
-                                }
-                              : undefined
-                          }
-                          compact
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredItems.map((asset) => {
-                      const meta =
-                        STATUS_META[asset.status ?? "AVAILABLE"] ??
-                        STATUS_META.AVAILABLE;
-                      const assignedEmployee = employees.find(
-                        (e) => e.id === asset.assignedTo,
-                      );
-                      const assignedName = assignedEmployee
-                        ? `${assignedEmployee.firstName ?? ""} ${assignedEmployee.lastName ?? ""}`.trim() ||
-                          assignedEmployee.email
-                        : null;
-                      const assignedInitial =
-                        assignedName?.[0]?.toUpperCase() ?? "?";
-
-                      return (
-                        <TableRow
-                          key={asset.id}
-                          className="transition-colors duration-200"
-                        >
-                          <TableCell>
-                            <div>
-                              <p className="font-semibold text-sm text-foreground">
-                                {asset.name}
-                              </p>
-                              {(asset.brand || asset.model) && (
-                                <p className="text-xs text-muted-foreground">
-                                  {[asset.brand, asset.model]
-                                    .filter(Boolean)
-                                    .join(" · ")}
-                                </p>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-slate-100 border-slate-200 text-slate-700 dark:bg-slate-900/40 dark:border-slate-700 dark:text-slate-300">
-                              {asset.type}
-                            </span>
-                          </TableCell>
-                          <TableCell className="font-mono text-xs text-muted-foreground">
-                            {asset.serialNumber ?? "—"}
-                          </TableCell>
-                          <TableCell>
-                            <span
-                              className={cn(
-                                "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
-                                meta.badge,
-                              )}
-                            >
-                              {meta.label}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            {assignedName ? (
-                              <div className="flex items-center gap-2">
-                                <Avatar className="h-6 w-6">
-                                  <AvatarFallback className="text-[9px] bg-primary/10 text-primary">
-                                    {assignedInitial}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <span className="text-sm text-foreground truncate max-w-[120px]">
-                                  {assignedName}
-                                </span>
-                              </div>
-                            ) : (
-                              <span className="text-muted-foreground text-xs">
-                                Unassigned
-                              </span>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right text-sm font-medium">
-                            {fmtCost(asset.purchaseCost)}
-                          </TableCell>
-                          <TableCell className="text-xs text-muted-foreground">
-                            {asset.purchaseDate
-                              ? format(
-                                  new Date(asset.purchaseDate),
-                                  "dd MMM yyyy",
-                                )
-                              : "—"}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center justify-end gap-1">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7"
-                                title={
-                                  asset.assignedTo
-                                    ? "Reassign / Unassign"
-                                    : "Assign Employee"
-                                }
-                                onClick={() => handleOpenAssign(asset)}
-                              >
-                                {asset.assignedTo ? (
-                                  <UserMinus className="h-3.5 w-3.5" />
-                                ) : (
-                                  <UserPlus className="h-3.5 w-3.5" />
-                                )}
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7"
-                                title="Edit asset"
-                                onClick={() => handleOpenEdit(asset)}
-                              >
-                                <Pencil className="h-3.5 w-3.5" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 text-destructive hover:text-destructive"
-                                title="Retire asset"
-                                onClick={() => handleSetDeleteId(asset.id)}
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </ScrollArea>
-          </div>
+          <DataTable<Asset>
+            data={filteredItems}
+            columns={ASSET_COLUMNS(employees, handleOpenAssign, handleOpenEdit, handleSetDeleteId, canManageAssets)}
+            getRowKey={(row) => row.id}
+            isLoading={isLoading}
+            minWidth="900px"
+            emptyState={
+              <EmptyState
+                illustration={<Package className="h-8 w-8 text-muted-foreground" />}
+                title="No assets found"
+                description={
+                  statusFilter
+                    ? `No ${statusFilter.toLowerCase()} assets.`
+                    : "Register your first company asset."
+                }
+                action={
+                  !statusFilter
+                    ? { label: "Register Asset", onClick: handleOpenAdd }
+                    : undefined
+                }
+                compact
+              />
+            }
+          />
         )}
 
         <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">

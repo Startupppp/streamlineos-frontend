@@ -11,16 +11,10 @@ import {
   getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import {
-  ArrowUp,
-  ArrowDown,
-  ArrowUpDown,
-  ChevronLeft,
-  ChevronRight,
-  Search,
-} from "lucide-react";
+import { ArrowUp, ArrowDown, ArrowUpDown, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
+import { DataTablePagination } from "@/components/shared/data-table-pagination";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -31,7 +25,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 
 declare module "@tanstack/react-table" {
@@ -58,6 +51,7 @@ type ServerPagination = {
   pageSize: number;
   total: number;
   onPageChange: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
 };
 
 export interface DataTableProps<T> {
@@ -82,6 +76,11 @@ export interface DataTableProps<T> {
     placeholder?: string;
   };
   toolbar?: ReactNode;
+  sortState?: {
+    field: string | null;
+    direction: "asc" | "desc";
+    onChange: (field: string, direction: "asc" | "desc") => void;
+  };
 }
 
 function SortIndicator({ sorted }: { sorted: "asc" | "desc" | false }) {
@@ -105,8 +104,12 @@ export function DataTable<T>({
   rowClassName,
   search,
   toolbar,
+  sortState,
 }: DataTableProps<T>) {
   const [sorting, setSorting] = useState<SortingState>([]);
+  const externalSorting: SortingState = sortState?.field
+    ? [{ id: sortState.field, desc: sortState.direction === "desc" }]
+    : [];
   const [localRowSelection, setLocalRowSelection] = useState<RowSelectionState>({});
   const [internalPage, setInternalPage] = useState(0);
 
@@ -172,18 +175,28 @@ export function DataTable<T>({
     columns: columnDefs,
     getRowId: (row) => String(getRowKey(row)),
     state: {
-      sorting,
+      sorting: sortState ? externalSorting : sorting,
       rowSelection,
       pagination: isServerPagination
         ? { pageIndex: serverPag!.page - 1, pageSize: serverPag!.pageSize }
         : { pageIndex: internalPage, pageSize: clientPageSize },
     },
+    manualSorting: sortState !== undefined,
     manualPagination: isServerPagination,
     pageCount: isServerPagination
       ? Math.ceil(serverPag!.total / serverPag!.pageSize)
       : undefined,
     enableRowSelection: !!selection,
-    onSortingChange: setSorting,
+    onSortingChange: (updater) => {
+      const prev = sortState ? externalSorting : sorting;
+      const next = typeof updater === "function" ? updater(prev) : updater;
+      if (sortState) {
+        const first = next[0];
+        if (first) sortState.onChange(first.id, first.desc ? "desc" : "asc");
+      } else {
+        setSorting(next);
+      }
+    },
     onRowSelectionChange: (updater) => {
       const next =
         typeof updater === "function" ? updater(rowSelection) : updater;
@@ -207,7 +220,7 @@ export function DataTable<T>({
       }
     },
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
+    getSortedRowModel: sortState ? undefined : getSortedRowModel(),
     getPaginationRowModel: isServerPagination ? undefined : getPaginationRowModel(),
   });
 
@@ -223,6 +236,11 @@ export function DataTable<T>({
 
   function handleSearchInputChange(e: React.ChangeEvent<HTMLInputElement>) {
     search?.onChange(e.target.value);
+  }
+
+  function handlePageChange(nextPage: number) {
+    if (serverPag) serverPag.onPageChange(nextPage);
+    else setInternalPage(nextPage - 1);
   }
 
   return (
@@ -393,38 +411,54 @@ export function DataTable<T>({
       )}
 
       {showPagination && (
-        <div className="shrink-0 flex items-center justify-between px-4 py-2 border-t text-xs text-muted-foreground">
-          <span>
-            Showing {currentPage * pSize + 1}–
-            {Math.min((currentPage + 1) * pSize, totalItems)} of {totalItems}
-          </span>
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-7 w-7"
-              disabled={currentPage === 0}
-              onClick={() => table.previousPage()}
-              aria-label="Previous page"
-            >
-              <ChevronLeft className="h-3.5 w-3.5" />
-            </Button>
-            <span className="px-1">
-              {currentPage + 1} / {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-7 w-7"
-              disabled={currentPage >= totalPages - 1}
-              onClick={() => table.nextPage()}
-              aria-label="Next page"
-            >
-              <ChevronRight className="h-3.5 w-3.5" />
-            </Button>
-          </div>
+        <div className="shrink-0 border-t px-3">
+          <DataTablePagination
+            page={currentPage + 1}
+            totalPages={totalPages}
+            total={totalItems}
+            limit={pSize}
+            onPageChange={handlePageChange}
+            onLimitChange={serverPag?.onPageSizeChange}
+          />
         </div>
       )}
+    </div>
+  );
+}
+
+export function DataTableSkeleton({
+  rows = 5,
+  columns = 4,
+  className,
+}: {
+  rows?: number;
+  columns?: number;
+  className?: string;
+}) {
+  return (
+    <div className={cn("border border-border rounded-md overflow-hidden", className)}>
+      <Table>
+        <TableHeader className="bg-muted/80">
+          <TableRow className="border-b-2 border-border hover:bg-transparent">
+            {Array.from({ length: columns }).map((_, colIdx) => (
+              <TableHead key={colIdx} className="px-2 py-1.5">
+                <Skeleton className="h-3 w-16" />
+              </TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {Array.from({ length: rows }).map((_, rowIdx) => (
+            <TableRow key={rowIdx} className="h-8 hover:bg-transparent">
+              {Array.from({ length: columns }).map((_, colIdx) => (
+                <TableCell key={colIdx} className="px-2 py-1">
+                  <Skeleton className="h-3 w-full" />
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 }

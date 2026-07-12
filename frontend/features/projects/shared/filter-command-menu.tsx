@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import {
   ListFilter,
   ChevronRight,
+  ChevronDown,
   CircleDot,
   AlertTriangle,
   Tag,
@@ -20,6 +21,7 @@ import {
 import { cn } from "@/lib/utils";
 import {
   FilterCategorySubmenu,
+  FilterDatesInline,
   type FilterCategory,
 } from "./filter-category-submenu";
 import { FilterFlatSearch } from "./filter-flat-search";
@@ -105,6 +107,7 @@ interface CategoryRowProps {
   label: string;
   activeCount: number;
   hovered: boolean;
+  inlineExpand?: boolean;
   onMouseEnter: () => void;
   onFocus: () => void;
   onKeyDown: (e: React.KeyboardEvent) => void;
@@ -115,15 +118,17 @@ function CategoryRow({
   label,
   activeCount,
   hovered,
+  inlineExpand = false,
   onMouseEnter,
   onFocus,
   onKeyDown,
 }: CategoryRowProps) {
+  const ChevronIcon = inlineExpand ? ChevronDown : ChevronRight;
   return (
     <div
       role="menuitem"
       tabIndex={0}
-      aria-haspopup="true"
+      aria-haspopup={inlineExpand ? undefined : "true"}
       aria-expanded={hovered}
       onMouseEnter={onMouseEnter}
       onFocus={onFocus}
@@ -142,7 +147,12 @@ function CategoryRow({
           {activeCount}
         </span>
       )}
-      <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+      <ChevronIcon
+        className={cn(
+          "h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none",
+          inlineExpand && hovered && "rotate-180",
+        )}
+      />
     </div>
   );
 }
@@ -290,9 +300,11 @@ export function FilterCommandMenu({
     if (e.key === "ArrowRight" || e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       setHoveredCategory(key);
-      setTimeout(() => {
-        submenuRef.current?.focus();
-      }, 0);
+      if (key !== "dates") {
+        setTimeout(() => {
+          submenuRef.current?.focus();
+        }, 0);
+      }
     }
   }
 
@@ -363,7 +375,7 @@ export function FilterCommandMenu({
       </PopoverTrigger>
       <PopoverContent
         align="start"
-        className="w-64 p-0 overflow-visible"
+        className="w-auto min-w-[200px] max-h-[var(--radix-popover-content-available-height)] overflow-hidden p-0"
         onInteractOutside={handleInteractOutside}
       >
         {isSearching ? (
@@ -376,9 +388,9 @@ export function FilterCommandMenu({
             {...sharedProps}
           />
         ) : (
-          <div className="flex">
-            <div className="min-w-[200px]">
-              <Command shouldFilter={false}>
+          <div className="flex max-h-[var(--radix-popover-content-available-height)]">
+            <div className="flex min-w-[200px] flex-col">
+              <Command shouldFilter={false} className="h-auto shrink-0">
                 <CommandInput
                   placeholder="Filter by..."
                   className="h-9 text-xs"
@@ -391,32 +403,44 @@ export function FilterCommandMenu({
                 role="menu"
                 aria-label="Filter categories"
                 onMouseLeave={handleListMouseLeave}
-                className="p-1"
+                className="max-h-[min(360px,calc(var(--radix-popover-content-available-height)-2.25rem))] overflow-y-auto p-1"
               >
                 {visibleCategories.map((cat) => {
+                  const isHovered = hoveredCategory === cat.key;
+                  const isDates = cat.key === "dates";
                   function onMouseEnter() { handleCategoryMouseEnter(cat.key); }
                   function onFocus() { handleCategoryFocus(cat.key); }
                   function onKeyDown(e: React.KeyboardEvent) { handleCategoryKeyDown(cat.key, e); }
                   return (
-                    <CategoryRow
-                      key={cat.key}
-                      icon={cat.icon}
-                      label={cat.label}
-                      activeCount={cat.activeCount}
-                      hovered={hoveredCategory === cat.key}
-                      onMouseEnter={onMouseEnter}
-                      onFocus={onFocus}
-                      onKeyDown={onKeyDown}
-                    />
+                    <div key={cat.key}>
+                      <CategoryRow
+                        icon={cat.icon}
+                        label={cat.label}
+                        activeCount={cat.activeCount}
+                        hovered={isHovered}
+                        inlineExpand={isDates}
+                        onMouseEnter={onMouseEnter}
+                        onFocus={onFocus}
+                        onKeyDown={onKeyDown}
+                      />
+                      {isDates && isHovered && (
+                        <FilterDatesInline
+                          dueDateFrom={dueDateFrom}
+                          dueDateTo={dueDateTo}
+                          onDueDateFromChange={handleDueDateFromChange}
+                          onDueDateToChange={handleDueDateToChange}
+                        />
+                      )}
+                    </div>
                   );
                 })}
               </div>
             </div>
 
-            {hoveredCategory !== null && (
+            {hoveredCategory !== null && hoveredCategory !== "dates" && (
               <div
                 ref={submenuRef}
-                className="border-l border-border bg-popover"
+                className="max-h-[var(--radix-popover-content-available-height)] overflow-y-auto border-l border-border bg-popover"
               >
                 <FilterCategorySubmenu
                   category={hoveredCategory}

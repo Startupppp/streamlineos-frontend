@@ -6,18 +6,10 @@ import { Gift, Send, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useReferrals, useCreateReferral, type Referral } from "@/hooks/api/referrals";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -49,29 +41,6 @@ const STATUS_CONFIG: Record<
     className: "bg-muted/60 text-muted-foreground border-border",
   },
 };
-
-function TableSkeleton() {
-  return (
-    <div className="rounded-lg border border-border overflow-hidden">
-      <div className="border-b border-border px-4 py-3 bg-muted/30">
-        <div className="grid grid-cols-4 gap-3">
-          {["Email", "Status", "Expires", "Sent"].map((h) => (
-            <Skeleton key={h} className="h-3 w-full" />
-          ))}
-        </div>
-      </div>
-      {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="px-4 py-3 border-b border-border last:border-0">
-          <div className="grid grid-cols-4 gap-3">
-            {Array.from({ length: 4 }).map((__, j) => (
-              <Skeleton key={j} className="h-4 w-full" />
-            ))}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
 
 export default function ReferralsPage() {
   const [emailInput, setEmailInput] = useState("");
@@ -110,10 +79,56 @@ export default function ReferralsPage() {
     void refetch();
   }
 
-  function handleOpenSheetFromEmpty() {
+  function handleFocusEmailInput() {
     const el = document.getElementById("referral-email-input");
     el?.focus();
   }
+
+  function getReferralRowKey(referral: Referral) {
+    return referral.id;
+  }
+
+  const columns: DataTableColumn<Referral>[] = [
+    {
+      key: "referredEmail",
+      header: "Email",
+      cell: (referral) => (
+        <span className="text-sm">{referral.referredEmail}</span>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (referral) => {
+        const statusConfig = STATUS_CONFIG[referral.status] ?? STATUS_CONFIG.PENDING;
+        return (
+          <span
+            className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium border ${statusConfig.className}`}
+          >
+            {statusConfig.label}
+          </span>
+        );
+      },
+    },
+    {
+      key: "expiresAt",
+      header: "Expires",
+      cell: (referral) => (
+        <span className="text-xs text-muted-foreground tabular-nums">
+          {format(new Date(referral.expiresAt), "dd MMM yyyy")}
+        </span>
+      ),
+    },
+    {
+      key: "createdAt",
+      header: "Sent",
+      cell: (referral) => (
+        <span className="text-xs text-muted-foreground tabular-nums">
+          {format(new Date(referral.createdAt), "dd MMM yyyy")}
+        </span>
+      ),
+    },
+  ];
 
   return (
     <PageWrapper
@@ -185,72 +200,32 @@ export default function ReferralsPage() {
           ))}
         </div>
 
-        {isLoading ? (
-          <TableSkeleton />
-        ) : isError ? (
+        {isError ? (
           <div className="flex flex-col items-center justify-center py-12 gap-3">
-            <p className="text-sm text-muted-foreground">
-              Failed to load referrals
-            </p>
+            <p className="text-sm text-muted-foreground">Failed to load referrals</p>
             <Button variant="outline" size="sm" onClick={handleRetry}>
               <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
               Retry
             </Button>
           </div>
-        ) : referrals.length === 0 ? (
-          <EmptyState
-            illustration={<EmptyDocumentsIllustration />}
-            title="No referrals yet"
-            description="Send your first invite to start earning rewards for bringing friends aboard."
-            action={{
-              label: "Send Your First Invite",
-              onClick: handleOpenSheetFromEmpty,
-            }}
-          />
         ) : (
-          <div className="rounded-lg border border-border overflow-hidden">
-            <div className="px-4 py-3 border-b border-border">
-              <p className="text-sm font-semibold">Referrals</p>
-            </div>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Email</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Status</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Expires</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Sent</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {referrals.map((referral) => {
-                    const statusConfig =
-                      STATUS_CONFIG[referral.status] ?? STATUS_CONFIG.PENDING;
-                    return (
-                      <TableRow key={referral.id} className="border-b border-border/50 hover:bg-muted/30">
-                        <TableCell className="text-sm">
-                          {referral.referredEmail}
-                        </TableCell>
-                        <TableCell>
-                          <span
-                            className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium border ${statusConfig.className}`}
-                          >
-                            {statusConfig.label}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-xs text-muted-foreground tabular-nums">
-                          {format(new Date(referral.expiresAt), "dd MMM yyyy")}
-                        </TableCell>
-                        <TableCell className="text-xs text-muted-foreground tabular-nums">
-                          {format(new Date(referral.createdAt), "dd MMM yyyy")}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
+          <DataTable
+            data={referrals}
+            columns={columns}
+            getRowKey={getReferralRowKey}
+            isLoading={isLoading}
+            emptyState={
+              <EmptyState
+                illustration={<EmptyDocumentsIllustration />}
+                title="No referrals yet"
+                description="Send your first invite to start earning rewards for bringing friends aboard."
+                action={{
+                  label: "Send Your First Invite",
+                  onClick: handleFocusEmailInput,
+                }}
+              />
+            }
+          />
         )}
       </div>
     </PageWrapper>

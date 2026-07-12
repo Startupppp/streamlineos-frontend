@@ -15,14 +15,7 @@ import { LoadingState, ErrorState } from "@/components/shared";
 import { AppDialog } from "@/components/shared/app-dialog";
 import { EmptyApprovalIllustration } from "@/components/illustrations";
 import { FinanceStatusBadge, Money } from "@/features/accounting/shared";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import {
@@ -205,6 +198,56 @@ export default function FinanceApprovalsPage() {
   const counts = countsQuery.data;
   const items = approvalsQuery.data?.items ?? [];
 
+  const approvalColumns: DataTableColumn<ApprovalRequest>[] = [
+    {
+      key: "type",
+      header: "Type",
+      cell: (req) => (
+        <Badge variant="outline" className="text-[10px] font-mono">
+          {req.recordType.replace(/_/g, " ")}
+        </Badge>
+      ),
+    },
+    {
+      key: "label",
+      header: "Label",
+      className: "max-w-[180px] truncate",
+      cell: (req) => <span className="text-sm">{req.recordLabel ?? "—"}</span>,
+    },
+    {
+      key: "amount",
+      header: "Amount",
+      headerClassName: "text-right",
+      className: "text-right tabular-nums",
+      cell: (req) => req.recordAmount ? <Money value={Number(req.recordAmount)} /> : "—",
+    },
+    {
+      key: "requestedBy",
+      header: "Requested by",
+      cell: (req) => <span className="text-sm">{req.requesterDisplayName}</span>,
+    },
+    {
+      key: "date",
+      header: "Date",
+      headerClassName: "hidden md:table-cell",
+      className: "hidden md:table-cell",
+      cell: (req) => (
+        <span className="text-sm text-muted-foreground">{formatDate(req.createdAt)}</span>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (req) => <FinanceStatusBadge status={req.status} />,
+    },
+    {
+      key: "actions",
+      header: "",
+      className: "w-36",
+      cell: (req) => <RowActions request={req} canDecide={canDecide} />,
+    },
+  ];
+
   function handleStatusTab(value: ApprovalStatus | "ALL") {
     setStatusFilter(value);
   }
@@ -289,8 +332,6 @@ export default function FinanceApprovalsPage() {
           ))}
         </div>
 
-        {approvalsQuery.isLoading && <LoadingState variant="table" rows={6} />}
-
         {approvalsQuery.error && (
           <ErrorState
             title="Failed to load approvals"
@@ -299,63 +340,21 @@ export default function FinanceApprovalsPage() {
           />
         )}
 
-        {!approvalsQuery.isLoading && !approvalsQuery.error && items.length === 0 && (
-          <EmptyState
-            illustration={<EmptyApprovalIllustration />}
-            title="No approvals"
-            description="There are no approval requests matching the current filters."
+        {!approvalsQuery.error && (
+          <DataTable
+            data={items}
+            columns={approvalColumns}
+            getRowKey={(row) => row.id}
+            isLoading={approvalsQuery.isLoading}
+            emptyState={
+              <EmptyState
+                illustration={<EmptyApprovalIllustration />}
+                title="No approvals"
+                description="There are no approval requests matching the current filters."
+              />
+            }
+            minWidth="700px"
           />
-        )}
-
-        {items.length > 0 && (
-          <div className="rounded-lg border border-border overflow-hidden">
-            <div className="overflow-x-auto">
-              <Table className="min-w-[700px]">
-                <TableHeader>
-                  <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Type</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Label</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Amount</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Requested by</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 hidden md:table-cell">Date</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Status</TableHead>
-                    <TableHead className="w-36 px-2 py-2" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {items.map((req) => (
-                    <TableRow key={req.id} className="border-b border-border/50 hover:bg-muted/30">
-                      <TableCell className="px-3 py-2">
-                        <Badge variant="outline" className="text-[10px] font-mono">
-                          {req.recordType.replace(/_/g, " ")}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-sm px-3 py-2 max-w-[180px] truncate">
-                        {req.recordLabel ?? "—"}
-                      </TableCell>
-                      <TableCell className="text-sm text-right tabular-nums px-3 py-2">
-                        {req.recordAmount ? (
-                          <Money value={Number(req.recordAmount)} />
-                        ) : (
-                          "—"
-                        )}
-                      </TableCell>
-                      <TableCell className="text-sm px-3 py-2">{req.requesterDisplayName}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground px-3 py-2 hidden md:table-cell">
-                        {formatDate(req.createdAt)}
-                      </TableCell>
-                      <TableCell className="px-3 py-2">
-                        <FinanceStatusBadge status={req.status} />
-                      </TableCell>
-                      <TableCell className="px-2 py-2">
-                        <RowActions request={req} canDecide={canDecide} />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
         )}
       </div>
     </PageWrapper>

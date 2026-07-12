@@ -23,8 +23,8 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { ErrorState, SkeletonTable } from "@/components/shared";
+import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
+import { ErrorState } from "@/components/shared";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyWarehouseIllustration } from "@/components/illustrations";
 import {
@@ -236,7 +236,7 @@ export function PhysicalAuditsClient() {
             className="min-h-[40vh]"
           />
         ) : isLoading ? (
-          <SkeletonTable rows={6} columns={6} />
+          <DataTableSkeleton rows={6} columns={6} />
         ) : (
           <DataTable
             data={items}

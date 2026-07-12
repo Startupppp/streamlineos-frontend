@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   format,
   startOfWeek,
   endOfWeek,
   eachDayOfInterval,
   isWithinInterval,
+  differenceInCalendarDays,
 } from "date-fns";
 import { toast } from "sonner";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
@@ -14,19 +15,45 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyLeaveIllustration } from "@/components/illustrations";
-import { Filter, Download, CalendarDays, TrendingUp, History } from "lucide-react";
+import {
+  Filter,
+  Download,
+  CalendarDays,
+  TrendingUp,
+  History,
+  MoreVertical,
+  Eye,
+  Check,
+  X,
+  RotateCcw,
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { useCancelLeave, useApproveLeaveDedicated, useRejectLeaveDedicated, useRevertLeave } from "@/hooks/api/hr";
 import { cn, resolveImageUrl } from "@/lib/utils";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 
 import type {
   LeaveBalance,
   LeaveRequest,
   ApprovedLeave,
 } from "./leaves-shared";
-import { BalanceCard, RequestHistoryRow } from "./leaves-shared";
+import { BalanceCard, balanceCardConfig, DEFAULT_CARD_CONFIG, priorityConfig } from "./leaves-shared";
 import { useCan } from "@/hooks/api/access";
 import { useLeavePolicy } from "@/hooks/api/hr";
 
@@ -248,6 +275,146 @@ function LeaveCalendarWidget({
   );
 }
 
+interface RequestActionCellProps {
+  request: LeaveRequest;
+  isAdmin: boolean;
+  isSelf: boolean;
+  onApprove?: (id: number) => void;
+  onReject?: (id: number, reason?: string) => void;
+  onRevert?: (id: number) => void;
+  onCancel?: (id: number) => void;
+}
+
+function RequestActionCell({
+  request,
+  isAdmin,
+  isSelf,
+  onApprove,
+  onReject,
+  onRevert,
+  onCancel,
+}: RequestActionCellProps) {
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+
+  const status = request.status ?? "PENDING";
+
+  function handleOpenRejectDialog() {
+    setRejectReason("");
+    setRejectDialogOpen(true);
+  }
+
+  function handleCloseRejectDialog() {
+    setRejectDialogOpen(false);
+  }
+
+  function handleConfirmReject() {
+    setRejectDialogOpen(false);
+    onReject?.(request.id, rejectReason || undefined);
+  }
+
+  function handleRejectReasonChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
+    setRejectReason(e.target.value);
+  }
+
+  function handleCancelRequest() {
+    onCancel?.(request.id);
+  }
+
+  function handleApproveRequest() {
+    onApprove?.(request.id);
+  }
+
+  function handleRevertRequest() {
+    onRevert?.(request.id);
+  }
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            aria-label="Actions"
+          >
+            <MoreVertical className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem>
+            <Eye className="mr-2 h-4 w-4" />
+            View Details
+          </DropdownMenuItem>
+          {isSelf && status === "PENDING" && onCancel && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={handleCancelRequest}
+                className="text-slate-600"
+              >
+                <X className="mr-2 h-4 w-4" />
+                Cancel Request
+              </DropdownMenuItem>
+            </>
+          )}
+          {isAdmin && (
+            <>
+              <DropdownMenuSeparator />
+              {status !== "APPROVED" && status !== "CANCELLED" && (
+                <DropdownMenuItem
+                  onClick={handleApproveRequest}
+                  className="text-emerald-600"
+                >
+                  <Check className="mr-2 h-4 w-4" />
+                  Approve
+                </DropdownMenuItem>
+              )}
+              {status !== "REJECTED" && status !== "CANCELLED" && (
+                <DropdownMenuItem
+                  onClick={handleOpenRejectDialog}
+                  className="text-rose-600"
+                >
+                  <X className="mr-2 h-4 w-4" />
+                  Reject
+                </DropdownMenuItem>
+              )}
+              {(status === "APPROVED" || status === "REJECTED") && (
+                <DropdownMenuItem onClick={handleRevertRequest}>
+                  <RotateCcw className="mr-2 h-4 w-4" />
+                  Revert to Pending
+                </DropdownMenuItem>
+              )}
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rejection reason</DialogTitle>
+          </DialogHeader>
+          <Textarea
+            placeholder="Reason (optional)"
+            value={rejectReason}
+            onChange={handleRejectReasonChange}
+            className="min-h-[80px] resize-none"
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCloseRejectDialog}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleConfirmReject}>
+              Reject
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
 interface LeavesTabContentProps {
   balances: LeaveBalance[];
   myLeaveRequests: LeaveRequest[];
@@ -367,6 +534,175 @@ export function LeavesTabContent({
     }
   }, [myLeaveRequests]);
 
+  const columns = useMemo<DataTableColumn<LeaveRequest>[]>(
+    () => [
+      {
+        key: "type",
+        header: "Type",
+        cell: (row) => {
+          const typeName = row.leaveType?.name ?? "Leave";
+          const config = balanceCardConfig[typeName] ?? DEFAULT_CARD_CONFIG;
+          const Icon = config.icon;
+          return (
+            <div className="flex items-center gap-2.5">
+              <div
+                className={cn(
+                  "h-7 w-7 rounded-lg flex items-center justify-center",
+                  config.iconBg,
+                )}
+              >
+                <Icon
+                  className={cn("h-3.5 w-3.5", config.iconColor)}
+                  aria-hidden="true"
+                />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground leading-tight truncate">
+                  {typeName.replace(" Leave", "")}
+                </p>
+                <p className="text-[10px] text-muted-foreground">Leave</p>
+              </div>
+            </div>
+          );
+        },
+      },
+      {
+        key: "dateRequested",
+        header: "Date Requested",
+        cell: (row) => {
+          const createdAt = row.createdAt
+            ? new Date(row.createdAt)
+            : new Date(row.startDate);
+          return (
+            <span className="text-xs text-muted-foreground tabular-nums">
+              {format(createdAt, "MMM d, yyyy")}
+            </span>
+          );
+        },
+        className: "hidden md:table-cell",
+        headerClassName: "hidden md:table-cell",
+      },
+      {
+        key: "period",
+        header: "Period",
+        cell: (row) => {
+          const start = new Date(row.startDate);
+          const end = new Date(row.endDate);
+          const days = differenceInCalendarDays(end, start) + 1;
+          const periodStr =
+            days === 1
+              ? format(start, "MMM d")
+              : `${format(start, "MMM d")} – ${format(end, "MMM d")}`;
+          return (
+            <span className="text-xs text-foreground font-medium">
+              {periodStr}
+            </span>
+          );
+        },
+      },
+      {
+        key: "days",
+        header: "Days",
+        cell: (row) => {
+          const start = new Date(row.startDate);
+          const end = new Date(row.endDate);
+          const days = differenceInCalendarDays(end, start) + 1;
+          return (
+            <span className="text-xs text-center font-semibold tabular-nums text-foreground">
+              {days}
+            </span>
+          );
+        },
+      },
+      {
+        key: "priority",
+        header: "Priority",
+        cell: (row) => {
+          const priority = row.priority ?? "MEDIUM";
+          const pConfig =
+            priorityConfig[priority] ??
+            priorityConfig["MEDIUM"] ?? {
+              label: "Medium",
+              dotColor: "bg-amber-500",
+              textColor: "text-amber-600",
+            };
+          return (
+            <div className="flex items-center gap-1.5">
+              <span className={cn("h-1.5 w-1.5 rounded-full", pConfig.dotColor)} />
+              <span className={cn("text-[10px] font-semibold", pConfig.textColor)}>
+                {pConfig.label}
+              </span>
+            </div>
+          );
+        },
+        className: "hidden md:table-cell",
+        headerClassName: "hidden md:table-cell",
+      },
+      {
+        key: "status",
+        header: "Status",
+        cell: (row) => {
+          const status = row.status ?? "PENDING";
+          const statusBadgeClass =
+            status === "PENDING"
+              ? "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800"
+              : status === "APPROVED"
+                ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800"
+                : status === "CANCELLED"
+                  ? "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700"
+                  : "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800";
+          return (
+            <div className="flex flex-col gap-0.5">
+              <span
+                className={cn(
+                  "inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border w-fit",
+                  statusBadgeClass,
+                )}
+              >
+                {status.charAt(0) + status.slice(1).toLowerCase()}
+              </span>
+              {row.managerComment && (
+                <span
+                  className="text-[10px] text-muted-foreground truncate max-w-[120px]"
+                  title={row.managerComment}
+                >
+                  &ldquo;{row.managerComment}&rdquo;
+                </span>
+              )}
+              {status === "REJECTED" && row.rejectionReason && (
+                <span
+                  className="text-[10px] text-rose-500 dark:text-rose-400 truncate max-w-[120px]"
+                  title={row.rejectionReason}
+                >
+                  {row.rejectionReason}
+                </span>
+              )}
+            </div>
+          );
+        },
+      },
+      {
+        key: "action",
+        header: "Action",
+        cell: (row) => (
+          <div className="flex justify-end">
+            <RequestActionCell
+              request={row}
+              isAdmin={isAdmin}
+              isSelf
+              onApprove={handleApproveRequest}
+              onReject={handleRejectRequest}
+              onRevert={handleRevertRequest}
+              onCancel={handleCancelRequest}
+            />
+          </div>
+        ),
+        headerClassName: "text-right",
+      },
+    ],
+    [isAdmin, handleApproveRequest, handleRejectRequest, handleRevertRequest, handleCancelRequest],
+  );
+
   return (
     <div className="space-y-4">
       <div className="space-y-0.5">
@@ -436,63 +772,20 @@ export function LeavesTabContent({
           </div>
         </CardHeader>
         <CardContent className="pt-0" aria-live="polite">
-          {myLeaveRequests.length === 0 ? (
-            <EmptyState
-              illustration={<EmptyLeaveIllustration />}
-              title="No leave requests"
-              description="You haven't submitted any leave requests yet."
-              className="flex-1"
-            />
-          ) : (
-            <ScrollArea className="w-full" type="auto">
-              <div className="min-w-[600px] rounded-lg border border-border overflow-hidden">
-                <table className="w-full">
-                  <caption className="sr-only">
-                    Your leave request history
-                  </caption>
-                  <thead className="bg-muted/40">
-                    <tr>
-                      <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider py-2.5 px-3">
-                        Type
-                      </th>
-                      <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider py-2.5 px-3 hidden md:table-cell">
-                        Date Requested
-                      </th>
-                      <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider py-2.5 px-3">
-                        Period
-                      </th>
-                      <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider py-2.5 px-3">
-                        Days
-                      </th>
-                      <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider py-2.5 px-3 hidden md:table-cell">
-                        Priority
-                      </th>
-                      <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider py-2.5 px-3">
-                        Status
-                      </th>
-                      <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider py-2.5 px-3">
-                        Action
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {myLeaveRequests.map((req) => (
-                      <RequestHistoryRow
-                        key={req.id}
-                        request={req}
-                        isAdmin={isAdmin}
-                        isSelf
-                        onApprove={handleApproveRequest}
-                        onReject={handleRejectRequest}
-                        onRevert={handleRevertRequest}
-                        onCancel={handleCancelRequest}
-                      />
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </ScrollArea>
-          )}
+          <DataTable
+            data={myLeaveRequests}
+            columns={columns}
+            getRowKey={(row) => row.id}
+            minWidth="600px"
+            emptyState={
+              <EmptyState
+                illustration={<EmptyLeaveIllustration />}
+                title="No leave requests"
+                description="You haven't submitted any leave requests yet."
+                className="flex-1"
+              />
+            }
+          />
         </CardContent>
       </Card>
     </div>

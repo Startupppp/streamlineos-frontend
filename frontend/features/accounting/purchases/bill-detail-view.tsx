@@ -1,14 +1,7 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Button } from "@/components/ui/button";
 import type { PurchaseBill, PurchaseBillStatus } from "@/types/accounting";
@@ -61,6 +54,100 @@ function formatNum(value: string | number): string {
       })
     : "—";
 }
+
+type BillItem = PurchaseBill["items"][number];
+type BillPayment = NonNullable<PurchaseBill["payments"]>[number];
+
+const ITEM_COLUMNS: DataTableColumn<BillItem>[] = [
+  {
+    key: "description",
+    header: "Description",
+    cell: (row) => <span className="text-sm text-foreground">{row.description}</span>,
+  },
+  {
+    key: "hsnSacCode",
+    header: "HSN/SAC",
+    cell: (row) => (
+      <span className="text-sm font-mono text-muted-foreground">{row.hsnSacCode ?? "—"}</span>
+    ),
+  },
+  {
+    key: "quantity",
+    header: "Qty",
+    headerClassName: "text-right",
+    className: "text-right font-mono text-sm tabular-nums",
+    cell: (row) => formatNum(row.quantity),
+  },
+  {
+    key: "rate",
+    header: "Rate",
+    headerClassName: "text-right",
+    className: "text-right font-mono text-sm tabular-nums",
+    cell: (row) => formatNum(row.rate),
+  },
+  {
+    key: "gstRate",
+    header: "GST %",
+    headerClassName: "text-right",
+    className: "text-right text-sm tabular-nums",
+    cell: (row) => `${formatNum(row.gstRate)}%`,
+  },
+  {
+    key: "amount",
+    header: "Amount",
+    headerClassName: "text-right",
+    className: "text-right font-mono text-sm tabular-nums",
+    cell: (row) => formatNum(row.amount),
+  },
+  {
+    key: "tax",
+    header: "Tax",
+    headerClassName: "text-right",
+    className: "text-right font-mono text-sm tabular-nums text-muted-foreground",
+    cell: (row) =>
+      formatNum(
+        (Number(row.quantity) * Number(row.rate) * Number(row.gstRate)) / 100,
+      ),
+  },
+  {
+    key: "total",
+    header: "Total",
+    headerClassName: "text-right",
+    className: "text-right font-mono text-sm tabular-nums font-medium",
+    cell: (row) =>
+      formatNum(
+        Number(row.quantity) * Number(row.rate) * (1 + Number(row.gstRate) / 100),
+      ),
+  },
+];
+
+const PAYMENT_COLUMNS: DataTableColumn<BillPayment>[] = [
+  {
+    key: "paymentDate",
+    header: "Date",
+    className: "text-sm tabular-nums",
+    cell: (row) => formatDate(row.paymentDate),
+  },
+  {
+    key: "paymentMethod",
+    header: "Method",
+    className: "text-sm",
+    cell: (row) => PAYMENT_METHOD_LABEL[row.paymentMethod] ?? row.paymentMethod,
+  },
+  {
+    key: "referenceNumber",
+    header: "Reference",
+    className: "text-sm text-muted-foreground font-mono",
+    cell: (row) => row.referenceNumber ?? "—",
+  },
+  {
+    key: "amount",
+    header: "Amount",
+    headerClassName: "text-right",
+    className: "text-right font-mono text-sm tabular-nums font-medium",
+    cell: (row) => formatNum(row.amount),
+  },
+];
 
 interface BillDetailViewProps {
   bill: PurchaseBill;
@@ -177,62 +264,15 @@ export function BillDetailView({
         </CardContent>
       </Card>
 
-      <div className="rounded-lg border border-border overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Description</TableHead>
-              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">HSN/SAC</TableHead>
-              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Qty</TableHead>
-              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Rate</TableHead>
-              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">GST %</TableHead>
-              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Amount</TableHead>
-              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Tax</TableHead>
-              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Total</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {bill.items.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={8} className="text-center text-sm text-muted-foreground py-8">
-                  No line items
-                </TableCell>
-              </TableRow>
-            ) : (
-              bill.items.map((item) => (
-                <TableRow key={item.id} className="border-b border-border/50 hover:bg-muted/30">
-                  <TableCell className="text-sm text-foreground">{item.description}</TableCell>
-                  <TableCell className="text-sm font-mono text-muted-foreground">
-                    {item.hsnSacCode ?? "—"}
-                  </TableCell>
-                  <TableCell className="text-right font-mono text-sm tabular-nums">
-                    {formatNum(item.quantity)}
-                  </TableCell>
-                  <TableCell className="text-right font-mono text-sm tabular-nums">
-                    {formatNum(item.rate)}
-                  </TableCell>
-                  <TableCell className="text-right text-sm tabular-nums">
-                    {formatNum(item.gstRate)}%
-                  </TableCell>
-                  <TableCell className="text-right font-mono text-sm tabular-nums">
-                    {formatNum(item.amount)}
-                  </TableCell>
-                  <TableCell className="text-right font-mono text-sm tabular-nums text-muted-foreground">
-                    {formatNum(
-                      (Number(item.quantity) * Number(item.rate) * Number(item.gstRate)) / 100,
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right font-mono text-sm tabular-nums font-medium">
-                    {formatNum(
-                      Number(item.quantity) * Number(item.rate) * (1 + Number(item.gstRate) / 100),
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      <DataTable
+        data={bill.items}
+        columns={ITEM_COLUMNS}
+        getRowKey={(row) => row.id}
+        emptyState={
+          <p className="text-center text-sm text-muted-foreground py-8">No line items</p>
+        }
+        minWidth="760px"
+      />
 
       <div className="flex justify-end">
         <Card className="w-full max-w-sm">
@@ -286,36 +326,11 @@ export function BillDetailView({
       {bill.payments && bill.payments.length > 0 && (
         <div className="space-y-2">
           <h2 className="text-sm font-semibold text-foreground">Payments</h2>
-          <div className="rounded-lg border border-border overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Date</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Method</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Reference</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Amount</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {bill.payments.map((payment) => (
-                  <TableRow key={payment.id} className="border-b border-border/50 hover:bg-muted/30">
-                    <TableCell className="text-sm tabular-nums">
-                      {formatDate(payment.paymentDate)}
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {PAYMENT_METHOD_LABEL[payment.paymentMethod] ?? payment.paymentMethod}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground font-mono">
-                      {payment.referenceNumber ?? "—"}
-                    </TableCell>
-                    <TableCell className="text-right font-mono text-sm tabular-nums font-medium">
-                      {formatNum(payment.amount)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <DataTable
+            data={bill.payments}
+            columns={PAYMENT_COLUMNS}
+            getRowKey={(row) => row.id}
+          />
         </div>
       )}
     </div>

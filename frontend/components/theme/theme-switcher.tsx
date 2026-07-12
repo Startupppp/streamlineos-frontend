@@ -2,15 +2,10 @@
 
 import { Check, Palette } from "lucide-react";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { APP_THEMES, type AppTheme } from "@/lib/theme/app-themes";
 import { useAppTheme } from "./app-theme-provider";
@@ -46,37 +41,26 @@ function ThemeOption({ theme }: { theme: AppTheme }) {
   );
 }
 
-function renderThemeOption(theme: AppTheme) {
-  return <ThemeOption key={theme.id} theme={theme} />;
+function ThemeOptionsGrid() {
+  return (
+    <div className="grid grid-cols-2 gap-1.5">
+      {APP_THEMES.map((theme) => (
+        <ThemeOption key={theme.id} theme={theme} />
+      ))}
+    </div>
+  );
 }
 
-export function ThemeSwitcher() {
+export function ThemeMenuSubmenu() {
   return (
-    <Popover>
-      <Tooltip delayDuration={0}>
-        <TooltipTrigger asChild>
-          <PopoverTrigger asChild>
-            <button
-              type="button"
-              aria-label="Interface theme"
-              className="h-8 w-8 rounded-lg flex items-center justify-center text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
-            >
-              <Palette className="h-4 w-4" />
-            </button>
-          </PopoverTrigger>
-        </TooltipTrigger>
-        <TooltipContent side="bottom" className="text-xs">
-          Interface theme
-        </TooltipContent>
-      </Tooltip>
-      <PopoverContent align="end" sideOffset={8} className="w-64 p-2">
-        <p className="px-1 pb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-          Interface theme
-        </p>
-        <div className="grid grid-cols-2 gap-1.5">
-          {APP_THEMES.map(renderThemeOption)}
-        </div>
-      </PopoverContent>
-    </Popover>
+    <DropdownMenuSub>
+      <DropdownMenuSubTrigger>
+        <Palette className="h-3.5 w-3.5" />
+        Interface theme
+      </DropdownMenuSubTrigger>
+      <DropdownMenuSubContent className="w-64 p-2">
+        <ThemeOptionsGrid />
+      </DropdownMenuSubContent>
+    </DropdownMenuSub>
   );
 }

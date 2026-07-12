@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useInterviews } from "@/hooks/api/hr";
 import { useBulkRescheduleInterviews } from "@/hooks/api/hr/recruitment";
 import { InterviewFeedbackForm } from "@/features/hr/recruitment/interview-feedback-form";
@@ -8,17 +8,8 @@ import type { Interview } from "@/types/hr";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { toast } from "sonner";
-import { Checkbox } from "@/components/ui/checkbox";
 import { X, CheckCircle2, XCircle, Clock, CalendarClock, Users, MessageSquare } from "lucide-react";
 import { format } from "date-fns";
 import { EmptyCalendarIllustration } from "@/components/illustrations";
@@ -101,75 +92,6 @@ function CandidateAvatar({ firstName, lastName }: { firstName?: string; lastName
   );
 }
 
-interface InterviewTableRowProps {
-  interview: Interview;
-  isSelected: boolean;
-  onToggleSelect: (id: number) => void;
-  onFeedback: (interview: Interview) => void;
-}
-
-function InterviewTableRow({ interview, isSelected, onToggleSelect, onFeedback }: InterviewTableRowProps) {
-  const handleToggleSelect = useCallback(() => onToggleSelect(interview.id), [onToggleSelect, interview.id]);
-  const handleFeedback = useCallback(() => onFeedback(interview), [onFeedback, interview]);
-  const panelIds = interview.panelInterviewerIds;
-
-  return (
-    <TableRow
-      className={cn(
-        "transition-colors duration-150",
-        isSelected && "bg-primary/5 hover:bg-primary/8"
-      )}
-    >
-      <TableCell className="pl-4">
-        <Checkbox
-          checked={isSelected}
-          onCheckedChange={handleToggleSelect}
-          aria-label={`Select interview for ${interview.candidate?.firstName} ${interview.candidate?.lastName}`}
-        />
-      </TableCell>
-      <TableCell>
-        <div className="flex items-center gap-2.5">
-          <CandidateAvatar
-            firstName={interview.candidate?.firstName}
-            lastName={interview.candidate?.lastName}
-          />
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-foreground truncate">
-              {interview.candidate?.firstName} {interview.candidate?.lastName}
-            </p>
-          </div>
-        </div>
-      </TableCell>
-      <TableCell>
-        <TypeBadge type={interview.type} panelCount={panelIds?.length} />
-      </TableCell>
-      <TableCell>
-        <div className="text-sm">
-          <p className="font-medium text-foreground">{format(new Date(interview.scheduledAt), "MMM d, yyyy")}</p>
-          <p className="text-[11px] text-muted-foreground">{format(new Date(interview.scheduledAt), "h:mm a")}</p>
-        </div>
-      </TableCell>
-      <TableCell>
-        <span className="text-sm text-muted-foreground">{interview.duration} min</span>
-      </TableCell>
-      <TableCell>
-        <ResultBadge result={interview.result} />
-      </TableCell>
-      <TableCell>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-7 text-xs gap-1.5 text-muted-foreground hover:text-foreground"
-          onClick={handleFeedback}
-        >
-          <MessageSquare className="h-3 w-3" />
-          Feedback
-        </Button>
-      </TableCell>
-    </TableRow>
-  );
-}
-
 export function InterviewList() {
   const { data: interviews } = useInterviews();
   const bulkReschedule = useBulkRescheduleInterviews();
@@ -200,24 +122,6 @@ export function InterviewList() {
     );
   }, [bulkNewDate, selectedIds, bulkReschedule]);
 
-  const toggleSelect = useCallback((id: number) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }, []);
-
-  const toggleSelectAll = useCallback(() => {
-    if (!interviews) return;
-    setSelectedIds((prev) =>
-      prev.size === interviews.length
-        ? new Set()
-        : new Set(interviews.map((iv) => iv.id)),
-    );
-  }, [interviews]);
-
   function handleBulkDateChange(e: React.ChangeEvent<HTMLInputElement>) {
     setBulkNewDate(e.target.value);
   }
@@ -229,6 +133,82 @@ export function InterviewList() {
 
   function handleFeedbackClose(open: boolean) {
     if (!open) setFeedbackInterview(null);
+  }
+
+  function handleSelectionChange(sel: Set<string | number>) {
+    setSelectedIds(new Set([...sel].map(Number)));
+  }
+
+  const columns = useMemo<DataTableColumn<Interview>[]>(() => [
+    {
+      key: "candidate",
+      header: "Candidate",
+      cell: (interview) => (
+        <div className="flex items-center gap-2.5">
+          <CandidateAvatar
+            firstName={interview.candidate?.firstName}
+            lastName={interview.candidate?.lastName}
+          />
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-foreground truncate">
+              {interview.candidate?.firstName} {interview.candidate?.lastName}
+            </p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "type",
+      header: "Type",
+      cell: (interview) => (
+        <TypeBadge
+          type={interview.type}
+          panelCount={interview.panelInterviewerIds?.length}
+        />
+      ),
+    },
+    {
+      key: "scheduledAt",
+      header: "Scheduled",
+      cell: (interview) => (
+        <div className="text-sm">
+          <p className="font-medium text-foreground">{format(new Date(interview.scheduledAt), "MMM d, yyyy")}</p>
+          <p className="text-[11px] text-muted-foreground">{format(new Date(interview.scheduledAt), "h:mm a")}</p>
+        </div>
+      ),
+    },
+    {
+      key: "duration",
+      header: "Duration",
+      cell: (interview) => (
+        <span className="text-sm text-muted-foreground">{interview.duration} min</span>
+      ),
+    },
+    {
+      key: "result",
+      header: "Result",
+      cell: (interview) => <ResultBadge result={interview.result} />,
+    },
+    {
+      key: "feedback",
+      header: "",
+      className: "w-[90px]",
+      cell: (interview) => (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 text-xs gap-1.5 text-muted-foreground hover:text-foreground"
+          onClick={() => setFeedbackInterview(interview)}
+        >
+          <MessageSquare className="h-3 w-3" />
+          Feedback
+        </Button>
+      ),
+    },
+  ], []);
+
+  function getRowKey(interview: Interview) {
+    return interview.id;
   }
 
   return (
@@ -270,54 +250,22 @@ export function InterviewList() {
 
       <Card className="overflow-hidden">
         <CardContent className="p-0">
-          <ScrollArea className="w-full" type="auto">
-            <div className="min-w-[820px]">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/40 hover:bg-muted/40">
-                    <TableHead className="w-10 pl-4">
-                      <Checkbox
-                        checked={!!interviews?.length && selectedIds.size === interviews.length}
-                        onCheckedChange={toggleSelectAll}
-                        aria-label="Select all interviews"
-                      />
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Candidate</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Type</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Scheduled</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Duration</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Result</TableHead>
-                    <TableHead className="w-[90px]" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {!interviews?.length ? (
-                    <TableRow>
-                      <TableCell colSpan={7} className="p-0">
-                        <RecruitmentEmptyState
-                          illustration={<EmptyCalendarIllustration />}
-                          title="No interviews scheduled"
-                          description="Schedule interviews to track candidate progress"
-                          compact
-                          className="border-0 bg-transparent shadow-none"
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    interviews.map((interview) => (
-                      <InterviewTableRow
-                        key={interview.id}
-                        interview={interview}
-                        isSelected={selectedIds.has(interview.id)}
-                        onToggleSelect={toggleSelect}
-                        onFeedback={setFeedbackInterview}
-                      />
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </ScrollArea>
+          <DataTable
+            data={interviews ?? []}
+            columns={columns}
+            getRowKey={getRowKey}
+            selection={{ selected: selectedIds, onChange: handleSelectionChange }}
+            minWidth="820px"
+            emptyState={
+              <RecruitmentEmptyState
+                illustration={<EmptyCalendarIllustration />}
+                title="No interviews scheduled"
+                description="Schedule interviews to track candidate progress"
+                compact
+                className="border-0 bg-transparent shadow-none"
+              />
+            }
+          />
         </CardContent>
       </Card>
 

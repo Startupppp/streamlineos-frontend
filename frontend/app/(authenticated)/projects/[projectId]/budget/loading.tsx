@@ -7,6 +7,7 @@ export default function BudgetLoading() {
       title="Budget"
       eyebrow="Project"
       subtitle="Planned budget vs actual cost from billable timesheets"
+      actions={<Skeleton className="h-8 w-32 rounded-md" />}
     >
       <div className="space-y-4">
         <Skeleton className="h-10 w-48 rounded-lg" />

@@ -14,10 +14,19 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { CheckCircle2, AlertCircle } from "lucide-react";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   useHrImportJob,
   useRollbackImportJob,
 } from "@/hooks/api/hr/import-export";
+
+type ErrorRow = { row: number; field: string | null | undefined; message: string; _idx: number };
+
+const errorColumns: DataTableColumn<ErrorRow>[] = [
+  { key: "row", header: "Row", cell: (r) => <span className="tabular-nums text-muted-foreground">{r.row}</span> },
+  { key: "field", header: "Field", cell: (r) => <span className="font-mono text-muted-foreground">{r.field ?? "—"}</span> },
+  { key: "message", header: "Message", cell: (r) => <span className="text-red-700">{r.message}</span> },
+];
 
 interface JobErrorsSheetProps {
   jobId: string;
@@ -29,6 +38,7 @@ export function JobErrorsSheet({ jobId, open, onOpenChange }: JobErrorsSheetProp
   const { data: detail, isLoading } = useHrImportJob(open ? jobId : null);
   const job = detail?.job;
   const rollback = useRollbackImportJob();
+  const errorRows: ErrorRow[] = (job?.errors ?? []).map((e, i) => ({ ...e, _idx: i }));
 
   const handleRollback = useCallback(() => {
     if (!job) return;

@@ -1,24 +1,16 @@
 "use client";
 
-import { useState, type ChangeEvent } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { LoadingState } from "@/components/shared/loading-state";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { useAgedReceivables } from "@/hooks/api/accounting";
 import { getErrorMessage } from "@/lib/get-error-message";
+import type { AgedReceivablesRow } from "@/types/accounting";
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
@@ -27,6 +19,66 @@ function todayIso(): string {
 function formatAmount(value: string): string {
   return Number(value).toFixed(2);
 }
+
+const agedReceivablesColumns: DataTableColumn<AgedReceivablesRow>[] = [
+  {
+    key: "clientName",
+    header: "Customer",
+    cell: (row) => (
+      <Link href={"/accounting/customers/" + String(row.clientId)} className="text-blue-600 hover:underline">
+        {row.clientName}
+      </Link>
+    ),
+  },
+  {
+    key: "current",
+    header: "Current",
+    cell: (row) => <span className="tabular-nums font-mono text-sm">{formatAmount(row.current)}</span>,
+    className: "text-right",
+    sortable: true,
+    sortValue: (row) => parseFloat(row.current),
+  },
+  {
+    key: "d1_30",
+    header: "1–30 days",
+    cell: (row) => <span className="tabular-nums font-mono text-sm">{formatAmount(row.d1_30)}</span>,
+    className: "text-right",
+    sortable: true,
+    sortValue: (row) => parseFloat(row.d1_30),
+  },
+  {
+    key: "d31_60",
+    header: "31–60 days",
+    cell: (row) => <span className="tabular-nums font-mono text-sm">{formatAmount(row.d31_60)}</span>,
+    className: "text-right",
+    sortable: true,
+    sortValue: (row) => parseFloat(row.d31_60),
+  },
+  {
+    key: "d61_90",
+    header: "61–90 days",
+    cell: (row) => <span className="tabular-nums font-mono text-sm">{formatAmount(row.d61_90)}</span>,
+    className: "text-right",
+    sortable: true,
+    sortValue: (row) => parseFloat(row.d61_90),
+  },
+  {
+    key: "d91_plus",
+    header: "90+ days",
+    cell: (row) => <span className="tabular-nums text-rose-600 font-mono text-sm">{formatAmount(row.d91_plus)}</span>,
+    className: "text-right",
+    sortable: true,
+    sortValue: (row) => parseFloat(row.d91_plus),
+  },
+  {
+    key: "total",
+    header: "Total",
+    cell: (row) => <span className="tabular-nums font-medium font-mono text-sm">{formatAmount(row.total)}</span>,
+    className: "text-right",
+    sortable: true,
+    sortValue: (row) => parseFloat(row.total),
+  },
+];
 
 export default function AgedReceivablesPage() {
   const [asOf, setAsOf] = useState<string>(todayIso());
@@ -55,85 +107,33 @@ export default function AgedReceivablesPage() {
         </div>
       }
     >
-      {query.isLoading ? (
-        <LoadingState variant="table" />
-      ) : query.error ? (
+      {query.error ? (
         <ErrorState description={getErrorMessage(query.error)} onRetry={handleRetry} />
-      ) : !report || report.rows.length === 0 ? (
-        <EmptyState
-          illustration={<EmptyExpensesIllustration />}
-          title="No outstanding receivables"
-          description={`No customer balances are overdue as of ${asOf}.`}
-        />
       ) : (
-        <div className="rounded-lg border border-border overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Customer</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Current</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">1–30 days</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">31–60 days</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">61–90 days</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">90+ days</TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Total</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {report.rows.map((row) => (
-                <TableRow key={row.clientId} className="border-b border-border/50 hover:bg-muted/30">
-                  <TableCell>
-                    <Link
-                      href={`/accounting/customers/${row.clientId}`}
-                      className="text-blue-600 hover:underline"
-                    >
-                      {row.clientName}
-                    </Link>
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums font-mono text-sm">
-                    {formatAmount(row.current)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums font-mono text-sm">
-                    {formatAmount(row.d1_30)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums font-mono text-sm">
-                    {formatAmount(row.d31_60)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums font-mono text-sm">
-                    {formatAmount(row.d61_90)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums text-rose-600 font-mono text-sm">
-                    {formatAmount(row.d91_plus)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums font-medium font-mono text-sm">
-                    {formatAmount(row.total)}
-                  </TableCell>
-                </TableRow>
-              ))}
-              <TableRow className="font-medium bg-muted/40">
-                <TableCell>Total</TableCell>
-                <TableCell className="text-right tabular-nums font-mono text-sm">
-                  {formatAmount(report.totals.current)}
-                </TableCell>
-                <TableCell className="text-right tabular-nums font-mono text-sm">
-                  {formatAmount(report.totals.d1_30)}
-                </TableCell>
-                <TableCell className="text-right tabular-nums font-mono text-sm">
-                  {formatAmount(report.totals.d31_60)}
-                </TableCell>
-                <TableCell className="text-right tabular-nums font-mono text-sm">
-                  {formatAmount(report.totals.d61_90)}
-                </TableCell>
-                <TableCell className="text-right tabular-nums text-rose-600 font-mono text-sm">
-                  {formatAmount(report.totals.d91_plus)}
-                </TableCell>
-                <TableCell className="text-right tabular-nums font-mono text-sm">
-                  {formatAmount(report.totals.total)}
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </div>
+        <DataTable
+          data={report?.rows ?? []}
+          columns={agedReceivablesColumns}
+          getRowKey={(row) => row.clientId}
+          isLoading={query.isLoading}
+          emptyState={
+            <EmptyState
+              illustration={<EmptyExpensesIllustration />}
+              title="No outstanding receivables"
+              description={`No customer balances are overdue as of ${asOf}.`}
+            />
+          }
+          footer={report ? (
+            <div className="grid grid-cols-7 gap-2 text-xs font-semibold tabular-nums font-mono">
+              <span>Total</span>
+              <span className="text-right">{formatAmount(report.totals.current)}</span>
+              <span className="text-right">{formatAmount(report.totals.d1_30)}</span>
+              <span className="text-right">{formatAmount(report.totals.d31_60)}</span>
+              <span className="text-right">{formatAmount(report.totals.d61_90)}</span>
+              <span className="text-right text-rose-600">{formatAmount(report.totals.d91_plus)}</span>
+              <span className="text-right">{formatAmount(report.totals.total)}</span>
+            </div>
+          ) : undefined}
+        />
       )}
     </PageWrapper>
   );

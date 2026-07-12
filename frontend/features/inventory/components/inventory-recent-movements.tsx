@@ -3,16 +3,8 @@
 import { Badge } from "@/components/ui/badge";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState } from "@/components/shared";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableHead,
-  TableRow,
-  TableCell,
-} from "@/components/ui/table";
-import { useStockTransactions, type TransactionType } from "@/hooks/api/inventory/stock";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { useStockTransactions, type TransactionType, type StockTransaction } from "@/hooks/api/inventory/stock";
 
 const MOVEMENT_TYPE_CONFIG: Record<TransactionType, { label: string; className: string }> = {
   PURCHASE: { label: "Purchase", className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
@@ -37,22 +29,106 @@ function formatDateTime(dateStr: string): string {
   });
 }
 
-function MovementsTableSkeleton() {
+function renderDateCell(row: StockTransaction) {
+  return formatDateTime(row.createdAt);
+}
+
+function renderProductCell(row: StockTransaction) {
   return (
-    <div className="divide-y divide-border">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="h-8 flex items-center gap-2 px-2">
-          <Skeleton className="h-3 w-24 shrink-0" />
-          <Skeleton className="h-3 w-32 flex-1" />
-          <Skeleton className="h-4 w-20 rounded shrink-0" />
-          <Skeleton className="h-3 w-10 shrink-0" />
-          <Skeleton className="h-3 w-24 shrink-0" />
-          <Skeleton className="h-3 w-16 shrink-0" />
-        </div>
-      ))}
-    </div>
+    <>
+      <p className="text-[11px] font-medium text-foreground truncate max-w-[160px]">
+        {row.productVariant?.product?.name ?? row.productVariant?.name ?? "—"}
+      </p>
+      <p className="text-[11px] text-muted-foreground font-mono truncate">
+        {row.productVariant?.sku ?? "—"}
+      </p>
+    </>
   );
 }
+
+function renderTypeCell(row: StockTransaction) {
+  const config = MOVEMENT_TYPE_CONFIG[row.transactionType];
+  return (
+    <Badge variant="outline" className={`h-4 text-[9px] px-1.5 py-0 font-medium ${config.className}`}>
+      {config.label}
+    </Badge>
+  );
+}
+
+function renderQtyCell(row: StockTransaction) {
+  const absQty = Math.abs(row.quantityChange);
+  const isPositive = row.quantityChange >= 0;
+  return (
+    <span
+      className={`text-[11px] font-mono tabular-nums font-semibold ${
+        isPositive ? "text-emerald-600" : "text-red-600"
+      }`}
+    >
+      {isPositive ? `+${absQty}` : `-${absQty}`}
+    </span>
+  );
+}
+
+function renderLocationCell(row: StockTransaction) {
+  return (
+    <p className="text-[11px] text-foreground truncate max-w-[120px]">
+      {row.location?.name ?? "—"}
+    </p>
+  );
+}
+
+function renderUserCell(row: StockTransaction) {
+  return (
+    <span className="text-[11px] text-muted-foreground truncate max-w-[100px] block">
+      {row.creator?.name ?? "System"}
+    </span>
+  );
+}
+
+const MOVEMENTS_COLUMNS: DataTableColumn<StockTransaction>[] = [
+  {
+    key: "date",
+    header: "Date",
+    className: "text-muted-foreground whitespace-nowrap",
+    cell: renderDateCell,
+  },
+  {
+    key: "product",
+    header: "Product",
+    className: "min-w-0",
+    cell: renderProductCell,
+  },
+  {
+    key: "type",
+    header: "Type",
+    cell: renderTypeCell,
+  },
+  {
+    key: "qty",
+    header: "Qty",
+    headerClassName: "text-right",
+    className: "text-right",
+    cell: renderQtyCell,
+  },
+  {
+    key: "location",
+    header: "Location",
+    cell: renderLocationCell,
+  },
+  {
+    key: "user",
+    header: "User",
+    cell: renderUserCell,
+  },
+];
+
+const MOVEMENTS_EMPTY = (
+  <InventoryEmptyState
+    compact
+    title="No movements yet"
+    description="Stock transactions will appear here as items move in and out."
+  />
+);
 
 export function RecentMovementsTable() {
   const { data, isLoading, error, refetch } = useStockTransactions({ limit: 10 });
@@ -61,8 +137,6 @@ export function RecentMovementsTable() {
   function handleRetry(): void {
     void refetch();
   }
-
-  if (isLoading) return <MovementsTableSkeleton />;
 
   if (error) {
     return (
@@ -75,78 +149,13 @@ export function RecentMovementsTable() {
     );
   }
 
-  if (movements.length === 0) {
-    return (
-      <InventoryEmptyState
-        compact
-        title="No movements yet"
-        description="Stock transactions will appear here as items move in and out."
-      />
-    );
-  }
-
   return (
-    <Table>
-      <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
-        <TableRow className="border-b-2 border-border">
-          <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Date</TableHead>
-          <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Product</TableHead>
-          <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Type</TableHead>
-          <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Qty</TableHead>
-          <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Location</TableHead>
-          <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">User</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {movements.map((row) => {
-          const config = MOVEMENT_TYPE_CONFIG[row.transactionType];
-          const absQty = Math.abs(row.quantityChange);
-          const isPositive = row.quantityChange >= 0;
-
-          return (
-            <TableRow key={row.id} className="h-8 hover:bg-muted/30 transition-colors">
-              <TableCell className="px-2 py-1 text-[11px] text-muted-foreground whitespace-nowrap">
-                {formatDateTime(row.createdAt)}
-              </TableCell>
-              <TableCell className="px-2 py-1 min-w-0">
-                <p className="text-[11px] font-medium text-foreground truncate max-w-[160px]">
-                  {row.productVariant?.product?.name ?? row.productVariant?.name ?? "—"}
-                </p>
-                <p className="text-[11px] text-muted-foreground font-mono truncate">
-                  {row.productVariant?.sku ?? "—"}
-                </p>
-              </TableCell>
-              <TableCell className="px-2 py-1">
-                <Badge
-                  variant="outline"
-                  className={`h-4 text-[9px] px-1.5 py-0 font-medium ${config.className}`}
-                >
-                  {config.label}
-                </Badge>
-              </TableCell>
-              <TableCell className="px-2 py-1 text-right">
-                <span
-                  className={`text-[11px] font-mono tabular-nums font-semibold ${
-                    isPositive ? "text-emerald-600" : "text-red-600"
-                  }`}
-                >
-                  {isPositive ? `+${absQty}` : `-${absQty}`}
-                </span>
-              </TableCell>
-              <TableCell className="px-2 py-1">
-                <p className="text-[11px] text-foreground truncate max-w-[120px]">
-                  {row.location?.name ?? "—"}
-                </p>
-              </TableCell>
-              <TableCell className="px-2 py-1">
-                <span className="text-[11px] text-muted-foreground truncate max-w-[100px] block">
-                  {row.creator?.name ?? "System"}
-                </span>
-              </TableCell>
-            </TableRow>
-          );
-        })}
-      </TableBody>
-    </Table>
+    <DataTable
+      data={movements}
+      columns={MOVEMENTS_COLUMNS}
+      getRowKey={(row) => row.id}
+      isLoading={isLoading}
+      emptyState={MOVEMENTS_EMPTY}
+    />
   );
 }

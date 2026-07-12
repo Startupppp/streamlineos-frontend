@@ -190,7 +190,7 @@ function AIScoreDetails({
                 "text-[10px] px-1.5 py-0.5 rounded font-medium capitalize",
                 result.confidence === "high" ? "bg-emerald-50 text-emerald-700" :
                 result.confidence === "medium" ? "bg-amber-50 text-amber-700" :
-                "bg-slate-100 text-slate-600",
+                "bg-muted text-muted-foreground",
               )}>
                 {result.confidence} confidence
               </span>

@@ -47,11 +47,11 @@ interface Order {
 }
 
 const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
-  CREATED: "bg-slate-100 text-slate-600 border-0",
-  PROCESSING: "bg-blue-100 text-blue-700 border-0",
-  SHIPPED: "bg-amber-100 text-amber-700 border-0",
-  DELIVERED: "bg-emerald-100 text-emerald-700 border-0",
-  CANCELLED: "bg-red-100 text-red-700 border-0",
+  CREATED: "bg-muted text-muted-foreground border-0",
+  PROCESSING: "bg-blue-500/10 text-blue-700 border-0",
+  SHIPPED: "bg-amber-500/10 text-amber-700 border-0",
+  DELIVERED: "bg-emerald-500/10 text-emerald-700 border-0",
+  CANCELLED: "bg-red-500/10 text-red-700 border-0",
 };
 
 const ORDER_STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {

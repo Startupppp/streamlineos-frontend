@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertTriangle, Plus } from "lucide-react";
@@ -42,49 +41,61 @@ import {
   CHART_SEMANTIC,
 } from "@/features/hr/analytics/shared";
 import { cn } from "@/lib/utils";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+
+type BudgetVsActualRow = { departmentName: string; budgeted: number; actual: number; variance: number };
+
+const overviewColumns: DataTableColumn<BudgetVsActualRow>[] = [
+  {
+    key: "departmentName",
+    header: "Department",
+    cell: (row) => <span className="font-medium text-foreground">{row.departmentName}</span>,
+  },
+  {
+    key: "budgeted",
+    header: "Budgeted",
+    headerClassName: "text-right",
+    className: "text-right tabular-nums text-foreground",
+    cell: (row) => row.budgeted,
+  },
+  {
+    key: "actual",
+    header: "Actual",
+    headerClassName: "text-right",
+    className: "text-right tabular-nums text-foreground",
+    cell: (row) => row.actual,
+  },
+  {
+    key: "variance",
+    header: "Variance",
+    headerClassName: "text-right",
+    className: "text-right",
+    cell: (row) => (
+      <Badge
+        variant="secondary"
+        className={cn(
+          "tabular-nums",
+          row.variance >= 0 ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-600",
+        )}
+      >
+        {row.variance >= 0 ? "+" : ""}
+        {row.variance}
+      </Badge>
+    ),
+  },
+];
 
 function OverviewTab() {
   const { data: bva, isLoading } = useHrBudgetVsActual();
 
-  if (isLoading) return <SectionSkeleton rows={5} />;
-  if (!bva?.length) return <EmptyChart label="No budget data available" />;
-
   return (
-    <div className="overflow-x-auto rounded-lg border border-border/60">
-      <table className="w-full text-sm">
-        <thead className="bg-muted/40">
-          <tr>
-            <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Department</th>
-            <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">Budgeted</th>
-            <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">Actual</th>
-            <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">Variance</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-border/50">
-          {bva.map((row) => (
-            <tr key={row.departmentName} className="hover:bg-muted/20">
-              <td className="px-4 py-2.5 font-medium text-foreground">{row.departmentName}</td>
-              <td className="px-4 py-2.5 text-right tabular-nums text-foreground">{row.budgeted}</td>
-              <td className="px-4 py-2.5 text-right tabular-nums text-foreground">{row.actual}</td>
-              <td className="px-4 py-2.5 text-right">
-                <Badge
-                  variant="secondary"
-                  className={cn(
-                    "tabular-nums",
-                    row.variance >= 0
-                      ? "bg-emerald-50 text-emerald-700"
-                      : "bg-red-50 text-red-600",
-                  )}
-                >
-                  {row.variance >= 0 ? "+" : ""}
-                  {row.variance}
-                </Badge>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <DataTable
+      data={bva ?? []}
+      columns={overviewColumns}
+      getRowKey={(row) => row.departmentName}
+      isLoading={isLoading}
+      emptyState={<EmptyChart label="No budget data available" />}
+    />
   );
 }
 
@@ -189,16 +200,49 @@ function HiringPlansTab() {
     setSheetOpen(true);
   }
 
+  function handleClose() {
+    setSheetOpen(false);
+  }
+
+  function buildColumns(onEdit: (p: HeadcountPlan) => void): DataTableColumn<HeadcountPlan>[] {
+    return [
+      {
+        key: "fiscalYear",
+        header: "Fiscal Year",
+        cell: (row) => <span className="font-medium text-foreground">{row.fiscalYear}</span>,
+      },
+      {
+        key: "budgetedHeadcount",
+        header: "Headcount",
+        headerClassName: "text-right",
+        className: "text-right tabular-nums text-foreground",
+        cell: (row) => row.budgetedHeadcount,
+      },
+      {
+        key: "note",
+        header: "Note",
+        className: "text-muted-foreground",
+        cell: (row) => row.note ?? "—",
+      },
+      {
+        key: "actions",
+        header: "",
+        className: "text-right",
+        cell: (row) => (
+          <Button variant="ghost" size="sm" onClick={() => onEdit(row)}>
+            Edit
+          </Button>
+        ),
+      },
+    ];
+  }
+
   function handleEdit(p: HeadcountPlan) {
     setSheetPlan(p);
     setSheetOpen(true);
   }
 
-  function handleClose() {
-    setSheetOpen(false);
-  }
-
-  if (isLoading) return <SectionSkeleton rows={4} />;
+  const hiringColumns = buildColumns(handleEdit);
 
   return (
     <>
@@ -208,78 +252,68 @@ function HiringPlansTab() {
           Add Plan
         </Button>
       </div>
-      {!plans?.length ? (
-        <EmptyChart label="No headcount plans yet" />
-      ) : (
-        <div className="overflow-x-auto rounded-lg border border-border/60">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/40">
-              <tr>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Fiscal Year</th>
-                <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">Headcount</th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Note</th>
-                <th className="px-4 py-2.5" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/50">
-              {plans.map((p) => (
-                <tr key={p.id} className="hover:bg-muted/20">
-                  <td className="px-4 py-2.5 font-medium text-foreground">{p.fiscalYear}</td>
-                  <td className="px-4 py-2.5 text-right tabular-nums text-foreground">{p.budgetedHeadcount}</td>
-                  <td className="px-4 py-2.5 text-muted-foreground">{p.note ?? "—"}</td>
-                  <td className="px-4 py-2.5 text-right">
-                    <Button variant="ghost" size="sm" onClick={() => handleEdit(p)}>
-                      Edit
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <DataTable
+        data={plans ?? []}
+        columns={hiringColumns}
+        getRowKey={(row) => row.id}
+        isLoading={isLoading}
+        emptyState={<EmptyChart label="No headcount plans yet" />}
+      />
       <PlanSheet open={sheetOpen} plan={sheetPlan} onClose={handleClose} />
     </>
   );
 }
 
+type SkillsGapRow = { skillName: string; required: number; covered: number; gap: number };
+
+const skillsGapColumns: DataTableColumn<SkillsGapRow>[] = [
+  {
+    key: "skillName",
+    header: "Skill",
+    cell: (row) => <span className="font-medium text-foreground">{row.skillName}</span>,
+  },
+  {
+    key: "required",
+    header: "Required",
+    headerClassName: "text-right",
+    className: "text-right tabular-nums",
+    cell: (row) => row.required,
+  },
+  {
+    key: "covered",
+    header: "Covered",
+    headerClassName: "text-right",
+    className: "text-right tabular-nums",
+    cell: (row) => row.covered,
+  },
+  {
+    key: "gap",
+    header: "Gap",
+    headerClassName: "text-right",
+    className: "text-right",
+    cell: (row) => (
+      <Badge
+        variant="secondary"
+        className={row.gap > 0 ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-700"}
+      >
+        {row.gap}
+      </Badge>
+    ),
+  },
+];
+
 function SkillsGapTab() {
   const { data, isLoading } = useHrSkillsGap();
   const gaps = data?.gaps ?? [];
 
-  if (isLoading) return <SectionSkeleton rows={5} />;
-  if (!gaps.length) return <EmptyChart label="No skills gap data available" />;
-
   return (
-    <div className="overflow-x-auto rounded-lg border border-border/60">
-      <table className="w-full text-sm">
-        <thead className="bg-muted/40">
-          <tr>
-            <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Skill</th>
-            <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">Required</th>
-            <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">Covered</th>
-            <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">Gap</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-border/50">
-          {gaps.map((row) => (
-            <tr key={row.skillName} className="hover:bg-muted/20">
-              <td className="px-4 py-2.5 font-medium text-foreground">{row.skillName}</td>
-              <td className="px-4 py-2.5 text-right tabular-nums">{row.required}</td>
-              <td className="px-4 py-2.5 text-right tabular-nums">{row.covered}</td>
-              <td className="px-4 py-2.5 text-right">
-                <Badge
-                  variant="secondary"
-                  className={row.gap > 0 ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-700"}
-                >
-                  {row.gap}
-                </Badge>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <DataTable
+      data={gaps}
+      columns={skillsGapColumns}
+      getRowKey={(row) => row.skillName}
+      isLoading={isLoading}
+      emptyState={<EmptyChart label="No skills gap data available" />}
+    />
   );
 }
 

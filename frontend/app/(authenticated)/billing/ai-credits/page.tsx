@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { addMonths, format } from "date-fns";
 import {
@@ -15,14 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Switch } from "@/components/ui/switch";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -42,6 +35,82 @@ const TXN_LABELS: Record<
   REFUND: { label: "Refund", sign: "+", color: "text-blue-600" },
   EXPIRY: { label: "Expiry", sign: "-", color: "text-destructive" },
 };
+
+const TXN_COLUMNS: DataTableColumn<AiCreditTransaction>[] = [
+  {
+    key: "type",
+    header: "Type",
+    cell: (txn): ReactNode => {
+      const meta = TXN_LABELS[txn.type] ?? {
+        label: txn.type,
+        sign: "",
+        color: "text-foreground",
+      };
+      return (
+        <Badge variant="secondary" className="text-[10px]">
+          {meta.label}
+        </Badge>
+      );
+    },
+  },
+  {
+    key: "feature",
+    header: "Feature",
+    cell: (txn): ReactNode => (
+      <span className="text-xs text-muted-foreground">{txn.feature ?? "—"}</span>
+    ),
+  },
+  {
+    key: "amount",
+    header: "Amount",
+    headerClassName: "text-right",
+    cell: (txn): ReactNode => {
+      const meta = TXN_LABELS[txn.type] ?? {
+        label: txn.type,
+        sign: "",
+        color: "text-foreground",
+      };
+      return (
+        <span
+          className={`font-mono text-sm font-medium tabular-nums ${meta.color}`}
+        >
+          {meta.sign}
+          {Math.abs(txn.amount).toLocaleString()}
+        </span>
+      );
+    },
+    className: "text-right",
+  },
+  {
+    key: "balanceAfter",
+    header: "Balance",
+    headerClassName: "text-right",
+    className: "text-right font-mono text-sm tabular-nums text-muted-foreground",
+    cell: (txn): ReactNode => txn.balanceAfter.toLocaleString(),
+  },
+  {
+    key: "expires",
+    header: "Expires",
+    headerClassName: "text-right",
+    className: "text-right text-xs text-muted-foreground",
+    cell: (txn): ReactNode =>
+      txn.type === "PURCHASE"
+        ? format(addMonths(new Date(txn.createdAt), 12), "dd MMM yyyy")
+        : "—",
+  },
+  {
+    key: "createdAt",
+    header: "Date",
+    headerClassName: "text-right",
+    className: "text-right text-xs text-muted-foreground",
+    cell: (txn): ReactNode =>
+      format(new Date(txn.createdAt), "dd MMM yyyy"),
+  },
+];
+
+function getTxnRowKey(txn: AiCreditTransaction): string | number {
+  return txn.id;
+}
 
 function BuyPackButton({ packId, onBuy }: { packId: number; onBuy: (id: number) => void }) {
   function handleClick() {
@@ -179,61 +248,12 @@ export default function AiCreditsPage() {
               compact
             />
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Type</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Feature</TableHead>
-                    <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Amount</TableHead>
-                    <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Balance</TableHead>
-                    <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Expires</TableHead>
-                    <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Date</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {txns.map((txn) => {
-                    const meta = TXN_LABELS[txn.type] ?? {
-                      label: txn.type,
-                      sign: "",
-                      color: "text-foreground",
-                    };
-                    return (
-                      <TableRow key={txn.id} className="border-b border-border/50 hover:bg-muted/30">
-                        <TableCell>
-                          <Badge variant="secondary" className="text-[10px]">
-                            {meta.label}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-xs text-muted-foreground">
-                          {txn.feature ?? "—"}
-                        </TableCell>
-                        <TableCell
-                          className={`text-right font-mono text-sm font-medium tabular-nums ${meta.color}`}
-                        >
-                          {meta.sign}
-                          {Math.abs(txn.amount).toLocaleString()}
-                        </TableCell>
-                        <TableCell className="text-right font-mono text-sm tabular-nums text-muted-foreground">
-                          {txn.balanceAfter.toLocaleString()}
-                        </TableCell>
-                        <TableCell className="text-right text-xs text-muted-foreground">
-                          {txn.type === "PURCHASE"
-                            ? format(
-                                addMonths(new Date(txn.createdAt), 12),
-                                "dd MMM yyyy",
-                              )
-                            : "—"}
-                        </TableCell>
-                        <TableCell className="text-right text-xs text-muted-foreground">
-                          {format(new Date(txn.createdAt), "dd MMM yyyy")}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
+            <DataTable
+              data={txns}
+              columns={TXN_COLUMNS}
+              getRowKey={getTxnRowKey}
+              className="border-0 rounded-none"
+            />
           )}
         </div>
           </>

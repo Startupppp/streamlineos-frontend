@@ -69,7 +69,7 @@ function isTicketOverdue(ticket: KanbanTicket): boolean {
   }
 }
 
-export const WorkloadView = memo(function WorkloadView({ tickets, members, projectId, projectStatuses }: WorkloadViewProps) {
+export const WorkloadView = memo(function WorkloadView({ tickets, members, projectId }: WorkloadViewProps) {
   const shouldReduceMotion = useReducedMotion();
   const [expandedMembers, setExpandedMembers] = useState<Set<string>>(
     new Set(),
@@ -283,10 +283,6 @@ export const WorkloadView = memo(function WorkloadView({ tickets, members, proje
                             className="overflow-hidden bg-muted/20"
                           >
                             {memberTickets.slice(0, 10).map((ticket) => {
-                              const labelIds = ticket.labels
-                                ?.map((l) => l.label?.id)
-                                .filter((v): v is number => v != null) ?? [];
-
                               return (
                                 <div
                                   key={ticket.id}
@@ -312,14 +308,6 @@ export const WorkloadView = memo(function WorkloadView({ tickets, members, proje
                                     <TicketQuickActions
                                       ticketId={ticket.id}
                                       projectId={projectId}
-                                      currentStatus={ticket.status}
-                                      currentPriority={ticket.priority}
-                                      currentAssigneeId={ticket.assigneeId}
-                                      currentType={ticket.type}
-                                      currentLabelIds={labelIds}
-                                      currentCycleId={ticket.cycleId}
-                                      currentSprintId={ticket.sprintId}
-                                      projectStatuses={projectStatuses}
                                     />
                                   </span>
                                 </div>

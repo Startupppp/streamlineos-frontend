@@ -64,8 +64,6 @@ interface FilterCategorySubmenuProps {
   selectedCycles: string[];
   selectedProjectIds: string[];
   sprintParam: string;
-  dueDateFrom: string;
-  dueDateTo: string;
   onToggleStatus: (v: string) => void;
   onTogglePriority: (v: string) => void;
   onToggleType: (v: string) => void;
@@ -74,8 +72,6 @@ interface FilterCategorySubmenuProps {
   onToggleCycle: (v: string) => void;
   onToggleSprint: (v: string) => void;
   onToggleProject: (v: string) => void;
-  onDueDateFromChange: (v: string) => void;
-  onDueDateToChange: (v: string) => void;
   onClose: () => void;
 }
 
@@ -160,8 +156,6 @@ export function FilterCategorySubmenu({
   selectedCycles,
   selectedProjectIds,
   sprintParam,
-  dueDateFrom,
-  dueDateTo,
   onToggleStatus,
   onTogglePriority,
   onToggleType,
@@ -438,41 +432,48 @@ export function FilterCategorySubmenu({
     );
   }
 
-  if (category === "dates") {
-    const hasDate = Boolean(dueDateFrom || dueDateTo);
-    return (
-      <div
-        ref={containerRef}
-        tabIndex={-1}
-        onKeyDown={handleKeyDown}
-        className="flex min-w-[220px] flex-col p-2 outline-none"
-      >
-        <div className="mb-1.5 flex items-center gap-1.5 text-[10px] text-muted-foreground">
-          <CalendarRange className="h-3 w-3" />
-          {hasDate ? (
-            <span className="font-medium text-foreground">Range active</span>
-          ) : (
-            <span>Select a date range</span>
-          )}
-        </div>
-        <div className="flex items-center gap-1.5">
-          <DatePicker
-            value={dueDateFrom}
-            onChange={onDueDateFromChange}
-            placeholder="From"
-            className="h-7 flex-1 min-w-0 text-xs"
-          />
-          <span className="shrink-0 text-xs text-muted-foreground">–</span>
-          <DatePicker
-            value={dueDateTo}
-            onChange={onDueDateToChange}
-            placeholder="To"
-            className="h-7 flex-1 min-w-0 text-xs"
-          />
-        </div>
-      </div>
-    );
-  }
-
   return null;
+}
+
+interface FilterDatesInlineProps {
+  dueDateFrom: string;
+  dueDateTo: string;
+  onDueDateFromChange: (v: string) => void;
+  onDueDateToChange: (v: string) => void;
+}
+
+export function FilterDatesInline({
+  dueDateFrom,
+  dueDateTo,
+  onDueDateFromChange,
+  onDueDateToChange,
+}: FilterDatesInlineProps) {
+  const hasDate = Boolean(dueDateFrom || dueDateTo);
+  return (
+    <div className="px-2 pb-2 pt-0.5">
+      <div className="mb-1.5 flex items-center gap-1.5 text-[10px] text-muted-foreground">
+        <CalendarRange className="h-3 w-3" />
+        {hasDate ? (
+          <span className="font-medium text-foreground">Range active</span>
+        ) : (
+          <span>Select a date range</span>
+        )}
+      </div>
+      <div className="flex items-center gap-1.5">
+        <DatePicker
+          value={dueDateFrom}
+          onChange={onDueDateFromChange}
+          placeholder="From"
+          className="h-7 flex-1 min-w-0 text-xs"
+        />
+        <span className="shrink-0 text-xs text-muted-foreground">–</span>
+        <DatePicker
+          value={dueDateTo}
+          onChange={onDueDateToChange}
+          placeholder="To"
+          className="h-7 flex-1 min-w-0 text-xs"
+        />
+      </div>
+    </div>
+  );
 }

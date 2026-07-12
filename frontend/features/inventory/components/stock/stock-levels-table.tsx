@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, TrendingDown, CheckCircle2, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,14 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { type StockLevelRow } from "@/hooks/api/inventory/stock";
 import { cn } from "@/lib/utils";
 
@@ -43,8 +36,6 @@ const StockStatusIcon = memo(function StockStatusIcon({ status }: { status: Stoc
   }
   return <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" aria-label="Stock OK" />;
 });
-
-const TH = "text-[10px] uppercase tracking-wider font-bold px-2 py-1.5";
 
 interface StockLevelsTableProps {
   rows: StockLevelRow[];
@@ -74,134 +65,155 @@ export const StockLevelsTable = memo(function StockLevelsTable({ rows, onShowAva
     }
   }, [onShowAvailability]);
 
+  const columns = useMemo<DataTableColumn<StockLevelRow>[]>(() => [
+    {
+      key: "status",
+      header: "Status",
+      cell: (row) => <StockStatusIcon status={getStockStatus(row)} />,
+    },
+    {
+      key: "product",
+      header: "Product",
+      className: "font-medium max-w-[200px] truncate",
+      cell: (row) => row.productName,
+    },
+    {
+      key: "sku",
+      header: "SKU",
+      className: "font-mono text-muted-foreground hidden md:table-cell",
+      headerClassName: "hidden md:table-cell",
+      cell: (row) => row.sku,
+    },
+    {
+      key: "location",
+      header: "Warehouse / Location",
+      className: "text-muted-foreground hidden md:table-cell",
+      headerClassName: "hidden md:table-cell",
+      cell: (row) => [row.warehouseName, row.locationCode].filter(Boolean).join(" / ") || "—",
+    },
+    {
+      key: "onHand",
+      header: "On Hand",
+      headerClassName: "text-right",
+      className: "text-right font-mono tabular-nums",
+      cell: (row) => row.onHand.toLocaleString(),
+    },
+    {
+      key: "committed",
+      header: "Committed",
+      headerClassName: "text-right hidden md:table-cell",
+      className: "text-right font-mono tabular-nums text-muted-foreground hidden md:table-cell",
+      cell: (row) => row.committed.toLocaleString(),
+    },
+    {
+      key: "onOrder",
+      header: "On Order",
+      headerClassName: "text-right hidden md:table-cell",
+      className: "text-right font-mono tabular-nums text-muted-foreground hidden md:table-cell",
+      cell: (row) => row.onOrder.toLocaleString(),
+    },
+    {
+      key: "available",
+      header: "Available",
+      headerClassName: "text-right",
+      className: "text-right font-mono tabular-nums font-semibold",
+      cell: (row) => {
+        const s = getStockStatus(row);
+        return (
+          <span className={cn(
+            s === "critical" && "text-red-600",
+            s === "low" && "text-amber-600",
+            s === "ok" && "text-emerald-600",
+          )}>
+            {row.available.toLocaleString()}
+          </span>
+        );
+      },
+    },
+    {
+      key: "blockedQty",
+      header: "Blocked",
+      headerClassName: "text-right hidden lg:table-cell",
+      className: "text-right font-mono tabular-nums hidden lg:table-cell",
+      cell: (row) => (
+        <span className={cn(
+          row.blockedQty > 0 ? "text-amber-600 font-medium" : "text-muted-foreground",
+        )}>
+          {row.blockedQty.toLocaleString()}
+        </span>
+      ),
+    },
+    {
+      key: "qualityHoldQty",
+      header: "Qual. Hold",
+      headerClassName: "text-right hidden lg:table-cell",
+      className: "text-right font-mono tabular-nums hidden lg:table-cell",
+      cell: (row) => (
+        <span className={cn(
+          row.qualityHoldQty > 0 ? "text-red-600 font-medium" : "text-muted-foreground",
+        )}>
+          {row.qualityHoldQty.toLocaleString()}
+        </span>
+      ),
+    },
+    {
+      key: "averageCost",
+      header: "Avg Cost",
+      headerClassName: "text-right hidden lg:table-cell",
+      className: "text-right font-mono tabular-nums text-muted-foreground hidden lg:table-cell",
+      cell: (row) => row.averageCost ?? "—",
+    },
+    {
+      key: "actions",
+      header: "",
+      headerClassName: "w-8",
+      cell: (row) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              aria-label={`Actions for ${row.productName}`}
+            >
+              <MoreHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {row.variantId && onShowAvailability && (
+              <DropdownMenuItem onSelect={() => handleAvailability(row)}>
+                Availability
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem onSelect={() => handleAdjust(row)}>
+              Adjust
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={handleTransfer}>
+              Transfer
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => handleMovements(row)}>
+              View Movements
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ),
+    },
+  ], [handleAdjust, handleTransfer, handleMovements, handleAvailability, onShowAvailability]);
+
+  function getRowClassName(row: StockLevelRow): string {
+    const s = getStockStatus(row);
+    if (s === "critical") return "bg-red-50/50";
+    if (s === "low") return "bg-amber-50/50";
+    return "";
+  }
+
   return (
-    <div className="rounded-md border border-border overflow-hidden bg-card">
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/80 hover:bg-muted/80">
-              <TableHead className={TH}>Status</TableHead>
-              <TableHead className={TH}>Product</TableHead>
-              <TableHead className={cn(TH, "hidden md:table-cell")}>SKU</TableHead>
-              <TableHead className={cn(TH, "hidden md:table-cell")}>Warehouse / Location</TableHead>
-              <TableHead className={cn(TH, "text-right")}>On Hand</TableHead>
-              <TableHead className={cn(TH, "text-right hidden md:table-cell")}>Committed</TableHead>
-              <TableHead className={cn(TH, "text-right hidden md:table-cell")}>On Order</TableHead>
-              <TableHead className={cn(TH, "text-right")}>Available</TableHead>
-              <TableHead className={cn(TH, "text-right hidden lg:table-cell")}>Blocked</TableHead>
-              <TableHead className={cn(TH, "text-right hidden lg:table-cell")}>Qual. Hold</TableHead>
-              <TableHead className={cn(TH, "text-right hidden lg:table-cell")}>Avg Cost</TableHead>
-              <TableHead className={cn(TH, "w-8")} />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rows.map((row) => {
-              const status = getStockStatus(row);
-              return (
-                <TableRow
-                  key={row.id}
-                  className={cn(
-                    "h-8 border-b border-border/50 transition-colors",
-                    status === "critical" && "bg-red-50/50 hover:bg-red-50/70",
-                    status === "low" && "bg-amber-50/50 hover:bg-amber-50/70",
-                    status === "ok" && "hover:bg-muted/30",
-                  )}
-                >
-                  <TableCell className="px-2 py-1">
-                    <StockStatusIcon status={status} />
-                  </TableCell>
-                  <TableCell className="px-2 py-1 font-medium max-w-[200px] truncate text-[11px]">
-                    {row.productName}
-                  </TableCell>
-                  <TableCell className="px-2 py-1 font-mono text-[11px] text-muted-foreground hidden md:table-cell">
-                    {row.sku}
-                  </TableCell>
-                  <TableCell className="px-2 py-1 text-muted-foreground text-[11px] hidden md:table-cell">
-                    {[row.warehouseName, row.locationCode].filter(Boolean).join(" / ") || "—"}
-                  </TableCell>
-                  <TableCell className="px-2 py-1 text-right font-mono tabular-nums text-[11px]">
-                    {row.onHand.toLocaleString()}
-                  </TableCell>
-                  <TableCell className="px-2 py-1 text-right font-mono tabular-nums text-muted-foreground text-[11px] hidden md:table-cell">
-                    {row.committed.toLocaleString()}
-                  </TableCell>
-                  <TableCell className="px-2 py-1 text-right font-mono tabular-nums text-muted-foreground text-[11px] hidden md:table-cell">
-                    {row.onOrder.toLocaleString()}
-                  </TableCell>
-                  <TableCell
-                    className={cn(
-                      "px-2 py-1 text-right font-mono tabular-nums font-semibold text-[11px]",
-                      status === "critical" && "text-red-600",
-                      status === "low" && "text-amber-600",
-                      status === "ok" && "text-emerald-600",
-                    )}
-                  >
-                    {row.available.toLocaleString()}
-                  </TableCell>
-                  <TableCell
-                    className={cn(
-                      "px-2 py-1 text-right font-mono tabular-nums text-[11px] hidden lg:table-cell",
-                      row.blockedQty > 0 && "text-amber-600 font-medium",
-                      row.blockedQty === 0 && "text-muted-foreground",
-                    )}
-                  >
-                    {row.blockedQty.toLocaleString()}
-                  </TableCell>
-                  <TableCell
-                    className={cn(
-                      "px-2 py-1 text-right font-mono tabular-nums text-[11px] hidden lg:table-cell",
-                      row.qualityHoldQty > 0 && "text-red-600 font-medium",
-                      row.qualityHoldQty === 0 && "text-muted-foreground",
-                    )}
-                  >
-                    {row.qualityHoldQty.toLocaleString()}
-                  </TableCell>
-                  <TableCell className="px-2 py-1 text-right font-mono tabular-nums text-[11px] text-muted-foreground hidden lg:table-cell">
-                    {row.averageCost ?? "—"}
-                  </TableCell>
-                  <TableCell className="px-2 py-1">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
-                          aria-label={`Actions for ${row.productName}`}
-                        >
-                          <MoreHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        {row.variantId && onShowAvailability && (
-                          <DropdownMenuItem onSelect={() => handleAvailability(row)}>
-                            Availability
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuItem
-                          onSelect={() => handleAdjust(row)}
-                        >
-                          Adjust
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onSelect={handleTransfer}
-                        >
-                          Transfer
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onSelect={() => handleMovements(row)}
-                        >
-                          View Movements
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
+    <DataTable
+      data={rows}
+      columns={columns}
+      getRowKey={(row) => row.id}
+      rowClassName={getRowClassName}
+    />
   );
 });
 

@@ -165,14 +165,6 @@ const ListViewItem = memo(function ListViewItem({ ticket, projectKey, projectId,
         <TicketQuickActions
           ticketId={ticket.id}
           projectId={projectId}
-          currentStatus={ticket.status}
-          currentPriority={ticket.priority}
-          currentAssigneeId={ticket.assigneeId ?? ticket.assignee?.id}
-          currentType={ticket.type}
-          currentLabelIds={labelIds}
-          currentCycleId={ticket.cycleId}
-          currentSprintId={ticket.sprintId}
-          projectStatuses={projectStatuses}
           className="opacity-0 group-hover:opacity-100 transition-opacity"
         />
       </div>

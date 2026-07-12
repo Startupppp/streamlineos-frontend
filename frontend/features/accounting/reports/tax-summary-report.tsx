@@ -5,12 +5,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from "recharts";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyReportIllustration } from "@/components/illustrations";
-import { LoadingState, ErrorState } from "@/components/shared";
+import { ErrorState } from "@/components/shared";
 import { ReportShell } from "./report-shell";
 import { DateRangeFilter } from "./date-range-filter";
 import { useTaxSummary } from "@/hooks/api/accounting/reports";
@@ -32,6 +30,69 @@ function currentYearRange(): { from: string; to: string } {
   const from = new Date(now.getFullYear(), 0, 1).toISOString().slice(0, 10);
   const to = now.toISOString().slice(0, 10);
   return { from, to };
+}
+
+type TaxSummaryRow = NonNullable<ReturnType<typeof useTaxSummary>["data"]>[number];
+
+const TAX_COLUMNS: DataTableColumn<TaxSummaryRow>[] = [
+  {
+    key: "month",
+    header: "Month",
+    cell: (row) => row.month,
+  },
+  {
+    key: "outputCgst",
+    header: "Out CGST",
+    cell: (row) => formatCurrencyFull(Number(row.outputCgst)),
+    className: "text-right font-mono tabular-nums",
+    headerClassName: "text-right",
+  },
+  {
+    key: "outputSgst",
+    header: "Out SGST",
+    cell: (row) => formatCurrencyFull(Number(row.outputSgst)),
+    className: "text-right font-mono tabular-nums",
+    headerClassName: "text-right",
+  },
+  {
+    key: "outputIgst",
+    header: "Out IGST",
+    cell: (row) => formatCurrencyFull(Number(row.outputIgst)),
+    className: "text-right font-mono tabular-nums",
+    headerClassName: "text-right",
+  },
+  {
+    key: "inputCgst",
+    header: "In CGST",
+    cell: (row) => formatCurrencyFull(Number(row.inputCgst)),
+    className: "text-right font-mono tabular-nums",
+    headerClassName: "text-right",
+  },
+  {
+    key: "inputSgst",
+    header: "In SGST",
+    cell: (row) => formatCurrencyFull(Number(row.inputSgst)),
+    className: "text-right font-mono tabular-nums",
+    headerClassName: "text-right",
+  },
+  {
+    key: "inputIgst",
+    header: "In IGST",
+    cell: (row) => formatCurrencyFull(Number(row.inputIgst)),
+    className: "text-right font-mono tabular-nums",
+    headerClassName: "text-right",
+  },
+  {
+    key: "netPayable",
+    header: "Net Payable",
+    cell: (row) => formatCurrencyFull(Number(row.netPayable)),
+    className: "text-right font-mono tabular-nums font-semibold",
+    headerClassName: "text-right",
+  },
+];
+
+function getTaxRowKey(row: TaxSummaryRow): string {
+  return row.month;
 }
 
 export function TaxSummaryReport() {
@@ -92,73 +153,47 @@ export function TaxSummaryReport() {
         />
       }
     >
-      {isLoading ? (
-        <LoadingState variant="table" rows={8} />
-      ) : error ? (
+      {error ? (
         <ErrorState
           title="Failed to load report"
           description={getErrorMessage(error)}
           onRetry={handleRetry}
         />
-      ) : !data || data.length === 0 ? (
-        <EmptyState
-          illustration={<EmptyReportIllustration />}
-          title="No tax data"
-          description="No GST transactions found in the selected date range."
-          compact
-        />
       ) : (
         <div className="space-y-6">
-          <div className="rounded-xl border border-border bg-card p-4">
-            <p className="text-sm font-semibold text-foreground mb-4">Output vs Input Tax by Month</p>
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="month" tick={AXIS_TICK} />
-                <YAxis tick={AXIS_TICK} width={56} />
-                <Tooltip contentStyle={TOOLTIP_STYLE} />
-                <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11 }} />
-                <Bar dataKey="output" name="Output Tax" fill="#3b82f6" radius={[3, 3, 0, 0]} />
-                <Bar dataKey="input" name="Input Tax (ITC)" fill="#10b981" radius={[3, 3, 0, 0]} />
-                <Bar dataKey="netPayable" name="Net Payable" fill="#f59e0b" radius={[3, 3, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          <div className="rounded-lg border border-border overflow-hidden">
-            <div className="overflow-x-auto">
-              <Table className="min-w-[800px]">
-                <TableHeader>
-                  <TableRow className="bg-muted/40 hover:bg-muted/40">
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Month</TableHead>
-                    <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Out CGST</TableHead>
-                    <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Out SGST</TableHead>
-                    <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Out IGST</TableHead>
-                    <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">In CGST</TableHead>
-                    <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">In SGST</TableHead>
-                    <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">In IGST</TableHead>
-                    <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Net Payable</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data.map((row) => (
-                    <TableRow key={row.month} className="border-b border-border/50 hover:bg-muted/30">
-                      <TableCell className="text-sm text-foreground px-3 py-2">{row.month}</TableCell>
-                      <TableCell className="text-right text-sm font-mono tabular-nums px-3 py-2">{formatCurrencyFull(Number(row.outputCgst))}</TableCell>
-                      <TableCell className="text-right text-sm font-mono tabular-nums px-3 py-2">{formatCurrencyFull(Number(row.outputSgst))}</TableCell>
-                      <TableCell className="text-right text-sm font-mono tabular-nums px-3 py-2">{formatCurrencyFull(Number(row.outputIgst))}</TableCell>
-                      <TableCell className="text-right text-sm font-mono tabular-nums px-3 py-2">{formatCurrencyFull(Number(row.inputCgst))}</TableCell>
-                      <TableCell className="text-right text-sm font-mono tabular-nums px-3 py-2">{formatCurrencyFull(Number(row.inputSgst))}</TableCell>
-                      <TableCell className="text-right text-sm font-mono tabular-nums px-3 py-2">{formatCurrencyFull(Number(row.inputIgst))}</TableCell>
-                      <TableCell className="text-right text-sm font-mono tabular-nums font-semibold px-3 py-2">
-                        {formatCurrencyFull(Number(row.netPayable))}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+          {!isLoading && (data?.length ?? 0) > 0 && (
+            <div className="rounded-xl border border-border bg-card p-4">
+              <p className="text-sm font-semibold text-foreground mb-4">Output vs Input Tax by Month</p>
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="month" tick={AXIS_TICK} />
+                  <YAxis tick={AXIS_TICK} width={56} />
+                  <Tooltip contentStyle={TOOLTIP_STYLE} />
+                  <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11 }} />
+                  <Bar dataKey="output" name="Output Tax" fill="#3b82f6" radius={[3, 3, 0, 0]} />
+                  <Bar dataKey="input" name="Input Tax (ITC)" fill="#10b981" radius={[3, 3, 0, 0]} />
+                  <Bar dataKey="netPayable" name="Net Payable" fill="#f59e0b" radius={[3, 3, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
-          </div>
+          )}
+
+          <DataTable
+            data={data ?? []}
+            columns={TAX_COLUMNS}
+            getRowKey={getTaxRowKey}
+            isLoading={isLoading}
+            minWidth="800px"
+            emptyState={
+              <EmptyState
+                illustration={<EmptyReportIllustration />}
+                title="No tax data"
+                description="No GST transactions found in the selected date range."
+                compact
+              />
+            }
+          />
         </div>
       )}
     </ReportShell>

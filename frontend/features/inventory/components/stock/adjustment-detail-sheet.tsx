@@ -23,14 +23,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
@@ -48,7 +41,50 @@ import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 
-const TH = "text-[10px] uppercase tracking-wider font-bold px-2 py-1.5";
+type AdjustmentLine = {
+  id: number;
+  productVariantId: number;
+  locationId: number;
+  variantName: string | null;
+  variantSku: string | null;
+  locationName: string | null;
+  quantityChange: number;
+};
+
+const lineColumns: DataTableColumn<AdjustmentLine>[] = [
+  {
+    key: "variant",
+    header: "Variant",
+    cell: (line) => (
+      <>
+        {line.variantName ?? `Variant #${line.productVariantId}`}
+        {line.variantSku && (
+          <span className="text-muted-foreground font-mono ml-1">({line.variantSku})</span>
+        )}
+      </>
+    ),
+  },
+  {
+    key: "location",
+    header: "Location",
+    className: "text-muted-foreground",
+    cell: (line) => line.locationName ?? `Location #${line.locationId}`,
+  },
+  {
+    key: "qtyChange",
+    header: "Qty Change",
+    headerClassName: "text-right",
+    className: "text-right font-mono tabular-nums font-semibold",
+    cell: (line) => (
+      <span className={cn(
+        line.quantityChange > 0 && "text-emerald-600",
+        line.quantityChange < 0 && "text-red-600",
+      )}>
+        {line.quantityChange > 0 ? `+${line.quantityChange}` : line.quantityChange}
+      </span>
+    ),
+  },
+];
 
 interface AdjustmentDetailSheetProps {
   adjustmentId: number | null;
@@ -138,41 +174,11 @@ export function AdjustmentDetailSheet({ adjustmentId, open, onOpenChange }: Adju
             </div>
           ) : detail ? (
             <>
-              <div className="rounded-md border border-border overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/80 hover:bg-muted/80">
-                      <TableHead className={TH}>Variant</TableHead>
-                      <TableHead className={TH}>Location</TableHead>
-                      <TableHead className={cn(TH, "text-right")}>Qty Change</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {detail.lines.map((line) => (
-                      <TableRow key={line.id} className="h-8 border-b border-border/50 hover:bg-muted/30">
-                        <TableCell className="px-2 py-1 text-[11px] font-medium">
-                          {line.variantName ?? `Variant #${line.productVariantId}`}
-                          {line.variantSku && (
-                            <span className="text-muted-foreground font-mono ml-1">({line.variantSku})</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="px-2 py-1 text-[11px] text-muted-foreground">
-                          {line.locationName ?? `Location #${line.locationId}`}
-                        </TableCell>
-                        <TableCell
-                          className={cn(
-                            "px-2 py-1 text-right font-mono tabular-nums text-[11px] font-semibold",
-                            line.quantityChange > 0 && "text-emerald-600",
-                            line.quantityChange < 0 && "text-red-600",
-                          )}
-                        >
-                          {line.quantityChange > 0 ? `+${line.quantityChange}` : line.quantityChange}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+              <DataTable
+                data={detail.lines}
+                columns={lineColumns}
+                getRowKey={(line) => line.id}
+              />
               {detail.notes && (
                 <div className="text-xs text-muted-foreground">
                   <span className="font-medium text-foreground">Notes: </span>

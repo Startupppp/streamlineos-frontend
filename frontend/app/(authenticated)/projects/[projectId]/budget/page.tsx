@@ -3,11 +3,11 @@
 import { use, useState, type ChangeEvent } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/ui/stat-card";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { IndianRupee, TrendingUp, Pencil } from "lucide-react";
@@ -53,9 +53,44 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
     return members?.find((m) => m.id === userId) ?? null;
   }
 
+  const budgetActions = editMode ? (
+    <div className="flex items-center gap-2">
+      <Input
+        type="number"
+        min={0}
+        aria-label="Planned budget in rupees"
+        className="h-8 text-sm w-36"
+        value={newBudget}
+        onChange={handleBudgetInputChange}
+        placeholder={String(budget?.plannedBudget ?? "")}
+      />
+      <LoadingButton
+        size="sm"
+        onClick={handleSaveBudget}
+        isPending={updateBudget.isPending}
+        loadingText="Saving…"
+      >
+        Save
+      </LoadingButton>
+      <Button size="sm" variant="outline" onClick={handleCancelEdit}>
+        Cancel
+      </Button>
+    </div>
+  ) : (
+    <Button size="sm" variant="outline" onClick={handleOpenEdit}>
+      <Pencil className="h-4 w-4 mr-1" />
+      {budget?.plannedBudget ? "Update Budget" : "Set Budget"}
+    </Button>
+  );
+
   if (isLoading) {
     return (
-      <PageWrapper title="Budget" eyebrow="Project" subtitle="Planned budget vs actual cost from billable timesheets">
+      <PageWrapper
+        title="Budget"
+        eyebrow="Project"
+        subtitle="Planned budget vs actual cost from billable timesheets"
+        actions={<Skeleton className="h-8 w-32 rounded-md" />}
+      >
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
           {[1, 2, 3].map((i) => <Skeleton key={i} className="h-24 rounded-lg" />)}
         </div>
@@ -70,36 +105,12 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
   const overBudget = (budget?.remaining ?? 0) < 0;
 
   return (
-    <PageWrapper title="Budget" eyebrow="Project" subtitle="Planned budget vs actual cost from billable timesheets">
-      <div className="bg-muted/40 border border-border rounded-lg px-3 py-2 mb-4 flex items-center gap-2">
-        {editMode ? (
-          <>
-            <Label className="text-sm shrink-0">Planned Budget (₹)</Label>
-            <Input
-              type="number"
-              min={0}
-              className="h-8 text-sm bg-transparent border-border w-36"
-              value={newBudget}
-              onChange={handleBudgetInputChange}
-              placeholder={String(budget?.plannedBudget ?? "")}
-            />
-            <Button
-              size="sm"
-              onClick={handleSaveBudget}
-              disabled={updateBudget.isPending}
-            >
-              {updateBudget.isPending ? "Saving…" : "Save"}
-            </Button>
-            <Button size="sm" variant="outline" onClick={handleCancelEdit}>Cancel</Button>
-          </>
-        ) : (
-          <Button size="sm" variant="outline" onClick={handleOpenEdit}>
-            <Pencil className="h-4 w-4 mr-1" />
-            {budget?.plannedBudget ? "Update Budget" : "Set Budget"}
-          </Button>
-        )}
-      </div>
-
+    <PageWrapper
+      title="Budget"
+      eyebrow="Project"
+      subtitle="Planned budget vs actual cost from billable timesheets"
+      actions={budgetActions}
+    >
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
         <StatCard
           label="Planned Budget"

@@ -23,15 +23,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { LoadingState, ErrorState } from "@/components/shared";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   useRecurringJournals,
@@ -113,6 +106,52 @@ function RecurringRowActions({ template, onEdit, onDelete }: RecurringRowActions
   );
 }
 
+const COLUMNS: DataTableColumn<RecurringJournal>[] = [
+  {
+    key: "name",
+    header: "Name",
+    cell: (row) => (
+      <div>
+        <p className="text-sm font-medium text-foreground">{row.name}</p>
+        {row.description && (
+          <p className="text-xs text-muted-foreground truncate max-w-[280px]">
+            {row.description}
+          </p>
+        )}
+      </div>
+    ),
+  },
+  {
+    key: "frequency",
+    header: "Frequency",
+    headerClassName: "w-[120px]",
+    className: "w-[120px]",
+    cell: (row) => (
+      <Badge variant="outline" className="text-xs">
+        {FREQUENCY_LABELS[row.frequency]}
+      </Badge>
+    ),
+  },
+  {
+    key: "nextRunDate",
+    header: "Next run",
+    headerClassName: "w-[140px]",
+    className: "w-[140px] text-sm tabular-nums text-muted-foreground",
+    cell: (row) => formatDate(row.nextRunDate),
+  },
+  {
+    key: "status",
+    header: "Status",
+    headerClassName: "w-[100px]",
+    className: "w-[100px]",
+    cell: (row) => (
+      <Badge variant={row.isActive ? "default" : "secondary"} className="text-xs">
+        {row.isActive ? "Active" : "Inactive"}
+      </Badge>
+    ),
+  },
+];
+
 export function RecurringJournalsTab() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editTemplate, setEditTemplate] = useState<RecurringJournal | null>(null);
@@ -168,6 +207,32 @@ export function RecurringJournalsTab() {
     if (!open) setEditTemplate(null);
   }
 
+  const columns: DataTableColumn<RecurringJournal>[] = [
+    ...COLUMNS,
+    {
+      key: "actions",
+      header: "",
+      headerClassName: "w-12",
+      className: "w-12 text-right",
+      cell: (row) => (
+        <RecurringRowActions
+          template={row}
+          onEdit={handleEdit}
+          onDelete={handleDeleteRequest}
+        />
+      ),
+    },
+  ];
+
+  const emptyState = (
+    <EmptyState
+      illustrationPreset="documents"
+      title="No recurring templates"
+      description="Create a template to auto-generate journal entries on a schedule."
+      action={{ label: "New template", onClick: handleOpenCreate }}
+    />
+  );
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -180,83 +245,20 @@ export function RecurringJournalsTab() {
         </Button>
       </div>
 
-      {query.isLoading ? (
-        <LoadingState variant="table" rows={4} />
-      ) : query.error ? (
+      {query.error ? (
         <ErrorState
           title="Failed to load templates"
           description={getErrorMessage(query.error)}
           onRetry={handleRetry}
         />
-      ) : items.length === 0 ? (
-        <EmptyState
-          illustrationPreset="documents"
-          title="No recurring templates"
-          description="Create a template to auto-generate journal entries on a schedule."
-          action={{ label: "New template", onClick: handleOpenCreate }}
-        />
       ) : (
-        <div className="rounded-lg border border-border overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">
-                  Name
-                </TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[120px]">
-                  Frequency
-                </TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[140px]">
-                  Next run
-                </TableHead>
-                <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[100px]">
-                  Status
-                </TableHead>
-                <TableHead className="w-12 px-3 py-2" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {items.map((template: RecurringJournal) => (
-                <TableRow
-                  key={template.id}
-                  className="border-b border-border/50 hover:bg-muted/30"
-                >
-                  <TableCell className="px-3 py-2">
-                    <p className="text-sm font-medium text-foreground">{template.name}</p>
-                    {template.description && (
-                      <p className="text-xs text-muted-foreground truncate max-w-[280px]">
-                        {template.description}
-                      </p>
-                    )}
-                  </TableCell>
-                  <TableCell className="px-3 py-2">
-                    <Badge variant="outline" className="text-xs">
-                      {FREQUENCY_LABELS[template.frequency]}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="px-3 py-2 text-sm tabular-nums text-muted-foreground">
-                    {formatDate(template.nextRunDate)}
-                  </TableCell>
-                  <TableCell className="px-3 py-2">
-                    <Badge
-                      variant={template.isActive ? "default" : "secondary"}
-                      className="text-xs"
-                    >
-                      {template.isActive ? "Active" : "Inactive"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="px-3 py-2 text-right">
-                    <RecurringRowActions
-                      template={template}
-                      onEdit={handleEdit}
-                      onDelete={handleDeleteRequest}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <DataTable
+          data={items}
+          columns={columns}
+          getRowKey={(row) => row.id}
+          isLoading={query.isLoading}
+          emptyState={emptyState}
+        />
       )}
 
       <RecurringJournalSheet

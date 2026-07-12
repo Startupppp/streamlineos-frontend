@@ -6,15 +6,7 @@ import { Plus, Pencil, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { StateIllustration } from "@/components/illustrations";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -54,11 +46,108 @@ interface Props {
   canManage: boolean;
 }
 
+function buildColumns(
+  canManage: boolean,
+  onEdit: (dim: AccountingDimension) => void,
+  onViewValues: (dim: AccountingDimension) => void,
+): DataTableColumn<AccountingDimension>[] {
+  return [
+    {
+      key: "name",
+      header: "Name",
+      cell: (row) => <span className="font-medium">{row.name}</span>,
+    },
+    {
+      key: "key",
+      header: "Key",
+      cell: (row) => (
+        <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">{row.key}</span>
+      ),
+    },
+    {
+      key: "requiredForAccountTypes",
+      header: "Required For",
+      cell: (row) =>
+        row.requiredForAccountTypes.length === 0 ? (
+          <span className="text-xs text-muted-foreground">—</span>
+        ) : (
+          <div className="flex flex-wrap gap-1">
+            {row.requiredForAccountTypes.map((t) => (
+              <Badge
+                key={t}
+                variant="outline"
+                className="text-[9px] px-1.5 py-0 h-4 text-blue-700 border-blue-200 bg-blue-50"
+              >
+                {t}
+              </Badge>
+            ))}
+          </div>
+        ),
+    },
+    {
+      key: "valueCount",
+      header: "Values",
+      headerClassName: "text-right",
+      className: "text-right text-sm",
+      cell: (row) => row.valueCount,
+    },
+    {
+      key: "isActive",
+      header: "Active",
+      headerClassName: "text-right",
+      className: "text-right",
+      cell: (row) => <DimensionActiveToggle dimension={row} canManage={canManage} />,
+    },
+    {
+      key: "actions",
+      header: "",
+      headerClassName: "w-20",
+      className: "w-20",
+      cell: (row) => {
+        function handleEdit(): void {
+          onEdit(row);
+        }
+        function handleViewValues(): void {
+          onViewValues(row);
+        }
+        return (
+          <div className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+            {canManage && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-7"
+                onClick={handleEdit}
+                aria-label={`Edit ${row.name}`}
+              >
+                <Pencil className="size-3.5" />
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-7"
+              onClick={handleViewValues}
+              aria-label={`View values for ${row.name}`}
+            >
+              <ChevronRight className="size-3.5" />
+            </Button>
+          </div>
+        );
+      },
+    },
+  ];
+}
+
 export function DimensionsTable({ canManage }: Props) {
   const { data, isLoading, error } = useDimensions();
   const [createOpen, setCreateOpen] = useState(false);
   const [editDimension, setEditDimension] = useState<AccountingDimension | undefined>();
   const [valuesDimension, setValuesDimension] = useState<AccountingDimension | undefined>();
+
+  const items = data?.items ?? [];
+
+  const columns = buildColumns(canManage, setEditDimension, setValuesDimension);
 
   if (error) {
     return (
@@ -68,17 +157,21 @@ export function DimensionsTable({ canManage }: Props) {
     );
   }
 
-  if (isLoading) {
-    return (
-      <div className="space-y-2 mt-4">
-        {[1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-12 w-full" />
-        ))}
-      </div>
-    );
-  }
-
-  const items = data?.items ?? [];
+  const emptyState = (
+    <div className="flex flex-col items-center justify-center flex-1 py-16 text-center">
+      <StateIllustration preset="settings" className="h-32 w-32 mb-4 opacity-70" />
+      <h3 className="text-sm font-semibold text-foreground">No dimensions yet</h3>
+      <p className="mt-1 text-sm text-muted-foreground max-w-xs">
+        Add cost centres, projects, or departments to tag GL entries for richer reporting.
+      </p>
+      {canManage && (
+        <Button size="sm" className="mt-4" onClick={() => setCreateOpen(true)}>
+          <Plus className="size-3.5 mr-1.5" />
+          New Dimension
+        </Button>
+      )}
+    </div>
+  );
 
   return (
     <>
@@ -96,93 +189,14 @@ export function DimensionsTable({ canManage }: Props) {
         )}
       </div>
 
-      {items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center flex-1 py-16 text-center">
-          <StateIllustration preset="settings" className="h-32 w-32 mb-4 opacity-70" />
-          <h3 className="text-sm font-semibold text-foreground">No dimensions yet</h3>
-          <p className="mt-1 text-sm text-muted-foreground max-w-xs">
-            Add cost centres, projects, or departments to tag GL entries for richer reporting.
-          </p>
-          {canManage && (
-            <Button size="sm" className="mt-4" onClick={() => setCreateOpen(true)}>
-              <Plus className="size-3.5 mr-1.5" />
-              New Dimension
-            </Button>
-          )}
-        </div>
-      ) : (
-        <div className="rounded-xl border border-border overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Key</TableHead>
-                <TableHead>Required For</TableHead>
-                <TableHead className="text-right">Values</TableHead>
-                <TableHead className="text-right">Active</TableHead>
-                <TableHead className="w-20" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {items.map((dim) => (
-                <TableRow key={dim.id} className="group">
-                  <TableCell className="font-medium">{dim.name}</TableCell>
-                  <TableCell>
-                    <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">
-                      {dim.key}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    {dim.requiredForAccountTypes.length === 0 ? (
-                      <span className="text-xs text-muted-foreground">—</span>
-                    ) : (
-                      <div className="flex flex-wrap gap-1">
-                        {dim.requiredForAccountTypes.map((t) => (
-                          <Badge
-                            key={t}
-                            variant="outline"
-                            className="text-[9px] px-1.5 py-0 h-4 text-blue-700 border-blue-200 bg-blue-50"
-                          >
-                            {t}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right text-sm">{dim.valueCount}</TableCell>
-                  <TableCell className="text-right">
-                    <DimensionActiveToggle dimension={dim} canManage={canManage} />
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                      {canManage && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="size-7"
-                          onClick={() => setEditDimension(dim)}
-                          aria-label={`Edit ${dim.name}`}
-                        >
-                          <Pencil className="size-3.5" />
-                        </Button>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-7"
-                        onClick={() => setValuesDimension(dim)}
-                        aria-label={`View values for ${dim.name}`}
-                      >
-                        <ChevronRight className="size-3.5" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
+      <DataTable
+        data={items}
+        columns={columns}
+        getRowKey={(row) => row.id}
+        isLoading={isLoading}
+        emptyState={emptyState}
+        rowClassName={() => "group"}
+      />
 
       {createOpen && (
         <DimensionFormDialog open={createOpen} onOpenChange={setCreateOpen} />

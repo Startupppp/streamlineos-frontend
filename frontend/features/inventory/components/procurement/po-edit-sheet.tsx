@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useForm, useFieldArray, useWatch, Controller, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -26,7 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useProductVariants, useVendors } from "@/hooks/api/inventory";
 import { useUpdatePurchaseOrder } from "@/hooks/api/inventory/purchase-orders";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -49,6 +49,8 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
+type FieldRow = { id: string; index: number };
+
 function toNum(v: string): number {
   const n = parseFloat(v);
   return Number.isFinite(n) && n >= 0 ? n : 0;
@@ -58,91 +60,12 @@ function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }
 
-interface PoEditLineRowProps {
-  index: number;
-  control: Control<FormValues>;
-  variants: Array<{ id: number; productName: string; name: string; sku: string }>;
-  isOnly: boolean;
-  onRemove: (index: number) => void;
-}
-
-const PoEditLineRow = memo(function PoEditLineRow({ index, control, variants, isOnly, onRemove }: PoEditLineRowProps) {
+function LineAmountCell({ index, control }: { index: number; control: Control<FormValues> }) {
   const quantity = useWatch({ control, name: `lines.${index}.quantity` });
   const unitCost = useWatch({ control, name: `lines.${index}.unitCost` });
   const amount = round2(toNum(quantity ?? "") * toNum(unitCost ?? ""));
-
-  function handleRemove(): void {
-    onRemove(index);
-  }
-
-  return (
-    <TableRow>
-      <TableCell className="px-2 py-1">
-        <Controller
-          control={control}
-          name={`lines.${index}.variantId`}
-          render={({ field: f }) => (
-            <Select value={f.value} onValueChange={f.onChange}>
-              <SelectTrigger className="h-8 text-xs">
-                <SelectValue placeholder="Select variant" />
-              </SelectTrigger>
-              <SelectContent className="max-h-72">
-                {variants.map((v) => (
-                  <SelectItem key={v.id} value={String(v.id)}>
-                    {v.productName} — {v.name} ({v.sku})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        />
-      </TableCell>
-      <TableCell className="px-2 py-1 w-[80px]">
-        <Controller
-          control={control}
-          name={`lines.${index}.quantity`}
-          render={({ field: f }) => (
-            <Input type="number" min="0.0001" step="1" className="h-8 text-right tabular-nums text-xs" {...f} />
-          )}
-        />
-      </TableCell>
-      <TableCell className="px-2 py-1 w-[100px]">
-        <Controller
-          control={control}
-          name={`lines.${index}.unitCost`}
-          render={({ field: f }) => (
-            <Input type="number" min="0" step="0.01" className="h-8 text-right tabular-nums text-xs" {...f} />
-          )}
-        />
-      </TableCell>
-      <TableCell className="px-2 py-1 w-[80px]">
-        <Controller
-          control={control}
-          name={`lines.${index}.taxRate`}
-          render={({ field: f }) => (
-            <Input type="number" min="0" max="100" step="0.01" className="h-8 text-right tabular-nums text-xs" {...f} />
-          )}
-        />
-      </TableCell>
-      <TableCell className="px-2 py-1 text-xs text-right font-mono tabular-nums w-[90px]">
-        {amount.toFixed(2)}
-      </TableCell>
-      <TableCell className="px-2 py-1 w-[40px]">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7"
-          onClick={handleRemove}
-          disabled={isOnly}
-          aria-label={`Remove line ${index + 1}`}
-        >
-          <Trash2 className="size-3.5" />
-        </Button>
-      </TableCell>
-    </TableRow>
-  );
-});
+  return <span>{amount.toFixed(2)}</span>;
+}
 
 interface PoEditSheetProps {
   open: boolean;
@@ -176,6 +99,11 @@ export function PoEditSheet({ open, onOpenChange, po }: PoEditSheetProps) {
 
   const { fields, append, remove } = useFieldArray({ control, name: "lines" });
 
+  const fieldRows: FieldRow[] = useMemo(
+    () => fields.map((f, i) => ({ id: f.id, index: i })),
+    [fields],
+  );
+
   function handleAddLine(): void {
     append({ variantId: "", quantity: "1", unitCost: "0", taxRate: "0" });
   }
@@ -204,6 +132,104 @@ export function PoEditSheet({ open, onOpenChange, po }: PoEditSheetProps) {
     );
     return { subtotal };
   }, [watchedLines]);
+
+  const columns = useMemo<DataTableColumn<FieldRow>[]>(() => [
+    {
+      key: "variant",
+      header: "Variant",
+      cell: (row) => (
+        <Controller
+          control={control}
+          name={`lines.${row.index}.variantId`}
+          render={({ field: f }) => (
+            <Select value={f.value} onValueChange={f.onChange}>
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue placeholder="Select variant" />
+              </SelectTrigger>
+              <SelectContent className="max-h-72">
+                {variants.map((v) => (
+                  <SelectItem key={v.id} value={String(v.id)}>
+                    {v.productName} — {v.name} ({v.sku})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
+      ),
+    },
+    {
+      key: "qty",
+      header: "Qty",
+      headerClassName: "text-right w-[80px]",
+      className: "w-[80px]",
+      cell: (row) => (
+        <Controller
+          control={control}
+          name={`lines.${row.index}.quantity`}
+          render={({ field: f }) => (
+            <Input type="number" min="0.0001" step="1" className="h-8 text-right tabular-nums text-xs" {...f} />
+          )}
+        />
+      ),
+    },
+    {
+      key: "unitCost",
+      header: "Unit Cost",
+      headerClassName: "text-right w-[100px]",
+      className: "w-[100px]",
+      cell: (row) => (
+        <Controller
+          control={control}
+          name={`lines.${row.index}.unitCost`}
+          render={({ field: f }) => (
+            <Input type="number" min="0" step="0.01" className="h-8 text-right tabular-nums text-xs" {...f} />
+          )}
+        />
+      ),
+    },
+    {
+      key: "taxRate",
+      header: "Tax %",
+      headerClassName: "text-right w-[80px]",
+      className: "w-[80px]",
+      cell: (row) => (
+        <Controller
+          control={control}
+          name={`lines.${row.index}.taxRate`}
+          render={({ field: f }) => (
+            <Input type="number" min="0" max="100" step="0.01" className="h-8 text-right tabular-nums text-xs" {...f} />
+          )}
+        />
+      ),
+    },
+    {
+      key: "amount",
+      header: "Amount",
+      headerClassName: "text-right w-[90px]",
+      className: "text-right font-mono tabular-nums w-[90px]",
+      cell: (row) => <LineAmountCell index={row.index} control={control} />,
+    },
+    {
+      key: "remove",
+      header: "",
+      headerClassName: "w-[40px]",
+      className: "w-[40px]",
+      cell: (row) => (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={() => handleRemoveAt(row.index)}
+          disabled={fields.length === 1}
+          aria-label={`Remove line ${row.index + 1}`}
+        >
+          <Trash2 className="size-3.5" />
+        </Button>
+      ),
+    },
+  ], [control, variants, fields.length, handleRemoveAt]);
 
   async function onSubmit(values: FormValues): Promise<void> {
     try {
@@ -303,35 +329,16 @@ export function PoEditSheet({ open, onOpenChange, po }: PoEditSheetProps) {
                   Add line
                 </Button>
               </div>
-              <div className="rounded-md border border-border overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/80 hover:bg-muted/80">
-                      <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Variant</TableHead>
-                      <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Qty</TableHead>
-                      <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Unit Cost</TableHead>
-                      <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Tax %</TableHead>
-                      <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Amount</TableHead>
-                      <TableHead className="w-[40px]" />
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {fields.map((field, index) => (
-                      <PoEditLineRow
-                        key={field.id}
-                        index={index}
-                        control={control}
-                        variants={variants}
-                        isOnly={fields.length === 1}
-                        onRemove={handleRemoveAt}
-                      />
-                    ))}
-                  </TableBody>
-                </Table>
-                <div className="px-4 py-2 border-t text-right text-sm font-medium">
-                  Subtotal: <span className="font-mono tabular-nums">{totals.subtotal.toFixed(2)}</span>
-                </div>
-              </div>
+              <DataTable
+                data={fieldRows}
+                columns={columns}
+                getRowKey={(row) => row.id}
+                footer={
+                  <div className="text-right text-sm font-medium">
+                    Subtotal: <span className="font-mono tabular-nums">{totals.subtotal.toFixed(2)}</span>
+                  </div>
+                }
+              />
             </div>
           </div>
           <SheetFooter className="border-t px-6 py-4 gap-2">

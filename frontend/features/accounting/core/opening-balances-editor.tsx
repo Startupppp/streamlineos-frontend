@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useAccounts } from "@/hooks/api/accounting";
 import { usePostOpeningBalances } from "@/hooks/api/accounting/core";
 
@@ -117,6 +118,89 @@ export function OpeningBalancesEditor({ onSuccess }: OpeningBalancesEditorProps)
     );
   }
 
+  const columns: DataTableColumn<EditorLine>[] = [
+    {
+      key: "account",
+      header: "Account",
+      cell: (row) => (
+        <Select
+          value={row.accountId}
+          onValueChange={(v) => handleAccountChange(row.id, v)}
+        >
+          <SelectTrigger className="h-7 text-xs">
+            <SelectValue placeholder="Select account…" />
+          </SelectTrigger>
+          <SelectContent>
+            {accounts.map((a) => (
+              <SelectItem key={a.id} value={String(a.id)}>
+                {a.code} — {a.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ),
+    },
+    {
+      key: "debit",
+      header: "Debit",
+      headerClassName: "w-[160px] text-right",
+      className: "w-[160px]",
+      cell: (row) => (
+        <Input
+          className="h-7 text-xs text-right font-mono"
+          placeholder="0.00"
+          value={row.debit}
+          onChange={(e) => handleDebitChange(row.id, e.target.value)}
+        />
+      ),
+    },
+    {
+      key: "credit",
+      header: "Credit",
+      headerClassName: "w-[160px] text-right",
+      className: "w-[160px]",
+      cell: (row) => (
+        <Input
+          className="h-7 text-xs text-right font-mono"
+          placeholder="0.00"
+          value={row.credit}
+          onChange={(e) => handleCreditChange(row.id, e.target.value)}
+        />
+      ),
+    },
+    {
+      key: "remove",
+      header: "",
+      headerClassName: "w-10",
+      className: "w-10 text-right",
+      cell: (row) => {
+        function handleRemove(): void {
+          handleRemoveLine(row.id);
+        }
+        return (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 text-muted-foreground hover:text-destructive"
+            onClick={handleRemove}
+            type="button"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        );
+      },
+    },
+  ];
+
+  const footer = (
+    <div className="flex items-center gap-2 text-xs font-semibold">
+      <span className="flex-1 text-foreground">Totals</span>
+      <span className="w-[160px] text-right font-mono tabular-nums">{formatMoney(totalDebit)}</span>
+      <span className="w-[160px] text-right font-mono tabular-nums">{formatMoney(totalCredit)}</span>
+      <span className="w-10" />
+    </div>
+  );
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
@@ -132,84 +216,12 @@ export function OpeningBalancesEditor({ onSuccess }: OpeningBalancesEditorProps)
         />
       </div>
 
-      <div className="rounded-lg border border-border overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-muted/40 border-b border-border">
-              <th className="text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">
-                Account
-              </th>
-              <th className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[160px]">
-                Debit
-              </th>
-              <th className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[160px]">
-                Credit
-              </th>
-              <th className="w-10 px-2 py-2" />
-            </tr>
-          </thead>
-          <tbody>
-            {lines.map((line) => (
-              <tr key={line.id} className="border-b border-border/50">
-                <td className="px-2 py-1.5">
-                  <Select
-                    value={line.accountId}
-                    onValueChange={(v) => handleAccountChange(line.id, v)}
-                  >
-                    <SelectTrigger className="h-7 text-xs">
-                      <SelectValue placeholder="Select account…" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {accounts.map((a) => (
-                        <SelectItem key={a.id} value={String(a.id)}>
-                          {a.code} — {a.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </td>
-                <td className="px-2 py-1.5">
-                  <Input
-                    className="h-7 text-xs text-right font-mono"
-                    placeholder="0.00"
-                    value={line.debit}
-                    onChange={(e) => handleDebitChange(line.id, e.target.value)}
-                  />
-                </td>
-                <td className="px-2 py-1.5">
-                  <Input
-                    className="h-7 text-xs text-right font-mono"
-                    placeholder="0.00"
-                    value={line.credit}
-                    onChange={(e) => handleCreditChange(line.id, e.target.value)}
-                  />
-                </td>
-                <td className="px-1 py-1.5 text-right">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                    onClick={() => handleRemoveLine(line.id)}
-                    type="button"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                </td>
-              </tr>
-            ))}
-            <tr className="bg-muted/30 border-t border-border">
-              <td className="px-3 py-2 text-xs font-semibold text-foreground">Totals</td>
-              <td className="px-3 py-2 text-xs font-mono text-right font-semibold tabular-nums">
-                {formatMoney(totalDebit)}
-              </td>
-              <td className="px-3 py-2 text-xs font-mono text-right font-semibold tabular-nums">
-                {formatMoney(totalCredit)}
-              </td>
-              <td />
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <DataTable
+        data={lines}
+        columns={columns}
+        getRowKey={(row) => row.id}
+        footer={footer}
+      />
 
       {!isBalanced && (
         <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">

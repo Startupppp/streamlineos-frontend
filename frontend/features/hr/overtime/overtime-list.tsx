@@ -1,17 +1,10 @@
 "use client";
 
+import { useMemo, type ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api-client";
 import { useOvertimeRequests, useApproveOvertime, useRejectOvertime } from "@/hooks/api/hr/overtime";
@@ -45,91 +38,103 @@ export function OvertimeList({ canManage }: Props) {
     });
   }
 
-  if (isLoading) {
-    return (
-      <div className="space-y-2">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-12 rounded-lg" />
-        ))}
-      </div>
-    );
-  }
+  type OvertimeRequest = NonNullable<typeof requests>[number];
 
-  if (!requests?.length) {
-    return (
-      <EmptyState
-        illustrationPreset="approval"
-        title="No overtime requests"
-        description="Submit your first overtime request using the button above"
-        className="border-0 bg-transparent shadow-none h-64"
-        compact
-      />
-    );
-  }
+  const columns = useMemo<DataTableColumn<OvertimeRequest>[]>(() => {
+    const cols: DataTableColumn<OvertimeRequest>[] = [
+      {
+        key: "userId",
+        header: "Employee",
+        cell: (req) => <span className="text-sm">{req.userId}</span>,
+      },
+      {
+        key: "date",
+        header: "Date",
+        cell: (req) => <span className="text-sm">{req.date}</span>,
+      },
+      {
+        key: "hours",
+        header: "Hours",
+        cell: (req) => <span className="text-sm font-medium">{req.hours}h</span>,
+      },
+      {
+        key: "reason",
+        header: "Reason",
+        cell: (req) => (
+          <span className="text-sm text-muted-foreground max-w-[200px] truncate block">
+            {req.reason ?? "—"}
+          </span>
+        ),
+      },
+      {
+        key: "convertToCompOff",
+        header: "Comp-Off",
+        cell: (req) =>
+          req.convertToCompOff ? (
+            <Badge variant="secondary" className="text-[11px]">Yes</Badge>
+          ) : (
+            <span className="text-xs text-muted-foreground">No</span>
+          ),
+      },
+      {
+        key: "status",
+        header: "Status",
+        cell: (req) => (
+          <Badge variant={STATUS_VARIANTS[req.status] ?? "secondary"} className="text-[11px]">
+            {req.status}
+          </Badge>
+        ),
+      },
+    ];
+
+    if (canManage) {
+      cols.push({
+        key: "actions",
+        header: "Actions",
+        cell: (req): ReactNode =>
+          req.status === "PENDING" ? (
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs"
+                onClick={() => handleApprove(req.id)}
+                disabled={approve.isPending || reject.isPending}
+              >
+                Approve
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs text-destructive hover:text-destructive"
+                onClick={() => handleReject(req.id)}
+                disabled={approve.isPending || reject.isPending}
+              >
+                Reject
+              </Button>
+            </div>
+          ) : null,
+      });
+    }
+
+    return cols;
+  }, [canManage, approve.isPending, reject.isPending]);
 
   return (
-    <div className="rounded-xl border border-slate-200/80 overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-slate-50/80">
-            <TableHead className="text-xs font-semibold">Employee</TableHead>
-            <TableHead className="text-xs font-semibold">Date</TableHead>
-            <TableHead className="text-xs font-semibold">Hours</TableHead>
-            <TableHead className="text-xs font-semibold">Reason</TableHead>
-            <TableHead className="text-xs font-semibold">Comp-Off</TableHead>
-            <TableHead className="text-xs font-semibold">Status</TableHead>
-            {canManage && <TableHead className="text-xs font-semibold">Actions</TableHead>}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {requests.map((req) => (
-            <TableRow key={req.id}>
-              <TableCell className="text-sm">{req.userId}</TableCell>
-              <TableCell className="text-sm">{req.date}</TableCell>
-              <TableCell className="text-sm font-medium">{req.hours}h</TableCell>
-              <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">{req.reason ?? "—"}</TableCell>
-              <TableCell>
-                {req.convertToCompOff ? (
-                  <Badge variant="secondary" className="text-[11px]">Yes</Badge>
-                ) : (
-                  <span className="text-xs text-muted-foreground">No</span>
-                )}
-              </TableCell>
-              <TableCell>
-                <Badge variant={STATUS_VARIANTS[req.status] ?? "secondary"} className="text-[11px]">
-                  {req.status}
-                </Badge>
-              </TableCell>
-              {canManage && (
-                <TableCell>
-                  {req.status === "PENDING" && (
-                    <div className="flex items-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 text-xs"
-                        onClick={() => handleApprove(req.id)}
-                        disabled={approve.isPending || reject.isPending}
-                      >
-                        Approve
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 text-xs text-destructive hover:text-destructive"
-                        onClick={() => handleReject(req.id)}
-                        disabled={approve.isPending || reject.isPending}
-                      >
-                        Reject
-                      </Button>
-                    </div>
-                  )}
-                </TableCell>
-              )}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+    <DataTable
+      data={requests ?? []}
+      columns={columns}
+      getRowKey={(req) => req.id}
+      isLoading={isLoading}
+      emptyState={
+        <EmptyState
+          illustrationPreset="approval"
+          title="No overtime requests"
+          description="Submit your first overtime request using the button above"
+          className="border-0 bg-transparent shadow-none h-64"
+          compact
+        />
+      }
+    />
   );
 }

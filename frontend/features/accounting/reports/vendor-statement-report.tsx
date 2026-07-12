@@ -1,19 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  TableFooter,
-} from "@/components/ui/table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyReportIllustration } from "@/components/illustrations";
-import { LoadingState, ErrorState } from "@/components/shared";
+import { ErrorState } from "@/components/shared";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ReportShell } from "./report-shell";
 import { DateRangeFilter } from "./date-range-filter";
 import { useVendorStatement } from "@/hooks/api/accounting/reports";
@@ -23,12 +15,93 @@ import { downloadCsv } from "@/features/accounting/shared";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatCurrencyFull } from "@/lib/format-utils";
 
+type VendorStatementRow =
+  | { kind: "opening"; balance: string | number; _idx: number }
+  | { kind: "line"; date: string; docType: string; docNumber: string; debit: string | number; credit: string | number; runningBalance: string | number; _idx: number };
+
 function currentMonthRange(): { from: string; to: string } {
   const now = new Date();
   const from = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
   const to = now.toISOString().slice(0, 10);
   return { from, to };
 }
+
+const columns: DataTableColumn<VendorStatementRow>[] = [
+  {
+    key: "date",
+    header: "Date",
+    cell: function renderDate(row) {
+      if (row.kind === "opening") {
+        return <span className="text-xs font-medium text-muted-foreground">Opening Balance</span>;
+      }
+      return <span className="text-xs text-foreground">{row.date}</span>;
+    },
+  },
+  {
+    key: "docType",
+    header: "Type",
+    cell: function renderDocType(row) {
+      if (row.kind === "opening") return null;
+      return <span className="text-xs text-muted-foreground">{row.docType}</span>;
+    },
+  },
+  {
+    key: "docNumber",
+    header: "Document #",
+    cell: function renderDocNumber(row) {
+      if (row.kind === "opening") return null;
+      return <span className="text-xs font-mono text-foreground">{row.docNumber}</span>;
+    },
+  },
+  {
+    key: "debit",
+    header: "Debit",
+    headerClassName: "text-right",
+    className: "text-right",
+    cell: function renderDebit(row) {
+      if (row.kind === "opening") return null;
+      return (
+        <span className="text-sm font-mono tabular-nums">
+          {Number(row.debit) !== 0 ? formatCurrencyFull(Number(row.debit)) : "—"}
+        </span>
+      );
+    },
+  },
+  {
+    key: "credit",
+    header: "Credit",
+    headerClassName: "text-right",
+    className: "text-right",
+    cell: function renderCredit(row) {
+      if (row.kind === "opening") return null;
+      return (
+        <span className="text-sm font-mono tabular-nums">
+          {Number(row.credit) !== 0 ? formatCurrencyFull(Number(row.credit)) : "—"}
+        </span>
+      );
+    },
+  },
+  {
+    key: "balance",
+    header: "Balance",
+    headerClassName: "text-right",
+    className: "text-right",
+    cell: function renderBalance(row) {
+      if (row.kind === "opening") {
+        return (
+          <span className="text-sm font-mono tabular-nums font-semibold">
+            {formatCurrencyFull(Number(row.balance))}
+          </span>
+        );
+      }
+      return (
+        <span className="text-sm font-mono tabular-nums font-medium">
+          {formatCurrencyFull(Number(row.runningBalance))}
+        </span>
+      );
+    },
+  },
+];
 
 export function VendorStatementReport() {
   const router = useRouter();
@@ -83,6 +156,42 @@ export function VendorStatementReport() {
 
   const data = statementQuery.data;
 
+  const rows: VendorStatementRow[] = data
+    ? [
+        { kind: "opening", balance: data.openingBalance, _idx: 0 },
+        ...data.lines.map(
+          (l, i) =>
+            ({
+              kind: "line" as const,
+              date: l.date,
+              docType: l.docType,
+              docNumber: l.docNumber,
+              debit: l.debit,
+              credit: l.credit,
+              runningBalance: l.runningBalance,
+              _idx: i + 1,
+            }) satisfies VendorStatementRow,
+        ),
+      ]
+    : [];
+
+  function getRowKey(row: VendorStatementRow): number {
+    return row._idx;
+  }
+
+  function rowClassName(row: VendorStatementRow): string {
+    return row.kind === "opening" ? "bg-slate-50/60 border-b border-border/50" : "";
+  }
+
+  const closingBalanceFooter: ReactNode = data ? (
+    <div className="flex justify-between font-semibold text-sm px-1">
+      <span>Closing Balance</span>
+      <span className="font-mono tabular-nums font-bold">
+        {formatCurrencyFull(Number(data.closingBalance))}
+      </span>
+    </div>
+  ) : null;
+
   return (
     <ReportShell
       title="Vendor Statement"
@@ -124,70 +233,30 @@ export function VendorStatementReport() {
           description="Choose a vendor above to view their statement."
           compact
         />
-      ) : statementQuery.isLoading ? (
-        <LoadingState variant="table" rows={8} />
       ) : statementQuery.error ? (
         <ErrorState
           title="Failed to load statement"
           description={getErrorMessage(statementQuery.error)}
           onRetry={handleRetry}
         />
-      ) : !data || data.lines.length === 0 ? (
-        <EmptyState
-          illustration={<EmptyReportIllustration />}
-          title="No transactions in this period"
-          description="There are no AP transactions for this vendor in the selected date range."
-          compact
-        />
       ) : (
-        <div className="rounded-lg border border-border overflow-hidden">
-          <div className="overflow-x-auto">
-            <Table className="min-w-[680px]">
-              <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40">
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Date</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Type</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Document #</TableHead>
-                  <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Debit</TableHead>
-                  <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Credit</TableHead>
-                  <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Balance</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <TableRow className="bg-slate-50/60 border-b border-border/50">
-                  <TableCell colSpan={5} className="text-xs font-medium text-muted-foreground px-3 py-2">Opening Balance</TableCell>
-                  <TableCell className="text-right text-sm font-mono tabular-nums font-semibold px-3 py-2">
-                    {formatCurrencyFull(Number(data.openingBalance))}
-                  </TableCell>
-                </TableRow>
-                {data.lines.map((line, i) => (
-                  <TableRow key={i} className="border-b border-border/50 hover:bg-muted/30">
-                    <TableCell className="text-xs text-foreground px-3 py-2">{line.date}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground px-3 py-2">{line.docType}</TableCell>
-                    <TableCell className="text-xs font-mono text-foreground px-3 py-2">{line.docNumber}</TableCell>
-                    <TableCell className="text-right text-sm font-mono tabular-nums px-3 py-2">
-                      {Number(line.debit) !== 0 ? formatCurrencyFull(Number(line.debit)) : "—"}
-                    </TableCell>
-                    <TableCell className="text-right text-sm font-mono tabular-nums px-3 py-2">
-                      {Number(line.credit) !== 0 ? formatCurrencyFull(Number(line.credit)) : "—"}
-                    </TableCell>
-                    <TableCell className="text-right text-sm font-mono tabular-nums font-medium px-3 py-2">
-                      {formatCurrencyFull(Number(line.runningBalance))}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-              <TableFooter>
-                <TableRow>
-                  <TableCell colSpan={5} className="text-sm font-semibold px-3 py-2">Closing Balance</TableCell>
-                  <TableCell className="text-right text-sm font-mono tabular-nums font-bold px-3 py-2">
-                    {formatCurrencyFull(Number(data.closingBalance))}
-                  </TableCell>
-                </TableRow>
-              </TableFooter>
-            </Table>
-          </div>
-        </div>
+        <DataTable
+          data={rows}
+          columns={columns}
+          getRowKey={getRowKey}
+          rowClassName={rowClassName}
+          isLoading={statementQuery.isLoading}
+          minWidth="680px"
+          footer={closingBalanceFooter}
+          emptyState={
+            <EmptyState
+              illustration={<EmptyReportIllustration />}
+              title="No transactions in this period"
+              description="There are no AP transactions for this vendor in the selected date range."
+              compact
+            />
+          }
+        />
       )}
     </ReportShell>
   );

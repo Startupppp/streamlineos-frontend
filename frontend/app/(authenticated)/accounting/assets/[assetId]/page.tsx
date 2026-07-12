@@ -12,14 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -82,6 +75,42 @@ function ScheduleStatusBadge({ status }: { status: DepreciationScheduleRow["stat
     </Badge>
   );
 }
+
+const scheduleColumns: DataTableColumn<DepreciationScheduleRow>[] = [
+  {
+    key: "period",
+    header: "Period",
+    cell: (row) => <span className="font-mono text-xs">{row.periodKey}</span>,
+  },
+  {
+    key: "amount",
+    header: "Amount",
+    headerClassName: "text-right",
+    className: "text-right",
+    cell: (row) => <Money value={parseFloat(row.amount)} />,
+  },
+  {
+    key: "status",
+    header: "Status",
+    cell: (row) => <ScheduleStatusBadge status={row.status} />,
+  },
+  {
+    key: "journal",
+    header: "Journal",
+    cell: (row) =>
+      row.journalEntryId !== undefined ? (
+        <Link
+          href={`/accounting/journal/${row.journalEntryId}`}
+          className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline"
+        >
+          JE-{row.journalEntryId}
+          <ExternalLink className="h-3 w-3" />
+        </Link>
+      ) : (
+        <span className="text-xs text-muted-foreground">—</span>
+      ),
+  },
+];
 
 export default function AssetDetailPage() {
   const params = useParams();
@@ -268,46 +297,12 @@ export default function AssetDetailPage() {
             {asset.schedule.length === 0 ? (
               <p className="text-sm text-muted-foreground">No schedule generated yet. Activate the asset to start depreciation.</p>
             ) : (
-              <div className="rounded-lg border border-border overflow-hidden">
-                <div className="overflow-x-auto">
-                  <Table className="min-w-[480px]">
-                    <TableHeader>
-                      <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Period</TableHead>
-                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Amount</TableHead>
-                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Status</TableHead>
-                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Journal</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {asset.schedule.map((row) => (
-                        <TableRow key={row.id} className="border-b border-border/50 hover:bg-muted/30">
-                          <TableCell className="font-mono text-xs px-3 py-2">{row.periodKey}</TableCell>
-                          <TableCell className="text-sm text-right px-3 py-2">
-                            <Money value={parseFloat(row.amount)} />
-                          </TableCell>
-                          <TableCell className="px-3 py-2">
-                            <ScheduleStatusBadge status={row.status} />
-                          </TableCell>
-                          <TableCell className="px-3 py-2">
-                            {row.journalEntryId ? (
-                              <Link
-                                href={`/accounting/journal/${row.journalEntryId}`}
-                                className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline"
-                              >
-                                JE-{row.journalEntryId}
-                                <ExternalLink className="h-3 w-3" />
-                              </Link>
-                            ) : (
-                              <span className="text-xs text-muted-foreground">—</span>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
+              <DataTable
+                data={asset.schedule}
+                columns={scheduleColumns}
+                getRowKey={(row) => row.id}
+                minWidth="480px"
+              />
             )}
           </div>
         </div>

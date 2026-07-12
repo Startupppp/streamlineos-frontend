@@ -1,15 +1,7 @@
 import { Activity } from "lucide-react";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { cn } from "@/lib/utils";
 import { formatCurrency, type LeadSourceReport } from "../lib/types";
 
@@ -17,6 +9,77 @@ interface SourceAttributionCardProps {
   sourceReport: LeadSourceReport | undefined;
   isLoading: boolean;
 }
+
+type SourceRow = NonNullable<LeadSourceReport["sources"]>[number];
+
+const columns: DataTableColumn<SourceRow>[] = [
+  {
+    key: "source",
+    header: "Source",
+    cell: (row) => (
+      <span className="text-[11px] font-medium capitalize">
+        {row.source.replace(/_/g, " ")}
+      </span>
+    ),
+  },
+  {
+    key: "count",
+    header: "Leads",
+    sortable: true,
+    sortValue: (row) => row.count,
+    headerClassName: "text-right",
+    className: "text-right",
+    cell: (row) => (
+      <span className="text-[11px] font-mono tabular-nums">{row.count}</span>
+    ),
+  },
+  {
+    key: "converted",
+    header: "Converted",
+    sortable: true,
+    sortValue: (row) => row.converted,
+    headerClassName: "text-right",
+    className: "text-right",
+    cell: (row) => (
+      <span className="text-[11px] font-mono tabular-nums text-emerald-600">
+        {row.converted}
+      </span>
+    ),
+  },
+  {
+    key: "conversionRate",
+    header: "Win Rate",
+    headerClassName: "text-right",
+    className: "text-right",
+    cell: (row) => (
+      <span
+        className={cn(
+          "text-[11px] font-mono tabular-nums font-medium",
+          row.conversionRate >= 50
+            ? "text-emerald-600"
+            : row.conversionRate >= 25
+              ? "text-amber-600"
+              : "text-muted-foreground",
+        )}
+      >
+        {row.conversionRate.toFixed(1)}%
+      </span>
+    ),
+  },
+  {
+    key: "avgValue",
+    header: "Avg Value",
+    headerClassName: "text-right",
+    className: "text-right",
+    cell: (row) => (
+      <span className="text-[11px] font-mono tabular-nums text-muted-foreground">
+        {row.count > 0
+          ? formatCurrency(Math.round(row.totalValue / row.count))
+          : "—"}
+      </span>
+    ),
+  },
+];
 
 export function SourceAttributionCard({
   sourceReport,
@@ -30,65 +93,15 @@ export function SourceAttributionCard({
           Source Attribution
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-0">
-        {isLoading ? (
-          <div className="p-4 space-y-2">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-8 w-full" />
-            ))}
-          </div>
-        ) : !sourceReport?.sources?.length ? (
+      <DataTable
+        data={sourceReport?.sources ?? []}
+        columns={columns}
+        getRowKey={(row) => row.source}
+        isLoading={isLoading}
+        emptyState={
           <ChartEmptyState message="No source data available" compact className="py-10 px-4" />
-        ) : (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
-                <TableRow className="border-b-2 border-border hover:bg-transparent">
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Source</TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Leads</TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Converted</TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Win Rate</TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Avg Value</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sourceReport.sources.map((src) => (
-                  <TableRow key={src.source} className="h-8 hover:bg-muted/30 transition-colors">
-                    <TableCell className="px-2 py-1 text-[11px] font-medium capitalize">
-                      {src.source.replace(/_/g, " ")}
-                    </TableCell>
-                    <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums">
-                      {src.count}
-                    </TableCell>
-                    <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums text-emerald-600">
-                      {src.converted}
-                    </TableCell>
-                    <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums">
-                      <span
-                        className={cn(
-                          "font-medium",
-                          src.conversionRate >= 50
-                            ? "text-emerald-600"
-                            : src.conversionRate >= 25
-                              ? "text-amber-600"
-                              : "text-muted-foreground",
-                        )}
-                      >
-                        {src.conversionRate.toFixed(1)}%
-                      </span>
-                    </TableCell>
-                    <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums text-muted-foreground">
-                      {src.count > 0
-                        ? formatCurrency(Math.round(src.totalValue / src.count))
-                        : "—"}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-      </CardContent>
+        }
+      />
     </Card>
   );
 }

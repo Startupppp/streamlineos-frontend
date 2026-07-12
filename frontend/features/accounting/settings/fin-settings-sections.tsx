@@ -1,21 +1,13 @@
-﻿"use client";
+"use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { cn } from "@/lib/utils";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useDeleteApprovalPolicy } from "@/hooks/api/accounting/settings";
 import type { NumberSequence, SystemAccountMapping, SystemAccountPurpose } from "@/types/accounting/fin-settings";
@@ -51,32 +43,6 @@ export const PURPOSE_LABELS: Record<SystemAccountPurpose, string> = {
   ASSET_DISPOSAL_GAIN_LOSS: "Asset Disposal Gain / Loss",
 };
 
-interface SequenceEditRowProps {
-  seq: NumberSequence;
-  canManage: boolean;
-  onEdit: (s: NumberSequence) => void;
-}
-
-function SequenceEditRow({ seq, canManage, onEdit }: SequenceEditRowProps) {
-  function handleEdit(): void {
-    onEdit(seq);
-  }
-
-  return (
-    <TableRow className="border-b border-border/50 hover:bg-muted/30">
-      <TableCell className="text-xs px-3 py-2 font-mono capitalize">{seq.entityType.replace(/_/g, " ")}</TableCell>
-      <TableCell className="text-xs px-3 py-2 font-mono">{seq.prefix}</TableCell>
-      <TableCell className="text-xs px-3 py-2 tabular-nums">{seq.padding}</TableCell>
-      <TableCell className="text-xs px-3 py-2 tabular-nums">{seq.nextNumber}</TableCell>
-      {canManage && (
-        <TableCell className="px-2 py-2">
-          <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={handleEdit}>Edit</Button>
-        </TableCell>
-      )}
-    </TableRow>
-  );
-}
-
 export interface SequencesSectionProps {
   sequences: NumberSequence[];
   canManage: boolean;
@@ -89,6 +55,50 @@ export function SequencesSection({ sequences, canManage }: SequencesSectionProps
     if (!v) setEditSeq(null);
   }
 
+  function getSeqRowKey(seq: NumberSequence): string {
+    return seq.entityType;
+  }
+
+  const baseColumns: DataTableColumn<NumberSequence>[] = [
+    {
+      key: "entityType",
+      header: "Entity type",
+      cell: (row) => (
+        <span className="text-xs font-mono capitalize">{row.entityType.replace(/_/g, " ")}</span>
+      ),
+    },
+    {
+      key: "prefix",
+      header: "Prefix",
+      cell: (row) => <span className="text-xs font-mono">{row.prefix}</span>,
+    },
+    {
+      key: "padding",
+      header: "Padding",
+      cell: (row) => <span className="text-xs tabular-nums">{row.padding}</span>,
+    },
+    {
+      key: "nextNumber",
+      header: "Next #",
+      cell: (row) => <span className="text-xs tabular-nums">{row.nextNumber}</span>,
+    },
+  ];
+
+  const actionsColumn: DataTableColumn<NumberSequence> = {
+    key: "actions",
+    header: "",
+    cell: (row) => (
+      <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setEditSeq(row)}>
+        Edit
+      </Button>
+    ),
+  };
+
+  const columns = useMemo(
+    () => (canManage ? [...baseColumns, actionsColumn] : baseColumns),
+    [canManage],
+  );
+
   return (
     <>
       <Card>
@@ -96,24 +106,12 @@ export function SequencesSection({ sequences, canManage }: SequencesSectionProps
           <CardTitle className="text-sm font-semibold">Numbering Sequences</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Entity type</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Prefix</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Padding</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Next #</TableHead>
-                  {canManage && <TableHead className="w-16 px-2 py-2" />}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sequences.map((seq) => (
-                  <SequenceEditRow key={seq.entityType} seq={seq} canManage={canManage} onEdit={setEditSeq} />
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <DataTable
+            data={sequences}
+            columns={columns}
+            getRowKey={getSeqRowKey}
+            className="rounded-none border-0"
+          />
         </CardContent>
       </Card>
 
@@ -125,36 +123,6 @@ export function SequencesSection({ sequences, canManage }: SequencesSectionProps
         />
       )}
     </>
-  );
-}
-
-interface SystemAccountRowProps {
-  mapping: SystemAccountMapping;
-  canManage: boolean;
-  onMap: (m: SystemAccountMapping) => void;
-}
-
-function SystemAccountRow({ mapping, canManage, onMap }: SystemAccountRowProps) {
-  function handleMap(): void {
-    onMap(mapping);
-  }
-
-  return (
-    <TableRow className={cn("border-b border-border/50 hover:bg-muted/30", !mapping.accountId && "bg-amber-50/60")}>
-      <TableCell className="text-xs px-3 py-2">{PURPOSE_LABELS[mapping.purpose]}</TableCell>
-      <TableCell className="text-xs px-3 py-2">
-        {mapping.account ? (
-          <span className="font-mono">{mapping.account.code} â€” {mapping.account.name}</span>
-        ) : (
-          <span className="text-amber-600 font-medium">Not mapped</span>
-        )}
-      </TableCell>
-      {canManage && (
-        <TableCell className="px-2 py-2">
-          <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={handleMap}>Map</Button>
-        </TableCell>
-      )}
-    </TableRow>
   );
 }
 
@@ -170,6 +138,49 @@ export function SystemAccountsSection({ systemAccounts, canManage }: SystemAccou
     if (!v) setEditMapping(null);
   }
 
+  function getMappingRowKey(m: SystemAccountMapping): string {
+    return m.purpose;
+  }
+
+  function getMappingRowClassName(m: SystemAccountMapping): string {
+    return !m.accountId ? "bg-amber-50/60" : "";
+  }
+
+  const baseColumns: DataTableColumn<SystemAccountMapping>[] = [
+    {
+      key: "purpose",
+      header: "Purpose",
+      cell: (row) => <span className="text-xs">{PURPOSE_LABELS[row.purpose]}</span>,
+    },
+    {
+      key: "account",
+      header: "Mapped account",
+      cell: (row) =>
+        row.account ? (
+          <span className="text-xs font-mono">
+            {row.account.code} – {row.account.name}
+          </span>
+        ) : (
+          <span className="text-xs text-amber-600 font-medium">Not mapped</span>
+        ),
+    },
+  ];
+
+  const actionsColumn: DataTableColumn<SystemAccountMapping> = {
+    key: "actions",
+    header: "",
+    cell: (row) => (
+      <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setEditMapping(row)}>
+        Map
+      </Button>
+    ),
+  };
+
+  const columns = useMemo(
+    () => (canManage ? [...baseColumns, actionsColumn] : baseColumns),
+    [canManage],
+  );
+
   return (
     <>
       <Card>
@@ -177,22 +188,13 @@ export function SystemAccountsSection({ systemAccounts, canManage }: SystemAccou
           <CardTitle className="text-sm font-semibold">System Accounts</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Purpose</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Mapped account</TableHead>
-                  {canManage && <TableHead className="w-16 px-2 py-2" />}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {systemAccounts.map((m) => (
-                  <SystemAccountRow key={m.purpose} mapping={m} canManage={canManage} onMap={setEditMapping} />
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <DataTable
+            data={systemAccounts}
+            columns={columns}
+            getRowKey={getMappingRowKey}
+            rowClassName={getMappingRowClassName}
+            className="rounded-none border-0"
+          />
         </CardContent>
       </Card>
 
@@ -204,53 +206,6 @@ export function SystemAccountsSection({ systemAccounts, canManage }: SystemAccou
         />
       )}
     </>
-  );
-}
-
-interface PolicyRowProps {
-  policy: ApprovalPolicy;
-  canManage: boolean;
-  isDeleting: boolean;
-  onEdit: (p: ApprovalPolicy) => void;
-  onDelete: (id: number) => void;
-}
-
-function PolicyRow({ policy, canManage, isDeleting, onEdit, onDelete }: PolicyRowProps) {
-  function handleEdit(): void {
-    onEdit(policy);
-  }
-
-  function handleDelete(): void {
-    onDelete(policy.id);
-  }
-
-  return (
-    <TableRow className="border-b border-border/50 hover:bg-muted/30">
-      <TableCell className="text-xs px-3 py-2 font-mono">{policy.recordType.replace(/_/g, " ")}</TableCell>
-      <TableCell className="text-xs px-3 py-2 tabular-nums">{policy.minAmount ?? "â€”"}</TableCell>
-      <TableCell className="text-xs px-3 py-2">{policy.approverRole ?? "â€”"}</TableCell>
-      <TableCell className="px-3 py-2">
-        <Badge variant={policy.isActive ? "default" : "secondary"} className="text-[10px]">
-          {policy.isActive ? "Active" : "Inactive"}
-        </Badge>
-      </TableCell>
-      {canManage && (
-        <TableCell className="px-2 py-2">
-          <div className="flex gap-1">
-            <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={handleEdit}>Edit</Button>
-            <LoadingButton
-              variant="ghost"
-              size="sm"
-              className="h-6 text-xs text-destructive hover:text-destructive"
-              onClick={handleDelete}
-              isPending={isDeleting}
-            >
-              Delete
-            </LoadingButton>
-          </div>
-        </TableCell>
-      )}
-    </TableRow>
   );
 }
 
@@ -279,6 +234,65 @@ export function PoliciesSection({ policies, canManage }: PoliciesSectionProps) {
     setAddPolicyOpen(true);
   }
 
+  function getPolicyRowKey(p: ApprovalPolicy): number {
+    return p.id;
+  }
+
+  const baseColumns: DataTableColumn<ApprovalPolicy>[] = [
+    {
+      key: "recordType",
+      header: "Record type",
+      cell: (row) => (
+        <span className="text-xs font-mono">{row.recordType.replace(/_/g, " ")}</span>
+      ),
+    },
+    {
+      key: "minAmount",
+      header: "Min amount",
+      cell: (row) => <span className="text-xs tabular-nums">{row.minAmount ?? "—"}</span>,
+    },
+    {
+      key: "approverRole",
+      header: "Approver role",
+      cell: (row) => <span className="text-xs">{row.approverRole ?? "—"}</span>,
+    },
+    {
+      key: "isActive",
+      header: "Active",
+      cell: (row) => (
+        <Badge variant={row.isActive ? "default" : "secondary"} className="text-[10px]">
+          {row.isActive ? "Active" : "Inactive"}
+        </Badge>
+      ),
+    },
+  ];
+
+  const actionsColumn: DataTableColumn<ApprovalPolicy> = {
+    key: "actions",
+    header: "",
+    cell: (row) => (
+      <div className="flex gap-1">
+        <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setEditPolicy(row)}>
+          Edit
+        </Button>
+        <LoadingButton
+          variant="ghost"
+          size="sm"
+          className="h-6 text-xs text-destructive hover:text-destructive"
+          onClick={() => handleDeletePolicy(row.id)}
+          isPending={deletePolicy.isPending}
+        >
+          Delete
+        </LoadingButton>
+      </div>
+    ),
+  };
+
+  const columns = useMemo(
+    () => (canManage ? [...baseColumns, actionsColumn] : baseColumns),
+    [canManage, deletePolicy.isPending],
+  );
+
   return (
     <>
       <Card>
@@ -289,38 +303,17 @@ export function PoliciesSection({ policies, canManage }: PoliciesSectionProps) {
           )}
         </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Record type</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Min amount</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Approver role</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Active</TableHead>
-                  {canManage && <TableHead className="w-28 px-2 py-2" />}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {policies.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={canManage ? 5 : 4} className="text-center text-xs text-muted-foreground py-6">
-                      No approval policies configured.
-                    </TableCell>
-                  </TableRow>
-                )}
-                {policies.map((p) => (
-                  <PolicyRow
-                    key={p.id}
-                    policy={p}
-                    canManage={canManage}
-                    isDeleting={deletePolicy.isPending}
-                    onEdit={setEditPolicy}
-                    onDelete={handleDeletePolicy}
-                  />
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <DataTable
+            data={policies}
+            columns={columns}
+            getRowKey={getPolicyRowKey}
+            className="rounded-none border-0"
+            emptyState={
+              <p className="text-center text-xs text-muted-foreground py-6">
+                No approval policies configured.
+              </p>
+            }
+          />
         </CardContent>
       </Card>
 
@@ -341,47 +334,62 @@ export interface ExchangeRatesSectionProps {
 export function ExchangeRatesSection({ rates, canManage }: ExchangeRatesSectionProps) {
   const [addRateOpen, setAddRateOpen] = useState(false);
 
+  function handleAddRateOpen(): void {
+    setAddRateOpen(true);
+  }
+
+  function getRateRowKey(r: ExchangeRate): number {
+    return r.id;
+  }
+
+  const columns: DataTableColumn<ExchangeRate>[] = [
+    {
+      key: "fromCurrency",
+      header: "From",
+      cell: (row) => <span className="text-xs font-mono uppercase">{row.fromCurrency}</span>,
+    },
+    {
+      key: "toCurrency",
+      header: "To",
+      cell: (row) => <span className="text-xs font-mono uppercase">{row.toCurrency}</span>,
+    },
+    {
+      key: "rate",
+      header: "Rate",
+      cell: (row) => <span className="text-xs tabular-nums">{row.rate}</span>,
+    },
+    {
+      key: "asOfDate",
+      header: "As of",
+      cell: (row) => (
+        <span className="text-xs text-muted-foreground">
+          {new Date(row.asOfDate).toLocaleDateString()}
+        </span>
+      ),
+    },
+  ];
+
   return (
     <>
       <Card>
         <CardHeader className="pb-2 flex flex-row items-center justify-between">
           <CardTitle className="text-sm font-semibold">Exchange Rates</CardTitle>
           {canManage && (
-            <Button size="sm" className="h-7 text-xs" onClick={() => setAddRateOpen(true)}>Add rate</Button>
+            <Button size="sm" className="h-7 text-xs" onClick={handleAddRateOpen}>Add rate</Button>
           )}
         </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">From</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">To</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Rate</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">As of</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rates.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center text-xs text-muted-foreground py-6">
-                      No exchange rates configured.
-                    </TableCell>
-                  </TableRow>
-                )}
-                {rates.map((r) => (
-                  <TableRow key={r.id} className="border-b border-border/50 hover:bg-muted/30">
-                    <TableCell className="text-xs px-3 py-2 font-mono uppercase">{r.fromCurrency}</TableCell>
-                    <TableCell className="text-xs px-3 py-2 font-mono uppercase">{r.toCurrency}</TableCell>
-                    <TableCell className="text-xs px-3 py-2 tabular-nums">{r.rate}</TableCell>
-                    <TableCell className="text-xs px-3 py-2 text-muted-foreground">
-                      {new Date(r.asOfDate).toLocaleDateString()}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <DataTable
+            data={rates}
+            columns={columns}
+            getRowKey={getRateRowKey}
+            className="rounded-none border-0"
+            emptyState={
+              <p className="text-center text-xs text-muted-foreground py-6">
+                No exchange rates configured.
+              </p>
+            }
+          />
         </CardContent>
       </Card>
 
@@ -397,16 +405,14 @@ export function QuickLinks() {
         href="/accounting/period-close"
         className="rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium hover:bg-muted/30 transition-colors"
       >
-        Period Close â†’
+        Period Close →
       </Link>
       <Link
         href="/accounting/audit"
         className="rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium hover:bg-muted/30 transition-colors"
       >
-        Audit â†’
+        Audit →
       </Link>
     </div>
   );
 }
-
-

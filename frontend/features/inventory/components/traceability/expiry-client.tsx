@@ -14,22 +14,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { ErrorState, SkeletonTable } from "@/components/shared";
+import { ErrorState } from "@/components/shared";
 import { EmptyReportIllustration } from "@/components/illustrations";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
+import { fadeUp } from "@/lib/motion-variants";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useExpiryItems } from "@/hooks/api/inventory/traceability";
-import { cn } from "@/lib/utils";
-
-const TH = "text-[10px] uppercase tracking-wider font-bold px-2 py-1.5";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 
 function ExpiryLotViewButton({ lotId, lotNumber }: { lotId: number; lotNumber: string }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
@@ -66,6 +56,77 @@ function formatDaysLabel(days: number): string {
   return `${days}d`;
 }
 
+type ExpiryItem = NonNullable<ReturnType<typeof useExpiryItems>["data"]>[number];
+
+function getExpiryRowClassName(row: ExpiryItem): string {
+  if (row.daysUntilExpiry < 0) return "bg-red-50/40 hover:bg-red-50/60";
+  if (row.daysUntilExpiry <= 30) return "bg-amber-50/30 hover:bg-amber-50/50";
+  return "";
+}
+
+const EXPIRY_COLUMNS: DataTableColumn<ExpiryItem>[] = [
+  {
+    key: "lotNumber",
+    header: "Lot #",
+    cell: (row) => (
+      <span className="font-mono font-semibold text-foreground">{row.lotNumber}</span>
+    ),
+  },
+  {
+    key: "productName",
+    header: "Product",
+    className: "font-medium text-foreground truncate max-w-[160px]",
+    cell: (row) => <>{row.productName}</>,
+  },
+  {
+    key: "variantSku",
+    header: "SKU",
+    headerClassName: "hidden md:table-cell",
+    className: "font-mono text-muted-foreground hidden md:table-cell",
+    cell: (row) => <>{row.variantSku}</>,
+  },
+  {
+    key: "expiryDate",
+    header: "Expiry Date",
+    className: "tabular-nums",
+    cell: (row) => (
+      <span className={getExpiryColorClass(row.daysUntilExpiry)}>
+        {new Date(row.expiryDate).toLocaleDateString()}
+      </span>
+    ),
+  },
+  {
+    key: "daysUntilExpiry",
+    header: "Days",
+    headerClassName: "text-right",
+    className: "text-right tabular-nums",
+    cell: (row) => (
+      <span className={getExpiryColorClass(row.daysUntilExpiry)}>
+        {formatDaysLabel(row.daysUntilExpiry)}
+      </span>
+    ),
+  },
+  {
+    key: "currentStock",
+    header: "Stock Qty",
+    headerClassName: "text-right",
+    className: "text-right font-mono tabular-nums",
+    cell: (row) => <>{row.currentStock.toLocaleString()}</>,
+  },
+  {
+    key: "warehouseName",
+    header: "Warehouse",
+    headerClassName: "hidden md:table-cell",
+    className: "text-muted-foreground hidden md:table-cell",
+    cell: (row) => <>{row.warehouseName ?? "—"}</>,
+  },
+  {
+    key: "actions",
+    header: "",
+    cell: (row) => <ExpiryLotViewButton lotId={row.lotId} lotNumber={row.lotNumber} />,
+  },
+];
+
 export function ExpiryClient() {
   const [days, setDays] = useState("30");
 
@@ -80,6 +141,17 @@ export function ExpiryClient() {
   function handleDaysChange(val: string): void {
     setDays(val);
   }
+
+  const emptyState = (
+    <motion.div variants={fadeUp} initial="hidden" animate="visible">
+      <InventoryEmptyState
+        illustration={<EmptyReportIllustration />}
+        title={`No stock expiring within ${days} days`}
+        description="All tracked lots are within acceptable expiry windows for this period."
+        className="flex-1 min-h-[40vh]"
+      />
+    </motion.div>
+  );
 
   return (
     <PageWrapper
@@ -104,97 +176,22 @@ export function ExpiryClient() {
         </div>
       }
     >
-      {isLoading ? (
-        <SkeletonTable rows={8} columns={6} />
-      ) : isError ? (
+      {isError ? (
         <ErrorState
           title="Failed to load expiry data"
           description="An error occurred while fetching expiry information. Please try again."
           onRetry={handleRetry}
           className="flex-1 min-h-[40vh]"
         />
-      ) : items.length === 0 ? (
-        <motion.div variants={fadeUp} initial="hidden" animate="visible">
-          <InventoryEmptyState
-            illustration={<EmptyReportIllustration />}
-            title={`No stock expiring within ${days} days`}
-            description="All tracked lots are within acceptable expiry windows for this period."
-            className="flex-1 min-h-[40vh]"
-          />
-        </motion.div>
       ) : (
-        <motion.div
-          variants={staggerContainer}
-          initial="hidden"
-          animate="visible"
-          className="space-y-3"
-        >
-          <motion.div variants={fadeUp}>
-            <div className="rounded-md border border-border overflow-hidden bg-card">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/80 hover:bg-muted/80">
-                      <TableHead className={TH}>Lot #</TableHead>
-                      <TableHead className={TH}>Product</TableHead>
-                      <TableHead className={`${TH} hidden md:table-cell`}>SKU</TableHead>
-                      <TableHead className={TH}>Expiry Date</TableHead>
-                      <TableHead className={`${TH} text-right`}>Days</TableHead>
-                      <TableHead className={`${TH} text-right`}>Stock Qty</TableHead>
-                      <TableHead className={`${TH} hidden md:table-cell`}>Warehouse</TableHead>
-                      <TableHead className={TH} />
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {items.map((item) => {
-                      const colorClass = getExpiryColorClass(item.daysUntilExpiry);
-                      return (
-                        <TableRow
-                          key={item.lotId}
-                          className={cn(
-                            "h-8 border-b border-border/50 transition-colors",
-                            item.daysUntilExpiry < 0 && "bg-red-50/40 hover:bg-red-50/60",
-                            item.daysUntilExpiry >= 0 &&
-                              item.daysUntilExpiry <= 30 &&
-                              "bg-amber-50/30 hover:bg-amber-50/50",
-                            item.daysUntilExpiry > 30 && "hover:bg-muted/30",
-                          )}
-                        >
-                          <TableCell className="px-2 py-1 font-mono text-[11px] font-semibold text-foreground">
-                            {item.lotNumber}
-                          </TableCell>
-                          <TableCell className="px-2 py-1 text-[11px] font-medium text-foreground truncate max-w-[160px]">
-                            {item.productName}
-                          </TableCell>
-                          <TableCell className="px-2 py-1 font-mono text-[11px] text-muted-foreground hidden md:table-cell">
-                            {item.variantSku}
-                          </TableCell>
-                          <TableCell className={`px-2 py-1 text-[11px] tabular-nums ${colorClass}`}>
-                            {new Date(item.expiryDate).toLocaleDateString()}
-                          </TableCell>
-                          <TableCell
-                            className={`px-2 py-1 text-right tabular-nums text-[11px] ${colorClass}`}
-                          >
-                            {formatDaysLabel(item.daysUntilExpiry)}
-                          </TableCell>
-                          <TableCell className="px-2 py-1 text-right font-mono tabular-nums text-[11px]">
-                            {item.currentStock.toLocaleString()}
-                          </TableCell>
-                          <TableCell className="px-2 py-1 text-[11px] text-muted-foreground hidden md:table-cell">
-                            {item.warehouseName ?? "—"}
-                          </TableCell>
-                          <TableCell className="px-2 py-1">
-                            <ExpiryLotViewButton lotId={item.lotId} lotNumber={item.lotNumber} />
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
-          </motion.div>
-        </motion.div>
+        <DataTable
+          data={items}
+          columns={EXPIRY_COLUMNS}
+          getRowKey={(row) => row.lotId}
+          isLoading={isLoading}
+          emptyState={emptyState}
+          rowClassName={getExpiryRowClassName}
+        />
       )}
     </PageWrapper>
   );

@@ -1,27 +1,67 @@
 "use client";
 
-import { useState, type ChangeEvent } from "react";
+import { useState } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { LoadingState, ErrorState } from "@/components/shared";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTimeIllustration } from "@/components/illustrations";
 import { useTrialBalance } from "@/hooks/api/accounting";
 import { getErrorMessage } from "@/lib/get-error-message";
+import type { TrialBalanceRow } from "@/types/accounting";
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
 }
+
+const columns: DataTableColumn<TrialBalanceRow>[] = [
+  {
+    key: "code",
+    header: "Code",
+    cell: (row) => <span className="font-mono text-xs text-foreground">{row.code}</span>,
+    className: "w-[120px]",
+  },
+  {
+    key: "name",
+    header: "Account",
+    cell: (row) => <span className="text-sm text-foreground">{row.name}</span>,
+  },
+  {
+    key: "accountType",
+    header: "Type",
+    cell: (row) => (
+      <span className="text-xs font-mono uppercase tracking-wide text-muted-foreground">
+        {row.accountType}
+      </span>
+    ),
+    className: "w-[140px]",
+  },
+  {
+    key: "debit",
+    header: "Debit",
+    cell: (row) => <span className="tabular-nums font-mono">{row.debit}</span>,
+    className: "text-right w-[140px]",
+    sortable: true,
+    sortValue: (row) => parseFloat(row.debit),
+  },
+  {
+    key: "credit",
+    header: "Credit",
+    cell: (row) => <span className="tabular-nums font-mono">{row.credit}</span>,
+    className: "text-right w-[140px]",
+    sortable: true,
+    sortValue: (row) => parseFloat(row.credit),
+  },
+  {
+    key: "balance",
+    header: "Balance",
+    cell: (row) => <span className="tabular-nums font-medium font-mono">{row.balance}</span>,
+    className: "text-right w-[140px]",
+    sortable: true,
+    sortValue: (row) => parseFloat(row.balance),
+  },
+];
 
 export default function TrialBalancePage() {
   const [asOf, setAsOf] = useState<string>(todayIso());
@@ -53,7 +93,13 @@ export default function TrialBalancePage() {
             >
               As of
             </label>
-            <DatePicker id="tb-as-of" value={asOf ?? ""} onChange={handleAsOfChange} placeholder="Pick a date" className="w-full sm:w-[160px] h-8 text-sm" />
+            <DatePicker
+              id="tb-as-of"
+              value={asOf ?? ""}
+              onChange={handleAsOfChange}
+              placeholder="Pick a date"
+              className="w-full sm:w-[160px] h-8 text-sm"
+            />
           </div>
           {tb ? (
             <div className="flex flex-col gap-1">
@@ -74,78 +120,37 @@ export default function TrialBalancePage() {
         </div>
       }
     >
-      {query.isLoading ? (
-          <LoadingState variant="table" rows={8} />
-        ) : query.error ? (
-          <ErrorState
-            title="Failed to load trial balance"
-            description={getErrorMessage(query.error)}
-            onRetry={handleRetry}
-          />
-        ) : rows.length === 0 ? (
-          <EmptyState
-            illustration={<EmptyTimeIllustration />}
-            title="No posted entries for this date"
-            description="Post journal entries with a date on or before the selected date to populate this report."
-          />
-        ) : (
-          <div className="rounded-lg border border-border overflow-hidden">
-            <div className="overflow-x-auto">
-            <Table className="min-w-[640px]">
-              <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-                  <TableHead className="w-[120px] text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Code</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Account</TableHead>
-                  <TableHead className="w-[140px] text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Type</TableHead>
-                  <TableHead className="w-[140px] text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Debit</TableHead>
-                  <TableHead className="w-[140px] text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Credit</TableHead>
-                  <TableHead className="w-[140px] text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">
-                    Balance
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rows.map((row) => (
-                  <TableRow key={row.accountId} className="border-b border-border/50 hover:bg-muted/30">
-                    <TableCell className="font-mono text-xs text-foreground">
-                      {row.code}
-                    </TableCell>
-                    <TableCell className="text-sm text-foreground">
-                      {row.name}
-                    </TableCell>
-                    <TableCell className="text-xs font-mono uppercase tracking-wide text-muted-foreground">
-                      {row.accountType}
-                    </TableCell>
-                    <TableCell className="text-sm text-right tabular-nums font-mono">
-                      {row.debit}
-                    </TableCell>
-                    <TableCell className="text-sm text-right tabular-nums font-mono">
-                      {row.credit}
-                    </TableCell>
-                    <TableCell className="text-sm text-right tabular-nums font-medium font-mono">
-                      {row.balance}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-              <TableFooter>
-                <TableRow>
-                  <TableCell colSpan={3} className="text-sm font-semibold">
-                    Total
-                  </TableCell>
-                  <TableCell className="text-sm text-right tabular-nums font-semibold font-mono">
-                    {tb?.totalDebit ?? ""}
-                  </TableCell>
-                  <TableCell className="text-sm text-right tabular-nums font-semibold font-mono">
-                    {tb?.totalCredit ?? ""}
-                  </TableCell>
-                  <TableCell />
-                </TableRow>
-              </TableFooter>
-            </Table>
-            </div>
-          </div>
-        )}
+      {query.error ? (
+        <ErrorState
+          title="Failed to load trial balance"
+          description={getErrorMessage(query.error)}
+          onRetry={handleRetry}
+        />
+      ) : (
+        <DataTable
+          data={rows}
+          columns={columns}
+          getRowKey={(row) => row.accountId}
+          isLoading={query.isLoading}
+          emptyState={
+            <EmptyState
+              illustration={<EmptyTimeIllustration />}
+              title="No posted entries for this date"
+              description="Post journal entries with a date on or before the selected date to populate this report."
+            />
+          }
+          footer={
+            tb ? (
+              <div className="flex gap-8 justify-end text-xs font-semibold tabular-nums font-mono">
+                <span className="mr-auto">Total</span>
+                <span>{tb.totalDebit}</span>
+                <span>{tb.totalCredit}</span>
+              </div>
+            ) : undefined
+          }
+          minWidth="640px"
+        />
+      )}
     </PageWrapper>
   );
 }

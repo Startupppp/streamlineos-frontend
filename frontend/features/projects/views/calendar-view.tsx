@@ -43,7 +43,7 @@ interface CalendarViewProps {
   projectStatuses?: Array<{ name: string; color: string | null; type?: string | null }>;
 }
 
-export function CalendarView({ tickets, onTicketClick, projectId, projectStatuses }: CalendarViewProps) {
+export function CalendarView({ tickets, onTicketClick, projectId }: CalendarViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -151,10 +151,6 @@ export function CalendarView({ tickets, onTicketClick, projectId, projectStatuse
                   </span>
                   <div className="flex flex-col gap-0.5">
                     {dayTickets.slice(0, 3).map((t) => {
-                      const labelIds = t.labels
-                        ?.map((l) => l.label?.id)
-                        .filter((v): v is number => v != null) ?? [];
-
                       return (
                         <div
                           key={t.id}
@@ -173,14 +169,6 @@ export function CalendarView({ tickets, onTicketClick, projectId, projectStatuse
                               <TicketQuickActions
                                 ticketId={t.id}
                                 projectId={projectId}
-                                currentStatus={t.status}
-                                currentPriority={t.priority}
-                                currentAssigneeId={t.assigneeId}
-                                currentType={t.type}
-                                currentLabelIds={labelIds}
-                                currentCycleId={t.cycleId}
-                                currentSprintId={t.sprintId}
-                                projectStatuses={projectStatuses}
                               />
                             </span>
                           )}

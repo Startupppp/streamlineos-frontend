@@ -9,14 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,11 +30,88 @@ export interface GrnDetailSheetProps {
   onOpenChange: (open: boolean) => void;
 }
 
+type GrnLine = ReturnType<typeof useGoodsReceipt>["data"] extends infer D
+  ? D extends { lines: Array<infer L> }
+    ? L
+    : never
+  : never;
+
 function formatDate(value: string | null | undefined): string {
   if (!value) return "—";
   const d = new Date(value);
   return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
 }
+
+const grnLineColumns: DataTableColumn<GrnLine>[] = [
+  {
+    key: "product",
+    header: "Product",
+    cell: (line) => String(line.poLineId),
+  },
+  {
+    key: "qty",
+    header: "Qty",
+    headerClassName: "text-right",
+    className: "text-right font-mono tabular-nums",
+    cell: (line) => Number(line.quantityReceived).toFixed(2),
+  },
+  {
+    key: "quality",
+    header: "Quality",
+    cell: (line) => (
+      <>
+        <Badge
+          variant="outline"
+          className={cn(
+            "h-4 text-[9px] px-1.5 py-0",
+            GRN_QUALITY_BADGE[line.qualityStatus],
+          )}
+        >
+          {GRN_QUALITY_LABEL[line.qualityStatus]}
+        </Badge>
+        {line.rejectionReason && (
+          <div className="text-[10px] text-muted-foreground mt-0.5">
+            {line.rejectionReason}
+          </div>
+        )}
+      </>
+    ),
+  },
+  {
+    key: "lotSerial",
+    header: "Lot / Serial",
+    className: "font-mono",
+    cell: (line) => {
+      if (line.lotNumber) {
+        return (
+          <div>
+            <span className="text-muted-foreground text-[10px]">LOT:</span>{" "}
+            {line.lotNumber}
+            {line.expiryDate && (
+              <div className="text-[10px] text-muted-foreground">
+                Exp: {formatDate(line.expiryDate)}
+              </div>
+            )}
+          </div>
+        );
+      }
+      if (line.serialNumbers && line.serialNumbers.length > 0) {
+        return (
+          <div>
+            <span className="text-muted-foreground text-[10px]">S/N:</span>{" "}
+            {line.serialNumbers.slice(0, 3).join(", ")}
+            {line.serialNumbers.length > 3 && (
+              <span className="text-muted-foreground">
+                {" "}+{line.serialNumbers.length - 3} more
+              </span>
+            )}
+          </div>
+        );
+      }
+      return <span className="text-muted-foreground">—</span>;
+    },
+  },
+];
 
 export function GrnDetailSheet({ grnId, open, onOpenChange }: GrnDetailSheetProps) {
   const grnQuery = useGoodsReceipt(open ? grnId : 0);
@@ -127,80 +197,12 @@ export function GrnDetailSheet({ grnId, open, onOpenChange }: GrnDetailSheetProp
             </Card>
 
             <div className="space-y-1.5">
-              <h3 className="text-sm font-semibold">Lines</h3>
-              <Card className="overflow-x-auto">
-                <Table className="min-w-[480px]">
-                  <TableHeader className="bg-muted/80">
-                    <TableRow className="border-b-2 border-border">
-                      <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
-                        Product
-                      </TableHead>
-                      <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">
-                        Qty
-                      </TableHead>
-                      <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
-                        Quality
-                      </TableHead>
-                      <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
-                        Lot / Serial
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {grn.lines.map((line) => (
-                      <TableRow key={line.id} className="h-8 hover:bg-muted/30 transition-colors">
-                        <TableCell className="px-2 py-1 text-[11px]">
-                          {line.poLineId}
-                        </TableCell>
-                        <TableCell className="px-2 py-1 text-right font-mono tabular-nums text-[11px]">
-                          {Number(line.quantityReceived).toFixed(2)}
-                        </TableCell>
-                        <TableCell className="px-2 py-1">
-                          <Badge
-                            variant="outline"
-                            className={cn(
-                              "h-4 text-[9px] px-1.5 py-0",
-                              GRN_QUALITY_BADGE[line.qualityStatus],
-                            )}
-                          >
-                            {GRN_QUALITY_LABEL[line.qualityStatus]}
-                          </Badge>
-                          {line.rejectionReason && (
-                            <div className="text-[10px] text-muted-foreground mt-0.5">
-                              {line.rejectionReason}
-                            </div>
-                          )}
-                        </TableCell>
-                        <TableCell className="px-2 py-1 text-[11px] font-mono">
-                          {line.lotNumber ? (
-                            <div>
-                              <span className="text-muted-foreground text-[10px]">LOT:</span>{" "}
-                              {line.lotNumber}
-                              {line.expiryDate && (
-                                <div className="text-[10px] text-muted-foreground">
-                                  Exp: {formatDate(line.expiryDate)}
-                                </div>
-                              )}
-                            </div>
-                          ) : line.serialNumbers && line.serialNumbers.length > 0 ? (
-                            <div>
-                              <span className="text-muted-foreground text-[10px]">S/N:</span>{" "}
-                              {line.serialNumbers.slice(0, 3).join(", ")}
-                              {line.serialNumbers.length > 3 && (
-                                <span className="text-muted-foreground">
-                                  {" "}+{line.serialNumbers.length - 3} more
-                                </span>
-                              )}
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground">—</span>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </Card>
+              <DataTable
+                data={grn.lines}
+                columns={grnLineColumns}
+                getRowKey={(line) => line.id}
+                minWidth="480px"
+              />
             </div>
           </div>
         )}

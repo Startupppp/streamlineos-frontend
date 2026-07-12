@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { cn } from "@/lib/utils";
 import { useAccounts } from "@/hooks/api/accounting";
 import {
@@ -68,6 +69,7 @@ const recurringSchema = z.object({
 });
 
 type RecurringFormValues = z.infer<typeof recurringSchema>;
+type LineValue = RecurringFormValues["lines"][number];
 
 function parseMoney(value: string): number {
   const n = parseFloat(value.replace(/,/g, ""));
@@ -197,6 +199,103 @@ export function RecurringJournalSheet({
   }
 
   const isPending = createMutation.isPending || updateMutation.isPending;
+
+  const lineColumns: DataTableColumn<LineValue & { _index: number }>[] = [
+    {
+      key: "accountId",
+      header: "Account",
+      cell: (row) => (
+        <FormField
+          control={form.control}
+          name={`lines.${row._index}.accountId`}
+          render={({ field: f }) => (
+            <Select value={f.value} onValueChange={f.onChange}>
+              <SelectTrigger className="h-7 text-xs">
+                <SelectValue placeholder="Account…" />
+              </SelectTrigger>
+              <SelectContent>
+                {accounts.map((a) => (
+                  <SelectItem key={a.id} value={String(a.id)}>
+                    {a.code} — {a.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
+      ),
+    },
+    {
+      key: "debit",
+      header: "Dr",
+      headerClassName: "w-[80px] text-right",
+      className: "w-[80px]",
+      cell: (row) => (
+        <FormField
+          control={form.control}
+          name={`lines.${row._index}.debit`}
+          render={({ field: f }) => (
+            <Input
+              {...f}
+              className="h-7 text-xs text-right font-mono"
+              placeholder="0.00"
+            />
+          )}
+        />
+      ),
+    },
+    {
+      key: "credit",
+      header: "Cr",
+      headerClassName: "w-[80px] text-right",
+      className: "w-[80px]",
+      cell: (row) => (
+        <FormField
+          control={form.control}
+          name={`lines.${row._index}.credit`}
+          render={({ field: f }) => (
+            <Input
+              {...f}
+              className="h-7 text-xs text-right font-mono"
+              placeholder="0.00"
+            />
+          )}
+        />
+      ),
+    },
+    {
+      key: "remove",
+      header: "",
+      headerClassName: "w-7",
+      className: "w-7 text-right",
+      cell: (row) => {
+        function handleRemove(): void {
+          handleRemoveLine(row._index);
+        }
+        return fields.length > 2 ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 text-muted-foreground hover:text-destructive"
+            onClick={handleRemove}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        ) : null;
+      },
+    },
+  ];
+
+  const lineRows = fields.map((field, index) => ({
+    ...watchedLines[index],
+    accountId: watchedLines[index]?.accountId ?? "",
+    debit: watchedLines[index]?.debit ?? "",
+    credit: watchedLines[index]?.credit ?? "",
+    description: watchedLines[index]?.description,
+    _fieldId: field.id,
+    _index: index,
+  }));
 
   return (
     <AppSheet
@@ -336,89 +435,13 @@ export function RecurringJournalSheet({
                   : `Unbalanced (Dr ${totalDebit.toFixed(2)} / Cr ${totalCredit.toFixed(2)})`}
               </span>
             </div>
-            <div className="rounded-lg border border-border overflow-hidden">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="bg-muted/40 border-b border-border">
-                    <th className="text-left font-semibold uppercase tracking-wider text-muted-foreground px-2 py-1.5">
-                      Account
-                    </th>
-                    <th className="text-right font-semibold uppercase tracking-wider text-muted-foreground px-2 py-1.5 w-[80px]">
-                      Dr
-                    </th>
-                    <th className="text-right font-semibold uppercase tracking-wider text-muted-foreground px-2 py-1.5 w-[80px]">
-                      Cr
-                    </th>
-                    <th className="w-7" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {fields.map((field, index) => (
-                    <tr key={field.id} className="border-b border-border/50">
-                      <td className="px-1.5 py-1">
-                        <FormField
-                          control={form.control}
-                          name={`lines.${index}.accountId`}
-                          render={({ field: f }) => (
-                            <Select value={f.value} onValueChange={f.onChange}>
-                              <SelectTrigger className="h-7 text-xs">
-                                <SelectValue placeholder="Account…" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {accounts.map((a) => (
-                                  <SelectItem key={a.id} value={String(a.id)}>
-                                    {a.code} — {a.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          )}
-                        />
-                      </td>
-                      <td className="px-1.5 py-1">
-                        <FormField
-                          control={form.control}
-                          name={`lines.${index}.debit`}
-                          render={({ field: f }) => (
-                            <Input
-                              {...f}
-                              className="h-7 text-xs text-right font-mono"
-                              placeholder="0.00"
-                            />
-                          )}
-                        />
-                      </td>
-                      <td className="px-1.5 py-1">
-                        <FormField
-                          control={form.control}
-                          name={`lines.${index}.credit`}
-                          render={({ field: f }) => (
-                            <Input
-                              {...f}
-                              className="h-7 text-xs text-right font-mono"
-                              placeholder="0.00"
-                            />
-                          )}
-                        />
-                      </td>
-                      <td className="px-1 py-1 text-right">
-                        {fields.length > 2 && (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                            onClick={() => handleRemoveLine(index)}
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+
+            <DataTable
+              data={lineRows}
+              columns={lineColumns}
+              getRowKey={(row) => row._fieldId}
+            />
+
             <Button type="button" variant="outline" size="sm" onClick={handleAddLine}>
               <Plus className="h-3.5 w-3.5 mr-1.5" />
               Add line

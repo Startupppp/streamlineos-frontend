@@ -2,12 +2,10 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyReportIllustration } from "@/components/illustrations";
-import { LoadingState, ErrorState } from "@/components/shared";
+import { ErrorState } from "@/components/shared";
 import { MiniDonutChart } from "@/components/charts/mini-donut-chart";
 import { ReportShell } from "./report-shell";
 import { DateRangeFilter } from "./date-range-filter";
@@ -27,6 +25,34 @@ const CHART_COLORS = [
   "#3b82f6", "#f59e0b", "#10b981", "#ef4444", "#8b5cf6",
   "#06b6d4", "#f97316", "#84cc16", "#ec4899", "#6366f1",
 ];
+
+type ExpenseByCategoryRow = NonNullable<ReturnType<typeof useExpenseByCategory>["data"]>[number];
+
+const EXPENSE_BY_CATEGORY_COLUMNS: DataTableColumn<ExpenseByCategoryRow>[] = [
+  {
+    key: "categoryName",
+    header: "Category",
+    cell: (row) => row.categoryName,
+  },
+  {
+    key: "count",
+    header: "Count",
+    cell: (row) => row.count,
+    className: "text-right tabular-nums",
+    headerClassName: "text-right",
+  },
+  {
+    key: "totalAmount",
+    header: "Total Amount",
+    cell: (row) => formatCurrencyFull(Number(row.totalAmount)),
+    className: "text-right font-mono tabular-nums font-medium",
+    headerClassName: "text-right",
+  },
+];
+
+function getExpenseCategoryRowKey(row: ExpenseByCategoryRow): string | number {
+  return row.categoryId;
+}
 
 export function ExpenseByCategoryReport() {
   const router = useRouter();
@@ -85,15 +111,13 @@ export function ExpenseByCategoryReport() {
         />
       }
     >
-      {isLoading ? (
-        <LoadingState variant="table" rows={8} />
-      ) : error ? (
+      {error ? (
         <ErrorState
           title="Failed to load report"
           description={getErrorMessage(error)}
           onRetry={handleRetry}
         />
-      ) : !data || data.length === 0 ? (
+      ) : !isLoading && (data?.length ?? 0) === 0 ? (
         <EmptyState
           illustration={<EmptyReportIllustration />}
           title="No expense data"
@@ -102,40 +126,25 @@ export function ExpenseByCategoryReport() {
         />
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-6 items-start">
-          <div className="rounded-lg border border-border overflow-hidden">
-            <div className="overflow-x-auto">
-              <Table className="min-w-[400px]">
-                <TableHeader>
-                  <TableRow className="bg-muted/40 hover:bg-muted/40">
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Category</TableHead>
-                    <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Count</TableHead>
-                    <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Total Amount</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data.map((row) => (
-                    <TableRow key={row.categoryId} className="border-b border-border/50 hover:bg-muted/30">
-                      <TableCell className="text-sm text-foreground px-3 py-2">{row.categoryName}</TableCell>
-                      <TableCell className="text-right text-sm tabular-nums px-3 py-2">{row.count}</TableCell>
-                      <TableCell className="text-right text-sm font-mono tabular-nums font-medium px-3 py-2">
-                        {formatCurrencyFull(Number(row.totalAmount))}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+          <DataTable
+            data={data ?? []}
+            columns={EXPENSE_BY_CATEGORY_COLUMNS}
+            getRowKey={getExpenseCategoryRowKey}
+            isLoading={isLoading}
+            minWidth="400px"
+          />
+          {!isLoading && (data?.length ?? 0) > 0 && (
+            <div className="rounded-xl border border-border bg-card p-4 flex flex-col items-center">
+              <p className="text-sm font-semibold text-foreground mb-4 self-start">Distribution</p>
+              <MiniDonutChart
+                data={donutData}
+                size={160}
+                strokeWidth={24}
+                centerLabel="categories"
+                centerValue={data?.length ?? 0}
+              />
             </div>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-4 flex flex-col items-center">
-            <p className="text-sm font-semibold text-foreground mb-4 self-start">Distribution</p>
-            <MiniDonutChart
-              data={donutData}
-              size={160}
-              strokeWidth={24}
-              centerLabel="categories"
-              centerValue={data.length}
-            />
-          </div>
+          )}
         </div>
       )}
     </ReportShell>

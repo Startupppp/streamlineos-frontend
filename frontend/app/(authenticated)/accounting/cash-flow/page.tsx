@@ -1,18 +1,9 @@
 "use client";
 
-import { useState, type ChangeEvent } from "react";
+import { useState } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
@@ -70,6 +61,29 @@ function SummaryCard({ label, value, emphasis = false }: SummaryCardProps) {
   );
 }
 
+type CashFlowItem = CashFlowSection["items"][number];
+
+const cashFlowItemColumns: DataTableColumn<CashFlowItem>[] = [
+  {
+    key: "label",
+    header: "Account",
+    cell: (row) => <span className="text-sm text-foreground">{row.label}</span>,
+  },
+  {
+    key: "amount",
+    header: "Net Cash Flow",
+    cell: (row) => (
+      <span className="text-sm text-right tabular-nums font-mono block">
+        {formatInr(row.amount)}
+      </span>
+    ),
+    className: "w-[180px] text-right",
+    headerClassName: "text-right",
+    sortable: true,
+    sortValue: (row) => parseFloat(row.amount),
+  },
+];
+
 interface SectionCardProps {
   section: CashFlowSection;
 }
@@ -82,44 +96,23 @@ function SectionCard({ section }: SectionCardProps) {
           {section.label}
         </h3>
       </div>
-      {section.items.length === 0 ? (
-        <div className="px-6 py-8 text-center text-sm text-muted-foreground">
-          No cash movement in this category for the selected range.
-        </div>
-      ) : (
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-              <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Account</TableHead>
-              <TableHead className="w-[180px] text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">
-                Net Cash Flow
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {section.items.map((item) => (
-              <TableRow key={item.label} className="border-b border-border/50 hover:bg-muted/30">
-                <TableCell className="text-sm text-foreground">
-                  {item.label}
-                </TableCell>
-                <TableCell className="text-sm text-right tabular-nums font-mono">
-                  {formatInr(item.amount)}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-          <TableFooter>
-            <TableRow>
-              <TableCell className="text-sm font-semibold">
-                Net {section.label}
-              </TableCell>
-              <TableCell className="text-sm text-right tabular-nums font-mono font-semibold">
-                {formatInr(section.total)}
-              </TableCell>
-            </TableRow>
-          </TableFooter>
-        </Table>
-      )}
+      <DataTable
+        data={section.items}
+        columns={cashFlowItemColumns}
+        getRowKey={(item) => item.label}
+        emptyState={
+          <div className="px-6 py-8 text-center text-sm text-muted-foreground">
+            No cash movement in this category for the selected range.
+          </div>
+        }
+        footer={
+          <div className="flex items-center justify-between text-sm font-semibold">
+            <span>Net {section.label}</span>
+            <span className="tabular-nums font-mono">{formatInr(section.total)}</span>
+          </div>
+        }
+        className="border-0 rounded-none"
+      />
     </div>
   );
 }

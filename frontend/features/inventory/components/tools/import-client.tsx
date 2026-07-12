@@ -11,17 +11,9 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardAction } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useCan } from "@/hooks/api/access";
 import { JOB_STATUS_BADGE, JOB_STATUS_LABEL } from "@/features/inventory/lib";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -115,78 +107,76 @@ interface ExportJobsTableProps {
   isDownloading: boolean;
 }
 
-function ExportJobsTable({ jobs, isLoading, onDownload, isDownloading }: ExportJobsTableProps) {
-  if (isLoading) {
-    return (
-      <div className="p-4 space-y-2">
-        {Array.from({ length: 3 }).map(function renderSkeleton(_, i) {
-          return <Skeleton key={i} className="h-8 w-full" />;
-        })}
-      </div>
-    );
-  }
+const EXPORT_JOBS_COLUMNS: (onDownload: (job: ExportJob) => void, isDownloading: boolean) => DataTableColumn<ExportJob>[] =
+  (onDownload, isDownloading) => [
+    {
+      key: "jobType",
+      header: "Type",
+      className: "text-xs capitalize",
+      cell: (job) => EXPORT_TYPE_META[job.jobType]?.label ?? job.jobType,
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (job) => (
+        <Badge className={JOB_STATUS_BADGE[job.status]}>
+          {JOB_STATUS_LABEL[job.status]}
+        </Badge>
+      ),
+    },
+    {
+      key: "totalRows",
+      header: "Total Rows",
+      className: "text-xs",
+      cell: (job) => job.totalRows,
+    },
+    {
+      key: "createdAt",
+      header: "Created",
+      className: "text-xs text-muted-foreground",
+      cell: (job) => new Date(job.createdAt).toLocaleDateString(),
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      cell: (job) => {
+        const isCompleted = job.status === "COMPLETED";
+        function handleDownloadClick(): void {
+          onDownload(job);
+        }
+        return (
+          <button
+            type="button"
+            onClick={handleDownloadClick}
+            disabled={!isCompleted || isDownloading}
+            className={`inline-flex items-center gap-1 text-[11px] font-medium transition-colors ${
+              isCompleted
+                ? "text-primary hover:text-primary/80"
+                : "text-muted-foreground cursor-not-allowed"
+            }`}
+          >
+            <Download className="h-3 w-3" aria-hidden="true" />
+            Download
+          </button>
+        );
+      },
+    },
+  ];
 
-  if (jobs.length === 0) {
-    return (
-      <div className="py-8 text-center text-sm text-muted-foreground">No export jobs yet.</div>
-    );
-  }
+function ExportJobsTable({ jobs, isLoading, onDownload, isDownloading }: ExportJobsTableProps) {
+  const columns = React.useMemo(
+    () => EXPORT_JOBS_COLUMNS(onDownload, isDownloading),
+    [onDownload, isDownloading],
+  );
 
   return (
-    <div className="overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Type</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Total Rows</TableHead>
-            <TableHead>Created</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {jobs.map(function renderJobRow(job) {
-            const isCompleted = job.status === "COMPLETED";
-
-            function handleDownloadClick(): void {
-              onDownload(job);
-            }
-
-            return (
-              <TableRow key={job.id}>
-                <TableCell className="text-xs capitalize">
-                  {EXPORT_TYPE_META[job.jobType]?.label ?? job.jobType}
-                </TableCell>
-                <TableCell>
-                  <Badge className={JOB_STATUS_BADGE[job.status]}>
-                    {JOB_STATUS_LABEL[job.status]}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-xs">{job.totalRows}</TableCell>
-                <TableCell className="text-xs text-muted-foreground">
-                  {new Date(job.createdAt).toLocaleDateString()}
-                </TableCell>
-                <TableCell>
-                  <button
-                    type="button"
-                    onClick={handleDownloadClick}
-                    disabled={!isCompleted || isDownloading}
-                    className={`inline-flex items-center gap-1 text-[11px] font-medium transition-colors ${
-                      isCompleted
-                        ? "text-primary hover:text-primary/80"
-                        : "text-muted-foreground cursor-not-allowed"
-                    }`}
-                  >
-                    <Download className="h-3 w-3" aria-hidden="true" />
-                    Download
-                  </button>
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-    </div>
+    <DataTable
+      data={jobs}
+      columns={columns}
+      getRowKey={(job) => job.id}
+      isLoading={isLoading}
+      emptyState={<div className="py-8 text-center text-sm text-muted-foreground">No export jobs yet.</div>}
+    />
   );
 }
 
@@ -323,6 +313,74 @@ function ExportTab() {
   );
 }
 
+interface ImportJobRow {
+  id: number;
+  importType: string;
+  status: string;
+  totalRows: number;
+  processedRows: number;
+  errorCount: number;
+  createdAt: string;
+  completedAt: string | null;
+}
+
+const IMPORT_HISTORY_COLUMNS: DataTableColumn<ImportJobRow>[] = [
+  {
+    key: "id",
+    header: "ID",
+    className: "text-xs font-mono",
+    cell: (job) => job.id,
+  },
+  {
+    key: "importType",
+    header: "Type",
+    className: "text-xs capitalize",
+    cell: (job) => job.importType,
+  },
+  {
+    key: "status",
+    header: "Status",
+    cell: (job) => (
+      <Badge className={JOB_STATUS_BADGE[job.status as keyof typeof JOB_STATUS_BADGE]}>
+        {JOB_STATUS_LABEL[job.status as keyof typeof JOB_STATUS_LABEL]}
+      </Badge>
+    ),
+  },
+  {
+    key: "totalRows",
+    header: "Total",
+    className: "text-xs",
+    cell: (job) => job.totalRows,
+  },
+  {
+    key: "processedRows",
+    header: "Processed",
+    className: "text-xs",
+    cell: (job) => job.processedRows,
+  },
+  {
+    key: "errorCount",
+    header: "Errors",
+    cell: (job) => (
+      <span className={`text-xs ${job.errorCount > 0 ? "text-red-600 font-medium" : ""}`}>
+        {job.errorCount}
+      </span>
+    ),
+  },
+  {
+    key: "createdAt",
+    header: "Created",
+    className: "text-xs text-muted-foreground",
+    cell: (job) => new Date(job.createdAt).toLocaleDateString(),
+  },
+  {
+    key: "completedAt",
+    header: "Completed",
+    className: "text-xs text-muted-foreground",
+    cell: (job) => (job.completedAt ? new Date(job.completedAt).toLocaleDateString() : "—"),
+  },
+];
+
 export function ImportClient() {
   const canImport = useCan("inventory:import");
   const [step, setStep] = React.useState<Step>("type");
@@ -441,58 +499,13 @@ export function ImportClient() {
                   <CardTitle className="text-sm font-semibold">Import History</CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
-                  {isJobsLoading ? (
-                    <div className="p-4 space-y-2">
-                      {Array.from({ length: 4 }).map(function renderSkeleton(_, i) {
-                        return <Skeleton key={i} className="h-8 w-full" />;
-                      })}
-                    </div>
-                  ) : !jobsData?.items.length ? (
-                    <div className="py-8 text-center text-sm text-muted-foreground">No import jobs yet.</div>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>ID</TableHead>
-                            <TableHead>Type</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Total</TableHead>
-                            <TableHead>Processed</TableHead>
-                            <TableHead>Errors</TableHead>
-                            <TableHead>Created</TableHead>
-                            <TableHead>Completed</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {jobsData.items.map(function renderJobRow(job) {
-                            return (
-                              <TableRow key={job.id}>
-                                <TableCell className="text-xs font-mono">{job.id}</TableCell>
-                                <TableCell className="text-xs capitalize">{job.importType}</TableCell>
-                                <TableCell>
-                                  <Badge className={JOB_STATUS_BADGE[job.status]}>
-                                    {JOB_STATUS_LABEL[job.status]}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell className="text-xs">{job.totalRows}</TableCell>
-                                <TableCell className="text-xs">{job.processedRows}</TableCell>
-                                <TableCell className={`text-xs ${job.errorCount > 0 ? "text-red-600 font-medium" : ""}`}>
-                                  {job.errorCount}
-                                </TableCell>
-                                <TableCell className="text-xs text-muted-foreground">
-                                  {new Date(job.createdAt).toLocaleDateString()}
-                                </TableCell>
-                                <TableCell className="text-xs text-muted-foreground">
-                                  {job.completedAt ? new Date(job.completedAt).toLocaleDateString() : "—"}
-                                </TableCell>
-                              </TableRow>
-                            );
-                          })}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  )}
+                  <DataTable
+                    data={jobsData?.items ?? []}
+                    columns={IMPORT_HISTORY_COLUMNS}
+                    getRowKey={(job) => job.id}
+                    isLoading={isJobsLoading}
+                    emptyState={<div className="py-8 text-center text-sm text-muted-foreground">No import jobs yet.</div>}
+                  />
                 </CardContent>
               </Card>
             </>

@@ -83,13 +83,13 @@ function RuleRow({ rule, pipelineName, onEdit, onToggle, onDeleteRequest }: Rule
       <TableCell className="px-2 py-1">
         <div className="flex items-center gap-1 flex-wrap">
           {pipelineName && (
-            <span className="text-[9px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded border border-slate-200">{pipelineName}</span>
+            <span className="text-[9px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded border border-border">{pipelineName}</span>
           )}
           {rule.stageKey && (
-            <span className="text-[9px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded border border-slate-200">stage:{rule.stageKey}</span>
+            <span className="text-[9px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded border border-border">stage:{rule.stageKey}</span>
           )}
           {rule.sourceKey && (
-            <span className="text-[9px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded border border-slate-200">src:{rule.sourceKey}</span>
+            <span className="text-[9px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded border border-border">src:{rule.sourceKey}</span>
           )}
         </div>
       </TableCell>
@@ -311,7 +311,7 @@ function EntityRulesTab({ entityType, onNewRule }: EntityRulesTabProps) {
           <Card className="bg-card rounded-lg border border-border shadow-sm overflow-hidden">
             <CardContent className="p-0">
               <Table>
-                <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
+                <TableHeader className="sticky top-0 z-10 bg-muted/80">
                   <TableRow className="border-b-2 border-border hover:bg-transparent">
                     <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Field</TableHead>
                     <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Type</TableHead>

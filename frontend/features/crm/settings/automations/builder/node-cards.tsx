@@ -136,7 +136,7 @@ export const ActionNodeCard = memo(function ActionNodeCard({ node, actions, drag
         <div className="flex-1 space-y-2 min-w-0">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <div className="h-5 w-5 rounded bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-600">A</div>
+              <div className="h-5 w-5 rounded bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground">A</div>
               <Select value={node.type ?? ""} onValueChange={handleActionChange}>
                 <SelectTrigger className="h-7 text-xs w-[180px]">
                   <SelectValue placeholder="Select action" />

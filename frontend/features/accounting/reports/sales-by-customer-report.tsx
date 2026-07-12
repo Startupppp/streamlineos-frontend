@@ -2,12 +2,10 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyReportIllustration } from "@/components/illustrations";
-import { LoadingState, ErrorState } from "@/components/shared";
+import { ErrorState } from "@/components/shared";
 import { ReportShell } from "./report-shell";
 import { DateRangeFilter } from "./date-range-filter";
 import { useSalesByCustomer } from "@/hooks/api/accounting/reports";
@@ -20,6 +18,48 @@ function currentMonthRange(): { from: string; to: string } {
   const from = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
   const to = now.toISOString().slice(0, 10);
   return { from, to };
+}
+
+type SalesByCustomerRow = NonNullable<ReturnType<typeof useSalesByCustomer>["data"]>[number];
+
+const SALES_BY_CUSTOMER_COLUMNS: DataTableColumn<SalesByCustomerRow>[] = [
+  {
+    key: "clientName",
+    header: "Customer",
+    cell: (row) => row.clientName,
+  },
+  {
+    key: "invoiceCount",
+    header: "Invoices",
+    cell: (row) => row.invoiceCount,
+    className: "text-right tabular-nums",
+    headerClassName: "text-right",
+  },
+  {
+    key: "totalBilled",
+    header: "Total Billed",
+    cell: (row) => formatCurrencyFull(Number(row.totalBilled)),
+    className: "text-right font-mono tabular-nums",
+    headerClassName: "text-right",
+  },
+  {
+    key: "totalPaid",
+    header: "Total Paid",
+    cell: (row) => formatCurrencyFull(Number(row.totalPaid)),
+    className: "text-right font-mono tabular-nums",
+    headerClassName: "text-right",
+  },
+  {
+    key: "outstanding",
+    header: "Outstanding",
+    cell: (row) => formatCurrencyFull(Number(row.outstanding)),
+    className: "text-right font-mono tabular-nums font-medium",
+    headerClassName: "text-right",
+  },
+];
+
+function getSalesByCustomerRowKey(row: SalesByCustomerRow): string | number {
+  return row.clientId;
 }
 
 export function SalesByCustomerReport() {
@@ -72,54 +112,28 @@ export function SalesByCustomerReport() {
         />
       }
     >
-      {isLoading ? (
-        <LoadingState variant="table" rows={8} />
-      ) : error ? (
+      {error ? (
         <ErrorState
           title="Failed to load report"
           description={getErrorMessage(error)}
           onRetry={handleRetry}
         />
-      ) : !data || data.length === 0 ? (
-        <EmptyState
-          illustration={<EmptyReportIllustration />}
-          title="No sales data"
-          description="No invoices found in the selected date range."
-          compact
-        />
       ) : (
-        <div className="rounded-lg border border-border overflow-hidden">
-          <div className="overflow-x-auto">
-            <Table className="min-w-[640px]">
-              <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40">
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Customer</TableHead>
-                  <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Invoices</TableHead>
-                  <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Total Billed</TableHead>
-                  <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Total Paid</TableHead>
-                  <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Outstanding</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.map((row) => (
-                  <TableRow key={row.clientId} className="border-b border-border/50 hover:bg-muted/30">
-                    <TableCell className="text-sm text-foreground px-3 py-2">{row.clientName}</TableCell>
-                    <TableCell className="text-right text-sm tabular-nums px-3 py-2">{row.invoiceCount}</TableCell>
-                    <TableCell className="text-right text-sm font-mono tabular-nums px-3 py-2">
-                      {formatCurrencyFull(Number(row.totalBilled))}
-                    </TableCell>
-                    <TableCell className="text-right text-sm font-mono tabular-nums px-3 py-2">
-                      {formatCurrencyFull(Number(row.totalPaid))}
-                    </TableCell>
-                    <TableCell className="text-right text-sm font-mono tabular-nums font-medium px-3 py-2">
-                      {formatCurrencyFull(Number(row.outstanding))}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
+        <DataTable
+          data={data ?? []}
+          columns={SALES_BY_CUSTOMER_COLUMNS}
+          getRowKey={getSalesByCustomerRowKey}
+          isLoading={isLoading}
+          minWidth="640px"
+          emptyState={
+            <EmptyState
+              illustration={<EmptyReportIllustration />}
+              title="No sales data"
+              description="No invoices found in the selected date range."
+              compact
+            />
+          }
+        />
       )}
     </ReportShell>
   );

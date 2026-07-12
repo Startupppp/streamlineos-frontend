@@ -138,7 +138,7 @@ export function TransitionPopover({
           {requiredFields.map((f) => (
             <span
               key={f}
-              className="inline-flex items-center gap-0.5 bg-slate-100 text-slate-700 text-[10px] px-1.5 h-5 rounded"
+              className="inline-flex items-center gap-0.5 bg-muted text-muted-foreground text-[10px] px-1.5 h-5 rounded"
             >
               {f}
               <button type="button" onClick={() => handleRemoveField(f)} className="ml-0.5 hover:text-destructive">

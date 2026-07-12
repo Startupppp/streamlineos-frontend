@@ -10,14 +10,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   FormControl,
   FormField,
@@ -39,6 +32,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import type {
   AccountType,
   Account,
+  JournalEntry,
   JournalEntryStatus,
 } from "@/types/accounting";
 
@@ -220,6 +214,57 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
 
   const journalEntries = journalQuery.data?.items ?? [];
 
+  const journalColumns: DataTableColumn<JournalEntry>[] = [
+    {
+      key: "entryNumber",
+      header: "Entry #",
+      cell: (entry) => (
+        <span className="font-mono text-xs text-foreground">
+          {entry.entryNumber}
+        </span>
+      ),
+    },
+    {
+      key: "entryDate",
+      header: "Date",
+      cell: (entry) => (
+        <span className="text-sm text-foreground tabular-nums">
+          {formatDate(entry.entryDate)}
+        </span>
+      ),
+    },
+    {
+      key: "description",
+      header: "Description",
+      className: "max-w-[280px] truncate",
+      cell: (entry) => (
+        <span className="text-sm text-muted-foreground">
+          {entry.description ?? "—"}
+        </span>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (entry) => (
+        <Badge variant={STATUS_VARIANT[entry.status]}>{entry.status}</Badge>
+      ),
+    },
+    {
+      key: "actions",
+      header: "",
+      className: "w-[60px] text-right",
+      cell: (entry) => (
+        <Link
+          href={`/accounting/journal/${entry.id}`}
+          className="text-xs text-blue-600 hover:underline whitespace-nowrap"
+        >
+          View
+        </Link>
+      ),
+    },
+  ];
+
   return (
     <PageWrapper
       eyebrow="Accounting · Chart of Accounts"
@@ -384,48 +429,13 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
                     </Button>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <Table className="min-w-[560px]">
-                      <TableHeader>
-                        <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-                          <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[120px]">
-                            Entry #
-                          </TableHead>
-                          <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[120px]">Date</TableHead>
-                          <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Description</TableHead>
-                          <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[100px]">Status</TableHead>
-                          <TableHead className="w-[60px] px-3 py-2" />
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {journalEntries.map((entry) => (
-                          <TableRow key={entry.id} className="border-b border-border/50 hover:bg-muted/30">
-                            <TableCell className="pl-5 font-mono text-xs text-foreground">
-                              {entry.entryNumber}
-                            </TableCell>
-                            <TableCell className="text-sm text-foreground tabular-nums">
-                              {formatDate(entry.entryDate)}
-                            </TableCell>
-                            <TableCell className="text-sm text-muted-foreground max-w-[280px] truncate">
-                              {entry.description ?? "—"}
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant={STATUS_VARIANT[entry.status]}>
-                                {entry.status}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="pr-5 text-right">
-                              <Link
-                                href={`/accounting/journal/${entry.id}`}
-                                className="text-xs text-blue-600 hover:underline whitespace-nowrap"
-                              >
-                                View
-                              </Link>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                  <div className="px-0">
+                    <DataTable
+                      data={journalEntries}
+                      columns={journalColumns}
+                      getRowKey={(row) => row.id}
+                      minWidth="560px"
+                    />
                   </div>
                 )}
               </CardContent>

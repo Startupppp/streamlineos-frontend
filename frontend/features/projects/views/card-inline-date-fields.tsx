@@ -10,7 +10,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useUpdateTicket } from "@/hooks/api/projects/tickets";
 import { InlineFieldWrapper } from "./card-inline-fields";
 import { format, parseISO, isValid } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { Calendar as CalendarIcon, CalendarClock } from "lucide-react";
 
 interface InlineDueDateProps {
   ticketId: number;
@@ -56,7 +56,7 @@ export const InlineDueDate = memo(function InlineDueDate({
             className="inline-flex items-center gap-1 rounded px-1 py-0.5 hover:bg-muted/60 transition-colors"
             aria-label="Set due date"
           >
-            <CalendarIcon
+            <CalendarClock
               className={cn(
                 "h-3 w-3 shrink-0",
                 parsedDate ? "text-foreground" : "text-muted-foreground/50",

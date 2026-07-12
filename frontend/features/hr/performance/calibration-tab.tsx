@@ -7,8 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useReviewCycles } from "@/hooks/api/hr";
-import { useCalibrationEntries, useUpsertCalibrationEntry } from "@/hooks/api/hr/calibration";
+import { useCalibrationEntries, useUpsertCalibrationEntry, type CalibrationEntry } from "@/hooks/api/hr/calibration";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 
 export function CalibrationTab() {
   const [selectedCycleId, setSelectedCycleId] = useState<number>(0);
@@ -35,6 +36,92 @@ export function CalibrationTab() {
     }
   }
 
+  const columns: DataTableColumn<CalibrationEntry>[] = [
+    {
+      key: "employee",
+      header: "Employee",
+      cell: (row) => (
+        <span className="font-mono text-xs text-muted-foreground">{row.employeeId.slice(0, 8)}…</span>
+      ),
+    },
+    {
+      key: "preRating",
+      header: "Pre-Rating",
+      cell: (row) => {
+        const editing = editingEntry[row.employeeId] ?? {
+          preRating: row.preRating ?? "",
+          postRating: row.postRating ?? "",
+          note: row.note ?? "",
+        };
+        return (
+          <Input
+            type="number"
+            min="1"
+            max="5"
+            step="0.5"
+            className="w-20 h-7 text-sm"
+            value={editing.preRating}
+            onChange={(e) => handleChange(row.employeeId, "preRating", e.target.value)}
+          />
+        );
+      },
+    },
+    {
+      key: "postRating",
+      header: "Post-Rating",
+      cell: (row) => {
+        const editing = editingEntry[row.employeeId] ?? {
+          preRating: row.preRating ?? "",
+          postRating: row.postRating ?? "",
+          note: row.note ?? "",
+        };
+        return (
+          <Input
+            type="number"
+            min="1"
+            max="5"
+            step="0.5"
+            className="w-20 h-7 text-sm"
+            value={editing.postRating}
+            onChange={(e) => handleChange(row.employeeId, "postRating", e.target.value)}
+          />
+        );
+      },
+    },
+    {
+      key: "note",
+      header: "Note",
+      cell: (row) => {
+        const editing = editingEntry[row.employeeId] ?? {
+          preRating: row.preRating ?? "",
+          postRating: row.postRating ?? "",
+          note: row.note ?? "",
+        };
+        return (
+          <Input
+            className="h-7 text-sm"
+            value={editing.note}
+            onChange={(e) => handleChange(row.employeeId, "note", e.target.value)}
+          />
+        );
+      },
+    },
+    {
+      key: "save",
+      header: "",
+      cell: (row) => (
+        <LoadingButton
+          size="sm"
+          variant="outline"
+          isPending={upsert.isPending}
+          onClick={() => handleSave(row.employeeId)}
+        >
+          Save
+        </LoadingButton>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
@@ -56,80 +143,15 @@ export function CalibrationTab() {
             <CardTitle className="text-sm font-medium">Calibration Grid</CardTitle>
           </CardHeader>
           <CardContent>
-            {isLoading ? (
-              <div className="space-y-2">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="h-10 bg-muted rounded animate-pulse" />
-                ))}
-              </div>
-            ) : entries.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">No entries yet for this cycle.</p>
-            ) : (
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-2 font-medium">Employee</th>
-                    <th className="text-left py-2 font-medium">Pre-Rating</th>
-                    <th className="text-left py-2 font-medium">Post-Rating</th>
-                    <th className="text-left py-2 font-medium">Note</th>
-                    <th className="py-2" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {entries.map((entry) => {
-                    const editing = editingEntry[entry.employeeId] ?? {
-                      preRating: entry.preRating ?? "",
-                      postRating: entry.postRating ?? "",
-                      note: entry.note ?? "",
-                    };
-                    return (
-                      <tr key={entry.employeeId} className="border-b last:border-0">
-                        <td className="py-2 font-mono text-xs text-muted-foreground">{entry.employeeId.slice(0, 8)}…</td>
-                        <td className="py-2">
-                          <Input
-                            type="number"
-                            min="1"
-                            max="5"
-                            step="0.5"
-                            className="w-20 h-7 text-sm"
-                            value={editing.preRating}
-                            onChange={(e) => handleChange(entry.employeeId, "preRating", e.target.value)}
-                          />
-                        </td>
-                        <td className="py-2">
-                          <Input
-                            type="number"
-                            min="1"
-                            max="5"
-                            step="0.5"
-                            className="w-20 h-7 text-sm"
-                            value={editing.postRating}
-                            onChange={(e) => handleChange(entry.employeeId, "postRating", e.target.value)}
-                          />
-                        </td>
-                        <td className="py-2">
-                          <Input
-                            className="h-7 text-sm"
-                            value={editing.note}
-                            onChange={(e) => handleChange(entry.employeeId, "note", e.target.value)}
-                          />
-                        </td>
-                        <td className="py-2">
-                          <LoadingButton
-                            size="sm"
-                            variant="outline"
-                            isPending={upsert.isPending}
-                            onClick={() => handleSave(entry.employeeId)}
-                          >
-                            Save
-                          </LoadingButton>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            )}
+            <DataTable
+              data={entries}
+              columns={columns}
+              getRowKey={(row) => row.employeeId}
+              isLoading={isLoading}
+              emptyState={
+                <p className="text-sm text-muted-foreground py-4 text-center">No entries yet for this cycle.</p>
+              }
+            />
           </CardContent>
         </Card>
       )}

@@ -197,7 +197,7 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
           Display
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-72 p-3 space-y-3 max-h-[80vh] overflow-y-auto">
+      <PopoverContent align="start" collisionPadding={16} className="w-72 p-3 space-y-3">
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Columns</p>

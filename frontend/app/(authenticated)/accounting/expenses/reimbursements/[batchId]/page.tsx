@@ -13,15 +13,8 @@ import { useCan } from "@/hooks/api/access";
 import { useReimbursementBatch, useApproveBatch } from "@/hooks/api/accounting/expenses";
 import { PayBatchDialog } from "@/features/accounting/expenses/pay-batch-dialog";
 import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import type { ReimbursementBatchStatus } from "@/types/accounting/expenses";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import type { ReimbursementBatchStatus, ReimbursementBatchItem } from "@/types/accounting/expenses";
 import type { FinanceStatus } from "@/features/accounting/shared";
 
 function formatDate(value: string | null | undefined): string {
@@ -35,6 +28,40 @@ const STATUS_MAP: Record<ReimbursementBatchStatus, FinanceStatus> = {
   APPROVED: "APPROVED",
   PAID: "PAID",
 };
+
+const batchItemColumns: DataTableColumn<ReimbursementBatchItem>[] = [
+  {
+    key: "employee",
+    header: "Employee",
+    cell: (row) => (
+      <div>
+        <p className="text-sm font-medium">{row.userName ?? row.userEmail ?? "—"}</p>
+        {row.userEmail && row.userName && (
+          <p className="text-xs text-muted-foreground">{row.userEmail}</p>
+        )}
+      </div>
+    ),
+  },
+  {
+    key: "category",
+    header: "Category",
+    cell: (row) => row.category,
+  },
+  {
+    key: "date",
+    header: "Date",
+    className: "hidden md:table-cell",
+    headerClassName: "hidden md:table-cell",
+    cell: (row) => formatDate(row.expenseDate),
+  },
+  {
+    key: "amount",
+    header: "Amount",
+    className: "text-right",
+    headerClassName: "text-right",
+    cell: (row) => <Money value={parseFloat(row.amount)} className="text-sm font-medium" />,
+  },
+];
 
 interface BatchDetailPageProps {
   params: Promise<{ batchId: string }>;
@@ -149,55 +176,14 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
         </div>
 
         {items.length === 0 ? (
-          <EmptyState
-            illustration={<EmptyExpensesIllustration />}
-            title="No items in this batch"
-            compact
-          />
+          <EmptyState illustration={<EmptyExpensesIllustration />} title="No items in this batch" compact />
         ) : (
-          <div className="rounded-lg border border-border overflow-hidden">
-            <div className="overflow-x-auto">
-              <Table className="min-w-[560px]">
-                <TableHeader>
-                  <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">
-                      Employee
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">
-                      Category
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 hidden md:table-cell">
-                      Date
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">
-                      Amount
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {items.map((item) => (
-                    <TableRow key={item.id} className="border-b border-border/50 hover:bg-muted/30">
-                      <TableCell className="px-3 py-2">
-                        <p className="text-sm font-medium">{item.userName ?? item.userEmail ?? "—"}</p>
-                        {item.userEmail && item.userName && (
-                          <p className="text-xs text-muted-foreground">{item.userEmail}</p>
-                        )}
-                      </TableCell>
-                      <TableCell className="px-3 py-2 text-sm text-muted-foreground">
-                        {item.category}
-                      </TableCell>
-                      <TableCell className="px-3 py-2 text-sm text-muted-foreground hidden md:table-cell">
-                        {formatDate(item.expenseDate)}
-                      </TableCell>
-                      <TableCell className="px-3 py-2 text-right">
-                        <Money value={parseFloat(item.amount)} className="text-sm font-medium" />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
+          <DataTable
+            data={items}
+            columns={batchItemColumns}
+            getRowKey={(row) => row.id}
+            minWidth="560px"
+          />
         )}
       </div>
 

@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 
 export default function InvoicesLoading() {
   return (
@@ -26,26 +27,7 @@ export default function InvoicesLoading() {
           ))}
         </div>
 
-        <div className="border border-border rounded-lg overflow-hidden">
-          <div className="bg-muted/30 px-4 py-3 grid grid-cols-7 gap-4">
-            {Array.from({ length: 7 }).map((_, i) => (
-              <Skeleton key={i} className="h-4 w-full" />
-            ))}
-          </div>
-          <div className="divide-y divide-border">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="px-4 py-3 grid grid-cols-7 gap-4 items-center">
-                <Skeleton className="h-4 w-20" />
-                <Skeleton className="h-4 w-28" />
-                <Skeleton className="h-4 w-20" />
-                <Skeleton className="h-5 w-16 rounded-full" />
-                <Skeleton className="h-4 w-20" />
-                <Skeleton className="h-4 w-16" />
-                <Skeleton className="h-7 w-7 rounded ml-auto" />
-              </div>
-            ))}
-          </div>
-        </div>
+        <DataTableSkeleton rows={8} columns={7} />
       </div>
     </PageWrapper>
   );

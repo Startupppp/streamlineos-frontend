@@ -1,163 +1,25 @@
 "use client";
 
-import { useCallback } from "react";
-import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { useMemo } from "react";
+import { Plus } from "lucide-react";
+import { format } from "date-fns";
+import { CheckCircle2, XCircle, Pencil, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { AdminExpenseItem } from "./expense-item";
-import { MemberExpenseItem } from "./expense-item";
+import { cn } from "@/lib/utils";
+import { formatINR } from "@/lib/format-utils";
+import { viewFile } from "@/hooks/common/use-file-url";
+import {
+  getCategoryConfig,
+  STATUS_STYLES,
+  STATUS_LABELS,
+} from "./expense-constants";
 import type { ExpenseWithRelations } from "@/types/hr/expenses";
 import type { ExpenseToEdit } from "@/features/hr/expenses/components/create-expense-dialog";
 import type { StatusFilter } from "./expense-constants";
-
-function PageNumberButton({ page, currentPage, onPageChange }: { page: number; currentPage: number; onPageChange: (page: number) => void }) {
-  function handleClick() { onPageChange(page); }
-  return (
-    <Button
-      key={page}
-      variant={page === currentPage ? "default" : "outline"}
-      size="icon"
-      className="h-8 w-8 text-xs"
-      onClick={handleClick}
-    >
-      {page}
-    </Button>
-  );
-}
-
-interface PaginationProps {
-  pagination: {
-    page: number;
-    pageSize: number;
-    total: number;
-    totalPages: number;
-  };
-  startItem: number;
-  endItem: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
-  variant?: "admin" | "member";
-}
-
-function ExpensePagination({
-  pagination,
-  startItem,
-  endItem,
-  totalPages,
-  onPageChange,
-  variant = "member",
-}: PaginationProps) {
-  const handlePrevious = useCallback(() => onPageChange(pagination.page - 1), [onPageChange, pagination.page]);
-  const handleNext = useCallback(() => onPageChange(pagination.page + 1), [onPageChange, pagination.page]);
-
-  if (pagination.total === 0 || totalPages <= 1) return null;
-
-  if (variant === "admin") {
-    return (
-      <div className="flex items-center justify-between px-6 py-3 border-t bg-muted/40">
-        <span className="text-xs text-muted-foreground">
-          Showing{" "}
-          <strong className="font-semibold text-foreground">{startItem}</strong>{" "}
-          to{" "}
-          <strong className="font-semibold text-foreground">{endItem}</strong>{" "}
-          of{" "}
-          <strong className="font-semibold text-foreground">
-            {pagination.total}
-          </strong>{" "}
-          results
-        </span>
-        <div className="flex items-center gap-1">
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-            disabled={pagination.page <= 1}
-            onClick={handlePrevious}
-            aria-label="Previous page"
-          >
-            <ChevronLeft className="h-3.5 w-3.5" />
-          </Button>
-          {(() => {
-            const maxVisible = 5;
-            let start = Math.max(
-              1,
-              pagination.page - Math.floor(maxVisible / 2),
-            );
-            const end = Math.min(totalPages, start + maxVisible - 1);
-            start = Math.max(1, end - maxVisible + 1);
-            return Array.from({ length: end - start + 1 }, (_, i) => start + i);
-          })().map((p) => (
-            <PageNumberButton
-              key={p}
-              page={p}
-              currentPage={pagination.page}
-              onPageChange={onPageChange}
-            />
-          ))}
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-            disabled={pagination.page >= totalPages}
-            onClick={handleNext}
-            aria-label="Next page"
-          >
-            <ChevronRight className="h-3.5 w-3.5" />
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex items-center justify-between px-6 py-3 border-t bg-muted/40">
-      <span className="text-xs text-muted-foreground">
-        Showing{" "}
-        <strong className="font-semibold text-foreground">{startItem}</strong>{" "}
-        to <strong className="font-semibold text-foreground">{endItem}</strong>{" "}
-        of{" "}
-        <strong className="font-semibold text-foreground">
-          {pagination.total}
-        </strong>{" "}
-        claims
-      </span>
-      <div className="flex items-center gap-1.5">
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 text-xs gap-1.5"
-          disabled={pagination.page <= 1}
-          onClick={handlePrevious}
-        >
-          <ChevronLeft className="h-3.5 w-3.5" />
-          Previous
-        </Button>
-        <span className="text-xs text-muted-foreground px-1">
-          {pagination.page} / {totalPages}
-        </span>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 text-xs gap-1.5"
-          disabled={pagination.page >= totalPages}
-          onClick={handleNext}
-        >
-          Next
-          <ChevronRight className="h-3.5 w-3.5" />
-        </Button>
-      </div>
-    </div>
-  );
-}
 
 interface AdminExpenseListProps {
   expenses: ExpenseWithRelations[];
@@ -203,6 +65,13 @@ export function AdminExpenseList({
   onPageChange,
   onShowAll,
 }: AdminExpenseListProps) {
+  function handlePrevious() {
+    onPageChange(pagination.page - 1);
+  }
+  function handleNext() {
+    onPageChange(pagination.page + 1);
+  }
+
   return (
     <Card className="rounded-lg border border-border overflow-hidden">
       <CardContent className="p-0 flex flex-col">
@@ -262,14 +131,44 @@ export function AdminExpenseList({
           </div>
         )}
 
-        <ExpensePagination
-          pagination={pagination}
-          startItem={startItem}
-          endItem={endItem}
-          totalPages={totalPages}
-          onPageChange={onPageChange}
-          variant="admin"
-        />
+        {pagination.total > 0 && totalPages > 1 && (
+          <div className="flex items-center justify-between px-6 py-3 border-t bg-muted/40">
+            <span className="text-xs text-muted-foreground">
+              Showing{" "}
+              <strong className="font-semibold text-foreground">{startItem}</strong>{" "}
+              to{" "}
+              <strong className="font-semibold text-foreground">{endItem}</strong>{" "}
+              of{" "}
+              <strong className="font-semibold text-foreground">
+                {pagination.total}
+              </strong>{" "}
+              results
+            </span>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs gap-1.5"
+                disabled={pagination.page <= 1}
+                onClick={handlePrevious}
+              >
+                Previous
+              </Button>
+              <span className="text-xs text-muted-foreground px-1">
+                {pagination.page} / {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs gap-1.5"
+                disabled={pagination.page >= totalPages}
+                onClick={handleNext}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -298,9 +197,6 @@ interface MemberExpenseListProps {
 export function MemberExpenseList({
   expenses,
   pagination,
-  startItem,
-  endItem,
-  totalPages,
   statusFilter,
   activeFilterCount,
   onEdit,
@@ -309,125 +205,241 @@ export function MemberExpenseList({
   onCreateNew,
   onPageChange,
 }: MemberExpenseListProps) {
+  const columns = useMemo<DataTableColumn<ExpenseWithRelations>[]>(() => [
+    {
+      key: "claimId",
+      header: "Claim ID",
+      cell(expense) {
+        const status = expense.status || "PENDING";
+        const statusBorderClass =
+          status === "PENDING"
+            ? "border-l-amber-400"
+            : status === "APPROVED"
+              ? "border-l-emerald-400"
+              : status === "REJECTED"
+                ? "border-l-rose-400"
+                : "border-l-slate-400";
+        return (
+          <span
+            className={cn(
+              "text-xs font-semibold tabular-nums border-l-4 pl-2",
+              statusBorderClass,
+            )}
+          >
+            #EXP-{new Date(expense.expenseDate).getFullYear()}-
+            {expense.id.toString().padStart(3, "0")}
+          </span>
+        );
+      },
+    },
+    {
+      key: "date",
+      header: "Date",
+      headerClassName: "hidden md:table-cell",
+      className: "hidden md:table-cell text-xs text-muted-foreground",
+      cell(expense) {
+        return format(new Date(expense.expenseDate), "MMM dd, yyyy");
+      },
+    },
+    {
+      key: "category",
+      header: "Category",
+      headerClassName: "hidden md:table-cell",
+      className: "hidden md:table-cell",
+      cell(expense) {
+        const catConfig = getCategoryConfig(expense.category || "Other");
+        const CatIcon = catConfig.icon;
+        return (
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+              catConfig.bg,
+              catConfig.text,
+            )}
+          >
+            <CatIcon className="h-3 w-3" />
+            {catConfig.label}
+          </span>
+        );
+      },
+    },
+    {
+      key: "description",
+      header: "Description",
+      headerClassName: "hidden md:table-cell",
+      className: "hidden md:table-cell text-xs text-foreground max-w-[200px] truncate",
+      cell(expense) {
+        return expense.description || expense.merchant || "-";
+      },
+    },
+    {
+      key: "amount",
+      header: "Amount",
+      headerClassName: "text-right",
+      className: "font-mono text-sm text-right",
+      cell(expense) {
+        return formatINR(expense.amount);
+      },
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell(expense) {
+        const status = expense.status || "PENDING";
+        const statusStyle = STATUS_STYLES[status] ?? STATUS_STYLES["PENDING"];
+        return (
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+              statusStyle.bg,
+              statusStyle.text,
+              statusStyle.border,
+            )}
+          >
+            {status === "PAID" ? (
+              <CheckCircle2 className="h-3 w-3" />
+            ) : status === "REJECTED" ? (
+              <XCircle className="h-3 w-3" />
+            ) : (
+              <span className={cn("size-1.5 rounded-full", statusStyle.dot)} />
+            )}
+            {STATUS_LABELS[status] ?? status}
+          </span>
+        );
+      },
+    },
+    {
+      key: "action",
+      header: "Action",
+      headerClassName: "text-right",
+      className: "text-right",
+      cell(expense) {
+        const status = expense.status || "PENDING";
+        const canResubmit = status === "REJECTED";
+        const canEdit = status === "PENDING";
+
+        function toEditPayload(): ExpenseToEdit {
+          return {
+            id: expense.id,
+            category: expense.category || "",
+            amount: expense.amount,
+            description: expense.description,
+            merchant: expense.merchant,
+            paymentMethod: expense.paymentMethod,
+            expenseDate: expense.expenseDate,
+            receiptUrl: expense.receiptUrl,
+            receiptFileName: expense.receiptFileName,
+          };
+        }
+
+        function handleResubmit() {
+          onResubmit(expense);
+        }
+        function handleEdit() {
+          onEdit(toEditPayload());
+        }
+        function handleView() {
+          if (expense.receiptUrl) {
+            viewFile(expense.receiptUrl);
+          } else {
+            onEdit(toEditPayload());
+          }
+        }
+
+        if (canResubmit) {
+          return (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 text-xs gap-1.5 text-blue-600 border-blue-200 hover:bg-blue-50 dark:border-blue-800 dark:hover:bg-blue-950/30"
+              onClick={handleResubmit}
+            >
+              Resubmit
+            </Button>
+          );
+        }
+        if (canEdit) {
+          return (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-blue-600 hover:text-blue-600/80 hover:bg-blue-50 dark:hover:bg-blue-950/30"
+              onClick={handleEdit}
+              aria-label="Edit"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </Button>
+          );
+        }
+        return (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            onClick={handleView}
+            aria-label="View"
+          >
+            <Eye className="h-3.5 w-3.5" />
+          </Button>
+        );
+      },
+    },
+  ], [onEdit, onResubmit]);
+
+  const emptyState = (
+    <div className="flex flex-col items-center justify-center flex-1 min-h-[220px] gap-3">
+      <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+        <EmptyExpensesIllustration className="h-5 w-5 opacity-60" />
+      </div>
+      <div className="text-center">
+        <p className="text-sm font-medium text-foreground">
+          No expenses found
+        </p>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          {statusFilter !== "ALL" || activeFilterCount > 0
+            ? "Try adjusting your filters"
+            : "Submit your first expense claim to get started"}
+        </p>
+      </div>
+      {statusFilter !== "ALL" ? (
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 text-xs gap-1.5 mt-1"
+          onClick={onShowAll}
+        >
+          Show All Claims
+        </Button>
+      ) : (
+        <Button
+          size="sm"
+          className="h-8 text-xs gap-1.5 mt-1"
+          onClick={onCreateNew}
+        >
+          <Plus className="h-3.5 w-3.5" />
+          Submit New Claim
+        </Button>
+      )}
+    </div>
+  );
+
   return (
     <Card className="rounded-lg border border-border overflow-hidden">
       <CardContent className="p-0 flex flex-col" aria-live="polite">
-        {expenses.length === 0 ? (
-          <div className="flex flex-col items-center justify-center flex-1 min-h-[260px] gap-3">
-            <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
-              <EmptyExpensesIllustration className="h-5 w-5 opacity-60" />
-            </div>
-            <div className="text-center">
-              <p className="text-sm font-medium text-foreground">
-                No expenses found
-              </p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {statusFilter !== "ALL" || activeFilterCount > 0
-                  ? "Try adjusting your filters"
-                  : "Submit your first expense claim to get started"}
-              </p>
-            </div>
-            {statusFilter !== "ALL" ? (
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 text-xs gap-1.5 mt-1"
-                onClick={onShowAll}
-              >
-                Show All Claims
-              </Button>
-            ) : (
-              <Button
-                size="sm"
-                className="h-8 text-xs gap-1.5 mt-1"
-                onClick={onCreateNew}
-              >
-                <Plus className="h-3.5 w-3.5" />
-                Submit New Claim
-              </Button>
-            )}
-          </div>
-        ) : (
-          <>
-            <ScrollArea
-              className="w-full max-h-[60vh]"
-              type="auto"
-              role="region"
-              aria-label="Expense claims table"
-            >
-              <div className="min-w-[640px]">
-                <Table>
-                  <caption className="sr-only">Expense claims</caption>
-                  <TableHeader>
-                    <TableRow className="bg-muted/40 hover:bg-muted/40">
-                      <TableHead
-                        scope="col"
-                        className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-6 py-3"
-                      >
-                        Claim ID
-                      </TableHead>
-                      <TableHead
-                        scope="col"
-                        className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-6 py-3 hidden md:table-cell"
-                      >
-                        Date
-                      </TableHead>
-                      <TableHead
-                        scope="col"
-                        className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-6 py-3 hidden md:table-cell"
-                      >
-                        Category
-                      </TableHead>
-                      <TableHead
-                        scope="col"
-                        className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-6 py-3 hidden md:table-cell"
-                      >
-                        Description
-                      </TableHead>
-                      <TableHead
-                        scope="col"
-                        className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-6 py-3 text-right"
-                      >
-                        Amount
-                      </TableHead>
-                      <TableHead
-                        scope="col"
-                        className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-6 py-3"
-                      >
-                        Status
-                      </TableHead>
-                      <TableHead
-                        scope="col"
-                        className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-6 py-3 text-right"
-                      >
-                        Action
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {expenses.map((expense) => (
-                      <MemberExpenseItem
-                        key={expense.id}
-                        expense={expense}
-                        onEdit={onEdit}
-                        onResubmit={onResubmit}
-                      />
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </ScrollArea>
-
-            <ExpensePagination
-              pagination={pagination}
-              startItem={startItem}
-              endItem={endItem}
-              totalPages={totalPages}
-              onPageChange={onPageChange}
-              variant="member"
-            />
-          </>
-        )}
+        <DataTable
+          data={expenses}
+          columns={columns}
+          getRowKey={(expense) => expense.id}
+          pagination={{
+            mode: "server",
+            page: pagination.page,
+            pageSize: pagination.pageSize,
+            total: pagination.total,
+            onPageChange,
+          }}
+          emptyState={emptyState}
+          minWidth="640px"
+        />
       </CardContent>
     </Card>
   );

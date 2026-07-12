@@ -20,15 +20,7 @@ import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   Sheet,
   SheetContent,
@@ -90,84 +82,6 @@ function TypeBadge({ type }: { type: FeatureFlag["type"] }) {
     <Badge variant={variants[type]} className="capitalize text-xs">
       {type}
     </Badge>
-  );
-}
-
-function TableSkeleton() {
-  return (
-    <>
-      {Array.from({ length: 4 }).map((_, i) => (
-        <TableRow key={i}>
-          <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-          <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-          <TableCell><Skeleton className="h-5 w-16" /></TableCell>
-          <TableCell><Skeleton className="h-5 w-16" /></TableCell>
-          <TableCell><Skeleton className="h-4 w-10" /></TableCell>
-          <TableCell><Skeleton className="h-8 w-16" /></TableCell>
-        </TableRow>
-      ))}
-    </>
-  );
-}
-
-interface FlagTableRowProps {
-  flag: FeatureFlag;
-  onToggle: (flag: FeatureFlag) => void;
-  onArchive: (flag: FeatureFlag) => void;
-  isUpdating: boolean;
-  isArchiving: boolean;
-}
-
-function FlagTableRow({ flag, onToggle, onArchive, isUpdating, isArchiving }: FlagTableRowProps) {
-  function handleToggle() {
-    onToggle(flag);
-  }
-
-  function handleArchive() {
-    onArchive(flag);
-  }
-
-  return (
-    <TableRow>
-      <TableCell className="px-5 py-3">
-        <div>
-          <p className="text-sm font-medium">{flag.name}</p>
-          {flag.description && (
-            <p className="text-xs text-muted-foreground truncate max-w-xs">{flag.description}</p>
-          )}
-        </div>
-      </TableCell>
-      <TableCell className="px-5 py-3">
-        <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{flag.key}</code>
-      </TableCell>
-      <TableCell className="px-5 py-3">
-        <TypeBadge type={flag.type} />
-      </TableCell>
-      <TableCell className="px-5 py-3">
-        <Switch
-          checked={flag.enabled}
-          onCheckedChange={handleToggle}
-          disabled={isUpdating}
-          aria-label={`Toggle ${flag.name}`}
-        />
-      </TableCell>
-      <TableCell className="px-5 py-3 text-sm text-muted-foreground">
-        {flag.type === "percentage" ? `${flag.rolloutPercentage}%` : "—"}
-      </TableCell>
-      <TableCell className="px-5 py-3 text-right">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-8 gap-1.5 text-muted-foreground hover:text-destructive"
-          onClick={handleArchive}
-          disabled={isArchiving}
-          aria-label={`Archive ${flag.name}`}
-        >
-          <Archive className="h-3.5 w-3.5" />
-          Archive
-        </Button>
-      </TableCell>
-    </TableRow>
   );
 }
 
@@ -252,6 +166,99 @@ function FeatureFlagsContent() {
 
   const visibleFlags = (flags ?? []).filter((f) => !f.isArchived);
 
+  const columns: DataTableColumn<FeatureFlag>[] = [
+    {
+      key: "name",
+      header: "Name",
+      cell: (flag) => (
+        <div>
+          <p className="text-sm font-medium">{flag.name}</p>
+          {flag.description && (
+            <p className="text-xs text-muted-foreground truncate max-w-xs">{flag.description}</p>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "key",
+      header: "Key",
+      cell: (flag) => (
+        <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{flag.key}</code>
+      ),
+    },
+    {
+      key: "type",
+      header: "Type",
+      cell: (flag) => <TypeBadge type={flag.type} />,
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (flag) => (
+        <div onClick={(e) => e.stopPropagation()}>
+          <Switch
+            checked={flag.enabled}
+            onCheckedChange={() => handleToggle(flag)}
+            disabled={updateFlag.isPending}
+            aria-label={`Toggle ${flag.name}`}
+          />
+        </div>
+      ),
+    },
+    {
+      key: "rollout",
+      header: "Rollout",
+      cell: (flag) => (
+        <span className="text-sm text-muted-foreground">
+          {flag.type === "percentage" ? `${flag.rolloutPercentage}%` : "—"}
+        </span>
+      ),
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      headerClassName: "text-right",
+      className: "text-right",
+      cell: (flag) => (
+        <div onClick={(e) => e.stopPropagation()}>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 gap-1.5 text-muted-foreground hover:text-destructive"
+            onClick={() => handleArchive(flag)}
+            disabled={archiveFlag.isPending}
+            aria-label={`Archive ${flag.name}`}
+          >
+            <Archive className="h-3.5 w-3.5" />
+            Archive
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
+  const emptyState = isError ? (
+    <div className="flex flex-1 flex-col items-center justify-center py-24 gap-3 text-center">
+      <AlertCircle className="h-10 w-10 text-destructive/40" />
+      <p className="text-sm font-medium">Failed to load feature flags</p>
+      <p className="text-xs text-muted-foreground">Something went wrong. Please try again.</p>
+      <Button variant="outline" onClick={handleRetry} className="mt-2">
+        Retry
+      </Button>
+    </div>
+  ) : (
+    <div className="flex flex-1 flex-col items-center justify-center py-24 gap-3 text-center">
+      <Flag className="h-10 w-10 text-muted-foreground/40" />
+      <p className="text-sm font-medium">No feature flags yet</p>
+      <p className="text-xs text-muted-foreground max-w-xs">
+        Create a flag to control feature rollouts across your platform.
+      </p>
+      <Button onClick={handleOpenCreate} className="mt-2 gap-2">
+        <Plus className="h-4 w-4" /> New Flag
+      </Button>
+    </div>
+  );
+
   return (
     <PageWrapper
       title="Feature Flags"
@@ -262,66 +269,13 @@ function FeatureFlagsContent() {
         </Button>
       }
     >
-      {isLoading ? (
-        <Table>
-          <TableHeader className="bg-muted/40">
-            <TableRow>
-              <TableHead className="px-5 py-3 text-xs font-semibold">Name</TableHead>
-              <TableHead className="px-5 py-3 text-xs font-semibold">Key</TableHead>
-              <TableHead className="px-5 py-3 text-xs font-semibold">Type</TableHead>
-              <TableHead className="px-5 py-3 text-xs font-semibold">Status</TableHead>
-              <TableHead className="px-5 py-3 text-xs font-semibold">Rollout</TableHead>
-              <TableHead className="px-5 py-3 text-xs font-semibold text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody><TableSkeleton /></TableBody>
-        </Table>
-      ) : isError ? (
-        <div className="flex flex-1 flex-col items-center justify-center py-24 gap-3 text-center">
-          <AlertCircle className="h-10 w-10 text-destructive/40" />
-          <p className="text-sm font-medium">Failed to load feature flags</p>
-          <p className="text-xs text-muted-foreground">Something went wrong. Please try again.</p>
-          <Button variant="outline" onClick={handleRetry} className="mt-2">
-            Retry
-          </Button>
-        </div>
-      ) : visibleFlags.length === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center py-24 gap-3 text-center">
-          <Flag className="h-10 w-10 text-muted-foreground/40" />
-          <p className="text-sm font-medium">No feature flags yet</p>
-          <p className="text-xs text-muted-foreground max-w-xs">
-            Create a flag to control feature rollouts across your platform.
-          </p>
-          <Button onClick={handleOpenCreate} className="mt-2 gap-2">
-            <Plus className="h-4 w-4" /> New Flag
-          </Button>
-        </div>
-      ) : (
-        <Table>
-          <TableHeader className="bg-muted/40">
-            <TableRow>
-              <TableHead className="px-5 py-3 text-xs font-semibold">Name</TableHead>
-              <TableHead className="px-5 py-3 text-xs font-semibold">Key</TableHead>
-              <TableHead className="px-5 py-3 text-xs font-semibold">Type</TableHead>
-              <TableHead className="px-5 py-3 text-xs font-semibold">Status</TableHead>
-              <TableHead className="px-5 py-3 text-xs font-semibold">Rollout</TableHead>
-              <TableHead className="px-5 py-3 text-xs font-semibold text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {visibleFlags.map((flag) => (
-              <FlagTableRow
-                key={flag.id}
-                flag={flag}
-                onToggle={handleToggle}
-                onArchive={handleArchive}
-                isUpdating={updateFlag.isPending}
-                isArchiving={archiveFlag.isPending}
-              />
-            ))}
-          </TableBody>
-        </Table>
-      )}
+      <DataTable
+        data={visibleFlags}
+        columns={columns}
+        getRowKey={(flag) => flag.id}
+        isLoading={isLoading}
+        emptyState={emptyState}
+      />
 
       <Sheet open={createOpen} onOpenChange={setCreateOpen}>
         <SheetContent className="w-full sm:max-w-lg p-0 flex flex-col gap-0">

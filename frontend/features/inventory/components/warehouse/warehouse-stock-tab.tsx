@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
-import { SkeletonTable, ErrorState } from "@/components/shared";
+import { ErrorState } from "@/components/shared";
 import { useWarehouseStock } from "@/hooks/api/inventory/warehouses";
 import type { WarehouseStockRow } from "@/types/inventory";
 
@@ -90,7 +90,7 @@ export function WarehouseStockTab({ warehouseId }: WarehouseStockTabProps) {
     setPage(newPage);
   }
 
-  if (isLoading) return <SkeletonTable rows={6} columns={6} />;
+  if (isLoading) return <DataTableSkeleton rows={6} columns={6} />;
 
   if (isError) {
     return (

@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { ChevronLeft, ArrowRight, Package } from "lucide-react";
 import { EmptyTransferIllustration } from "@/components/illustrations";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import {
@@ -23,14 +24,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { toast } from "sonner";
 import Link from "next/link";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
@@ -50,7 +43,94 @@ import {
 import { StatusTimeline, LocationCell } from "@/features/inventory/components/stock/transfer-detail-widgets";
 import { cn } from "@/lib/utils";
 
-const TH = "px-2 py-1.5 text-left text-[11px] font-medium text-muted-foreground";
+type TransferLine = {
+  id: number;
+  productName: string;
+  sku: string;
+  lotNumber?: string | null;
+  serialNumber?: string | null;
+  quantity: number;
+  quantityReceived: number;
+  notes?: string | null;
+};
+
+function buildLineColumns(isCompleted: boolean): DataTableColumn<TransferLine>[] {
+  const cols: DataTableColumn<TransferLine>[] = [
+    {
+      key: "productName",
+      header: "Product",
+      className: "max-w-[180px] truncate font-medium",
+      cell: (row) => <span>{row.productName}</span>,
+    },
+    {
+      key: "sku",
+      header: "SKU",
+      className: "font-mono text-muted-foreground",
+      cell: (row) => <span>{row.sku}</span>,
+    },
+    {
+      key: "tracking",
+      header: "Lot / Serial",
+      className: "font-mono text-muted-foreground",
+      cell: (row) => {
+        const label = row.lotNumber
+          ? `Lot: ${row.lotNumber}`
+          : row.serialNumber
+          ? `S/N: ${row.serialNumber}`
+          : "—";
+        return <span>{label}</span>;
+      },
+    },
+    {
+      key: "quantity",
+      header: "Requested",
+      headerClassName: "text-right",
+      className: "text-right font-mono tabular-nums",
+      cell: (row) => <span>{row.quantity.toLocaleString()}</span>,
+    },
+  ];
+
+  if (isCompleted) {
+    cols.push({
+      key: "quantityReceived",
+      header: "Received",
+      headerClassName: "text-right",
+      className: "text-right font-mono tabular-nums",
+      cell: (row) => <span>{row.quantityReceived.toLocaleString()}</span>,
+    });
+    cols.push({
+      key: "variance",
+      header: "Variance",
+      headerClassName: "text-right",
+      className: "text-right font-mono tabular-nums font-medium",
+      cell: (row) => {
+        const variance = row.quantityReceived - row.quantity;
+        return (
+          <span
+            className={cn(
+              variance < 0 && "text-red-600",
+              variance > 0 && "text-amber-600",
+              variance === 0 && "text-muted-foreground",
+            )}
+          >
+            {variance === 0
+              ? "—"
+              : `${variance > 0 ? "+" : ""}${variance.toLocaleString()}`}
+          </span>
+        );
+      },
+    });
+  }
+
+  cols.push({
+    key: "notes",
+    header: "Notes",
+    className: "text-muted-foreground max-w-[160px] truncate",
+    cell: (row) => <span>{row.notes ?? "—"}</span>,
+  });
+
+  return cols;
+}
 
 function TransferDetailSkeleton() {
   return (
@@ -146,6 +226,10 @@ export default function TransferDetailPage({
     );
   }
 
+  const lines: TransferLine[] = transfer?.lines ?? [];
+  const isCompleted = transfer?.status === "COMPLETED";
+  const lineColumns = useMemo(() => buildLineColumns(isCompleted), [isCompleted]);
+
   if (isLoading) return <TransferDetailSkeleton />;
 
   if (isError)
@@ -195,8 +279,6 @@ export default function TransferDetailPage({
       </PageWrapper>
     );
 
-  const lines = transfer.lines ?? [];
-  const isCompleted = transfer.status === "COMPLETED";
   const isCancellable = transfer.status === "PENDING" || transfer.status === "RESERVED";
   const anyMutationPending =
     reserveMutation.isPending ||
@@ -346,69 +428,11 @@ export default function TransferDetailPage({
                   description="This transfer has no product lines."
                 />
               ) : (
-                <div className="rounded-md border border-border overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-muted/80 hover:bg-muted/80">
-                        <TableHead className={TH}>Product</TableHead>
-                        <TableHead className={TH}>SKU</TableHead>
-                        <TableHead className={TH}>Lot / Serial</TableHead>
-                        <TableHead className={cn(TH, "text-right")}>Requested</TableHead>
-                        {isCompleted && <TableHead className={cn(TH, "text-right")}>Received</TableHead>}
-                        {isCompleted && <TableHead className={cn(TH, "text-right")}>Variance</TableHead>}
-                        <TableHead className={TH}>Notes</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {lines.map((line) => {
-                        const variance = line.quantityReceived - line.quantity;
-                        const trackingLabel = line.lotNumber
-                          ? `Lot: ${line.lotNumber}`
-                          : line.serialNumber
-                          ? `S/N: ${line.serialNumber}`
-                          : "—";
-                        return (
-                          <TableRow key={line.id} className="h-8 hover:bg-muted/30 transition-colors">
-                            <TableCell className="px-2 py-1 text-[11px] font-medium max-w-[180px] truncate">
-                              {line.productName}
-                            </TableCell>
-                            <TableCell className="px-2 py-1 font-mono text-[11px] text-muted-foreground">
-                              {line.sku}
-                            </TableCell>
-                            <TableCell className="px-2 py-1 font-mono text-[11px] text-muted-foreground">
-                              {trackingLabel}
-                            </TableCell>
-                            <TableCell className="px-2 py-1 text-right font-mono tabular-nums text-[11px]">
-                              {line.quantity.toLocaleString()}
-                            </TableCell>
-                            {isCompleted && (
-                              <TableCell className="px-2 py-1 text-right font-mono tabular-nums text-[11px]">
-                                {line.quantityReceived.toLocaleString()}
-                              </TableCell>
-                            )}
-                            {isCompleted && (
-                              <TableCell
-                                className={cn(
-                                  "px-2 py-1 text-right font-mono tabular-nums text-[11px] font-medium",
-                                  variance < 0 && "text-red-600",
-                                  variance > 0 && "text-amber-600",
-                                  variance === 0 && "text-muted-foreground",
-                                )}
-                              >
-                                {variance === 0
-                                  ? "—"
-                                  : `${variance > 0 ? "+" : ""}${variance.toLocaleString()}`}
-                              </TableCell>
-                            )}
-                            <TableCell className="px-2 py-1 text-[11px] text-muted-foreground max-w-[160px] truncate">
-                              {line.notes ?? "—"}
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
+                <DataTable
+                  data={lines}
+                  columns={lineColumns}
+                  getRowKey={(row) => row.id}
+                />
               )}
             </CardContent>
           </Card>

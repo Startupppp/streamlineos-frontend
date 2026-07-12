@@ -4,14 +4,7 @@ import * as React from "react";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useImportJob } from "@/hooks/api/inventory/admin";
 import type { JobStatus } from "@/features/inventory/lib";
 import { JOB_STATUS_BADGE, JOB_STATUS_LABEL } from "@/features/inventory/lib";
@@ -22,6 +15,29 @@ interface ImportResultStepProps {
   jobId: number;
   onReset: () => void;
 }
+
+type ErrorRow = { row: number | string; field: string; message: string; _idx: number };
+
+const ERROR_COLUMNS: DataTableColumn<ErrorRow>[] = [
+  {
+    key: "row",
+    header: "Row",
+    className: "text-xs text-red-700",
+    cell: (e) => e.row,
+  },
+  {
+    key: "field",
+    header: "Field",
+    className: "text-xs text-red-700",
+    cell: (e) => e.field,
+  },
+  {
+    key: "message",
+    header: "Message",
+    className: "text-xs text-red-700",
+    cell: (e) => e.message,
+  },
+];
 
 export function ImportResultStep({ jobId, onReset }: ImportResultStepProps) {
   const [isPolling, setIsPolling] = React.useState(true);
@@ -49,6 +65,8 @@ export function ImportResultStep({ jobId, onReset }: ImportResultStepProps) {
   const isRunning = POLLING_STATUSES.includes(job.status);
   const isCompleted = job.status === "COMPLETED";
   const isFailed = job.status === "FAILED";
+
+  const errorData: ErrorRow[] = (job.errors ?? []).map((e, i) => ({ ...e, _idx: i }));
 
   return (
     <div className="space-y-4">
@@ -78,29 +96,12 @@ export function ImportResultStep({ jobId, onReset }: ImportResultStepProps) {
         </div>
       </div>
 
-      {job.errors && job.errors.length > 0 && (
-        <div className="rounded-lg border border-red-200 overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Row</TableHead>
-                <TableHead>Field</TableHead>
-                <TableHead>Message</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {job.errors.map(function renderError(err, idx) {
-                return (
-                  <TableRow key={idx}>
-                    <TableCell className="text-xs text-red-700">{err.row}</TableCell>
-                    <TableCell className="text-xs text-red-700">{err.field}</TableCell>
-                    <TableCell className="text-xs text-red-700">{err.message}</TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
+      {errorData.length > 0 && (
+        <DataTable
+          data={errorData}
+          columns={ERROR_COLUMNS}
+          getRowKey={(e) => e._idx}
+        />
       )}
 
       {!isRunning && (

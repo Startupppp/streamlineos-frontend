@@ -11,18 +11,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { DatePicker } from "@/components/ui/date-picker";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { DataTablePagination, LoadingState, ErrorState } from "@/components/shared";
+import { ErrorState } from "@/components/shared";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useGeneralLedger, useGlAccounts } from "@/hooks/api/accounting/core";
 import { useCustomersOutstanding, useVendorsOutstanding } from "@/hooks/api/accounting";
 import { useCan } from "@/hooks/api/access";
@@ -68,6 +61,75 @@ function isNegative(value: string): boolean {
 
 const PAGE_SIZE = 50;
 
+const glColumns: DataTableColumn<GlRow>[] = [
+  {
+    key: "date",
+    header: "Date",
+    cell: (row) => <span className="tabular-nums text-muted-foreground">{formatDate(row.date)}</span>,
+    className: "w-[120px]",
+    sortable: true,
+    sortValue: (row) => row.date,
+  },
+  {
+    key: "entryNumber",
+    header: "Entry #",
+    cell: (row) =>
+      row.entryId !== null ? (
+        <Link href={"/accounting/journal/" + String(row.entryId)} className="text-foreground hover:text-blue-600 hover:underline font-mono text-xs">
+          {row.entryNumber}
+        </Link>
+      ) : (
+        <span className="font-mono text-xs">{row.entryNumber}</span>
+      ),
+    className: "w-[140px]",
+  },
+  {
+    key: "description",
+    header: "Description",
+    cell: (row) => <span className="text-sm text-foreground">{row.description ?? ""}</span>,
+  },
+  {
+    key: "debit",
+    header: "Debit",
+    cell: (row) => (
+      <span className="text-right font-mono text-sm tabular-nums text-destructive block">
+        {parseFloat(row.debit) > 0
+          ? parseFloat(row.debit).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+          : ""}
+      </span>
+    ),
+    className: "w-[130px] text-right",
+    sortable: true,
+    sortValue: (row) => parseFloat(row.debit),
+  },
+  {
+    key: "credit",
+    header: "Credit",
+    cell: (row) => (
+      <span className="text-right font-mono text-sm tabular-nums text-emerald-600 block">
+        {parseFloat(row.credit) > 0
+          ? parseFloat(row.credit).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+          : ""}
+      </span>
+    ),
+    className: "w-[130px] text-right",
+    sortable: true,
+    sortValue: (row) => parseFloat(row.credit),
+  },
+  {
+    key: "runningBalance",
+    header: "Balance",
+    cell: (row) => (
+      <span className={cn("text-right font-mono text-sm tabular-nums block", isNegative(row.runningBalance) ? "text-destructive" : "text-foreground")}>
+        {formatMoney(row.runningBalance)}
+      </span>
+    ),
+    className: "w-[140px] text-right",
+    sortable: true,
+    sortValue: (row) => parseFloat(row.runningBalance),
+  },
+];
+
 export default function GeneralLedgerPage() {
   const [from, setFrom] = useState<string>(getMonthStart());
   const [to, setTo] = useState<string>(getToday());
@@ -97,7 +159,6 @@ export default function GeneralLedgerPage() {
 
   const glData = glQuery.data;
   const rows = glData?.rows ?? [];
-  const totalPages = glData?.totalPages ?? 1;
 
   const periodDebit = sumDebit(rows);
   const periodCredit = sumCredit(rows);
@@ -239,75 +300,29 @@ export default function GeneralLedgerPage() {
               Choose a date range above to view the general ledger.
             </p>
           </div>
-        ) : glQuery.isLoading ? (
-          <LoadingState variant="table" rows={8} />
         ) : glQuery.error ? (
           <ErrorState title="Failed to load ledger" description={getErrorMessage(glQuery.error)} onRetry={handleRetry} />
-        ) : rows.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/20 py-10 px-6 text-center">
-            <h3 className="text-sm font-semibold text-foreground">No transactions found</h3>
-            <p className="mt-1 text-sm text-muted-foreground max-w-xs">
-              No activity for the selected account and date range.
-            </p>
-          </div>
         ) : (
-          <>
-            <div className="rounded-lg border border-border overflow-hidden">
-              <div className="overflow-x-auto">
-                <Table className="min-w-[700px]">
-                  <TableHeader>
-                    <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[120px]">Date</TableHead>
-                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[140px]">Entry #</TableHead>
-                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Description</TableHead>
-                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[130px] text-right">Debit</TableHead>
-                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[130px] text-right">Credit</TableHead>
-                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[140px] text-right">Balance</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {rows.map((row: GlRow, idx: number) => (
-                      <TableRow key={`${row.entryNumber}-${idx}`} className="border-b border-border/50 hover:bg-muted/30">
-                        <TableCell className="text-sm tabular-nums text-muted-foreground px-3 py-2">
-                          {formatDate(row.date)}
-                        </TableCell>
-                        <TableCell className="font-mono text-xs px-3 py-2">
-                          {row.entryId ? (
-                            <Link href={`/accounting/journal/${row.entryId}`} className="text-foreground hover:text-blue-600 hover:underline">
-                              {row.entryNumber}
-                            </Link>
-                          ) : (
-                            row.entryNumber
-                          )}
-                        </TableCell>
-                        <TableCell className="text-sm text-foreground px-3 py-2">
-                          {row.description ?? ""}
-                        </TableCell>
-                        <TableCell className="text-right font-mono text-sm tabular-nums px-3 py-2 text-destructive">
-                          {parseFloat(row.debit) > 0 ? parseFloat(row.debit).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ""}
-                        </TableCell>
-                        <TableCell className="text-right font-mono text-sm tabular-nums px-3 py-2 text-emerald-600">
-                          {parseFloat(row.credit) > 0 ? parseFloat(row.credit).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ""}
-                        </TableCell>
-                        <TableCell className={cn("text-right font-mono text-sm tabular-nums px-3 py-2", isNegative(row.runningBalance) ? "text-destructive" : "text-foreground")}>
-                          {formatMoney(row.runningBalance)}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+          <DataTable
+            data={rows}
+            columns={glColumns}
+            getRowKey={(row) => row.entryId ?? row.entryNumber}
+            isLoading={glQuery.isLoading}
+            pagination={{
+              mode: "server",
+              page,
+              pageSize: PAGE_SIZE,
+              total: glData?.total ?? 0,
+              onPageChange: handlePageChange,
+            }}
+            emptyState={
+              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/20 py-10 px-6 text-center">
+                <h3 className="text-sm font-semibold text-foreground">No transactions found</h3>
+                <p className="mt-1 text-sm text-muted-foreground max-w-xs">No activity for the selected account and date range.</p>
               </div>
-            </div>
-            {totalPages > 1 && (
-              <DataTablePagination
-                page={page}
-                limit={PAGE_SIZE}
-                total={glData?.total ?? 0}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-              />
-            )}
-          </>
+            }
+            minWidth="700px"
+          />
         )}
       </div>
     </PageWrapper>

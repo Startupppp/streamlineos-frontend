@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import type { JournalLine } from "@/types/accounting";
 
 function parseAmount(value: string): number {
@@ -26,81 +19,87 @@ export interface JournalLinesTableProps {
   isBalanced: boolean;
 }
 
+function buildColumns(lines: JournalLine[]): DataTableColumn<JournalLine>[] {
+  return [
+    {
+      key: "index",
+      header: "#",
+      headerClassName: "w-10",
+      className: "w-10 text-sm text-muted-foreground tabular-nums",
+      cell: (row) => lines.indexOf(row) + 1,
+    },
+    {
+      key: "accountCode",
+      header: "Code",
+      headerClassName: "w-[120px]",
+      className: "w-[120px] font-mono text-xs text-muted-foreground",
+      cell: (row) => row.accountCode,
+    },
+    {
+      key: "accountName",
+      header: "Account name",
+      cell: (row) => <span className="text-sm text-foreground">{row.accountName}</span>,
+    },
+    {
+      key: "debit",
+      header: "Debit",
+      headerClassName: "w-[160px] text-right",
+      className: "w-[160px] text-right font-mono text-sm tabular-nums text-destructive",
+      cell: (row) => {
+        const v = parseAmount(row.debit);
+        return v > 0 ? formatAmount(v) : "";
+      },
+    },
+    {
+      key: "credit",
+      header: "Credit",
+      headerClassName: "w-[160px] text-right",
+      className: "w-[160px] text-right font-mono text-sm tabular-nums text-emerald-600",
+      cell: (row) => {
+        const v = parseAmount(row.credit);
+        return v > 0 ? formatAmount(v) : "";
+      },
+    },
+    {
+      key: "description",
+      header: "Description",
+      cell: (row) => <span className="text-sm text-muted-foreground">{row.description ?? ""}</span>,
+    },
+  ];
+}
+
 export function JournalLinesTable({ lines, debitTotal, creditTotal, isBalanced }: JournalLinesTableProps) {
-  return (
-    <div className="rounded-lg border border-border overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-            <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-10">
-              #
-            </TableHead>
-            <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[120px]">
-              Code
-            </TableHead>
-            <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">
-              Account name
-            </TableHead>
-            <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[160px] text-right">
-              Debit
-            </TableHead>
-            <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[160px] text-right">
-              Credit
-            </TableHead>
-            <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">
-              Description
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {lines.map((line, index) => (
-            <TableRow key={line.id} className="border-b border-border/50 hover:bg-muted/30">
-              <TableCell className="text-sm text-muted-foreground tabular-nums">
-                {index + 1}
-              </TableCell>
-              <TableCell className="font-mono text-xs text-muted-foreground">
-                {line.accountCode}
-              </TableCell>
-              <TableCell className="text-sm text-foreground">{line.accountName}</TableCell>
-              <TableCell className="text-right font-mono text-sm tabular-nums text-destructive">
-                {parseAmount(line.debit) > 0 ? formatAmount(parseAmount(line.debit)) : ""}
-              </TableCell>
-              <TableCell className="text-right font-mono text-sm tabular-nums text-emerald-600">
-                {parseAmount(line.credit) > 0
-                  ? formatAmount(parseAmount(line.credit))
-                  : ""}
-              </TableCell>
-              <TableCell className="text-sm text-muted-foreground">
-                {line.description ?? ""}
-              </TableCell>
-            </TableRow>
-          ))}
-          <TableRow className="bg-muted/40 hover:bg-muted/40 border-t border-border">
-            <TableCell />
-            <TableCell />
-            <TableCell className="font-medium text-foreground text-sm">Total</TableCell>
-            <TableCell className="text-right font-mono font-medium tabular-nums text-foreground text-sm">
-              {formatAmount(debitTotal)}
-            </TableCell>
-            <TableCell className="text-right font-mono font-medium tabular-nums text-foreground text-sm">
-              {formatAmount(creditTotal)}
-            </TableCell>
-            <TableCell>
-              {isBalanced ? (
-                <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                  Balanced
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1 text-xs font-medium text-red-600">
-                  <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
-                  Unbalanced
-                </span>
-              )}
-            </TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
+  const footer = (
+    <div className="flex items-center gap-2 text-sm">
+      <span className="flex-1 font-medium text-foreground">Total</span>
+      <span className="w-[160px] text-right font-mono font-medium tabular-nums text-foreground">
+        {formatAmount(debitTotal)}
+      </span>
+      <span className="w-[160px] text-right font-mono font-medium tabular-nums text-foreground">
+        {formatAmount(creditTotal)}
+      </span>
+      <span>
+        {isBalanced ? (
+          <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            Balanced
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1 text-xs font-medium text-red-600">
+            <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+            Unbalanced
+          </span>
+        )}
+      </span>
     </div>
+  );
+
+  return (
+    <DataTable
+      data={lines}
+      columns={buildColumns(lines)}
+      getRowKey={(row) => row.id}
+      footer={footer}
+    />
   );
 }

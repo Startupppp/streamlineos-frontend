@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ChangeEvent } from "react";
+import { useState, useMemo, type ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,18 +11,12 @@ import {
   SheetDescription,
   SheetFooter,
 } from "@/components/ui/sheet";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import type { TransferDetail } from "@/hooks/api/inventory/stock";
 
 type Line = TransferDetail["lines"][number];
 type LineInput = { transferLineId: number; quantityReceived: number; notes: string };
+type LineData = { id: number; line: Line; input: LineInput };
 
 function buildInitialInputs(lines: TransferDetail["lines"]): LineInput[] {
   return lines.map((l) => ({
@@ -30,57 +24,6 @@ function buildInitialInputs(lines: TransferDetail["lines"]): LineInput[] {
     quantityReceived: l.quantity,
     notes: "",
   }));
-}
-
-function ReceiveLineRow({
-  line,
-  input,
-  onQtyChange,
-  onNotesChange,
-}: {
-  line: Line;
-  input: LineInput;
-  onQtyChange: (id: number, v: string) => void;
-  onNotesChange: (id: number, v: string) => void;
-}) {
-  function handleQtyChange(e: ChangeEvent<HTMLInputElement>) {
-    onQtyChange(line.id, e.target.value);
-  }
-  function handleNotesChange(e: ChangeEvent<HTMLInputElement>) {
-    onNotesChange(line.id, e.target.value);
-  }
-  return (
-    <TableRow className="hover:bg-muted/30 transition-colors">
-      <TableCell className="px-2 py-2">
-        <p className="font-medium text-[11px] leading-tight truncate max-w-[140px]">
-          {line.productName}
-        </p>
-        <p className="text-[10px] text-muted-foreground font-mono">{line.sku}</p>
-      </TableCell>
-      <TableCell className="px-2 py-2 text-right font-mono tabular-nums text-[11px]">
-        {line.quantity.toLocaleString()}
-      </TableCell>
-      <TableCell className="px-2 py-2">
-        <Input
-          type="number"
-          min={0}
-          max={line.quantity}
-          value={input.quantityReceived}
-          onChange={handleQtyChange}
-          className="h-7 w-20 text-xs"
-        />
-      </TableCell>
-      <TableCell className="px-2 py-2">
-        <Input
-          type="text"
-          placeholder="Optional"
-          value={input.notes}
-          onChange={handleNotesChange}
-          className="h-7 text-xs"
-        />
-      </TableCell>
-    </TableRow>
-  );
 }
 
 function ReceiveTransferForm({
@@ -127,6 +70,75 @@ function ReceiveTransferForm({
     );
   }
 
+  const lineData = useMemo<LineData[]>(
+    () =>
+      lineInputs.flatMap((li) => {
+        const line = transfer.lines.find((l) => l.id === li.transferLineId);
+        if (!line) return [];
+        return [{ id: li.transferLineId, line, input: li }];
+      }),
+    [lineInputs, transfer.lines],
+  );
+
+  const columns = useMemo<DataTableColumn<LineData>[]>(() => [
+    {
+      key: "product",
+      header: "Product / SKU",
+      cell: (ld) => (
+        <>
+          <p className="font-medium leading-tight truncate max-w-[140px]">
+            {ld.line.productName}
+          </p>
+          <p className="text-[10px] text-muted-foreground font-mono">{ld.line.sku}</p>
+        </>
+      ),
+    },
+    {
+      key: "requested",
+      header: "Requested",
+      headerClassName: "text-right",
+      className: "text-right font-mono tabular-nums",
+      cell: (ld) => ld.line.quantity.toLocaleString(),
+    },
+    {
+      key: "received",
+      header: "Received",
+      cell: (ld) => {
+        function handleChange(e: ChangeEvent<HTMLInputElement>) {
+          handleQtyChange(ld.id, e.target.value);
+        }
+        return (
+          <Input
+            type="number"
+            min={0}
+            max={ld.line.quantity}
+            value={ld.input.quantityReceived}
+            onChange={handleChange}
+            className="h-7 w-20 text-xs"
+          />
+        );
+      },
+    },
+    {
+      key: "notes",
+      header: "Notes",
+      cell: (ld) => {
+        function handleChange(e: ChangeEvent<HTMLInputElement>) {
+          handleNotesChange(ld.id, e.target.value);
+        }
+        return (
+          <Input
+            type="text"
+            placeholder="Optional"
+            value={ld.input.notes}
+            onChange={handleChange}
+            className="h-7 text-xs"
+          />
+        );
+      },
+    },
+  ], [lineInputs]);
+
   return (
     <>
       <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-4">
@@ -136,41 +148,11 @@ function ReceiveTransferForm({
             Receive All
           </Button>
         </div>
-        <div className="rounded-md border border-border overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/80 hover:bg-muted/80">
-                <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
-                  Product / SKU
-                </TableHead>
-                <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">
-                  Requested
-                </TableHead>
-                <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
-                  Received
-                </TableHead>
-                <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
-                  Notes
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {lineInputs.map((li) => {
-                const line = transfer.lines.find((l) => l.id === li.transferLineId);
-                if (!line) return null;
-                return (
-                  <ReceiveLineRow
-                    key={li.transferLineId}
-                    line={line}
-                    input={li}
-                    onQtyChange={handleQtyChange}
-                    onNotesChange={handleNotesChange}
-                  />
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
+        <DataTable
+          data={lineData}
+          columns={columns}
+          getRowKey={(ld) => ld.id}
+        />
       </div>
       <SheetFooter className="shrink-0 px-6 py-4 border-t">
         <div className="grid grid-cols-2 gap-2 w-full">

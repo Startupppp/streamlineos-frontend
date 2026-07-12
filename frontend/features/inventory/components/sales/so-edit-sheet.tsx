@@ -26,7 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useProductVariants, useWarehouses } from "@/hooks/api/inventory";
 import { useUpdateSalesOrder, type SalesOrderDetail } from "@/hooks/api/inventory/sales-orders";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -50,6 +50,8 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
+type FieldRow = { id: string; index: number };
+
 function toNum(v: string): number {
   const n = parseFloat(v);
   return Number.isFinite(n) && n >= 0 ? n : 0;
@@ -59,94 +61,14 @@ function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }
 
-interface LineRowProps {
-  index: number;
-  control: Control<FormValues>;
-  variants: Array<{ id: number; productName: string; name: string; sku: string }>;
-  isOnly: boolean;
-  onRemove: (index: number) => void;
-}
-
-const SoEditLineRow = memo(function SoEditLineRow({ index, control, variants, isOnly, onRemove }: LineRowProps) {
+function SoLineAmountCell({ index, control }: { index: number; control: Control<FormValues> }) {
   const quantity = useWatch({ control, name: `lines.${index}.quantity` });
   const unitPrice = useWatch({ control, name: `lines.${index}.unitPrice` });
   const taxRate = useWatch({ control, name: `lines.${index}.taxRate` });
-
   const sub = round2(toNum(quantity ?? "") * toNum(unitPrice ?? ""));
   const lineTotal = round2(sub + round2(sub * (toNum(taxRate ?? "") / 100)));
-
-  function handleRemove(): void {
-    onRemove(index);
-  }
-
-  return (
-    <TableRow>
-      <TableCell className="px-2 py-1">
-        <Controller
-          control={control}
-          name={`lines.${index}.variantId`}
-          render={({ field: f }) => (
-            <Select value={f.value} onValueChange={f.onChange}>
-              <SelectTrigger className="h-8 text-xs">
-                <SelectValue placeholder="Select variant" />
-              </SelectTrigger>
-              <SelectContent className="max-h-72">
-                {variants.map((v) => (
-                  <SelectItem key={v.id} value={String(v.id)}>
-                    {v.productName} – {v.name} ({v.sku})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        />
-      </TableCell>
-      <TableCell className="px-2 py-1 w-[80px]">
-        <Controller
-          control={control}
-          name={`lines.${index}.quantity`}
-          render={({ field: f }) => (
-            <Input type="number" min="1" step="1" className="h-8 text-right tabular-nums text-xs" {...f} />
-          )}
-        />
-      </TableCell>
-      <TableCell className="px-2 py-1 w-[100px]">
-        <Controller
-          control={control}
-          name={`lines.${index}.unitPrice`}
-          render={({ field: f }) => (
-            <Input type="number" min="0" step="0.01" className="h-8 text-right tabular-nums text-xs" {...f} />
-          )}
-        />
-      </TableCell>
-      <TableCell className="px-2 py-1 w-[80px]">
-        <Controller
-          control={control}
-          name={`lines.${index}.taxRate`}
-          render={({ field: f }) => (
-            <Input type="number" min="0" max="100" step="0.01" className="h-8 text-right tabular-nums text-xs" {...f} />
-          )}
-        />
-      </TableCell>
-      <TableCell className="px-2 py-1 text-xs text-right font-mono tabular-nums w-[90px]">
-        {lineTotal.toFixed(2)}
-      </TableCell>
-      <TableCell className="px-2 py-1 w-[40px]">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7"
-          onClick={handleRemove}
-          disabled={isOnly}
-          aria-label={`Remove line ${index + 1}`}
-        >
-          <Trash2 className="size-3.5" />
-        </Button>
-      </TableCell>
-    </TableRow>
-  );
-});
+  return <span>{lineTotal.toFixed(2)}</span>;
+}
 
 interface SoEditSheetProps {
   open: boolean;
@@ -212,6 +134,116 @@ export function SoEditSheet({ open, onOpenChange, soId, so }: SoEditSheetProps) 
       }, 0),
     );
   }, [watchedLines]);
+
+  const lineColumns = useMemo((): DataTableColumn<FieldRow>[] => [
+    {
+      key: "variantId",
+      header: "Variant",
+      cell: (row) => (
+        <Controller
+          control={control}
+          name={`lines.${row.index}.variantId`}
+          render={({ field: f }) => (
+            <Select value={f.value} onValueChange={f.onChange}>
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue placeholder="Select variant" />
+              </SelectTrigger>
+              <SelectContent className="max-h-72">
+                {variants.map((v) => (
+                  <SelectItem key={v.id} value={String(v.id)}>
+                    {v.productName} – {v.name} ({v.sku})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
+      ),
+    },
+    {
+      key: "quantity",
+      header: "Qty",
+      headerClassName: "text-right",
+      className: "w-[80px]",
+      cell: (row) => (
+        <Controller
+          control={control}
+          name={`lines.${row.index}.quantity`}
+          render={({ field: f }) => (
+            <Input type="number" min="1" step="1" className="h-8 text-right tabular-nums text-xs" {...f} />
+          )}
+        />
+      ),
+    },
+    {
+      key: "unitPrice",
+      header: "Unit Price",
+      headerClassName: "text-right",
+      className: "w-[100px]",
+      cell: (row) => (
+        <Controller
+          control={control}
+          name={`lines.${row.index}.unitPrice`}
+          render={({ field: f }) => (
+            <Input type="number" min="0" step="0.01" className="h-8 text-right tabular-nums text-xs" {...f} />
+          )}
+        />
+      ),
+    },
+    {
+      key: "taxRate",
+      header: "Tax %",
+      headerClassName: "text-right",
+      className: "w-[80px]",
+      cell: (row) => (
+        <Controller
+          control={control}
+          name={`lines.${row.index}.taxRate`}
+          render={({ field: f }) => (
+            <Input type="number" min="0" max="100" step="0.01" className="h-8 text-right tabular-nums text-xs" {...f} />
+          )}
+        />
+      ),
+    },
+    {
+      key: "total",
+      header: "Total",
+      headerClassName: "text-right",
+      className: "text-xs text-right font-mono tabular-nums w-[90px]",
+      cell: (row) => <SoLineAmountCell index={row.index} control={control} />,
+    },
+    {
+      key: "remove",
+      header: "",
+      className: "w-[40px]",
+      cell: (row) => {
+        function handleRemove(): void {
+          handleRemoveAt(row.index);
+        }
+        return (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={handleRemove}
+            disabled={fields.length === 1}
+            aria-label={`Remove line ${row.index + 1}`}
+          >
+            <Trash2 className="size-3.5" />
+          </Button>
+        );
+      },
+    },
+  ], [control, variants, fields.length, handleRemoveAt]);
+
+  const lineTableData: FieldRow[] = fields.map((f, i) => ({ id: f.id, index: i }));
+
+  const tableFooter = (
+    <div className="text-right text-sm font-medium">
+      Total: <span className="font-mono tabular-nums">{grandTotal.toFixed(2)}</span>
+    </div>
+  );
 
   async function onSubmit(values: FormValues): Promise<void> {
     try {
@@ -316,35 +348,12 @@ export function SoEditSheet({ open, onOpenChange, soId, so }: SoEditSheetProps) 
                   Add line
                 </Button>
               </div>
-              <div className="rounded-md border border-border overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/80 hover:bg-muted/80">
-                      <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Variant</TableHead>
-                      <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Qty</TableHead>
-                      <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Unit Price</TableHead>
-                      <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Tax %</TableHead>
-                      <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Total</TableHead>
-                      <TableHead className="w-[40px]" />
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {fields.map((field, index) => (
-                      <SoEditLineRow
-                        key={field.id}
-                        index={index}
-                        control={control}
-                        variants={variants}
-                        isOnly={fields.length === 1}
-                        onRemove={handleRemoveAt}
-                      />
-                    ))}
-                  </TableBody>
-                </Table>
-                <div className="px-4 py-2 border-t text-right text-sm font-medium">
-                  Total: <span className="font-mono tabular-nums">{grandTotal.toFixed(2)}</span>
-                </div>
-              </div>
+              <DataTable
+                data={lineTableData}
+                columns={lineColumns}
+                getRowKey={(row) => row.id}
+                footer={tableFooter}
+              />
             </div>
           </div>
           <SheetFooter className="border-t px-6 py-4 gap-2">

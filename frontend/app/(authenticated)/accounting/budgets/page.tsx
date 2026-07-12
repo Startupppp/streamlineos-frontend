@@ -18,15 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { LoadingState, ErrorState } from "@/components/shared";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { EntityFormSheet } from "@/components/shared/entity-form-sheet";
@@ -122,44 +115,65 @@ function BudgetStatusCell({ status }: { status: BudgetStatus }) {
   return <FinanceStatusBadge status={status} />;
 }
 
-interface BudgetTableRowProps {
-  row: BudgetSummary;
-  onRowClick: (id: number) => void;
-}
-
-function BudgetTableRow({ row, onRowClick }: BudgetTableRowProps) {
-  function handleClick(): void {
-    onRowClick(row.id);
-  }
-  return (
-    <TableRow
-      className="border-b border-border/50 hover:bg-muted/30 cursor-pointer"
-      onClick={handleClick}
-    >
-      <TableCell className="text-sm font-medium px-3 py-2 text-foreground hover:text-blue-600">
+const budgetColumns: DataTableColumn<BudgetSummary>[] = [
+  {
+    key: "name",
+    header: "Name",
+    cell: (row) => (
+      <span className="text-sm font-medium text-foreground hover:text-blue-600">
         {row.name}
-      </TableCell>
-      <TableCell className="text-sm text-muted-foreground px-3 py-2">
-        {row.fiscalYear}
-      </TableCell>
-      <TableCell className="px-3 py-2 hidden md:table-cell">
-        <PeriodTypeBadge periodType={row.periodType} />
-      </TableCell>
-      <TableCell className="text-sm text-muted-foreground px-3 py-2 hidden lg:table-cell">
+      </span>
+    ),
+  },
+  {
+    key: "fiscalYear",
+    header: "Fiscal Year",
+    cell: (row) => (
+      <span className="text-sm text-muted-foreground">{row.fiscalYear}</span>
+    ),
+  },
+  {
+    key: "periodType",
+    header: "Period",
+    headerClassName: "hidden md:table-cell",
+    className: "hidden md:table-cell",
+    cell: (row) => <PeriodTypeBadge periodType={row.periodType} />,
+  },
+  {
+    key: "dimensionType",
+    header: "Dimension",
+    headerClassName: "hidden lg:table-cell",
+    className: "hidden lg:table-cell",
+    cell: (row) => (
+      <span className="text-sm text-muted-foreground">
         {row.dimensionType ?? "—"}
-      </TableCell>
-      <TableCell className="px-3 py-2">
-        <BudgetStatusCell status={row.status} />
-      </TableCell>
-      <TableCell className="text-sm text-right px-3 py-2">
-        <Money value={parseFloat(row.totalAmount)} />
-      </TableCell>
-      <TableCell className="text-sm text-muted-foreground px-3 py-2 hidden md:table-cell">
+      </span>
+    ),
+  },
+  {
+    key: "status",
+    header: "Status",
+    cell: (row) => <BudgetStatusCell status={row.status} />,
+  },
+  {
+    key: "totalAmount",
+    header: "Total",
+    headerClassName: "text-right",
+    className: "text-right",
+    cell: (row) => <Money value={parseFloat(row.totalAmount)} />,
+  },
+  {
+    key: "createdAt",
+    header: "Created",
+    headerClassName: "hidden md:table-cell",
+    className: "hidden md:table-cell",
+    cell: (row) => (
+      <span className="text-sm text-muted-foreground">
         {formatDate(row.createdAt)}
-      </TableCell>
-    </TableRow>
-  );
-}
+      </span>
+    ),
+  },
+];
 
 export default function BudgetsListPage() {
   const router = useRouter();
@@ -192,8 +206,8 @@ export default function BudgetsListPage() {
     void query.refetch();
   }
 
-  function handleRowClick(id: number): void {
-    router.push(`/accounting/budgets/${id}`);
+  function handleRowClickRow(row: BudgetSummary): void {
+    router.push(`/accounting/budgets/${row.id}`);
   }
 
   function handleOpenCreate(): void {
@@ -258,7 +272,6 @@ export default function BudgetsListPage() {
         </div>
       }
     >
-      {query.isLoading && <LoadingState variant="table" rows={8} />}
       {query.error && (
         <ErrorState
           title="Failed to load budgets"
@@ -266,56 +279,22 @@ export default function BudgetsListPage() {
           onRetry={handleRetry}
         />
       )}
-
-      {!query.isLoading && !query.error && items.length === 0 && (
-        <EmptyState
-          illustration={<EmptyReportIllustration />}
-          title="No budgets yet"
-          description="Create a budget to start tracking planned vs actual spend."
+      {!query.error && (
+        <DataTable
+          data={items}
+          columns={budgetColumns}
+          getRowKey={(row) => row.id}
+          isLoading={query.isLoading}
+          onRowClick={handleRowClickRow}
+          emptyState={
+            <EmptyState
+              illustration={<EmptyReportIllustration />}
+              title="No budgets yet"
+              description="Create a budget to start tracking planned vs actual spend."
+            />
+          }
+          minWidth="700px"
         />
-      )}
-
-      {items.length > 0 && (
-        <div className="rounded-lg border border-border overflow-hidden">
-          <div className="overflow-x-auto">
-            <Table className="min-w-[700px]">
-              <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">
-                    Name
-                  </TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">
-                    Fiscal Year
-                  </TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 hidden md:table-cell">
-                    Period
-                  </TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 hidden lg:table-cell">
-                    Dimension
-                  </TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">
-                    Status
-                  </TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">
-                    Total
-                  </TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 hidden md:table-cell">
-                    Created
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {items.map((row) => (
-                  <BudgetTableRow
-                    key={row.id}
-                    row={row}
-                    onRowClick={handleRowClick}
-                  />
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
       )}
 
       <EntityFormSheet<CreateBudgetForm>

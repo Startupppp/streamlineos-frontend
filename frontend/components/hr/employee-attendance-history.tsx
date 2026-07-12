@@ -4,14 +4,6 @@ import { useState } from "react";
 import { useHrMonthlyAttendance } from "@/hooks/api/hr";
 import { format } from "date-fns";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -20,7 +12,56 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2 } from "lucide-react";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+
+type AttendanceRecord = {
+  id: string;
+  date: string;
+  status: string;
+  checkIn?: string | null;
+  checkOut?: string | null;
+  workHours: string;
+};
+
+const ATTENDANCE_COLUMNS: DataTableColumn<AttendanceRecord>[] = [
+  {
+    key: "date",
+    header: "Date",
+    cell: (row) => format(new Date(row.date), "MMM d, yyyy"),
+  },
+  {
+    key: "status",
+    header: "Status",
+    cell: (row) => (
+      <Badge
+        variant={
+          row.status === "PRESENT" || row.status === "WORK_FROM_HOME" ? "default" : "secondary"
+        }
+      >
+        {row.status}
+      </Badge>
+    ),
+  },
+  {
+    key: "checkIn",
+    header: "Check In",
+    cell: (row) => (row.checkIn ? format(new Date(row.checkIn), "hh:mm a") : "-"),
+  },
+  {
+    key: "checkOut",
+    header: "Check Out",
+    cell: (row) => (row.checkOut ? format(new Date(row.checkOut), "hh:mm a") : "-"),
+  },
+  {
+    key: "workHours",
+    header: "Work Hours",
+    cell: (row) => <span className="font-bold">{row.workHours}h</span>,
+  },
+];
+
+function getRowKey(row: AttendanceRecord) {
+  return row.id;
+}
 
 export function EmployeeAttendanceHistory({ userId }: { userId: string }) {
   const [date, setDate] = useState(new Date());
@@ -49,10 +90,7 @@ export function EmployeeAttendanceHistory({ userId }: { userId: string }) {
   const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
 
   const totalHours =
-    attendance?.reduce(
-      (acc, curr) => acc + parseFloat(curr.workHours || "0"),
-      0,
-    ) || 0;
+    attendance?.reduce((acc, curr) => acc + parseFloat(curr.workHours || "0"), 0) || 0;
 
   function handleMonthChange(val: string) {
     const newDate = new Date(date);
@@ -69,10 +107,7 @@ export function EmployeeAttendanceHistory({ userId }: { userId: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-3">
-        <Select
-          value={date.getMonth().toString()}
-          onValueChange={handleMonthChange}
-        >
+        <Select value={date.getMonth().toString()} onValueChange={handleMonthChange}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Month" />
           </SelectTrigger>
@@ -85,10 +120,7 @@ export function EmployeeAttendanceHistory({ userId }: { userId: string }) {
           </SelectContent>
         </Select>
 
-        <Select
-          value={date.getFullYear().toString()}
-          onValueChange={handleYearChange}
-        >
+        <Select value={date.getFullYear().toString()} onValueChange={handleYearChange}>
           <SelectTrigger className="w-[120px]">
             <SelectValue placeholder="Year" />
           </SelectTrigger>
@@ -126,67 +158,17 @@ export function EmployeeAttendanceHistory({ userId }: { userId: string }) {
           <CardTitle>Daily Attendance</CardTitle>
         </CardHeader>
         <CardContent className="pb-4">
-          {isLoading ? (
-            <div className="flex justify-center p-4">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Check In</TableHead>
-                  <TableHead>Check Out</TableHead>
-                  <TableHead>Work Hours</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {attendance?.map((record) => (
-                  <TableRow key={record.id}>
-                    <TableCell>
-                      {format(new Date(record.date), "MMM d, yyyy")}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          record.status === "PRESENT" ||
-                          record.status === "WORK_FROM_HOME"
-                            ? "default"
-                            : "secondary"
-                        }
-                      >
-                        {record.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {record.checkIn
-                        ? format(new Date(record.checkIn), "hh:mm a")
-                        : "-"}
-                    </TableCell>
-                    <TableCell>
-                      {record.checkOut
-                        ? format(new Date(record.checkOut), "hh:mm a")
-                        : "-"}
-                    </TableCell>
-                    <TableCell className="font-bold">
-                      {record.workHours}h
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {!attendance?.length && (
-                  <TableRow>
-                    <TableCell
-                      colSpan={5}
-                      className="text-center py-4 text-muted-foreground"
-                    >
-                      No attendance records found for this month.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          )}
+          <DataTable
+            data={attendance ?? []}
+            columns={ATTENDANCE_COLUMNS}
+            getRowKey={getRowKey}
+            isLoading={isLoading}
+            emptyState={
+              <div className="text-center py-4 text-muted-foreground">
+                No attendance records found for this month.
+              </div>
+            }
+          />
         </CardContent>
       </Card>
     </div>

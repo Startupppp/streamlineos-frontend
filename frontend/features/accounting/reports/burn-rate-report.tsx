@@ -3,9 +3,7 @@
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer,
 } from "recharts";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyChartIllustration } from "@/components/illustrations";
@@ -24,6 +22,27 @@ const TOOLTIP_STYLE = {
 } as const;
 
 const AXIS_TICK = { fill: "hsl(var(--muted-foreground))", fontSize: 11 } as const;
+
+type BurnMonth = NonNullable<ReturnType<typeof useBurnRate>["data"]>["months"][number];
+
+const BURN_MONTH_COLUMNS: DataTableColumn<BurnMonth>[] = [
+  {
+    key: "month",
+    header: "Month",
+    cell: (row) => row.month,
+  },
+  {
+    key: "netOutflow",
+    header: "Net Outflow",
+    cell: (row) => formatCurrencyFull(Number(row.netOutflow)),
+    className: "text-right font-mono tabular-nums",
+    headerClassName: "text-right",
+  },
+];
+
+function getBurnMonthRowKey(row: BurnMonth): string {
+  return row.month;
+}
 
 export function BurnRateReport() {
   const burnQuery = useBurnRate();
@@ -138,26 +157,13 @@ export function BurnRateReport() {
               <div className="px-3 py-2.5 bg-muted/40 border-b border-border">
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Monthly Outflow History</p>
               </div>
-              <div className="overflow-x-auto">
-                <Table className="min-w-[300px]">
-                  <TableHeader>
-                    <TableRow className="hover:bg-transparent">
-                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Month</TableHead>
-                      <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Net Outflow</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {burnData.months.map((m) => (
-                      <TableRow key={m.month} className="border-b border-border/50 hover:bg-muted/30">
-                        <TableCell className="text-sm text-foreground px-3 py-2">{m.month}</TableCell>
-                        <TableCell className="text-right text-sm font-mono tabular-nums px-3 py-2">
-                          {formatCurrencyFull(Number(m.netOutflow))}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+              <DataTable
+                data={burnData.months}
+                columns={BURN_MONTH_COLUMNS}
+                getRowKey={getBurnMonthRowKey}
+                minWidth="300px"
+                className="rounded-none border-0 border-t border-border"
+              />
             </div>
           )}
         </div>

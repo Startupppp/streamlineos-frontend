@@ -11,9 +11,9 @@ import { Plus, AlertCircle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   Select,
   SelectContent,
@@ -40,17 +40,10 @@ import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   useEnterpriseQuotes,
   useCreateEnterpriseQuote,
   type EnterpriseQuoteStatus,
+  type EnterpriseQuoteListItem,
 } from "@/hooks/api/enterprise-quotes";
 import { getApiError } from "@/lib/api-client";
 
@@ -60,8 +53,7 @@ const STATUS_CONFIG: Record<
 > = {
   DRAFT: {
     label: "Draft",
-    className:
-      "bg-slate-500/10 text-slate-600 border-slate-500/20",
+    className: "bg-slate-500/10 text-slate-600 border-slate-500/20",
   },
   PENDING_APPROVAL: {
     label: "Pending Approval",
@@ -411,43 +403,13 @@ function NewQuoteSheet({
   );
 }
 
-function TableSkeleton() {
-  return (
-    <div className="rounded-lg border border-border bg-card overflow-hidden">
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-              {["Quote Ref", "Subject", "Status", "Seats", "Value", "Valid Until", "Deal", "Created"].map(
-                (h) => (
-                  <TableHead key={h} className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">{h}</TableHead>
-                ),
-              )}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {Array.from({ length: 6 }).map((_, i) => (
-              <TableRow key={i}>
-                {Array.from({ length: 8 }).map((__, j) => (
-                  <TableCell key={j}>
-                    <Skeleton className="h-4 w-full" />
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
-  );
-}
-
 export default function EnterpriseQuotesPage() {
   const [statusFilter, setStatusFilter] = useState<
     EnterpriseQuoteStatus | "ALL"
   >("ALL");
   const [page, setPage] = useState(1);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const router = useRouter();
 
   const { data, isLoading, isError, refetch } = useEnterpriseQuotes({
     status: statusFilter === "ALL" ? undefined : statusFilter,
@@ -464,12 +426,97 @@ export default function EnterpriseQuotesPage() {
 
   const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
 
-  const handlePrevPage = useCallback(
-    () => setPage((p) => Math.max(1, p - 1)),
-    [],
-  );
+  function handleRowClick(q: EnterpriseQuoteListItem) {
+    router.push(`/billing/enterprise-quotes/${q.id}`);
+  }
 
-  const handleNextPage = useCallback(() => setPage((p) => p + 1), []);
+  function getQuoteRowKey(q: EnterpriseQuoteListItem) {
+    return q.id;
+  }
+
+  const columns: DataTableColumn<EnterpriseQuoteListItem>[] = [
+    {
+      key: "quoteRef",
+      header: "Quote Ref",
+      cell: (q) => (
+        <Link
+          href={`/billing/enterprise-quotes/${q.id}`}
+          className="font-mono text-xs font-medium text-primary hover:underline"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {q.quoteRef}
+        </Link>
+      ),
+    },
+    {
+      key: "subject",
+      header: "Subject",
+      cell: (q) => (
+        <span className="truncate text-sm block max-w-[200px]">{q.subject}</span>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (q) => {
+        const cfg = STATUS_CONFIG[q.status];
+        return (
+          <span
+            className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium ${cfg.className}`}
+          >
+            {cfg.label}
+          </span>
+        );
+      },
+    },
+    {
+      key: "seats",
+      header: "Seats",
+      cell: (q) => (
+        <span className="text-sm tabular-nums">{q.negotiatedSeats}</span>
+      ),
+      className: "text-right",
+      headerClassName: "text-right",
+    },
+    {
+      key: "value",
+      header: "Value",
+      cell: (q) => (
+        <span className="font-mono text-sm tabular-nums font-medium">
+          {fmtInr(q.negotiatedSeats * q.pricePerSeatInPaise * q.contractTermMonths)}
+        </span>
+      ),
+      className: "text-right",
+      headerClassName: "text-right",
+    },
+    {
+      key: "validUntil",
+      header: "Valid Until",
+      cell: (q) => (
+        <span className="text-sm text-muted-foreground">
+          {format(new Date(q.validUntil), "dd MMM yyyy")}
+        </span>
+      ),
+    },
+    {
+      key: "deal",
+      header: "Deal",
+      cell: (q) => (
+        <span className="text-sm text-muted-foreground truncate block max-w-[120px]">
+          {q.dealName ?? "—"}
+        </span>
+      ),
+    },
+    {
+      key: "createdAt",
+      header: "Created",
+      cell: (q) => (
+        <span className="text-xs text-muted-foreground">
+          {format(new Date(q.createdAt), "dd MMM yyyy")}
+        </span>
+      ),
+    },
+  ];
 
   return (
     <PageWrapper
@@ -497,9 +544,7 @@ export default function EnterpriseQuotesPage() {
       }
     >
       <div className="space-y-3">
-        {isLoading ? (
-          <TableSkeleton />
-        ) : isError ? (
+        {isError ? (
           <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
             <AlertCircle className="h-10 w-10 text-destructive" />
             <p className="text-sm text-muted-foreground">
@@ -510,107 +555,29 @@ export default function EnterpriseQuotesPage() {
               Retry
             </Button>
           </div>
-        ) : data?.items.length === 0 ? (
-          <EmptyState
-            illustration={<EmptyDocumentsIllustration />}
-            title="No enterprise quotes yet"
-            description="Create a custom quote with negotiated pricing and seat counts for enterprise clients."
-            action={{ label: "New Quote", onClick: handleOpenSheet }}
-          />
         ) : (
-          <>
-            <div className="rounded-lg border border-border bg-card overflow-hidden">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Quote Ref</TableHead>
-                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Subject</TableHead>
-                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Status</TableHead>
-                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Seats</TableHead>
-                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Value</TableHead>
-                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Valid Until</TableHead>
-                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Deal</TableHead>
-                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Created</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {data?.items.map((q) => {
-                      const cfg = STATUS_CONFIG[q.status];
-                      const totalPaise =
-                        q.negotiatedSeats *
-                        q.pricePerSeatInPaise *
-                        q.contractTermMonths;
-                      return (
-                        <TableRow key={q.id} className="border-b border-border/50 cursor-pointer hover:bg-muted/30">
-                          <TableCell>
-                            <Link
-                              href={`/billing/enterprise-quotes/${q.id}`}
-                              className="font-mono text-xs font-medium text-primary hover:underline"
-                            >
-                              {q.quoteRef}
-                            </Link>
-                          </TableCell>
-                          <TableCell className="max-w-[200px] truncate text-sm">
-                            {q.subject}
-                          </TableCell>
-                          <TableCell>
-                            <span
-                              className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium ${cfg.className}`}
-                            >
-                              {cfg.label}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-right text-sm tabular-nums">
-                            {q.negotiatedSeats}
-                          </TableCell>
-                          <TableCell className="text-right font-mono text-sm tabular-nums font-medium">
-                            {fmtInr(totalPaise)}
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {format(new Date(q.validUntil), "dd MMM yyyy")}
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground truncate max-w-[120px]">
-                            {q.dealName ?? "—"}
-                          </TableCell>
-                          <TableCell className="text-xs text-muted-foreground">
-                            {format(new Date(q.createdAt), "dd MMM yyyy")}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
-
-            {data && data.totalPages > 1 && (
-              <div className="flex items-center justify-between pt-1">
-                <p className="text-xs text-muted-foreground">
-                  Page {data.page} of {data.totalPages} &mdash; {data.total}{" "}
-                  total
-                </p>
-                <div className="flex gap-1.5">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handlePrevPage}
-                    disabled={data.page <= 1}
-                  >
-                    Previous
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleNextPage}
-                    disabled={data.page >= data.totalPages}
-                  >
-                    Next
-                  </Button>
-                </div>
-              </div>
-            )}
-          </>
+          <DataTable
+            data={data?.items ?? []}
+            columns={columns}
+            getRowKey={getQuoteRowKey}
+            onRowClick={handleRowClick}
+            isLoading={isLoading}
+            pagination={{
+              mode: "server",
+              page,
+              pageSize: 20,
+              total: data?.total ?? 0,
+              onPageChange: setPage,
+            }}
+            emptyState={
+              <EmptyState
+                illustration={<EmptyDocumentsIllustration />}
+                title="No enterprise quotes yet"
+                description="Create a custom quote with negotiated pricing and seat counts for enterprise clients."
+                action={{ label: "New Quote", onClick: handleOpenSheet }}
+              />
+            }
+          />
         )}
       </div>
 
