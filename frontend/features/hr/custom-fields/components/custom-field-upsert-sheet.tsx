@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import {
   Sheet,
   SheetContent,
@@ -17,7 +16,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { LoadingButton } from "@/components/ui/loading-button";
 import {
@@ -35,108 +33,17 @@ import type {
   UpdateCustomFieldPayload,
   HrCustomFieldSettings,
 } from "@/features/hr/forms/lib/types";
-
-const FIELD_TYPES = [
-  { value: "text", label: "Short Text" },
-  { value: "number", label: "Number" },
-  { value: "date", label: "Date" },
-  { value: "select", label: "Dropdown" },
-  { value: "multi_select", label: "Multi-select" },
-  { value: "boolean", label: "Yes / No" },
-  { value: "file", label: "File" },
-  { value: "employee_ref", label: "Employee" },
-  { value: "department_ref", label: "Department" },
-  { value: "currency", label: "Currency" },
-] as const;
-
-const ENTITY_TYPES = [
-  { value: "employee", label: "Employee" },
-  { value: "candidate", label: "Candidate" },
-  { value: "leave", label: "Leave" },
-  { value: "document", label: "Document" },
-  { value: "asset", label: "Asset" },
-  { value: "case", label: "Case" },
-  { value: "department", label: "Department" },
-  { value: "job_role", label: "Job Role" },
-] as const;
-
-const RESERVED_KEYS = new Set([
-  "id",
-  "email",
-  "salary",
-  "role",
-  "status",
-  "created_at",
-  "updated_at",
-  "deleted_at",
-  "org_id",
-  "user_id",
-  "employee_id",
-]);
-
-function slugify(name: string): string {
-  return name
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s_]/g, "")
-    .replace(/\s+/g, "_")
-    .replace(/^(\d)/, "_$1")
-    .replace(/_+/g, "_")
-    .slice(0, 64);
-}
-
-const nameSchema = z
-  .string()
-  .min(3, "Name must be at least 3 characters")
-  .max(100, "Name must be at most 100 characters")
-  .refine((v) => v.trim().length >= 3, "Name must not be whitespace-only")
-  .refine(
-    (v) => !/^[^a-zA-ZÀ-ɏ]+$/.test(v.trim()),
-    "Name must contain at least one letter",
-  );
-
-const keySchema = z
-  .string()
-  .min(1, "Key is required")
-  .max(64, "Key must be at most 64 characters")
-  .regex(
-    /^[a-z][a-z0-9_]*$/,
-    "Key must start with a letter and contain only lowercase letters, numbers, and underscores",
-  )
-  .refine((v) => !RESERVED_KEYS.has(v), "This key is reserved and cannot be used");
-
-const fieldSchema = z.object({
-  entityType: z.string().min(1, "Entity type is required"),
-  name: nameSchema,
-  key: z.string(),
-  fieldType: z.string().min(1, "Field type is required"),
-  isRequired: z.boolean(),
-  isSensitive: z.boolean(),
-  helpText: z.string().max(500).optional(),
-  placeholder: z.string().max(200).optional(),
-  options: z
-    .array(
-      z.object({
-        label: z.string().min(1, "Label required"),
-        value: z.string().min(1, "Value required"),
-      }),
-    )
-    .optional(),
-  validationMinLength: z.string().optional(),
-  validationMaxLength: z.string().optional(),
-  validationMinValue: z.string().optional(),
-  validationMaxValue: z.string().optional(),
-  validationDateMin: z.string().optional(),
-  validationDateMax: z.string().optional(),
-  visibilityHrOnly: z.boolean(),
-  visibilityManagerVisible: z.boolean(),
-  visibilitySelfService: z.boolean(),
-  visibilityHiddenFromExports: z.boolean(),
-  searchable: z.boolean(),
-  reportable: z.boolean(),
-});
-
-type FieldFormValues = z.infer<typeof fieldSchema>;
+import {
+  FIELD_TYPES,
+  ENTITY_TYPES,
+  SENSITIVE_WARNING_TEXT,
+  slugify,
+  keySchema,
+  fieldFormSchema,
+  getDefaultValues,
+  type FieldFormValues,
+} from "../lib/custom-field-form";
+import { FieldPreview } from "./field-preview";
 
 interface CustomFieldUpsertSheetProps {
   open: boolean;
@@ -196,7 +103,7 @@ export function CustomFieldUpsertSheet({
   const isEdit = !!field;
 
   const form = useForm<FieldFormValues>({
-    resolver: zodResolver(fieldSchema),
+    resolver: zodResolver(fieldFormSchema),
     defaultValues: getDefaultValues(field, entityType),
   });
 
@@ -204,10 +111,11 @@ export function CustomFieldUpsertSheet({
   const watchedFieldType = form.watch("fieldType");
   const watchedName = form.watch("name");
 
-  const { fields: optionFields, append: appendOption, remove: removeOption } = useFieldArray({
-    control: form.control,
-    name: "options",
-  });
+  const {
+    fields: optionFields,
+    append: appendOption,
+    remove: removeOption,
+  } = useFieldArray({ control: form.control, name: "options" });
 
   useEffect(() => {
     if (!isEdit && watchedName) {
@@ -247,9 +155,9 @@ export function CustomFieldUpsertSheet({
         isRequired: values.isRequired,
       });
     } else {
-      const keyValidation = keySchema.safeParse(values.key);
-      if (!keyValidation.success) {
-        form.setError("key", { message: keyValidation.error.errors[0]?.message });
+      const keyResult = keySchema.safeParse(values.key);
+      if (!keyResult.success) {
+        form.setError("key", { message: keyResult.error.errors[0]?.message ?? "Invalid key" });
         return;
       }
       await onSave({
@@ -289,13 +197,13 @@ export function CustomFieldUpsertSheet({
     onOpenChange(false);
   }
 
-  const sensitiveWarningText =
-    "Sensitive fields are restricted to HR admins by default. They will be excluded from standard exports and access will be audited. Only users with the hr:sensitive:manage permission can read or update this field's values.";
-
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="right" className="sm:max-w-lg w-full flex flex-col gap-0 p-0 overflow-hidden">
+        <SheetContent
+          side="right"
+          className="sm:max-w-lg w-full flex flex-col gap-0 p-0 overflow-hidden"
+        >
           <SheetHeader className="px-6 pt-5 pb-4 border-b shrink-0">
             <SheetTitle className="text-base">
               {isEdit ? "Edit Custom Field" : "New Custom Field"}
@@ -335,7 +243,9 @@ export function CustomFieldUpsertSheet({
                     )}
                   />
                   {form.formState.errors.entityType && (
-                    <p className="text-xs text-destructive">{form.formState.errors.entityType.message}</p>
+                    <p className="text-xs text-destructive">
+                      {form.formState.errors.entityType.message}
+                    </p>
                   )}
                 </div>
               )}
@@ -357,7 +267,9 @@ export function CustomFieldUpsertSheet({
                   <div className="space-y-1">
                     <Label className="text-xs font-medium">
                       Key *
-                      <span className="text-muted-foreground font-normal ml-1">(auto-generated, editable)</span>
+                      <span className="text-muted-foreground font-normal ml-1">
+                        (auto-generated, editable)
+                      </span>
                     </Label>
                     <Input
                       {...form.register("key")}
@@ -365,10 +277,13 @@ export function CustomFieldUpsertSheet({
                       placeholder="e.g. badge_number"
                     />
                     {form.formState.errors.key && (
-                      <p className="text-xs text-destructive">{form.formState.errors.key.message}</p>
+                      <p className="text-xs text-destructive">
+                        {form.formState.errors.key.message}
+                      </p>
                     )}
                     <p className="text-[11px] text-muted-foreground">
-                      Lowercase letters, numbers, underscores only. Cannot start with a number or use reserved names.
+                      Lowercase letters, numbers, underscores only. Cannot start with a number or
+                      use reserved names.
                     </p>
                   </div>
 
@@ -405,7 +320,9 @@ export function CustomFieldUpsertSheet({
                   placeholder="Guidance shown below the field in forms"
                 />
                 {form.formState.errors.helpText && (
-                  <p className="text-xs text-destructive">{form.formState.errors.helpText.message}</p>
+                  <p className="text-xs text-destructive">
+                    {form.formState.errors.helpText.message}
+                  </p>
                 )}
               </div>
 
@@ -568,9 +485,10 @@ export function CustomFieldUpsertSheet({
                       <Switch checked={f.value} onCheckedChange={f.onChange} id="isRequired" />
                     )}
                   />
-                  <Label htmlFor="isRequired" className="text-sm cursor-pointer">Required</Label>
+                  <Label htmlFor="isRequired" className="text-sm cursor-pointer">
+                    Required
+                  </Label>
                 </div>
-
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <Controller
@@ -580,13 +498,15 @@ export function CustomFieldUpsertSheet({
                         <Switch checked={f.value} onCheckedChange={f.onChange} id="isSensitive" />
                       )}
                     />
-                    <Label htmlFor="isSensitive" className="text-sm cursor-pointer">Sensitive</Label>
+                    <Label htmlFor="isSensitive" className="text-sm cursor-pointer">
+                      Sensitive
+                    </Label>
                     {watchedIsSensitive && <Lock className="h-3.5 w-3.5 text-amber-600" />}
                   </div>
                   {watchedIsSensitive && (
                     <div className="flex gap-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
                       <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
-                      <p className="text-xs text-amber-800">{sensitiveWarningText}</p>
+                      <p className="text-xs text-amber-800">{SENSITIVE_WARNING_TEXT}</p>
                     </div>
                   )}
                 </div>
@@ -599,9 +519,15 @@ export function CustomFieldUpsertSheet({
                 <div className="space-y-2">
                   {(
                     [
-                      { name: "visibilityHrOnly", label: "HR only (hidden from managers and employees)" },
+                      {
+                        name: "visibilityHrOnly",
+                        label: "HR only (hidden from managers and employees)",
+                      },
                       { name: "visibilityManagerVisible", label: "Visible to managers" },
-                      { name: "visibilitySelfService", label: "Visible in employee self-service" },
+                      {
+                        name: "visibilitySelfService",
+                        label: "Visible in employee self-service",
+                      },
                       { name: "visibilityHiddenFromExports", label: "Hidden from exports" },
                     ] as const
                   ).map(({ name, label }) => (
@@ -631,7 +557,11 @@ export function CustomFieldUpsertSheet({
                       control={form.control}
                       name="searchable"
                       render={({ field: f }) => (
-                        <Checkbox id="searchable" checked={f.value} onCheckedChange={f.onChange} />
+                        <Checkbox
+                          id="searchable"
+                          checked={f.value}
+                          onCheckedChange={f.onChange}
+                        />
                       )}
                     />
                     <Label htmlFor="searchable" className="text-sm font-normal cursor-pointer">
@@ -643,7 +573,11 @@ export function CustomFieldUpsertSheet({
                       control={form.control}
                       name="reportable"
                       render={({ field: f }) => (
-                        <Checkbox id="reportable" checked={f.value} onCheckedChange={f.onChange} />
+                        <Checkbox
+                          id="reportable"
+                          checked={f.value}
+                          onCheckedChange={f.onChange}
+                        />
                       )}
                     />
                     <Label htmlFor="reportable" className="text-sm font-normal cursor-pointer">
@@ -693,101 +627,11 @@ export function CustomFieldUpsertSheet({
           if (!isOpen) handleCancelSensitiveConfirm();
         }}
         title="Create sensitive field?"
-        description={`"${pendingValues?.name ?? ""}" will be marked as sensitive. ${sensitiveWarningText}`}
+        description={`"${pendingValues?.name ?? ""}" will be marked as sensitive. ${SENSITIVE_WARNING_TEXT}`}
         confirmLabel="Create Sensitive Field"
         isPending={isPending}
         onConfirm={handleConfirmSensitive}
       />
     </>
-  );
-}
-
-function getDefaultValues(field: HrCustomFieldDefinition | undefined, entityType: string): FieldFormValues {
-  return {
-    entityType: field?.entityType ?? entityType,
-    name: field?.name ?? "",
-    key: field?.key ?? "",
-    fieldType: field?.fieldType ?? "text",
-    isRequired: field?.isRequired ?? false,
-    isSensitive: field?.isSensitive ?? false,
-    helpText: field?.settings?.helpText ?? "",
-    placeholder: field?.settings?.placeholder ?? "",
-    options: field?.options ?? [],
-    validationMinLength: field?.settings?.validationRules?.minLength != null ? String(field.settings.validationRules.minLength) : "",
-    validationMaxLength: field?.settings?.validationRules?.maxLength != null ? String(field.settings.validationRules.maxLength) : "",
-    validationMinValue: field?.settings?.validationRules?.minValue != null ? String(field.settings.validationRules.minValue) : "",
-    validationMaxValue: field?.settings?.validationRules?.maxValue != null ? String(field.settings.validationRules.maxValue) : "",
-    validationDateMin: field?.settings?.validationRules?.dateMin ?? "",
-    validationDateMax: field?.settings?.validationRules?.dateMax ?? "",
-    visibilityHrOnly: field?.settings?.visibility?.hrOnly ?? false,
-    visibilityManagerVisible: field?.settings?.visibility?.managerVisible ?? true,
-    visibilitySelfService: field?.settings?.visibility?.selfServiceVisible ?? false,
-    visibilityHiddenFromExports: field?.settings?.visibility?.hiddenFromExports ?? false,
-    searchable: field?.settings?.searchable ?? true,
-    reportable: field?.settings?.reportable ?? true,
-  };
-}
-
-interface FieldPreviewProps {
-  name: string;
-  fieldType: string;
-  helpText?: string;
-  placeholder?: string;
-  isRequired: boolean;
-  isSensitive: boolean;
-  options?: { label: string; value: string }[];
-}
-
-function FieldPreview({
-  name,
-  fieldType,
-  helpText,
-  placeholder,
-  isRequired,
-  isSensitive,
-  options,
-}: FieldPreviewProps) {
-  return (
-    <div className="p-3 border rounded-md bg-muted/30 space-y-1.5">
-      <div className="flex items-center gap-1.5 flex-wrap">
-        <span className="text-sm font-medium">{name || "Untitled"}</span>
-        {isRequired && (
-          <Badge variant="outline" className="text-[10px] h-4 px-1 text-blue-700 border-blue-200">
-            required
-          </Badge>
-        )}
-        {isSensitive && (
-          <Badge variant="outline" className="text-[10px] h-4 px-1 text-amber-700 border-amber-200 gap-0.5">
-            <Lock className="h-2.5 w-2.5" /> sensitive
-          </Badge>
-        )}
-      </div>
-      {helpText && <p className="text-[11px] text-muted-foreground">{helpText}</p>}
-      <div className="mt-1">
-        {fieldType === "boolean" ? (
-          <div className="flex items-center gap-2">
-            <div className="h-4 w-7 rounded-full bg-muted border" />
-            <span className="text-xs text-muted-foreground">Yes / No</span>
-          </div>
-        ) : (fieldType === "select" || fieldType === "multi_select") &&
-          options &&
-          options.length > 0 ? (
-          <div className="h-7 border rounded px-2 flex items-center text-xs text-muted-foreground bg-background">
-            {options[0]?.label ?? placeholder ?? "Select..."}
-          </div>
-        ) : (
-          <div className="h-7 border rounded px-2 flex items-center text-xs text-muted-foreground bg-background">
-            {placeholder ||
-              `Enter ${
-                fieldType === "date"
-                  ? "a date"
-                  : fieldType === "number" || fieldType === "currency"
-                    ? "a number"
-                    : "text"
-              }...`}
-          </div>
-        )}
-      </div>
-    </div>
   );
 }
