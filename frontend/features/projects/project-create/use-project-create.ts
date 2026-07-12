@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 
 export const TOTAL_STEPS = 7;
@@ -82,15 +82,16 @@ function buildInitialDraft(creatorId: string | undefined): WizardDraft {
 export function useProjectCreate() {
   const { data: session } = useSession();
   const creatorId = session?.user?.id;
+  const seededRef = useRef(false);
   const [step, setStep] = useState(1);
   const [direction, setDirection] = useState(1);
-  const [draft, setDraft] = useState<WizardDraft>(() => buildInitialDraft(creatorId));
-  const [initialized, setInitialized] = useState(!creatorId);
+  const [draft, setDraft] = useState<WizardDraft>(() => buildInitialDraft(undefined));
 
-  if (!initialized && creatorId) {
+  useEffect(() => {
+    if (seededRef.current || !creatorId) return;
+    seededRef.current = true;
     setDraft(buildInitialDraft(creatorId));
-    setInitialized(true);
-  }
+  }, [creatorId]);
 
   function updateDraft(partial: Partial<WizardDraft>) {
     setDraft((prev) => ({ ...prev, ...partial }));
@@ -109,8 +110,9 @@ export function useProjectCreate() {
   function reset() {
     setStep(1);
     setDirection(1);
+    seededRef.current = false;
     setDraft(buildInitialDraft(creatorId));
-    setInitialized(!!creatorId);
+    if (creatorId) seededRef.current = true;
   }
 
   return { step, direction, draft, updateDraft, goNext, goBack, reset };

@@ -8,6 +8,8 @@ import { useCycles } from "@/hooks/api/projects/advanced";
 import { useProjectLabels } from "@/hooks/api/projects/projects";
 import { useProjectMembers } from "@/hooks/api/projects/projects";
 import { useAddLabelToTicket } from "@/hooks/api/projects/tickets";
+import { useAddRelatedLink } from "@/hooks/api/projects/ticket-related-links";
+import type { RelatedLinkDraft } from "./ticket-related-links-editor";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -38,6 +40,7 @@ export interface UseCreateTicketFormOptions {
 export function useCreateTicketForm({ projectId, defaultStatus, onCreated }: UseCreateTicketFormOptions) {
   const [open, setOpen] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
+  const [relatedLinks, setRelatedLinks] = useState<RelatedLinkDraft[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [createMore, setCreateMore] = useState(false);
   const titleRef = useRef<HTMLInputElement | null>(null);
@@ -86,6 +89,7 @@ export function useCreateTicketForm({ projectId, defaultStatus, onCreated }: Use
 
   const addAttachmentMutation = useAddAttachment();
   const addLabelMutation = useAddLabelToTicket();
+  const addRelatedLinkMutation = useAddRelatedLink();
 
   const handlePropertiesChange = useCallback((patch: Partial<CreateTicketPropertiesValue>) => {
     setProperties((prev) => ({ ...prev, ...patch }));
@@ -105,6 +109,7 @@ export function useCreateTicketForm({ projectId, defaultStatus, onCreated }: Use
   const resetForm = useCallback((preserveContext: boolean) => {
     form.reset({ title: "", type: "TASK", description: "" });
     setFiles([]);
+    setRelatedLinks([]);
     if (!preserveContext) {
       pendingCycleDefaultRef.current = true;
       setProperties({
@@ -138,6 +143,7 @@ export function useCreateTicketForm({ projectId, defaultStatus, onCreated }: Use
     onSuccess: async (data) => {
       const pendingLabels = properties.labelIds;
       const pendingFiles = files;
+      const pendingLinks = relatedLinks;
 
       const labelTask =
         pendingLabels.length > 0
@@ -148,10 +154,24 @@ export function useCreateTicketForm({ projectId, defaultStatus, onCreated }: Use
             ).catch(() => toast.error("Ticket created but some labels failed to attach"))
           : Promise.resolve();
 
+      const linksTask =
+        pendingLinks.length > 0
+          ? Promise.all(
+              pendingLinks.map((link) =>
+                addRelatedLinkMutation.mutateAsync({
+                  projectId,
+                  ticketId: data.id,
+                  url: link.url,
+                  label: link.label || undefined,
+                }),
+              ),
+            ).catch(() => toast.error("Ticket created but some links failed to attach"))
+          : Promise.resolve();
+
       if (pendingFiles.length > 0) {
         try {
           setIsUploading(true);
-          await labelTask;
+          await Promise.all([labelTask, linksTask]);
           await Promise.all(
             pendingFiles.map(async (file) => {
               const formData = new FormData();
@@ -175,7 +195,7 @@ export function useCreateTicketForm({ projectId, defaultStatus, onCreated }: Use
           finishCreation();
         }
       } else {
-        await labelTask;
+        await Promise.all([labelTask, linksTask]);
         toast.success("Issue created");
         finishCreation();
       }
@@ -202,9 +222,8 @@ export function useCreateTicketForm({ projectId, defaultStatus, onCreated }: Use
     [createTicketMutation, properties, projectId],
   );
 
-  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const selected = Array.from(e.target.files ?? []);
-    const valid = selected.filter((f) => {
+  const addFiles = useCallback((incoming: File[]) => {
+    const valid = incoming.filter((f) => {
       if (f.size > 25 * 1024 * 1024) {
         toast.error(`${f.name} exceeds 25MB limit`);
         return false;
@@ -212,8 +231,12 @@ export function useCreateTicketForm({ projectId, defaultStatus, onCreated }: Use
       return true;
     });
     setFiles((prev) => [...prev, ...valid]);
-    e.target.value = "";
   }, []);
+
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    addFiles(Array.from(e.target.files ?? []));
+    e.target.value = "";
+  }, [addFiles]);
 
   const handleRemoveFile = useCallback((idx: number) => {
     setFiles((prev) => prev.filter((_, i) => i !== idx));
@@ -228,12 +251,15 @@ export function useCreateTicketForm({ projectId, defaultStatus, onCreated }: Use
     setOpen,
     form,
     files,
+    relatedLinks,
+    setRelatedLinks,
     isUploading,
     isPending: createTicketMutation.isPending,
     properties,
     handlePropertiesChange,
     handleSubmit,
     handleFileChange,
+    addFiles,
     handleRemoveFile,
     createMore,
     handleToggleCreateMore,

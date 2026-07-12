@@ -4,6 +4,12 @@ import type { Editor } from "@tiptap/react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough,
   Heading1, Heading2, Heading3,
   List, ListOrdered, Quote,
@@ -20,16 +26,24 @@ interface ToolbarButtonProps {
 
 export function ToolbarButton({ onClick, isActive, children, title }: ToolbarButtonProps) {
   return (
-    <Button
-      type="button"
-      variant="ghost"
-      size="icon"
-      className={`h-8 w-8 ${isActive ? "bg-muted text-foreground" : "text-muted-foreground"}`}
-      onClick={onClick}
-      title={title}
-    >
-      {children}
-    </Button>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          tabIndex={-1}
+          aria-label={title}
+          className={`h-8 w-8 ${isActive ? "bg-muted text-foreground" : "text-muted-foreground"}`}
+          onClick={onClick}
+        >
+          {children}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom" className="text-xs">
+        {title}
+      </TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -61,79 +75,81 @@ export function TiptapToolbar({ editor, onImageInsert, compact = false }: Tiptap
   function handleRedo() { editor.chain().focus().redo().run(); }
 
   return (
-    <div className="flex flex-wrap items-center gap-0.5 p-1">
-      {!compact && (
-        <>
-          <ToolbarButton onClick={handleUndo} title="Undo">
-            <Undo className="h-4 w-4" />
-          </ToolbarButton>
-          <ToolbarButton onClick={handleRedo} title="Redo">
-            <Redo className="h-4 w-4" />
-          </ToolbarButton>
-          <Separator orientation="vertical" className="mx-1 h-6" />
-        </>
-      )}
+    <TooltipProvider delayDuration={400}>
+      <div className="flex flex-wrap items-center gap-0.5 p-1">
+        {!compact && (
+          <>
+            <ToolbarButton onClick={handleUndo} title="Undo">
+              <Undo className="h-4 w-4" />
+            </ToolbarButton>
+            <ToolbarButton onClick={handleRedo} title="Redo">
+              <Redo className="h-4 w-4" />
+            </ToolbarButton>
+            <Separator orientation="vertical" className="mx-1 h-6" />
+          </>
+        )}
 
-      <ToolbarButton onClick={handleBold} isActive={editor.isActive("bold")} title="Bold">
-        <Bold className="h-4 w-4" />
-      </ToolbarButton>
-      <ToolbarButton onClick={handleItalic} isActive={editor.isActive("italic")} title="Italic">
-        <Italic className="h-4 w-4" />
-      </ToolbarButton>
-      <ToolbarButton onClick={handleUnderline} isActive={editor.isActive("underline")} title="Underline">
-        <UnderlineIcon className="h-4 w-4" />
-      </ToolbarButton>
-      <ToolbarButton onClick={handleStrike} isActive={editor.isActive("strike")} title="Strikethrough">
-        <Strikethrough className="h-4 w-4" />
-      </ToolbarButton>
-
-      <Separator orientation="vertical" className="mx-1 h-6" />
-
-      <ToolbarButton onClick={handleH1} isActive={editor.isActive("heading", { level: 1 })} title="Heading 1">
-        <Heading1 className="h-4 w-4" />
-      </ToolbarButton>
-      <ToolbarButton onClick={handleH2} isActive={editor.isActive("heading", { level: 2 })} title="Heading 2">
-        <Heading2 className="h-4 w-4" />
-      </ToolbarButton>
-      <ToolbarButton onClick={handleH3} isActive={editor.isActive("heading", { level: 3 })} title="Heading 3">
-        <Heading3 className="h-4 w-4" />
-      </ToolbarButton>
-
-      <Separator orientation="vertical" className="mx-1 h-6" />
-
-      <ToolbarButton onClick={handleBulletList} isActive={editor.isActive("bulletList")} title="Bullet List">
-        <List className="h-4 w-4" />
-      </ToolbarButton>
-      <ToolbarButton onClick={handleOrderedList} isActive={editor.isActive("orderedList")} title="Ordered List">
-        <ListOrdered className="h-4 w-4" />
-      </ToolbarButton>
-      <ToolbarButton onClick={handleBlockquote} isActive={editor.isActive("blockquote")} title="Blockquote">
-        <Quote className="h-4 w-4" />
-      </ToolbarButton>
-
-      <Separator orientation="vertical" className="mx-1 h-6" />
-
-      <ToolbarButton onClick={handleAlignLeft} isActive={editor.isActive({ textAlign: "left" })} title="Align Left">
-        <AlignLeft className="h-4 w-4" />
-      </ToolbarButton>
-      <ToolbarButton onClick={handleAlignCenter} isActive={editor.isActive({ textAlign: "center" })} title="Align Center">
-        <AlignCenter className="h-4 w-4" />
-      </ToolbarButton>
-      <ToolbarButton onClick={handleAlignRight} isActive={editor.isActive({ textAlign: "right" })} title="Align Right">
-        <AlignRight className="h-4 w-4" />
-      </ToolbarButton>
-
-      <Separator orientation="vertical" className="mx-1 h-6" />
-
-      <ToolbarButton onClick={handleLink} isActive={editor.isActive("link")} title="Add Link">
-        <LinkIcon className="h-4 w-4" />
-      </ToolbarButton>
-
-      {onImageInsert && (
-        <ToolbarButton onClick={onImageInsert} title="Insert Image">
-          <ImageIcon className="h-4 w-4" />
+        <ToolbarButton onClick={handleBold} isActive={editor.isActive("bold")} title="Bold">
+          <Bold className="h-4 w-4" />
         </ToolbarButton>
-      )}
-    </div>
+        <ToolbarButton onClick={handleItalic} isActive={editor.isActive("italic")} title="Italic">
+          <Italic className="h-4 w-4" />
+        </ToolbarButton>
+        <ToolbarButton onClick={handleUnderline} isActive={editor.isActive("underline")} title="Underline">
+          <UnderlineIcon className="h-4 w-4" />
+        </ToolbarButton>
+        <ToolbarButton onClick={handleStrike} isActive={editor.isActive("strike")} title="Strikethrough">
+          <Strikethrough className="h-4 w-4" />
+        </ToolbarButton>
+
+        <Separator orientation="vertical" className="mx-1 h-6" />
+
+        <ToolbarButton onClick={handleH1} isActive={editor.isActive("heading", { level: 1 })} title="Heading 1">
+          <Heading1 className="h-4 w-4" />
+        </ToolbarButton>
+        <ToolbarButton onClick={handleH2} isActive={editor.isActive("heading", { level: 2 })} title="Heading 2">
+          <Heading2 className="h-4 w-4" />
+        </ToolbarButton>
+        <ToolbarButton onClick={handleH3} isActive={editor.isActive("heading", { level: 3 })} title="Heading 3">
+          <Heading3 className="h-4 w-4" />
+        </ToolbarButton>
+
+        <Separator orientation="vertical" className="mx-1 h-6" />
+
+        <ToolbarButton onClick={handleBulletList} isActive={editor.isActive("bulletList")} title="Bullet List">
+          <List className="h-4 w-4" />
+        </ToolbarButton>
+        <ToolbarButton onClick={handleOrderedList} isActive={editor.isActive("orderedList")} title="Ordered List">
+          <ListOrdered className="h-4 w-4" />
+        </ToolbarButton>
+        <ToolbarButton onClick={handleBlockquote} isActive={editor.isActive("blockquote")} title="Blockquote">
+          <Quote className="h-4 w-4" />
+        </ToolbarButton>
+
+        <Separator orientation="vertical" className="mx-1 h-6" />
+
+        <ToolbarButton onClick={handleAlignLeft} isActive={editor.isActive({ textAlign: "left" })} title="Align Left">
+          <AlignLeft className="h-4 w-4" />
+        </ToolbarButton>
+        <ToolbarButton onClick={handleAlignCenter} isActive={editor.isActive({ textAlign: "center" })} title="Align Center">
+          <AlignCenter className="h-4 w-4" />
+        </ToolbarButton>
+        <ToolbarButton onClick={handleAlignRight} isActive={editor.isActive({ textAlign: "right" })} title="Align Right">
+          <AlignRight className="h-4 w-4" />
+        </ToolbarButton>
+
+        <Separator orientation="vertical" className="mx-1 h-6" />
+
+        <ToolbarButton onClick={handleLink} isActive={editor.isActive("link")} title="Add Link">
+          <LinkIcon className="h-4 w-4" />
+        </ToolbarButton>
+
+        {onImageInsert && (
+          <ToolbarButton onClick={onImageInsert} title="Insert Image">
+            <ImageIcon className="h-4 w-4" />
+          </ToolbarButton>
+        )}
+      </div>
+    </TooltipProvider>
   );
 }

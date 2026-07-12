@@ -1,7 +1,8 @@
 "use client";
 
-import { memo, useMemo, useCallback } from "react";
+import { memo, useMemo, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import { PageWrapper, PageSection } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
@@ -9,10 +10,40 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Briefcase, CheckSquare, AlertCircle, ChevronRight, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Briefcase,
+  CheckSquare,
+  AlertCircle,
+  ChevronRight,
+  ArrowRight,
+  Plus,
+  FolderPlus,
+  ListPlus,
+  GitBranch,
+  CircleCheck,
+  LayoutGrid,
+  LayoutList,
+  GanttChart,
+  BarChart2,
+  Settings,
+} from "lucide-react";
 import { useProjects } from "@/hooks/api/projects/projects";
 import { useMyWork } from "@/hooks/api/projects/my-work";
+import { ProjectCreateWizard } from "@/features/projects/project-create/project-create-wizard";
 import type { MyWorkItem } from "@/types/projects/my-work";
 import type { ProjectListItem } from "@/types/projects";
 import { isPast, isToday, parseISO } from "date-fns";
@@ -25,6 +56,14 @@ const STATUS_COLOR: Record<string, string> = {
   COMPLETED: "text-slate-600 border-slate-300 bg-slate-100",
   ARCHIVED: "text-slate-500 border-slate-200 bg-slate-50",
 };
+
+const PINNED_LINKS = [
+  { label: "Backlog", href: "/projects/backlog", icon: LayoutList },
+  { label: "Board", href: "/projects/board", icon: LayoutGrid },
+  { label: "Timeline", href: "/projects/timeline", icon: GanttChart },
+  { label: "Reports", href: "/projects/reports", icon: BarChart2 },
+  { label: "Settings", href: "/projects/settings", icon: Settings },
+];
 
 function isOverdue(item: MyWorkItem): boolean {
   if (!item.dueDate) return false;
@@ -68,26 +107,25 @@ const MyWorkRow = memo(function MyWorkRow({ item, index }: { item: MyWorkItem; i
 });
 
 const ProjectCard = memo(function ProjectCard({ project, index }: { project: ProjectListItem; index: number }) {
+  const base = `/projects/${project.id}`;
   return (
     <motion.div
       initial={{ opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.04, duration: 0.18, ease: "easeOut" }}
+      className="group"
     >
-      <Link
-        href={`/projects/${project.id}`}
-        className="flex items-center gap-3 px-3 py-2.5 bg-card rounded-lg border border-border hover:shadow-sm hover:border-border/80 transition-all group"
-      >
-        <div className="h-7 w-7 rounded bg-primary/10 flex items-center justify-center text-primary text-[10px] font-bold shrink-0">
+      <div className="flex items-center gap-3 px-3 py-2.5 bg-card rounded-lg border border-border hover:shadow-sm hover:border-border/80 transition-all">
+        <Link href={base} className="h-7 w-7 rounded bg-primary/10 flex items-center justify-center text-primary text-[10px] font-bold shrink-0">
           {project.key.substring(0, 2).toUpperCase()}
-        </div>
-        <div className="flex-1 min-w-0">
+        </Link>
+        <Link href={base} className="flex-1 min-w-0">
           <p className="text-sm font-medium text-foreground truncate">{project.name}</p>
           {project.description && (
             <p className="text-[11px] text-muted-foreground truncate">{project.description}</p>
           )}
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
+        </Link>
+        <div className="flex items-center gap-1.5 shrink-0">
           {project.progress && (
             <div className="flex items-center gap-1.5">
               <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
@@ -109,17 +147,191 @@ const ProjectCard = memo(function ProjectCard({ project, index }: { project: Pro
               {project.status.replace(/_/g, " ")}
             </Badge>
           )}
-          <ChevronRight className={cn(
-            "h-3.5 w-3.5 text-muted-foreground transition-opacity",
-            "opacity-0 group-hover:opacity-100",
-          )} />
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-1">
+            <TooltipProvider delayDuration={0}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link
+                    href={base}
+                    className="h-6 w-6 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                    aria-label="Open Board"
+                  >
+                    <LayoutGrid className="h-3 w-3" />
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">Board</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link
+                    href={`${base}/backlog`}
+                    className="h-6 w-6 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                    aria-label="Open Backlog"
+                  >
+                    <LayoutList className="h-3 w-3" />
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">Backlog</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link
+                    href={`${base}/timeline`}
+                    className="h-6 w-6 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                    aria-label="Open Timeline"
+                  >
+                    <GanttChart className="h-3 w-3" />
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">Timeline</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link
+                    href={`${base}/settings`}
+                    className="h-6 w-6 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                    aria-label="Settings"
+                  >
+                    <Settings className="h-3 w-3" />
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">Settings</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
         </div>
-      </Link>
+      </div>
     </motion.div>
   );
 });
 
+function QuickCreateMenu({ onCreateProject }: { onCreateProject: () => void }) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button size="sm" className="h-8 gap-1.5">
+          <Plus className="h-3.5 w-3.5" />
+          New
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuItem onClick={onCreateProject} className="gap-2 cursor-pointer">
+          <FolderPlus className="h-4 w-4 text-muted-foreground" />
+          <span>Create Project</span>
+          <span className="ml-auto text-[10px] text-muted-foreground font-mono">C P</span>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild className="gap-2 cursor-pointer">
+          <Link href="/projects/my-work">
+            <ListPlus className="h-4 w-4 text-muted-foreground" />
+            <span>Create Task</span>
+            <span className="ml-auto text-[10px] text-muted-foreground font-mono">C T</span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild className="gap-2 cursor-pointer">
+          <Link href="/projects/sprints">
+            <GitBranch className="h-4 w-4 text-muted-foreground" />
+            <span>Create Sprint</span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild className="gap-2 cursor-pointer">
+          <Link href="/projects/approvals">
+            <CircleCheck className="h-4 w-4 text-muted-foreground" />
+            <span>Create Approval</span>
+          </Link>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function PinnedNav() {
+  return (
+    <div className="flex items-center gap-1 flex-wrap">
+      {PINNED_LINKS.map(({ label, href, icon: Icon }) => (
+        <Link
+          key={href}
+          href={href}
+          className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground hover:border-border/80 hover:bg-muted/30 transition-colors"
+        >
+          <Icon className="h-3 w-3" />
+          {label}
+          <ExternalLink className="h-2.5 w-2.5 opacity-0 group-hover:opacity-100" />
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+function useKeyboardShortcuts(onCreateProject: () => void) {
+  const router = useRouter();
+  const [pendingKey, setPendingKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+
+    function handleKeyDown(e: KeyboardEvent) {
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.tagName === "SELECT" ||
+        target.isContentEditable
+      ) {
+        return;
+      }
+
+      if (e.key === "/") {
+        e.preventDefault();
+        const searchEl = document.querySelector<HTMLElement>('[data-search-input]');
+        searchEl?.focus();
+        return;
+      }
+
+      if (e.key === "g" && !pendingKey) {
+        setPendingKey("g");
+        timer = setTimeout(() => setPendingKey(null), 1000);
+        return;
+      }
+
+      if (e.key === "c" && !pendingKey) {
+        setPendingKey("c");
+        timer = setTimeout(() => setPendingKey(null), 1000);
+        return;
+      }
+
+      if (pendingKey === "g" && e.key === "m") {
+        setPendingKey(null);
+        router.push("/projects/my-work");
+        return;
+      }
+
+      if (pendingKey === "c" && e.key === "p") {
+        setPendingKey(null);
+        onCreateProject();
+        return;
+      }
+
+      if (pendingKey === "c" && e.key === "t") {
+        setPendingKey(null);
+        router.push("/projects/my-work");
+        return;
+      }
+
+      setPendingKey(null);
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      clearTimeout(timer);
+    };
+  }, [pendingKey, onCreateProject, router]);
+}
+
 export function CommandCenterPage() {
+  const [wizardOpen, setWizardOpen] = useState(false);
+
   const {
     data: projectsData,
     isLoading: projectsLoading,
@@ -133,6 +345,10 @@ export function CommandCenterPage() {
     isError: workError,
     refetch: refetchWork,
   } = useMyWork();
+
+  const handleOpenWizard = useCallback(() => setWizardOpen(true), []);
+
+  useKeyboardShortcuts(handleOpenWizard);
 
   const handleRetry = useCallback(() => {
     void refetchProjects();
@@ -189,84 +405,121 @@ export function CommandCenterPage() {
   }
 
   return (
-    <PageWrapper title="Command Center" eyebrow="Projects" subtitle="Overview of your projects and active work">
-      <div className="space-y-6">
-        <StatCardGrid cols={3}>
-          <StatCard
-            label="Active Projects"
-            value={stats.activeProjects}
-            icon={Briefcase}
-            tone="blue"
-            index={0}
-          />
-          <StatCard
-            label="Open Tickets"
-            value={stats.openTickets}
-            icon={CheckSquare}
-            tone="emerald"
-            index={1}
-          />
-          <StatCard
-            label="Overdue"
-            value={stats.overdueTickets}
-            icon={AlertCircle}
-            tone={stats.overdueTickets > 0 ? "red" : "default"}
-            index={2}
-          />
-        </StatCardGrid>
-
-        <PageSection
-          title="My Work"
-          actions={
-            <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" asChild>
-              <Link href="/projects/my-work">
-                View all <ArrowRight className="h-3 w-3" />
-              </Link>
-            </Button>
-          }
-        >
-          {topWork.length === 0 ? (
-            <EmptyState
-              illustrationPreset="projects"
-              title="No open tickets"
-              description="You have no open tickets across any project."
-              className="min-h-[12rem]"
+    <>
+      <PageWrapper
+        title="Command Center"
+        eyebrow="Projects"
+        subtitle="Overview of your projects and active work"
+        actions={<QuickCreateMenu onCreateProject={handleOpenWizard} />}
+      >
+        <div className="space-y-6">
+          <StatCardGrid cols={3}>
+            <StatCard
+              label="Active Projects"
+              value={stats.activeProjects}
+              icon={Briefcase}
+              tone="blue"
+              index={0}
             />
-          ) : (
-            <div className="space-y-0.5 bg-card rounded-lg border border-border overflow-hidden">
-              {topWork.map((item, i) => (
-                <MyWorkRow key={item.id} item={item} index={i} />
-              ))}
-            </div>
-          )}
-        </PageSection>
-
-        <PageSection
-          title="Active Projects"
-          actions={
-            <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" asChild>
-              <Link href="/projects/all">
-                All projects <ArrowRight className="h-3 w-3" />
-              </Link>
-            </Button>
-          }
-        >
-          {projects.length === 0 ? (
-            <EmptyState
-              illustrationPreset="projects"
-              title="No active projects"
-              description="Active projects will appear here."
-              className="min-h-[12rem]"
+            <StatCard
+              label="Open Tickets"
+              value={stats.openTickets}
+              icon={CheckSquare}
+              tone="emerald"
+              index={1}
             />
-          ) : (
-            <div className="space-y-2">
-              {projects.slice(0, 8).map((project, idx) => (
-                <ProjectCard key={project.id} project={project} index={idx} />
-              ))}
-            </div>
-          )}
-        </PageSection>
-      </div>
-    </PageWrapper>
+            <StatCard
+              label="Overdue"
+              value={stats.overdueTickets}
+              icon={AlertCircle}
+              tone={stats.overdueTickets > 0 ? "red" : "default"}
+              index={2}
+            />
+          </StatCardGrid>
+
+          <div>
+            <p className="text-xs text-muted-foreground font-medium mb-2">Quick navigation</p>
+            <PinnedNav />
+          </div>
+
+          <PageSection
+            title="My Work"
+            actions={
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-xs gap-1 text-muted-foreground"
+                  asChild
+                >
+                  <Link href="/projects/my-work">
+                    Create Task
+                  </Link>
+                </Button>
+                <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" asChild>
+                  <Link href="/projects/my-work">
+                    View all <ArrowRight className="h-3 w-3" />
+                  </Link>
+                </Button>
+              </div>
+            }
+          >
+            {topWork.length === 0 ? (
+              <EmptyState
+                illustrationPreset="projects"
+                title="No open tickets"
+                description="You have no open tickets across any project."
+                className="min-h-[12rem]"
+              />
+            ) : (
+              <div className="space-y-0.5 bg-card rounded-lg border border-border overflow-hidden">
+                {topWork.map((item, i) => (
+                  <MyWorkRow key={item.id} item={item} index={i} />
+                ))}
+              </div>
+            )}
+          </PageSection>
+
+          <PageSection
+            title="Active Projects"
+            actions={
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-xs gap-1 text-muted-foreground"
+                  onClick={handleOpenWizard}
+                >
+                  Create Project
+                </Button>
+                <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" asChild>
+                  <Link href="/projects/all">
+                    All projects <ArrowRight className="h-3 w-3" />
+                  </Link>
+                </Button>
+              </div>
+            }
+          >
+            {projects.length === 0 ? (
+              <EmptyState
+                illustrationPreset="projects"
+                title="No active projects"
+                description="Active projects will appear here."
+                className="min-h-[12rem]"
+                action={{ label: "Create Project", onClick: handleOpenWizard }}
+              />
+            ) : (
+              <div className="space-y-2">
+                {projects.slice(0, 8).map((project, idx) => (
+                  <ProjectCard key={project.id} project={project} index={idx} />
+                ))}
+              </div>
+            )}
+          </PageSection>
+        </div>
+      </PageWrapper>
+
+      <ProjectCreateWizard open={wizardOpen} onOpenChange={setWizardOpen} />
+    </>
   );
 }

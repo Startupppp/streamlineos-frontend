@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useRef, useCallback, useEffect } from "react";
+import { useRef, useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import {
@@ -12,11 +12,13 @@ import {
 } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Paperclip, X, Upload } from "lucide-react";
+import { Plus, Paperclip, X, FileText, File, AlertTriangle, Link as LinkIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProject } from "@/hooks/api";
+import { useTicketSearch } from "@/hooks/api/projects/ticket-search";
 import { useCreateTicketForm } from "./use-create-ticket-form";
 import { TicketCreateProperties } from "./ticket-create-properties";
+import { TicketRelatedLinksEditor } from "./ticket-related-links-editor";
 
 const TiptapEditorDynamic = dynamic(
   () => import("@/components/editor/tiptap-editor").then((m) => ({ default: m.TiptapEditor })),
@@ -27,6 +29,86 @@ const TiptapEditorDynamic = dynamic(
     ),
   },
 );
+
+const MAX_FILES = 10;
+const MAX_TOTAL_BYTES = 100 * 1024 * 1024;
+const MAX_FILE_BYTES = 25 * 1024 * 1024;
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes}B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)}KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
+}
+
+function isImageMime(mime: string): boolean {
+  return mime.startsWith("image/");
+}
+
+interface AttachmentPreviewProps {
+  file: File;
+  previewUrl: string | null;
+  onRemove: () => void;
+}
+
+function AttachmentPreview({ file, previewUrl, onRemove }: AttachmentPreviewProps) {
+  const isImage = isImageMime(file.type);
+
+  return (
+    <div className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2">
+      {isImage && previewUrl ? (
+        <img
+          src={previewUrl}
+          alt={file.name}
+          className="h-10 w-10 rounded object-cover shrink-0 border border-border"
+        />
+      ) : (
+        <div className="h-10 w-10 rounded border border-border bg-muted flex items-center justify-center shrink-0">
+          {file.type === "application/pdf" ? (
+            <FileText className="h-5 w-5 text-red-500" />
+          ) : (
+            <File className="h-5 w-5 text-muted-foreground" />
+          )}
+        </div>
+      )}
+      <div className="flex-1 min-w-0">
+        <p className="truncate text-xs font-medium">{file.name}</p>
+        <p className="text-[10px] text-muted-foreground">{formatBytes(file.size)}</p>
+      </div>
+      <button
+        type="button"
+        onClick={onRemove}
+        aria-label={`Remove ${file.name}`}
+        className="text-muted-foreground hover:text-destructive transition-colors shrink-0"
+      >
+        <X className="h-3.5 w-3.5" />
+      </button>
+    </div>
+  );
+}
+
+function useDuplicateTitleWarning(title: string, projectId: number) {
+  const [debouncedTitle, setDebouncedTitle] = useState(title);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedTitle(title), 500);
+    return () => clearTimeout(t);
+  }, [title]);
+
+  const trimmed = debouncedTitle.trim().toLowerCase();
+  const enabled = trimmed.length >= 3;
+
+  const { data } = useTicketSearch(trimmed, { enabled });
+
+  const matches = (data ?? []).filter(
+    (r) =>
+      r.projectId === projectId &&
+      r.title.trim().toLowerCase() === trimmed &&
+      r.status !== "DONE" &&
+      r.status !== "CANCELLED",
+  );
+
+  return matches;
+}
 
 interface CreateTicketDialogProps {
   projectId: number;
@@ -50,12 +132,14 @@ export function CreateTicketDialog({
     setOpen,
     form,
     files,
+    relatedLinks,
+    setRelatedLinks,
     isUploading,
     isPending,
     properties,
     handlePropertiesChange,
     handleSubmit,
-    handleFileChange,
+    addFiles,
     handleRemoveFile,
     createMore,
     handleToggleCreateMore,
@@ -66,11 +150,29 @@ export function CreateTicketDialog({
     cycles,
   } = useCreateTicketForm({ projectId, defaultStatus });
 
+  const [showLinksEditor, setShowLinksEditor] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [previewUrls, setPreviewUrls] = useState<(string | null)[]>([]);
+  const [fileError, setFileError] = useState<string | null>(null);
+
+  const watchedTitle = form.watch("title") ?? "";
+  const duplicates = useDuplicateTitleWarning(watchedTitle, projectId);
 
   useEffect(() => {
     if (externalOpen === true) setOpen(true);
   }, [externalOpen, setOpen]);
+
+  useEffect(() => {
+    const urls = files.map((f) => {
+      if (isImageMime(f.type)) return URL.createObjectURL(f);
+      return null;
+    });
+    setPreviewUrls(urls);
+    return () => {
+      urls.forEach((u) => { if (u) URL.revokeObjectURL(u); });
+    };
+  }, [files]);
 
   const resolvedOpen = externalOpen !== undefined ? externalOpen || internalOpen : internalOpen;
 
@@ -83,6 +185,44 @@ export function CreateTicketDialog({
     [setOpen, onExternalOpenChange],
   );
   const handleAttachClick = useCallback(() => fileInputRef.current?.click(), []);
+
+  const handleFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const selected = Array.from(e.target.files ?? []);
+      e.target.value = "";
+
+      const nextCount = files.length + selected.length;
+      if (nextCount > MAX_FILES) {
+        setFileError(`You can upload up to ${MAX_FILES} files per ticket.`);
+        return;
+      }
+
+      const oversized = selected.find((f) => f.size > MAX_FILE_BYTES);
+      if (oversized) {
+        setFileError(`${oversized.name} exceeds the 25MB per-file limit.`);
+        return;
+      }
+
+      const currentTotal = files.reduce((sum, f) => sum + f.size, 0);
+      const newTotal = selected.reduce((sum, f) => sum + f.size, currentTotal);
+      if (newTotal > MAX_TOTAL_BYTES) {
+        setFileError("Total attachments exceed the 100MB limit.");
+        return;
+      }
+
+      setFileError(null);
+      addFiles(selected);
+    },
+    [files, addFiles],
+  );
+
+  const handleRemoveFileWithPreview = useCallback(
+    (idx: number) => {
+      handleRemoveFile(idx);
+    },
+    [handleRemoveFile],
+  );
+
   const handleFormSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
@@ -90,6 +230,8 @@ export function CreateTicketDialog({
     },
     [form, handleSubmit],
   );
+
+  const totalSize = files.reduce((sum, f) => sum + f.size, 0);
 
   return (
     <>
@@ -151,6 +293,24 @@ export function CreateTicketDialog({
                         />
                       </FormControl>
                       <FormMessage className="text-xs" />
+                      {duplicates.length > 0 && (
+                        <div className="flex items-start gap-1.5 rounded-md bg-amber-50 border border-amber-200 px-2.5 py-2 mt-1">
+                          <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0 mt-0.5" />
+                          <div className="min-w-0">
+                            <p className="text-[11px] text-amber-700 font-medium">
+                              Similar open {duplicates.length === 1 ? "ticket" : "tickets"} already exist — you can still create this one.
+                            </p>
+                            <ul className="mt-0.5 space-y-0.5">
+                              {duplicates.slice(0, 3).map((d) => (
+                                <li key={d.id} className="text-[11px] text-amber-600">
+                                  {d.projectKey}-{d.ticketNumber}: {d.title}{" "}
+                                  <span className="text-amber-500">({d.status})</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                      )}
                     </FormItem>
                   )}
                 />
@@ -189,25 +349,20 @@ export function CreateTicketDialog({
               {files.length > 0 && (
                 <div className="px-5 pb-2 space-y-1.5">
                   {files.map((file, idx) => (
-                    <div
+                    <AttachmentPreview
                       key={idx}
-                      className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2"
-                    >
-                      <Upload className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                      <span className="flex-1 truncate text-xs font-medium">{file.name}</span>
-                      <span className="text-[10px] text-muted-foreground shrink-0">
-                        {(file.size / 1024).toFixed(0)}KB
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveFile(idx)}
-                        aria-label="Remove file"
-                        className="text-muted-foreground hover:text-destructive transition-colors"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
+                      file={file}
+                      previewUrl={previewUrls[idx] ?? null}
+                      onRemove={() => handleRemoveFileWithPreview(idx)}
+                    />
                   ))}
+                </div>
+              )}
+
+              {(showLinksEditor || relatedLinks.length > 0) && (
+                <div className="px-5 pb-3 border-t border-border/60 pt-3">
+                  <p className="text-[11px] font-medium text-muted-foreground mb-1.5">Related links</p>
+                  <TicketRelatedLinksEditor links={relatedLinks} onChange={setRelatedLinks} />
                 </div>
               )}
 
@@ -222,6 +377,15 @@ export function CreateTicketDialog({
                     <Paperclip className="h-3.5 w-3.5" />
                     Attach
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowLinksEditor(true)}
+                    aria-label="Add related links"
+                    className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors"
+                  >
+                    <LinkIcon className="h-3.5 w-3.5" />
+                    Links
+                  </button>
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -230,6 +394,10 @@ export function CreateTicketDialog({
                     multiple
                     onChange={handleFileChange}
                   />
+                  <span className="text-[10px] text-muted-foreground">
+                    Up to {MAX_FILES} files, 25MB each, 100MB total
+                    {files.length > 0 && ` · ${files.length}/${MAX_FILES} · ${formatBytes(totalSize)}`}
+                  </span>
                 </div>
 
                 <div className="flex items-center gap-3">
@@ -265,6 +433,12 @@ export function CreateTicketDialog({
                   </LoadingButton>
                 </div>
               </div>
+
+              {fileError && (
+                <div className="px-5 pb-3">
+                  <p className="text-[11px] text-destructive">{fileError}</p>
+                </div>
+              )}
             </form>
           </Form>
         </DialogContent>

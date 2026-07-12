@@ -1,11 +1,21 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { ChevronUp, Loader2, MessageCircle, MoreHorizontal, PenLine, Search, Trash2, X } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import {
+  KbChevronUpIcon,
+  KbLoader2Icon,
+  KbMessageCircleIcon,
+  KbMoreHorizontalIcon,
+  KbPenLineIcon,
+  KbSearchIcon,
+  KbTrash2Icon,
+  KbXIcon,
+} from "@/features/knowledge-base/lib/kb-icons";
+import { SidebarAnimatedNavIcon, useAnimatedNavIconHover } from "@/components/layout/sidebar/sidebar-animated-nav";
 import type { KbConversation } from "@/hooks/api/kb/chat-history";
 
 function conversationDateGroup(updatedAt: string): string {
@@ -28,6 +38,53 @@ function relativeTime(iso: string): string {
   const hrs = Math.floor(mins / 60);
   if (hrs < 24) return `${hrs}h ago`;
   return `${Math.floor(hrs / 24)}d ago`;
+}
+
+interface ConversationRowActionsProps {
+  conv: KbConversation;
+  onRename: (id: number, title: string) => void;
+  onDeleteRequest: (id: number) => void;
+}
+
+function ConversationRowActions({ conv, onRename, onDeleteRequest }: ConversationRowActionsProps) {
+  const moreIcon = useAnimatedNavIconHover();
+
+  function handleRenameSelect() {
+    onRename(conv.id, conv.title ?? "");
+  }
+
+  function handleDeleteSelect() {
+    onDeleteRequest(conv.id);
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          aria-label="More options"
+          className="shrink-0 rounded p-0.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 data-[state=open]:opacity-100"
+          {...moreIcon.animatedNavHoverHandlers}
+        >
+          <SidebarAnimatedNavIcon
+            icon={KbMoreHorizontalIcon}
+            iconRef={moreIcon.iconRef}
+            className="h-3.5 w-3.5"
+          />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-36">
+        <DropdownMenuItem onSelect={handleRenameSelect}>
+          <KbPenLineIcon className="mr-2 h-3.5 w-3.5" />
+          Rename
+        </DropdownMenuItem>
+        <DropdownMenuItem variant="destructive" onSelect={handleDeleteSelect}>
+          <KbTrash2Icon className="mr-2 h-3.5 w-3.5" />
+          Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 }
 
 interface KbConversationListProps {
@@ -54,6 +111,9 @@ export function KbConversationList({
   const [renameValue, setRenameValue] = useState("");
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const cancelRenameRef = useRef(false);
+  const newChatIcon = useAnimatedNavIconHover();
+  const closeIcon = useAnimatedNavIconHover();
+  const loadMoreIcon = useAnimatedNavIconHover();
 
   const groups = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -94,15 +154,13 @@ export function KbConversationList({
     if (id) onSelect(id);
   }
 
-  function handleRenameFromMenu(e: React.MouseEvent<HTMLDivElement>) {
-    const id = Number(e.currentTarget.dataset.conversationId);
-    const title = e.currentTarget.dataset.conversationTitle ?? null;
-    if (id) { setRenamingId(id); setRenameValue(title ?? ""); }
+  function handleRowRename(id: number, title: string) {
+    setRenamingId(id);
+    setRenameValue(title);
   }
 
-  function handleDeleteFromMenu(e: React.MouseEvent<HTMLDivElement>) {
-    const id = Number(e.currentTarget.dataset.conversationId);
-    if (id) setDeleteTargetId(id);
+  function handleRowDeleteRequest(id: number) {
+    setDeleteTargetId(id);
   }
 
   function handleDeleteDialogOpenChange(open: boolean) { if (!open) setDeleteTargetId(null); }
@@ -116,19 +174,39 @@ export function KbConversationList({
       <div className="flex shrink-0 items-center justify-between border-b border-border px-3 py-2">
         <span className="text-sm font-semibold text-foreground">Conversations</span>
         <div className="flex items-center gap-0.5">
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onNewChat} aria-label="New chat">
-            <PenLine className="h-4 w-4" />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={onNewChat}
+            aria-label="New chat"
+            {...newChatIcon.animatedNavHoverHandlers}
+          >
+            <SidebarAnimatedNavIcon icon={KbPenLineIcon} iconRef={newChatIcon.iconRef} className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose} aria-label="Close panel">
-            <X className="h-4 w-4" />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={onClose}
+            aria-label="Close panel"
+            {...closeIcon.animatedNavHoverHandlers}
+          >
+            <SidebarAnimatedNavIcon icon={KbXIcon} iconRef={closeIcon.iconRef} className="h-4 w-4" />
           </Button>
         </div>
       </div>
 
       <div className="shrink-0 border-b border-border px-3 py-2">
         <div className="flex items-center gap-2 rounded-lg border border-input bg-background px-2.5">
-          <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-          <input type="text" value={search} onChange={handleSearchChange} placeholder="Search conversations…" className="h-8 flex-1 bg-transparent text-xs focus-visible:outline-none" />
+          <KbSearchIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+          <input
+            type="text"
+            value={search}
+            onChange={handleSearchChange}
+            placeholder="Search conversations…"
+            className="h-8 flex-1 bg-transparent text-xs focus-visible:outline-none"
+          />
         </div>
       </div>
 
@@ -143,38 +221,62 @@ export function KbConversationList({
               <div key={label} className="mb-1">
                 <p className="px-2 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/60">{label}</p>
                 {items.map((conv) => (
-                  <div key={conv.id} className={cn("group flex items-center gap-1.5 rounded-lg px-2 py-1.5 transition-colors", activeConversationId === conv.id ? "bg-accent/10" : "hover:bg-muted/50")}>
-                    <MessageCircle className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <div
+                    key={conv.id}
+                    className={cn(
+                      "group flex items-center gap-1.5 rounded-lg px-2 py-1.5 transition-colors",
+                      activeConversationId === conv.id ? "bg-accent/10" : "hover:bg-muted/50",
+                    )}
+                  >
+                    <KbMessageCircleIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                     {renamingId === conv.id ? (
-                      <input type="text" value={renameValue} onChange={handleRenameInputChange} onKeyDown={handleRenameKeyDown} onBlur={handleRenameCommit} autoFocus className="flex-1 min-w-0 bg-transparent text-xs focus-visible:outline-none" />
+                      <input
+                        type="text"
+                        value={renameValue}
+                        onChange={handleRenameInputChange}
+                        onKeyDown={handleRenameKeyDown}
+                        onBlur={handleRenameCommit}
+                        autoFocus
+                        className="flex-1 min-w-0 bg-transparent text-xs focus-visible:outline-none"
+                      />
                     ) : (
-                      <button type="button" data-conversation-id={conv.id} onClick={handleSelectItem} className="min-w-0 flex-1 text-left">
-                        <p className="truncate text-xs font-medium leading-tight text-foreground">{conv.title ?? "New conversation"}</p>
+                      <button
+                        type="button"
+                        data-conversation-id={conv.id}
+                        onClick={handleSelectItem}
+                        className="min-w-0 flex-1 text-left"
+                      >
+                        <p className="truncate text-xs font-medium leading-tight text-foreground">
+                          {conv.title ?? "New conversation"}
+                        </p>
                         <p className="text-[10px] text-muted-foreground">{relativeTime(conv.updatedAt)}</p>
                       </button>
                     )}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button type="button" aria-label="More options" className="shrink-0 rounded p-0.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 data-[state=open]:opacity-100">
-                          <MoreHorizontal className="h-3.5 w-3.5" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-36">
-                        <DropdownMenuItem data-conversation-id={conv.id} data-conversation-title={conv.title ?? ""} onClick={handleRenameFromMenu}>
-                          <PenLine className="mr-2 h-3.5 w-3.5" />Rename
-                        </DropdownMenuItem>
-                        <DropdownMenuItem variant="destructive" data-conversation-id={conv.id} onClick={handleDeleteFromMenu}>
-                          <Trash2 className="mr-2 h-3.5 w-3.5" />Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <ConversationRowActions
+                      conv={conv}
+                      onRename={handleRowRename}
+                      onDeleteRequest={handleRowDeleteRequest}
+                    />
                   </div>
                 ))}
               </div>
             ))}
             {hasNextPage && (
-              <button type="button" onClick={onLoadMore} disabled={isFetchingNextPage} className="mt-1 flex w-full items-center justify-center gap-1 rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted disabled:opacity-50">
-                {isFetchingNextPage ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <><ChevronUp className="h-3.5 w-3.5" />Load more</>}
+              <button
+                type="button"
+                onClick={onLoadMore}
+                disabled={isFetchingNextPage}
+                className="mt-1 flex w-full items-center justify-center gap-1 rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted disabled:opacity-50"
+                {...loadMoreIcon.animatedNavHoverHandlers}
+              >
+                {isFetchingNextPage ? (
+                  <KbLoader2Icon className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <>
+                    <SidebarAnimatedNavIcon icon={KbChevronUpIcon} iconRef={loadMoreIcon.iconRef} className="h-3.5 w-3.5" />
+                    Load more
+                  </>
+                )}
               </button>
             )}
           </>
@@ -189,7 +291,9 @@ export function KbConversationList({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -191,3 +191,5 @@ export const KbLink2Icon = createLucideIcon(Link2);
 export const KbUnlockIcon = createLucideIcon(Unlock);
 export const KbFileDownIcon = createLucideIcon(FileDown);
 export const KbSaveIcon = createLucideIcon(Save);
+export const KbPenLineIcon = createLucideIcon(PenLine);
+export const KbChevronUpIcon = createAnimatedIcon(ChevronUpIcon);

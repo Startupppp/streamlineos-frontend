@@ -1,6 +1,5 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { resolveImageUrl } from "@/lib/utils";
 import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
@@ -35,36 +34,37 @@ export function SidebarAssigneeSection({
   }
 
   return (
-    <div>
-      <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide mb-1 block">
+    <div className="space-y-1.5">
+      <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide block">
         Assignees
       </span>
       {displayedAssignees.length > 0 && (
-        <div className="flex flex-wrap gap-1 mb-1.5">
+        <div className="space-y-1">
           {displayedAssignees.map((person) => {
             const displayName = getUserDisplayName(person);
             return (
-              <Badge
+              <div
                 key={person.id}
-                variant="user"
-                className="gap-1.5 pl-0.5 pr-1.5 py-0.5"
+                className="flex items-center gap-2 rounded-md px-2 py-1.5 bg-muted/50 group"
               >
-                <Avatar className="h-5 w-5 shrink-0">
+                <Avatar className="h-6 w-6 shrink-0">
                   <AvatarImage src={resolveImageUrl(person.image)} />
-                  <AvatarFallback className="text-[7px]">
+                  <AvatarFallback className="text-[8px] bg-primary/10 text-primary">
                     {getUserInitials(person)}
                   </AvatarFallback>
                 </Avatar>
-                <span className="truncate max-w-[140px] text-[11px]">{displayName}</span>
+                <span className="text-xs font-medium truncate flex-1 min-w-0 text-foreground">
+                  {displayName}
+                </span>
                 <button
                   type="button"
-                  className="text-accent/70 hover:text-destructive transition-colors leading-none"
+                  className="text-muted-foreground/50 hover:text-destructive transition-colors leading-none opacity-0 group-hover:opacity-100 shrink-0"
                   onClick={() => onRemoveAssignee(person.id)}
                   aria-label={`Remove ${displayName}`}
                 >
                   <span className="text-xs font-bold">&times;</span>
                 </button>
-              </Badge>
+              </div>
             );
           })}
         </div>

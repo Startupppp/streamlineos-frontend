@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   SidebarAnimatedNavIcon,
@@ -48,8 +48,17 @@ import {
   FilePen,
   Gavel,
   MessageSquareText,
+  ChevronsUpDown,
+  Check,
+  Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Sheet,
   SheetContent,
@@ -66,6 +75,7 @@ import {
 import { useCan } from "@/hooks/api/access";
 import { useProjectSidebarPrefs } from "@/features/projects/sidebar/use-project-sidebar-prefs";
 import { ProjectSidebarCustomizer } from "@/features/projects/sidebar/project-sidebar-customizer";
+import { useProjects } from "@/hooks/api/projects/projects";
 
 interface ProjectSidebarProps {
   projectId: string;
@@ -360,6 +370,111 @@ function MobileProjectNavLink({
   );
 }
 
+function ProjectSwitcher({
+  currentProjectId,
+  currentProjectName,
+  currentProjectKey,
+}: {
+  currentProjectId: string;
+  currentProjectName: string | undefined;
+  currentProjectKey: string | undefined;
+}) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const { data: projectsData } = useProjects({ limit: 100 });
+  const projects = projectsData?.data ?? [];
+
+  const filtered = useMemo(() => {
+    if (!search.trim()) return projects;
+    const q = search.toLowerCase();
+    return projects.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        p.key.toLowerCase().includes(q),
+    );
+  }, [projects, search]);
+
+  function handleSelect(projectId: number) {
+    setOpen(false);
+    setSearch("");
+    const currentBase = `/projects/${currentProjectId}`;
+    const subPath = pathname?.startsWith(currentBase)
+      ? pathname.slice(currentBase.length)
+      : "";
+    const target = subPath ? `/projects/${projectId}${subPath}` : `/projects/${projectId}`;
+    router.push(target);
+  }
+
+  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setSearch(e.target.value);
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="flex items-center gap-0.5 text-sm font-semibold truncate flex-1 min-w-0 hover:text-foreground/80 transition-colors"
+          aria-label="Switch project"
+          aria-expanded={open}
+          aria-haspopup="listbox"
+        >
+          <span className="truncate">{currentProjectName ?? "Project"}</span>
+          <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground ml-0.5" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-64 p-0" align="start" sideOffset={8}>
+        <div className="p-2 border-b">
+          <div className="relative">
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={handleSearchChange}
+              placeholder="Search projects…"
+              className="h-7 pl-7 text-xs"
+              autoFocus
+            />
+          </div>
+        </div>
+        <ScrollArea className="max-h-64">
+          {filtered.length === 0 ? (
+            <p className="py-4 text-center text-xs text-muted-foreground">No projects found.</p>
+          ) : (
+            <div className="p-1" role="listbox" aria-label="Projects">
+              {filtered.map((p) => {
+                const isCurrent = String(p.id) === currentProjectId;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    role="option"
+                    aria-selected={isCurrent}
+                    onClick={() => handleSelect(p.id)}
+                    className={cn(
+                      "w-full flex items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors",
+                      isCurrent
+                        ? "bg-muted text-foreground"
+                        : "hover:bg-muted text-foreground/80 hover:text-foreground",
+                    )}
+                  >
+                    <div className="h-5 w-5 rounded bg-primary/10 flex items-center justify-center text-primary text-[9px] font-bold shrink-0">
+                      {p.key.substring(0, 2).toUpperCase()}
+                    </div>
+                    <span className="text-xs truncate flex-1 min-w-0">{p.name}</span>
+                    {isCurrent && <Check className="h-3 w-3 shrink-0 text-primary" />}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </ScrollArea>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 const SIDEBAR_COLLAPSED_KEY = "streamlineos:project-sidebar:collapsed";
 
 function getProjectInitials(
@@ -426,9 +541,11 @@ function DesktopSidebar({
             {getProjectInitials(projectKey, projectName)}
           </div>
           {!isCollapsed && (
-            <span className="text-sm font-semibold truncate flex-1 min-w-0">
-              {projectName ?? "Project"}
-            </span>
+            <ProjectSwitcher
+              currentProjectId={projectId}
+              currentProjectName={projectName}
+              currentProjectKey={projectKey}
+            />
           )}
           <Button
             variant="ghost"
