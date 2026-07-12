@@ -36,6 +36,7 @@ import {
 } from "@/hooks/api/hr";
 import { useLetters } from "@/hooks/api/hr/letters";
 import { useCertifications } from "@/hooks/api/hr/certifications";
+import { CreateEnvelopeDialog } from "@/features/sign";
 import { UploadDocumentDialog } from "@/features/hr/documents/components/upload-document-dialog";
 import { LetterGenerationSheet } from "@/features/hr/documents/letter-generation-sheet";
 import { LettersHistoryTable } from "@/features/hr/documents/letters-history-table";
@@ -83,6 +84,7 @@ export default function DocumentsPage() {
   const [newFolderName, setNewFolderName] = useState("");
   const [customFolders, setCustomFolders] = useState<string[]>([]);
   const [editingDocument, setEditingDocument] = useState<Document | null>(null);
+  const [signatureDocument, setSignatureDocument] = useState<Document | null>(null);
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [page, setPage] = useState(1);
   const pageSize = 5;
@@ -206,6 +208,8 @@ export default function DocumentsPage() {
   const handleEdit = useCallback((doc: Document) => setEditingDocument(doc), []);
   const handleUploadSuccess = useCallback(() => { void refetch(); setIsUploadOpen(false); }, [refetch]);
   const handleEditSheetChange = useCallback((open: boolean) => { if (!open) setEditingDocument(null); }, []);
+  const handleSendForSignature = useCallback((doc: Document) => setSignatureDocument(doc), []);
+  const handleSignatureDialogChange = useCallback((open: boolean) => { if (!open) setSignatureDocument(null); }, []);
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
   const handleOpenLetterGen = useCallback(() => setIsLetterGenOpen(true), []);
   const handleLetterSaved = useCallback(() => { void refetch(); }, [refetch]);
@@ -349,6 +353,7 @@ export default function DocumentsPage() {
           onDelete={handleDelete}
           onEdit={handleEdit}
           onOpenUpload={handleOpenUpload}
+          onSendForSignature={handleSendForSignature}
         />
 
         <RichDocumentsSection />
@@ -378,6 +383,16 @@ export default function DocumentsPage() {
           documentTypes={DOCUMENT_TYPES}
           categories={[...DOCUMENT_CATEGORIES, ...customFolders]}
           isAdmin={isAdmin}
+        />
+        <CreateEnvelopeDialog
+          open={!!signatureDocument}
+          onOpenChange={handleSignatureDialogChange}
+          defaultTitle={signatureDocument?.name}
+          sourceModule="hr"
+          sourceEntityType="document"
+          sourceEntityId={signatureDocument ? String(signatureDocument.id) : undefined}
+          dialogTitle="Send for e-signature"
+          dialogDescription="Creates a SignOS envelope linked to this document — you'll upload the PDF and add signers next."
         />
         <LetterGenerationSheet
           open={isLetterGenOpen}

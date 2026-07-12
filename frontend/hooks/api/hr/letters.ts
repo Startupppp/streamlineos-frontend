@@ -68,11 +68,3 @@ export function useSaveLetter() {
     onSuccess: () => qc.invalidateQueries({ queryKey: LETTERS_KEY }),
   });
 }
-
-export function useSendLetterToSign() {
-  return useMutation({
-    mutationKey: [...LETTERS_KEY, "sign"],
-    mutationFn: ({ renderId, signerUserIds }: { renderId: number; signerUserIds: string[] }) =>
-      apiClient.post(`/hr/documents/letters/${renderId}/sign`, { signerUserIds }),
-  });
-}
