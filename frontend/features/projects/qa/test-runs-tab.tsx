@@ -184,7 +184,7 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
     },
   ], [canManage, projectId]);
 
-  if (isLoading) return <SkeletonTable rows={5} columns={5} />;
+  if (isLoading) return <DataTableSkeleton rows={5} columns={5} />;
   if (isError) return <ErrorState onRetry={refetch} />;
 
   return (

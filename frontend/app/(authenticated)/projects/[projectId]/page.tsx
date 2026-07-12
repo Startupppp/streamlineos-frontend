@@ -24,7 +24,8 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Upload, Bookmark, X } from "lucide-react";
+import { DownloadIcon, UploadIcon } from "@animateicons/react/lucide";
+import { Bookmark, X } from "lucide-react";
 import { exportToCsv } from "@/lib/export-csv";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -32,9 +33,38 @@ import { notFound, useRouter, useSearchParams } from "next/navigation";
 import type { KanbanTicket } from "@/features/projects/shared/types";
 import { useExportTickets } from "@/hooks/api/projects/import-export";
 import { ImportTicketsDialog } from "@/features/projects/tickets/import-tickets-dialog";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import type { IconHandle } from "@animateicons/react";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
+}
+
+type AnimatedToolbarIcon = React.ForwardRefExoticComponent<
+  { size?: number } & React.RefAttributes<IconHandle>
+>;
+
+interface AnimatedToolbarIconButtonProps {
+  onClick: () => void;
+  ariaLabel: string;
+  Icon: AnimatedToolbarIcon;
+}
+
+function AnimatedToolbarIconButton({ onClick, ariaLabel, Icon }: AnimatedToolbarIconButtonProps) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+
+  return (
+    <Button
+      variant="outline"
+      size="icon"
+      onClick={onClick}
+      className="h-8 w-8 shrink-0 bg-card"
+      aria-label={ariaLabel}
+      {...hoverHandlers}
+    >
+      <Icon ref={iconRef} size={14} />
+    </Button>
+  );
 }
 
 export default function ProjectBoardPage({ params }: PageProps) {
@@ -340,65 +370,65 @@ export default function ProjectBoardPage({ params }: PageProps) {
       contentClassName="!p-0"
       actions={<CreateTicketDialog projectId={projectId} />}
       filters={
-        <div className="flex min-h-8 w-full flex-wrap items-center gap-2 sm:gap-3">
-          <ViewSwitcher activeView={view} onViewChange={handleViewChange} />
-          <DisplayOptionsPanel options={displayOptions} onChange={setDisplayOptions} />
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleExportCsv}
-            className="h-8 w-8 shrink-0 bg-card"
-            aria-label="Export tickets"
-          >
-            <Download className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleOpenImport}
-            className="h-8 w-8 shrink-0 bg-card"
-            aria-label="Import tickets"
-          >
-            <Upload className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => {
-              setSaveViewName("");
-              setSaveViewOpen(true);
-            }}
-            className="h-8 w-8 shrink-0 bg-card"
-            aria-label="Save view"
-          >
-            <Bookmark className="h-3.5 w-3.5" />
-          </Button>
-          {activeView && (
-            <Badge
-              variant="secondary"
-              className="h-6 shrink-0 cursor-default gap-1 bg-card pl-2 pr-1 text-xs font-normal"
-            >
-              View: {activeView.name}
-              <button
-                type="button"
-                onClick={handleClearView}
-                aria-label="Clear view"
-                className="ml-0.5 rounded-sm transition-colors hover:bg-muted"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          )}
-          <TicketFilterBar
-            members={members}
-            statuses={statuses}
-            projectId={projectId}
-            showSprintFilter={false}
-            showDoneToggle
-            hideCompleted={hideCompleted}
-            onHideCompletedChange={setHideCompleted}
-            doneCount={doneCount}
-          />
+        <div className="flex w-full min-w-0 flex-col gap-1.5">
+          <div className="flex w-full min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 flex-wrap items-center gap-2 sm:flex-nowrap">
+              <ViewSwitcher activeView={view} onViewChange={handleViewChange} />
+              <DisplayOptionsPanel options={displayOptions} onChange={setDisplayOptions} />
+              <div className="flex items-center gap-1.5">
+                <AnimatedToolbarIconButton
+                  onClick={handleExportCsv}
+                  ariaLabel="Export tickets"
+                  Icon={DownloadIcon}
+                />
+                <AnimatedToolbarIconButton
+                  onClick={handleOpenImport}
+                  ariaLabel="Import tickets"
+                  Icon={UploadIcon}
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    setSaveViewName("");
+                    setSaveViewOpen(true);
+                  }}
+                  className="h-8 w-8 shrink-0 bg-card"
+                  aria-label="Save view"
+                >
+                  <Bookmark className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+              {activeView && (
+                <Badge
+                  variant="secondary"
+                  className="h-6 shrink-0 cursor-default gap-1 bg-card pl-2 pr-1 text-xs font-normal"
+                >
+                  View: {activeView.name}
+                  <button
+                    type="button"
+                    onClick={handleClearView}
+                    aria-label="Clear view"
+                    className="ml-0.5 rounded-sm transition-colors hover:bg-muted"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
+            </div>
+            <TicketFilterBar
+              className="w-full sm:min-w-0 sm:max-w-xl sm:flex-1"
+              align="end"
+              members={members}
+              statuses={statuses}
+              projectId={projectId}
+              showSprintFilter={false}
+              showDoneToggle
+              hideCompleted={hideCompleted}
+              onHideCompletedChange={setHideCompleted}
+              doneCount={doneCount}
+            />
+          </div>
         </div>
       }
     >

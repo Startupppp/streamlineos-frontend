@@ -197,7 +197,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
     >
       <div className="px-4 pb-4">
         {isLoading ? (
-          <SkeletonTable rows={5} columns={7} />
+          <DataTableSkeleton rows={5} columns={7} />
         ) : isError ? (
           <ErrorState className="flex-1" onRetry={() => void refetch()} />
         ) : displayed.length === 0 ? (

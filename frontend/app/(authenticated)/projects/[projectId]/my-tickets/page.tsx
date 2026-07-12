@@ -15,27 +15,13 @@ import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { formatTicketKey } from "@/features/projects/shared/format-ticket-key";
-
-interface MyTicket {
-  id: number;
-  type: string;
-  ticketNumber: string | number;
-  title: string | null;
-  status: string;
-  priority: string | null;
-  points?: number | null;
-  dueDate?: string | Date | null;
-  description?: string | null;
-  assigneeId?: string | null;
-  reporterId?: string | null;
-  assignees?: { userId: string }[] | null;
-}
+import type { Ticket } from "@/types/projects/tasks";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
 }
 
-export default function MyTicketsPage({ params }: PageProps) {
+export default function TicketsPage({ params }: PageProps) {
   const { projectId: projectIdStr } = use(params);
   const projectId = parseInt(projectIdStr);
   const { data, isLoading } = useProject(projectId);
@@ -88,7 +74,7 @@ export default function MyTicketsPage({ params }: PageProps) {
   );
 
   const handleRowClick = useCallback(
-    (ticket: MyTicket) => handleTicketSelect(ticket.id),
+    (ticket: Ticket) => handleTicketSelect(ticket.id),
     [handleTicketSelect],
   );
 
@@ -98,7 +84,7 @@ export default function MyTicketsPage({ params }: PageProps) {
     if (href) router.replace(href);
   }, [selectedTicketId, data, myTickets, projectId, router]);
 
-  const columns = useMemo<DataTableColumn<MyTicket>[]>(
+  const columns = useMemo<DataTableColumn<Ticket>[]>(
     () => [
       {
         key: "id",

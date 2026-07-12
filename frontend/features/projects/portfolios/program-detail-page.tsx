@@ -96,7 +96,7 @@ export function ProgramDetailPage({ programId }: Props) {
   if (isLoading) {
     return (
       <PageWrapper title="Program" eyebrow="Program" backHref="/projects/programs">
-        <div className="px-4 pb-4"><SkeletonTable rows={4} columns={3} /></div>
+        <div className="px-4 pb-4"><DataTableSkeleton rows={4} columns={3} /></div>
       </PageWrapper>
     );
   }

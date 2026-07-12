@@ -200,7 +200,7 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
         transition={{ duration: shouldReduceMotion ? 0 : 0.22, ease: "easeOut" }}
       >
         {isLoading ? (
-          <SkeletonTable rows={5} columns={6} />
+          <DataTableSkeleton rows={5} columns={6} />
         ) : isError ? (
           <ErrorState onRetry={() => void refetch()} />
         ) : filtered.length === 0 ? (

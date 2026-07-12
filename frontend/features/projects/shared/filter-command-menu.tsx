@@ -390,7 +390,8 @@ export function FilterCommandMenu({
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          className="relative h-8 shrink-0 gap-1.5 bg-card border-border px-2.5 text-xs font-normal shadow-xs"
+          size="sm"
+          className="relative h-8 shrink-0 gap-1.5 bg-card px-2.5 text-xs font-normal shadow-xs data-[state=open]:border-blue-400 data-[state=open]:focus-visible:border-blue-400"
         >
           <ListFilter className="h-3.5 w-3.5 shrink-0" />
           <span>Add filter</span>

@@ -1,5 +1,5 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { SkeletonTable } from "@/components/shared/skeletons/skeleton-table";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ProjectRisksLoading() {
@@ -20,7 +20,7 @@ export default function ProjectRisksLoading() {
           <Skeleton className="h-8 w-40 rounded-md" />
           <Skeleton className="h-8 w-52 rounded-md" />
         </div>
-        <SkeletonTable rows={5} columns={8} />
+        <DataTableSkeleton rows={5} columns={8} />
       </div>
     </PageWrapper>
   );

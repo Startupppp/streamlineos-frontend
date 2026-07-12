@@ -1,17 +1,10 @@
-"use client";
+﻿"use client";
 
 import { AlertCircle, CheckCircle2, ChevronLeft, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LoadingButton } from "@/components/ui/loading-button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 
 const VALID_SOURCES = [
   "referral",
@@ -38,6 +31,10 @@ export function isValidSource(s: string): s is ValidSource {
   return (VALID_SOURCES as readonly string[]).includes(s);
 }
 
+interface ParsedContactWithIdx extends ParsedContact {
+  _idx: number;
+}
+
 interface CsvContactsPreviewProps {
   fileName: string;
   parsed: ParsedContact[];
@@ -49,6 +46,46 @@ interface CsvContactsPreviewProps {
   onClose: () => void;
 }
 
+const contactColumns: DataTableColumn<ParsedContactWithIdx>[] = [
+  {
+    key: "name",
+    header: "Name",
+    cell: (row) => <span className="text-xs font-medium">{row.name}</span>,
+  },
+  {
+    key: "email",
+    header: "Email",
+    cell: (row) => <span className="text-xs text-muted-foreground">{row.email ?? "—"}</span>,
+  },
+  {
+    key: "phone",
+    header: "Phone",
+    cell: (row) => <span className="text-xs text-muted-foreground">{row.phone ?? "—"}</span>,
+  },
+  {
+    key: "company",
+    header: "Company",
+    cell: (row) => <span className="text-xs text-muted-foreground">{row.company ?? "—"}</span>,
+  },
+  {
+    key: "title",
+    header: "Title",
+    cell: (row) => <span className="text-xs text-muted-foreground">{row.title ?? "—"}</span>,
+  },
+  {
+    key: "source",
+    header: "Source",
+    cell: (row) =>
+      row.source ? (
+        <Badge variant="outline" className="text-[10px]">
+          {row.source}
+        </Badge>
+      ) : (
+        "—"
+      ),
+  },
+];
+
 export function CsvContactsPreview({
   fileName,
   parsed,
@@ -59,6 +96,10 @@ export function CsvContactsPreview({
   onImport,
   onClose,
 }: CsvContactsPreviewProps) {
+  const indexedParsed: ParsedContactWithIdx[] = parsed
+    .slice(0, 20)
+    .map((c, i) => ({ ...c, _idx: i }));
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -97,55 +138,18 @@ export function CsvContactsPreview({
       )}
 
       {parsed.length > 0 && (
-        <div className="border rounded-lg overflow-hidden max-h-[260px] overflow-y-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="text-xs">Name</TableHead>
-                <TableHead className="text-xs">Email</TableHead>
-                <TableHead className="text-xs">Phone</TableHead>
-                <TableHead className="text-xs">Company</TableHead>
-                <TableHead className="text-xs">Title</TableHead>
-                <TableHead className="text-xs">Source</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {parsed.slice(0, 20).map((contact, i) => (
-                <TableRow key={i}>
-                  <TableCell className="text-xs font-medium">
-                    {contact.name}
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {contact.email ?? "—"}
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {contact.phone ?? "—"}
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {contact.company ?? "—"}
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {contact.title ?? "—"}
-                  </TableCell>
-                  <TableCell className="text-xs">
-                    {contact.source ? (
-                      <Badge variant="outline" className="text-[10px]">
-                        {contact.source}
-                      </Badge>
-                    ) : (
-                      "—"
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+        <>
+          <DataTable
+            data={indexedParsed}
+            columns={contactColumns}
+            getRowKey={(row) => row._idx}
+          />
           {parsed.length > 20 && (
             <p className="text-xs text-center text-muted-foreground py-2">
               ...and {parsed.length - 20} more
             </p>
           )}
-        </div>
+        </>
       )}
 
       {importResult ? (

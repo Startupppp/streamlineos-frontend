@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { LayoutGrid, List, Users, UserPlus } from "lucide-react";
 import { useHrEmployees, useHrDepartments } from "@/hooks/api/hr";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
@@ -9,23 +10,107 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ViewToggle } from "@/components/ui/view-toggle";
-import {
-  Table,
-  TableBody,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { EmployeeCard } from "@/features/hr/employees/employee-card";
-import { EmployeeRow } from "@/features/hr/employees/employee-row";
 import {
   EmployeesFilters,
   type Department,
 } from "@/features/hr/employees/employees-filters";
 import { EmployeesGridSkeleton } from "@/features/hr/employees/employees-loading-skeleton";
+import { resolveImageUrl, cn } from "@/lib/utils";
 import type { Employee } from "@/types/hr";
 
 type ViewMode = "grid" | "list";
+
+function buildEmployeeListColumns(getDept: (emp: Employee) => string | null): DataTableColumn<Employee>[] {
+  return [
+    {
+      key: "employee",
+      header: "Employee",
+      cell: (emp) => {
+        const displayName =
+          emp.firstName && emp.lastName
+            ? `${emp.firstName} ${emp.lastName}`
+            : (emp.name ?? "—");
+        return (
+          <div className="flex items-center gap-3">
+            <Avatar className="h-8 w-8 shrink-0">
+              <AvatarImage src={resolveImageUrl(emp.image)} />
+              <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-xs font-bold">
+                {displayName[0]?.toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-foreground truncate">{displayName}</p>
+              {emp.email && <p className="text-[11px] text-muted-foreground truncate">{emp.email}</p>}
+            </div>
+          </div>
+        );
+      },
+      sortable: true,
+      sortValue: (emp) =>
+        emp.firstName && emp.lastName ? `${emp.firstName} ${emp.lastName}` : (emp.name ?? ""),
+    },
+    {
+      key: "employeeId",
+      header: "Employee ID",
+      headerClassName: "w-[110px] hidden md:table-cell",
+      className: "text-xs text-muted-foreground font-mono hidden md:table-cell",
+      cell: (emp) => emp.employeeId ?? "—",
+      sortable: true,
+      sortValue: (emp) => emp.employeeId ?? "",
+    },
+    {
+      key: "designation",
+      header: "Designation",
+      headerClassName: "w-[160px] hidden md:table-cell",
+      className: "text-xs text-muted-foreground hidden md:table-cell",
+      cell: (emp) => emp.designation ?? "—",
+    },
+    {
+      key: "department",
+      header: "Department",
+      headerClassName: "w-[140px] hidden md:table-cell",
+      className: "hidden md:table-cell",
+      cell: (emp) => {
+        const dept = getDept(emp);
+        return dept ? (
+          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800">
+            {dept}
+          </span>
+        ) : (
+          <span className="text-xs text-muted-foreground">—</span>
+        );
+      },
+    },
+    {
+      key: "email",
+      header: "Email",
+      headerClassName: "w-[200px] hidden lg:table-cell",
+      className: "text-xs text-muted-foreground truncate max-w-[180px] hidden lg:table-cell",
+      cell: (emp) => emp.email,
+    },
+    {
+      key: "status",
+      header: "Status",
+      headerClassName: "w-[90px]",
+      cell: (emp) => (
+        <span
+          className={cn(
+            "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+            emp.isActive
+              ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800"
+              : "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-700",
+          )}
+        >
+          <span className={cn("h-1.5 w-1.5 rounded-full", emp.isActive ? "bg-emerald-500" : "bg-slate-400")} />
+          {emp.isActive ? "Active" : "Inactive"}
+        </span>
+      ),
+    },
+  ];
+}
 
 const VIEW_OPTIONS = [
   { value: "grid" as const, icon: LayoutGrid, label: "Grid view" },

@@ -15,16 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { toast } from "sonner";
 import { Plus, Pencil, Clock, AlertCircle } from "lucide-react";
 import Link from "next/link";
@@ -63,60 +54,69 @@ function slaStatusBadge(maxHours: number) {
   return <Badge variant="secondary" className="text-xs">Relaxed</Badge>;
 }
 
-function SlaTableRow({
-  stage,
-  existing,
-  onEdit,
-  onNew,
-}: {
+interface SlaRow {
   stage: CandidateStage;
   existing: InterviewSla | undefined;
-  onEdit: (sla: InterviewSla) => void;
-  onNew: (stage: CandidateStage) => void;
-}) {
-  const handleEdit = useCallback(() => {
-    if (existing) onEdit(existing);
-  }, [existing, onEdit]);
+}
 
-  const handleNew = useCallback(() => {
-    onNew(stage);
-  }, [stage, onNew]);
-
-  return (
-    <TableRow>
-      <TableCell className="font-medium">{STAGE_LABELS[stage]}</TableCell>
-      <TableCell>
-        {existing ? (
-          <span className="text-yellow-600 font-medium">{existing.warningHours}h</span>
+function buildSlaColumns(
+  onEdit: (sla: InterviewSla) => void,
+  onNew: (stage: CandidateStage) => void,
+): DataTableColumn<SlaRow>[] {
+  return [
+    {
+      key: "stage",
+      header: "Stage",
+      cell: (row) => <span className="font-medium">{STAGE_LABELS[row.stage]}</span>,
+    },
+    {
+      key: "warningAfter",
+      header: "Warning After",
+      cell: (row) =>
+        row.existing ? (
+          <span className="text-yellow-600 font-medium">{row.existing.warningHours}h</span>
         ) : (
           <span className="text-muted-foreground text-xs">Not set</span>
-        )}
-      </TableCell>
-      <TableCell>
-        {existing ? (
-          <span className="text-destructive font-medium">{existing.maxHours}h</span>
+        ),
+    },
+    {
+      key: "maxHours",
+      header: "Max Hours (Breach)",
+      cell: (row) =>
+        row.existing ? (
+          <span className="text-destructive font-medium">{row.existing.maxHours}h</span>
         ) : (
           <span className="text-muted-foreground text-xs">Not set</span>
-        )}
-      </TableCell>
-      <TableCell>
-        {existing ? slaStatusBadge(existing.maxHours) : null}
-      </TableCell>
-      <TableCell>
-        {existing ? (
+        ),
+    },
+    {
+      key: "strictness",
+      header: "Strictness",
+      cell: (row) => (row.existing ? slaStatusBadge(row.existing.maxHours) : null),
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (row) =>
+        row.existing ? (
           <Badge variant="default" className="text-xs bg-green-600">Configured</Badge>
         ) : (
           <Badge variant="outline" className="text-xs text-muted-foreground">Default</Badge>
-        )}
-      </TableCell>
-      <TableCell className="text-right">
-        {existing ? (
+        ),
+    },
+    {
+      key: "action",
+      header: "",
+      headerClassName: "text-right",
+      className: "text-right",
+      cell: (row) =>
+        row.existing ? (
           <Button
             variant="ghost"
             size="sm"
             className="h-7 w-7 p-0"
-            aria-label={`Edit SLA for ${stage}`}
-            onClick={handleEdit}
+            aria-label={`Edit SLA for ${row.stage}`}
+            onClick={(e) => { e.stopPropagation(); onEdit(row.existing!); }}
           >
             <Pencil className="h-3.5 w-3.5" />
           </Button>
@@ -125,15 +125,14 @@ function SlaTableRow({
             variant="ghost"
             size="sm"
             className="h-7 w-7 p-0"
-            aria-label={`Configure SLA for ${stage}`}
-            onClick={handleNew}
+            aria-label={`Configure SLA for ${row.stage}`}
+            onClick={(e) => { e.stopPropagation(); onNew(row.stage); }}
           >
             <Plus className="h-3.5 w-3.5" />
           </Button>
-        )}
-      </TableCell>
-    </TableRow>
-  );
+        ),
+    },
+  ];
 }
 
 export default function SlaConfigPage() {
@@ -268,13 +267,7 @@ export default function SlaConfigPage() {
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          {isLoading ? (
-            <div className="p-4 space-y-2">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-12 w-full" />
-              ))}
-            </div>
-          ) : isError ? (
+          {isError ? (
             <div className="flex flex-col items-center justify-center gap-3 py-12">
               <AlertCircle className="h-8 w-8 text-destructive/60" />
               <p className="text-sm text-muted-foreground">Failed to load SLA configuration.</p>
@@ -283,33 +276,13 @@ export default function SlaConfigPage() {
               </Button>
             </div>
           ) : (
-            <ScrollArea className="w-full" type="auto">
-              <div className="min-w-[600px]">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Stage</TableHead>
-                      <TableHead>Warning After</TableHead>
-                      <TableHead>Max Hours (Breach)</TableHead>
-                      <TableHead>Strictness</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Action</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {CANDIDATE_STAGES.map((stage) => (
-                      <SlaTableRow
-                        key={stage}
-                        stage={stage}
-                        existing={slaByStage.get(stage)}
-                        onEdit={openEdit}
-                        onNew={openNew}
-                      />
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </ScrollArea>
+            <DataTable<SlaRow>
+              data={CANDIDATE_STAGES.map((stage) => ({ stage, existing: slaByStage.get(stage) }))}
+              columns={buildSlaColumns(openEdit, openNew)}
+              getRowKey={(row) => row.stage}
+              isLoading={isLoading}
+              minWidth="600px"
+            />
           )}
         </CardContent>
       </Card>

@@ -1,5 +1,5 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { SkeletonTable } from "@/components/shared/skeletons/skeleton-table";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ProjectDecisionsLoading() {
@@ -16,7 +16,7 @@ export default function ProjectDecisionsLoading() {
       }
     >
       <div className="px-4 pb-4">
-        <SkeletonTable rows={5} columns={7} />
+        <DataTableSkeleton rows={5} columns={7} />
       </div>
     </PageWrapper>
   );

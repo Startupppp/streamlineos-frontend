@@ -28,6 +28,54 @@ import { ErrorState } from "@/components/shared/error-state";
 
 const formatTicketValue = (v: number) => v.toLocaleString();
 
+const TEAM_COLUMNS: DataTableColumn<SupportTeamMember>[] = [
+  {
+    key: "name",
+    header: "Name",
+    cell: (member) => (
+      <div className="flex items-center gap-2.5">
+        <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center shrink-0">
+          <span className="text-xs font-semibold text-blue-600">{member.avatar}</span>
+        </div>
+        <span className="font-medium text-foreground">{member.name}</span>
+      </div>
+    ),
+  },
+  {
+    key: "role",
+    header: "Role",
+    className: "text-muted-foreground",
+    cell: (member) => member.role,
+  },
+  {
+    key: "access",
+    header: "Access",
+    cell: (member) => (
+      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+        {member.access}
+      </span>
+    ),
+  },
+  {
+    key: "status",
+    header: "Status",
+    cell: (member) => <TeamMemberStatus member={member} />,
+  },
+];
+
+function TeamMemberStatus({ member }: { member: SupportTeamMember }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <div className={cn("w-2 h-2 rounded-full", getColorSafe(onlineStatusColors, member.status))} />
+      <span className="text-xs capitalize text-muted-foreground">{member.status}</span>
+    </div>
+  );
+}
+
+function getTeamMemberKey(member: SupportTeamMember) {
+  return member.name;
+}
+
 export default function SupportDashboardPage() {
   const { data, isLoading, isError, refetch } = useSupportDashboard();
 
@@ -191,61 +239,13 @@ export default function SupportDashboardPage() {
             <CardHeader>
               <CardTitle className="text-base">Team Access</CardTitle>
             </CardHeader>
-            <CardContent>
-              <ScrollArea className="w-full max-h-[60vh]" type="auto">
-              <div className="min-w-[400px]">
-                <table className="w-full text-sm">
-                  <caption className="sr-only">Support team members with roles, access levels, and online status</caption>
-                  <thead>
-                    <tr className="border-b border-border">
-                      <th scope="col" className="text-left font-medium text-muted-foreground pb-2">Name</th>
-                      <th scope="col" className="text-left font-medium text-muted-foreground pb-2">Role</th>
-                      <th scope="col" className="text-left font-medium text-muted-foreground pb-2">Access</th>
-                      <th scope="col" className="text-left font-medium text-muted-foreground pb-2">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {supportTeamMembers.map((member) => (
-                      <motion.tr
-                        key={member.name}
-                        className="border-b border-border/50 last:border-0"
-                        variants={fadeUp}
-                      >
-                        <td className="py-2.5">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center shrink-0">
-                              <span className="text-xs font-semibold text-blue-600">
-                                {member.avatar}
-                              </span>
-                            </div>
-                            <span className="font-medium text-foreground">{member.name}</span>
-                          </div>
-                        </td>
-                        <td className="py-2.5 text-muted-foreground">{member.role}</td>
-                        <td className="py-2.5">
-                          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                            {member.access}
-                          </span>
-                        </td>
-                        <td className="py-2.5">
-                          <div className="flex items-center gap-1.5">
-                            <div
-                              className={cn(
-                                "w-2 h-2 rounded-full",
-                                getColorSafe(onlineStatusColors, member.status)
-                              )}
-                            />
-                            <span className="text-xs capitalize text-muted-foreground">
-                              {member.status}
-                            </span>
-                          </div>
-                        </td>
-                      </motion.tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              </ScrollArea>
+            <CardContent className="p-0">
+              <DataTable
+                data={supportTeamMembers}
+                columns={TEAM_COLUMNS}
+                getRowKey={getTeamMemberKey}
+                className="border-0 rounded-none"
+              />
             </CardContent>
           </Card>
         </motion.div>

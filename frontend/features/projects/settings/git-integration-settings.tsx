@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useState, useCallback } from "react";
 import { Plus, ExternalLink } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -57,7 +58,7 @@ const PROVIDERS: { value: GitProvider; label: string }[] = [
   { value: "bitbucket", label: "Bitbucket" },
 ];
 
-export function ProjectsGitIntegrationSettings() {
+export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode }) {
   const {
     data: connections,
     isLoading,
@@ -215,6 +216,8 @@ export function ProjectsGitIntegrationSettings() {
           <SetupInstructions />
         </div>
       )}
+
+      {footer ? <div className="mt-6">{footer}</div> : null}
 
       <Dialog open={dialogOpen} onOpenChange={handleDialogChange}>
         <DialogContent>

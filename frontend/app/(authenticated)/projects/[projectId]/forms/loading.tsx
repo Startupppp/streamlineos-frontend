@@ -1,5 +1,5 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { SkeletonTable } from "@/components/shared/skeletons/skeleton-table";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ProjectFormsLoading() {
@@ -19,7 +19,7 @@ export default function ProjectFormsLoading() {
       actions={<Skeleton className="h-8 w-24 rounded-md" />}
     >
       <div className="px-4 pb-4">
-        <SkeletonTable rows={5} columns={6} />
+        <DataTableSkeleton rows={5} columns={6} />
       </div>
     </PageWrapper>
   );

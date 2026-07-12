@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useMemo, useState } from "react";
 import Link from "next/link";
 import { Send, PackageCheck, CheckCircle, XCircle, Pencil, Lock } from "lucide-react";
 import { toast } from "sonner";
@@ -9,14 +9,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,6 +40,14 @@ interface PoDetailPageProps {
 
 type ConfirmAction = "cancel" | "close";
 
+type GrnRow = {
+  id: number;
+  grnNumber: string;
+  receivedDate: string | null;
+  creator?: { name: string } | null;
+  notes?: string | null;
+};
+
 function formatDate(value: string | null): string {
   if (!value) return "—";
   const d = new Date(value);
@@ -65,57 +66,96 @@ function StatusBadge({ status }: { status: PurchaseOrderStatus }) {
   );
 }
 
-function PurchaseOrderLines({ lines }: { lines: PurchaseOrderLine[] }) {
-  return (
-    <Card className="overflow-hidden">
-      <Table>
-        <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
-          <TableRow className="border-b-2 border-border">
-            <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Product</TableHead>
-            <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">SKU</TableHead>
-            <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Qty</TableHead>
-            <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Unit cost</TableHead>
-            <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Received</TableHead>
-            <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Amount</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {lines.map((line) => (
-            <TableRow key={line.id} className="h-8 hover:bg-muted/30 transition-colors">
-              <TableCell className="px-2 py-1 text-[11px]">
-                {line.productVariant?.product?.name ?? line.productVariant?.name ?? "—"}
-              </TableCell>
-              <TableCell className="px-2 py-1 font-mono text-[11px]">
-                {line.productVariant?.sku ?? "—"}
-              </TableCell>
-              <TableCell className="px-2 py-1 text-right font-mono tabular-nums text-[11px]">
-                {formatAmount(line.quantity)}
-              </TableCell>
-              <TableCell className="px-2 py-1 text-right font-mono tabular-nums text-[11px]">
-                {formatAmount(line.unitCost)}
-              </TableCell>
-              <TableCell className="px-2 py-1 text-right font-mono tabular-nums text-[11px]">
-                <span
-                  className={
-                    Number(line.quantityReceived) >= Number(line.quantity)
-                      ? "text-emerald-600 font-medium"
-                      : Number(line.quantityReceived) > 0
-                        ? "text-amber-600 font-medium"
-                        : "text-muted-foreground"
-                  }
-                >
-                  {formatAmount(line.quantityReceived)}
-                </span>
-              </TableCell>
-              <TableCell className="px-2 py-1 text-right font-mono tabular-nums text-[11px] font-medium">
-                {formatAmount(line.amount)}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </Card>
-  );
+const PO_LINE_COLUMNS: DataTableColumn<PurchaseOrderLine>[] = [
+  {
+    key: "product",
+    header: "Product",
+    cell: (row) => (
+      <span>{row.productVariant?.product?.name ?? row.productVariant?.name ?? "—"}</span>
+    ),
+  },
+  {
+    key: "sku",
+    header: "SKU",
+    className: "font-mono",
+    cell: (row) => <span>{row.productVariant?.sku ?? "—"}</span>,
+  },
+  {
+    key: "quantity",
+    header: "Qty",
+    headerClassName: "text-right",
+    className: "text-right font-mono tabular-nums",
+    cell: (row) => <span>{formatAmount(row.quantity)}</span>,
+  },
+  {
+    key: "unitCost",
+    header: "Unit cost",
+    headerClassName: "text-right",
+    className: "text-right font-mono tabular-nums",
+    cell: (row) => <span>{formatAmount(row.unitCost)}</span>,
+  },
+  {
+    key: "quantityReceived",
+    header: "Received",
+    headerClassName: "text-right",
+    className: "text-right font-mono tabular-nums",
+    cell: (row) => (
+      <span
+        className={
+          Number(row.quantityReceived) >= Number(row.quantity)
+            ? "text-emerald-600 font-medium"
+            : Number(row.quantityReceived) > 0
+              ? "text-amber-600 font-medium"
+              : "text-muted-foreground"
+        }
+      >
+        {formatAmount(row.quantityReceived)}
+      </span>
+    ),
+  },
+  {
+    key: "amount",
+    header: "Amount",
+    headerClassName: "text-right",
+    className: "text-right font-mono tabular-nums font-medium",
+    cell: (row) => <span>{formatAmount(row.amount)}</span>,
+  },
+];
+
+function buildGrnColumns(onRowClick: (id: number) => void): DataTableColumn<GrnRow>[] {
+  return [
+    {
+      key: "grnNumber",
+      header: "GRN #",
+      className: "font-mono text-blue-600",
+      cell: (row) => (
+        <button
+          type="button"
+          className="font-mono text-[11px] text-blue-600 hover:underline"
+          onClick={(e) => { e.stopPropagation(); onRowClick(row.id); }}
+        >
+          {row.grnNumber}
+        </button>
+      ),
+    },
+    {
+      key: "receivedDate",
+      header: "Received date",
+      className: "font-mono tabular-nums",
+      cell: (row) => <span>{formatDate(row.receivedDate)}</span>,
+    },
+    {
+      key: "creator",
+      header: "Received by",
+      cell: (row) => <span>{row.creator?.name ?? "—"}</span>,
+    },
+    {
+      key: "notes",
+      header: "Notes",
+      className: "text-muted-foreground",
+      cell: (row) => <span>{row.notes ?? "—"}</span>,
+    },
+  ];
 }
 
 export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
@@ -198,6 +238,8 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
     if (!open) setSelectedGrnId(null);
   }
 
+  const grnColumns = useMemo(() => buildGrnColumns(handleGrnRowClick), []);
+
   if (query.isLoading) return <LoadingState variant="form" />;
   if (query.error) return <ErrorState description={query.error.message} onRetry={handleRetry} />;
   if (!query.data) return <ErrorState title="Not found" description={`PO #${poId}`} />;
@@ -215,6 +257,8 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
 
   const anyPending =
     cancelMutation.isPending || closeMutation.isPending;
+
+  const grnRows: GrnRow[] = po.grns;
 
   return (
     <PageWrapper
@@ -314,7 +358,12 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
           </dl>
         </Card>
 
-        <PurchaseOrderLines lines={po.lines} />
+        <DataTable
+          data={po.lines}
+          columns={PO_LINE_COLUMNS}
+          getRowKey={(row) => row.id}
+          minWidth="520px"
+        />
 
         <Card className="p-4">
           <div className="flex justify-end">
@@ -348,40 +397,13 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
         {po.grns.length > 0 && (
           <div className="space-y-2">
             <h2 className="text-sm font-semibold text-foreground">Goods Receipt Notes</h2>
-            <Card className="overflow-x-auto">
-              <Table className="min-w-[520px]">
-                <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
-                  <TableRow className="border-b-2 border-border">
-                    <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">GRN #</TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Received date</TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Received by</TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Notes</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {po.grns.map((grn) => (
-                    <TableRow
-                      key={grn.id}
-                      className="h-8 hover:bg-muted/30 transition-colors cursor-pointer"
-                      onClick={() => handleGrnRowClick(grn.id)}
-                    >
-                      <TableCell className="px-2 py-1 font-mono text-[11px] text-blue-600 hover:underline">
-                        {grn.grnNumber}
-                      </TableCell>
-                      <TableCell className="px-2 py-1 font-mono tabular-nums text-[11px]">
-                        {formatDate(grn.receivedDate)}
-                      </TableCell>
-                      <TableCell className="px-2 py-1 text-[11px]">
-                        {grn.creator?.name ?? "—"}
-                      </TableCell>
-                      <TableCell className="px-2 py-1 text-[11px] text-muted-foreground">
-                        {grn.notes ?? "—"}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </Card>
+            <DataTable
+              data={grnRows}
+              columns={grnColumns}
+              getRowKey={(row) => row.id}
+              onRowClick={(row) => handleGrnRowClick(row.id)}
+              minWidth="520px"
+            />
           </div>
         )}
       </div>

@@ -18,14 +18,7 @@ import {
   AlertDialogFooter,
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { useCan } from "@/hooks/api/access";
 import { SO_STATUS_BADGE, SO_STATUS_LABEL, type SoStatus } from "@/features/inventory/lib";
@@ -126,6 +119,81 @@ function formatNum(value: string | number | null | undefined): string {
   return Number(value).toFixed(2);
 }
 
+type SoLine = {
+  id: number;
+  productId: number;
+  productName?: string | null;
+  productSku?: string | null;
+  quantity: string | number;
+  unitPrice?: string | number | null;
+  taxRate?: string | number | null;
+  discount?: string | number | null;
+  lineTotal?: string | number | null;
+};
+
+function buildSoLineColumns(atpData: AtpEntry[]): DataTableColumn<SoLine>[] {
+  return [
+    {
+      key: "productName",
+      header: "Product",
+      cell: (row) => <span>{row.productName ?? "—"}</span>,
+    },
+    {
+      key: "productSku",
+      header: "SKU",
+      className: "font-mono",
+      cell: (row) => <span>{row.productSku ?? "—"}</span>,
+    },
+    {
+      key: "quantity",
+      header: "Qty",
+      headerClassName: "text-right",
+      className: "text-right font-mono tabular-nums",
+      cell: (row) => <span>{formatNum(row.quantity)}</span>,
+    },
+    {
+      key: "unitPrice",
+      header: "Unit Price",
+      headerClassName: "text-right",
+      className: "text-right font-mono tabular-nums",
+      cell: (row) => <span>{formatNum(row.unitPrice)}</span>,
+    },
+    {
+      key: "taxRate",
+      header: "Tax %",
+      headerClassName: "text-right",
+      className: "text-right font-mono tabular-nums",
+      cell: (row) => <span>{row.taxRate ? `${formatNum(row.taxRate)}%` : "—"}</span>,
+    },
+    {
+      key: "discount",
+      header: "Disc %",
+      headerClassName: "text-right",
+      className: "text-right font-mono tabular-nums",
+      cell: (row) => <span>{row.discount ? `${formatNum(row.discount)}%` : "—"}</span>,
+    },
+    {
+      key: "lineTotal",
+      header: "Line Total",
+      headerClassName: "text-right",
+      className: "text-right font-mono tabular-nums",
+      cell: (row) => <span>{formatNum(row.lineTotal)}</span>,
+    },
+    {
+      key: "atp",
+      header: "ATP",
+      cell: (row) => {
+        const atp = atpData.find((a) => a.productId === row.productId);
+        return atp ? (
+          <AtpIndicator available={atp.available} requested={Number(row.quantity)} />
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        );
+      },
+    },
+  ];
+}
+
 export default function SalesOrderDetailPage({ params }: SalesOrderDetailPageProps) {
   const { soId } = use(params);
   const id = Number(soId);
@@ -153,9 +221,7 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
   const so = query.data;
   const atpData = atpQuery.data ?? [];
 
-  function getAtp(productId: number): AtpEntry | undefined {
-    return atpData.find((a) => a.productId === productId);
-  }
+  const lineColumns = buildSoLineColumns(atpData);
 
   function handleConfirm(): void {
     confirmMutation.mutate({ soId: id }, {
@@ -364,51 +430,12 @@ export default function SalesOrderDetailPage({ params }: SalesOrderDetailPagePro
           </dl>
         </Card>
 
-        <Card className="overflow-hidden">
-          <div className="overflow-x-auto">
-            <Table className="min-w-[700px]">
-              <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
-                <TableRow className="border-b-2 border-border hover:bg-transparent">
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Product</TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">SKU</TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Qty</TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Unit Price</TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Tax %</TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Disc %</TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Line Total</TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">ATP</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {so.lines.map((ln) => {
-                  const atp = getAtp(ln.productId);
-                  return (
-                    <TableRow key={ln.id} className="h-8 hover:bg-muted/30 transition-colors">
-                      <TableCell className="px-2 py-1 text-[11px]">{ln.productName ?? "—"}</TableCell>
-                      <TableCell className="px-2 py-1 text-[11px] font-mono">{ln.productSku ?? "—"}</TableCell>
-                      <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums">{formatNum(ln.quantity)}</TableCell>
-                      <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums">{formatNum(ln.unitPrice)}</TableCell>
-                      <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums">
-                        {ln.taxRate ? `${formatNum(ln.taxRate)}%` : "—"}
-                      </TableCell>
-                      <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums">
-                        {ln.discount ? `${formatNum(ln.discount)}%` : "—"}
-                      </TableCell>
-                      <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums">{formatNum(ln.lineTotal)}</TableCell>
-                      <TableCell className="px-2 py-1 text-[11px]">
-                        {atp ? (
-                          <AtpIndicator available={atp.available} requested={Number(ln.quantity)} />
-                        ) : (
-                          <span className="text-muted-foreground">—</span>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
-        </Card>
+        <DataTable
+          data={so.lines}
+          columns={lineColumns}
+          getRowKey={(row) => row.id}
+          minWidth="700px"
+        />
 
         <Card className="p-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm">

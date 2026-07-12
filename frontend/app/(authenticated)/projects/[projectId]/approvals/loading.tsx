@@ -18,7 +18,7 @@ export default function ProjectApprovalsLoading() {
       filters={filtersBar}
     >
       <div className="px-4 pb-4">
-        <SkeletonTable rows={6} columns={7} />
+        <DataTableSkeleton rows={6} columns={7} />
       </div>
     </PageWrapper>
   );

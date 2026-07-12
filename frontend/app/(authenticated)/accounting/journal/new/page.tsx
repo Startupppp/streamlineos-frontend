@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, type ChangeEvent } from "react";
+import { useMemo, type ChangeEvent, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,14 +17,6 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -39,6 +31,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { useCan } from "@/hooks/api/access";
@@ -79,7 +72,7 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-interface LineRowProps {
+interface LineRowContext {
   index: number;
   accountOptions: Account[];
   canRemove: boolean;
@@ -94,99 +87,115 @@ interface LineRowProps {
   onRemove: (index: number) => void;
 }
 
-function LineRow({
-  index,
-  accountOptions,
-  canRemove,
-  accountCode,
-  debit,
-  credit,
-  description,
-  onAccountChange,
-  onDebitChange,
-  onCreditChange,
-  onDescriptionChange,
-  onRemove,
-}: LineRowProps) {
-  function handleAccountChange(value: string): void {
-    onAccountChange(index, value);
-  }
-
-  function handleDebitChange(event: ChangeEvent<HTMLInputElement>): void {
-    onDebitChange(index, event.target.value);
-  }
-
-  function handleCreditChange(event: ChangeEvent<HTMLInputElement>): void {
-    onCreditChange(index, event.target.value);
-  }
-
-  function handleDescriptionChange(event: ChangeEvent<HTMLInputElement>): void {
-    onDescriptionChange(index, event.target.value);
-  }
-
-  function handleRemove(): void {
-    onRemove(index);
-  }
-
-  return (
-    <TableRow>
-      <TableCell>
-        <Select value={accountCode} onValueChange={handleAccountChange}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select account" />
-          </SelectTrigger>
-          <SelectContent className="max-h-72">
-            {accountOptions.map((account) => (
-              <SelectItem key={account.id} value={account.code}>
-                {account.code} — {account.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </TableCell>
-      <TableCell>
-        <Input
-          type="number"
-          step="0.01"
-          min="0"
-          value={debit}
-          onChange={handleDebitChange}
-          className="text-right tabular-nums"
-          placeholder="0.00"
-        />
-      </TableCell>
-      <TableCell>
-        <Input
-          type="number"
-          step="0.01"
-          min="0"
-          value={credit}
-          onChange={handleCreditChange}
-          className="text-right tabular-nums"
-          placeholder="0.00"
-        />
-      </TableCell>
-      <TableCell>
-        <Input
-          value={description}
-          onChange={handleDescriptionChange}
-          placeholder="Optional"
-        />
-      </TableCell>
-      <TableCell>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={handleRemove}
-          disabled={!canRemove}
-          aria-label="Remove line"
-        >
-          <Trash2 className="size-4" />
-        </Button>
-      </TableCell>
-    </TableRow>
-  );
+function buildLineColumns(ctx: LineRowContext[]): DataTableColumn<LineRowContext>[] {
+  return [
+    {
+      key: "account",
+      header: "Account",
+      className: "w-[260px]",
+      cell: (row: LineRowContext): ReactNode => {
+        function handleAccountChange(value: string): void {
+          row.onAccountChange(row.index, value);
+        }
+        return (
+          <Select value={row.accountCode} onValueChange={handleAccountChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select account" />
+            </SelectTrigger>
+            <SelectContent className="max-h-72">
+              {row.accountOptions.map((account) => (
+                <SelectItem key={account.id} value={account.code}>
+                  {account.code} — {account.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        );
+      },
+    },
+    {
+      key: "debit",
+      header: "Debit",
+      className: "w-[140px]",
+      headerClassName: "text-right",
+      cell: (row: LineRowContext): ReactNode => {
+        function handleDebitChange(event: ChangeEvent<HTMLInputElement>): void {
+          row.onDebitChange(row.index, event.target.value);
+        }
+        return (
+          <Input
+            type="number"
+            step="0.01"
+            min="0"
+            value={row.debit}
+            onChange={handleDebitChange}
+            className="text-right tabular-nums"
+            placeholder="0.00"
+          />
+        );
+      },
+    },
+    {
+      key: "credit",
+      header: "Credit",
+      className: "w-[140px]",
+      headerClassName: "text-right",
+      cell: (row: LineRowContext): ReactNode => {
+        function handleCreditChange(event: ChangeEvent<HTMLInputElement>): void {
+          row.onCreditChange(row.index, event.target.value);
+        }
+        return (
+          <Input
+            type="number"
+            step="0.01"
+            min="0"
+            value={row.credit}
+            onChange={handleCreditChange}
+            className="text-right tabular-nums"
+            placeholder="0.00"
+          />
+        );
+      },
+    },
+    {
+      key: "lineDescription",
+      header: "Line description",
+      cell: (row: LineRowContext): ReactNode => {
+        function handleDescriptionChange(event: ChangeEvent<HTMLInputElement>): void {
+          row.onDescriptionChange(row.index, event.target.value);
+        }
+        return (
+          <Input
+            value={row.description}
+            onChange={handleDescriptionChange}
+            placeholder="Optional"
+          />
+        );
+      },
+    },
+    {
+      key: "remove",
+      header: "",
+      className: "w-[60px]",
+      cell: (row: LineRowContext): ReactNode => {
+        function handleRemove(): void {
+          row.onRemove(row.index);
+        }
+        return (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={handleRemove}
+            disabled={!row.canRemove}
+            aria-label="Remove line"
+          >
+            <Trash2 className="size-4" />
+          </Button>
+        );
+      },
+    },
+  ];
 }
 
 export default function NewJournalEntryPage() {
@@ -339,6 +348,55 @@ export default function NewJournalEntryPage() {
 
   const accountOptions = accountsQuery.data?.items ?? [];
 
+  const lineRows: LineRowContext[] = fields.map((field, index) => ({
+    index,
+    accountOptions,
+    canRemove: fields.length > 2,
+    accountCode: watchedLines[index]?.accountCode ?? "",
+    debit: watchedLines[index]?.debit ?? "",
+    credit: watchedLines[index]?.credit ?? "",
+    description: watchedLines[index]?.description ?? "",
+    onAccountChange: handleAccountChange,
+    onDebitChange: handleDebitChange,
+    onCreditChange: handleCreditChange,
+    onDescriptionChange: handleDescriptionChange,
+    onRemove: handleRemoveLine,
+  }));
+
+  const lineColumns = buildLineColumns(lineRows);
+
+  const tableFooter = (
+    <>
+      <div className="flex items-center gap-4 text-sm font-medium">
+        <span className="min-w-[260px]">Totals</span>
+        <span className="min-w-[140px] text-right tabular-nums">{totals.debit.toFixed(2)}</span>
+        <span className="min-w-[140px] text-right tabular-nums">{totals.credit.toFixed(2)}</span>
+        <span className="flex-1">
+          {totals.debit === 0 && totals.credit === 0 ? (
+            <span className="text-muted-foreground">Enter amounts</span>
+          ) : totals.balanced ? (
+            <span className="text-emerald-600">Balanced ✓</span>
+          ) : (
+            <span className="text-rose-600">
+              Off by {Math.abs(totals.debit - totals.credit).toFixed(2)}
+            </span>
+          )}
+        </span>
+      </div>
+      <div className="pt-2 border-t border-slate-200/60 mt-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={handleAddLine}
+        >
+          <Plus className="size-4 mr-1" />
+          Add line
+        </Button>
+      </div>
+    </>
+  );
+
   return (
     <PageWrapper
       eyebrow="Accounting · Journal"
@@ -404,75 +462,12 @@ export default function NewJournalEntryPage() {
             </div>
           </Card>
 
-          <Card className="overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[260px]">Account</TableHead>
-                  <TableHead className="text-right w-[140px]">Debit</TableHead>
-                  <TableHead className="text-right w-[140px]">Credit</TableHead>
-                  <TableHead>Line description</TableHead>
-                  <TableHead className="w-[60px]" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {fields.map((field, index) => (
-                  <LineRow
-                    key={field.id}
-                    index={index}
-                    accountOptions={accountOptions}
-                    canRemove={fields.length > 2}
-                    accountCode={watchedLines[index]?.accountCode ?? ""}
-                    debit={watchedLines[index]?.debit ?? ""}
-                    credit={watchedLines[index]?.credit ?? ""}
-                    description={watchedLines[index]?.description ?? ""}
-                    onAccountChange={handleAccountChange}
-                    onDebitChange={handleDebitChange}
-                    onCreditChange={handleCreditChange}
-                    onDescriptionChange={handleDescriptionChange}
-                    onRemove={handleRemoveLine}
-                  />
-                ))}
-                <TableRow className="bg-muted/40 font-medium">
-                  <TableCell>Totals</TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {totals.debit.toFixed(2)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {totals.credit.toFixed(2)}
-                  </TableCell>
-                  <TableCell>
-                    {totals.debit === 0 && totals.credit === 0 ? (
-                      <span className="text-sm text-muted-foreground">
-                        Enter amounts
-                      </span>
-                    ) : totals.balanced ? (
-                      <span className="text-sm text-emerald-600">
-                        Balanced ✓
-                      </span>
-                    ) : (
-                      <span className="text-sm text-rose-600">
-                        Off by{" "}
-                        {Math.abs(totals.debit - totals.credit).toFixed(2)}
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell />
-                </TableRow>
-              </TableBody>
-            </Table>
-            <div className="p-3 border-t border-slate-200/60">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleAddLine}
-              >
-                <Plus className="size-4 mr-1" />
-                Add line
-              </Button>
-            </div>
-          </Card>
+          <DataTable
+            data={lineRows}
+            columns={lineColumns}
+            getRowKey={(row) => row.index}
+            footer={tableFooter}
+          />
 
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={handleCancel}>

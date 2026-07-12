@@ -234,7 +234,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
         </StatCardGrid>
 
         {isLoading ? (
-          <SkeletonTable rows={8} columns={7} />
+          <DataTableSkeleton rows={8} columns={7} />
         ) : isError ? (
           <ErrorState onRetry={refetch} />
         ) : filtered.length === 0 ? (

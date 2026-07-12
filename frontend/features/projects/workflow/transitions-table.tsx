@@ -209,7 +209,7 @@ export function TransitionsTable({ projectId, statuses }: TransitionsTableProps)
       </div>
 
       {isLoading ? (
-        <SkeletonTable rows={4} columns={6} />
+        <DataTableSkeleton rows={4} columns={6} />
       ) : (transitions ?? []).length === 0 ? (
         <EmptyState
           illustrationPreset="projects"

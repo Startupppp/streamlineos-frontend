@@ -1,9 +1,19 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, Calculator, LayoutTemplate } from "lucide-react";
+import { useState, type ReactNode } from "react";
+import { Plus, Calculator, LayoutTemplate, ChevronRight, MoreHorizontal, Pencil, Power, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
@@ -11,13 +21,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ListToolbar, LoadingState, ErrorState } from "@/components/shared";
-import { useCoaTree, useSetupStatus } from "@/hooks/api/accounting/core";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { ListToolbar, ErrorState } from "@/components/shared";
+import { useCoaTree, useSetupStatus, useDeactivateAccount, useActivateAccount, useDeleteAccount } from "@/hooks/api/accounting/core";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { CreateAccountDialog } from "@/features/accounting/create-account-dialog";
-import { CoaTreeRow } from "@/features/accounting/core/coa-tree-row";
 import { ApplyTemplateDialog } from "@/features/accounting/core/apply-template-dialog";
 import { SetupProgressBanner } from "@/features/accounting/core/setup-progress-banner";
 import type { AccountTreeNode } from "@/hooks/api/accounting/core";
@@ -36,6 +45,14 @@ const TYPE_FILTER_VALUES: ReadonlyArray<string> = [
 function isTypeFilter(value: string): value is TypeFilter {
   return TYPE_FILTER_VALUES.includes(value);
 }
+
+const TYPE_BADGE_CLASSES: Record<string, string> = {
+  ASSET: "border-blue-500/30 text-blue-700 bg-blue-500/5",
+  LIABILITY: "border-orange-500/30 text-orange-700 bg-orange-500/5",
+  EQUITY: "border-blue-500/30 text-blue-700 bg-blue-500/5",
+  INCOME: "border-emerald-500/30 text-emerald-700 bg-emerald-500/5",
+  EXPENSE: "border-amber-500/30 text-amber-700 bg-amber-500/5",
+};
 
 interface FlatNode {
   node: AccountTreeNode;
@@ -89,6 +106,159 @@ function countNodes(nodes: AccountTreeNode[]): number {
   return nodes.reduce((total, node) => total + 1 + countNodes(node.children), 0);
 }
 
+interface CoaActionsCellProps {
+  node: AccountTreeNode;
+  onEdit: (node: AccountTreeNode) => void;
+}
+
+function CoaActionsCell({ node, onEdit }: CoaActionsCellProps) {
+  const deactivate = useDeactivateAccount(node.id);
+  const activate = useActivateAccount(node.id);
+  const deleteAccount = useDeleteAccount(node.id);
+  const isPending = deactivate.isPending || activate.isPending || deleteAccount.isPending;
+
+  function handleEdit(): void {
+    onEdit(node);
+  }
+
+  function handleToggleActive(): void {
+    if (node.isActive) {
+      deactivate.mutate(undefined, {
+        onError: (error) => toast.error(getErrorMessage(error)),
+      });
+    } else {
+      activate.mutate(undefined, {
+        onError: (error) => toast.error(getErrorMessage(error)),
+      });
+    }
+  }
+
+  function handleDelete(): void {
+    deleteAccount.mutate(undefined, {
+      onSuccess: () => toast.success("Account deleted"),
+      onError: (error) => toast.error(getErrorMessage(error)),
+    });
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-6 w-6" disabled={isPending}>
+          <MoreHorizontal className="h-3.5 w-3.5" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-40">
+        <DropdownMenuItem onClick={handleEdit}>
+          <Pencil className="mr-2 h-3.5 w-3.5" />
+          Edit
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleToggleActive} disabled={isPending}>
+          <Power className="mr-2 h-3.5 w-3.5" />
+          {node.isActive ? "Deactivate" : "Activate"}
+        </DropdownMenuItem>
+        {!node.isSystem && !node.hasActivity && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={handleDelete}
+              disabled={isPending}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash2 className="mr-2 h-3.5 w-3.5" />
+              Delete
+            </DropdownMenuItem>
+          </>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function buildColumns(
+  expanded: Set<number>,
+  onToggle: (id: number) => void,
+  onEdit: (node: AccountTreeNode) => void,
+  canManage: boolean,
+): DataTableColumn<FlatNode>[] {
+  const cols: DataTableColumn<FlatNode>[] = [
+    {
+      key: "code",
+      header: "Code",
+      className: "w-[120px] font-mono text-xs",
+      cell: ({ node }: FlatNode): ReactNode => node.code,
+    },
+    {
+      key: "name",
+      header: "Name",
+      cell: ({ node, depth, hasChildren }: FlatNode): ReactNode => {
+        function handleToggle(): void {
+          onToggle(node.id);
+        }
+        const isExpanded = expanded.has(node.id);
+        return (
+          <div
+            className="flex items-center gap-1.5 min-w-0"
+            style={{ paddingLeft: `${depth * 16}px` }}
+          >
+            {hasChildren ? (
+              <button
+                type="button"
+                className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+                onClick={handleToggle}
+              >
+                <ChevronRight
+                  className={cn("h-3.5 w-3.5 transition-transform duration-150", isExpanded && "rotate-90")}
+                />
+              </button>
+            ) : (
+              <span className="w-3.5 shrink-0" />
+            )}
+            <span className={cn("text-sm font-medium truncate", !node.isActive && "text-muted-foreground")}>
+              {node.name}
+            </span>
+          </div>
+        );
+      },
+    },
+    {
+      key: "type",
+      header: "Type",
+      className: "w-[140px]",
+      cell: ({ node }: FlatNode): ReactNode => {
+        const typeClass = TYPE_BADGE_CLASSES[node.accountType] ?? "border-slate-200 text-slate-600 bg-slate-50";
+        return (
+          <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", typeClass)}>
+            {node.accountType}
+          </Badge>
+        );
+      },
+    },
+    {
+      key: "status",
+      header: "Status",
+      className: "w-[100px]",
+      cell: ({ node }: FlatNode): ReactNode => (
+        <Badge variant={node.isActive ? "default" : "secondary"} className="text-[10px] px-1.5 py-0">
+          {node.isActive ? "Active" : "Inactive"}
+        </Badge>
+      ),
+    },
+  ];
+
+  if (canManage) {
+    cols.push({
+      key: "actions",
+      header: "",
+      className: "w-[48px] text-right",
+      cell: ({ node }: FlatNode): ReactNode => (
+        <CoaActionsCell node={node} onEdit={onEdit} />
+      ),
+    });
+  }
+
+  return cols;
+}
+
 export default function ChartOfAccountsPage() {
   const canManage = useCan("accounting:accounts:manage");
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("ALL");
@@ -103,7 +273,7 @@ export default function ChartOfAccountsPage() {
   const setupQuery = useSetupStatus();
 
   const treeData = query.data?.items ?? [];
-  const totalCount = countNodes(treeData);
+  countNodes(treeData);
 
   if (!expandedInitialized && treeData.length > 0) {
     setExpanded(initExpanded(treeData));
@@ -160,6 +330,26 @@ export default function ChartOfAccountsPage() {
   const setupSteps = setupQuery.data?.steps ?? [];
   const hasIncompleteSetup = setupSteps.some((s) => !s.done);
 
+  const columns = buildColumns(expanded, handleToggleNode, handleEditAccount, canManage);
+
+  const emptyState = (
+    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/20 py-14 px-6 text-center">
+      <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-blue-500/10 text-blue-600 mb-3">
+        <Calculator className="h-5 w-5" />
+      </div>
+      <h3 className="text-sm font-semibold text-foreground">No accounts found</h3>
+      <p className="mt-1 text-sm text-muted-foreground max-w-xs">
+        {search || typeFilter !== "ALL"
+          ? "Try a different filter or search term."
+          : "Create your first ledger account or apply a template."}
+      </p>
+      <Button size="sm" className="mt-4" onClick={handleOpenCreate}>
+        <Plus className="mr-2 h-4 w-4" />
+        New account
+      </Button>
+    </div>
+  );
+
   return (
     <PageWrapper
       eyebrow="Accounting"
@@ -207,67 +397,22 @@ export default function ChartOfAccountsPage() {
           <SetupProgressBanner steps={setupSteps} />
         )}
 
-        {query.isLoading ? (
-          <LoadingState variant="table" rows={8} />
-        ) : query.error ? (
+        {query.error ? (
           <ErrorState
             title="Failed to load accounts"
             description={getErrorMessage(query.error)}
             onRetry={handleRetry}
           />
-        ) : flatNodes.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/20 py-14 px-6 text-center">
-            <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-blue-500/10 text-blue-600 mb-3">
-              <Calculator className="h-5 w-5" />
-            </div>
-            <h3 className="text-sm font-semibold text-foreground">No accounts found</h3>
-            <p className="mt-1 text-sm text-muted-foreground max-w-xs">
-              {search || typeFilter !== "ALL"
-                ? "Try a different filter or search term."
-                : "Create your first ledger account or apply a template."}
-            </p>
-            <Button size="sm" className="mt-4" onClick={handleOpenCreate}>
-              <Plus className="mr-2 h-4 w-4" />
-              New account
-            </Button>
-          </div>
         ) : (
-          <div className="rounded-lg border border-border overflow-hidden">
-            <div className="overflow-x-auto">
-              <Table className="min-w-[560px]">
-                <TableHeader>
-                  <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-                    <TableHead className="w-[120px] text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">
-                      Code
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">
-                      Name
-                    </TableHead>
-                    <TableHead className="w-[140px] text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">
-                      Type
-                    </TableHead>
-                    <TableHead className="w-[100px] text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">
-                      Status
-                    </TableHead>
-                    <TableHead className="w-[48px] px-3 py-2" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {flatNodes.map(({ node, depth, hasChildren }) => (
-                    <CoaTreeRow
-                      key={node.id}
-                      node={node}
-                      depth={depth}
-                      isExpanded={expanded.has(node.id)}
-                      hasChildren={hasChildren}
-                      onToggle={handleToggleNode}
-                      onEdit={handleEditAccount}
-                    />
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
+          <DataTable
+            data={flatNodes}
+            columns={columns}
+            getRowKey={({ node }) => node.id}
+            isLoading={query.isLoading}
+            emptyState={emptyState}
+            minWidth="560px"
+            rowClassName={({ node }) => cn(!node.isActive && "opacity-60")}
+          />
         )}
       </div>
 

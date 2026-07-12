@@ -4,21 +4,28 @@ import { useState, useCallback } from "react";
 import Link from "next/link";
 import { useInterviewerPerformance } from "@/hooks/api/hr/recruitment";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { ChevronLeft, Clock, TrendingUp, UserCheck, AlertCircle, Users } from "lucide-react";
+import { ChevronLeft, Clock, TrendingUp, UserCheck, AlertCircle } from "lucide-react";
 import { StatCard } from "@/components/ui/stat-card";
 import { cn } from "@/lib/utils";
 import { EmptyLeaderboardIllustration } from "@/components/illustrations";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
+
+interface InterviewerStat {
+  interviewerId: string;
+  interviewerName: string | null;
+  interviewerEmail: string | null;
+  totalAssigned: number;
+  submitted: number;
+  pending: number;
+  avgHoursToSubmit: number | null;
+  recommendations: Record<string, number>;
+}
 
 function getSpeedLabel(hours: number | null): { label: string; color: string } {
   if (hours === null) return { label: "—", color: "text-muted-foreground" };
@@ -42,6 +49,100 @@ function SpeedBar({ hours }: { hours: number | null }) {
     </div>
   );
 }
+
+const INTERVIEWER_PERF_COLUMNS: DataTableColumn<InterviewerStat>[] = [
+  {
+    key: "interviewer",
+    header: "Interviewer",
+    cell: (stat) => (
+      <div>
+        <p className="font-medium text-sm">{stat.interviewerName ?? "—"}</p>
+        {stat.interviewerEmail && (
+          <p className="text-xs text-muted-foreground">{stat.interviewerEmail}</p>
+        )}
+      </div>
+    ),
+    sortable: true,
+    sortValue: (s) => s.interviewerName ?? "",
+  },
+  {
+    key: "assigned",
+    header: "Assigned",
+    headerClassName: "text-center",
+    className: "text-center",
+    cell: (stat) => <span className="tabular-nums">{stat.totalAssigned}</span>,
+    sortable: true,
+    sortValue: (s) => s.totalAssigned,
+  },
+  {
+    key: "submitted",
+    header: "Submitted",
+    headerClassName: "text-center",
+    className: "text-center",
+    cell: (stat) => (
+      <span className="tabular-nums text-emerald-600 dark:text-emerald-400 font-medium">
+        {stat.submitted}
+      </span>
+    ),
+    sortable: true,
+    sortValue: (s) => s.submitted,
+  },
+  {
+    key: "pending",
+    header: "Pending",
+    headerClassName: "text-center",
+    className: "text-center",
+    cell: (stat) =>
+      stat.pending > 0 ? (
+        <Badge variant="outline" className="text-amber-600 border-amber-300 dark:border-amber-700">
+          {stat.pending}
+        </Badge>
+      ) : (
+        <span className="text-muted-foreground">0</span>
+      ),
+    sortable: true,
+    sortValue: (s) => s.pending,
+  },
+  {
+    key: "avgSubmitTime",
+    header: "Avg Submission Time",
+    className: "w-52",
+    cell: (stat) => <SpeedBar hours={stat.avgHoursToSubmit} />,
+    sortable: true,
+    sortValue: (s) => s.avgHoursToSubmit ?? 9999,
+  },
+  {
+    key: "recommendations",
+    header: "Recommendations",
+    cell: (stat) => {
+      const hireCount = stat.recommendations["HIRE"] ?? 0;
+      const noHireCount = stat.recommendations["NO_HIRE"] ?? 0;
+      const maybeCount = stat.recommendations["MAYBE"] ?? 0;
+      return (
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {hireCount > 0 && (
+            <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 border-0 text-xs">
+              HIRE ×{hireCount}
+            </Badge>
+          )}
+          {maybeCount > 0 && (
+            <Badge variant="outline" className="text-amber-600 border-amber-300 text-xs">
+              MAYBE ×{maybeCount}
+            </Badge>
+          )}
+          {noHireCount > 0 && (
+            <Badge variant="outline" className="text-destructive border-destructive/40 text-xs">
+              NO_HIRE ×{noHireCount}
+            </Badge>
+          )}
+          {hireCount === 0 && maybeCount === 0 && noHireCount === 0 && (
+            <span className="text-xs text-muted-foreground">—</span>
+          )}
+        </div>
+      );
+    },
+  },
+];
 
 const PERIOD_OPTIONS = [
   { value: "30", label: "Last 30 days" },
@@ -128,116 +229,29 @@ export default function InterviewerPerformancePage() {
         />
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Interviewer</TableHead>
-                <TableHead className="text-center">Assigned</TableHead>
-                <TableHead className="text-center">Submitted</TableHead>
-                <TableHead className="text-center">Pending</TableHead>
-                <TableHead className="w-52">Avg Submission Time</TableHead>
-                <TableHead>Recommendations</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <TableRow key={i}>
-                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-8 mx-auto" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-8 mx-auto" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-8 mx-auto" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-40" /></TableCell>
-                  </TableRow>
-                ))
-              ) : isError ? (
-                <TableRow>
-                  <TableCell colSpan={6}>
-                    <div className="flex flex-col items-center justify-center gap-3 py-12">
-                      <AlertCircle className="h-8 w-8 text-destructive/60" />
-                      <p className="text-sm text-muted-foreground">Failed to load performance data.</p>
-                      <Button variant="outline" size="sm" onClick={handleRetry}>
-                        Try again
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : stats.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="p-0">
-                    <RecruitmentEmptyState
-                      illustration={<EmptyLeaderboardIllustration />}
-                      title="No scorecard data for the selected period"
-                      action={{ label: "View Interviews", href: "/hr/recruitment/interviews" }}
-                      compact
-                      className="border-0 bg-transparent shadow-none"
-                    />
-                  </TableCell>
-                </TableRow>
-              ) : (
-                stats.map((stat) => {
-                  const hireCount = stat.recommendations["HIRE"] ?? 0;
-                  const noHireCount = stat.recommendations["NO_HIRE"] ?? 0;
-                  const maybeCount = stat.recommendations["MAYBE"] ?? 0;
-                  return (
-                    <TableRow key={stat.interviewerId}>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium text-sm">{stat.interviewerName ?? "—"}</p>
-                          {stat.interviewerEmail && (
-                            <p className="text-xs text-muted-foreground">{stat.interviewerEmail}</p>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-center tabular-nums">{stat.totalAssigned}</TableCell>
-                      <TableCell className="text-center tabular-nums text-emerald-600 dark:text-emerald-400 font-medium">
-                        {stat.submitted}
-                      </TableCell>
-                      <TableCell className="text-center tabular-nums">
-                        {stat.pending > 0 ? (
-                          <Badge variant="outline" className="text-amber-600 border-amber-300 dark:border-amber-700">
-                            {stat.pending}
-                          </Badge>
-                        ) : (
-                          <span className="text-muted-foreground">0</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <SpeedBar hours={stat.avgHoursToSubmit} />
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          {hireCount > 0 && (
-                            <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 border-0 text-xs">
-                              HIRE ×{hireCount}
-                            </Badge>
-                          )}
-                          {maybeCount > 0 && (
-                            <Badge variant="outline" className="text-amber-600 border-amber-300 text-xs">
-                              MAYBE ×{maybeCount}
-                            </Badge>
-                          )}
-                          {noHireCount > 0 && (
-                            <Badge variant="outline" className="text-destructive border-destructive/40 text-xs">
-                              NO_HIRE ×{noHireCount}
-                            </Badge>
-                          )}
-                          {hireCount === 0 && maybeCount === 0 && noHireCount === 0 && (
-                            <span className="text-xs text-muted-foreground">—</span>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      {isError ? (
+        <div className="flex flex-col items-center justify-center gap-3 py-12">
+          <AlertCircle className="h-8 w-8 text-destructive/60" />
+          <p className="text-sm text-muted-foreground">Failed to load performance data.</p>
+          <Button variant="outline" size="sm" onClick={handleRetry}>Try again</Button>
+        </div>
+      ) : (
+        <DataTable
+          data={stats}
+          columns={INTERVIEWER_PERF_COLUMNS}
+          getRowKey={(s) => s.interviewerId}
+          isLoading={isLoading}
+          emptyState={
+            <RecruitmentEmptyState
+              illustration={<EmptyLeaderboardIllustration />}
+              title="No scorecard data for the selected period"
+              action={{ label: "View Interviews", href: "/hr/recruitment/interviews" }}
+              compact
+              className="border-0 bg-transparent shadow-none"
+            />
+          }
+        />
+      )}
     </PageWrapper>
   );
 }

@@ -44,8 +44,8 @@ export function WorkflowPage({ projectId }: WorkflowPageProps) {
       <div className="px-4 pb-6 space-y-6">
         {isLoading ? (
           <>
-            <SkeletonTable rows={4} columns={2} />
-            <SkeletonTable rows={5} columns={6} />
+            <DataTableSkeleton rows={4} columns={2} />
+            <DataTableSkeleton rows={5} columns={6} />
           </>
         ) : isError ? (
           <ErrorState className="flex-1" onRetry={() => void refetch()} />

@@ -241,7 +241,7 @@ export function RisksPage({ projectId }: RisksPageProps) {
         </div>
 
         {isLoading ? (
-          <SkeletonTable rows={5} columns={8} />
+          <DataTableSkeleton rows={5} columns={8} />
         ) : isError ? (
           <ErrorState className="flex-1" onRetry={() => void refetch()} />
         ) : displayed.length === 0 ? (

@@ -59,6 +59,53 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
     return members?.find((m) => m.id === userId) ?? null;
   }
 
+  const memberColumns = useMemo((): DataTableColumn<MemberBreakdownRow>[] => [
+    {
+      key: "member",
+      header: "Member",
+      cell: (row) => {
+        const user = resolveMemberUser(row.userId);
+        const displayName = user ? getUserDisplayName(user) : row.userId.substring(0, 8) + "…";
+        const initials = user ? getUserInitials(user) : "?";
+        const email = user?.email ?? null;
+        return (
+          <div className="flex items-center gap-2">
+            <Avatar className="h-6 w-6 shrink-0">
+              <AvatarImage src={resolveImageUrl(user?.image)} />
+              <AvatarFallback className="text-[9px] bg-primary/10 text-primary font-medium">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <p className="text-sm font-medium truncate">{displayName}</p>
+              {email && <p className="text-[11px] text-muted-foreground truncate">{email}</p>}
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      key: "hours",
+      header: "Hours",
+      className: "text-right w-[120px]",
+      headerClassName: "text-right",
+      cell: (row) => (
+        <span className="font-mono text-sm text-muted-foreground whitespace-nowrap">
+          {row.hours.toFixed(1)} hrs
+        </span>
+      ),
+    },
+    {
+      key: "cost",
+      header: "Cost",
+      className: "text-right w-[120px]",
+      headerClassName: "text-right",
+      cell: (row) => (
+        <span className="font-mono text-sm font-medium whitespace-nowrap">{fmt(row.cost)}</span>
+      ),
+    },
+  ], [members]);
+
   const budgetActions = editMode ? (
     <div className="flex items-center gap-2">
       <Input
@@ -104,9 +151,6 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
       </PageWrapper>
     );
   }
-
-  const fmt = (n: number) =>
-    new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n);
 
   const overBudget = (budget?.remaining ?? 0) < 0;
 
@@ -168,45 +212,12 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
             <CardTitle className="text-sm">Member Cost Breakdown</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border bg-muted/40">
-                    <th className="px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Member</th>
-                    <th className="px-3 py-2 text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Hours</th>
-                    <th className="px-3 py-2 text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Cost</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {budget.memberBreakdown.map((m) => {
-                    const user = resolveMemberUser(m.userId);
-                    const displayName = user ? getUserDisplayName(user) : m.userId.substring(0, 8) + "…";
-                    const initials = user ? getUserInitials(user) : "?";
-                    const email = user?.email ?? null;
-                    return (
-                      <tr key={m.userId} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
-                        <td className="px-3 py-2">
-                          <div className="flex items-center gap-2">
-                            <Avatar className="h-6 w-6 shrink-0">
-                              <AvatarImage src={resolveImageUrl(user?.image)} />
-                              <AvatarFallback className="text-[9px] bg-primary/10 text-primary font-medium">
-                                {initials}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="min-w-0">
-                              <p className="text-sm font-medium truncate">{displayName}</p>
-                              {email && <p className="text-[11px] text-muted-foreground truncate">{email}</p>}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-3 py-2 text-right font-mono text-sm text-muted-foreground whitespace-nowrap">{m.hours.toFixed(1)} hrs</td>
-                        <td className="px-3 py-2 text-right font-mono text-sm font-medium whitespace-nowrap">{fmt(m.cost)}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <DataTable
+              data={budget.memberBreakdown}
+              columns={memberColumns}
+              getRowKey={(row) => row.userId}
+              className="border-0 rounded-none rounded-b-lg"
+            />
           </CardContent>
         </Card>
       )}

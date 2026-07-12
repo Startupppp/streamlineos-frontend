@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Search, X, CheckCircle2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
 import { useCycles } from "@/hooks/api/projects/advanced";
 import { useProjectLabels } from "@/hooks/api/projects/projects";
@@ -43,6 +44,8 @@ interface TicketFilterBarProps {
   hideCompleted?: boolean;
   onHideCompletedChange?: (checked: boolean) => void;
   doneCount?: number;
+  className?: string;
+  align?: "start" | "end";
 }
 
 function parseMulti(param: string): string[] {
@@ -68,6 +71,8 @@ export function TicketFilterBar({
   hideCompleted,
   onHideCompletedChange,
   doneCount = 0,
+  className,
+  align = "start",
 }: TicketFilterBarProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -284,73 +289,105 @@ export function TicketFilterBar({
     dueDateTo,
   };
 
+  const hasFilterChips =
+    selectedStatuses.length > 0 ||
+    selectedPriorities.length > 0 ||
+    selectedTypes.length > 0 ||
+    selectedAssignees.length > 0 ||
+    selectedLabels.length > 0 ||
+    selectedCycles.length > 0 ||
+    selectedProjectIds.length > 0;
+
   return (
-    <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-      <div className="relative min-w-[120px] max-w-[180px] flex-1">
-        <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          placeholder="Search..."
-          value={q}
-          onChange={handleSearchChange}
-          className="h-8 bg-card border-border text-xs font-normal shadow-xs pl-7"
-        />
-      </div>
-
-      <FilterCommandMenu
-        activeFilterCount={activeFilterCount}
-        statusItems={statusItems}
-        statusConfig={statusConfig}
-        members={members ?? []}
-        labels={labels}
-        cycles={cycles}
-        sprints={sprints ?? []}
-        projectOptions={projectOptions}
-        showTypeFilter={showTypeFilter}
-        showSprintFilter={showSprintFilter}
-        showAssigneeFilter={showAssigneeFilter}
-        filterState={filterState}
-        onToggleStatus={handleToggleStatus}
-        onTogglePriority={handleTogglePriority}
-        onToggleType={handleToggleType}
-        onToggleAssignee={handleToggleAssignee}
-        onToggleLabel={handleToggleLabel}
-        onToggleCycle={handleToggleCycle}
-        onToggleSprint={handleToggleSprint}
-        onToggleProject={handleToggleProject}
-        onDueDateFromChange={handleDueDateFromChange}
-        onDueDateToChange={handleDueDateToChange}
-      />
-
-      {showDoneToggle && onHideCompletedChange !== undefined && hideCompleted !== undefined && (
-        <div className="flex items-center justify-between gap-2 rounded-md border border-border bg-muted/30 px-2.5 py-2">
-          <Label
-            htmlFor="hide-done-filter"
-            className="flex cursor-pointer items-center gap-1.5 text-xs font-normal"
-          >
-            <CheckCircle2 className="h-3 w-3 text-muted-foreground" />
-            Hide done
-            {hideCompleted && doneCount > 0 && (
-              <span className="text-muted-foreground">({doneCount})</span>
-            )}
-          </Label>
-          <Switch
-            id="hide-done-filter"
-            checked={hideCompleted}
-            onCheckedChange={handleHideCompletedChange}
-            className="scale-90"
+    <div className={cn("flex min-w-0 flex-col gap-1.5", className)}>
+      <div
+        className={cn(
+          "flex min-w-0 items-center gap-2",
+          align === "end" && "sm:justify-end",
+        )}
+      >
+        <div
+          className={cn(
+            "relative shrink-0",
+            align === "end"
+              ? "w-[140px] sm:w-[168px]"
+              : "min-w-[120px] max-w-[220px] flex-1",
+          )}
+        >
+          <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search..."
+            value={q}
+            onChange={handleSearchChange}
+            className="h-8 bg-card border-border text-xs font-normal shadow-xs pl-7"
           />
         </div>
-      )}
 
-      {(selectedStatuses.length > 0 ||
-        selectedPriorities.length > 0 ||
-        selectedTypes.length > 0 ||
-        selectedAssignees.length > 0 ||
-        selectedLabels.length > 0 ||
-        selectedCycles.length > 0 ||
-        selectedProjectIds.length > 0 ||
-        activeFilterCount > 0) && (
-        <div className="flex flex-wrap items-center gap-1">
+        <FilterCommandMenu
+          activeFilterCount={activeFilterCount}
+          statusItems={statusItems}
+          statusConfig={statusConfig}
+          members={members ?? []}
+          labels={labels}
+          cycles={cycles}
+          sprints={sprints ?? []}
+          projectOptions={projectOptions}
+          showTypeFilter={showTypeFilter}
+          showSprintFilter={showSprintFilter}
+          showAssigneeFilter={showAssigneeFilter}
+          filterState={filterState}
+          onToggleStatus={handleToggleStatus}
+          onTogglePriority={handleTogglePriority}
+          onToggleType={handleToggleType}
+          onToggleAssignee={handleToggleAssignee}
+          onToggleLabel={handleToggleLabel}
+          onToggleCycle={handleToggleCycle}
+          onToggleSprint={handleToggleSprint}
+          onToggleProject={handleToggleProject}
+          onDueDateFromChange={handleDueDateFromChange}
+          onDueDateToChange={handleDueDateToChange}
+        />
+
+        {showDoneToggle && onHideCompletedChange !== undefined && hideCompleted !== undefined && (
+          <div className="flex h-8 shrink-0 items-center gap-2 rounded-md border border-border bg-card px-2.5 shadow-xs">
+            <Label
+              htmlFor="hide-done-filter"
+              className="flex cursor-pointer items-center gap-1.5 whitespace-nowrap text-xs font-normal"
+            >
+              <CheckCircle2 className="h-3 w-3 shrink-0 text-muted-foreground" />
+              Hide done
+              {hideCompleted && doneCount > 0 && (
+                <span className="text-muted-foreground">({doneCount})</span>
+              )}
+            </Label>
+            <Switch
+              id="hide-done-filter"
+              checked={hideCompleted}
+              onCheckedChange={handleHideCompletedChange}
+              className="scale-[0.85]"
+            />
+          </div>
+        )}
+
+        {activeFilterCount > 0 && (
+          <button
+            type="button"
+            onClick={clearAll}
+            className="flex h-8 shrink-0 items-center gap-1 rounded-md border border-transparent px-2 text-xs text-muted-foreground transition-colors hover:border-border hover:bg-muted/50 hover:text-foreground"
+          >
+            <X className="h-3 w-3 shrink-0" />
+            Clear all
+          </button>
+        )}
+      </div>
+
+      {hasFilterChips && (
+        <div
+          className={cn(
+            "flex min-w-0 flex-wrap items-center gap-1",
+            align === "end" && "sm:justify-end",
+          )}
+        >
           {selectedStatuses.map((s) => (
             <FilterChip key={`status-${s}`} label={s.replace(/_/g, " ")} onRemove={makeRemoveStatus(s)} />
           ))}
@@ -388,16 +425,6 @@ export function TicketFilterBar({
             const p = projectMap.get(id);
             return <FilterChip key={`project-${id}`} label={p?.name ?? id} onRemove={makeRemoveProject(id)} />;
           })}
-          {activeFilterCount > 0 && (
-            <button
-              type="button"
-              onClick={clearAll}
-              className="flex h-5 items-center gap-0.5 rounded px-1.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <X className="h-2.5 w-2.5" />
-              Clear all
-            </button>
-          )}
         </div>
       )}
     </div>

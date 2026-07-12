@@ -11,7 +11,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EditVendorSheet } from "@/features/inventory/components/edit-vendor-sheet";
@@ -32,19 +32,66 @@ const STATUS_BADGE: Record<PurchaseOrderStatus, string> = {
   CANCELLED: "bg-red-50 text-red-700 border-red-200",
 };
 
+type VendorPoRow = {
+  id: number;
+  poNumber: string;
+  orderDate: string | null;
+  expectedDeliveryDate: string | null;
+  total: string;
+  currency: string;
+  status: PurchaseOrderStatus;
+};
+
 function formatDate(value: string | null): string {
   if (!value) return "—";
   const d = new Date(value);
   return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
 }
 
-function StatusBadge({ status }: { status: PurchaseOrderStatus }) {
-  return (
-    <Badge variant="outline" className={cn("h-4 text-[9px] px-1.5 py-0", STATUS_BADGE[status])}>
-      {status}
-    </Badge>
-  );
-}
+const VENDOR_PO_COLUMNS: DataTableColumn<VendorPoRow>[] = [
+  {
+    key: "poNumber",
+    header: "PO #",
+    className: "font-mono",
+    cell: (row) => (
+      <Link
+        href={`/inventory/purchase-orders/${row.id}`}
+        className="text-blue-600 hover:underline transition-colors"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {row.poNumber}
+      </Link>
+    ),
+  },
+  {
+    key: "orderDate",
+    header: "Order date",
+    className: "font-mono tabular-nums",
+    cell: (row) => <span>{formatDate(row.orderDate)}</span>,
+  },
+  {
+    key: "expectedDeliveryDate",
+    header: "Expected delivery",
+    className: "font-mono tabular-nums",
+    cell: (row) => <span>{formatDate(row.expectedDeliveryDate)}</span>,
+  },
+  {
+    key: "total",
+    header: "Total",
+    headerClassName: "text-right",
+    className: "text-right font-mono tabular-nums",
+    cell: (row) => <span>{row.currency} {Number(row.total).toFixed(2)}</span>,
+  },
+  {
+    key: "status",
+    header: "Status",
+    cell: (row) => (
+      <Badge variant="outline" className={cn("h-4 text-[9px] px-1.5 py-0", STATUS_BADGE[row.status])}>
+        {row.status}
+      </Badge>
+    ),
+  },
+];
 
 export default function VendorDetailPage({ params }: VendorDetailPageProps) {
   const { vendorId } = use(params);
@@ -73,7 +120,7 @@ export default function VendorDetailPage({ params }: VendorDetailPageProps) {
   if (!vendorQuery.data) return <ErrorState title="Not found" description={`Vendor #${vendorId}`} />;
 
   const vendor = vendorQuery.data;
-  const poItems = posQuery.data?.items ?? [];
+  const poItems: VendorPoRow[] = posQuery.data?.items ?? [];
 
   function handleToggleActive(): void {
     toggleMutation.mutate(
@@ -231,12 +278,11 @@ export default function VendorDetailPage({ params }: VendorDetailPageProps) {
               </Button>
             </div>
 
-            {posQuery.isLoading && <LoadingState variant="table" rows={4} />}
             {posQuery.error && (
               <ErrorState description={posQuery.error.message} onRetry={handlePosRetry} compact />
             )}
 
-            {!posQuery.isLoading && !posQuery.error && poItems.length === 0 && (
+            {!posQuery.error && poItems.length === 0 && !posQuery.isLoading && (
               <InventoryEmptyState
                 illustrationPreset="inventory"
                 title="No purchase orders"
@@ -249,56 +295,14 @@ export default function VendorDetailPage({ params }: VendorDetailPageProps) {
               />
             )}
 
-            {poItems.length > 0 && (
-              <Card className="overflow-x-auto">
-                <Table className="min-w-[640px]">
-                  <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
-                    <TableRow className="border-b-2 border-border">
-                      <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
-                        PO #
-                      </TableHead>
-                      <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
-                        Order date
-                      </TableHead>
-                      <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
-                        Expected delivery
-                      </TableHead>
-                      <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">
-                        Total
-                      </TableHead>
-                      <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
-                        Status
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {poItems.map((po) => (
-                      <TableRow key={po.id} className="h-8 hover:bg-muted/30 transition-colors">
-                        <TableCell className="px-2 py-1 font-mono text-[11px]">
-                          <Link
-                            href={`/inventory/purchase-orders/${po.id}`}
-                            className="text-blue-600 hover:underline transition-colors"
-                          >
-                            {po.poNumber}
-                          </Link>
-                        </TableCell>
-                        <TableCell className="px-2 py-1 font-mono tabular-nums text-[11px]">
-                          {formatDate(po.orderDate)}
-                        </TableCell>
-                        <TableCell className="px-2 py-1 font-mono tabular-nums text-[11px]">
-                          {formatDate(po.expectedDeliveryDate)}
-                        </TableCell>
-                        <TableCell className="px-2 py-1 text-right font-mono tabular-nums text-[11px]">
-                          {po.currency} {Number(po.total).toFixed(2)}
-                        </TableCell>
-                        <TableCell className="px-2 py-1">
-                          <StatusBadge status={po.status} />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </Card>
+            {(poItems.length > 0 || posQuery.isLoading) && (
+              <DataTable
+                data={poItems}
+                columns={VENDOR_PO_COLUMNS}
+                getRowKey={(row) => row.id}
+                isLoading={posQuery.isLoading}
+                minWidth="640px"
+              />
             )}
           </div>
         </div>
