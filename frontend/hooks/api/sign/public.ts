@@ -5,6 +5,14 @@ import { buildUrl } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { SignPublicSession } from "@/types/sign";
 
+function unwrap<T>(body: unknown): T {
+  if (body !== null && typeof body === "object") {
+    const b = body as Record<string, unknown>;
+    if (b.success === true && "data" in b) return b.data as T;
+  }
+  return body as T;
+}
+
 async function parseOrThrow<T>(res: Response, fallback: string): Promise<T> {
   if (!res.ok) {
     let message = fallback;
@@ -16,7 +24,8 @@ async function parseOrThrow<T>(res: Response, fallback: string): Promise<T> {
     }
     throw new Error(message);
   }
-  return res.json() as Promise<T>;
+  const body = (await res.json()) as unknown;
+  return unwrap<T>(body);
 }
 
 async function publicGet<T>(path: string, fallback: string): Promise<T> {
