@@ -1165,4 +1165,39 @@ export const queryKeys = {
     counts: () => [...base, "crmInbox", "counts"] as const,
   },
 
+  signEnvelopes: {
+    all: [...base, "signEnvelopes"] as const,
+    list: (params?: Record<string, unknown>) => [...base, "signEnvelopes", "list", params] as const,
+    detail: (id: number) => [...base, "signEnvelopes", "detail", id] as const,
+    audit: (id: number) => [...base, "signEnvelopes", "audit", id] as const,
+    certificate: (id: number) => [...base, "signEnvelopes", "certificate", id] as const,
+  },
+
+  signDocuments: {
+    all: [...base, "signDocuments"] as const,
+    list: (envelopeId: number) => [...base, "signDocuments", "list", envelopeId] as const,
+    preview: (documentId: number) => [...base, "signDocuments", "preview", documentId] as const,
+  },
+
+  signTemplates: {
+    all: [...base, "signTemplates"] as const,
+    list: () => [...base, "signTemplates", "list"] as const,
+    detail: (id: number) => [...base, "signTemplates", "detail", id] as const,
+  },
+
+  signBulkSend: {
+    all: [...base, "signBulkSend"] as const,
+    job: (id: number) => [...base, "signBulkSend", "job", id] as const,
+  },
+
+  signAdmin: {
+    settings: () => [...base, "signAdmin", "settings"] as const,
+    watermarkPolicies: () => [...base, "signAdmin", "watermarkPolicies"] as const,
+  },
+
+  signPublic: {
+    session: (token: string) => [...base, "signPublic", "session", token] as const,
+    form: (slug: string) => [...base, "signPublic", "form", slug] as const,
+  },
+
 } as const;

@@ -191,6 +191,7 @@ const MIGRATED_PREFIXES = [
   "/org-hierarchy",
   "/api-tokens",
   "/support",
+  "/sign",
   "/public",
   "/access",
   "/auth",

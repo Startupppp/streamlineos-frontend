@@ -57,6 +57,7 @@ const PRODUCT_DESCRIPTIONS: Record<ProductKey, string> = {
   administration: "Settings & access",
   payroll: "Runs, payslips & compliance",
   feedbucket: "Embedded feedback widget",
+  sign: "Envelopes & e-signatures",
 };
 
 interface ProductTileProps {
