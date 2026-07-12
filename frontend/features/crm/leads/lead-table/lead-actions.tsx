@@ -14,8 +14,9 @@ import {
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Trash2, Download, X } from "lucide-react";
 import { toast } from "sonner";
-import { Lead, TeamMember, STATUSES, PRIORITIES, LOST_REASONS } from "./types";
+import { Lead, TeamMember, LOST_REASONS } from "./types";
 import { AIBulkScoreButton } from "../ai-bulk-score-button";
+import { useCrmOptions } from "@/hooks/api/crm/metadata";
 
 interface ConversionModalProps {
   leadName: string | undefined;
@@ -247,6 +248,8 @@ export function BulkActionsBar({
   onBulkDelete,
   onClearSelection,
 }: BulkActionsBarProps) {
+  const { data: statusOptions = [] } = useCrmOptions("lead_status");
+  const { data: priorityOptions = [] } = useCrmOptions("priority");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const handleExport = useCallback(async () => {

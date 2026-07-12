@@ -1,7 +1,6 @@
 "use client";
 
-import { Controller, type Control, type FieldErrors } from "react-hook-form";
-import { format } from "date-fns";
+import { Controller, type Control, type UseFormRegister, type FieldErrors } from "react-hook-form";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +14,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+
+export const NO_ENTITY_TYPE = "none";
 
 const COLOR_OPTIONS = [
   { value: "blue" as const },
@@ -40,13 +41,9 @@ const COLOR_RING_CLASSES: Record<string, string> = {
   purple: "ring-purple-500",
 };
 
-const NO_ENTITY_TYPE = "none";
-
 export type EventColor = "blue" | "green" | "red" | "yellow" | "purple";
-export type EventCategory = "meeting" | "call" | "demo" | "general" | "other";
-export type EventEntityType = "LEAD" | "DEAL" | "CONTACT" | "" | "none";
 
-export interface EventFormFieldValues {
+export interface CrmEventFieldValues {
   title: string;
   description?: string;
   location?: string;
@@ -55,20 +52,20 @@ export interface EventFormFieldValues {
   startTime?: string;
   endDate: string;
   endTime?: string;
-  category: EventCategory;
+  category: "meeting" | "call" | "demo" | "general" | "other";
   color: EventColor;
-  entityType?: EventEntityType;
+  entityType?: "LEAD" | "DEAL" | "CONTACT" | "" | "none";
   entityId?: string;
   attendeeIds: string[];
 }
 
 interface CrmEventFormFieldsProps {
-  control: Control<EventFormFieldValues>;
-  register: (name: keyof EventFormFieldValues) => object;
-  errors: FieldErrors<EventFormFieldValues>;
+  control: Control<CrmEventFieldValues>;
+  register: UseFormRegister<CrmEventFieldValues>;
+  errors: FieldErrors<CrmEventFieldValues>;
   allDay: boolean;
   watchedColor: EventColor;
-  watchedEntityType?: EventEntityType;
+  watchedEntityType?: string;
   onColorClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
@@ -290,5 +287,3 @@ export function CrmEventFormFields({
     </>
   );
 }
-
-export { format, NO_ENTITY_TYPE };

@@ -160,7 +160,7 @@ export default function ProfitLossPage() {
         ) : query.error ? (
           <ErrorState
             title="Failed to load profit & loss"
-            description={query.error.message}
+            description={getErrorMessage(query.error)}
             onRetry={handleRetry}
           />
         ) : !pnl || !hasAnyRows ? (

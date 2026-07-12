@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Table,
   TableBody,
@@ -42,6 +43,7 @@ import {
 } from "@/components/ui/form";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { useCan } from "@/hooks/api/access";
 import {
   useAccounts,
   useCreatePurchaseBill,
@@ -137,6 +139,7 @@ function computeTotals(
 }
 
 export default function NewPurchaseBillPage() {
+  const canManage = useCan("accounting:payables:manage");
   const router = useRouter();
   const clientsQuery = useClientAccounts({});
   const accountsQuery = useAccounts({
@@ -316,6 +319,17 @@ export default function NewPurchaseBillPage() {
   }
   if (accountsQuery.error) {
     return <ErrorState description={getErrorMessage(accountsQuery.error)} />;
+  }
+  if (!canManage) {
+    return (
+      <PageWrapper eyebrow="Accounting · Purchase Bills" title="New purchase bill" subtitle="Record a vendor bill. Posting credits AP and debits the chosen expense account + Input GST.">
+        <EmptyState
+          illustrationPreset="permissions"
+          title="Access restricted"
+          description="You don't have permission to create purchase bills."
+        />
+      </PageWrapper>
+    );
   }
 
   const vendors = clientsQuery.data?.accounts ?? [];

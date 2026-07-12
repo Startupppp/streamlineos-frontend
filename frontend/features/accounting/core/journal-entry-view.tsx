@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FinanceStatusBadge } from "@/features/accounting/shared";
 import { JournalLinesTable } from "./journal-lines-table";
-import type { JournalLine } from "@/types/accounting";
+import type { JournalEntry, JournalLine } from "@/types/accounting";
 
 function formatDate(value: string): string {
   if (!value) return "";
@@ -32,22 +32,9 @@ function parseAmount(value: string): number {
   return Number.isFinite(n) ? n : 0;
 }
 
-interface JournalEntry {
-  entryNumber: string;
-  entryDate: string;
-  status: string;
-  sourceType: string;
-  sourceId?: string | null;
-  sourceEvent?: string | null;
-  createdBy: string;
-  createdAt: Date;
-  description?: string | null;
-  reversedEntryId?: number | null;
-  lines: JournalLine[];
-}
-
 interface JournalEntryViewProps {
   entry: JournalEntry;
+  lines: JournalLine[];
   isPendingApproval: boolean;
   canApproveJournal: boolean;
   onApproveClick: () => void;
@@ -56,12 +43,12 @@ interface JournalEntryViewProps {
 
 export function JournalEntryView({
   entry,
+  lines,
   isPendingApproval,
   canApproveJournal,
   onApproveClick,
   onRejectClick,
 }: JournalEntryViewProps) {
-  const lines = entry.lines;
   const debitTotal = lines.reduce((acc, l) => acc + parseAmount(l.debit), 0);
   const creditTotal = lines.reduce((acc, l) => acc + parseAmount(l.credit), 0);
   const isBalanced = Math.abs(debitTotal - creditTotal) < 0.005;

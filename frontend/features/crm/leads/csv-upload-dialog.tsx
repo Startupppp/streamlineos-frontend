@@ -328,7 +328,7 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
             );
           }
         },
-        onError: (err) => toast.error(err.message),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }, [parsed, autoDistribute, bulkImport, onSuccess]);

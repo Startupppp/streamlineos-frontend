@@ -173,7 +173,7 @@ export function useLeadCellRenderer({
         if (isEditing) {
           return (
             <Select
-              defaultValue={lead.priority || "WARM"}
+              defaultValue={lead.priority || ""}
               onValueChange={(v) => {
                 onPriorityChange(lead.id, v);
                 setEditingCell(null);
@@ -181,22 +181,25 @@ export function useLeadCellRenderer({
             >
               <SelectTrigger className="h-6 text-[10px] w-[80px]"><SelectValue /></SelectTrigger>
               <SelectContent>
-                {PRIORITIES.map((p) => (
-                  <SelectItem key={p} value={p} className="text-[11px]">{p}</SelectItem>
+                {priorityOptions.map((p) => (
+                  <SelectItem key={p.id} value={p.key} className="text-[11px]">{p.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           );
         }
-        return lead.priority ? (
-          <Badge
-            variant="outline"
-            className={cn("text-[9px] px-1.5 py-0 h-5 cursor-pointer border font-medium", PRIORITY_COLORS[lead.priority])}
+        if (!lead.priority) return <span className="text-[11px] text-muted-foreground/50">—</span>;
+        return (
+          <div
+            className="cursor-pointer"
             onDoubleClick={() => setEditingCell({ leadId: lead.id, column: "priority" })}
           >
-            {lead.priority}
-          </Badge>
-        ) : <span className="text-[11px] text-muted-foreground/50">—</span>;
+            <CrmOptionBadge
+              option={resolveOption(priorityOptions, lead.priority)}
+              size="table"
+            />
+          </div>
+        );
 
       case "notes":
         return lead.notes ? (

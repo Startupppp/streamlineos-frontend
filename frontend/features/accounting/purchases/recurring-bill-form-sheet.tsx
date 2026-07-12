@@ -200,11 +200,7 @@ export function RecurringBillFormSheet({
               </Label>
               <Select
                 value={form.watch("frequency")}
-                onValueChange={(v) =>
-                  form.setValue("frequency", v as RecurringBillFormValues["frequency"], {
-                    shouldValidate: true,
-                  })
-                }
+                onValueChange={handleFrequencyChange}
               >
                 <SelectTrigger id="frequency" className="h-8 text-sm">
                   <SelectValue />
@@ -362,7 +358,8 @@ export function RecurringBillFormSheet({
             </div>
           </div>
         </div>
-      )}
+        );
+      }}
     </EntityFormSheet>
   );
 }

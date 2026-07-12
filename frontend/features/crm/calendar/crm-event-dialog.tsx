@@ -29,7 +29,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import {
   CrmEventFormFields,
   NO_ENTITY_TYPE,
-  type EventFormFieldValues,
+  type CrmEventFieldValues,
 } from "./crm-event-form-fields";
 
 const eventSchema = z.object({
@@ -238,8 +238,8 @@ export function CrmEventDialog({
         <div className="flex-1 min-h-0 overflow-y-auto">
           <form id="crm-event-form" onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
             <CrmEventFormFields
-              control={form.control as unknown as Parameters<typeof CrmEventFormFields>[0]["control"]}
-              register={(name) => form.register(name as keyof EventFormValues)}
+              control={form.control}
+              register={form.register}
               errors={form.formState.errors}
               allDay={allDay}
               watchedColor={watchedColor}

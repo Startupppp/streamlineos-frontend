@@ -179,7 +179,8 @@ export function SystemAccountMapDialog({
             <p className="text-xs text-destructive">{form.formState.errors.accountId.message}</p>
           )}
         </div>
-      )}
+        );
+      }}
     </EntityFormDialog>
   );
 }

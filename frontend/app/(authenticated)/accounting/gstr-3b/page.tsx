@@ -104,7 +104,7 @@ export default function Gstr3BPage() {
       {query.isLoading ? (
         <LoadingState variant="table" />
       ) : query.error ? (
-        <ErrorState description={query.error.message} onRetry={handleRetry} />
+        <ErrorState description={getErrorMessage(query.error)} onRetry={handleRetry} />
       ) : !report ? (
         <EmptyState
           illustration={<EmptyExpensesIllustration />}

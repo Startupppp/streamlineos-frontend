@@ -57,7 +57,7 @@ export default function OpeningBalancesPage() {
       <PageWrapper eyebrow="Accounting" title="Opening Balances" subtitle="Set starting account balances.">
         <ErrorState
           title="Failed to load opening balances"
-          description={query.error.message}
+          description={getErrorMessage(query.error)}
           onRetry={handleRetry}
         />
       </PageWrapper>
