@@ -27,11 +27,11 @@ const STAGE_COLORS: Record<Stage, string> = {
 };
 
 const STAGE_BG: Record<Stage, string> = {
-  NEW: "bg-slate-50 border-slate-200",
-  CONTACTED: "bg-blue-50 border-blue-200",
-  INTERESTED: "bg-blue-50 border-blue-200",
-  QUALIFIED: "bg-amber-50 border-amber-200",
-  CONVERTED: "bg-emerald-50 border-emerald-200",
+  NEW: "bg-card border-border",
+  CONTACTED: "bg-blue-500/10 border-blue-500/20",
+  INTERESTED: "bg-blue-500/10 border-blue-500/20",
+  QUALIFIED: "bg-amber-500/10 border-amber-500/20",
+  CONVERTED: "bg-emerald-500/10 border-emerald-500/20",
 };
 
 interface LeadsFunnelViewProps {

@@ -361,7 +361,7 @@ export default function ScoringRulesPage() {
               <CardContent className="p-0">
                 {rules && rules.length > 0 ? (
                   <Table>
-                    <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
+                    <TableHeader className="sticky top-0 z-10 bg-muted/80">
                       <TableRow className="border-b-2 border-border hover:bg-transparent">
                         <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Field</TableHead>
                         <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Operator</TableHead>

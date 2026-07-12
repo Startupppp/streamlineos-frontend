@@ -66,7 +66,7 @@ function TerritoryRow({ territory, onEdit, onToggle, onDeleteRequest }: Territor
         {summarizeCriteria(territory)}
       </TableCell>
       <TableCell className="text-[11px] px-2 py-1 text-center">
-        <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-slate-100 text-slate-700 border-slate-200">
+        <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-muted text-muted-foreground border-border">
           {territory.priority}
         </Badge>
       </TableCell>
@@ -155,7 +155,7 @@ function PreviewPanel() {
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <Badge variant="outline" className="text-[9px] h-4 px-1.5 bg-slate-100 text-slate-700 border-slate-200">
+                <Badge variant="outline" className="text-[9px] h-4 px-1.5 bg-muted text-muted-foreground border-border">
                   No match
                 </Badge>
                 <span className="text-muted-foreground">No territory matched this lead</span>

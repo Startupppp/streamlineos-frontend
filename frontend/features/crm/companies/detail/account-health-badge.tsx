@@ -61,7 +61,7 @@ export function AccountHealthBadge({
     return (
       <Badge
         variant="outline"
-        className={cn("text-[10px] bg-slate-100 text-slate-700 border-slate-200", className)}
+        className={cn("text-[10px] bg-muted text-muted-foreground border-border", className)}
       >
         N/A
       </Badge>

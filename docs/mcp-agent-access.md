@@ -13,6 +13,35 @@ Connect Cursor or Claude Code to your StreamlineOS workspace so your AI coding a
 
 ---
 
+## Choosing the API URL
+
+`STREAMLINEOS_API_URL` tells the MCP server which backend to talk to:
+
+| Environment | URL |
+|---|---|
+| Production | `https://streamlineos-backend-production.up.railway.app` |
+| Local development | `http://localhost:1500` |
+
+**Use the production URL** unless you are developing StreamlineOS itself. All examples below show production; swap in the local URL when needed.
+
+### Changing the URL later
+
+The URL lives only in your own MCP client config — nothing in the codebase needs to change:
+
+- **Cursor:** edit the `STREAMLINEOS_API_URL` value in `.cursor/mcp.json`, then restart Cursor.
+- **Claude Code:** re-register with the new value:
+  ```bash
+  claude mcp remove streamlineos
+  claude mcp add streamlineos \
+    -e STREAMLINEOS_TOKEN=slos_your_token_here \
+    -e STREAMLINEOS_API_URL=https://new-url.example.com \
+    -- node /absolute/path/to/backend/scripts/mcp-server.mjs
+  ```
+
+If the production domain itself ever changes, update this table and the two snippets below — no code changes required (the server reads the env var at startup, defaulting to `http://localhost:1500` when unset).
+
+---
+
 ## 2. Cursor Setup
 
 Create or edit `.cursor/mcp.json` in the repository root (or your global Cursor config):
@@ -25,7 +54,7 @@ Create or edit `.cursor/mcp.json` in the repository root (or your global Cursor 
       "args": ["<absolute-path-to-repo>/backend/scripts/mcp-server.mjs"],
       "env": {
         "STREAMLINEOS_TOKEN": "slos_your_token_here",
-        "STREAMLINEOS_API_URL": "http://localhost:1500"
+        "STREAMLINEOS_API_URL": "https://streamlineos-backend-production.up.railway.app"
       }
     }
   }
@@ -45,7 +74,7 @@ Run once in any terminal:
 ```bash
 claude mcp add streamlineos \
   -e STREAMLINEOS_TOKEN=slos_your_token_here \
-  -e STREAMLINEOS_API_URL=http://localhost:1500 \
+  -e STREAMLINEOS_API_URL=https://streamlineos-backend-production.up.railway.app \
   -- node /absolute/path/to/backend/scripts/mcp-server.mjs
 ```
 

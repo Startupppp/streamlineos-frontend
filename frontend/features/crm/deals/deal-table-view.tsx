@@ -187,7 +187,7 @@ export function DealTableView({
       <div className="flex-1 min-h-0 rounded-lg border border-border overflow-hidden overflow-auto">
         <div className="min-w-max">
           <table className="w-full caption-bottom text-[11px]">
-            <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
+            <TableHeader className="sticky top-0 z-10 bg-muted/80">
               <TableRow className="border-b-2 border-border hover:bg-transparent">
                 {columns.map(col => (
                   <SortableHead

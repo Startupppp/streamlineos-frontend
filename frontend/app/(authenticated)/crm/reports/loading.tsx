@@ -26,7 +26,7 @@ export default function CrmReportsLoading() {
       <div className="space-y-6">
         <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
           {Array.from({ length: 5 }).map((_, i) => (
-            <Card key={i}>
+            <Card key={i} className="shadow-sm">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <Skeleton className="h-5 w-5 rounded" />
@@ -38,7 +38,7 @@ export default function CrmReportsLoading() {
           ))}
         </div>
 
-        <Card>
+        <Card className="shadow-sm">
           <CardHeader>
             <Skeleton className="h-5 w-44" />
           </CardHeader>
@@ -57,7 +57,7 @@ export default function CrmReportsLoading() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-sm">
           <CardHeader>
             <Skeleton className="h-5 w-40" />
           </CardHeader>

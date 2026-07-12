@@ -106,11 +106,11 @@ export default function CrmAnalyticsPage() {
           <AnalyticsKpiCards analyticsSummary={analyticsSummary} kpis={kpis} />
         )}
 
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid gap-3 grid-cols-1 md:grid-cols-2">
           <PipelineFunnelChart data={funnelData} />
           <LeadVolumeChart data={leadVolumeTrend} />
-          <div className="flex flex-col gap-2">
-            <div className="flex flex-wrap gap-1 px-1">
+          <div className="flex flex-col gap-2 min-w-0">
+            <div className="flex flex-wrap gap-1 px-1 overflow-x-auto">
               <button
                 onClick={() => handleSourceChange("all")}
                 className={`h-8 rounded-md px-3 text-xs font-medium transition-colors ${

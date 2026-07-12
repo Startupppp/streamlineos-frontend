@@ -183,7 +183,7 @@ export default function ProductCatalogPage() {
             Active
           </Badge>
         ) : (
-          <Badge variant="outline" className="bg-slate-100 text-slate-500 border-slate-200">
+          <Badge variant="outline" className="bg-muted text-muted-foreground border-border">
             Inactive
           </Badge>
         ),

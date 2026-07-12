@@ -56,7 +56,7 @@ export function RevenueVsGoalChart({ data }: RevenueVsGoalChartProps) {
             formatter={tooltipFormatter}
           />
           <Legend formatter={legendFormatter} />
-          <Bar dataKey="actual" fill="#8B5CF6" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="actual" fill="#3b82f6" radius={[4, 4, 0, 0]} />
           <Bar dataKey="target" fill="#E2E8F0" radius={[4, 4, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>

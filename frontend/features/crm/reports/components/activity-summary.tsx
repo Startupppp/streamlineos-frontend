@@ -1,4 +1,5 @@
 import { Phone, Mail, Video } from "lucide-react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { StatCard } from "@/components/ui/stat-card";
 import type { SalesLeaderboardEntry } from "@/types/leads";
 
@@ -33,38 +34,40 @@ export function ActivitySummary({
   const totals = leaderboard ? computeActivityTotals(leaderboard) : null;
 
   return (
-    <>
-      <div className="mb-3">
+    <Card className="shadow-sm">
+      <CardHeader className="pb-3">
         <h2 className="text-sm font-semibold text-foreground">
           Activity Summary
         </h2>
         <p className="text-xs text-muted-foreground mt-0.5">
           {periodLabel} totals across all reps
         </p>
-      </div>
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
-        <StatCard
-          label="Calls"
-          value={totals ? totals.calls.toLocaleString() : "—"}
-          icon={Phone}
-          color="blue"
-          index={0}
-        />
-        <StatCard
-          label="Emails"
-          value={totals ? totals.emails.toLocaleString() : "—"}
-          icon={Mail}
-          color="blue"
-          index={1}
-        />
-        <StatCard
-          label="Meetings"
-          value={totals ? totals.meetings.toLocaleString() : "—"}
-          icon={Video}
-          color="amber"
-          index={2}
-        />
-      </div>
-    </>
+      </CardHeader>
+      <CardContent>
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
+          <StatCard
+            label="Calls"
+            value={totals ? totals.calls.toLocaleString() : "—"}
+            icon={Phone}
+            color="blue"
+            index={0}
+          />
+          <StatCard
+            label="Emails"
+            value={totals ? totals.emails.toLocaleString() : "—"}
+            icon={Mail}
+            color="blue"
+            index={1}
+          />
+          <StatCard
+            label="Meetings"
+            value={totals ? totals.meetings.toLocaleString() : "—"}
+            icon={Video}
+            color="amber"
+            index={2}
+          />
+        </div>
+      </CardContent>
+    </Card>
   );
 }

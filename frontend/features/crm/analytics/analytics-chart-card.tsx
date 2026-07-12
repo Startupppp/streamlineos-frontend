@@ -51,7 +51,7 @@ export function AnalyticsChartCard<T extends object>({ title, data, filename, ch
             <Download className="h-3.5 w-3.5" />
           </Button>
         </CardHeader>
-        <CardContent>{children}</CardContent>
+        <CardContent className="p-4 pt-0">{children}</CardContent>
       </Card>
     </motion.div>
   );

@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,7 +48,7 @@ const STATUS_CONFIG: Record<
 > = {
   DRAFT: {
     label: "Draft",
-    className: "bg-slate-100 text-slate-700 border-slate-200",
+    className: "bg-muted text-muted-foreground border-border",
     icon: FileText,
   },
   SENT: {
@@ -139,7 +140,7 @@ function QuoteRow({ quote, dealId, onDeleteRequest }: QuoteRowProps) {
   }, []);
 
   return (
-    <div className="flex items-center gap-3 p-3 bg-white/90 backdrop-blur-sm rounded-xl border border-slate-200/80 shadow-sm">
+    <div className="flex items-center gap-3 p-3 bg-card border border-border rounded-lg shadow-sm hover:shadow-md transition-shadow">
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-sm font-medium text-slate-800 font-mono truncate">
@@ -258,7 +259,7 @@ export function DealQuotesSection({ dealId }: DealQuotesSectionProps) {
 
   return (
     <>
-      <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60">
+      <Card className="bg-card border border-border rounded-xl shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between pb-3 pt-4 px-4">
           <div className="flex items-center gap-2">
             <FileText className="h-4 w-4 text-muted-foreground" />
@@ -292,18 +293,16 @@ export function DealQuotesSection({ dealId }: DealQuotesSectionProps) {
               <Skeleton className="h-14 w-full rounded-xl" />
             </div>
           ) : isError ? (
-            <div className="flex flex-col items-center justify-center py-6 text-center border border-dashed border-slate-200 rounded-xl bg-slate-50/50 gap-2">
-              <p className="text-sm text-slate-500">Failed to load quotes</p>
+            <div className="flex flex-col items-center justify-center py-6 text-center border border-dashed border-border rounded-xl bg-muted/30 gap-2">
+              <p className="text-sm text-muted-foreground">Failed to load quotes</p>
               <Button variant="outline" size="sm" onClick={handleRetry}>Retry</Button>
             </div>
           ) : quotes.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-6 text-center border border-dashed border-slate-200 rounded-xl bg-slate-50/50">
-              <FileText className="h-8 w-8 text-slate-300 mb-2" />
-              <p className="text-sm text-slate-500">No quotes yet</p>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Create a quote to send to the client
-              </p>
-            </div>
+            <EmptyState
+              compact
+              title="No quotes yet"
+              description="Create a quote to send to the client"
+            />
           ) : (
             <div className="space-y-2">
               <AnimatePresence>

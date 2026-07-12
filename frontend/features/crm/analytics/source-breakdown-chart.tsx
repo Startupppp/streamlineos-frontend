@@ -3,7 +3,7 @@
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { CHART_TOOLTIP_STYLE } from "@/features/crm/shared/constants";
 
-const SOURCE_COLORS = ["#3b82f6", "#60a5fa", "#93c5fd", "#0ea5e9", "#06b6d4", "#f59e0b", "#10b981"];
+const SOURCE_COLORS = ["#3b82f6", "#60a5fa", "#93c5fd", "#bfdbfe", "#2563eb", "#f59e0b", "#10b981"];
 import { AnalyticsChartCard } from "./analytics-chart-card";
 import { EmptyChart } from "./empty-chart";
 

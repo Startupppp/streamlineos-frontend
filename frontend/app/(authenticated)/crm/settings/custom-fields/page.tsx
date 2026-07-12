@@ -397,7 +397,7 @@ export default function CustomFieldsPage() {
                 className={cn(
                   "px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-150",
                   entityType === tab.value
-                    ? "bg-white shadow text-foreground"
+                    ? "bg-background shadow text-foreground"
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >

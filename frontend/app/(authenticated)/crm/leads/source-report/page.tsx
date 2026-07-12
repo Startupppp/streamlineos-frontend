@@ -39,10 +39,10 @@ const SOURCE_COLORS = [
   { bar: "bg-blue-400", badge: "bg-blue-50 text-blue-700 border-blue-200" },
   { bar: "bg-rose-500", badge: "bg-rose-50 text-rose-700 border-rose-200" },
   { bar: "bg-cyan-500", badge: "bg-cyan-50 text-cyan-700 border-cyan-200" },
-  { bar: "bg-slate-500", badge: "bg-slate-100 text-slate-700 border-slate-200" },
+  { bar: "bg-muted-foreground", badge: "bg-muted text-muted-foreground border-border" },
 ];
 
-const FALLBACK_COLOR = { bar: "bg-slate-500", badge: "bg-slate-100 text-slate-700 border-slate-200" };
+const FALLBACK_COLOR = { bar: "bg-muted-foreground", badge: "bg-muted text-muted-foreground border-border" };
 
 function getSourceColor(index: number) {
   return SOURCE_COLORS[index % SOURCE_COLORS.length] ?? FALLBACK_COLOR;

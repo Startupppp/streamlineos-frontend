@@ -61,8 +61,8 @@ Ordered money-path first. Check off each page after fixing.
 - [x] `/crm/companies/[companyId]` — Company detail: rollup stats + hierarchy + timeline + related leads
 - [x] `/crm/activities` — Cross-entity activity log with filters + stats bar
 - [x] `/crm/tasks` — CRM tasks by due-date buckets with complete/delete
-- [x] `/crm/calendar` — CRM calendar (month/week) filtered to CRM entity events
-- [x] `/crm/analytics` — CRM analytics dashboard
+- [x] `/crm/calendar` — REMOVED (redirects to `/calendar`); CRM events now a toggleable "CRM events" source in the unified `/calendar` per §16 one-calendar rule
+- [x] `/crm/analytics` — CRM analytics dashboard; fixed 500 crashes (raw-sql JS-Date → .toISOString()); backend endpoints all verified 200
 - [x] `/crm/reports` — CRM reports with Excel export
 - [x] `/crm/settings/assignment-rules` — Lead assignment rules with priority reorder
 - [x] `/crm/settings/email-templates` — CRM email templates with variables + preview

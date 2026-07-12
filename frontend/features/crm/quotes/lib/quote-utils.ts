@@ -9,7 +9,7 @@ export const STATUS_LABELS: Record<QuoteStatus, string> = {
 };
 
 export const STATUS_BADGE_CLASSES: Record<QuoteStatus, string> = {
-  DRAFT: "bg-slate-100 text-slate-700 border-slate-200",
+  DRAFT: "bg-muted text-muted-foreground border-border",
   SENT: "bg-blue-50 text-blue-700 border-blue-200",
   ACCEPTED: "bg-emerald-50 text-emerald-700 border-emerald-200",
   REJECTED: "bg-red-50 text-red-700 border-red-200",

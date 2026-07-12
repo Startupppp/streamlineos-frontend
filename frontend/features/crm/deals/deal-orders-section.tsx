@@ -161,7 +161,7 @@ function OrderCard({ order, dealId, onDeleteRequest }: OrderCardProps) {
 
   return (
     <motion.div variants={fadeUp}>
-      <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm">
+      <Card className="bg-card border border-border rounded-xl shadow-sm hover:shadow-md transition-shadow">
         <CardContent className="p-4">
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
@@ -312,7 +312,7 @@ export function DealOrdersSection({ dealId, dealStage }: DealOrdersSectionProps)
 
   return (
     <>
-      <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60">
+      <Card className="bg-card border border-border rounded-xl shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between pb-3 pt-4 px-4">
           <div className="flex items-center gap-2">
             <Package className="h-4 w-4 text-muted-foreground" />
@@ -337,8 +337,8 @@ export function DealOrdersSection({ dealId, dealStage }: DealOrdersSectionProps)
         <CardContent className="px-4 pb-4">
           {isLoading ? (
             <div className="space-y-3">
-              <Skeleton className="h-16 w-full rounded-2xl" />
-              <Skeleton className="h-16 w-full rounded-2xl" />
+              <Skeleton className="h-16 w-full rounded-xl" />
+              <Skeleton className="h-16 w-full rounded-xl" />
             </div>
           ) : isError ? (
             <div className="flex flex-col items-center justify-center py-8 text-center gap-2">

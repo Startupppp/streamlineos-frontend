@@ -19,7 +19,7 @@ export default function Loading() {
               <div className="w-px flex-1 bg-border/30 mt-1" />
             </div>
             <div className="flex-1 pb-4">
-              <Skeleton className="h-16 w-full rounded-2xl" />
+              <Skeleton className="h-16 w-full rounded-xl" />
             </div>
           </div>
         ))}

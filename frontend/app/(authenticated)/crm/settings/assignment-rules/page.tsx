@@ -80,7 +80,7 @@ function RuleRow({ rule, dragHandleProps, onToggle, onEdit, onDeleteRequest }: R
               <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-blue-50 text-blue-700 border-blue-200">
                 {ASSIGNMENT_TYPE_LABELS[rule.assignmentType] ?? rule.assignmentType}
               </Badge>
-              <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-slate-100 text-slate-700 border-slate-200">
+              <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-muted text-muted-foreground border-border">
                 Priority {rule.priority}
               </Badge>
             </div>

@@ -81,7 +81,7 @@ const ACTION_BADGE_COLORS: Record<string, string> = {
   created: "bg-emerald-50 text-emerald-700 border-emerald-200",
   updated: "bg-blue-50 text-blue-700 border-blue-200",
   deleted: "bg-red-50 text-red-700 border-red-200",
-  archived: "bg-slate-100 text-slate-600 border-slate-200",
+  archived: "bg-muted text-muted-foreground border-border",
   restored: "bg-emerald-50 text-emerald-600 border-emerald-200",
   assigned: "bg-blue-50 text-blue-700 border-blue-200",
   unassigned: "bg-blue-50 text-blue-600 border-blue-200",
@@ -208,7 +208,7 @@ export function AuditEntryRow({ entry, isLast }: AuditEntryRowProps) {
     }
   }, [entry.createdAt]);
 
-  const badgeColor = ACTION_BADGE_COLORS[entry.action] ?? "bg-slate-100 text-slate-600 border-slate-200";
+  const badgeColor = ACTION_BADGE_COLORS[entry.action] ?? "bg-muted text-muted-foreground border-border";
   const entityLabel = entry.targetType
     ? (ENTITY_TYPE_LABELS[entry.targetType] ?? entry.targetType)
     : undefined;

@@ -214,7 +214,7 @@ export function LeadTableView({
       <div className="flex-1 min-h-0 border border-border rounded-md overflow-auto">
         <div className="min-w-max">
           <table className="w-full caption-bottom text-[11px]">
-            <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
+            <TableHeader className="sticky top-0 z-10 bg-muted/80">
               <TableRow className="hover:bg-muted/80 border-b-2 border-border">
                 <TableHead className="w-8 px-2 py-1.5">
                   <Checkbox checked={allSelected} onCheckedChange={toggleAll} className="h-3.5 w-3.5" />

@@ -18,7 +18,7 @@ export default function ProductsLoading() {
     >
       <div className="space-y-4">
         <Skeleton className="h-9 w-64 rounded-md" />
-        <div className="rounded-lg border border-slate-200/80 overflow-hidden">
+        <div className="rounded-lg border border-border overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>

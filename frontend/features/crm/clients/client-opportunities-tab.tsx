@@ -18,7 +18,7 @@ const OPP_STAGE_LABELS: Record<ClientOpportunity["stage"], string> = {
 const OPP_STAGE_BADGE_CLASSES: Record<ClientOpportunity["stage"], string> = {
   identified: "bg-blue-50 text-blue-700 border-blue-200",
   proposed: "bg-amber-50 text-amber-700 border-amber-200",
-  negotiating: "bg-slate-100 text-slate-700 border-slate-200",
+  negotiating: "bg-muted text-muted-foreground border-border",
   won: "bg-emerald-50 text-emerald-700 border-emerald-200",
   lost: "bg-red-50 text-red-700 border-red-200",
 };
@@ -79,7 +79,7 @@ export function ClientOpportunitiesTab({ clientId }: { clientId: number }) {
               <td className="px-3 py-1.5">
                 <Badge
                   variant="outline"
-                  className="text-[9px] px-1.5 py-0 h-4 bg-slate-100 text-slate-700 border-slate-200 capitalize"
+                  className="text-[9px] px-1.5 py-0 h-4 bg-muted text-muted-foreground border-border capitalize"
                 >
                   {opp.type === "cross_sell" ? "Cross-sell" : "Upsell"}
                 </Badge>

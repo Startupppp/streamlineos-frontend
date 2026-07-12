@@ -23,7 +23,7 @@ export default function CrmTasksLoading() {
     >
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-4">
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="bg-white/90 rounded-xl border border-slate-200/80 shadow-sm p-3">
+          <div key={i} className="bg-card rounded-xl border border-border shadow-sm p-3">
             <Skeleton className="h-6 w-10 mb-1.5" />
             <Skeleton className="h-3 w-16" />
           </div>
@@ -32,7 +32,7 @@ export default function CrmTasksLoading() {
 
       <div className="space-y-3">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="rounded-xl border border-slate-200/60 overflow-hidden">
+          <div key={i} className="rounded-xl border border-border overflow-hidden">
             <div className="flex items-center gap-3 px-4 py-3 bg-muted/30">
               <Skeleton className="h-4 w-4" />
               <Skeleton className="h-4 w-20" />

@@ -15,7 +15,7 @@ const TYPE_CONFIG: Record<CrmActivityType, TypeConfig> = {
   CALL:    { label: "Call",    icon: Phone,    color: "text-blue-600",    bg: "bg-blue-500/10"    },
   EMAIL:   { label: "Email",   icon: Mail,     color: "text-blue-600",   bg: "bg-blue-500/10"    },
   MEETING: { label: "Meeting", icon: Video,    color: "text-emerald-600", bg: "bg-emerald-500/10" },
-  CUSTOM:  { label: "Task",    icon: FileText, color: "text-slate-600",   bg: "bg-slate-500/10"   },
+  CUSTOM:  { label: "Task",    icon: FileText, color: "text-muted-foreground", bg: "bg-muted"          },
 };
 
 interface ActivityTypeBadgeProps {

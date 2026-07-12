@@ -24,7 +24,7 @@ type AgingDealRow = NonNullable<ReturnType<typeof useDealAging>["data"]>["deals"
 
 function StageBadge({ stage }: { stage: string }) {
   return (
-    <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-slate-100 text-slate-700 border-slate-200">
+    <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-muted text-muted-foreground border-border">
       {stage}
     </Badge>
   );

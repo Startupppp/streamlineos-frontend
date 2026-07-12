@@ -7,9 +7,9 @@ export default function CrmDealsForecastLoading() {
     <PageWrapper title="Deal Forecast" subtitle="Loading...">
       <div className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-3">
-          <Skeleton className="h-24 rounded-2xl" />
-          <Skeleton className="h-24 rounded-2xl" />
-          <Skeleton className="h-24 rounded-2xl" />
+          <Skeleton className="h-24 rounded-xl" />
+          <Skeleton className="h-24 rounded-xl" />
+          <Skeleton className="h-24 rounded-xl" />
         </div>
         <Card>
           <CardContent className="p-6 space-y-3">

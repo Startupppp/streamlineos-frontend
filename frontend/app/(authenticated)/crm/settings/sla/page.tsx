@@ -90,7 +90,7 @@ function SlaTableRow({ policy, onEdit, onDeleteRequest }: SlaTableRowProps) {
       <TableCell className="text-[11px] px-2 py-1">
         <Badge
           variant="outline"
-          className="text-[9px] h-4 px-1.5 py-0 bg-slate-100 text-slate-700 border-slate-200 capitalize"
+          className="text-[9px] h-4 px-1.5 py-0 bg-muted text-muted-foreground border-border capitalize"
         >
           {policy.appliesTo}
         </Badge>
@@ -130,7 +130,7 @@ function BreachedLeadsTable({ leads }: { leads: Array<{ id: number; name: string
       </CardHeader>
       <CardContent className="p-0">
         <Table>
-          <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
+          <TableHeader className="sticky top-0 z-10 bg-muted/80">
             <TableRow className="border-b-2 border-border hover:bg-transparent">
               <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Lead</TableHead>
               <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Status</TableHead>
@@ -151,7 +151,7 @@ function BreachedLeadsTable({ leads }: { leads: Array<{ id: number; name: string
                 <TableCell className="text-[11px] px-2 py-1">
                   <Badge
                     variant="outline"
-                    className="text-[9px] h-4 px-1.5 py-0 bg-slate-100 text-slate-700 border-slate-200"
+                    className="text-[9px] h-4 px-1.5 py-0 bg-muted text-muted-foreground border-border"
                   >
                     {lead.status}
                   </Badge>
@@ -352,7 +352,7 @@ export default function SlaPage() {
               <CardContent className="p-0">
                 {policies && policies.length > 0 ? (
                   <Table>
-                    <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
+                    <TableHeader className="sticky top-0 z-10 bg-muted/80">
                       <TableRow className="border-b-2 border-border hover:bg-transparent">
                         <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
                           Name

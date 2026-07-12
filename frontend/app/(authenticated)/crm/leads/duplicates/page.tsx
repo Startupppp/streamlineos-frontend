@@ -51,7 +51,7 @@ function statusBadgeClass(status: string): string {
     CONVERTED: "bg-emerald-50 text-emerald-700 border-emerald-200",
     LOST: "bg-red-50 text-red-700 border-red-200",
   };
-  return map[status] ?? "bg-slate-100 text-slate-700 border-slate-200";
+  return map[status] ?? "bg-muted text-muted-foreground border-border";
 }
 
 interface MergeTarget {
@@ -124,7 +124,7 @@ function DuplicateGroupCard({
         <CardContent className="pt-0 overflow-x-auto p-0">
           <div className="min-w-[640px]">
             <Table>
-              <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
+              <TableHeader className="sticky top-0 z-10 bg-muted/80">
                 <TableRow className="border-b-2 border-border hover:bg-transparent">
                   <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Name</TableHead>
                   <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Email</TableHead>

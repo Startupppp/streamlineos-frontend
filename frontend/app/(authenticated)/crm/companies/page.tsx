@@ -28,7 +28,7 @@ const PAGE_SIZE = 20;
 
 function getHealthBadgeClasses(score: number | null): string {
   if (score === null || score === undefined)
-    return "bg-slate-100 text-slate-700 border-slate-200";
+    return "bg-muted text-muted-foreground border-border";
   if (score >= 70) return "bg-emerald-50 text-emerald-700 border-emerald-200";
   if (score >= 40) return "bg-amber-50 text-amber-700 border-amber-200";
   return "bg-red-50 text-red-700 border-red-200";

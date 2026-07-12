@@ -22,7 +22,7 @@ export function PipelineBreakdownCard({
   const shouldReduceMotion = useReducedMotion();
 
   return (
-    <Card className="rounded-lg border border-border">
+    <Card className="shadow-sm">
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <BarChart3 className="h-4 w-4 text-blue-600" />

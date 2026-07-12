@@ -159,7 +159,7 @@ export default function BlueprintsPage() {
                         "text-[9px] h-4 px-1.5",
                         selectedBlueprint.isActive
                           ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                          : "bg-slate-100 text-slate-500 border-slate-200"
+                          : "bg-muted text-muted-foreground border-border"
                       )}
                     >
                       {selectedBlueprint.isActive ? "Active" : "Inactive"}

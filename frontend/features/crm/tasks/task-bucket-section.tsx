@@ -33,8 +33,8 @@ const BUCKET_CONFIG: Record<
   },
   NO_DATE: {
     label: "No Date",
-    badgeClass: "bg-slate-100 text-slate-600 border-slate-200",
-    borderClass: "border-l-slate-300",
+    badgeClass: "bg-muted text-muted-foreground border-border",
+    borderClass: "border-l-border",
   },
 };
 

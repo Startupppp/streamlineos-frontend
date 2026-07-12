@@ -25,7 +25,7 @@ export default function CrmActivitiesLoading() {
           {Array.from({ length: 8 }).map((_, i) => (
             <div
               key={i}
-              className="bg-white/90 rounded-2xl border border-slate-200/80 p-4 space-y-2"
+              className="bg-card rounded-xl border border-border p-4 space-y-2"
             >
               <div className="flex items-start gap-3">
                 <Skeleton className="h-5 w-16 rounded-full shrink-0 mt-0.5" />

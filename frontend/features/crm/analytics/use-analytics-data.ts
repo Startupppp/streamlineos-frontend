@@ -106,7 +106,7 @@ export function useAnalyticsData(dateRange: DateRange) {
       { name: "New", value: leadStats.byStatus.NEW, fill: "#3B82F6" },
       { name: "Contacted", value: leadStats.byStatus.CONTACTED, fill: "#0EA5E9" },
       { name: "Interested", value: leadStats.byStatus.INTERESTED, fill: "#F59E0B" },
-      { name: "Qualified", value: leadStats.byStatus.QUALIFIED, fill: "#8B5CF6" },
+      { name: "Qualified", value: leadStats.byStatus.QUALIFIED, fill: "#60a5fa" },
       { name: "Converted", value: leadStats.byStatus.CONVERTED, fill: "#10B981" },
     ].filter((s) => s.value > 0);
   }, [leadStats]);

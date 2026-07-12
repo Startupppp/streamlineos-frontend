@@ -31,7 +31,7 @@ interface TaskAnalyticsCardProps {
 export function TaskAnalyticsCard({ taskAnalytics }: TaskAnalyticsCardProps) {
   return (
     <motion.div variants={fadeUp}>
-      <Card>
+      <Card className="shadow-sm">
         <CardHeader className="px-4 py-3 border-b">
           <div className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-blue-600" />

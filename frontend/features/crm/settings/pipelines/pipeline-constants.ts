@@ -6,7 +6,7 @@ export const PIPELINE_TYPES: { value: CrmPipelineType; label: string; badgeClass
   { value: "renewal", label: "Renewal", badgeClass: "bg-amber-50 text-amber-700 border-amber-200" },
   { value: "customer_success", label: "CS", badgeClass: "bg-cyan-50 text-cyan-700 border-cyan-200" },
   { value: "partner", label: "Partner", badgeClass: "bg-sky-50 text-sky-700 border-sky-200" },
-  { value: "custom", label: "Custom", badgeClass: "bg-slate-100 text-slate-700 border-slate-200" },
+  { value: "custom", label: "Custom", badgeClass: "bg-muted text-muted-foreground border-border" },
 ];
 
 export const STAGE_TYPES: { value: CrmStageType; label: string; className: string }[] = [
