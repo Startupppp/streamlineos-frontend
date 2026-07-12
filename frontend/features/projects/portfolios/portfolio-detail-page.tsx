@@ -26,6 +26,7 @@ import type { UpdatePortfolioInput } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 type PortfolioTab = "projects" | "programs";
+const PORTFOLIO_TABS = ["projects", "programs"] as const;
 
 interface Props {
   portfolioId: number;
@@ -90,6 +91,11 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
     });
   }
 
+  function handleTabChange(v: string) {
+    const tab = PORTFOLIO_TABS.find((t) => t === v);
+    if (tab) setActiveTab(tab);
+  }
+
   if (isLoading) {
     return (
       <PageWrapper title="Portfolio" eyebrow="Portfolio" backHref="/projects/portfolios">
@@ -146,7 +152,7 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
           </div>
         )}
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as PortfolioTab)}>
+        <Tabs value={activeTab} onValueChange={handleTabChange}>
           <TabsList>
             <TabsTrigger value="projects">
               Linked Projects

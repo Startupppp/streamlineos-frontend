@@ -37,6 +37,8 @@ import { cn } from "@/lib/utils";
 
 type StateType = "unstarted" | "started" | "completed" | "cancelled";
 
+const STATE_TYPE_KEYS: readonly StateType[] = ["unstarted", "started", "completed", "cancelled"];
+
 const TYPE_CONFIG: Record<StateType, { label: string; color: string }> = {
   unstarted: { label: "Unstarted", color: "bg-slate-100 text-slate-600" },
   started: { label: "In Progress", color: "bg-blue-100 text-blue-700" },
@@ -92,7 +94,10 @@ export function StatusesSettings({ projectId }: { projectId: number }) {
     [deleteState],
   );
 
-  const handleTypeChange = useCallback((v: string) => setType(v as StateType), []);
+  const handleTypeChange = useCallback((v: string) => {
+    const found = STATE_TYPE_KEYS.find((t) => t === v);
+    if (found) setType(found);
+  }, []);
 
   const handleCancelForm = useCallback(() => {
     setShowForm(false);
@@ -196,9 +201,9 @@ export function StatusesSettings({ projectId }: { projectId: number }) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {(Object.entries(TYPE_CONFIG) as [StateType, { label: string; color: string }][]).map(([k, v]) => (
+                    {STATE_TYPE_KEYS.map((k) => (
                       <SelectItem key={k} value={k} className="text-sm">
-                        {v.label}
+                        {TYPE_CONFIG[k].label}
                       </SelectItem>
                     ))}
                   </SelectContent>

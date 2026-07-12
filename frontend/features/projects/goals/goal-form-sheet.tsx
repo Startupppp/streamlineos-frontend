@@ -70,7 +70,8 @@ const KeyResultRow = memo(function KeyResultRow({ kr, index, onUpdate, onRemove 
     onUpdate(index, { title: e.target.value });
   }
   function handleMetricTypeChange(v: string) {
-    onUpdate(index, { metricType: v as KeyResultMetric });
+    const found = METRIC_OPTIONS.find((o) => o.value === v);
+    if (found) onUpdate(index, { metricType: found.value });
   }
   function handleUnitChange(e: React.ChangeEvent<HTMLInputElement>) {
     onUpdate(index, { unit: e.target.value });
@@ -171,10 +172,12 @@ export function GoalFormSheet({
     setDescription(e.target.value);
   }
   function handleLevelChange(v: string) {
-    setLevel(v as GoalLevel);
+    const found = LEVEL_OPTIONS.find((o) => o.value === v);
+    if (found) setLevel(found.value);
   }
   function handleGoalStatusChange(v: string) {
-    setStatus(v as GoalStatus);
+    const found = STATUS_OPTIONS.find((o) => o.value === v);
+    if (found) setStatus(found.value);
   }
   function handleStartDateChange(value: string) {
     setStartDate(value);

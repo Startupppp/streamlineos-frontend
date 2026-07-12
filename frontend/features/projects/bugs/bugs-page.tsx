@@ -25,6 +25,12 @@ import { MoreHorizontal, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { BugSheet } from "./bug-sheet";
 
+const BUG_STATUSES: readonly BugStatus[] = [
+  "new", "triaged", "assigned", "in_progress", "fixed",
+  "ready_for_qa", "verified", "reopened", "closed",
+];
+const BUG_SEVERITIES: readonly BugSeverity[] = ["blocker", "critical", "major", "minor", "trivial"];
+
 const SEVERITY_STYLES: Record<BugSeverity, string> = {
   blocker: "text-red-700 border-red-300 bg-red-50",
   critical: "text-red-600 border-red-200",
@@ -198,7 +204,7 @@ export function BugsPage({ projectId }: BugsPageProps) {
         <SelectTrigger className="h-7 text-[11px] w-32"><SelectValue placeholder="Status" /></SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All statuses</SelectItem>
-          {(["new","triaged","assigned","in_progress","fixed","ready_for_qa","verified","reopened","closed"] as BugStatus[]).map((s) => (
+          {BUG_STATUSES.map((s) => (
             <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>
           ))}
         </SelectContent>
@@ -207,7 +213,7 @@ export function BugsPage({ projectId }: BugsPageProps) {
         <SelectTrigger className="h-7 text-[11px] w-28"><SelectValue placeholder="Severity" /></SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All severities</SelectItem>
-          {(["blocker","critical","major","minor","trivial"] as BugSeverity[]).map((s) => (
+          {BUG_SEVERITIES.map((s) => (
             <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>
           ))}
         </SelectContent>

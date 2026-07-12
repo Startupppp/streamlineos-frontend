@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import type { OrgMember } from "@/types/organization";
-import type { Portfolio, Program, CreateProgramInput, UpdateProgramInput, PortfolioStatus, PortfolioHealth } from "@/types/projects";
+import type { Portfolio, Program, CreateProgramInput, UpdateProgramInput } from "@/types/projects";
 
 const NONE_SENTINEL = "__none__";
 
@@ -34,7 +34,7 @@ const schema = z.object({
   portfolioId: z.string(),
   ownerId: z.string(),
   status: z.enum(["active", "on_hold", "completed", "archived"]),
-  health: z.string(),
+  health: z.enum(["", "on_track", "at_risk", "off_track"]),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -74,18 +74,20 @@ export function ProgramFormSheet({ open, onOpenChange, mode, defaultValues, onSu
   }, [open, mode, defaultValues, form]);
 
   function handleSubmit(v: FormValues) {
-    const base = {
+    const HEALTH_VALUES = ["on_track", "at_risk", "off_track"] as const;
+    const healthValue = HEALTH_VALUES.find((h) => h === v.health);
+    const base: CreateProgramInput = {
       name: v.name,
-      status: v.status as PortfolioStatus,
+      status: v.status,
       ...(v.description ? { description: v.description } : {}),
       ...(v.portfolioId ? { portfolioId: parseInt(v.portfolioId, 10) } : {}),
       ...(v.ownerId ? { ownerId: v.ownerId } : {}),
-      ...(v.health ? { health: v.health as PortfolioHealth } : {}),
+      ...(healthValue ? { health: healthValue } : {}),
     };
     if (mode === "edit" && defaultValues) {
       onSubmitEdit({ id: defaultValues.id, ...base });
     } else {
-      onSubmitCreate(base as CreateProgramInput);
+      onSubmitCreate(base);
     }
   }
 

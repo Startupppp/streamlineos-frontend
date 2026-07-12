@@ -56,7 +56,7 @@ function AddUpdateForm({ projectId, incidentId }: AddUpdateFormProps) {
         projectId,
         incidentId,
         message: values.message,
-        newStatus: values.newStatus !== "none" ? (values.newStatus as IncidentStatus) : undefined,
+        newStatus: values.newStatus !== "none" ? STATUSES.find((s) => s === values.newStatus) : undefined,
       },
       {
         onSuccess: () => { toast.success("Update posted"); form.reset({ message: "", newStatus: "none" }); },

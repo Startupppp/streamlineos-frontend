@@ -139,16 +139,20 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
 
   const isPending = create.isPending || update.isPending;
 
-  function SelectField({ name, label, options, labels }: {
-    name: keyof Pick<FormValues, "severity" | "priority" | "status" | "assigneeId" | "qaOwnerId">;
+  function SelectField<K extends keyof Pick<FormValues, "severity" | "priority" | "status">>({ name, label, options, labels }: {
+    name: K;
     label: string;
-    options: string[];
+    options: ReadonlyArray<FormValues[K]>;
     labels?: Record<string, string>;
   }) {
+    function handleValueChange(v: string) {
+      const found = options.find((o) => o === v);
+      if (found !== undefined) form.setValue(name, found);
+    }
     return (
       <div className="space-y-1.5">
         <Label className="text-[11px]">{label}</Label>
-        <Select value={form.watch(name)} onValueChange={(v) => form.setValue(name, v as FormValues[typeof name])}>
+        <Select value={form.watch(name)} onValueChange={handleValueChange}>
           <SelectTrigger className="h-8 text-[11px]"><SelectValue /></SelectTrigger>
           <SelectContent>
             {options.map((o) => (

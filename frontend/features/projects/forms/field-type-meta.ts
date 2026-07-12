@@ -30,5 +30,11 @@ export const FORM_TYPE_LABELS: Record<FormType, string> = {
   generic: "Generic",
 };
 
-export const FIELD_TYPES = Object.keys(FIELD_TYPE_META) as FormFieldType[];
-export const FORM_TYPES = Object.keys(FORM_TYPE_LABELS) as FormType[];
+export const FIELD_TYPES: readonly FormFieldType[] = [
+  "text", "long_text", "number", "date", "dropdown", "multiselect",
+  "checkbox", "url", "user", "currency", "rating",
+];
+export const FORM_TYPES: readonly FormType[] = [
+  "task_request", "bug_report", "feature_request", "change_request",
+  "client_approval", "risk_report", "qa_issue", "generic",
+];

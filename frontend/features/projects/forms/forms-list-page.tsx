@@ -19,7 +19,7 @@ import { useCan } from "@/hooks/api/access";
 import { useForms, useCreateForm } from "@/hooks/api/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { FORM_TYPE_LABELS, FORM_TYPES } from "./field-type-meta";
-import type { ProjectForm, FormType } from "@/types/projects/forms";
+import type { ProjectForm } from "@/types/projects/forms";
 
 const TYPE_OPTIONS = [
   { value: "all", label: "All types" },
@@ -48,8 +48,10 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
   const isActiveParam =
     activeFilter === "active" ? true : activeFilter === "inactive" ? false : undefined;
 
+  const formTypeValue = FORM_TYPES.find((t) => t === typeFilter);
+
   const { data, isLoading, isError, refetch } = useForms(projectId, {
-    type: typeFilter === "all" ? undefined : (typeFilter as FormType),
+    type: formTypeValue,
     isActive: isActiveParam,
   });
 

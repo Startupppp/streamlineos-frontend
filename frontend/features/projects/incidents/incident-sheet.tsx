@@ -124,6 +124,16 @@ export function IncidentSheet({ projectId, open, onOpenChange, editIncident }: I
 
   const isPending = create.isPending || update.isPending;
 
+  function handleSeverityChange(v: string) {
+    const found = SEVERITIES.find((s) => s === v);
+    if (found) form.setValue("severity", found);
+  }
+
+  function handleStatusChange(v: string) {
+    const found = STATUSES.find((s) => s === v);
+    if (found) form.setValue("status", found);
+  }
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="p-0 flex flex-col w-full sm:max-w-xl">
@@ -156,7 +166,7 @@ export function IncidentSheet({ projectId, open, onOpenChange, editIncident }: I
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-[11px]">Severity</Label>
-                <Select value={form.watch("severity")} onValueChange={(v) => form.setValue("severity", v as IncidentSeverity)}>
+                <Select value={form.watch("severity")} onValueChange={handleSeverityChange}>
                   <SelectTrigger className="h-8 text-[11px]"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {SEVERITIES.map((s) => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}
@@ -165,7 +175,7 @@ export function IncidentSheet({ projectId, open, onOpenChange, editIncident }: I
               </div>
               <div className="space-y-1.5">
                 <Label className="text-[11px]">Status</Label>
-                <Select value={form.watch("status")} onValueChange={(v) => form.setValue("status", v as IncidentStatus)}>
+                <Select value={form.watch("status")} onValueChange={handleStatusChange}>
                   <SelectTrigger className="h-8 text-[11px]"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {STATUSES.map((s) => <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>)}

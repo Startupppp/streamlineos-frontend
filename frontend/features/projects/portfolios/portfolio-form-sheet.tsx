@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import type { OrgMember } from "@/types/organization";
-import type { Portfolio, CreatePortfolioInput, UpdatePortfolioInput, PortfolioStatus, PortfolioHealth } from "@/types/projects";
+import type { Portfolio, CreatePortfolioInput, UpdatePortfolioInput } from "@/types/projects";
 
 const NONE_SENTINEL = "__none__";
 
@@ -33,7 +33,7 @@ const schema = z.object({
   description: z.string(),
   ownerId: z.string(),
   status: z.enum(["active", "on_hold", "completed", "archived"]),
-  health: z.string(),
+  health: z.enum(["", "on_track", "at_risk", "off_track"]),
   strategicGoal: z.string(),
 });
 
@@ -73,18 +73,20 @@ export function PortfolioFormSheet({ open, onOpenChange, mode, defaultValues, on
   }, [open, mode, defaultValues, form]);
 
   function handleSubmit(v: FormValues) {
-    const base = {
+    const HEALTH_VALUES = ["on_track", "at_risk", "off_track"] as const;
+    const healthValue = HEALTH_VALUES.find((h) => h === v.health);
+    const base: CreatePortfolioInput = {
       name: v.name,
-      status: v.status as PortfolioStatus,
+      status: v.status,
       ...(v.description ? { description: v.description } : {}),
       ...(v.ownerId ? { ownerId: v.ownerId } : {}),
-      ...(v.health ? { health: v.health as PortfolioHealth } : {}),
+      ...(healthValue ? { health: healthValue } : {}),
       ...(v.strategicGoal ? { strategicGoal: v.strategicGoal } : {}),
     };
     if (mode === "edit" && defaultValues) {
       onSubmitEdit({ id: defaultValues.id, ...base });
     } else {
-      onSubmitCreate(base as CreatePortfolioInput);
+      onSubmitCreate(base);
     }
   }
 

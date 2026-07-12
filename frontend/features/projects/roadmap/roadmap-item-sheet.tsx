@@ -54,7 +54,8 @@ export function RoadmapItemSheet({ item, onClose }: RoadmapItemSheetProps) {
     setDescription(e.target.value);
   }
   function handleStatusChange(v: string) {
-    setStatus(v as RoadmapStatus);
+    const found = ROADMAP_STATUS_OPTIONS.find((o) => o.value === v);
+    if (found) setStatus(found.value);
   }
   function handleTargetQuarterChange(e: React.ChangeEvent<HTMLInputElement>) {
     setTargetQuarter(e.target.value);

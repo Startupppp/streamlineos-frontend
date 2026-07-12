@@ -9,6 +9,8 @@ import type { AllWorkTicket } from "@/types/projects";
 
 type BulkPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 
+const BULK_PRIORITIES: readonly BulkPriority[] = ["LOW", "MEDIUM", "HIGH", "URGENT"];
+
 interface UseAllWorkBulkReturn {
   tableSelection: Set<string | number>;
   setTableSelection: React.Dispatch<React.SetStateAction<Set<string | number>>>;
@@ -89,7 +91,10 @@ export function useAllWorkBulk(tickets: AllWorkTicket[]): UseAllWorkBulkReturn {
   );
 
   const handleBulkPriority = useCallback(
-    (value: string) => { void handleBulkAction({ priority: value as BulkPriority }); },
+    (value: string) => {
+      const found = BULK_PRIORITIES.find((p) => p === value);
+      if (found) void handleBulkAction({ priority: found });
+    },
     [handleBulkAction]
   );
 

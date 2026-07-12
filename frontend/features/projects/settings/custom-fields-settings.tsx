@@ -171,7 +171,8 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
   );
 
   const handleFieldTypeChange = useCallback((v: string) => {
-    setFieldType(v as CustomFieldType);
+    const found = FIELD_TYPES.find((t) => t.value === v);
+    if (found) setFieldType(found.value);
   }, []);
 
   const handleCancelForm = useCallback(() => {

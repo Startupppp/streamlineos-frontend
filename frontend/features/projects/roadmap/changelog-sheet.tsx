@@ -48,7 +48,10 @@ export function ChangelogSheet({ entry, onClose }: ChangelogSheetProps) {
 
   function handleTitleChange(e: React.ChangeEvent<HTMLInputElement>) { setTitle(e.target.value); }
   function handleContentChange(e: React.ChangeEvent<HTMLTextAreaElement>) { setContent(e.target.value); }
-  function handleTypeChange(v: string) { setType(v as ChangelogType); }
+  function handleTypeChange(v: string) {
+    const found = CHANGELOG_TYPE_OPTIONS.find((o) => o.value === v);
+    if (found) setType(found.value);
+  }
   function handleVersionChange(e: React.ChangeEvent<HTMLInputElement>) { setVersion(e.target.value); }
 
   function handleSave() {

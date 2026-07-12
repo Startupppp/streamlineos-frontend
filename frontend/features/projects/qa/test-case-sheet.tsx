@@ -160,6 +160,19 @@ export function TestCaseSheet({
 
   const isPending = create.isPending || update.isPending;
 
+  const PRIORITY_VALUES = ["low", "medium", "high"] as const;
+  const AUTOMATION_VALUES = ["manual", "automated", "planned"] as const;
+
+  function handlePriorityChange(v: string) {
+    const found = PRIORITY_VALUES.find((p) => p === v);
+    if (found) form.setValue("priority", found);
+  }
+
+  function handleAutomationStatusChange(v: string) {
+    const found = AUTOMATION_VALUES.find((a) => a === v);
+    if (found) form.setValue("automationStatus", found);
+  }
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="p-0 flex flex-col w-full sm:max-w-lg">
@@ -211,9 +224,7 @@ export function TestCaseSheet({
                 <Label className="text-[11px]">Priority</Label>
                 <Select
                   value={form.watch("priority")}
-                  onValueChange={(v) =>
-                    form.setValue("priority", v as FormValues["priority"])
-                  }
+                  onValueChange={handlePriorityChange}
                 >
                   <SelectTrigger className="h-8 text-[11px]">
                     <SelectValue />
@@ -232,9 +243,7 @@ export function TestCaseSheet({
                 <Label className="text-[11px]">Automation</Label>
                 <Select
                   value={form.watch("automationStatus")}
-                  onValueChange={(v) =>
-                    form.setValue("automationStatus", v as FormValues["automationStatus"])
-                  }
+                  onValueChange={handleAutomationStatusChange}
                 >
                   <SelectTrigger className="h-8 text-[11px]">
                     <SelectValue />

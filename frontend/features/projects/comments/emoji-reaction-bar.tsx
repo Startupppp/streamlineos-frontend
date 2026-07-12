@@ -25,7 +25,7 @@ export function EmojiReactionBar({ reactions, onReact, onUnreact }: EmojiReactio
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
+      if (pickerRef.current && e.target instanceof Node && !pickerRef.current.contains(e.target)) {
         setShowPicker(false);
       }
     }

@@ -26,8 +26,10 @@ export const FeedbackRow = memo(function FeedbackRow({ post, roadmapItems, onDel
   const update = useUpdateFeedbackPost();
 
   const handleStatusChange = useCallback((value: string) => {
+    const found = FEEDBACK_STATUS_OPTIONS.find((o) => o.value === value);
+    if (!found) return;
     update.mutate(
-      { id: post.id, status: value as FeedbackStatus },
+      { id: post.id, status: found.value },
       {
         onSuccess: () => toast.success("Status updated"),
         onError: () => toast.error("Failed to update status"),
