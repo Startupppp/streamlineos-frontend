@@ -94,35 +94,16 @@ export function JobErrorsSheet({ jobId, open, onOpenChange }: JobErrorsSheetProp
                 </div>
               </div>
 
-              {job.errorRows > 0 && job.errors && job.errors.length > 0 && (
+              {job.errorRows > 0 && errorRows.length > 0 && (
                 <div className="space-y-1.5">
                   <p className="text-xs font-medium text-muted-foreground">
-                    Validation errors ({job.errors.length})
+                    Validation errors ({errorRows.length})
                   </p>
-                  <div className="rounded-lg border border-border overflow-hidden">
-                    <table className="w-full text-xs">
-                      <thead className="bg-muted/50">
-                        <tr>
-                          <th className="px-2 py-1.5 text-left font-medium text-muted-foreground">Row</th>
-                          <th className="px-2 py-1.5 text-left font-medium text-muted-foreground">Field</th>
-                          <th className="px-2 py-1.5 text-left font-medium text-muted-foreground">Message</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {job.errors.map((err, idx) => (
-                          <tr key={idx} className="border-t border-border/60">
-                            <td className="px-2 py-1.5 tabular-nums text-muted-foreground">
-                              {err.row}
-                            </td>
-                            <td className="px-2 py-1.5 font-mono text-muted-foreground">
-                              {err.field ?? "—"}
-                            </td>
-                            <td className="px-2 py-1.5 text-red-700">{err.message}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                  <DataTable
+                    data={errorRows}
+                    columns={errorColumns}
+                    getRowKey={(row) => row._idx}
+                  />
                 </div>
               )}
 

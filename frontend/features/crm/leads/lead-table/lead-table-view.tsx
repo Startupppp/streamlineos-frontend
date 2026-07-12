@@ -1,54 +1,22 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import {
-  TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Columns3, ChevronLeft, ChevronRight } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Columns3 } from "lucide-react";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyLeadsIllustration } from "@/components/illustrations";
-import { cn } from "@/lib/utils";
 import {
   LeadTableViewProps, ALL_COLUMNS, PAGE_SIZES, getStoredColumns,
 } from "./types";
-import { SortIcon, useLeadCellRenderer } from "./lead-columns";
+import { useLeadCellRenderer } from "./lead-columns";
 import { BulkActionsBar, ConversionModal, LostModal } from "./lead-actions";
-
-interface SortableHeadProps {
-  col: { key: string; label: string; sortable: boolean };
-  sortColumn: string;
-  sortDirection: "asc" | "desc";
-  onSort: (key: string) => void;
-}
-
-function SortableHead({ col, sortColumn, sortDirection, onSort }: SortableHeadProps) {
-  const handleClick = useCallback(() => { if (col.sortable) onSort(col.key); }, [col.key, col.sortable, onSort]);
-  return (
-    <TableHead
-      className={cn(
-        "text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 whitespace-nowrap",
-        col.sortable && "cursor-pointer select-none hover:text-foreground",
-      )}
-      onClick={handleClick}
-    >
-      <span className="flex items-center">
-        {col.label}
-        {col.sortable && (
-          <SortIcon column={col.key} sortColumn={sortColumn} sortDirection={sortDirection} />
-        )}
-      </span>
-    </TableHead>
-  );
-}
 
 interface ColumnToggleItemProps {
   col: { key: string; label: string };
@@ -65,17 +33,6 @@ function ColumnToggleItem({ col, checked, onToggle }: ColumnToggleItemProps) {
   );
 }
 
-interface LeadSelectCheckboxProps {
-  leadId: number;
-  checked: boolean;
-  onToggle: (id: number) => void;
-}
-
-function LeadSelectCheckbox({ leadId, checked, onToggle }: LeadSelectCheckboxProps) {
-  const handleChange = useCallback(() => onToggle(leadId), [leadId, onToggle]);
-  return <Checkbox checked={checked} onCheckedChange={handleChange} className="h-3.5 w-3.5" />;
-}
-
 export function LeadTableView({
   leads, totalCount, page, totalPages, pageSize,
   sortColumn, sortDirection, onSort, onPageChange, onPageSizeChange,
@@ -89,22 +46,6 @@ export function LeadTableView({
 
   const [conversionModal, setConversionModal] = useState<{ leadId: number; leadName: string } | null>(null);
   const [lostModal, setLostModal] = useState<{ leadId: number; leadName: string } | null>(null);
-
-  const allSelected = leads.length > 0 && leads.every((l) => selectedIds.has(l.id));
-
-  const toggleSelect = useCallback((id: number) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) { next.delete(id); } else { next.add(id); }
-      return next;
-    });
-  }, []);
-
-  const toggleAll = useCallback(() => {
-    setSelectedIds(allSelected ? new Set() : new Set(leads.map((l) => l.id)));
-  }, [leads, allSelected]);
-
-  const selectedArray = useMemo(() => [...selectedIds], [selectedIds]);
 
   const toggleColumn = useCallback((key: string) => {
     setVisibleColumns((prev) => {
@@ -136,10 +77,7 @@ export function LeadTableView({
   );
 
   const handlePageSizeChange = useCallback((v: string) => onPageSizeChange(Number(v)), [onPageSizeChange]);
-  const handlePrevPage = useCallback(() => onPageChange(page - 1), [onPageChange, page]);
-  const handleNextPage = useCallback(() => onPageChange(page + 1), [onPageChange, page]);
   const handleClearSelection = useCallback(() => setSelectedIds(new Set()), []);
-
   const handleConversionClose = useCallback(() => setConversionModal(null), []);
   const handleLostClose = useCallback(() => setLostModal(null), []);
 
@@ -173,134 +111,91 @@ export function LeadTableView({
   const fromRow = (page - 1) * pageSize + 1;
   const toRow = Math.min(page * pageSize, totalCount);
 
+  const selectedArray = useMemo(() => [...selectedIds], [selectedIds]);
+
+  const selectionProp = useMemo(() => ({
+    selected: new Set<string | number>(selectedIds),
+    onChange: (sel: Set<string | number>) => setSelectedIds(new Set([...sel].map(Number))),
+  }), [selectedIds]);
+
+  const columns: DataTableColumn<typeof leads[number]>[] = useMemo(
+    () => cols.map((col) => ({
+      key: col.key,
+      header: col.label,
+      sortable: col.sortable,
+      cell: (row) => renderCell(row, col.key),
+    })),
+    [cols, renderCell],
+  );
+
+  const toolbar = (
+    <div className="flex items-center justify-between w-full">
+      <span className="text-[11px] text-muted-foreground tabular-nums">
+        {totalCount > 0 ? `${fromRow}–${toRow} of ${totalCount}` : "0 leads"}
+      </span>
+      <div className="flex items-center gap-1.5">
+        <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
+          <SelectTrigger className="h-6 w-[70px] text-[10px]"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {PAGE_SIZES.map((s) => (
+              <SelectItem key={s} value={String(s)} className="text-[11px]">{s}/pg</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2">
+              <Columns3 className="h-3 w-3 mr-1" />Cols
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-44 max-h-80 overflow-y-auto">
+            {ALL_COLUMNS.map((col) => (
+              <ColumnToggleItem
+                key={col.key}
+                col={col}
+                checked={visibleColumns.has(col.key)}
+                onToggle={toggleColumn}
+              />
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </div>
+  );
+
+  const emptyState = (
+    <EmptyState
+      illustration={<EmptyLeadsIllustration />}
+      title="No leads found"
+      description="No leads match your current filters."
+      className="border-0 bg-transparent min-h-[40vh]"
+    />
+  );
+
   return (
     <div className="flex flex-col h-full min-h-0">
-      <div className="shrink-0 flex items-center justify-between px-1 pb-0.5">
-        <span className="text-[11px] text-muted-foreground tabular-nums">
-          {totalCount > 0 ? `${fromRow}–${toRow} of ${totalCount}` : "0 leads"}
-        </span>
-        <div className="flex items-center gap-1.5">
-          <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
-            <SelectTrigger className="h-6 w-[70px] text-[10px]"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {PAGE_SIZES.map((s) => (
-                <SelectItem key={s} value={String(s)} className="text-[11px]">{s}/pg</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2">
-                <Columns3 className="h-3 w-3 mr-1" />Cols
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44 max-h-80 overflow-y-auto">
-              {ALL_COLUMNS.map((col) => (
-                <ColumnToggleItem
-                  key={col.key}
-                  col={col}
-                  checked={visibleColumns.has(col.key)}
-                  onToggle={toggleColumn}
-                />
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
-
       <p className="sm:hidden shrink-0 text-[10px] text-muted-foreground/70 px-1 pb-0.5">
         Swipe horizontally to see more columns
       </p>
-      <div className="flex-1 min-h-0 border border-border rounded-md overflow-auto">
-        <div className="min-w-max">
-          <table className="w-full caption-bottom text-[11px]">
-            <TableHeader className="sticky top-0 z-10 bg-muted/80">
-              <TableRow className="hover:bg-muted/80 border-b-2 border-border">
-                <TableHead className="w-8 px-2 py-1.5">
-                  <Checkbox checked={allSelected} onCheckedChange={toggleAll} className="h-3.5 w-3.5" />
-                </TableHead>
-                {cols.map((col) => (
-                  <SortableHead
-                    key={col.key}
-                    col={col}
-                    sortColumn={sortColumn}
-                    sortDirection={sortDirection}
-                    onSort={onSort}
-                  />
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                Array.from({ length: 10 }).map((_, i) => (
-                  <TableRow key={i} className="h-8">
-                    <TableCell className="px-2 py-1">
-                      <Skeleton className="h-3 w-3.5" />
-                    </TableCell>
-                    {cols.map((col) => (
-                      <TableCell key={col.key} className="px-2 py-1">
-                        <Skeleton className="h-3 w-full" />
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : leads.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={cols.length + 1} className="p-0">
-                    <EmptyState
-                      illustration={<EmptyLeadsIllustration />}
-                      title="No leads found"
-                      description="No leads match your current filters."
-                      className="border-0 bg-transparent min-h-[40vh]"
-                    />
-                  </TableCell>
-                </TableRow>
-              ) : (
-                leads.map((lead, idx) => (
-                  <TableRow
-                    key={lead.id}
-                    className={cn(
-                      "h-8",
-                      idx % 2 === 1 && "bg-muted/10",
-                      selectedIds.has(lead.id) && "bg-blue-500/5 hover:bg-blue-500/10",
-                      "hover:bg-muted/30 transition-colors",
-                    )}
-                  >
-                    <TableCell className="px-2 py-1">
-                      <LeadSelectCheckbox
-                        leadId={lead.id}
-                        checked={selectedIds.has(lead.id)}
-                        onToggle={toggleSelect}
-                      />
-                    </TableCell>
-                    {cols.map((col) => (
-                      <TableCell key={col.key} className="px-2 py-1">
-                        {renderCell(lead, col.key)}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </table>
-        </div>
-      </div>
-
-      {totalPages > 1 && (
-        <div className="shrink-0 flex items-center justify-between pt-0.5 px-1">
-          <span className="text-[10px] text-muted-foreground tabular-nums">
-            Page {page}/{totalPages}
-          </span>
-          <div className="flex items-center gap-0.5">
-            <Button variant="outline" size="sm" className="h-6 w-6 p-0" disabled={page <= 1} onClick={handlePrevPage}>
-              <ChevronLeft className="h-3 w-3" />
-            </Button>
-            <Button variant="outline" size="sm" className="h-6 w-6 p-0" disabled={page >= totalPages} onClick={handleNextPage}>
-              <ChevronRight className="h-3 w-3" />
-            </Button>
-          </div>
-        </div>
-      )}
+      <DataTable
+        data={leads}
+        columns={columns}
+        getRowKey={(row) => row.id}
+        selection={selectionProp}
+        pagination={{
+          mode: "server",
+          page,
+          pageSize,
+          total: totalCount,
+          onPageChange,
+          onPageSizeChange,
+        }}
+        sortState={{ field: sortColumn, direction: sortDirection, onChange: (field) => onSort(field) }}
+        isLoading={isLoading}
+        emptyState={emptyState}
+        toolbar={toolbar}
+        className="flex-1 min-h-0"
+      />
 
       <BulkActionsBar
         selectedIds={selectedIds}

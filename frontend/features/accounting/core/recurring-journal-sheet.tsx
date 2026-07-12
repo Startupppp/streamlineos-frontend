@@ -70,6 +70,7 @@ const recurringSchema = z.object({
 
 type RecurringFormValues = z.infer<typeof recurringSchema>;
 type LineValue = RecurringFormValues["lines"][number];
+type LineRow = LineValue & { _fieldId: string; _index: number };
 
 function parseMoney(value: string): number {
   const n = parseFloat(value.replace(/,/g, ""));
@@ -200,7 +201,7 @@ export function RecurringJournalSheet({
 
   const isPending = createMutation.isPending || updateMutation.isPending;
 
-  const lineColumns: DataTableColumn<LineValue & { _index: number }>[] = [
+  const lineColumns: DataTableColumn<LineRow>[] = [
     {
       key: "accountId",
       header: "Account",
@@ -287,8 +288,7 @@ export function RecurringJournalSheet({
     },
   ];
 
-  const lineRows = fields.map((field, index) => ({
-    ...watchedLines[index],
+  const lineRows: LineRow[] = fields.map((field, index) => ({
     accountId: watchedLines[index]?.accountId ?? "",
     debit: watchedLines[index]?.debit ?? "",
     credit: watchedLines[index]?.credit ?? "",

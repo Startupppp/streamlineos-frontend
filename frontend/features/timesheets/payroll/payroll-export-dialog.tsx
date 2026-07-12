@@ -18,14 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useCreateTimesheetPayrollExport } from "@/hooks/api/timesheets/payroll";
 import {
   applyMapping,
@@ -50,6 +43,23 @@ interface PayrollExportDialogProps {
   allRows: PayrollSummaryRow[];
   selectedUserIds: Set<string>;
   mapping: PayrollMapping;
+}
+
+interface PreviewRow {
+  rowIndex: number;
+  cells: string[];
+}
+
+function buildPreviewColumns(
+  enabledCols: PayrollMapping["columns"],
+): DataTableColumn<PreviewRow>[] {
+  return enabledCols.map((col, index) => ({
+    key: col.key,
+    header: col.header,
+    headerClassName: "text-[10px] py-1 px-2 font-bold uppercase tracking-wider",
+    className: "text-[11px] py-1 px-2 font-mono",
+    cell: (row) => row.cells[index] ?? "",
+  }));
 }
 
 export function PayrollExportDialog({
@@ -77,7 +87,6 @@ export function PayrollExportDialog({
       : allRows;
 
   const previewRowCount = Math.min(6, targetRows.length);
-
   const enabledCols = mapping.columns.filter((c) => c.enabled).slice(0, 6);
 
   const handleClose = useCallback(() => {
@@ -120,6 +129,9 @@ export function PayrollExportDialog({
     targetRows.slice(0, previewRowCount).map((row) => summaryRowToExportRow(row, start, end)),
     { ...mapping, columns: enabledCols },
   );
+
+  const previewColumns = buildPreviewColumns(enabledCols);
+  const previewData: PreviewRow[] = preview.matrix.map((cells, rowIndex) => ({ rowIndex, cells }));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -172,35 +184,12 @@ export function PayrollExportDialog({
             <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
               Preview ({targetRows.length} people)
             </p>
-            <div className="rounded-md border border-border overflow-auto max-h-[160px]">
-              <Table>
-                <TableHeader>
-                  <TableRow className="hover:bg-transparent">
-                    {enabledCols.map((col) => (
-                      <TableHead key={col.key} className="text-[10px] py-1 px-2 font-bold uppercase tracking-wider">
-                        {col.header}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {preview.matrix.map((cells, rowIndex) => (
-                    <TableRow
-                      key={targetRows[rowIndex]?.userId ?? rowIndex}
-                      className="h-7 hover:bg-transparent"
-                    >
-                      {cells.map((value, cellIndex) => (
-                        <TableCell
-                          key={enabledCols[cellIndex]?.key ?? cellIndex}
-                          className="text-[11px] py-1 px-2 font-mono"
-                        >
-                          {value}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+            <div className="max-h-[160px] overflow-auto">
+              <DataTable
+                data={previewData}
+                columns={previewColumns}
+                getRowKey={(row) => row.rowIndex}
+              />
             </div>
           </div>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { format } from "date-fns";
 import { Copy, Download, DollarSign, FileText, Image, Link2 } from "lucide-react";
 import { toast } from "sonner";
@@ -15,14 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
@@ -58,6 +51,67 @@ const MARKETING_ASSETS = [
   { label: "Email Signature", size: "600×200px", icon: FileText },
 ];
 
+type Commission = { id: number; status: string; amountInPaise: number; createdAt: string };
+type CouponRow = { code: string; signupCount: number; totalEarned: number };
+
+const COMMISSION_COLUMNS: DataTableColumn<Commission>[] = [
+  {
+    key: "status",
+    header: "Status",
+    cell: (c): ReactNode => (
+      <Badge variant={COMMISSION_BADGE[c.status] ?? "secondary"} className="text-[10px]">
+        {c.status}
+      </Badge>
+    ),
+  },
+  {
+    key: "amount",
+    header: "Amount",
+    headerClassName: "text-right",
+    className: "text-right font-mono font-medium text-sm",
+    cell: (c): ReactNode => fmt(c.amountInPaise),
+  },
+  {
+    key: "date",
+    header: "Date",
+    headerClassName: "text-right",
+    className: "text-right text-xs text-muted-foreground",
+    cell: (c): ReactNode => format(new Date(c.createdAt), "dd MMM yyyy"),
+  },
+];
+
+const COUPON_COLUMNS: DataTableColumn<CouponRow>[] = [
+  {
+    key: "code",
+    header: "Coupon Code",
+    cell: (row): ReactNode => (
+      <span className="font-mono text-sm">{row.code}</span>
+    ),
+  },
+  {
+    key: "signupCount",
+    header: "Redemptions",
+    headerClassName: "text-right",
+    className: "text-right text-sm",
+    cell: (row): ReactNode => row.signupCount,
+  },
+  {
+    key: "totalEarned",
+    header: "Revenue Generated",
+    headerClassName: "text-right",
+    className: "text-right font-mono text-sm",
+    cell: (row): ReactNode => fmt(row.totalEarned),
+  },
+];
+
+function getCommissionRowKey(c: Commission): string | number {
+  return c.id;
+}
+
+function getCouponRowKey(row: CouponRow): string | number {
+  return row.code;
+}
+
 export default function AffiliatePage() {
   const { data, isLoading } = useAffiliate();
   const register = useRegisterAffiliate();
@@ -66,7 +120,7 @@ export default function AffiliatePage() {
   const [email, setEmail] = useState("");
 
   const affiliate = data?.affiliate;
-  const commissions = data?.commissions ?? [];
+  const commissions: Commission[] = data?.commissions ?? [];
 
   function handleCopyLink() {
     if (!affiliate) return;
@@ -190,39 +244,12 @@ export default function AffiliatePage() {
                 <div className="px-4 py-3 border-b border-border">
                   <p className="text-sm font-semibold">Commission History</p>
                 </div>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Status</TableHead>
-                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Amount</TableHead>
-                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Date</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {commissions.map((c) => (
-                        <TableRow key={c.id} className="border-b border-border/50 hover:bg-muted/30">
-                          <TableCell>
-                            <Badge
-                              variant={
-                                COMMISSION_BADGE[c.status] ?? "secondary"
-                              }
-                              className="text-[10px]"
-                            >
-                              {c.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right font-mono font-medium text-sm">
-                            {fmt(c.amountInPaise)}
-                          </TableCell>
-                          <TableCell className="text-right text-xs text-muted-foreground">
-                            {format(new Date(c.createdAt), "dd MMM yyyy")}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                <DataTable
+                  data={commissions}
+                  columns={COMMISSION_COLUMNS}
+                  getRowKey={getCommissionRowKey}
+                  className="border-0 rounded-none"
+                />
               </div>
             )}
 
@@ -259,30 +286,18 @@ export default function AffiliatePage() {
               </CardHeader>
               <CardContent>
                 {affiliate.referralCode ? (
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-                          <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Coupon Code</TableHead>
-                          <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Redemptions</TableHead>
-                          <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Revenue Generated</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        <TableRow className="border-b border-border/50 hover:bg-muted/30">
-                          <TableCell className="font-mono text-sm">
-                            {affiliate.referralCode}
-                          </TableCell>
-                          <TableCell className="text-right text-sm">
-                            {affiliate.signupCount}
-                          </TableCell>
-                          <TableCell className="text-right font-mono text-sm">
-                            {fmt(affiliate.totalEarned)}
-                          </TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
-                  </div>
+                  <DataTable
+                    data={[
+                      {
+                        code: affiliate.referralCode,
+                        signupCount: affiliate.signupCount,
+                        totalEarned: affiliate.totalEarned,
+                      },
+                    ]}
+                    columns={COUPON_COLUMNS}
+                    getRowKey={getCouponRowKey}
+                    className="border-0 rounded-none"
+                  />
                 ) : (
                   <p className="text-sm text-muted-foreground">
                     Contact support to get your affiliate coupon code assigned.

@@ -1,15 +1,8 @@
+import { useMemo } from "react";
 import { Trophy } from "lucide-react";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { cn } from "@/lib/utils";
 import type { SalesLeaderboardEntry } from "@/types/leads";
 import { formatCurrency } from "../lib/types";
@@ -19,10 +12,102 @@ interface TeamLeaderboardCardProps {
   isLoading: boolean;
 }
 
+type RankedEntry = SalesLeaderboardEntry & { rank: number };
+
+const columns: DataTableColumn<RankedEntry>[] = [
+  {
+    key: "rank",
+    header: "Rank",
+    headerClassName: "w-10",
+    cell: (row) => (
+      <span
+        className={cn(
+          "inline-flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold",
+          row.rank === 1 && "bg-amber-100 text-amber-700",
+          row.rank === 2 && "bg-slate-100 text-slate-600",
+          row.rank === 3 && "bg-orange-100 text-orange-700",
+          row.rank > 3 && "text-muted-foreground",
+        )}
+      >
+        {row.rank}
+      </span>
+    ),
+  },
+  {
+    key: "name",
+    header: "Name",
+    sortable: true,
+    sortValue: (row) => row.name,
+    cell: (row) => <span className="text-[11px] font-medium">{row.name}</span>,
+  },
+  {
+    key: "leadsAssigned",
+    header: "Leads",
+    headerClassName: "text-right",
+    className: "text-right",
+    cell: (row) => (
+      <span className="text-[11px] font-mono tabular-nums">{row.leadsAssigned}</span>
+    ),
+  },
+  {
+    key: "leadsConverted",
+    header: "Converted",
+    headerClassName: "text-right",
+    className: "text-right",
+    cell: (row) => (
+      <span className="text-[11px] font-mono tabular-nums text-emerald-600">
+        {row.leadsConverted}
+      </span>
+    ),
+  },
+  {
+    key: "totalRevenue",
+    header: "Revenue",
+    headerClassName: "text-right",
+    className: "text-right",
+    cell: (row) => (
+      <span className="text-[11px] font-mono tabular-nums">
+        {formatCurrency(row.totalRevenue)}
+      </span>
+    ),
+  },
+  {
+    key: "convRate",
+    header: "Conv. Rate",
+    headerClassName: "text-right",
+    className: "text-right",
+    cell: (row) => {
+      const convRate =
+        row.leadsAssigned > 0
+          ? ((row.leadsConverted / row.leadsAssigned) * 100).toFixed(1)
+          : "0.0";
+      return (
+        <span
+          className={cn(
+            "text-[11px] font-medium",
+            Number(convRate) >= 50
+              ? "text-emerald-600"
+              : Number(convRate) >= 25
+                ? "text-amber-600"
+                : "text-muted-foreground",
+          )}
+        >
+          {convRate}%
+        </span>
+      );
+    },
+  },
+];
+
 export function TeamLeaderboardCard({
   leaderboard,
   isLoading,
 }: TeamLeaderboardCardProps) {
+  const rankedLeaderboard = useMemo(
+    () => (leaderboard ?? []).map((rep, i) => ({ ...rep, rank: i + 1 })),
+    [leaderboard],
+  );
+
   return (
     <Card className="rounded-lg border border-border">
       <CardHeader className="pb-3">
@@ -31,85 +116,15 @@ export function TeamLeaderboardCard({
           Team Leaderboard
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-0">
-        {isLoading ? (
-          <div className="p-4 space-y-2">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-8 w-full" />
-            ))}
-          </div>
-        ) : !leaderboard?.length ? (
+      <DataTable
+        data={rankedLeaderboard}
+        columns={columns}
+        getRowKey={(row) => row.userId}
+        isLoading={isLoading}
+        emptyState={
           <ChartEmptyState message="No team data available" compact className="py-10 px-4" />
-        ) : (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
-                <TableRow className="border-b-2 border-border hover:bg-transparent">
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 w-10">Rank</TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Name</TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Leads</TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Converted</TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Revenue</TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Conv. Rate</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {leaderboard.map((rep, i) => {
-                  const convRate =
-                    rep.leadsAssigned > 0
-                      ? (
-                          (rep.leadsConverted / rep.leadsAssigned) *
-                          100
-                        ).toFixed(1)
-                      : "0.0";
-
-                  return (
-                    <TableRow key={rep.userId} className="h-8 hover:bg-muted/30 transition-colors">
-                      <TableCell className="px-2 py-1 text-[11px]">
-                        <span
-                          className={cn(
-                            "inline-flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold",
-                            i === 0 && "bg-amber-100 text-amber-700",
-                            i === 1 && "bg-slate-100 text-slate-600",
-                            i === 2 && "bg-orange-100 text-orange-700",
-                            i > 2 && "text-muted-foreground",
-                          )}
-                        >
-                          {i + 1}
-                        </span>
-                      </TableCell>
-                      <TableCell className="px-2 py-1 text-[11px] font-medium">{rep.name}</TableCell>
-                      <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums">
-                        {rep.leadsAssigned}
-                      </TableCell>
-                      <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums text-emerald-600">
-                        {rep.leadsConverted}
-                      </TableCell>
-                      <TableCell className="px-2 py-1 text-[11px] text-right font-mono tabular-nums">
-                        {formatCurrency(rep.totalRevenue)}
-                      </TableCell>
-                      <TableCell className="px-2 py-1 text-[11px] text-right">
-                        <span
-                          className={cn(
-                            "font-medium",
-                            Number(convRate) >= 50
-                              ? "text-emerald-600"
-                              : Number(convRate) >= 25
-                                ? "text-amber-600"
-                                : "text-muted-foreground",
-                          )}
-                        >
-                          {convRate}%
-                        </span>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-      </CardContent>
+        }
+      />
     </Card>
   );
 }

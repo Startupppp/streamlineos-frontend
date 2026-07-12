@@ -12,6 +12,8 @@ import { useProjectLabels } from "@/hooks/api/projects/projects";
 import { FilterChip } from "./filter-chips";
 import { FilterCommandMenu } from "./filter-command-menu";
 import type { FilterState } from "./filter-command-menu";
+import type { StatusFilterOption } from "./filter-category-submenu";
+import { buildStatusConfig } from "@/features/projects/shared/types";
 
 interface Member {
   id: string;
@@ -31,7 +33,7 @@ interface ProjectOption {
 interface TicketFilterBarProps {
   sprints?: { id: number; name: string }[];
   members?: Member[];
-  statuses?: Array<{ name: string }>;
+  statuses?: Array<{ name: string; color?: string | null; type?: string | null }>;
   projectId?: number;
   projectOptions?: ProjectOption[];
   showTypeFilter?: boolean;
@@ -95,10 +97,22 @@ export function TicketFilterBar({
   const selectedCycles = useMemo(() => parseMulti(cycleParam), [cycleParam]);
   const selectedProjectIds = useMemo(() => parseMulti(projectIdsParam), [projectIdsParam]);
 
-  const statusOptions =
-    statuses && statuses.length > 0
-      ? statuses.map((s) => s.name)
-      : ["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"];
+  const statusItems = useMemo<StatusFilterOption[]>(() => {
+    if (statuses && statuses.length > 0) {
+      return statuses.map((s) => ({
+        name: s.name,
+        color: s.color ?? null,
+        type: s.type ?? null,
+      }));
+    }
+    return (["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"] as const).map((name) => ({
+      name,
+      color: null,
+      type: null,
+    }));
+  }, [statuses]);
+
+  const statusConfig = useMemo(() => buildStatusConfig(statusItems), [statusItems]);
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -284,7 +298,8 @@ export function TicketFilterBar({
 
       <FilterCommandMenu
         activeFilterCount={activeFilterCount}
-        statusOptions={statusOptions}
+        statusItems={statusItems}
+        statusConfig={statusConfig}
         members={members ?? []}
         labels={labels}
         cycles={cycles}

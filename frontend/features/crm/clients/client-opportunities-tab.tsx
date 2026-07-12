@@ -2,6 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { cn } from "@/lib/utils";
 import { useClientOpportunities } from "@/hooks/api/crm/clients";
 import { formatAmount, formatDate } from "./utils";
@@ -23,85 +24,71 @@ const OPP_STAGE_BADGE_CLASSES: Record<ClientOpportunity["stage"], string> = {
   lost: "bg-red-50 text-red-700 border-red-200",
 };
 
+const columns: DataTableColumn<ClientOpportunity>[] = [
+  {
+    key: "title",
+    header: "Title",
+    cell: (row) => <span className="text-[11px] font-medium">{row.title}</span>,
+  },
+  {
+    key: "type",
+    header: "Type",
+    cell: (row) => (
+      <Badge
+        variant="outline"
+        className="text-[9px] px-1.5 py-0 h-4 bg-muted text-muted-foreground border-border capitalize"
+      >
+        {row.type === "cross_sell" ? "Cross-sell" : "Upsell"}
+      </Badge>
+    ),
+  },
+  {
+    key: "stage",
+    header: "Stage",
+    cell: (row) => (
+      <Badge
+        variant="outline"
+        className={cn("text-[9px] px-1.5 py-0 h-4", OPP_STAGE_BADGE_CLASSES[row.stage])}
+      >
+        {OPP_STAGE_LABELS[row.stage]}
+      </Badge>
+    ),
+  },
+  {
+    key: "value",
+    header: "Value",
+    cell: (row) => (
+      <span className="text-[11px] tabular-nums">{formatAmount(row.value)}</span>
+    ),
+  },
+  {
+    key: "expectedCloseDate",
+    header: "Expected Close",
+    cell: (row) => (
+      <span className="text-[11px] text-muted-foreground">
+        {formatDate(row.expectedCloseDate)}
+      </span>
+    ),
+  },
+];
+
 export function ClientOpportunitiesTab({ clientId }: { clientId: number }) {
   const { data, isLoading } = useClientOpportunities(clientId);
 
-  if (isLoading) {
-    return (
-      <div className="space-y-2 py-2">
-        {[1, 2].map((i) => (
-          <div key={i} className="h-12 rounded-md bg-muted/40 animate-pulse" />
-        ))}
-      </div>
-    );
-  }
-
-  if (!data?.length) {
-    return (
-      <EmptyState
-        title="No opportunities"
-        description="Upsell and cross-sell opportunities will appear here."
-        compact
-        className="py-10"
-      />
-    );
-  }
-
   return (
-    <div className="border border-border rounded-md overflow-hidden">
-      <table className="w-full">
-        <thead className="bg-muted/80">
-          <tr className="border-b border-border">
-            <th className="text-left px-3 py-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
-              Title
-            </th>
-            <th className="text-left px-3 py-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
-              Type
-            </th>
-            <th className="text-left px-3 py-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
-              Stage
-            </th>
-            <th className="text-left px-3 py-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
-              Value
-            </th>
-            <th className="text-left px-3 py-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
-              Expected Close
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((opp: ClientOpportunity) => (
-            <tr
-              key={opp.id}
-              className="border-b border-border/50 last:border-0 h-8 hover:bg-muted/30"
-            >
-              <td className="px-3 py-1.5 text-[11px] font-medium">{opp.title}</td>
-              <td className="px-3 py-1.5">
-                <Badge
-                  variant="outline"
-                  className="text-[9px] px-1.5 py-0 h-4 bg-muted text-muted-foreground border-border capitalize"
-                >
-                  {opp.type === "cross_sell" ? "Cross-sell" : "Upsell"}
-                </Badge>
-              </td>
-              <td className="px-3 py-1.5">
-                <Badge
-                  variant="outline"
-                  className={cn("text-[9px] px-1.5 py-0 h-4", OPP_STAGE_BADGE_CLASSES[opp.stage])}
-                >
-                  {OPP_STAGE_LABELS[opp.stage]}
-                </Badge>
-              </td>
-              <td className="px-3 py-1.5 text-[11px] tabular-nums">
-                {formatAmount(opp.value)}
-              </td>
-              <td className="px-3 py-1.5 text-[11px] text-muted-foreground">
-                {formatDate(opp.expectedCloseDate)}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <DataTable
+      data={data ?? []}
+      columns={columns}
+      getRowKey={(row) => row.id}
+      isLoading={isLoading}
+      emptyState={
+        <EmptyState
+          title="No opportunities"
+          description="Upsell and cross-sell opportunities will appear here."
+          compact
+          className="py-10"
+        />
+      }
+    />
   );
 }

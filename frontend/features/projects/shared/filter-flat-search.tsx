@@ -13,6 +13,17 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Check, CalendarRange } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
+import {
+  StatusFilterDot,
+  type StatusFilterOption,
+} from "./filter-category-submenu";
+import {
+  FilterAssigneeLeading,
+  FilterLabelDot,
+  FilterPriorityLeading,
+  FilterTypeLeading,
+} from "./filter-option-leading";
+import type { StatusConfigEntry } from "@/features/projects/shared/types";
 
 const PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
 const TYPES = ["TASK", "BUG", "STORY", "EPIC", "SUBTASK"] as const;
@@ -51,7 +62,8 @@ interface ProjectOption {
 interface FilterFlatSearchProps {
   search: string;
   onSearchChange: (value: string) => void;
-  statusOptions: string[];
+  statusItems: StatusFilterOption[];
+  statusConfig: Record<string, StatusConfigEntry>;
   members: Member[];
   labels: Label[];
   cycles: Cycle[];
@@ -96,7 +108,8 @@ function CheckMark({ active }: { active: boolean }) {
 export function FilterFlatSearch({
   search,
   onSearchChange,
-  statusOptions,
+  statusItems,
+  statusConfig,
   members,
   labels,
   cycles,
@@ -148,24 +161,25 @@ export function FilterFlatSearch({
         </CommandEmpty>
 
         <CommandGroup heading="Status">
-          {statusOptions
+          {statusItems
             .filter((s) =>
-              s.toLowerCase().includes(q) ||
-              s.replace(/_/g, " ").toLowerCase().includes(q) ||
+              s.name.toLowerCase().includes(q) ||
+              s.name.replace(/_/g, " ").toLowerCase().includes(q) ||
               "status".includes(q),
             )
             .map((s) => {
-              const label = s.replace(/_/g, " ");
-              const active = selectedStatuses.includes(s);
-              function onSelectStatus() { onToggleStatus(s); }
+              const label = s.name.replace(/_/g, " ");
+              const active = selectedStatuses.includes(s.name);
+              function onSelectStatus() { onToggleStatus(s.name); }
               return (
                 <CommandItem
-                  key={s}
+                  key={s.name}
                   value={`Status ${label}`}
-                  keywords={["status", label, s]}
+                  keywords={["status", label, s.name]}
                   onSelect={onSelectStatus}
                 >
                   <CheckMark active={active} />
+                  <StatusFilterDot status={s} config={statusConfig} className="mr-1.5 h-2 w-2 shrink-0 rounded-full" />
                   <span className="text-xs">{label}</span>
                 </CommandItem>
               );
@@ -192,6 +206,7 @@ export function FilterFlatSearch({
                   onSelect={onSelectPriority}
                 >
                   <CheckMark active={active} />
+                  <FilterPriorityLeading priority={p} />
                   <span className="text-xs">{label}</span>
                 </CommandItem>
               );
@@ -219,6 +234,7 @@ export function FilterFlatSearch({
                       onSelect={onSelectType}
                     >
                       <CheckMark active={active} />
+                      <FilterTypeLeading type={t} />
                       <span className="text-xs">{label}</span>
                     </CommandItem>
                   );
@@ -232,14 +248,14 @@ export function FilterFlatSearch({
             <CommandSeparator />
             <CommandGroup heading="Assignee">
               {[
-                { id: "@me", displayName: "Me (dynamic)" },
-                { id: "__unassigned__", displayName: "Unassigned" },
-                ...members.map((m) => ({ id: m.id, displayName: getUserDisplayName(m) })),
+                { id: "@me", displayName: "Me (dynamic)", member: null as Member | null },
+                { id: "__unassigned__", displayName: "Unassigned", member: null as Member | null },
+                ...members.map((m) => ({ id: m.id, displayName: getUserDisplayName(m), member: m })),
               ]
                 .filter(({ displayName }) =>
                   displayName.toLowerCase().includes(q) || "assignee".includes(q),
                 )
-                .map(({ id, displayName }) => {
+                .map(({ id, displayName, member }) => {
                   const active = selectedAssignees.includes(id);
                   function onSelectAssignee() { onToggleAssignee(id); }
                   return (
@@ -250,6 +266,7 @@ export function FilterFlatSearch({
                       onSelect={onSelectAssignee}
                     >
                       <CheckMark active={active} />
+                      <FilterAssigneeLeading assigneeId={id} member={member} />
                       <span className="text-xs">{displayName}</span>
                     </CommandItem>
                   );
@@ -276,12 +293,7 @@ export function FilterFlatSearch({
                       onSelect={onSelectLabel}
                     >
                       <CheckMark active={active} />
-                      {l.color && (
-                        <span
-                          className="mr-1.5 inline-block h-2 w-2 shrink-0 rounded-full"
-                          style={{ backgroundColor: l.color }}
-                        />
-                      )}
+                      <FilterLabelDot color={l.color} />
                       <span className="text-xs">{l.name}</span>
                     </CommandItem>
                   );

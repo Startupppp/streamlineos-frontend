@@ -1,17 +1,10 @@
 "use client";
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useUserDevices, useRemoveDevice } from "@/hooks/api/users";
 import { getApiError } from "@/lib/api-client";
 import { toast } from "sonner";
@@ -21,6 +14,15 @@ import { formatDistanceToNow } from "date-fns";
 interface UserDevicesTabProps {
   userId: string;
 }
+
+type Device = {
+  id: string;
+  browser: string | null;
+  os: string | null;
+  platform: string | null;
+  lastSeenAt: string;
+  trusted: boolean;
+};
 
 export function UserDevicesTab({ userId }: UserDevicesTabProps) {
   const { data: devices, isLoading } = useUserDevices(userId);
@@ -57,55 +59,73 @@ export function UserDevicesTab({ userId }: UserDevicesTabProps) {
     );
   }
 
+  const columns: DataTableColumn<Device>[] = [
+    {
+      key: "browser",
+      header: "Browser",
+      cell: (row) => <span className="font-medium">{row.browser ?? "—"}</span>,
+    },
+    {
+      key: "os",
+      header: "OS",
+      cell: (row) => <span className="text-muted-foreground">{row.os ?? "—"}</span>,
+    },
+    {
+      key: "platform",
+      header: "Platform",
+      cell: (row) => <span className="text-muted-foreground">{row.platform ?? "—"}</span>,
+    },
+    {
+      key: "lastSeen",
+      header: "Last Seen",
+      cell: (row) => (
+        <span className="text-muted-foreground">
+          {formatDistanceToNow(new Date(row.lastSeenAt), { addSuffix: true })}
+        </span>
+      ),
+    },
+    {
+      key: "trusted",
+      header: "Trusted",
+      cell: (row) =>
+        row.trusted ? (
+          <Badge variant="outline" className="text-[10px] border-green-200 text-green-600 bg-green-50">
+            Trusted
+          </Badge>
+        ) : (
+          <Badge variant="outline" className="text-[10px] text-muted-foreground">
+            Unverified
+          </Badge>
+        ),
+    },
+    {
+      key: "actions",
+      header: "",
+      headerClassName: "w-20",
+      cell: (row) => (
+        <div onClick={(e) => e.stopPropagation()}>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 text-[11px] text-red-600 hover:text-red-700 hover:bg-red-50"
+            onClick={() => handleRemove(row.id)}
+            disabled={isPending}
+          >
+            <Trash2 className="h-3 w-3 mr-1" />
+            Remove
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
-    <div className="pt-1 rounded-md border overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-muted/40">
-            <TableHead className="text-xs">Browser</TableHead>
-            <TableHead className="text-xs">OS</TableHead>
-            <TableHead className="text-xs">Platform</TableHead>
-            <TableHead className="text-xs">Last Seen</TableHead>
-            <TableHead className="text-xs">Trusted</TableHead>
-            <TableHead className="text-xs w-20" />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {devices.map((device) => (
-            <TableRow key={device.id} className="text-xs">
-              <TableCell className="font-medium">{device.browser ?? "—"}</TableCell>
-              <TableCell className="text-muted-foreground">{device.os ?? "—"}</TableCell>
-              <TableCell className="text-muted-foreground">{device.platform ?? "—"}</TableCell>
-              <TableCell className="text-muted-foreground">
-                {formatDistanceToNow(new Date(device.lastSeenAt), { addSuffix: true })}
-              </TableCell>
-              <TableCell>
-                {device.trusted ? (
-                  <Badge variant="outline" className="text-[10px] border-green-200 text-green-600 bg-green-50">
-                    Trusted
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="text-[10px] text-muted-foreground">
-                    Unverified
-                  </Badge>
-                )}
-              </TableCell>
-              <TableCell>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 text-[11px] text-red-600 hover:text-red-700 hover:bg-red-50"
-                  onClick={() => handleRemove(device.id)}
-                  disabled={isPending}
-                >
-                  <Trash2 className="h-3 w-3 mr-1" />
-                  Remove
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+    <div className="pt-1">
+      <DataTable
+        data={devices}
+        columns={columns}
+        getRowKey={(device) => device.id}
+      />
     </div>
   );
 }

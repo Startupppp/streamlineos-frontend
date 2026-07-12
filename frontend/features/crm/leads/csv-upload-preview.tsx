@@ -2,14 +2,7 @@
 
 import { useCallback } from "react";
 import { FileText, AlertCircle, CheckCircle2, ChevronLeft } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -54,6 +47,10 @@ interface CsvUploadPreviewProps {
   onClose: () => void;
 }
 
+interface ParsedLeadWithIdx extends ParsedLead {
+  _idx: number;
+}
+
 export function CsvUploadPreview({
   fileName,
   parsed,
@@ -70,6 +67,45 @@ export function CsvUploadPreview({
     (e: React.ChangeEvent<HTMLInputElement>) => onAutoDistributeChange(e.target.checked),
     [onAutoDistributeChange],
   );
+
+  const indexedParsed: ParsedLeadWithIdx[] = parsed.slice(0, 20).map((l, i) => ({ ...l, _idx: i }));
+
+  const columns: DataTableColumn<ParsedLeadWithIdx>[] = [
+    {
+      key: "name",
+      header: "Name",
+      cell: (row) => <span className="text-xs font-medium">{row.name}</span>,
+    },
+    {
+      key: "email",
+      header: "Email",
+      cell: (row) => <span className="text-xs text-muted-foreground">{row.email || "—"}</span>,
+    },
+    {
+      key: "phone",
+      header: "Phone",
+      cell: (row) => <span className="text-xs text-muted-foreground">{row.phone || "—"}</span>,
+    },
+    {
+      key: "company",
+      header: "Company",
+      cell: (row) => <span className="text-xs text-muted-foreground">{row.company || "—"}</span>,
+    },
+    {
+      key: "source",
+      header: "Source",
+      cell: (row) => row.source ? (
+        <Badge variant="outline" className="text-[10px]">{row.source}</Badge>
+      ) : "—",
+    },
+    {
+      key: "priority",
+      header: "Priority",
+      cell: (row) => row.priority ? (
+        <Badge variant="outline" className="text-[10px]">{row.priority}</Badge>
+      ) : "—",
+    },
+  ];
 
   return (
     <div className="space-y-4">
@@ -107,59 +143,18 @@ export function CsvUploadPreview({
       )}
 
       {parsed.length > 0 && (
-        <div className="border rounded-lg overflow-hidden max-h-[260px] overflow-y-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="text-xs">Name</TableHead>
-                <TableHead className="text-xs">Email</TableHead>
-                <TableHead className="text-xs">Phone</TableHead>
-                <TableHead className="text-xs">Company</TableHead>
-                <TableHead className="text-xs">Source</TableHead>
-                <TableHead className="text-xs">Priority</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {parsed.slice(0, 20).map((lead, i) => (
-                <TableRow key={i}>
-                  <TableCell className="text-xs font-medium">{lead.name}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {lead.email || "—"}
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {lead.phone || "—"}
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {lead.company || "—"}
-                  </TableCell>
-                  <TableCell className="text-xs">
-                    {lead.source ? (
-                      <Badge variant="outline" className="text-[10px]">
-                        {lead.source}
-                      </Badge>
-                    ) : (
-                      "—"
-                    )}
-                  </TableCell>
-                  <TableCell className="text-xs">
-                    {lead.priority ? (
-                      <Badge variant="outline" className="text-[10px]">
-                        {lead.priority}
-                      </Badge>
-                    ) : (
-                      "—"
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+        <>
+          <DataTable
+            data={indexedParsed}
+            columns={columns}
+            getRowKey={(row) => row._idx}
+          />
           {parsed.length > 20 && (
             <p className="text-xs text-center text-muted-foreground py-2">
               ...and {parsed.length - 20} more
             </p>
           )}
-        </div>
+        </>
       )}
 
       {importResult ? (

@@ -1,47 +1,83 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useOrgAuditLog } from "@/hooks/api/users";
-import {
-  ChevronLeft,
-  ChevronRight,
-  History,
-  Search,
-} from "lucide-react";
+import { History, Search } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
-function RowSkeleton() {
-  return (
-    <TableRow>
-      <TableCell><Skeleton className="h-3.5 w-32" /></TableCell>
-      <TableCell><Skeleton className="h-5 w-24 rounded-full" /></TableCell>
-      <TableCell><Skeleton className="h-3.5 w-28" /></TableCell>
-      <TableCell><Skeleton className="h-3.5 w-20" /></TableCell>
-      <TableCell><Skeleton className="h-3.5 w-24" /></TableCell>
-    </TableRow>
-  );
-}
+type AuditEntry = {
+  id: string;
+  actorUserId: string | null;
+  action: string;
+  resourceType: string | null;
+  resourceId: string | null;
+  ipAddress: string | null;
+  createdAt: string;
+};
 
 function actionVariant(action: string): "default" | "secondary" | "outline" | "destructive" {
   if (action.includes("delete") || action.includes("remove")) return "destructive";
   if (action.includes("create") || action.includes("invite")) return "default";
   return "secondary";
 }
+
+const columns: DataTableColumn<AuditEntry>[] = [
+  {
+    key: "actor",
+    header: "Actor",
+    cell: (row) => (
+      <span className="font-mono text-muted-foreground max-w-[140px] truncate block">
+        {row.actorUserId ?? "system"}
+      </span>
+    ),
+  },
+  {
+    key: "action",
+    header: "Action",
+    cell: (row) => (
+      <Badge
+        variant={actionVariant(row.action)}
+        className="text-[10px] h-5 px-1.5 font-normal font-mono"
+      >
+        {row.action}
+      </Badge>
+    ),
+  },
+  {
+    key: "resource",
+    header: "Resource",
+    cell: (row) => (
+      <span className="text-muted-foreground">
+        {row.resourceType
+          ? `${row.resourceType}${row.resourceId ? ` / ${row.resourceId.slice(0, 8)}` : ""}`
+          : "???"}
+      </span>
+    ),
+  },
+  {
+    key: "ip",
+    header: "IP",
+    cell: (row) => (
+      <span className="text-muted-foreground font-mono">{row.ipAddress ?? "???"}</span>
+    ),
+  },
+  {
+    key: "when",
+    header: "When",
+    cell: (row) => (
+      <span className="text-muted-foreground whitespace-nowrap">
+        {formatDistanceToNow(new Date(row.createdAt), { addSuffix: true })}
+      </span>
+    ),
+  },
+];
 
 export function OrgAuditLogPage() {
   const [page, setPage] = useState(1);
@@ -124,114 +160,35 @@ export function OrgAuditLogPage() {
         </div>
       }
     >
-      {isLoading ? (
-        <div className="rounded-md border overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/40">
-                <TableHead className="text-xs">Actor</TableHead>
-                <TableHead className="text-xs">Action</TableHead>
-                <TableHead className="text-xs">Resource</TableHead>
-                <TableHead className="text-xs">IP</TableHead>
-                <TableHead className="text-xs">When</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {Array.from({ length: 10 }).map((_, i) => (
-                <RowSkeleton key={i} />
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      ) : entries.length === 0 ? (
-        <EmptyState
-          illustration={<History className="text-muted-foreground/40" />}
-          title="No audit events"
-          description={
-            hasFilters
-              ? "No events match your filters."
-              : "No audit events recorded yet."
-          }
-          action={
-            hasFilters
-              ? { label: "Clear filters", onClick: handleClearFilters }
-              : undefined
-          }
-        />
-      ) : (
-        <div className="space-y-3">
-          <div className="rounded-md border overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/40">
-                  <TableHead className="text-xs">Actor</TableHead>
-                  <TableHead className="text-xs">Action</TableHead>
-                  <TableHead className="text-xs">Resource</TableHead>
-                  <TableHead className="text-xs">IP</TableHead>
-                  <TableHead className="text-xs">When</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {entries.map((entry) => (
-                  <TableRow key={entry.id} className="hover:bg-muted/20">
-                    <TableCell className="text-xs font-mono text-muted-foreground max-w-[140px] truncate">
-                      {entry.actorUserId ?? "system"}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={actionVariant(entry.action)}
-                        className="text-[10px] h-5 px-1.5 font-normal font-mono"
-                      >
-                        {entry.action}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
-                      {entry.resourceType
-                        ? `${entry.resourceType}${entry.resourceId ? ` / ${entry.resourceId.slice(0, 8)}` : ""}`
-                        : "???"}
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground font-mono">
-                      {entry.ipAddress ?? "???"}
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                      {formatDistanceToNow(new Date(entry.createdAt), { addSuffix: true })}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-
-          {pagination && pagination.totalPages > 1 && (
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>
-                Showing {(page - 1) * 20 + 1}???{Math.min(page * 20, pagination.total)} of {pagination.total}
-              </span>
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 w-7 p-0"
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                >
-                  <ChevronLeft className="h-3.5 w-3.5" />
-                </Button>
-                <span className="px-2">{page} / {pagination.totalPages}</span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 w-7 p-0"
-                  onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
-                  disabled={page === pagination.totalPages}
-                >
-                  <ChevronRight className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+      <DataTable
+        data={entries}
+        columns={columns}
+        getRowKey={(row) => row.id}
+        isLoading={isLoading}
+        emptyState={
+          <EmptyState
+            illustration={<History className="text-muted-foreground/40" />}
+            title="No audit events"
+            description={
+              hasFilters
+                ? "No events match your filters."
+                : "No audit events recorded yet."
+            }
+            action={
+              hasFilters
+                ? { label: "Clear filters", onClick: handleClearFilters }
+                : undefined
+            }
+          />
+        }
+        pagination={{
+          mode: "server",
+          page,
+          pageSize: 20,
+          total: pagination?.total ?? 0,
+          onPageChange: (p) => setPage(p),
+        }}
+      />
     </PageWrapper>
   );
 }

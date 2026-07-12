@@ -7,7 +7,8 @@ import { motion } from "framer-motion";
 import { PageWrapper, PageSection } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ErrorState, SkeletonTable } from "@/components/shared";
+import { ErrorState } from "@/components/shared";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fadeUp } from "@/lib/motion-variants";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -37,8 +38,8 @@ function DetailSkeleton() {
           </div>
         ))}
       </div>
-      <SkeletonTable rows={3} columns={3} />
-      <SkeletonTable rows={5} columns={6} />
+      <DataTableSkeleton rows={3} columns={3} />
+      <DataTableSkeleton rows={5} columns={6} />
     </div>
   );
 }

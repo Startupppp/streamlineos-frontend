@@ -1,20 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -30,8 +20,6 @@ import { UserDetailSheet } from "./user-detail-sheet";
 import { toast } from "sonner";
 import {
   Search,
-  ChevronLeft,
-  ChevronRight,
   RefreshCw,
   ShieldCheck,
   Trash2,
@@ -45,6 +33,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { formatDistanceToNow } from "date-fns";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 
 function getInitials(name: string | null, email: string): string {
   if (name) {
@@ -54,26 +43,6 @@ function getInitials(name: string | null, email: string): string {
     if (parts.length === 1) return (parts[0] ?? "").slice(0, 2).toUpperCase();
   }
   return email.slice(0, 2).toUpperCase();
-}
-
-function RowSkeleton() {
-  return (
-    <TableRow className="h-8">
-      <TableCell className="w-10 px-2 py-1">
-        <Skeleton className="h-4 w-4 rounded" />
-      </TableCell>
-      <TableCell className="px-2 py-1">
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-6 w-6 rounded-full shrink-0" />
-          <Skeleton className="h-3 w-28" />
-        </div>
-      </TableCell>
-      <TableCell className="px-2 py-1"><Skeleton className="h-3 w-36" /></TableCell>
-      <TableCell className="px-2 py-1"><Skeleton className="h-4 w-14 rounded-full" /></TableCell>
-      <TableCell className="px-2 py-1"><Skeleton className="h-3 w-20" /></TableCell>
-      <TableCell className="w-8 px-2 py-1" />
-    </TableRow>
-  );
 }
 
 interface ArchivedActionsMenuProps {
@@ -123,9 +92,7 @@ function ArchivedActionsMenu({ user, onView }: ArchivedActionsMenuProps) {
           Restore
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem variant="destructive"
-          onClick={handleDelete}
-        >
+        <DropdownMenuItem variant="destructive" onClick={handleDelete}>
           <Trash2 className="h-3.5 w-3.5 mr-2" />
           Delete user
         </DropdownMenuItem>
@@ -161,7 +128,6 @@ export function ArchivedUsersPage() {
 
   const users = useMemo(() => data?.data ?? [], [data]);
   const pagination = data?.pagination;
-  const allSelected = users.length > 0 && users.every((u) => selectedIds.has(u.id));
   const someSelected = selectedIds.size > 0;
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
@@ -171,31 +137,13 @@ export function ArchivedUsersPage() {
     [],
   );
 
-  const handleSelectAll = useCallback(
-    (checked: boolean) => {
-      if (checked) setSelectedIds(new Set(users.map((u) => u.id)));
-      else setSelectedIds(new Set());
-    },
-    [users],
-  );
-
-  const handleSelectAllChange = useCallback(
-    (c: boolean | string) => handleSelectAll(!!c),
-    [handleSelectAll],
-  );
-
-  function handleRowClick(userId: string) {
-    setSelectedUserId(userId);
+  function handleRowClick(user: User) {
+    setSelectedUserId(user.id);
     setSheetOpen(true);
   }
 
-  const handleSelectRow = useCallback((userId: string, checked: boolean) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (checked) next.add(userId);
-      else next.delete(userId);
-      return next;
-    });
+  const handleSelectionChange = useCallback((sel: Set<string | number>) => {
+    setSelectedIds(new Set([...sel].map(String)));
   }, []);
 
   const handleClearSelection = useCallback(() => setSelectedIds(new Set()), []);
@@ -213,14 +161,67 @@ export function ArchivedUsersPage() {
     );
   }
 
-  const handlePrevPage = useCallback(() => setPage((p) => Math.max(1, p - 1)), []);
-
-  const handleNextPage = useCallback(
-    () => setPage((p) => Math.min(pagination?.totalPages ?? 1, p + 1)),
-    [pagination?.totalPages],
-  );
-
   const handleSheetChange = useCallback((v: boolean) => setSheetOpen(v), []);
+
+  const columns = useMemo<DataTableColumn<User>[]>(() => [
+    {
+      key: "user",
+      header: "User",
+      cell: (user) => (
+        <div className="flex items-center gap-2">
+          <Avatar className="h-6 w-6 shrink-0">
+            <AvatarImage src={user.image ?? undefined} alt={user.name ?? user.email} />
+            <AvatarFallback className="text-[10px] font-semibold">
+              {getInitials(user.name, user.email)}
+            </AvatarFallback>
+          </Avatar>
+          <div className="min-w-0">
+            <p className="text-[11px] font-medium truncate leading-tight">{user.name ?? "—"}</p>
+            {user.designation && (
+              <p className="text-[10px] text-muted-foreground truncate">{user.designation}</p>
+            )}
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "email",
+      header: "Email",
+      cell: (user) => (
+        <span className="text-[11px] text-muted-foreground truncate max-w-[180px] block">
+          {user.email}
+        </span>
+      ),
+    },
+    {
+      key: "role",
+      header: "Role",
+      cell: (user) => (
+        <Badge variant="secondary" className="text-[10px] h-4 px-1.5 font-normal">
+          {user.role}
+        </Badge>
+      ),
+    },
+    {
+      key: "archived",
+      header: "Archived",
+      cell: (user) => (
+        <span className="text-[11px] text-muted-foreground tabular-nums font-mono">
+          {formatDistanceToNow(new Date(user.updatedAt), { addSuffix: true })}
+        </span>
+      ),
+    },
+    {
+      key: "actions",
+      header: "",
+      cell: (user) => (
+        <div onClick={(e) => e.stopPropagation()}>
+          <ArchivedActionsMenu user={user} onView={() => { setSelectedUserId(user.id); setSheetOpen(true); }} />
+        </div>
+      ),
+      className: "w-8",
+    },
+  ], []);
 
   return (
     <>
@@ -273,139 +274,36 @@ export function ArchivedUsersPage() {
             description="An error occurred while loading archived users."
             onRetry={handleRetry}
           />
-        ) : isLoading ? (
-          <div className="rounded-md border overflow-hidden">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/40 h-8">
-                    <TableHead className="w-10 px-2" />
-                    <TableHead className="px-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">User</TableHead>
-                    <TableHead className="px-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Email</TableHead>
-                    <TableHead className="px-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Role</TableHead>
-                    <TableHead className="px-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Archived</TableHead>
-                    <TableHead className="w-8 px-2" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {Array.from({ length: 8 }).map((_, i) => (
-                    <RowSkeleton key={i} />
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
-        ) : users.length === 0 ? (
-          <EmptyState
-            illustrationPreset="archive"
-            title="No archived users"
-            description={
-              debouncedSearch
-                ? "No archived users match your search."
-                : "No users have been archived yet."
+        ) : (
+          <DataTable
+            data={users}
+            columns={columns}
+            getRowKey={(u) => u.id}
+            onRowClick={handleRowClick}
+            isLoading={isLoading}
+            selection={{
+              selected: selectedIds,
+              onChange: handleSelectionChange,
+            }}
+            pagination={{
+              mode: "server",
+              page,
+              pageSize: 20,
+              total: pagination?.total ?? 0,
+              onPageChange: setPage,
+            }}
+            emptyState={
+              <EmptyState
+                illustrationPreset="archive"
+                title="No archived users"
+                description={
+                  debouncedSearch
+                    ? "No archived users match your search."
+                    : "No users have been archived yet."
+                }
+              />
             }
           />
-        ) : (
-          <div className="space-y-3">
-            <div className="rounded-md border overflow-hidden">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/40 h-8">
-                      <TableHead className="w-10 px-2 pl-4">
-                        <Checkbox
-                          checked={allSelected}
-                          onCheckedChange={handleSelectAllChange}
-                          aria-label="Select all"
-                        />
-                      </TableHead>
-                      <TableHead className="px-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">User</TableHead>
-                      <TableHead className="px-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Email</TableHead>
-                      <TableHead className="px-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Role</TableHead>
-                      <TableHead className="px-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Archived</TableHead>
-                      <TableHead className="w-8 px-2" />
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {users.map((user) => (
-                      <TableRow
-                        key={user.id}
-                        className="h-8 cursor-pointer hover:bg-muted/30 transition-colors"
-                        onClick={() => handleRowClick(user.id)}
-                      >
-                        <TableCell className="pl-4 px-2 py-1" onClick={(e) => e.stopPropagation()}>
-                          <Checkbox
-                            checked={selectedIds.has(user.id)}
-                            onCheckedChange={(c) => handleSelectRow(user.id, !!c)}
-                            aria-label={`Select ${user.name ?? user.email}`}
-                          />
-                        </TableCell>
-                        <TableCell className="px-2 py-1">
-                          <div className="flex items-center gap-2">
-                            <Avatar className="h-6 w-6 shrink-0">
-                              <AvatarImage src={user.image ?? undefined} alt={user.name ?? user.email} />
-                              <AvatarFallback className="text-[10px] font-semibold">
-                                {getInitials(user.name, user.email)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="min-w-0">
-                              <p className="text-[11px] font-medium truncate leading-tight">{user.name ?? "—"}</p>
-                              {user.designation && (
-                                <p className="text-[10px] text-muted-foreground truncate">{user.designation}</p>
-                              )}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="px-2 py-1 text-[11px] text-muted-foreground truncate max-w-[180px]">
-                          {user.email}
-                        </TableCell>
-                        <TableCell className="px-2 py-1">
-                          <Badge variant="secondary" className="text-[10px] h-4 px-1.5 font-normal">
-                            {user.role}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="px-2 py-1 text-[11px] text-muted-foreground tabular-nums font-mono">
-                          {formatDistanceToNow(new Date(user.updatedAt), { addSuffix: true })}
-                        </TableCell>
-                        <TableCell className="px-2 py-1" onClick={(e) => e.stopPropagation()}>
-                          <ArchivedActionsMenu user={user} onView={() => handleRowClick(user.id)} />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
-
-            {pagination && pagination.totalPages > 1 && (
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>
-                  Showing {(page - 1) * 20 + 1}–{Math.min(page * 20, pagination.total)} of {pagination.total}
-                </span>
-                <div className="flex items-center gap-1">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 w-7 p-0"
-                    onClick={handlePrevPage}
-                    disabled={page === 1}
-                  >
-                    <ChevronLeft className="h-3.5 w-3.5" />
-                  </Button>
-                  <span className="px-2">{page} / {pagination.totalPages}</span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 w-7 p-0"
-                    onClick={handleNextPage}
-                    disabled={page === pagination.totalPages}
-                  >
-                    <ChevronRight className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
         )}
       </PageWrapper>
 

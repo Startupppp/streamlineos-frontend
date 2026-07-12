@@ -8,14 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { cn } from "@/lib/utils";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { getCrmTokenClasses } from "@/features/crm/shared/metadata";
@@ -32,6 +25,60 @@ import {
 } from "@/hooks/api/crm/campaigns";
 import { formatCurrency } from "@/features/crm/reports/lib/types";
 import type { CampaignAttribution } from "@/types/crm/campaigns";
+
+interface CampaignLeadItem {
+  id?: string | number;
+  name?: string;
+  clientName?: string;
+  status?: string;
+  source?: string;
+}
+
+function getString(val: unknown): string {
+  return typeof val === "string" ? val : typeof val === "number" ? String(val) : "—";
+}
+
+function toCampaignLeadItem(raw: unknown): CampaignLeadItem {
+  if (typeof raw !== "object" || raw === null) return {};
+  const r = raw as Record<string, unknown>;
+  return {
+    id: typeof r.id === "string" || typeof r.id === "number" ? r.id : undefined,
+    name: typeof r.name === "string" ? r.name : undefined,
+    clientName: typeof r.clientName === "string" ? r.clientName : undefined,
+    status: typeof r.status === "string" ? r.status : undefined,
+    source: typeof r.source === "string" ? r.source : undefined,
+  };
+}
+
+const leadColumns: DataTableColumn<CampaignLeadItem & { _idx: number }>[] = [
+  {
+    key: "name",
+    header: "Name",
+    cell: (row) => (
+      <span className="text-[11px] font-medium">
+        {getString(row.name ?? row.clientName)}
+      </span>
+    ),
+  },
+  {
+    key: "status",
+    header: "Status",
+    cell: (row) => (
+      <span className="text-[11px] capitalize text-muted-foreground">
+        {getString(row.status).toLowerCase()}
+      </span>
+    ),
+  },
+  {
+    key: "source",
+    header: "Source",
+    cell: (row) => (
+      <span className="text-[11px] capitalize text-muted-foreground">
+        {getString(row.source).replace(/_/g, " ")}
+      </span>
+    ),
+  },
+];
 
 interface StatCardProps {
   label: string;
@@ -113,8 +160,9 @@ export function CampaignDetailPage({ campaignId }: CampaignDetailPageProps) {
     setAttributionTab(v as "first-touch" | "last-touch");
   }, []);
 
-  const handlePrevPage = useCallback(() => setLeadsPage((p) => Math.max(1, p - 1)), []);
-  const handleNextPage = useCallback(() => setLeadsPage((p) => p + 1), []);
+  const handleLeadsPageChange = useCallback((page: number) => {
+    setLeadsPage(page);
+  }, []);
 
   if (listLoading) {
     return (
@@ -138,9 +186,12 @@ export function CampaignDetailPage({ campaignId }: CampaignDetailPageProps) {
   const attributionData = attributionTab === "first-touch" ? (firstTouch ?? []) : (lastTouch ?? []);
   const attributionLoading = attributionTab === "first-touch" ? firstLoading : lastLoading;
 
-  const leads = leadsData?.items ?? [];
   const totalLeads = leadsData?.total ?? 0;
-  const totalPages = Math.ceil(totalLeads / 20);
+
+  const indexedLeads = (leadsData?.items ?? []).map((raw, i) => ({
+    ...toCampaignLeadItem(raw),
+    _idx: i,
+  }));
 
   return (
     <PageWrapper
@@ -212,75 +263,24 @@ export function CampaignDetailPage({ campaignId }: CampaignDetailPageProps) {
                 <span className="text-xs text-muted-foreground">{totalLeads} total</span>
               </div>
             </CardHeader>
-            <CardContent className="p-0">
-              {leadsLoading ? (
-                <div className="p-4 space-y-2">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Skeleton key={i} className="h-8 w-full" />
-                  ))}
-                </div>
-              ) : leads.length === 0 ? (
+            <DataTable
+              data={indexedLeads}
+              columns={leadColumns}
+              getRowKey={(row) => String(row.id ?? row._idx)}
+              isLoading={leadsLoading}
+              emptyState={
                 <div className="flex items-center justify-center h-24 text-sm text-muted-foreground">
                   No leads tracked for this campaign
                 </div>
-              ) : (
-                <>
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="hover:bg-transparent border-b-2">
-                          <TableHead className="text-[10px] uppercase tracking-wider font-bold px-3 py-2">Name</TableHead>
-                          <TableHead className="text-[10px] uppercase tracking-wider font-bold px-3 py-2">Status</TableHead>
-                          <TableHead className="text-[10px] uppercase tracking-wider font-bold px-3 py-2">Source</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {leads.map((lead, i) => {
-                          const l = lead as Record<string, unknown>;
-                          return (
-                            <TableRow key={String(l.id ?? i)} className="h-9 hover:bg-muted/30">
-                              <TableCell className="px-3 py-1.5 text-[11px] font-medium">
-                                {String(l.name ?? l.clientName ?? "—")}
-                              </TableCell>
-                              <TableCell className="px-3 py-1.5 text-[11px] capitalize text-muted-foreground">
-                                {String(l.status ?? "—").toLowerCase()}
-                              </TableCell>
-                              <TableCell className="px-3 py-1.5 text-[11px] capitalize text-muted-foreground">
-                                {String(l.source ?? "—").replace(/_/g, " ")}
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
-                  </div>
-
-                  {totalPages > 1 && (
-                    <div className="flex items-center justify-between px-4 py-2 border-t border-border">
-                      <span className="text-xs text-muted-foreground">
-                        Page {leadsPage} of {totalPages}
-                      </span>
-                      <div className="flex gap-1.5">
-                        <button
-                          className="text-xs px-2 py-1 rounded border border-border hover:bg-muted/50 disabled:opacity-40"
-                          disabled={leadsPage <= 1}
-                          onClick={handlePrevPage}
-                        >
-                          Prev
-                        </button>
-                        <button
-                          className="text-xs px-2 py-1 rounded border border-border hover:bg-muted/50 disabled:opacity-40"
-                          disabled={leadsPage >= totalPages}
-                          onClick={handleNextPage}
-                        >
-                          Next
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </CardContent>
+              }
+              pagination={{
+                mode: "server",
+                page: leadsPage,
+                pageSize: 20,
+                total: totalLeads,
+                onPageChange: handleLeadsPageChange,
+              }}
+            />
           </Card>
         </motion.div>
       </motion.div>

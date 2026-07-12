@@ -1,6 +1,6 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
-import { SkeletonTable } from "@/components/shared";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 
 export default function QuotesLoading() {
   return (
@@ -14,7 +14,7 @@ export default function QuotesLoading() {
         </div>
       }
     >
-      <SkeletonTable rows={8} columns={8} className="h-[calc(100dvh-16rem)]" />
+      <DataTableSkeleton rows={8} columns={8} className="h-[calc(100dvh-16rem)]" />
     </PageWrapper>
   );
 }

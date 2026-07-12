@@ -1,17 +1,10 @@
 "use client";
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useUserSessions, useRevokeSession, useRevokeAllSessions } from "@/hooks/api/users";
 import { getApiError } from "@/lib/api-client";
 import { toast } from "sonner";
@@ -21,6 +14,15 @@ import { formatDistanceToNow } from "date-fns";
 interface UserSessionsTabProps {
   userId: string;
 }
+
+type Session = {
+  id: string;
+  userAgent: string | null;
+  ipAddress: string | null;
+  lastActive: string;
+  isRevoked: boolean;
+  expiresAt: string | null;
+};
 
 function parseUserAgent(ua: string | null): { browser: string; device: string } {
   if (!ua) return { browser: "Unknown", device: "Unknown" };
@@ -88,6 +90,76 @@ export function UserSessionsTab({ userId }: UserSessionsTabProps) {
 
   const activeSessions = sessions.filter(isSessionActive);
 
+  const columns: DataTableColumn<Session>[] = [
+    {
+      key: "browser",
+      header: "Browser / Device",
+      cell: (row) => {
+        const { browser, device } = parseUserAgent(row.userAgent);
+        return (
+          <>
+            <span className="font-medium">{browser}</span>
+            <span className="text-muted-foreground ml-1">· {device}</span>
+          </>
+        );
+      },
+    },
+    {
+      key: "ip",
+      header: "IP Address",
+      cell: (row) => (
+        <span className="text-muted-foreground font-mono">{row.ipAddress ?? "—"}</span>
+      ),
+    },
+    {
+      key: "lastActive",
+      header: "Last Active",
+      cell: (row) => (
+        <span className="text-muted-foreground">
+          {formatDistanceToNow(new Date(row.lastActive), { addSuffix: true })}
+        </span>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (row) => {
+        const active = isSessionActive(row);
+        return active ? (
+          <Badge variant="outline" className="text-[10px] border-green-200 text-green-600 bg-green-50">
+            Active
+          </Badge>
+        ) : (
+          <Badge variant="outline" className="text-[10px] border-muted text-muted-foreground">
+            Expired
+          </Badge>
+        );
+      },
+    },
+    {
+      key: "actions",
+      header: "",
+      headerClassName: "w-20",
+      cell: (row) => {
+        const active = isSessionActive(row);
+        if (!active) return null;
+        return (
+          <div onClick={(e) => e.stopPropagation()}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 text-[11px] text-red-600 hover:text-red-700 hover:bg-red-50"
+              onClick={() => handleRevoke(row.id)}
+              disabled={isRevoking}
+            >
+              Revoke
+            </Button>
+          </div>
+        );
+      },
+    },
+  ];
+
   return (
     <div className="space-y-3 pt-1">
       {activeSessions.length > 0 && (
@@ -104,63 +176,11 @@ export function UserSessionsTab({ userId }: UserSessionsTabProps) {
           </Button>
         </div>
       )}
-      <div className="rounded-md border overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/40">
-              <TableHead className="text-xs">Browser / Device</TableHead>
-              <TableHead className="text-xs">IP Address</TableHead>
-              <TableHead className="text-xs">Last Active</TableHead>
-              <TableHead className="text-xs">Status</TableHead>
-              <TableHead className="text-xs w-20" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sessions.map((session) => {
-              const { browser, device } = parseUserAgent(session.userAgent);
-              const active = isSessionActive(session);
-              return (
-                <TableRow key={session.id} className="text-xs">
-                  <TableCell>
-                    <span className="font-medium">{browser}</span>
-                    <span className="text-muted-foreground ml-1">· {device}</span>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground font-mono">
-                    {session.ipAddress ?? "—"}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {formatDistanceToNow(new Date(session.lastActive), { addSuffix: true })}
-                  </TableCell>
-                  <TableCell>
-                    {active ? (
-                      <Badge variant="outline" className="text-[10px] border-green-200 text-green-600 bg-green-50">
-                        Active
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="text-[10px] border-muted text-muted-foreground">
-                        Expired
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {active && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 text-[11px] text-red-600 hover:text-red-700 hover:bg-red-50"
-                        onClick={() => handleRevoke(session.id)}
-                        disabled={isRevoking}
-                      >
-                        Revoke
-                      </Button>
-                    )}
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </div>
+      <DataTable
+        data={sessions}
+        columns={columns}
+        getRowKey={(session) => session.id}
+      />
     </div>
   );
 }

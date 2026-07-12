@@ -16,14 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useBillingExport } from "@/hooks/api/timesheets-core/billing";
 import { downloadBillingFile } from "./lib/build-billing-file";
 import type { BillingGroup } from "@/features/timesheets-core/types";
@@ -48,6 +41,30 @@ function formatMoney(amount: number, currency: string): string {
     minimumFractionDigits: 2,
   }).format(amount);
 }
+
+const billingPreviewColumns: DataTableColumn<BillingGroup>[] = [
+  {
+    key: "projectName",
+    header: "Project",
+    headerClassName: "text-[10px] py-1 px-2 font-bold uppercase tracking-wider",
+    className: "text-[11px] py-1 px-2 truncate max-w-[160px]",
+    cell: (row) => row.projectName,
+  },
+  {
+    key: "totalHours",
+    header: "Hours",
+    headerClassName: "text-[10px] py-1 px-2 font-bold uppercase tracking-wider text-right",
+    className: "text-[11px] py-1 px-2 font-mono text-right",
+    cell: (row) => row.totalHours.toFixed(1),
+  },
+  {
+    key: "billableAmount",
+    header: "Amount",
+    headerClassName: "text-[10px] py-1 px-2 font-bold uppercase tracking-wider text-right",
+    className: "text-[11px] py-1 px-2 font-mono text-right",
+    cell: (row) => formatMoney(row.billableAmount, row.currency),
+  },
+];
 
 export function BillingExportDialog({
   open,
@@ -120,27 +137,12 @@ export function BillingExportDialog({
             <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
               Preview ({groups.length} project{groups.length !== 1 ? "s" : ""})
             </p>
-            <div className="rounded-md border border-border overflow-auto max-h-[160px]">
-              <Table>
-                <TableHeader>
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead className="text-[10px] py-1 px-2 font-bold uppercase tracking-wider">Project</TableHead>
-                    <TableHead className="text-[10px] py-1 px-2 font-bold uppercase tracking-wider text-right">Hours</TableHead>
-                    <TableHead className="text-[10px] py-1 px-2 font-bold uppercase tracking-wider text-right">Amount</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {previewGroups.map((g) => (
-                    <TableRow key={g.projectId ?? g.projectName} className="h-7 hover:bg-transparent">
-                      <TableCell className="text-[11px] py-1 px-2 truncate max-w-[160px]">{g.projectName}</TableCell>
-                      <TableCell className="text-[11px] py-1 px-2 font-mono text-right">{g.totalHours.toFixed(1)}</TableCell>
-                      <TableCell className="text-[11px] py-1 px-2 font-mono text-right">
-                        {formatMoney(g.billableAmount, g.currency)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+            <div className="max-h-[160px] overflow-auto">
+              <DataTable
+                data={previewGroups}
+                columns={billingPreviewColumns}
+                getRowKey={(row) => row.projectId ?? row.projectName}
+              />
             </div>
           </div>
 

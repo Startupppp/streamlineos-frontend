@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
+import type { FieldArrayWithId } from "react-hook-form";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useCreateVendorCredit } from "@/hooks/api/accounting/ap";
 import { useVendorsOutstanding } from "@/hooks/api/accounting";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -36,6 +38,7 @@ const vendorCreditFormSchema = z.object({
 });
 
 type VendorCreditFormValues = z.infer<typeof vendorCreditFormSchema>;
+type LineField = FieldArrayWithId<VendorCreditFormValues, "items"> & { _index: number };
 
 const EMPTY_LINE = { description: "", quantity: "", rate: "", gstRate: "" };
 
@@ -92,6 +95,101 @@ export function VendorCreditFormSheet({ open, onOpenChange }: VendorCreditFormSh
   }
 
   const vendors = vendorsQuery.data?.items ?? [];
+
+  const lineRows: LineField[] = fields.map((field, index) => ({ ...field, _index: index }));
+
+  const lineColumns: DataTableColumn<LineField>[] = [
+    {
+      key: "description",
+      header: "Description",
+      cell: (row) => (
+        <Input
+          {...form.register(`items.${row._index}.description`)}
+          className="h-7 text-xs border-0 shadow-none focus-visible:ring-0 px-0"
+          placeholder="Description"
+        />
+      ),
+    },
+    {
+      key: "quantity",
+      header: "Qty",
+      headerClassName: "text-right w-16",
+      className: "w-16",
+      cell: (row) => (
+        <Input
+          {...form.register(`items.${row._index}.quantity`)}
+          className="h-7 text-xs text-right border-0 shadow-none focus-visible:ring-0 px-0"
+          placeholder="1"
+          type="number"
+          min="0"
+          step="any"
+        />
+      ),
+    },
+    {
+      key: "rate",
+      header: "Rate",
+      headerClassName: "text-right w-20",
+      className: "w-20",
+      cell: (row) => (
+        <Input
+          {...form.register(`items.${row._index}.rate`)}
+          className="h-7 text-xs text-right border-0 shadow-none focus-visible:ring-0 px-0"
+          placeholder="0.00"
+          type="number"
+          min="0"
+          step="any"
+        />
+      ),
+    },
+    {
+      key: "gstRate",
+      header: "GST %",
+      headerClassName: "text-right w-16",
+      className: "w-16",
+      cell: (row) => (
+        <Controller
+          control={form.control}
+          name={`items.${row._index}.gstRate`}
+          render={({ field: f }) => (
+            <Select value={f.value} onValueChange={f.onChange}>
+              <SelectTrigger className="h-7 text-xs border-0 shadow-none focus:ring-0">
+                <SelectValue placeholder="0" />
+              </SelectTrigger>
+              <SelectContent>
+                {["0", "5", "12", "18", "28"].map((r) => (
+                  <SelectItem key={r} value={r}>{r}%</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
+      ),
+    },
+    {
+      key: "remove",
+      header: "",
+      headerClassName: "w-8",
+      className: "w-8 text-center",
+      cell: (row) => {
+        function handleRemove(): void {
+          handleRemoveLine(row._index);
+        }
+        return (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 text-muted-foreground hover:text-destructive"
+            onClick={handleRemove}
+            disabled={fields.length === 1}
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        );
+      },
+    },
+  ];
 
   return (
     <AppSheet
@@ -172,82 +270,11 @@ export function VendorCreditFormSheet({ open, onOpenChange }: VendorCreditFormSh
           {form.formState.errors.items?.root && (
             <p className="text-xs text-destructive">{form.formState.errors.items.root.message}</p>
           )}
-          <div className="overflow-x-auto rounded-md border border-border">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="bg-muted/40 border-b border-border">
-                  <th className="px-2 py-1.5 text-left font-medium text-muted-foreground">Description</th>
-                  <th className="px-2 py-1.5 text-right font-medium text-muted-foreground w-16">Qty</th>
-                  <th className="px-2 py-1.5 text-right font-medium text-muted-foreground w-20">Rate</th>
-                  <th className="px-2 py-1.5 text-right font-medium text-muted-foreground w-16">GST %</th>
-                  <th className="w-8" />
-                </tr>
-              </thead>
-              <tbody>
-                {fields.map((field, idx) => (
-                  <tr key={field.id} className="border-b border-border/50 last:border-0">
-                    <td className="px-2 py-1">
-                      <Input
-                        {...form.register(`items.${idx}.description`)}
-                        className="h-7 text-xs border-0 shadow-none focus-visible:ring-0 px-0"
-                        placeholder="Description"
-                      />
-                    </td>
-                    <td className="px-2 py-1">
-                      <Input
-                        {...form.register(`items.${idx}.quantity`)}
-                        className="h-7 text-xs text-right border-0 shadow-none focus-visible:ring-0 px-0"
-                        placeholder="1"
-                        type="number"
-                        min="0"
-                        step="any"
-                      />
-                    </td>
-                    <td className="px-2 py-1">
-                      <Input
-                        {...form.register(`items.${idx}.rate`)}
-                        className="h-7 text-xs text-right border-0 shadow-none focus-visible:ring-0 px-0"
-                        placeholder="0.00"
-                        type="number"
-                        min="0"
-                        step="any"
-                      />
-                    </td>
-                    <td className="px-2 py-1">
-                      <Controller
-                        control={form.control}
-                        name={`items.${idx}.gstRate`}
-                        render={({ field: f }) => (
-                          <Select value={f.value} onValueChange={f.onChange}>
-                            <SelectTrigger className="h-7 text-xs border-0 shadow-none focus:ring-0">
-                              <SelectValue placeholder="0" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {["0", "5", "12", "18", "28"].map((r) => (
-                                <SelectItem key={r} value={r}>{r}%</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        )}
-                      />
-                    </td>
-                    <td className="px-1 py-1 text-center">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                        onClick={() => handleRemoveLine(idx)}
-                        disabled={fields.length === 1}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            data={lineRows}
+            columns={lineColumns}
+            getRowKey={(row) => row.id}
+          />
         </div>
       </form>
     </AppSheet>

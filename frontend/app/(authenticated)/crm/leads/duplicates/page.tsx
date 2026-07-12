@@ -11,14 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   useDuplicateLeads,
@@ -83,6 +76,82 @@ function DuplicateGroupCard({
 
   if (!leadA || !leadB) return null;
 
+  type DuplicateLead = DuplicateGroup["leads"][number] & { _isKeep: boolean };
+
+  const tableData: DuplicateLead[] = [
+    { ...leadA, _isKeep: true },
+    { ...leadB, _isKeep: false },
+  ];
+
+  const columns: DataTableColumn<DuplicateLead>[] = [
+    {
+      key: "name",
+      header: "Name",
+      cell: (row) => <span className="text-[11px] font-medium">{row.name}</span>,
+    },
+    {
+      key: "email",
+      header: "Email",
+      cell: (row) => <span className="text-[11px] text-muted-foreground">{row.email ?? "—"}</span>,
+    },
+    {
+      key: "phone",
+      header: "Phone",
+      headerClassName: "hidden md:table-cell",
+      className: "hidden md:table-cell",
+      cell: (row) => <span className="text-[11px] text-muted-foreground">{row.phone ?? "—"}</span>,
+    },
+    {
+      key: "company",
+      header: "Company",
+      headerClassName: "hidden md:table-cell",
+      className: "hidden md:table-cell",
+      cell: (row) => <span className="text-[11px] text-muted-foreground">{row.company ?? "—"}</span>,
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (row) => (
+        <Badge
+          variant="outline"
+          className={cn("text-[9px] px-1.5 py-0 h-4", statusBadgeClass(row.status))}
+        >
+          {row.status}
+        </Badge>
+      ),
+    },
+    {
+      key: "createdAt",
+      header: "Created",
+      headerClassName: "hidden md:table-cell",
+      className: "hidden md:table-cell",
+      cell: (row) => <span className="text-[11px] text-muted-foreground">{formatDate(row.createdAt)}</span>,
+    },
+    {
+      key: "action",
+      header: "Action",
+      headerClassName: "text-right",
+      className: "text-right",
+      cell: (row) => row._isKeep ? (
+        <Badge
+          variant="outline"
+          className="text-[9px] px-1.5 py-0 h-4 bg-emerald-50 text-emerald-700 border-emerald-200"
+        >
+          Keep
+        </Badge>
+      ) : (
+        <Button
+          size="sm"
+          variant="destructive"
+          className="h-6 text-[10px] px-2"
+          onClick={handleMergeClick}
+        >
+          Remove Duplicate
+        </Button>
+      ),
+    },
+  ];
+
   return (
     <Card className="overflow-hidden">
       <CardHeader className="pb-3">
@@ -122,76 +191,12 @@ function DuplicateGroupCard({
 
       {expanded && (
         <CardContent className="pt-0 overflow-x-auto p-0">
-          <div className="min-w-[640px]">
-            <Table>
-              <TableHeader className="sticky top-0 z-10 bg-muted/80">
-                <TableRow className="border-b-2 border-border hover:bg-transparent">
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Name</TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Email</TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 hidden md:table-cell">Phone</TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 hidden md:table-cell">Company</TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Status</TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 hidden md:table-cell">Created</TableHead>
-                  <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <TableRow className="h-8 hover:bg-muted/30 transition-colors">
-                  <TableCell className="px-2 py-1 text-[11px] font-medium">{leadA.name}</TableCell>
-                  <TableCell className="px-2 py-1 text-[11px] text-muted-foreground">{leadA.email ?? "—"}</TableCell>
-                  <TableCell className="px-2 py-1 text-[11px] text-muted-foreground hidden md:table-cell">{leadA.phone ?? "—"}</TableCell>
-                  <TableCell className="px-2 py-1 text-[11px] text-muted-foreground hidden md:table-cell">{leadA.company ?? "—"}</TableCell>
-                  <TableCell className="px-2 py-1">
-                    <Badge
-                      variant="outline"
-                      className={cn("text-[9px] px-1.5 py-0 h-4", statusBadgeClass(leadA.status))}
-                    >
-                      {leadA.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="px-2 py-1 text-[11px] text-muted-foreground hidden md:table-cell">
-                    {formatDate(leadA.createdAt)}
-                  </TableCell>
-                  <TableCell className="px-2 py-1 text-right">
-                    <Badge
-                      variant="outline"
-                      className="text-[9px] px-1.5 py-0 h-4 bg-emerald-50 text-emerald-700 border-emerald-200"
-                    >
-                      Keep
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-
-                <TableRow className="h-8 hover:bg-muted/30 transition-colors">
-                  <TableCell className="px-2 py-1 text-[11px] font-medium">{leadB.name}</TableCell>
-                  <TableCell className="px-2 py-1 text-[11px] text-muted-foreground">{leadB.email ?? "—"}</TableCell>
-                  <TableCell className="px-2 py-1 text-[11px] text-muted-foreground hidden md:table-cell">{leadB.phone ?? "—"}</TableCell>
-                  <TableCell className="px-2 py-1 text-[11px] text-muted-foreground hidden md:table-cell">{leadB.company ?? "—"}</TableCell>
-                  <TableCell className="px-2 py-1">
-                    <Badge
-                      variant="outline"
-                      className={cn("text-[9px] px-1.5 py-0 h-4", statusBadgeClass(leadB.status))}
-                    >
-                      {leadB.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="px-2 py-1 text-[11px] text-muted-foreground hidden md:table-cell">
-                    {formatDate(leadB.createdAt)}
-                  </TableCell>
-                  <TableCell className="px-2 py-1 text-right">
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      className="h-6 text-[10px] px-2"
-                      onClick={handleMergeClick}
-                    >
-                      Remove Duplicate
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </div>
+          <DataTable
+            data={tableData}
+            columns={columns}
+            getRowKey={(row) => row.id}
+            minWidth="640px"
+          />
         </CardContent>
       )}
     </Card>

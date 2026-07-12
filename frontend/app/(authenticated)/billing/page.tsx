@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
 import { format, isPast } from "date-fns";
@@ -17,15 +17,7 @@ import {
 import { ErrorState } from "@/components/shared/error-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { useInvoiceStats, useInvoices } from "@/hooks/api/invoice";
@@ -228,11 +220,7 @@ export default function BillingPage() {
               </Button>
             </Link>
           </div>
-          {recentLoading ? (
-            <TableSkeleton rows={5} />
-          ) : (
-            <InvoiceTable invoices={recentInvoices} />
-          )}
+          <InvoiceTable invoices={recentInvoices} isLoading={recentLoading} />
         </div>
 
         {overdueInvoices.length > 0 && (
@@ -258,115 +246,113 @@ export default function BillingPage() {
   );
 }
 
-function TableSkeleton({ rows }: { rows: number }) {
-  return (
-    <div className="overflow-x-auto">
-      <div className="min-w-[640px]">
-        <div className="divide-y divide-border">
-          {Array.from({ length: rows }).map((_, i) => (
-            <div
-              key={i}
-              className="grid grid-cols-6 gap-4 px-4 py-3 items-center"
-            >
-              <Skeleton className="h-4 w-20" />
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-5 w-14 rounded-full" />
-              <Skeleton className="h-4 w-20" />
-              <Skeleton className="h-4 w-16 ml-auto" />
-              <Skeleton className="h-7 w-12 ml-auto" />
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
+type InvoiceRow = {
+  id: number;
+  invoiceNumber: string;
+  status: InvoiceStatus;
+  total: string;
+  dueDate: string | null;
+  client: { id: number; name: string } | null;
+  createdAt: Date;
+};
+
+const INVOICE_COLUMNS: DataTableColumn<InvoiceRow>[] = [
+  {
+    key: "invoiceNumber",
+    header: "Invoice #",
+    className: "font-mono text-xs font-medium",
+    cell: (inv): ReactNode => inv.invoiceNumber,
+  },
+  {
+    key: "client",
+    header: "Client",
+    className: "text-sm",
+    cell: (inv): ReactNode =>
+      inv.client?.name ?? (
+        <span className="text-muted-foreground">—</span>
+      ),
+  },
+  {
+    key: "status",
+    header: "Status",
+    cell: (inv): ReactNode => {
+      const badge = STATUS_BADGE[inv.status];
+      return (
+        <Badge variant={badge.variant} className="text-[11px]">
+          {badge.label}
+        </Badge>
+      );
+    },
+  },
+  {
+    key: "dueDate",
+    header: "Due Date",
+    cell: (inv): ReactNode => {
+      const overdue =
+        inv.status !== "PAID" &&
+        inv.status !== "VOIDED" &&
+        inv.dueDate &&
+        isPast(new Date(inv.dueDate));
+      return (
+        <span
+          className={`text-xs ${overdue ? "text-destructive font-medium" : "text-muted-foreground"}`}
+        >
+          {inv.dueDate ? format(new Date(inv.dueDate), "dd MMM yyyy") : "—"}
+        </span>
+      );
+    },
+  },
+  {
+    key: "total",
+    header: "Amount",
+    headerClassName: "text-right",
+    className: "text-right font-mono font-medium text-sm",
+    cell: (inv): ReactNode => fmt(inv.total),
+  },
+  {
+    key: "actions",
+    header: "",
+    cell: (inv): ReactNode => (
+      <Link href={`/billing/invoices/${inv.id}`}>
+        <Button variant="ghost" size="sm" className="text-xs">
+          View
+        </Button>
+      </Link>
+    ),
+  },
+];
+
+const INVOICE_EMPTY_STATE = (
+  <EmptyState
+    className="border-0 bg-transparent py-10"
+    illustration={
+      <EmptyDocumentsIllustration className="h-28 w-28 opacity-95" />
+    }
+    title="No invoices found"
+    description="Create your first invoice to start tracking revenue."
+    action={{ label: "New Invoice", href: "/billing/invoices/new" }}
+  />
+);
+
+function getInvoiceRowKey(inv: InvoiceRow): string | number {
+  return inv.id;
 }
 
 function InvoiceTable({
   invoices,
+  isLoading,
 }: {
-  invoices: Array<{
-    id: number;
-    invoiceNumber: string;
-    status: InvoiceStatus;
-    total: string;
-    dueDate: string | null;
-    client: { id: number; name: string } | null;
-    createdAt: Date;
-  }>;
+  invoices: InvoiceRow[];
+  isLoading?: boolean;
 }) {
-  if (!invoices.length) {
-    return (
-      <EmptyState
-        className="border-0 bg-transparent py-10"
-        illustration={
-          <EmptyDocumentsIllustration className="h-28 w-28 opacity-95" />
-        }
-        title="No invoices found"
-        description="Create your first invoice to start tracking revenue."
-        action={{ label: "New Invoice", href: "/billing/invoices/new" }}
-      />
-    );
-  }
-
   return (
-    <div className="overflow-x-auto">
-      <Table className="min-w-[640px]">
-        <TableHeader>
-          <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-            <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Invoice #</TableHead>
-            <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Client</TableHead>
-            <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Status</TableHead>
-            <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Due Date</TableHead>
-            <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Amount</TableHead>
-            <TableHead />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {invoices.map((inv) => {
-            const badge = STATUS_BADGE[inv.status];
-            const overdue =
-              inv.status !== "PAID" &&
-              inv.status !== "VOIDED" &&
-              inv.dueDate &&
-              isPast(new Date(inv.dueDate));
-            return (
-              <TableRow key={inv.id} className="border-b border-border/50 hover:bg-muted/30">
-                <TableCell className="font-mono text-xs font-medium">
-                  {inv.invoiceNumber}
-                </TableCell>
-                <TableCell className="text-sm">
-                  {inv.client?.name ?? (
-                    <span className="text-muted-foreground">—</span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <Badge variant={badge.variant} className="text-[11px]">
-                    {badge.label}
-                  </Badge>
-                </TableCell>
-                <TableCell
-                  className={`text-xs ${overdue ? "text-destructive font-medium" : "text-muted-foreground"}`}
-                >
-                  {inv.dueDate
-                    ? format(new Date(inv.dueDate), "dd MMM yyyy")
-                    : "—"}
-                </TableCell>
-                <TableCell className="text-right font-mono font-medium text-sm px-3 py-2">
-                  {fmt(inv.total)}
-                </TableCell>
-                <TableCell>
-                  <Link href={`/billing/invoices/${inv.id}`}>
-                    <Button variant="ghost" size="sm" className="text-xs">
-                      View
-                    </Button>
-                  </Link>
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-    </div>
+    <DataTable
+      data={invoices}
+      columns={INVOICE_COLUMNS}
+      getRowKey={getInvoiceRowKey}
+      isLoading={isLoading}
+      emptyState={INVOICE_EMPTY_STATE}
+      className="border-0 rounded-none"
+    />
   );
 }

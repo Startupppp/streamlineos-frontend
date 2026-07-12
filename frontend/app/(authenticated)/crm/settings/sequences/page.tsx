@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
+import type { ReactNode } from "react";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { SkeletonTable } from "@/components/shared";
+import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -85,6 +86,79 @@ export default function SequencesPage() {
   const handleAlertOpenChange = useCallback((open: boolean) => { if (!open) setDeleteTargetId(null); }, []);
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
+  const columns = useMemo<DataTableColumn<CrmSequence>[]>(() => [
+    {
+      key: "name",
+      header: "Name",
+      cell: (seq) => (
+        <div>
+          <div className="font-medium text-foreground">{seq.name}</div>
+          {seq.description && (
+            <div className="text-xs text-muted-foreground truncate max-w-xs mt-0.5">
+              {seq.description}
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "entityType",
+      header: "Entity",
+      cell: (seq) => (
+        <Badge variant="outline" className="text-[11px] capitalize">
+          {seq.entityType}
+        </Badge>
+      ),
+    },
+    {
+      key: "isActive",
+      header: "Status",
+      cell: (seq) => (
+        <Switch
+          checked={seq.isActive}
+          onCheckedChange={() => handleToggleActive(seq)}
+          aria-label={seq.isActive ? "Disable sequence" : "Enable sequence"}
+        />
+      ),
+    },
+    {
+      key: "createdAt",
+      header: "Created",
+      sortable: true,
+      sortValue: (seq) => new Date(seq.createdAt).getTime(),
+      cell: (seq) => (
+        <span className="text-xs text-muted-foreground">
+          {new Date(seq.createdAt).toLocaleDateString()}
+        </span>
+      ),
+    },
+    {
+      key: "actions",
+      header: "",
+      cell: (seq) => (
+        <div className="flex items-center justify-end gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+            onClick={() => handleOpenEdit(seq)}
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-muted-foreground hover:text-destructive"
+            onClick={() => handleDeleteRequest(seq.id)}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      ),
+      headerClassName: "w-20",
+    },
+  ], [handleToggleActive, handleOpenEdit, handleDeleteRequest]);
+
   return (
     <>
       <AlertDialog open={deleteTargetId !== null} onOpenChange={handleAlertOpenChange}>
@@ -127,103 +201,25 @@ export default function SequencesPage() {
         {isError ? (
           <ErrorState title="Failed to load sequences" onRetry={handleRetry} />
         ) : isLoading ? (
-          <SkeletonTable rows={5} columns={5} />
-        ) : sequences.length === 0 ? (
-          <EmptyState
-            className="min-h-[50vh] border-0 bg-transparent"
-            illustration={<AutomationsIllustration />}
-            title="No sequences yet"
-            description="Create your first sequence to automate multi-step outreach across leads, deals, and contacts."
-            action={{ label: "New Sequence", onClick: handleOpenCreate }}
-          />
+          <DataTableSkeleton rows={5} columns={5} />
         ) : (
-          <div className="rounded-lg border border-border overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-muted/40">
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs">Name</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs">Entity</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs">Status</th>
-                  <th className="text-left px-4 py-3 font-medium text-muted-foreground text-xs">Created</th>
-                  <th className="px-4 py-3" />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {sequences.map((seq) => (
-                  <SequenceRow
-                    key={seq.id}
-                    sequence={seq}
-                    onEdit={handleOpenEdit}
-                    onDeleteRequest={handleDeleteRequest}
-                    onToggleActive={handleToggleActive}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            data={sequences}
+            columns={columns}
+            getRowKey={(seq) => seq.id}
+            isLoading={false}
+            emptyState={
+              <EmptyState
+                className="min-h-[50vh] border-0 bg-transparent"
+                illustration={<AutomationsIllustration />}
+                title="No sequences yet"
+                description="Create your first sequence to automate multi-step outreach across leads, deals, and contacts."
+                action={{ label: "New Sequence", onClick: handleOpenCreate }}
+              />
+            }
+          />
         )}
       </PageWrapper>
     </>
-  );
-}
-
-interface RowProps {
-  sequence: CrmSequence;
-  onEdit: (seq: CrmSequence) => void;
-  onDeleteRequest: (id: string) => void;
-  onToggleActive: (seq: CrmSequence) => void;
-}
-
-function SequenceRow({ sequence, onEdit, onDeleteRequest, onToggleActive }: RowProps) {
-  const handleEdit = useCallback(() => onEdit(sequence), [onEdit, sequence]);
-  const handleDelete = useCallback(() => onDeleteRequest(sequence.id), [onDeleteRequest, sequence.id]);
-  const handleToggle = useCallback(() => onToggleActive(sequence), [onToggleActive, sequence]);
-
-  return (
-    <tr className="hover:bg-muted/30 transition-colors">
-      <td className="px-4 py-3">
-        <div className="font-medium text-foreground">{sequence.name}</div>
-        {sequence.description && (
-          <div className="text-xs text-muted-foreground truncate max-w-xs mt-0.5">
-            {sequence.description}
-          </div>
-        )}
-      </td>
-      <td className="px-4 py-3">
-        <Badge variant="outline" className="text-[11px] capitalize">
-          {sequence.entityType}
-        </Badge>
-      </td>
-      <td className="px-4 py-3">
-        <Switch
-          checked={sequence.isActive}
-          onCheckedChange={handleToggle}
-          aria-label={sequence.isActive ? "Disable sequence" : "Enable sequence"}
-        />
-      </td>
-      <td className="px-4 py-3 text-xs text-muted-foreground">
-        {new Date(sequence.createdAt).toLocaleDateString()}
-      </td>
-      <td className="px-4 py-3">
-        <div className="flex items-center justify-end gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 text-muted-foreground hover:text-foreground"
-            onClick={handleEdit}
-          >
-            <Pencil className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 text-muted-foreground hover:text-destructive"
-            onClick={handleDelete}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
-        </div>
-      </td>
-    </tr>
   );
 }

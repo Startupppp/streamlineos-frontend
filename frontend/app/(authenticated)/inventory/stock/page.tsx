@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { SkeletonTable } from "@/components/shared/skeletons/skeleton-table";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 import {
   Select,
   SelectContent,
@@ -303,7 +303,7 @@ export default function StockLevelsPage() {
         {viewParam === "reservations" ? (
           <ReservationsPanel />
         ) : stockLoading ? (
-          <SkeletonTable rows={8} columns={8} />
+          <DataTableSkeleton rows={8} columns={8} />
         ) : stockError ? (
           <ErrorState
             title="Failed to load stock levels"

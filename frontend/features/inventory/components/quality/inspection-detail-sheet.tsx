@@ -12,6 +12,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useCan } from "@/hooks/api/access";
 import {
   useQualityInspection,
@@ -82,6 +83,28 @@ const LineDispositionRow = memo(function LineDispositionRow({
     </div>
   );
 });
+
+const INSPECTION_LINE_COLUMNS: DataTableColumn<InspectionLine>[] = [
+  {
+    key: "variantName",
+    header: "Variant",
+    className: "truncate max-w-[160px] text-xs",
+    cell: (line) => line.variantName,
+  },
+  {
+    key: "qty",
+    header: "Qty",
+    className: "text-right tabular-nums text-xs",
+    headerClassName: "text-right",
+    cell: (line) => line.qty,
+  },
+  {
+    key: "disposition",
+    header: "Disposition",
+    className: "text-muted-foreground text-xs",
+    cell: (line) => line.disposition ?? "—",
+  },
+];
 
 export function InspectionDetailSheet({ open, onOpenChange, inspectionId }: Props) {
   const [showFailForm, setShowFailForm] = useState(false);
@@ -280,26 +303,11 @@ export function InspectionDetailSheet({ open, onOpenChange, inspectionId }: Prop
             <>
               <div className="space-y-1">
                 <p className="text-xs font-medium text-foreground">Lines</p>
-                <div className="rounded-md border border-border overflow-hidden">
-                  <table className="w-full text-xs">
-                    <thead className="bg-muted/50">
-                      <tr>
-                        <th className="text-left px-3 py-2 font-medium text-muted-foreground">Variant</th>
-                        <th className="text-right px-3 py-2 font-medium text-muted-foreground">Qty</th>
-                        <th className="text-left px-3 py-2 font-medium text-muted-foreground">Disposition</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {inspection.lines.map((line) => (
-                        <tr key={line.id} className="border-t border-border/40">
-                          <td className="px-3 py-2 truncate max-w-[160px]">{line.variantName}</td>
-                          <td className="px-3 py-2 text-right tabular-nums">{line.qty}</td>
-                          <td className="px-3 py-2 text-muted-foreground">{line.disposition ?? "—"}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <DataTable
+                  data={inspection.lines}
+                  columns={INSPECTION_LINE_COLUMNS}
+                  getRowKey={(line) => line.id}
+                />
               </div>
 
               {inspection.statusTimeline && inspection.statusTimeline.length > 0 && (

@@ -13,16 +13,9 @@ import { getApiError } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { TokenCreatedDialog } from "./token-created-dialog";
 import { CreateUserTokenSheet } from "./create-user-token-sheet";
 
@@ -90,6 +83,72 @@ export function PersonalTokensTab({ showCreate, onShowCreateChange }: PersonalTo
   const handleOpenCreate = useCallback(() => onShowCreateChange(true), [onShowCreateChange]);
   const handleCloseCreated = useCallback(() => setCreatedRawToken(null), []);
 
+  const columns: DataTableColumn<UserApiToken>[] = [
+    {
+      key: "name",
+      header: "Name",
+      className: "font-medium",
+      cell: (t) => t.name,
+    },
+    {
+      key: "prefix",
+      header: "Prefix",
+      cell: (t) => (
+        <code className="text-[11px] bg-muted px-1.5 py-0.5 rounded">
+          {t.prefix}…
+        </code>
+      ),
+    },
+    {
+      key: "scopes",
+      header: "Scopes",
+      cell: (t) => (
+        <div className="flex flex-wrap gap-1 max-w-[200px]">
+          {t.scopes.slice(0, 3).map((s) => (
+            <Badge key={s} variant="outline" className="h-4 text-[9px] px-1.5 py-0">
+              {s}
+            </Badge>
+          ))}
+          {t.scopes.length > 3 && (
+            <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0">
+              +{t.scopes.length - 3}
+            </Badge>
+          )}
+          {t.scopes.length === 0 && (
+            <span className="text-[11px] text-muted-foreground">No scopes</span>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "expires",
+      header: "Expires",
+      className: "text-muted-foreground",
+      cell: (t) => {
+        const expired = isExpired(t.expiresAt);
+        return (
+          <div className="flex items-center gap-1">
+            {expired && <Clock className="h-3 w-3 text-destructive" />}
+            <span className={expired ? "text-destructive" : ""}>{formatDate(t.expiresAt)}</span>
+          </div>
+        );
+      },
+    },
+    {
+      key: "lastUsed",
+      header: "Last Used",
+      className: "text-muted-foreground",
+      cell: (t) => formatDate(t.lastUsedAt),
+    },
+    {
+      key: "actions",
+      header: "",
+      headerClassName: "w-8",
+      className: "w-8",
+      cell: (t) => <RevokeTokenButton token={t} onRevoke={setRevoking} />,
+    },
+  ];
+
   return (
     <>
       {isLoading ? (
@@ -107,64 +166,11 @@ export function PersonalTokensTab({ showCreate, onShowCreateChange }: PersonalTo
           className="min-h-[40vh]"
         />
       ) : (
-        <div className="rounded-md border border-border overflow-hidden">
-          <Table>
-            <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
-              <TableRow>
-                <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Name</TableHead>
-                <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Prefix</TableHead>
-                <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Scopes</TableHead>
-                <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Expires</TableHead>
-                <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Last Used</TableHead>
-                <TableHead className="w-8" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {tokens.map((t) => {
-                const expired = isExpired(t.expiresAt);
-                return (
-                  <TableRow key={t.id} className="h-8 hover:bg-muted/30 transition-colors">
-                    <TableCell className="px-2 py-1 text-[11px] font-medium">{t.name}</TableCell>
-                    <TableCell className="px-2 py-1">
-                      <code className="text-[11px] bg-muted px-1.5 py-0.5 rounded">
-                        {t.prefix}…
-                      </code>
-                    </TableCell>
-                    <TableCell className="px-2 py-1">
-                      <div className="flex flex-wrap gap-1 max-w-[200px]">
-                        {t.scopes.slice(0, 3).map((s) => (
-                          <Badge key={s} variant="outline" className="h-4 text-[9px] px-1.5 py-0">
-                            {s}
-                          </Badge>
-                        ))}
-                        {t.scopes.length > 3 && (
-                          <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0">
-                            +{t.scopes.length - 3}
-                          </Badge>
-                        )}
-                        {t.scopes.length === 0 && (
-                          <span className="text-[11px] text-muted-foreground">No scopes</span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-2 py-1 text-[11px] text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        {expired && <Clock className="h-3 w-3 text-destructive" />}
-                        <span className={expired ? "text-destructive" : ""}>{formatDate(t.expiresAt)}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-2 py-1 text-[11px] text-muted-foreground">
-                      {formatDate(t.lastUsedAt)}
-                    </TableCell>
-                    <TableCell className="px-2 py-1">
-                      <RevokeTokenButton token={t} onRevoke={setRevoking} />
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
+        <DataTable
+          data={tokens}
+          columns={columns}
+          getRowKey={(t) => t.id}
+        />
       )}
 
       <CreateUserTokenSheet

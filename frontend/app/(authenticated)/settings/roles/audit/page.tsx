@@ -5,12 +5,9 @@ import { ClipboardList, ShieldCheck, ShieldX, UserCheck, UserX } from "lucide-re
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { ErrorState } from "@/components/shared/error-state";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useAuditLogs } from "@/hooks/api/audit-log";
 import type { AuditLogRow as AuditLogEntry } from "@/hooks/api/audit-log";
 import { getInitials } from "@/lib/format-utils";
@@ -47,162 +44,6 @@ export default function AuditPage() {
   );
 }
 
-function AuditContent() {
-  const [page, setPage] = useState(1);
-
-  const query = useAuditLogs({ page, pageSize: PAGE_SIZE, targetType: "role" });
-
-  const handleRetry = useCallback(() => {
-    void query.refetch();
-  }, [query]);
-
-  const handlePrevPage = useCallback(() => {
-    setPage((p) => Math.max(1, p - 1));
-  }, []);
-
-  const handleNextPage = useCallback(() => {
-    setPage((p) => p + 1);
-  }, []);
-
-  const rbacLogs = query.data?.logs.filter(
-    (log) => RBAC_ACTIONS.includes(log.action),
-  ) ?? [];
-
-  return (
-    <PageWrapper
-      title="Access Audit Log"
-      subtitle="Track role and permission changes across your organization"
-      backHref="/settings/roles"
-      eyebrow="Settings / Roles"
-    >
-      <div className="flex flex-col gap-4 flex-1 min-h-0">
-        {query.isLoading && <AuditLoadingSkeleton />}
-
-        {query.isError && (
-          <ErrorState
-            title="Failed to load audit log"
-            description="Something went wrong while fetching audit events"
-            onRetry={handleRetry}
-            className="flex-1 min-h-[320px]"
-          />
-        )}
-
-        {query.isSuccess && rbacLogs.length === 0 && (
-          <AuditEmptyState />
-        )}
-
-        {query.isSuccess && rbacLogs.length > 0 && (
-          <>
-            <Card>
-              <ScrollArea type="auto">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
-                      <tr className="border-b-2 border-border text-muted-foreground">
-                        <th className="text-left px-2 py-1.5 text-[10px] uppercase tracking-wider font-bold whitespace-nowrap">When</th>
-                        <th className="text-left px-2 py-1.5 text-[10px] uppercase tracking-wider font-bold whitespace-nowrap">Actor</th>
-                        <th className="text-left px-2 py-1.5 text-[10px] uppercase tracking-wider font-bold whitespace-nowrap">Action</th>
-                        <th className="text-left px-2 py-1.5 text-[10px] uppercase tracking-wider font-bold whitespace-nowrap">Target</th>
-                        <th className="text-left px-2 py-1.5 text-[10px] uppercase tracking-wider font-bold whitespace-nowrap">Affected User</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border/30">
-                      {rbacLogs.map((log) => (
-                        <AuditLogRow key={log.id} log={log} />
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </ScrollArea>
-            </Card>
-
-            <div className="flex items-center justify-between shrink-0">
-              <p className="text-xs text-muted-foreground">
-                Page {query.data.page} of {query.data.totalPages} &mdash; {query.data.total} events
-              </p>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handlePrevPage}
-                  disabled={page <= 1 || query.isFetching}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleNextPage}
-                  disabled={page >= (query.data.totalPages ?? 1) || query.isFetching}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          </>
-        )}
-      </div>
-    </PageWrapper>
-  );
-}
-
-interface AuditLogRowProps {
-  log: AuditLogEntry;
-}
-
-function AuditLogRow({ log }: AuditLogRowProps) {
-  const meta = ACTION_META[log.action];
-  const displayName = log.userName ?? log.userEmail ?? log.userId;
-  const targetLabel = resolveTargetLabel(log);
-  const affectedUser = resolveAffectedUser(log);
-
-  return (
-    <tr className="h-8 hover:bg-muted/30 transition-colors">
-      <td className="px-2 py-1 text-[11px] text-muted-foreground whitespace-nowrap">
-        {formatTimestamp(log.createdAt)}
-      </td>
-      <td className="px-2 py-1">
-        <div className="flex items-center gap-2 min-w-0">
-          <Avatar className="h-6 w-6 shrink-0">
-            <AvatarImage src={log.userImage ?? undefined} />
-            <AvatarFallback className="text-[9px]">
-              {getInitials(displayName)}
-            </AvatarFallback>
-          </Avatar>
-          <div className="min-w-0">
-            <p className="text-xs font-medium truncate max-w-[140px]">{log.userName ?? log.userEmail ?? "Unknown"}</p>
-            {log.userName && log.userEmail && (
-              <p className="text-[10px] text-muted-foreground truncate max-w-[140px]">{log.userEmail}</p>
-            )}
-          </div>
-        </div>
-      </td>
-      <td className="px-2 py-1 whitespace-nowrap">
-        {meta ? (
-          <Badge variant={meta.variant} className="text-[10px] px-1.5 gap-1 whitespace-nowrap">
-            <meta.Icon className="h-3 w-3" />
-            {meta.label}
-          </Badge>
-        ) : (
-          <Badge variant="outline" className="text-[10px] px-1.5 font-mono whitespace-nowrap">
-            {log.action}
-          </Badge>
-        )}
-      </td>
-      <td className="px-2 py-1 text-[11px] text-foreground">
-        {targetLabel ? (
-          <span className="font-mono text-[11px] bg-muted/40 px-1.5 py-0.5 rounded">{targetLabel}</span>
-        ) : (
-          <span className="text-muted-foreground">—</span>
-        )}
-      </td>
-      <td className="px-2 py-1 text-[11px] text-muted-foreground">
-        {affectedUser ?? <span>—</span>}
-      </td>
-    </tr>
-  );
-}
-
 function resolveTargetLabel(log: AuditLogEntry): string | null {
   const meta = log.metadata;
   if (!meta) return log.targetId;
@@ -233,29 +74,138 @@ function formatTimestamp(value: Date): string {
   }).format(date);
 }
 
-function AuditLoadingSkeleton() {
-  return (
-    <Card>
-      <CardContent className="p-0">
-        <div className="divide-y divide-border/30">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-4 px-4 py-3">
-              <Skeleton className="h-3 w-28 shrink-0" />
-              <div className="flex items-center gap-2 flex-1">
-                <Skeleton className="h-6 w-6 rounded-full shrink-0" />
-                <Skeleton className="h-3 w-32" />
-              </div>
-              <Skeleton className="h-5 w-28 rounded-full shrink-0" />
-              <Skeleton className="h-3 w-24 shrink-0" />
-              <Skeleton className="h-3 w-24 shrink-0" />
-            </div>
-          ))}
+const columns: DataTableColumn<AuditLogEntry>[] = [
+  {
+    key: "when",
+    header: "When",
+    className: "whitespace-nowrap",
+    cell: (log) => (
+      <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+        {formatTimestamp(log.createdAt)}
+      </span>
+    ),
+  },
+  {
+    key: "actor",
+    header: "Actor",
+    cell: (log) => {
+      const displayName = log.userName ?? log.userEmail ?? log.userId;
+      return (
+        <div className="flex items-center gap-2 min-w-0">
+          <Avatar className="h-6 w-6 shrink-0">
+            <AvatarImage src={log.userImage ?? undefined} />
+            <AvatarFallback className="text-[9px]">
+              {getInitials(displayName)}
+            </AvatarFallback>
+          </Avatar>
+          <div className="min-w-0">
+            <p className="text-xs font-medium truncate max-w-[140px]">{log.userName ?? log.userEmail ?? "Unknown"}</p>
+            {log.userName && log.userEmail && (
+              <p className="text-[10px] text-muted-foreground truncate max-w-[140px]">{log.userEmail}</p>
+            )}
+          </div>
         </div>
-      </CardContent>
-    </Card>
+      );
+    },
+  },
+  {
+    key: "action",
+    header: "Action",
+    className: "whitespace-nowrap",
+    cell: (log) => {
+      const meta = ACTION_META[log.action];
+      return meta ? (
+        <Badge variant={meta.variant} className="text-[10px] px-1.5 gap-1 whitespace-nowrap">
+          <meta.Icon className="h-3 w-3" />
+          {meta.label}
+        </Badge>
+      ) : (
+        <Badge variant="outline" className="text-[10px] px-1.5 font-mono whitespace-nowrap">
+          {log.action}
+        </Badge>
+      );
+    },
+  },
+  {
+    key: "target",
+    header: "Target",
+    cell: (log) => {
+      const targetLabel = resolveTargetLabel(log);
+      return targetLabel ? (
+        <span className="font-mono text-[11px] bg-muted/40 px-1.5 py-0.5 rounded">{targetLabel}</span>
+      ) : (
+        <span className="text-muted-foreground">—</span>
+      );
+    },
+  },
+  {
+    key: "affected-user",
+    header: "Affected User",
+    cell: (log) => {
+      const affectedUser = resolveAffectedUser(log);
+      return (
+        <span className="text-[11px] text-muted-foreground">
+          {affectedUser ?? "—"}
+        </span>
+      );
+    },
+  },
+];
+
+function AuditContent() {
+  const [page, setPage] = useState(1);
+
+  const query = useAuditLogs({ page, pageSize: PAGE_SIZE, targetType: "role" });
+
+  const handleRetry = useCallback(() => {
+    void query.refetch();
+  }, [query]);
+
+  const handlePageChange = useCallback((p: number) => {
+    setPage(p);
+  }, []);
+
+  const rbacLogs = query.data?.logs.filter(
+    (log) => RBAC_ACTIONS.includes(log.action),
+  ) ?? [];
+
+  return (
+    <PageWrapper
+      title="Access Audit Log"
+      subtitle="Track role and permission changes across your organization"
+      backHref="/settings/roles"
+      eyebrow="Settings / Roles"
+    >
+      <div className="flex flex-col gap-4 flex-1 min-h-0">
+        {query.isError && (
+          <ErrorState
+            title="Failed to load audit log"
+            description="Something went wrong while fetching audit events"
+            onRetry={handleRetry}
+            className="flex-1 min-h-[320px]"
+          />
+        )}
+
+        {!query.isError && (
+          <DataTable
+            data={rbacLogs}
+            columns={columns}
+            getRowKey={(log) => log.id}
+            isLoading={query.isLoading}
+            emptyState={<AuditEmptyState />}
+            pagination={{
+              mode: "server",
+              page,
+              pageSize: PAGE_SIZE,
+              total: query.data?.total ?? 0,
+              onPageChange: handlePageChange,
+            }}
+          />
+        )}
+      </div>
+    </PageWrapper>
   );
 }
-
 
 function AuditEmptyState() {
   return (

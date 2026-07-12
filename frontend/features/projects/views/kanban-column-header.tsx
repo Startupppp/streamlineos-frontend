@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { Pencil, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -47,10 +47,6 @@ interface KanbanColumnHeaderProps {
   canManage: boolean;
   onRename?: (oldName: string, newName: string) => void;
   onColorChange?: (statusId: number, color: string) => void;
-  onMoveLeft?: () => void;
-  onMoveRight?: () => void;
-  canMoveLeft?: boolean;
-  canMoveRight?: boolean;
   quickAdd?: React.ReactNode;
 }
 
@@ -62,10 +58,6 @@ export function KanbanColumnHeader({
   canManage,
   onRename,
   onColorChange,
-  onMoveLeft,
-  onMoveRight,
-  canMoveLeft = false,
-  canMoveRight = false,
   quickAdd,
 }: KanbanColumnHeaderProps) {
   const [isRenaming, setIsRenaming] = useState(false);
@@ -147,16 +139,6 @@ export function KanbanColumnHeader({
     setMenuOpen(false);
     setDeleteOpen(true);
   }, []);
-
-  const handleMoveLeft = useCallback(() => {
-    setMenuOpen(false);
-    onMoveLeft?.();
-  }, [onMoveLeft]);
-
-  const handleMoveRight = useCallback(() => {
-    setMenuOpen(false);
-    onMoveRight?.();
-  }, [onMoveRight]);
 
   const handleMenuMouseDown = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();

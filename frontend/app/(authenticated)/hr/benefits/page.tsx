@@ -9,14 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   Select,
   SelectContent,
@@ -147,16 +140,6 @@ function PlansAdminTab({ canManage }: { canManage: boolean }) {
     if (!open) setEditPlan(undefined);
   }, []);
 
-  if (isLoading) {
-    return (
-      <div className="space-y-2">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-12 w-full rounded-lg" />
-        ))}
-      </div>
-    );
-  }
-
   const plans = data?.data ?? [];
 
   return (
@@ -170,70 +153,20 @@ function PlansAdminTab({ canManage }: { canManage: boolean }) {
         </div>
       )}
 
-      {!plans.length ? (
-        <EmptyState
-          illustrationPreset="payroll"
-          title="No benefit plans"
-          description="Create your first benefit plan to get started."
-          action={canManage ? { label: "New Plan", onClick: handleNew } : undefined}
-        />
-      ) : (
-        <div className="rounded-xl border border-border overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/30">
-                <TableHead className="text-xs font-semibold">Name</TableHead>
-                <TableHead className="text-xs font-semibold">Category</TableHead>
-                <TableHead className="text-xs font-semibold">Provider</TableHead>
-                <TableHead className="text-xs font-semibold">Premium</TableHead>
-                <TableHead className="text-xs font-semibold">Effective</TableHead>
-                <TableHead className="text-xs font-semibold">Status</TableHead>
-                {canManage && <TableHead className="text-xs font-semibold w-16" />}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {plans.map((plan) => (
-                <TableRow key={plan.id} className="hover:bg-muted/20">
-                  <TableCell className="text-sm font-medium">{plan.name}</TableCell>
-                  <TableCell className="text-xs capitalize">{plan.category}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground">{plan.provider ?? "—"}</TableCell>
-                  <TableCell className="text-xs">
-                    {plan.premiumCents != null
-                      ? `₹${(plan.premiumCents / 100).toLocaleString("en-IN")}`
-                      : "—"}
-                  </TableCell>
-                  <TableCell className="text-xs">{plan.effectiveFrom}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        "text-[10px]",
-                        plan.status === "active" && "bg-emerald-100 text-emerald-700 border-emerald-200",
-                        plan.status === "draft" && "bg-amber-100 text-amber-700 border-amber-200",
-                        plan.status === "archived" && "bg-slate-100 text-slate-600 border-slate-200",
-                      )}
-                    >
-                      {plan.status}
-                    </Badge>
-                  </TableCell>
-                  {canManage && (
-                    <TableCell>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-7 text-xs"
-                        onClick={() => handleEdit(plan)}
-                      >
-                        Edit
-                      </Button>
-                    </TableCell>
-                  )}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
+      <DataTable<BenefitPlan>
+        data={plans}
+        columns={buildPlanColumns(canManage, handleEdit)}
+        getRowKey={(p) => p.id}
+        isLoading={isLoading}
+        emptyState={
+          <EmptyState
+            illustrationPreset="payroll"
+            title="No benefit plans"
+            description="Create your first benefit plan to get started."
+            action={canManage ? { label: "New Plan", onClick: handleNew } : undefined}
+          />
+        }
+      />
 
       <PlanUpsertSheet open={sheetOpen} onOpenChange={handleSheetOpenChange} plan={editPlan} />
     </div>
@@ -259,16 +192,6 @@ function ClaimsDashboardTab({ canManage }: { canManage: boolean }) {
     if (!open) setReviewClaim(null);
   }, []);
 
-  if (isLoading) {
-    return (
-      <div className="space-y-2">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-12 w-full rounded-lg" />
-        ))}
-      </div>
-    );
-  }
-
   const claims = data?.data ?? [];
 
   return (
@@ -289,70 +212,19 @@ function ClaimsDashboardTab({ canManage }: { canManage: boolean }) {
         </Select>
       </div>
 
-      {!claims.length ? (
-        <EmptyState
-          illustrationPreset="documents"
-          title="No claims found"
-          description="No insurance claims match the current filter."
-        />
-      ) : (
-        <div className="rounded-xl border border-border overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/30">
-                <TableHead className="text-xs font-semibold">Claim #</TableHead>
-                <TableHead className="text-xs font-semibold">Claimant</TableHead>
-                <TableHead className="text-xs font-semibold">Plan</TableHead>
-                <TableHead className="text-xs font-semibold">Amount</TableHead>
-                <TableHead className="text-xs font-semibold">Status</TableHead>
-                <TableHead className="text-xs font-semibold">Payout Route</TableHead>
-                {canManage && <TableHead className="text-xs font-semibold w-20" />}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {claims.map((claim) => {
-                const meta = CLAIM_STATUS_META[claim.status];
-                return (
-                  <TableRow key={claim.id} className="hover:bg-muted/20">
-                    <TableCell className="text-xs font-mono">{claim.claimNumber}</TableCell>
-                    <TableCell className="text-sm">
-                      {claim.user?.name ?? claim.user?.email ?? claim.userId}
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
-                      {claim.plan?.name ?? `Plan #${claim.planId}`}
-                    </TableCell>
-                    <TableCell className="text-sm font-medium">
-                      ₹{(claim.amountCents / 100).toLocaleString("en-IN")}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={cn("text-[10px]", meta.className)}>
-                        {meta.label}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground capitalize">
-                      {claim.payoutRoute?.replace(/_/g, " ") ?? "—"}
-                    </TableCell>
-                    {canManage && (
-                      <TableCell>
-                        {(claim.status === "submitted" || claim.status === "in_review") && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-7 text-xs"
-                            onClick={() => handleReviewClaim(claim)}
-                          >
-                            Review
-                          </Button>
-                        )}
-                      </TableCell>
-                    )}
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
-      )}
+      <DataTable<InsuranceClaim>
+        data={claims}
+        columns={buildClaimColumns(canManage, handleReviewClaim)}
+        getRowKey={(c) => c.id}
+        isLoading={isLoading}
+        emptyState={
+          <EmptyState
+            illustrationPreset="documents"
+            title="No claims found"
+            description="No insurance claims match the current filter."
+          />
+        }
+      />
 
       <ClaimReviewSheet
         open={reviewClaim !== null}

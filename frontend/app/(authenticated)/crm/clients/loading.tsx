@@ -1,6 +1,6 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { SkeletonTable } from "@/components/shared";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 
 export default function ClientsLoading() {
   return (
@@ -14,7 +14,7 @@ export default function ClientsLoading() {
         </div>
       }
     >
-      <SkeletonTable rows={8} columns={8} />
+      <DataTableSkeleton rows={8} columns={8} />
     </PageWrapper>
   );
 }

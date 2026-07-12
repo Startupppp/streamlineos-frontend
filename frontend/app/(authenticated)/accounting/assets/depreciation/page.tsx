@@ -23,7 +23,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
-import { LoadingState, ErrorState } from "@/components/shared";
+import { ErrorState } from "@/components/shared";
 import { EntityFormDialog } from "@/components/shared/entity-form-dialog";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { Money } from "@/features/accounting/shared";

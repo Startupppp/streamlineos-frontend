@@ -1,16 +1,15 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, MoreHorizontal, Play, Pause, Trash2, History } from "lucide-react";
 import { toast } from "sonner";
-import { motion, AnimatePresence } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +26,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
 import { AutomationsIllustration } from "@/components/illustrations";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -39,15 +39,128 @@ import {
 import type { CrmAutomationRule } from "@/types/crm";
 import { cn } from "@/lib/utils";
 
-const listVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.05 } },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 8 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.18 } },
-};
+function buildColumns(
+  eventMap: Record<string, string>,
+  onToggle: (rule: CrmAutomationRule) => void,
+  onOpenBuilder: (id: number) => void,
+  onDeleteRequest: (id: number) => void,
+): DataTableColumn<CrmAutomationRule>[] {
+  return [
+    {
+      key: "name",
+      header: "Name",
+      cell: (row): ReactNode => (
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="font-medium text-foreground">{row.name}</span>
+            {row.isDraft && (
+              <Badge variant="outline" className="text-[10px] h-4 px-1.5 text-amber-600 border-amber-300">
+                Draft
+              </Badge>
+            )}
+          </div>
+          <div className="text-[11px] text-muted-foreground mt-0.5">v{row.version}</div>
+        </div>
+      ),
+    },
+    {
+      key: "trigger",
+      header: "Trigger",
+      cell: (row): ReactNode => (
+        <span className={cn(
+          "inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium",
+          "bg-blue-50 text-blue-700 border border-blue-200",
+        )}>
+          {eventMap[row.trigger] ?? row.trigger}
+        </span>
+      ),
+    },
+    {
+      key: "runs",
+      header: "Runs",
+      className: "hidden md:table-cell",
+      headerClassName: "hidden md:table-cell",
+      cell: (row): ReactNode => (
+        <span className="text-xs text-muted-foreground">{row.executionCount}</span>
+      ),
+    },
+    {
+      key: "lastRun",
+      header: "Last Run",
+      className: "hidden lg:table-cell",
+      headerClassName: "hidden lg:table-cell",
+      cell: (row): ReactNode => (
+        <span className="text-xs text-muted-foreground">
+          {row.lastRunAt
+            ? new Date(row.lastRunAt).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
+            : "—"
+          }
+        </span>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (row): ReactNode => {
+        const handleToggleClick = (e: React.MouseEvent) => { e.stopPropagation(); onToggle(row); };
+        return (
+          <div onClick={handleToggleClick}>
+            <Switch
+              checked={row.isActive}
+              onCheckedChange={() => onToggle(row)}
+              aria-label={row.isActive ? "Disable automation" : "Enable automation"}
+            />
+          </div>
+        );
+      },
+    },
+    {
+      key: "actions",
+      header: "",
+      cell: (row): ReactNode => {
+        const handleActionsClick = (e: React.MouseEvent) => { e.stopPropagation(); };
+        const handleEdit = () => onOpenBuilder(row.id);
+        const handleToggleItem = () => onToggle(row);
+        const handleDelete = () => onDeleteRequest(row.id);
+        return (
+          <div onClick={handleActionsClick}>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground">
+                  <MoreHorizontal className="h-3.5 w-3.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
+                <DropdownMenuItem onClick={handleEdit}>
+                  <Play className="h-3.5 w-3.5 mr-2" />
+                  Open Builder
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleEdit}>
+                  <History className="h-3.5 w-3.5 mr-2" />
+                  Run History
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleToggleItem}>
+                  {row.isActive ? (
+                    <><Pause className="h-3.5 w-3.5 mr-2" />Disable</>
+                  ) : (
+                    <><Play className="h-3.5 w-3.5 mr-2" />Enable</>
+                  )}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive"
+                  onClick={handleDelete}
+                >
+                  <Trash2 className="h-3.5 w-3.5 mr-2" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        );
+      },
+    },
+  ];
+}
 
 export default function AutomationsPage() {
   const router = useRouter();
@@ -102,6 +215,10 @@ export default function AutomationsPage() {
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
   const handleCreate = useCallback(() => router.push("/crm/settings/automations/new"), [router]);
   const handleOpenBuilder = useCallback((id: number) => router.push(`/crm/settings/automations/${id}`), [router]);
+  const handleRowClick = useCallback((rule: CrmAutomationRule) => handleOpenBuilder(rule.id), [handleOpenBuilder]);
+  const getRuleKey = useCallback((rule: CrmAutomationRule) => String(rule.id), []);
+
+  const columns = buildColumns(eventMap, handleToggle, handleOpenBuilder, handleDeleteRequest);
 
   return (
     <>
@@ -142,9 +259,7 @@ export default function AutomationsPage() {
             description="Could not fetch automation rules."
             action={{ label: "Retry", onClick: handleRetry }}
           />
-        ) : isLoading ? (
-          <AutomationsSkeleton />
-        ) : rules.length === 0 ? (
+        ) : rules.length === 0 && !isLoading ? (
           <EmptyState
             className="min-h-[50vh] border-0 bg-transparent"
             illustration={<AutomationsIllustration />}
@@ -153,165 +268,16 @@ export default function AutomationsPage() {
             action={{ label: "New Automation", onClick: handleCreate }}
           />
         ) : (
-          <div className="rounded-lg border border-border overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-muted/40">
-                  <th className="text-left px-4 py-2.5 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Name</th>
-                  <th className="text-left px-4 py-2.5 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Trigger</th>
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground text-xs hidden md:table-cell">Runs</th>
-                  <th className="text-left px-4 py-2.5 font-medium text-muted-foreground text-xs hidden lg:table-cell">Last Run</th>
-                  <th className="text-left px-4 py-2.5 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Status</th>
-                  <th className="px-4 py-2.5" />
-                </tr>
-              </thead>
-              <AnimatePresence>
-                <motion.tbody
-                  className="divide-y divide-border"
-                  variants={listVariants}
-                  initial="hidden"
-                  animate="visible"
-                >
-                  {rules.map((rule) => (
-                    <AutomationRow
-                      key={rule.id}
-                      rule={rule}
-                      eventLabel={eventMap[rule.trigger] ?? rule.trigger}
-                      onToggle={handleToggle}
-                      onEdit={handleOpenBuilder}
-                      onDeleteRequest={handleDeleteRequest}
-                    />
-                  ))}
-                </motion.tbody>
-              </AnimatePresence>
-            </table>
-          </div>
+          <DataTable
+            data={rules}
+            columns={columns}
+            getRowKey={getRuleKey}
+            onRowClick={handleRowClick}
+            isLoading={isLoading}
+            rowClassName={() => "cursor-pointer"}
+          />
         )}
       </PageWrapper>
     </>
-  );
-}
-
-interface RowProps {
-  rule: CrmAutomationRule;
-  eventLabel: string;
-  onToggle: (rule: CrmAutomationRule) => void;
-  onEdit: (id: number) => void;
-  onDeleteRequest: (id: number) => void;
-}
-
-function AutomationRow({ rule, eventLabel, onToggle, onEdit, onDeleteRequest }: RowProps) {
-  const handleToggle = useCallback(() => onToggle(rule), [onToggle, rule]);
-  const handleEdit = useCallback(() => onEdit(rule.id), [onEdit, rule.id]);
-  const handleDelete = useCallback(() => onDeleteRequest(rule.id), [onDeleteRequest, rule.id]);
-
-  return (
-    <motion.tr
-      variants={itemVariants}
-      className="hover:bg-muted/30 transition-colors cursor-pointer"
-      onClick={handleEdit}
-    >
-      <td className="px-4 py-3">
-        <div className="flex items-center gap-2">
-          <span className="font-medium text-foreground">{rule.name}</span>
-          {rule.isDraft && (
-            <Badge variant="outline" className="text-[10px] h-4 px-1.5 text-amber-600 border-amber-300">
-              Draft
-            </Badge>
-          )}
-        </div>
-        <div className="text-[11px] text-muted-foreground mt-0.5">v{rule.version}</div>
-      </td>
-      <td className="px-4 py-3">
-        <span className={cn(
-          "inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium",
-          "bg-blue-50 text-blue-700 border border-blue-200",
-        )}>
-          {eventLabel}
-        </span>
-      </td>
-      <td className="px-4 py-3 hidden md:table-cell">
-        <span className="text-xs text-muted-foreground">{rule.executionCount}</span>
-      </td>
-      <td className="px-4 py-3 hidden lg:table-cell">
-        <span className="text-xs text-muted-foreground">
-          {rule.lastRunAt
-            ? new Date(rule.lastRunAt).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
-            : "—"
-          }
-        </span>
-      </td>
-      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-        <Switch
-          checked={rule.isActive}
-          onCheckedChange={handleToggle}
-          aria-label={rule.isActive ? "Disable automation" : "Enable automation"}
-        />
-      </td>
-      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground">
-              <MoreHorizontal className="h-3.5 w-3.5" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-44">
-            <DropdownMenuItem onClick={handleEdit}>
-              <Play className="h-3.5 w-3.5 mr-2" />
-              Open Builder
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleEdit}>
-              <History className="h-3.5 w-3.5 mr-2" />
-              Run History
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleToggle}>
-              {rule.isActive ? (
-                <><Pause className="h-3.5 w-3.5 mr-2" />Disable</>
-              ) : (
-                <><Play className="h-3.5 w-3.5 mr-2" />Enable</>
-              )}
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="text-destructive focus:text-destructive"
-              onClick={handleDelete}
-            >
-              <Trash2 className="h-3.5 w-3.5 mr-2" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </td>
-    </motion.tr>
-  );
-}
-
-function AutomationsSkeleton() {
-  return (
-    <div className="rounded-lg border border-border overflow-hidden">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b bg-muted/40">
-            <th className="px-4 py-2.5 text-left"><Skeleton className="h-3 w-20" /></th>
-            <th className="px-4 py-2.5 text-left"><Skeleton className="h-3 w-16" /></th>
-            <th className="px-4 py-2.5 text-left hidden md:table-cell"><Skeleton className="h-3 w-10" /></th>
-            <th className="px-4 py-2.5 text-left hidden lg:table-cell"><Skeleton className="h-3 w-14" /></th>
-            <th className="px-4 py-2.5 text-left"><Skeleton className="h-3 w-12" /></th>
-            <th className="px-4 py-2.5" />
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-border">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <tr key={i}>
-              <td className="px-4 py-3"><Skeleton className="h-4 w-36" /></td>
-              <td className="px-4 py-3"><Skeleton className="h-5 w-24 rounded-full" /></td>
-              <td className="px-4 py-3 hidden md:table-cell"><Skeleton className="h-4 w-8" /></td>
-              <td className="px-4 py-3 hidden lg:table-cell"><Skeleton className="h-4 w-20" /></td>
-              <td className="px-4 py-3"><Skeleton className="h-5 w-9 rounded-full" /></td>
-              <td className="px-4 py-3"><Skeleton className="h-6 w-6 rounded" /></td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
   );
 }

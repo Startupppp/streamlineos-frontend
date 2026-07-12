@@ -22,7 +22,6 @@ import { SwimlaneRowHeader, getTicketRowKey } from "./kanban-swimlane";
 import type { KanbanTicket, KanbanColumn, DisplayOptions } from "../shared/types";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCan } from "@/hooks/api/access";
-import { useReorderCustomStates } from "@/hooks/api/projects/custom-states";
 
 type UpdateOrderContext = { previous: KanbanTicket[] };
 
@@ -96,20 +95,6 @@ function applyColumnOrder(items: KanbanColumn[]): KanbanColumn[] {
   return [...items].sort((a, b) => a.order - b.order);
 }
 
-function reorderColumnList(columns: KanbanColumn[], fromIndex: number, toIndex: number): KanbanColumn[] {
-  const next = [...columns];
-  const [moved] = next.splice(fromIndex, 1);
-  if (!moved) return columns;
-  next.splice(toIndex, 0, moved);
-  return next.map((col, index) => ({ ...col, order: index }));
-}
-
-function buildOrderUpdates(columns: KanbanColumn[]): { stateId: number; order: number }[] {
-  return columns
-    .filter((col): col is KanbanColumn & { statusId: number } => col.statusId != null)
-    .map((col) => ({ stateId: col.statusId, order: col.order }));
-}
-
 export function KanbanBoard({
   tickets,
   projectId,
@@ -137,7 +122,6 @@ export function KanbanBoard({
     setOptimisticColumnOrder(null);
   }
   const queryClient = useQueryClient();
-  const reorderStates = useReorderCustomStates(projectId);
 
   const rowBy = displayOptions?.rowBy ?? "none";
   const showEmptyColumns = displayOptions?.showEmptyColumns ?? true;
@@ -203,24 +187,6 @@ export function KanbanBoard({
       onTicketSelect?.(id);
     },
     [onTicketSelect],
-  );
-
-  const persistColumnOrder = useCallback(
-    (nextColumns: KanbanColumn[], previousColumns: KanbanColumn[]) => {
-      const updates = buildOrderUpdates(nextColumns);
-      if (updates.length === 0) return;
-      setOptimisticColumnOrder(nextColumns);
-      reorderStates.mutate(updates, {
-        onError: (error) => {
-          setOptimisticColumnOrder(previousColumns);
-          toast.error(getErrorMessage(error));
-        },
-        onSettled: () => {
-          setOptimisticColumnOrder(null);
-        },
-      });
-    },
-    [reorderStates],
   );
 
   const handleColumnRename = useCallback((oldName: string, newName: string) => {
@@ -475,66 +441,43 @@ export function KanbanBoard({
 
   return (
     <DragDropContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
-      <Droppable droppableId="board-columns" direction="horizontal" type={COLUMN_DND_TYPE}>
-        {(boardProvided) => (
-          <div
-            ref={boardProvided.innerRef}
-            {...boardProvided.droppableProps}
-            className="flex h-full min-w-0 gap-3 overflow-x-auto pb-1 px-1"
-          >
-            {visibleColumns.map((col, index) => {
-              const columnTickets = optimisticTickets
-                .filter((t) => t.status === col.id)
-                .sort((a, b) => (a.order || 0) - (b.order || 0));
-              const wip = wipLimits?.[col.id];
-              const overWip = wip != null && columnTickets.length > wip;
-              const columnDraggableId = `column-${col.statusId ?? col.id}`;
+      <div className="flex h-full min-w-0 gap-3 overflow-x-auto pb-1 px-1">
+        {visibleColumns.map((col) => {
+          const columnTickets = optimisticTickets
+            .filter((t) => t.status === col.id)
+            .sort((a, b) => (a.order || 0) - (b.order || 0));
+          const wip = wipLimits?.[col.id];
+          const overWip = wip != null && columnTickets.length > wip;
 
-              return (
-                <Draggable
-                  key={columnDraggableId}
-                  draggableId={columnDraggableId}
-                  index={index}
-                  type={COLUMN_DND_TYPE}
-                  isDragDisabled={!canManage || col.statusId == null}
-                >
-                  {(colProvided, colSnapshot) => (
-                    <div
-                      ref={colProvided.innerRef}
-                      {...colProvided.draggableProps}
-                      className={cn(
-                        "w-72 min-w-[280px] shrink-0 rounded-lg border bg-muted/20 flex flex-col min-h-0",
-                        overWip && "border-destructive/60",
-                        colSnapshot.isDragging && "shadow-md ring-1 ring-border",
-                      )}
-                    >
-                      <KanbanColumnHeader
-                        column={col}
-                        projectId={projectId}
-                        ticketCount={columnTickets.length}
-                        wipLimit={wip}
-                        canManage={canManage}
-                        dragHandleProps={colProvided.dragHandleProps}
-                        onRename={handleColumnRename}
-                        onColorChange={handleColumnColorChange}
-                        quickAdd={
-                          <QuickAddInput columnId={col.id} projectId={projectId} headerMode />
-                        }
-                      />
-                      {renderColumnTickets(col, columnTickets, col.id, "min-h-[100px]")}
-                      <div className="border-t">
-                        <QuickAddInput columnId={col.id} projectId={projectId} />
-                      </div>
-                    </div>
-                  )}
-                </Draggable>
-              );
-            })}
-            {boardProvided.placeholder}
-            <AddColumn projectId={projectId} />
-          </div>
-        )}
-      </Droppable>
+          return (
+            <div
+              key={col.id}
+              className={cn(
+                "w-72 min-w-[280px] shrink-0 rounded-lg border bg-muted/20 flex flex-col min-h-0",
+                overWip && "border-destructive/60",
+              )}
+            >
+              <KanbanColumnHeader
+                column={col}
+                projectId={projectId}
+                ticketCount={columnTickets.length}
+                wipLimit={wip}
+                canManage={canManage}
+                onRename={handleColumnRename}
+                onColorChange={handleColumnColorChange}
+                quickAdd={
+                  <QuickAddInput columnId={col.id} projectId={projectId} headerMode />
+                }
+              />
+              {renderColumnTickets(col, columnTickets, col.id, "min-h-[100px]")}
+              <div className="border-t">
+                <QuickAddInput columnId={col.id} projectId={projectId} />
+              </div>
+            </div>
+          );
+        })}
+        <AddColumn projectId={projectId} />
+      </div>
     </DragDropContext>
   );
 }

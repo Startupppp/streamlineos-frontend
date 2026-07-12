@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import type { ReactNode } from "react";
 import { Plus, Pencil, Trash2, FlaskConical } from "lucide-react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -10,16 +11,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
+import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
 import {
   useValidationRules, useCreateValidationRule, useUpdateValidationRule,
   useDeleteValidationRule, useTestValidationRules, useCrmMetadata,
@@ -56,60 +54,6 @@ const RULE_TYPE_COLORS: Record<CrmValidationRuleType, string> = {
   stage_required: "bg-orange-50 text-orange-700 border-orange-200",
   source_required: "bg-orange-50 text-orange-700 border-orange-200",
 };
-
-interface RuleRowProps {
-  rule: CrmValidationRule;
-  pipelineName: string | undefined;
-  onEdit: (rule: CrmValidationRule) => void;
-  onToggle: (id: string, current: boolean) => void;
-  onDeleteRequest: (id: string) => void;
-}
-
-function RuleRow({ rule, pipelineName, onEdit, onToggle, onDeleteRequest }: RuleRowProps) {
-  const handleEdit = useCallback(() => onEdit(rule), [rule, onEdit]);
-  const handleToggle = useCallback(() => onToggle(rule.id, rule.isActive), [rule.id, rule.isActive, onToggle]);
-  const handleDelete = useCallback(() => onDeleteRequest(rule.id), [rule.id, onDeleteRequest]);
-
-  return (
-    <TableRow className={cn("h-9 hover:bg-muted/30 transition-colors", !rule.isActive && "opacity-60")}>
-      <TableCell className="px-2 py-1">
-        <span className="font-mono text-[10px] bg-muted px-1.5 py-0.5 rounded">{rule.field}</span>
-      </TableCell>
-      <TableCell className="px-2 py-1">
-        <Badge variant="outline" className={cn("text-[9px] h-4 px-1.5 py-0 border", RULE_TYPE_COLORS[rule.ruleType])}>
-          {rule.ruleType}
-        </Badge>
-      </TableCell>
-      <TableCell className="px-2 py-1">
-        <div className="flex items-center gap-1 flex-wrap">
-          {pipelineName && (
-            <span className="text-[9px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded border border-border">{pipelineName}</span>
-          )}
-          {rule.stageKey && (
-            <span className="text-[9px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded border border-border">stage:{rule.stageKey}</span>
-          )}
-          {rule.sourceKey && (
-            <span className="text-[9px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded border border-border">src:{rule.sourceKey}</span>
-          )}
-        </div>
-      </TableCell>
-      <TableCell className="px-2 py-1 text-center text-[10px] text-muted-foreground">{rule.sortOrder}</TableCell>
-      <TableCell className="px-2 py-1 text-center">
-        <Switch checked={rule.isActive} onCheckedChange={handleToggle} />
-      </TableCell>
-      <TableCell className="px-2 py-1 text-right">
-        <div className="flex items-center justify-end gap-1">
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleEdit} aria-label="Edit rule">
-            <Pencil className="h-3.5 w-3.5" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={handleDelete} aria-label="Delete rule">
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
-        </div>
-      </TableCell>
-    </TableRow>
-  );
-}
 
 interface TestPanelProps {
   entityType: CrmValidationEntityType;
@@ -269,6 +213,97 @@ function EntityRulesTab({ entityType, onNewRule }: EntityRulesTabProps) {
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
+  const getRuleKey = useCallback((rule: CrmValidationRule) => rule.id, []);
+  const getRuleRowClassName = useCallback((rule: CrmValidationRule) => cn(!rule.isActive && "opacity-60"), []);
+
+  const columns: DataTableColumn<CrmValidationRule>[] = [
+    {
+      key: "field",
+      header: "Field",
+      cell: (row): ReactNode => (
+        <span className="font-mono text-[10px] bg-muted px-1.5 py-0.5 rounded">{row.field}</span>
+      ),
+    },
+    {
+      key: "type",
+      header: "Type",
+      cell: (row): ReactNode => (
+        <Badge variant="outline" className={cn("text-[9px] h-4 px-1.5 py-0 border", RULE_TYPE_COLORS[row.ruleType])}>
+          {row.ruleType}
+        </Badge>
+      ),
+    },
+    {
+      key: "scope",
+      header: "Scope",
+      cell: (row): ReactNode => {
+        const pipelineName = row.pipelineId ? pipelineMap.get(row.pipelineId) : undefined;
+        return (
+          <div className="flex items-center gap-1 flex-wrap">
+            {pipelineName && (
+              <span className="text-[9px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded border border-border">{pipelineName}</span>
+            )}
+            {row.stageKey && (
+              <span className="text-[9px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded border border-border">stage:{row.stageKey}</span>
+            )}
+            {row.sourceKey && (
+              <span className="text-[9px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded border border-border">src:{row.sourceKey}</span>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      key: "sortOrder",
+      header: "Order",
+      headerClassName: "text-center",
+      className: "text-center",
+      cell: (row): ReactNode => (
+        <span className="text-[10px] text-muted-foreground">{row.sortOrder}</span>
+      ),
+    },
+    {
+      key: "active",
+      header: "Active",
+      headerClassName: "text-center",
+      className: "text-center",
+      cell: (row): ReactNode => {
+        const onToggleRow = () => handleToggle(row.id, row.isActive);
+        return <Switch checked={row.isActive} onCheckedChange={onToggleRow} />;
+      },
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      headerClassName: "text-right",
+      className: "text-right",
+      cell: (row): ReactNode => {
+        const onEditRow = () => handleEditOpen(row);
+        const onDeleteRow = () => handleDeleteRequest(row.id);
+        return (
+          <div className="flex items-center justify-end gap-1">
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onEditRow} aria-label="Edit rule">
+              <Pencil className="h-3.5 w-3.5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={onDeleteRow} aria-label="Delete rule">
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        );
+      },
+    },
+  ];
+
+  const emptyState = (
+    <EmptyState
+      compact
+      title="No rules for this entity"
+      description="Add validation rules to enforce data quality on this entity type."
+      action={{ label: "New Rule", onClick: onNewRule }}
+      className="min-h-[20vh] border-0 bg-transparent"
+    />
+  );
+
   return (
     <>
       <AlertDialog open={deleteTargetId !== null} onOpenChange={handleAlertOpenChange}>
@@ -298,7 +333,7 @@ function EntityRulesTab({ entityType, onNewRule }: EntityRulesTabProps) {
 
       <div className="space-y-6">
         {isLoading ? (
-          <div className="space-y-2">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
+          <DataTableSkeleton rows={3} columns={6} />
         ) : isError ? (
           <EmptyState
             compact
@@ -307,43 +342,16 @@ function EntityRulesTab({ entityType, onNewRule }: EntityRulesTabProps) {
             action={{ label: "Retry", onClick: handleRetry }}
             className="min-h-[20vh] border-0 bg-transparent"
           />
-        ) : rules && rules.length > 0 ? (
-          <Card className="bg-card rounded-lg border border-border shadow-sm overflow-hidden">
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader className="sticky top-0 z-10 bg-muted/80">
-                  <TableRow className="border-b-2 border-border hover:bg-transparent">
-                    <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Field</TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Type</TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Scope</TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-center">Order</TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-center">Active</TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {rules.map((rule) => (
-                    <RuleRow
-                      key={rule.id}
-                      rule={rule}
-                      pipelineName={rule.pipelineId ? pipelineMap.get(rule.pipelineId) : undefined}
-                      onEdit={handleEditOpen}
-                      onToggle={handleToggle}
-                      onDeleteRequest={handleDeleteRequest}
-                    />
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
         ) : (
-          <EmptyState
-            compact
-            title="No rules for this entity"
-            description="Add validation rules to enforce data quality on this entity type."
-            action={{ label: "New Rule", onClick: onNewRule }}
-            className="min-h-[20vh] border-0 bg-transparent"
-          />
+          <Card className="bg-card rounded-lg border border-border shadow-sm">
+            <DataTable
+              data={rules ?? []}
+              columns={columns}
+              getRowKey={getRuleKey}
+              rowClassName={getRuleRowClassName}
+              emptyState={emptyState}
+            />
+          </Card>
         )}
         <TestPanel entityType={entityType} />
       </div>

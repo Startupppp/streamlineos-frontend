@@ -12,6 +12,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useRecall, useUpdateRecall } from "@/hooks/api/inventory/quality";
 import {
   RECALL_STATUS_BADGE,
@@ -24,6 +25,29 @@ interface Props {
   onOpenChange: (v: boolean) => void;
   recallId: number | null;
 }
+
+interface RecallLine {
+  id: number;
+  lotId?: number | null;
+  serialId?: number | null;
+  lotNumber?: string | null;
+  serialNumber?: string | null;
+}
+
+const RECALL_LINE_COLUMNS: DataTableColumn<RecallLine>[] = [
+  {
+    key: "lotNumber",
+    header: "Lot #",
+    className: "text-muted-foreground text-xs",
+    cell: (line) => line.lotNumber ?? (line.lotId ? String(line.lotId) : "—"),
+  },
+  {
+    key: "serialNumber",
+    header: "Serial #",
+    className: "text-muted-foreground text-xs",
+    cell: (line) => line.serialNumber ?? (line.serialId ? String(line.serialId) : "—"),
+  },
+];
 
 export function RecallDetailSheet({ open, onOpenChange, recallId }: Props) {
   const [editingNotes, setEditingNotes] = useState(false);
@@ -196,24 +220,11 @@ export function RecallDetailSheet({ open, onOpenChange, recallId }: Props) {
           {recall.lines.length > 0 && (
             <div className="space-y-1">
               <p className="text-xs font-medium text-foreground">Affected Lines ({recall.lines.length})</p>
-              <div className="rounded-md border border-border overflow-hidden">
-                <table className="w-full text-xs">
-                  <thead className="bg-muted/50">
-                    <tr>
-                      <th className="text-left px-3 py-2 font-medium text-muted-foreground">Lot #</th>
-                      <th className="text-left px-3 py-2 font-medium text-muted-foreground">Serial #</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recall.lines.map((line) => (
-                      <tr key={line.id} className="border-t border-border/40">
-                        <td className="px-3 py-2 text-muted-foreground">{line.lotNumber ?? (line.lotId ? String(line.lotId) : "—")}</td>
-                        <td className="px-3 py-2 text-muted-foreground">{line.serialNumber ?? (line.serialId ? String(line.serialId) : "—")}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <DataTable
+                data={recall.lines}
+                columns={RECALL_LINE_COLUMNS}
+                getRowKey={(line) => line.id}
+              />
             </div>
           )}
 

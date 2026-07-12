@@ -122,8 +122,8 @@ export function BookingLinksView({ baseUrl }: { baseUrl: string }) {
       header: "Status",
       cell: (link) => {
         const isExpired = new Date(link.expiresAt) < new Date();
-        const effectiveStatus = isExpired && link.status === "pending" ? "expired" : link.status;
-        return <StatusBadgeCell status={effectiveStatus as HrBookingLink["status"]} />;
+        const effectiveStatus: HrBookingLink["status"] = isExpired && link.status === "pending" ? "expired" : link.status;
+        return <StatusBadgeCell status={effectiveStatus} />;
       },
     },
     {

@@ -3,16 +3,13 @@
 import { useState, useCallback, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { EmptyActivityIllustration } from "@/components/illustrations";
 import { format, subDays, startOfDay, endOfDay } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { SkeletonTable } from "@/components/shared/skeletons/skeleton-table";
 import {
   Select,
   SelectContent,
@@ -20,14 +17,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import {
   useStockTransactions,
@@ -72,16 +61,82 @@ function isTransactionTypeOrAll(val: string): val is TransactionType | "all" {
 
 const ALL_TXN_TYPES = Object.keys(TXN_TYPE_CONFIG) as TransactionType[];
 
-const TH = "text-[10px] uppercase tracking-wider font-bold px-2 py-1.5";
-
-function TxnTypeBadge({ type }: { type: TransactionType }) {
-  const cfg = TXN_TYPE_CONFIG[type];
-  return (
-    <Badge variant="outline" className={cn("h-4 text-[9px] px-1.5 py-0 font-medium whitespace-nowrap", cfg.badgeClass)}>
-      {cfg.label}
-    </Badge>
-  );
-}
+const MOVEMENTS_COLUMNS: DataTableColumn<StockTransaction>[] = [
+  {
+    key: "transactionType",
+    header: "Type",
+    cell: (row) => {
+      const cfg = TXN_TYPE_CONFIG[row.transactionType];
+      return (
+        <Badge variant="outline" className={cn("h-4 text-[9px] px-1.5 py-0 font-medium whitespace-nowrap", cfg.badgeClass)}>
+          {cfg.label}
+        </Badge>
+      );
+    },
+  },
+  {
+    key: "product",
+    header: "Product",
+    cell: (row) => (
+      <div>
+        <div className="font-medium text-[11px] text-foreground truncate max-w-[160px]">
+          {row.productVariant?.product?.name ?? row.productVariant?.name ?? "—"}
+        </div>
+        <div className="text-[10px] font-mono text-muted-foreground">
+          {row.productVariant?.sku ?? "—"}
+        </div>
+      </div>
+    ),
+  },
+  {
+    key: "location",
+    header: "Location",
+    className: "text-muted-foreground",
+    cell: (row) => <span>{row.location?.name ?? "—"}</span>,
+  },
+  {
+    key: "quantityChange",
+    header: "Qty Change",
+    headerClassName: "text-right",
+    className: "text-right font-mono tabular-nums font-semibold",
+    cell: (row) => {
+      const isPositive = row.quantityChange > 0;
+      return (
+        <span className={isPositive ? "text-emerald-600" : "text-red-600"}>
+          {isPositive ? "+" : ""}{row.quantityChange.toLocaleString()}
+        </span>
+      );
+    },
+  },
+  {
+    key: "quantityAfter",
+    header: "Balance After",
+    headerClassName: "text-right",
+    className: "text-right font-mono tabular-nums font-medium",
+    cell: (row) => <span>{Number(row.quantityAfter).toLocaleString()}</span>,
+  },
+  {
+    key: "reference",
+    header: "Reference",
+    className: "text-muted-foreground font-mono",
+    cell: (row) => {
+      const ref = [row.referenceType, row.referenceId].filter(Boolean).join(" #");
+      return <span>{ref || "—"}</span>;
+    },
+  },
+  {
+    key: "date",
+    header: "Date",
+    className: "text-muted-foreground whitespace-nowrap",
+    cell: (row) => <span>{format(new Date(row.createdAt), "dd MMM yyyy, HH:mm")}</span>,
+  },
+  {
+    key: "by",
+    header: "By",
+    className: "text-muted-foreground",
+    cell: (row) => <span>{row.creator?.name ?? "—"}</span>,
+  },
+];
 
 export default function MovementsPage() {
   const router = useRouter();
@@ -127,17 +182,6 @@ export default function MovementsPage() {
     );
   }, [txnData?.items, searchQ]);
 
-  const rangeStart = total === 0 ? 0 : (currentPage - 1) * LIMIT + 1;
-  const rangeEnd = Math.min(currentPage * LIMIT, total);
-
-  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const params = new URLSearchParams(searchParams.toString());
-    if (e.target.value) params.set("q", e.target.value);
-    else params.delete("q");
-    router.replace(`?${params.toString()}`);
-    setPage(1);
-  }
-
   const handleDatePresetChange = useCallback((val: string) => {
     if (isDatePreset(val)) {
       const params = new URLSearchParams(searchParams.toString());
@@ -165,8 +209,13 @@ export default function MovementsPage() {
     setPage(1);
   }
 
-  function handlePrevPage() { setPage((p) => Math.max(1, p - 1)); }
-  function handleNextPage() { setPage((p) => Math.min(totalPages, p + 1)); }
+  function handleSearchChange(val: string): void {
+    const params = new URLSearchParams(searchParams.toString());
+    if (val) params.set("q", val);
+    else params.delete("q");
+    router.replace(`?${params.toString()}`);
+    setPage(1);
+  }
 
   const subtitle = total > 0 ? `${total} movement${total !== 1 ? "s" : ""}` : undefined;
 
@@ -177,15 +226,6 @@ export default function MovementsPage() {
       subtitle={subtitle}
       filters={
         <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
-          <div className="relative min-w-0 flex-1 lg:max-w-xs">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" aria-hidden="true" />
-            <Input
-              placeholder="Search product or location…"
-              value={searchQ}
-              onChange={handleSearchChange}
-              className="h-8 w-full pl-8 text-xs"
-            />
-          </div>
           <div className="hidden sm:flex min-w-0 flex-row flex-nowrap items-center gap-2">
             <Select value={txnTypeFilter} onValueChange={handleTypeChange}>
               <SelectTrigger className="h-8 text-xs w-[140px]">
@@ -215,21 +255,17 @@ export default function MovementsPage() {
         </div>
       }
     >
-      {isLoading ? (
-        <SkeletonTable rows={8} columns={8} />
-      ) : isError ? (
+      {isError ? (
         <ErrorState
           title="Failed to load movements"
           description="An error occurred while fetching stock transactions."
           onRetry={handleRetry}
           className="flex-1 min-h-[40vh]"
         />
-      ) : transactions.length === 0 ? (
+      ) : transactions.length === 0 && !isLoading ? (
         <motion.div variants={fadeUp} initial="hidden" animate="visible">
           <InventoryEmptyState
-            illustration={
-              <EmptyActivityIllustration />
-            }
+            illustration={<EmptyActivityIllustration />}
             title="No movements found"
             description="No stock movements match the selected filters."
             action={{ label: "Clear Filters", onClick: handleResetFilters }}
@@ -237,115 +273,27 @@ export default function MovementsPage() {
           />
         </motion.div>
       ) : (
-        <motion.div
-          variants={staggerContainer}
-          initial="hidden"
-          animate="visible"
-          className="space-y-3"
-        >
+        <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-3">
           <motion.div variants={fadeUp}>
-            <div className="rounded-md border border-border overflow-hidden bg-card">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/80 hover:bg-muted/80">
-                      <TableHead className={TH}>Type</TableHead>
-                      <TableHead className={TH}>Product</TableHead>
-                      <TableHead className={TH}>Location</TableHead>
-                      <TableHead className={cn(TH, "text-right")}>Qty Change</TableHead>
-                      <TableHead className={cn(TH, "text-right")}>Balance After</TableHead>
-                      <TableHead className={TH}>Reference</TableHead>
-                      <TableHead className={TH}>Date</TableHead>
-                      <TableHead className={TH}>By</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {transactions.map((txn) => {
-                      const isPositive = txn.quantityChange > 0;
-                      const ref = [txn.referenceType, txn.referenceId]
-                        .filter(Boolean)
-                        .join(" #");
-                      return (
-                        <TableRow
-                          key={txn.id}
-                          className="h-8 border-b border-border/50 hover:bg-muted/30 transition-colors"
-                        >
-                          <TableCell className="px-2 py-1">
-                            <TxnTypeBadge type={txn.transactionType} />
-                          </TableCell>
-                          <TableCell className="px-2 py-1">
-                            <div className="font-medium text-[11px] text-foreground truncate max-w-[160px]">
-                              {txn.productVariant?.product?.name ??
-                                txn.productVariant?.name ??
-                                "—"}
-                            </div>
-                            <div className="text-[10px] font-mono text-muted-foreground">
-                              {txn.productVariant?.sku ?? "—"}
-                            </div>
-                          </TableCell>
-                          <TableCell className="px-2 py-1 text-[11px] text-muted-foreground">
-                            {txn.location?.name ?? "—"}
-                          </TableCell>
-                          <TableCell
-                            className={cn(
-                              "px-2 py-1 text-right font-mono tabular-nums font-semibold text-[11px]",
-                              isPositive ? "text-emerald-600" : "text-red-600",
-                            )}
-                          >
-                            {isPositive ? "+" : ""}
-                            {txn.quantityChange.toLocaleString()}
-                          </TableCell>
-                          <TableCell className="px-2 py-1 text-right font-mono tabular-nums text-[11px] font-medium">
-                            {Number(txn.quantityAfter).toLocaleString()}
-                          </TableCell>
-                          <TableCell className="px-2 py-1 text-[11px] text-muted-foreground font-mono">
-                            {ref || "—"}
-                          </TableCell>
-                          <TableCell className="px-2 py-1 text-[11px] text-muted-foreground whitespace-nowrap">
-                            {format(new Date(txn.createdAt), "dd MMM yyyy, HH:mm")}
-                          </TableCell>
-                          <TableCell className="px-2 py-1 text-[11px] text-muted-foreground">
-                            {txn.creator?.name ?? "—"}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-              <div className="shrink-0 flex items-center justify-between px-4 py-2 border-t">
-                <span className="text-xs text-muted-foreground">
-                  Showing {rangeStart}–{rangeEnd} of {total} movements
-                </span>
-                <div className="flex items-center gap-1.5">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 px-2 text-xs"
-                    onClick={handlePrevPage}
-                    disabled={currentPage <= 1}
-                    aria-label="Previous page"
-                  >
-                    <ChevronLeft className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
-                    Prev
-                  </Button>
-                  <span className="text-xs text-muted-foreground px-1">
-                    {currentPage} / {totalPages}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 px-2 text-xs"
-                    onClick={handleNextPage}
-                    disabled={currentPage >= totalPages}
-                    aria-label="Next page"
-                  >
-                    Next
-                    <ChevronRight className="h-3.5 w-3.5 ml-1" aria-hidden="true" />
-                  </Button>
-                </div>
-              </div>
-            </div>
+            <DataTable
+              data={transactions}
+              columns={MOVEMENTS_COLUMNS}
+              getRowKey={(row) => row.id}
+              isLoading={isLoading}
+              pagination={{
+                mode: "server",
+                page: currentPage,
+                pageSize: LIMIT,
+                total,
+                onPageChange: setPage,
+              }}
+              search={{
+                value: searchQ,
+                onChange: handleSearchChange,
+                placeholder: "Search product or location…",
+              }}
+              minWidth="720px"
+            />
           </motion.div>
         </motion.div>
       )}

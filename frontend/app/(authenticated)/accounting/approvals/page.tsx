@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { LoadingState, ErrorState } from "@/components/shared";
+import { ErrorState } from "@/components/shared";
 import { AppDialog } from "@/components/shared/app-dialog";
 import { EmptyApprovalIllustration } from "@/components/illustrations";
 import { FinanceStatusBadge, Money } from "@/features/accounting/shared";

@@ -2,17 +2,8 @@
 
 import { useState, useCallback, useMemo, useTransition, useEffect } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -29,11 +20,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   useUsers,
   useExportUsers,
@@ -41,6 +31,7 @@ import {
   useBulkArchive,
   useBulkRestore,
 } from "@/hooks/api/users";
+import type { User } from "@/hooks/api/users";
 import { useOrgBranches, useOrgDepartments } from "@/hooks/api/org-hierarchy";
 import { getApiError } from "@/lib/api-client";
 import { UserStatusBadge } from "./user-status-badge";
@@ -56,8 +47,6 @@ import { toast } from "sonner";
 import {
   Search,
   Users,
-  ChevronLeft,
-  ChevronRight,
   ShieldOff,
   UserX,
   RefreshCw,
@@ -66,9 +55,6 @@ import {
   MoreHorizontal,
   Download,
   Upload,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -79,46 +65,6 @@ function getInitials(name: string | null, email: string): string {
     if (parts.length === 1) return parts[0]!.slice(0, 2).toUpperCase();
   }
   return email.slice(0, 2).toUpperCase();
-}
-
-function RowSkeleton() {
-  return (
-    <TableRow className="h-8">
-      <TableCell className="w-10 px-2 py-1">
-        <Skeleton className="h-4 w-4 rounded" />
-      </TableCell>
-      <TableCell className="px-2 py-1">
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-6 w-6 rounded-full shrink-0" />
-          <Skeleton className="h-3 w-28" />
-        </div>
-      </TableCell>
-      <TableCell className="px-2 py-1">
-        <Skeleton className="h-3 w-36" />
-      </TableCell>
-      <TableCell className="px-2 py-1">
-        <Skeleton className="h-4 w-14 rounded-full" />
-      </TableCell>
-      <TableCell className="px-2 py-1">
-        <Skeleton className="h-4 w-14 rounded-full" />
-      </TableCell>
-      <TableCell className="px-2 py-1">
-        <Skeleton className="h-3 w-16" />
-      </TableCell>
-      <TableCell className="px-2 py-1">
-        <Skeleton className="h-3 w-16" />
-      </TableCell>
-      <TableCell className="px-2 py-1">
-        <Skeleton className="h-3 w-20" />
-      </TableCell>
-      <TableCell className="w-8 px-2 py-1" />
-    </TableRow>
-  );
-}
-
-function SortIcon({ col, sortBy, sortOrder }: { col: "name" | "joinedAt" | "status"; sortBy: string; sortOrder: string }) {
-  if (sortBy !== col) return <ArrowUpDown className="h-3 w-3 opacity-40" />;
-  return sortOrder === "asc" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />;
 }
 
 export function UsersPage() {
@@ -193,13 +139,11 @@ export function UsersPage() {
     [pushParams],
   );
 
-  const handleSort = useCallback(
-    (column: "name" | "joinedAt" | "status") => {
-      const newOrder =
-        sortBy === column ? (sortOrder === "asc" ? "desc" : "asc") : "asc";
-      pushParams({ sortBy: column, sortOrder: newOrder, page: null });
+  const handleSortChange = useCallback(
+    (field: string, direction: "asc" | "desc") => {
+      pushParams({ sortBy: field, sortOrder: direction, page: null });
     },
-    [sortBy, sortOrder, pushParams],
+    [pushParams],
   );
 
   const { data, isLoading, isError, refetch } = useUsers({
@@ -238,31 +182,13 @@ export function UsersPage() {
 
   const users = data?.data ?? [];
   const pagination = data?.pagination;
-  const allSelected =
-    users.length > 0 && users.every((u) => selectedIds.has(u.id));
   const someSelected = selectedIds.size > 0;
+  const allSelected = users.length > 0 && users.every((u) => selectedIds.has(u.id));
   const bulkIsPending = isSuspending || isArchiving || isRestoring;
 
-  function handleRowClick(userId: string) {
-    setSelectedUserId(userId);
+  function handleRowClick(user: User) {
+    setSelectedUserId(user.id);
     setSheetOpen(true);
-  }
-
-  function handleSelectAll(checked: boolean) {
-    if (checked) setSelectedIds(new Set(users.map((u) => u.id)));
-    else {
-      setSelectedIds(new Set());
-      setSelectAllMatching(false);
-    }
-  }
-
-  function handleSelectRow(userId: string, checked: boolean) {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (checked) next.add(userId);
-      else next.delete(userId);
-      return next;
-    });
   }
 
   function handleBulkSuspend() {
@@ -304,6 +230,11 @@ export function UsersPage() {
     );
   }
 
+  const handleSelectionChange = useCallback(
+    (sel: Set<string | number>) => setSelectedIds(new Set([...sel].map(String))),
+    [],
+  );
+
   const handleOpenInvite = useCallback(() => setInviteOpen(true), []);
   const handleInviteChange = useCallback((v: boolean) => setInviteOpen(v), []);
   const handleBulkInviteChange = useCallback((v: boolean) => setBulkInviteOpen(v), []);
@@ -325,17 +256,120 @@ export function UsersPage() {
   const handleClearAllMatching = useCallback(() => setSelectAllMatching(false), []);
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
   const handleAssignSuccess = useCallback(() => setSelectedIds(new Set()), []);
-  const handlePrevPage = useCallback(
-    () => pushParams({ page: page <= 2 ? null : String(page - 1) }),
-    [page, pushParams],
+  const handlePageChange = useCallback(
+    (p: number) => pushParams({ page: p === 1 ? null : String(p) }),
+    [pushParams],
   );
-  const handleNextPage = useCallback(
-    () => pushParams({ page: String(page + 1) }),
-    [page, pushParams],
+
+  const columns = useMemo<DataTableColumn<User>[]>(() => [
+    {
+      key: "name",
+      header: "User",
+      sortable: true,
+      cell: (user) => (
+        <div className="flex items-center gap-2">
+          <Avatar className="h-6 w-6 shrink-0">
+            <AvatarImage src={user.image ?? undefined} alt={user.name ?? user.email} />
+            <AvatarFallback className="text-[10px] font-semibold">
+              {getInitials(user.name, user.email)}
+            </AvatarFallback>
+          </Avatar>
+          <div className="min-w-0">
+            <p className="text-[11px] font-medium truncate leading-tight">{user.name ?? "—"}</p>
+            {user.designation && (
+              <p className="text-[10px] text-muted-foreground truncate">{user.designation}</p>
+            )}
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "email",
+      header: "Email",
+      cell: (user) => (
+        <span className="text-muted-foreground truncate max-w-[180px] block">{user.email}</span>
+      ),
+    },
+    {
+      key: "role",
+      header: "Role",
+      cell: (user) => (
+        <Badge variant="secondary" className="text-[10px] h-4 px-1.5 font-normal">
+          {user.role}
+        </Badge>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      sortable: true,
+      cell: (user) => <UserStatusBadge isActive={user.isActive} />,
+    },
+    {
+      key: "branch",
+      header: "Branch",
+      cell: (user) => (
+        <span className="text-muted-foreground">
+          {user.branchId != null ? (branchMap.get(user.branchId) ?? String(user.branchId)) : "—"}
+        </span>
+      ),
+    },
+    {
+      key: "dept",
+      header: "Dept",
+      cell: (user) => (
+        <span className="text-muted-foreground">
+          {user.departmentId != null
+            ? (deptMap.get(user.departmentId) ?? String(user.departmentId))
+            : "—"}
+        </span>
+      ),
+    },
+    {
+      key: "joinedAt",
+      header: "Joined",
+      sortable: true,
+      className: "tabular-nums font-mono",
+      cell: (user) => (
+        <span className="text-muted-foreground">
+          {formatDistanceToNow(new Date(user.joinedAt ?? user.createdAt), { addSuffix: true })}
+        </span>
+      ),
+    },
+    {
+      key: "actions",
+      header: "",
+      className: "w-8",
+      cell: (user) => (
+        <div onClick={(e) => e.stopPropagation()}>
+          <UserActionsMenu
+            user={user}
+            onView={() => {
+              setSelectedUserId(user.id);
+              setSheetOpen(true);
+            }}
+          />
+        </div>
+      ),
+    },
+  ], [branchMap, deptMap]);
+
+  const emptyStateNode = (
+    <EmptyState
+      illustrationPreset="team"
+      title="No users found"
+      description={
+        q || status !== "all" || role !== "all"
+          ? "Try adjusting your search or filters."
+          : "Invite your first team member to get started."
+      }
+      action={
+        !q && status === "all" && role === "all"
+          ? { label: "Invite User", onClick: handleOpenInvite }
+          : undefined
+      }
+    />
   );
-  const handleSortName = useCallback(() => handleSort("name"), [handleSort]);
-  const handleSortStatus = useCallback(() => handleSort("status"), [handleSort]);
-  const handleSortJoined = useCallback(() => handleSort("joinedAt"), [handleSort]);
 
   return (
     <>
@@ -356,10 +390,7 @@ export function UsersPage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-44">
-                <DropdownMenuItem
-                  onClick={handleExport}
-                  disabled={isExporting}
-                >
+                <DropdownMenuItem onClick={handleExport} disabled={isExporting}>
                   <Download className="h-3.5 w-3.5 mr-2" />
                   Export CSV
                 </DropdownMenuItem>
@@ -378,11 +409,7 @@ export function UsersPage() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button
-              size="sm"
-              className="h-8 text-xs"
-              onClick={handleOpenInvite}
-            >
+            <Button size="sm" className="h-8 text-xs" onClick={handleOpenInvite}>
               <UserPlus className="h-3.5 w-3.5 mr-1.5" />
               Invite User
             </Button>
@@ -545,228 +572,31 @@ export function UsersPage() {
               description="An error occurred while loading users."
               onRetry={handleRetry}
             />
-          ) : isLoading ? (
-            <Card className="overflow-hidden">
-              <CardContent className="p-0 overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/40 h-8">
-                      <TableHead className="w-10 px-2" />
-                      <TableHead className="px-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">User</TableHead>
-                      <TableHead className="px-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Email</TableHead>
-                      <TableHead className="px-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Role</TableHead>
-                      <TableHead className="px-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Status</TableHead>
-                      <TableHead className="px-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Branch</TableHead>
-                      <TableHead className="px-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Dept</TableHead>
-                      <TableHead className="px-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">Joined</TableHead>
-                      <TableHead className="w-8 px-2" />
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {Array.from({ length: 10 }).map((_, i) => (
-                      <RowSkeleton key={i} />
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          ) : users.length === 0 ? (
-            <EmptyState
-              illustrationPreset="team"
-              title="No users found"
-              description={
-                q || status !== "all" || role !== "all"
-                  ? "Try adjusting your search or filters."
-                  : "Invite your first team member to get started."
-              }
-              action={
-                !q && status === "all" && role === "all"
-                  ? { label: "Invite User", onClick: handleOpenInvite }
-                  : undefined
-              }
-            />
           ) : (
-            <div className="space-y-3">
-              <Card className="overflow-hidden">
-                <CardContent className="p-0 overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-muted/40 h-8">
-                        <TableHead className="w-10 px-2 pl-4">
-                          <Checkbox
-                            checked={allSelected}
-                            onCheckedChange={(c) => handleSelectAll(!!c)}
-                            aria-label="Select all"
-                          />
-                        </TableHead>
-                        <TableHead
-                          className="px-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground cursor-pointer select-none hover:text-foreground"
-                          onClick={handleSortName}
-                        >
-                          <span className="flex items-center gap-1">
-                            User
-                            <SortIcon col="name" sortBy={sortBy} sortOrder={sortOrder} />
-                          </span>
-                        </TableHead>
-                        <TableHead className="px-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
-                          Email
-                        </TableHead>
-                        <TableHead className="px-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
-                          Role
-                        </TableHead>
-                        <TableHead
-                          className="px-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground cursor-pointer select-none hover:text-foreground"
-                          onClick={handleSortStatus}
-                        >
-                          <span className="flex items-center gap-1">
-                            Status
-                            <SortIcon col="status" sortBy={sortBy} sortOrder={sortOrder} />
-                          </span>
-                        </TableHead>
-                        <TableHead className="px-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
-                          Branch
-                        </TableHead>
-                        <TableHead className="px-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
-                          Dept
-                        </TableHead>
-                        <TableHead
-                          className="px-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground cursor-pointer select-none hover:text-foreground"
-                          onClick={handleSortJoined}
-                        >
-                          <span className="flex items-center gap-1">
-                            Joined
-                            <SortIcon col="joinedAt" sortBy={sortBy} sortOrder={sortOrder} />
-                          </span>
-                        </TableHead>
-                        <TableHead className="w-8 px-2" />
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {users.map((user) => (
-                        <TableRow
-                          key={user.id}
-                          className="h-8 cursor-pointer hover:bg-muted/30 transition-colors"
-                          onClick={() => handleRowClick(user.id)}
-                          data-state={
-                            selectedIds.has(user.id) ? "selected" : undefined
-                          }
-                        >
-                          <TableCell
-                            className="pl-4 px-2 py-1"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Checkbox
-                              checked={selectedIds.has(user.id)}
-                              onCheckedChange={(c) =>
-                                handleSelectRow(user.id, !!c)
-                              }
-                              aria-label={`Select ${user.name ?? user.email}`}
-                            />
-                          </TableCell>
-                          <TableCell className="px-2 py-1">
-                            <div className="flex items-center gap-2">
-                              <Avatar className="h-6 w-6 shrink-0">
-                                <AvatarImage
-                                  src={user.image ?? undefined}
-                                  alt={user.name ?? user.email}
-                                />
-                                <AvatarFallback className="text-[10px] font-semibold">
-                                  {getInitials(user.name, user.email)}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div className="min-w-0">
-                                <p className="text-[11px] font-medium truncate leading-tight">
-                                  {user.name ?? "—"}
-                                </p>
-                                {user.designation && (
-                                  <p className="text-[10px] text-muted-foreground truncate">
-                                    {user.designation}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell className="px-2 py-1 text-[11px] text-muted-foreground truncate max-w-[180px]">
-                            {user.email}
-                          </TableCell>
-                          <TableCell className="px-2 py-1">
-                            <Badge
-                              variant="secondary"
-                              className="text-[10px] h-4 px-1.5 font-normal"
-                            >
-                              {user.role}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="px-2 py-1">
-                            <UserStatusBadge isActive={user.isActive} />
-                          </TableCell>
-                          <TableCell className="px-2 py-1 text-[11px] text-muted-foreground">
-                            {user.branchId != null
-                              ? (branchMap.get(user.branchId) ??
-                                String(user.branchId))
-                              : "—"}
-                          </TableCell>
-                          <TableCell className="px-2 py-1 text-[11px] text-muted-foreground">
-                            {user.departmentId != null
-                              ? (deptMap.get(user.departmentId) ??
-                                String(user.departmentId))
-                              : "—"}
-                          </TableCell>
-                          <TableCell className="px-2 py-1 text-[11px] text-muted-foreground tabular-nums font-mono">
-                            {formatDistanceToNow(
-                              new Date(user.joinedAt ?? user.createdAt),
-                              { addSuffix: true },
-                            )}
-                          </TableCell>
-                          <TableCell
-                            className="px-2 py-1"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <UserActionsMenu
-                              user={user}
-                              onView={() => handleRowClick(user.id)}
-                            />
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-
-              {pagination && pagination.totalPages > 1 && (
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>
-                    Showing {(page - 1) * 20 + 1}–
-                    {Math.min(page * 20, pagination.total)} of{" "}
-                    {pagination.total}
-                  </span>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-7 w-7 p-0"
-                      onClick={handlePrevPage}
-                      disabled={page === 1}
-                    >
-                      <ChevronLeft className="h-3.5 w-3.5" />
-                    </Button>
-                    <span className="px-2">
-                      {page} / {pagination.totalPages}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-7 w-7 p-0"
-                      onClick={handleNextPage}
-                      disabled={page === pagination.totalPages}
-                    >
-                      <ChevronRight className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
+            <DataTable
+              data={users}
+              columns={columns}
+              getRowKey={(user) => user.id}
+              onRowClick={handleRowClick}
+              isLoading={isLoading}
+              emptyState={emptyStateNode}
+              selection={{
+                selected: selectedIds,
+                onChange: handleSelectionChange,
+              }}
+              sortState={{
+                field: sortBy,
+                direction: sortOrder,
+                onChange: handleSortChange,
+              }}
+              pagination={{
+                mode: "server",
+                page,
+                pageSize: 20,
+                total: pagination?.total ?? 0,
+                onPageChange: handlePageChange,
+              }}
+            />
           )}
         </div>
       </PageWrapper>

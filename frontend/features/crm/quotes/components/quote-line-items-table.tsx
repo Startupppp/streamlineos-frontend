@@ -1,3 +1,4 @@
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import type { QuoteLineItem } from "@/types/crm/quotes";
 import { formatCurrency } from "../lib/quote-utils";
 
@@ -6,60 +7,69 @@ interface QuoteLineItemsTableProps {
   currency: string;
 }
 
-export function QuoteLineItemsTable({ lineItems, currency }: QuoteLineItemsTableProps) {
-  if (!lineItems.length) {
-    return (
-      <p className="text-xs text-muted-foreground py-4 text-center">
-        No line items added.
-      </p>
-    );
-  }
+function buildColumns(currency: string): DataTableColumn<QuoteLineItem>[] {
+  return [
+    {
+      key: "description",
+      header: "Description",
+      cell: (row) => <span className="text-[11px]">{row.description}</span>,
+    },
+    {
+      key: "quantity",
+      header: "Qty",
+      headerClassName: "text-right w-16",
+      className: "text-right",
+      cell: (row) => (
+        <span className="text-[11px] tabular-nums">{parseFloat(row.quantity)}</span>
+      ),
+    },
+    {
+      key: "unitPrice",
+      header: "Unit Price",
+      headerClassName: "text-right w-28",
+      className: "text-right",
+      cell: (row) => (
+        <span className="text-[11px] tabular-nums">
+          {formatCurrency(row.unitPrice, currency)}
+        </span>
+      ),
+    },
+    {
+      key: "taxRate",
+      header: "Tax %",
+      headerClassName: "text-right w-16",
+      className: "text-right",
+      cell: (row) => (
+        <span className="text-[11px] tabular-nums text-muted-foreground">
+          {parseFloat(row.taxRate)}%
+        </span>
+      ),
+    },
+    {
+      key: "amount",
+      header: "Amount",
+      headerClassName: "text-right w-28",
+      className: "text-right",
+      cell: (row) => (
+        <span className="text-[11px] tabular-nums font-medium">
+          {formatCurrency(row.amount, currency)}
+        </span>
+      ),
+    },
+  ];
+}
 
+export function QuoteLineItemsTable({ lineItems, currency }: QuoteLineItemsTableProps) {
   return (
-    <div className="border border-border rounded-md overflow-hidden">
-      <table className="w-full">
-        <thead className="bg-muted/80">
-          <tr className="border-b border-border">
-            <th className="text-left px-3 py-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
-              Description
-            </th>
-            <th className="text-right px-3 py-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground w-16">
-              Qty
-            </th>
-            <th className="text-right px-3 py-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground w-28">
-              Unit Price
-            </th>
-            <th className="text-right px-3 py-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground w-16">
-              Tax %
-            </th>
-            <th className="text-right px-3 py-2 text-[10px] uppercase tracking-wider font-bold text-muted-foreground w-28">
-              Amount
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {lineItems.map((item) => (
-            <tr
-              key={item.id}
-              className="border-b border-border/50 last:border-0 h-8 hover:bg-muted/20"
-            >
-              <td className="px-3 py-1.5 text-[11px]">{item.description}</td>
-              <td className="px-3 py-1.5 text-[11px] text-right tabular-nums">
-                {parseFloat(item.quantity)}
-              </td>
-              <td className="px-3 py-1.5 text-[11px] text-right tabular-nums">
-                {formatCurrency(item.unitPrice, currency)}
-              </td>
-              <td className="px-3 py-1.5 text-[11px] text-right tabular-nums text-muted-foreground">
-                {parseFloat(item.taxRate)}%
-              </td>
-              <td className="px-3 py-1.5 text-[11px] text-right tabular-nums font-medium">
-                {formatCurrency(item.amount, currency)}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <DataTable
+      data={lineItems}
+      columns={buildColumns(currency)}
+      getRowKey={(row) => row.id}
+      emptyState={
+        <p className="text-xs text-muted-foreground py-4 text-center">
+          No line items added.
+        </p>
+      }
+    />
   );
 }

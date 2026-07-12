@@ -5,6 +5,23 @@ import { Check, Search, CalendarRange } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { cn } from "@/lib/utils";
 import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
+import {
+  FilterAssigneeLeading,
+  FilterLabelDot,
+  FilterPriorityLeading,
+  FilterTypeLeading,
+} from "./filter-option-leading";
+import { resolveColumnColor } from "@/features/projects/shared/column-colors";
+import {
+  getStatusEntry,
+  type StatusConfigEntry,
+} from "@/features/projects/shared/types";
+
+export interface StatusFilterOption {
+  name: string;
+  color: string | null;
+  type?: string | null;
+}
 
 interface Member {
   id: string;
@@ -50,7 +67,8 @@ interface ProjectOption {
 
 interface FilterCategorySubmenuProps {
   category: FilterCategory;
-  statusOptions: string[];
+  statusItems: StatusFilterOption[];
+  statusConfig: Record<string, StatusConfigEntry>;
   members: Member[];
   labels: Label[];
   cycles: Cycle[];
@@ -82,11 +100,15 @@ function OptionRow({
   active,
   label,
   color,
+  dotClassName,
+  leading,
   onClick,
 }: {
   active: boolean;
   label: string;
   color?: string | null;
+  dotClassName?: string;
+  leading?: React.ReactNode;
   onClick: () => void;
 }) {
   return (
@@ -101,15 +123,39 @@ function OptionRow({
           active ? "opacity-100" : "opacity-0",
         )}
       />
-      {color && (
+      {leading}
+      {!leading && color ? (
         <span
           className="h-2 w-2 shrink-0 rounded-full"
           style={{ backgroundColor: color }}
         />
-      )}
+      ) : !leading && dotClassName ? (
+        <span className={cn("h-2 w-2 shrink-0 rounded-full", dotClassName)} />
+      ) : null}
       <span className="truncate">{label}</span>
     </button>
   );
+}
+
+export function StatusFilterDot({
+  status,
+  config,
+  className = "h-2 w-2 shrink-0 rounded-full",
+}: {
+  status: StatusFilterOption;
+  config: Record<string, StatusConfigEntry>;
+  className?: string;
+}) {
+  const entry = getStatusEntry(config, status.name);
+  if (status.color) {
+    return (
+      <span
+        className={className}
+        style={{ backgroundColor: resolveColumnColor(status.color) }}
+      />
+    );
+  }
+  return <span className={cn(className, entry.dotColor)} />;
 }
 
 function SearchInput({
@@ -142,7 +188,8 @@ function SearchInput({
 
 export function FilterCategorySubmenu({
   category,
-  statusOptions,
+  statusItems,
+  statusConfig,
   members,
   labels,
   cycles,
@@ -164,8 +211,6 @@ export function FilterCategorySubmenu({
   onToggleCycle,
   onToggleSprint,
   onToggleProject,
-  onDueDateFromChange,
-  onDueDateToChange,
   onClose,
 }: FilterCategorySubmenuProps) {
   const [search, setSearch] = useState("");
@@ -190,8 +235,10 @@ export function FilterCategorySubmenu({
   const q = search.toLowerCase();
 
   if (category === "status") {
-    const filtered = statusOptions.filter((s) =>
-      !q || s.toLowerCase().includes(q) || s.replace(/_/g, " ").toLowerCase().includes(q),
+    const filtered = statusItems.filter((s) =>
+      !q ||
+      s.name.toLowerCase().includes(q) ||
+      s.name.replace(/_/g, " ").toLowerCase().includes(q),
     );
     return (
       <div
@@ -201,13 +248,16 @@ export function FilterCategorySubmenu({
         className="flex min-w-[160px] flex-col py-1 outline-none"
       >
         {filtered.map((s) => {
-          const label = s.replace(/_/g, " ");
-          function handleClick() { onToggleStatus(s); }
+          const label = s.name.replace(/_/g, " ");
+          const entry = getStatusEntry(statusConfig, s.name);
+          function handleClick() { onToggleStatus(s.name); }
           return (
             <OptionRow
-              key={s}
-              active={selectedStatuses.includes(s)}
+              key={s.name}
+              active={selectedStatuses.includes(s.name)}
               label={label}
+              color={s.color ? resolveColumnColor(s.color) : undefined}
+              dotClassName={s.color ? undefined : entry.dotColor}
               onClick={handleClick}
             />
           );
@@ -235,6 +285,7 @@ export function FilterCategorySubmenu({
               key={p}
               active={selectedPriorities.includes(p)}
               label={label}
+              leading={<FilterPriorityLeading priority={p} />}
               onClick={handleClick}
             />
           );
@@ -259,6 +310,7 @@ export function FilterCategorySubmenu({
               key={t}
               active={selectedTypes.includes(t)}
               label={label}
+              leading={<FilterTypeLeading type={t} />}
               onClick={handleClick}
             />
           );
@@ -269,9 +321,9 @@ export function FilterCategorySubmenu({
 
   if (category === "assignee") {
     const allMembers = [
-      { id: "@me", displayName: "Me (dynamic)", color: null as string | null },
-      { id: "__unassigned__", displayName: "Unassigned", color: null as string | null },
-      ...members.map((m) => ({ id: m.id, displayName: getUserDisplayName(m), color: null as string | null })),
+      { id: "@me", displayName: "Me (dynamic)", member: null as Member | null },
+      { id: "__unassigned__", displayName: "Unassigned", member: null as Member | null },
+      ...members.map((m) => ({ id: m.id, displayName: getUserDisplayName(m), member: m })),
     ];
     const filtered = allMembers.filter(
       (m) => !q || m.displayName.toLowerCase().includes(q),
@@ -294,6 +346,7 @@ export function FilterCategorySubmenu({
                 key={m.id}
                 active={selectedAssignees.includes(m.id)}
                 label={m.displayName}
+                leading={<FilterAssigneeLeading assigneeId={m.id} member={m.member} />}
                 onClick={handleClick}
               />
             );
@@ -329,7 +382,7 @@ export function FilterCategorySubmenu({
                 key={l.id}
                 active={selectedLabels.includes(labelId)}
                 label={l.name}
-                color={l.color}
+                leading={<FilterLabelDot color={l.color} />}
                 onClick={handleClick}
               />
             );
@@ -459,19 +512,18 @@ export function FilterDatesInline({
           <span>Select a date range</span>
         )}
       </div>
-      <div className="flex items-center gap-1.5">
+      <div className="grid grid-cols-2 gap-2">
         <DatePicker
           value={dueDateFrom}
           onChange={onDueDateFromChange}
           placeholder="From"
-          className="h-7 flex-1 min-w-0 text-xs"
+          className="h-7 w-full text-xs"
         />
-        <span className="shrink-0 text-xs text-muted-foreground">–</span>
         <DatePicker
           value={dueDateTo}
           onChange={onDueDateToChange}
           placeholder="To"
-          className="h-7 flex-1 min-w-0 text-xs"
+          className="h-7 w-full text-xs"
         />
       </div>
     </div>

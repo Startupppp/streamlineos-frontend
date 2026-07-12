@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { Shield, CheckCircle2, XCircle, Clock, AlertTriangle, Pencil } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,9 +18,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
+import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -77,97 +76,120 @@ function PolicyRowActions({ policy, onEdit, onDeleteRequest }: PolicyRowActionsP
   );
 }
 
-interface SlaTableRowProps {
-  policy: SlaPolicyItem;
-  onEdit: (policy: SlaPolicyItem) => void;
-  onDeleteRequest: (id: number) => void;
+type BreachedLead = { id: number; name: string; status: string; slaDeadline: string | null };
+
+function buildBreachedColumns(): DataTableColumn<BreachedLead>[] {
+  return [
+    {
+      key: "lead",
+      header: "Lead",
+      cell: (row): ReactNode => (
+        <Link href={`/crm/leads/${row.id}`} className="text-[11px] font-medium hover:underline text-foreground">
+          {row.name}
+        </Link>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (row): ReactNode => (
+        <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-muted text-muted-foreground border-border">
+          {row.status}
+        </Badge>
+      ),
+    },
+    {
+      key: "breachedAt",
+      header: "Breached At",
+      headerClassName: "text-right",
+      className: "text-right",
+      cell: (row): ReactNode => (
+        <span className="text-[11px] text-red-700 font-mono tabular-nums">
+          {row.slaDeadline ? new Date(row.slaDeadline).toLocaleDateString() : "N/A"}
+        </span>
+      ),
+    },
+  ];
 }
 
-function SlaTableRow({ policy, onEdit, onDeleteRequest }: SlaTableRowProps) {
-  return (
-    <TableRow className="h-8 hover:bg-muted/30 transition-colors">
-      <TableCell className="text-[11px] px-2 py-1 font-medium">{policy.name}</TableCell>
-      <TableCell className="text-[11px] px-2 py-1">
-        <Badge
-          variant="outline"
-          className="text-[9px] h-4 px-1.5 py-0 bg-muted text-muted-foreground border-border capitalize"
-        >
-          {policy.appliesTo}
-        </Badge>
-      </TableCell>
-      <TableCell className="text-[11px] px-2 py-1">
-        <Badge
-          variant="outline"
-          className={cn(
-            "text-[9px] h-4 px-1.5 py-0 capitalize",
-            PRIORITY_BADGE[policy.priority] ?? PRIORITY_BADGE["medium"]
-          )}
-        >
-          {policy.priority}
-        </Badge>
-      </TableCell>
-      <TableCell className="text-[11px] px-2 py-1 text-right font-mono tabular-nums">
-        {policy.firstResponseHours}h
-      </TableCell>
-      <TableCell className="text-[11px] px-2 py-1 text-right font-mono tabular-nums">
-        {policy.resolutionHours}h
-      </TableCell>
-      <TableCell className="text-[11px] px-2 py-1 text-right">
-        <PolicyRowActions policy={policy} onEdit={onEdit} onDeleteRequest={onDeleteRequest} />
-      </TableCell>
-    </TableRow>
-  );
-}
+function BreachedLeadsTable({ leads }: { leads: BreachedLead[] }) {
+  const getKey = useCallback((row: BreachedLead) => String(row.id), []);
+  const columns = buildBreachedColumns();
 
-function BreachedLeadsTable({ leads }: { leads: Array<{ id: number; name: string; status: string; slaDeadline: string | null }> }) {
   return (
-    <Card className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+    <Card className="bg-card rounded-xl border border-border shadow-sm">
       <CardHeader className="px-4 py-3">
         <CardTitle className="text-sm font-semibold flex items-center gap-2">
           <AlertTriangle className="h-4 w-4 text-red-600" />
           Recent SLA Breaches ({leads.length})
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-0">
-        <Table>
-          <TableHeader className="sticky top-0 z-10 bg-muted/80">
-            <TableRow className="border-b-2 border-border hover:bg-transparent">
-              <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Lead</TableHead>
-              <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Status</TableHead>
-              <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Breached At</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {leads.map((lead) => (
-              <TableRow key={lead.id} className="h-8 hover:bg-muted/30 transition-colors">
-                <TableCell className="text-[11px] px-2 py-1 font-medium">
-                  <Link
-                    href={`/crm/leads/${lead.id}`}
-                    className="hover:underline text-foreground"
-                  >
-                    {lead.name}
-                  </Link>
-                </TableCell>
-                <TableCell className="text-[11px] px-2 py-1">
-                  <Badge
-                    variant="outline"
-                    className="text-[9px] h-4 px-1.5 py-0 bg-muted text-muted-foreground border-border"
-                  >
-                    {lead.status}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-[11px] px-2 py-1 text-right text-red-700 font-mono tabular-nums">
-                  {lead.slaDeadline
-                    ? new Date(lead.slaDeadline).toLocaleDateString()
-                    : "N/A"}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
+      <DataTable data={leads} columns={columns} getRowKey={getKey} />
     </Card>
   );
+}
+
+function buildPolicyColumns(
+  onEdit: (policy: SlaPolicyItem) => void,
+  onDeleteRequest: (id: number) => void,
+): DataTableColumn<SlaPolicyItem>[] {
+  return [
+    {
+      key: "name",
+      header: "Name",
+      cell: (row): ReactNode => (
+        <span className="text-[11px] font-medium">{row.name}</span>
+      ),
+    },
+    {
+      key: "appliesTo",
+      header: "Applies To",
+      cell: (row): ReactNode => (
+        <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-muted text-muted-foreground border-border capitalize">
+          {row.appliesTo}
+        </Badge>
+      ),
+    },
+    {
+      key: "priority",
+      header: "Priority",
+      cell: (row): ReactNode => (
+        <Badge
+          variant="outline"
+          className={cn("text-[9px] h-4 px-1.5 py-0 capitalize", PRIORITY_BADGE[row.priority] ?? PRIORITY_BADGE["medium"])}
+        >
+          {row.priority}
+        </Badge>
+      ),
+    },
+    {
+      key: "firstResponse",
+      header: "First Response",
+      headerClassName: "text-right",
+      className: "text-right",
+      cell: (row): ReactNode => (
+        <span className="text-[11px] font-mono tabular-nums">{row.firstResponseHours}h</span>
+      ),
+    },
+    {
+      key: "resolution",
+      header: "Resolution",
+      headerClassName: "text-right",
+      className: "text-right",
+      cell: (row): ReactNode => (
+        <span className="text-[11px] font-mono tabular-nums">{row.resolutionHours}h</span>
+      ),
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      headerClassName: "text-right",
+      className: "text-right",
+      cell: (row): ReactNode => (
+        <PolicyRowActions policy={row} onEdit={onEdit} onDeleteRequest={onDeleteRequest} />
+      ),
+    },
+  ];
 }
 
 export default function SlaPage() {
@@ -243,9 +265,25 @@ export default function SlaPage() {
     [handleDeleteCancel]
   );
 
+  const getPolicyKey = useCallback((p: SlaPolicyItem) => String(p.id), []);
+
   const newPolicyIcon = useAnimatedIcon();
   const isPending = createPolicy.isPending || updatePolicy.isPending;
   const pageLoading = isLoading || reportLoading;
+
+  const columns = buildPolicyColumns(handleStartEdit, handleDeleteRequest);
+
+  const policyEmptyState = (
+    <div className="py-14 px-4">
+      <EmptyState
+        illustrationPreset="security"
+        title="No SLA policies defined"
+        description="Create a policy to track response and resolution time commitments."
+        action={{ label: "New Policy", onClick: handleOpenNew }}
+        className="border-0 bg-transparent"
+      />
+    </div>
+  );
 
   return (
     <>
@@ -345,58 +383,17 @@ export default function SlaPage() {
               </StatCardGrid>
             )}
 
-            <Card className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+            <Card className="bg-card rounded-xl border border-border shadow-sm">
               <CardHeader className="px-4 py-3">
                 <CardTitle className="text-sm font-semibold">Policies</CardTitle>
               </CardHeader>
-              <CardContent className="p-0">
-                {policies && policies.length > 0 ? (
-                  <Table>
-                    <TableHeader className="sticky top-0 z-10 bg-muted/80">
-                      <TableRow className="border-b-2 border-border hover:bg-transparent">
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
-                          Name
-                        </TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
-                          Applies To
-                        </TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">
-                          Priority
-                        </TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">
-                          First Response
-                        </TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">
-                          Resolution
-                        </TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">
-                          Actions
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {policies.map((policy) => (
-                        <SlaTableRow
-                          key={policy.id}
-                          policy={policy}
-                          onEdit={handleStartEdit}
-                          onDeleteRequest={handleDeleteRequest}
-                        />
-                      ))}
-                    </TableBody>
-                  </Table>
-                ) : (
-                  <div className="py-14 px-4">
-                    <EmptyState
-                      illustrationPreset="security"
-                      title="No SLA policies defined"
-                      description="Create a policy to track response and resolution time commitments."
-                      action={{ label: "New Policy", onClick: handleOpenNew }}
-                      className="border-0 bg-transparent"
-                    />
-                  </div>
-                )}
-              </CardContent>
+              <DataTable
+                data={policies ?? []}
+                columns={columns}
+                getRowKey={getPolicyKey}
+                isLoading={isLoading}
+                emptyState={policyEmptyState}
+              />
             </Card>
 
             {breachesLoading ? (
@@ -405,9 +402,9 @@ export default function SlaPage() {
               <BreachedLeadsTable leads={breachedLeads} />
             ) : (
               <Card className="bg-card rounded-xl border border-border shadow-sm">
-                <CardContent className="py-8 px-4 text-center">
+                <div className="py-8 px-4 text-center">
                   <p className="text-sm text-muted-foreground">No SLA breaches in the last 30 days.</p>
-                </CardContent>
+                </div>
               </Card>
             )}
           </div>

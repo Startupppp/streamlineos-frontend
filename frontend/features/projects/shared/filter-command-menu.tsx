@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandInput } from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
@@ -23,8 +23,11 @@ import {
   FilterCategorySubmenu,
   FilterDatesInline,
   type FilterCategory,
+  type StatusFilterOption,
 } from "./filter-category-submenu";
 import { FilterFlatSearch } from "./filter-flat-search";
+import { FilterAssigneeLeading } from "./filter-option-leading";
+import type { StatusConfigEntry } from "@/features/projects/shared/types";
 
 interface Member {
   id: string;
@@ -72,7 +75,8 @@ interface ProjectOption {
 
 export interface FilterCommandMenuProps {
   activeFilterCount: number;
-  statusOptions: string[];
+  statusItems: StatusFilterOption[];
+  statusConfig: Record<string, StatusConfigEntry>;
   members: Member[];
   labels: Label[];
   cycles: Cycle[];
@@ -159,7 +163,8 @@ function CategoryRow({
 
 export function FilterCommandMenu({
   activeFilterCount,
-  statusOptions,
+  statusItems,
+  statusConfig,
   members,
   labels,
   cycles,
@@ -185,6 +190,14 @@ export function FilterCommandMenu({
   const [hoveredCategory, setHoveredCategory] = useState<FilterCategory | null>(null);
   const submenuRef = useRef<HTMLDivElement>(null);
   const categoryListRef = useRef<HTMLDivElement>(null);
+  const datesInlineRef = useRef<HTMLDivElement>(null);
+  const datesExpanded = hoveredCategory === "dates";
+
+  useEffect(() => {
+    if (datesExpanded) {
+      datesInlineRef.current?.scrollIntoView({ block: "nearest" });
+    }
+  }, [datesExpanded]);
 
   const {
     selectedStatuses,
@@ -200,6 +213,20 @@ export function FilterCommandMenu({
   } = filterState;
 
   const isSearching = search.trim().length > 0;
+
+  function resolveAssigneeCategoryIcon(): React.ReactNode {
+    if (selectedAssignees.length === 1) {
+      const id = selectedAssignees[0];
+      if (id === "@me" || id === "__unassigned__") {
+        return <FilterAssigneeLeading assigneeId={id} />;
+      }
+      const member = members.find((m) => m.id === id);
+      if (member) {
+        return <FilterAssigneeLeading assigneeId={id} member={member} />;
+      }
+    }
+    return <User className="h-3.5 w-3.5" />;
+  }
 
   const categories: CategoryDefinition[] = [
     {
@@ -226,7 +253,7 @@ export function FilterCommandMenu({
     {
       key: "assignee",
       label: "Assignee",
-      icon: <User className="h-3.5 w-3.5" />,
+      icon: resolveAssigneeCategoryIcon(),
       visible: showAssigneeFilter,
       activeCount: selectedAssignees.length,
     },
@@ -329,7 +356,8 @@ export function FilterCommandMenu({
   const handleDueDateToChange = useCallback((v: string) => { onDueDateToChange(v); }, [onDueDateToChange]);
 
   const sharedProps = {
-    statusOptions,
+    statusItems,
+    statusConfig,
     members,
     labels,
     cycles,
@@ -375,7 +403,10 @@ export function FilterCommandMenu({
       </PopoverTrigger>
       <PopoverContent
         align="start"
-        className="w-auto min-w-[200px] max-h-[var(--radix-popover-content-available-height)] overflow-hidden p-0"
+        className={cn(
+          "w-auto max-h-[var(--radix-popover-content-available-height)] overflow-hidden p-0",
+          datesExpanded ? "min-w-[280px]" : "min-w-[200px]",
+        )}
         onInteractOutside={handleInteractOutside}
       >
         {isSearching ? (
@@ -389,7 +420,12 @@ export function FilterCommandMenu({
           />
         ) : (
           <div className="flex max-h-[var(--radix-popover-content-available-height)]">
-            <div className="flex min-w-[200px] flex-col">
+            <div
+              className={cn(
+                "flex flex-col",
+                datesExpanded ? "min-w-[280px]" : "min-w-[200px]",
+              )}
+            >
               <Command shouldFilter={false} className="h-auto shrink-0">
                 <CommandInput
                   placeholder="Filter by..."
@@ -424,12 +460,14 @@ export function FilterCommandMenu({
                         onKeyDown={onKeyDown}
                       />
                       {isDates && isHovered && (
-                        <FilterDatesInline
-                          dueDateFrom={dueDateFrom}
-                          dueDateTo={dueDateTo}
-                          onDueDateFromChange={handleDueDateFromChange}
-                          onDueDateToChange={handleDueDateToChange}
-                        />
+                        <div ref={datesInlineRef}>
+                          <FilterDatesInline
+                            dueDateFrom={dueDateFrom}
+                            dueDateTo={dueDateTo}
+                            onDueDateFromChange={handleDueDateFromChange}
+                            onDueDateToChange={handleDueDateToChange}
+                          />
+                        </div>
                       )}
                     </div>
                   );

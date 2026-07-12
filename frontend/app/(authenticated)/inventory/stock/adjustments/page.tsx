@@ -3,13 +3,11 @@
 import { useState, useCallback, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { Plus, Search } from "lucide-react";
+import { Plus } from "lucide-react";
 import { EmptyActivityIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { fadeUp, staggerContainer } from "@/lib/motion-variants";
 import {
@@ -18,9 +16,9 @@ import {
   type AdjustmentReason,
 } from "@/hooks/api/inventory/stock";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { SkeletonTable } from "@/components/shared/skeletons/skeleton-table";
 import {
   ADJUSTMENT_STATUS_BADGE,
   ADJUSTMENT_STATUS_LABEL,
@@ -47,7 +45,54 @@ const REASON_BADGE: Record<AdjustmentReason, string> = {
 const REASONS: AdjustmentReason[] = ["PURCHASE", "SALE", "RETURN", "DAMAGE", "EXPIRY", "THEFT", "RECOUNT", "OTHER"];
 const ADJ_STATUSES: AdjustmentStatus[] = ["DRAFT", "PENDING_APPROVAL", "APPROVED", "POSTED", "CANCELLED"];
 
-const TH = "text-[10px] uppercase tracking-wider font-bold px-2 py-1.5";
+const ADJUSTMENT_COLUMNS: DataTableColumn<AdjustmentListItem>[] = [
+  {
+    key: "referenceNumber",
+    header: "Ref #",
+    className: "font-mono text-[11px] font-semibold text-blue-600",
+    cell: (row) => <span>{row.referenceNumber}</span>,
+  },
+  {
+    key: "reason",
+    header: "Reason",
+    cell: (row) => (
+      <Badge variant="outline" className={cn("h-4 text-[9px] px-1.5 py-0 font-medium", REASON_BADGE[row.reason])}>
+        {REASON_LABELS[row.reason]}
+      </Badge>
+    ),
+  },
+  {
+    key: "status",
+    header: "Status",
+    cell: (row) => (
+      <Badge
+        variant="outline"
+        className={cn("h-4 text-[9px] px-1.5 py-0 font-medium", ADJUSTMENT_STATUS_BADGE[row.status])}
+      >
+        {ADJUSTMENT_STATUS_LABEL[row.status]}
+      </Badge>
+    ),
+  },
+  {
+    key: "lineCount",
+    header: "Lines",
+    headerClassName: "text-right",
+    className: "text-right font-mono tabular-nums font-medium",
+    cell: (row) => <span>{row.lineCount}</span>,
+  },
+  {
+    key: "createdByName",
+    header: "Created By",
+    className: "text-muted-foreground",
+    cell: (row) => <span>{row.createdByName ?? "—"}</span>,
+  },
+  {
+    key: "createdAt",
+    header: "Date",
+    className: "text-muted-foreground whitespace-nowrap",
+    cell: (row) => <span>{format(new Date(row.createdAt), "dd MMM yyyy")}</span>,
+  },
+];
 
 export default function AdjustmentsPage() {
   const router = useRouter();
@@ -84,15 +129,6 @@ export default function AdjustmentsPage() {
     return result;
   }, [adjData?.items, searchQ, reasonFilter]);
 
-  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>): void {
-    const params = new URLSearchParams(searchParams.toString());
-    if (e.target.value) params.set("q", e.target.value);
-    else params.delete("q");
-    params.delete("page");
-    setPage(1);
-    router.replace(`?${params.toString()}`);
-  }
-
   const handleReasonChange = useCallback(
     (val: string) => {
       const params = new URLSearchParams(searchParams.toString());
@@ -121,12 +157,19 @@ export default function AdjustmentsPage() {
     setSheetOpen(true);
   }
   function handleRetry(): void { void refetch(); }
-  function handlePrevPage(): void { setPage((p) => p - 1); }
-  function handleNextPage(): void { setPage((p) => p + 1); }
 
   function handleRowClick(adj: AdjustmentListItem): void {
     setDetailId(adj.id);
     setDetailOpen(true);
+  }
+
+  function handleSearchChange(val: string): void {
+    const params = new URLSearchParams(searchParams.toString());
+    if (val) params.set("q", val);
+    else params.delete("q");
+    params.delete("page");
+    setPage(1);
+    router.replace(`?${params.toString()}`);
   }
 
   const subtitle = adjData?.total != null
@@ -148,15 +191,6 @@ export default function AdjustmentsPage() {
       }
       filters={
         <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
-          <div className="relative min-w-0 flex-1 lg:max-w-xs">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" aria-hidden="true" />
-            <Input
-              placeholder="Search by ref or creator…"
-              value={searchQ}
-              onChange={handleSearchChange}
-              className="h-8 w-full pl-8 text-xs"
-            />
-          </div>
           <Select value={reasonFilter} onValueChange={handleReasonChange}>
             <SelectTrigger className="h-8 w-[160px] text-xs">
               <SelectValue placeholder="All reasons" />
@@ -182,16 +216,14 @@ export default function AdjustmentsPage() {
         </div>
       }
     >
-      {isLoading ? (
-        <SkeletonTable rows={8} columns={6} />
-      ) : isError ? (
+      {isError ? (
         <ErrorState
           title="Failed to load adjustments"
           description="An error occurred while fetching adjustment records."
           onRetry={handleRetry}
           className="flex-1 min-h-[40vh]"
         />
-      ) : adjustments.length === 0 ? (
+      ) : adjustments.length === 0 && !isLoading ? (
         <motion.div variants={fadeUp} initial="hidden" animate="visible">
           <InventoryEmptyState
             illustration={hasActiveFilters ? <EmptySearchIllustration /> : <EmptyActivityIllustration />}
@@ -212,65 +244,25 @@ export default function AdjustmentsPage() {
       ) : (
         <motion.div variants={staggerContainer} initial="hidden" animate="visible">
           <motion.div variants={fadeUp}>
-            <div className="rounded-md border border-border overflow-hidden bg-card">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/80 hover:bg-muted/80">
-                    <TableHead className={TH}>Ref #</TableHead>
-                    <TableHead className={TH}>Reason</TableHead>
-                    <TableHead className={TH}>Status</TableHead>
-                    <TableHead className={cn(TH, "text-right")}>Lines</TableHead>
-                    <TableHead className={TH}>Created By</TableHead>
-                    <TableHead className={TH}>Date</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {adjustments.map((adj) => (
-                    <TableRow
-                      key={adj.id}
-                      className="h-8 border-b border-border/50 hover:bg-muted/30 transition-colors cursor-pointer"
-                      onClick={() => handleRowClick(adj)}
-                    >
-                      <TableCell className="px-2 py-1 font-mono text-[11px] font-semibold text-blue-600 hover:underline">
-                        {adj.referenceNumber}
-                      </TableCell>
-                      <TableCell className="px-2 py-1">
-                        <Badge variant="outline" className={cn("h-4 text-[9px] px-1.5 py-0 font-medium", REASON_BADGE[adj.reason])}>
-                          {REASON_LABELS[adj.reason]}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="px-2 py-1">
-                        <Badge
-                          variant="outline"
-                          className={cn(
-                            "h-4 text-[9px] px-1.5 py-0 font-medium",
-                            ADJUSTMENT_STATUS_BADGE[adj.status],
-                          )}
-                        >
-                          {ADJUSTMENT_STATUS_LABEL[adj.status]}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="px-2 py-1 text-right text-[11px] font-mono tabular-nums font-medium">{adj.lineCount}</TableCell>
-                      <TableCell className="px-2 py-1 text-[11px] text-muted-foreground">{adj.createdByName ?? "—"}</TableCell>
-                      <TableCell className="px-2 py-1 text-[11px] text-muted-foreground whitespace-nowrap">
-                        {format(new Date(adj.createdAt), "dd MMM yyyy")}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              {adjData && adjData.totalPages > 1 && (
-                <div className="shrink-0 flex items-center justify-between px-4 py-2 border-t">
-                  <span className="text-xs text-muted-foreground">
-                    Page {page} of {adjData.totalPages}
-                  </span>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="h-7 text-xs" disabled={page <= 1} onClick={handlePrevPage}>Previous</Button>
-                    <Button variant="outline" size="sm" className="h-7 text-xs" disabled={page >= adjData.totalPages} onClick={handleNextPage}>Next</Button>
-                  </div>
-                </div>
-              )}
-            </div>
+            <DataTable
+              data={adjustments}
+              columns={ADJUSTMENT_COLUMNS}
+              getRowKey={(row) => row.id}
+              onRowClick={handleRowClick}
+              isLoading={isLoading}
+              pagination={{
+                mode: "server",
+                page,
+                pageSize: 20,
+                total: adjData?.total ?? 0,
+                onPageChange: setPage,
+              }}
+              search={{
+                value: searchQ,
+                onChange: handleSearchChange,
+                placeholder: "Search by ref or creator…",
+              }}
+            />
           </motion.div>
         </motion.div>
       )}

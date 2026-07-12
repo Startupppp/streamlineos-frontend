@@ -7,7 +7,6 @@ import { Search, Mail, RefreshCw, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -18,10 +17,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { UserInviteDialog } from "@/features/users/user-invite-dialog";
 import {
   useInvitations,
@@ -44,67 +43,6 @@ function getStatus(inv: Invitation): InvStatus {
   if (inv.acceptedAt) return "accepted";
   if (isPast(new Date(inv.expiresAt))) return "expired";
   return "pending";
-}
-
-function InvitationTableRow({ inv, onResend, onCancel, isResending, isCancelling }: {
-  inv: Invitation; onResend: (id: string) => void; onCancel: (id: string) => void;
-  isResending: boolean; isCancelling: boolean;
-}) {
-  const status = getStatus(inv);
-  const canResend = status === "pending" || status === "expired";
-  const canCancel = status === "pending" || status === "expired";
-  const handleResend = useCallback(() => onResend(inv.id), [inv.id, onResend]);
-  const handleCancel = useCallback(() => onCancel(inv.id), [inv.id, onCancel]);
-
-  return (
-    <tr className="h-8 hover:bg-muted/30 transition-colors border-b border-border/50 last:border-0">
-      <td className="px-2 py-1 text-[11px]">{inv.email}</td>
-      <td className="px-2 py-1">
-        <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0">{inv.role}</Badge>
-      </td>
-      <td className="px-2 py-1 font-mono tabular-nums text-[11px] text-muted-foreground">
-        {format(new Date(inv.createdAt), "MMM d, yyyy")}
-      </td>
-      <td className="px-2 py-1 font-mono tabular-nums text-[11px] text-muted-foreground">
-        {format(new Date(inv.expiresAt), "MMM d, yyyy")}
-      </td>
-      <td className="px-2 py-1">
-        <Badge variant="outline" className={`h-4 text-[9px] px-1.5 py-0 capitalize ${STATUS_CLASSES[status]}`}>
-          {status}
-        </Badge>
-      </td>
-      <td className="w-[72px] px-2 py-1">
-        {canResend || canCancel ? (
-          <div className="flex items-center gap-0.5">
-            {canResend ? (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7"
-                onClick={handleResend}
-                disabled={isResending || isCancelling}
-                aria-label="Resend invitation"
-              >
-                <RefreshCw className="h-4 w-4" />
-              </Button>
-            ) : null}
-            {canCancel ? (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 text-destructive hover:text-destructive"
-                onClick={handleCancel}
-                disabled={isResending || isCancelling}
-                aria-label="Cancel invitation"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            ) : null}
-          </div>
-        ) : null}
-      </td>
-    </tr>
-  );
 }
 
 export function UserInvitationsPanel() {
@@ -195,11 +133,107 @@ export function UserInvitationsPanel() {
   const handleInviteChange = useCallback((v: boolean) => setInviteOpen(v), []);
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
   const handleClearFilters = useCallback(() => updateParams({ q: null, status: null, page: null }), [updateParams]);
-  const handlePrevPage = useCallback(() => updateParams({ page: page <= 2 ? null : String(page - 1) }), [page, updateParams]);
-  const handleNextPage = useCallback(() => updateParams({ page: String(page + 1) }), [page, updateParams]);
+  const handlePageChange = useCallback((p: number) => updateParams({ page: p <= 1 ? null : String(p) }), [updateParams]);
 
   const pagination = data?.pagination;
   const hasFilters = !!q || status !== "all";
+
+  const columns: DataTableColumn<Invitation>[] = [
+    {
+      key: "email",
+      header: "Email",
+      cell: (inv) => inv.email,
+    },
+    {
+      key: "role",
+      header: "Role",
+      cell: (inv) => (
+        <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0">{inv.role}</Badge>
+      ),
+    },
+    {
+      key: "invited",
+      header: "Invited",
+      className: "font-mono tabular-nums text-muted-foreground",
+      cell: (inv) => format(new Date(inv.createdAt), "MMM d, yyyy"),
+    },
+    {
+      key: "expires",
+      header: "Expires",
+      className: "font-mono tabular-nums text-muted-foreground",
+      cell: (inv) => format(new Date(inv.expiresAt), "MMM d, yyyy"),
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (inv) => {
+        const s = getStatus(inv);
+        return (
+          <Badge variant="outline" className={`h-4 text-[9px] px-1.5 py-0 capitalize ${STATUS_CLASSES[s]}`}>
+            {s}
+          </Badge>
+        );
+      },
+    },
+    {
+      key: "actions",
+      header: "",
+      headerClassName: "w-[72px]",
+      className: "w-[72px]",
+      cell: (inv) => {
+        const s = getStatus(inv);
+        const canResend = s === "pending" || s === "expired";
+        const canCancel = s === "pending" || s === "expired";
+        if (!canResend && !canCancel) return null;
+        return (
+          <div className="flex items-center gap-0.5">
+            {canResend && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => handleResend(inv.id)}
+                disabled={isResending || isCancelling}
+                aria-label="Resend invitation"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            )}
+            {canCancel && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-destructive hover:text-destructive"
+                onClick={() => handleCancelRequest(inv.id)}
+                disabled={isResending || isCancelling}
+                aria-label="Cancel invitation"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        );
+      },
+    },
+  ];
+
+  const emptyState = (
+    <EmptyState
+      illustrationPreset="mail"
+      title={hasFilters ? "No results" : "No invitations yet"}
+      description={
+        hasFilters
+          ? "No invitations match your filters."
+          : "Invite your first team member to get started."
+      }
+      action={
+        hasFilters
+          ? { label: "Clear filters", onClick: handleClearFilters }
+          : { label: "Invite User", onClick: handleOpenInvite }
+      }
+      className="border-0 bg-transparent min-h-[40vh]"
+    />
+  );
 
   return (
     <>
@@ -229,37 +263,7 @@ export function UserInvitationsPanel() {
           </Select>
         </>}
       >
-        {isLoading ? (
-          <Card className="overflow-hidden">
-            <CardContent className="p-0 overflow-x-auto">
-            <div className="min-w-max">
-              <table className="w-full caption-bottom text-[11px]">
-                <thead className="bg-muted/80">
-                  <tr className="border-b-2 border-border">
-                    {["Email", "Role", "Invited", "Expires", "Status", ""].map((col) => (
-                      <th key={col} className="px-2 py-1.5 text-left">
-                        <Skeleton className="h-3 w-12" />
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/50">
-                  {Array.from({ length: 8 }).map((_, i) => (
-                    <tr key={i} className="h-8">
-                      <td className="px-2 py-1"><Skeleton className="h-3 w-40" /></td>
-                      <td className="px-2 py-1"><Skeleton className="h-4 w-14 rounded-full" /></td>
-                      <td className="px-2 py-1"><Skeleton className="h-3 w-20" /></td>
-                      <td className="px-2 py-1"><Skeleton className="h-3 w-20" /></td>
-                      <td className="px-2 py-1"><Skeleton className="h-4 w-16 rounded-full" /></td>
-                      <td className="px-2 py-1 w-[72px]"><Skeleton className="h-5 w-14 rounded" /></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            </CardContent>
-          </Card>
-        ) : isError ? (
+        {isError ? (
           <ErrorState
             title="Failed to load invitations"
             description="An error occurred while loading invitations."
@@ -267,69 +271,20 @@ export function UserInvitationsPanel() {
             className="flex-1 min-h-[40vh]"
           />
         ) : (
-          <Card className="overflow-hidden">
-            <div className="flex-1 min-h-0 overflow-auto">
-              <div className="min-w-max">
-                <table className="w-full caption-bottom text-[11px]">
-                  <thead className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
-                    <tr className="border-b-2 border-border">
-                      <th className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-left text-muted-foreground">Email</th>
-                      <th className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-left text-muted-foreground">Role</th>
-                      <th className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-left text-muted-foreground">Invited</th>
-                      <th className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-left text-muted-foreground">Expires</th>
-                      <th className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-left text-muted-foreground">Status</th>
-                      <th className="w-[72px] px-2 py-1.5" />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filtered.length === 0 ? (
-                      <tr>
-                        <td colSpan={6} className="p-0">
-                          <EmptyState
-                            illustrationPreset="mail"
-                            title={hasFilters ? "No results" : "No invitations yet"}
-                            description={
-                              hasFilters
-                                ? "No invitations match your filters."
-                                : "Invite your first team member to get started."
-                            }
-                            action={
-                              hasFilters
-                                ? { label: "Clear filters", onClick: handleClearFilters }
-                                : { label: "Invite User", onClick: handleOpenInvite }
-                            }
-                            className="border-0 bg-transparent min-h-[40vh]"
-                          />
-                        </td>
-                      </tr>
-                    ) : (
-                      filtered.map((inv) => (
-                        <InvitationTableRow
-                          key={inv.id}
-                          inv={inv}
-                          onResend={handleResend}
-                          onCancel={handleCancelRequest}
-                          isResending={isResending}
-                          isCancelling={isCancelling}
-                        />
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            {pagination && pagination.totalPages > 1 && (
-              <div className="shrink-0 flex items-center justify-between px-4 py-2 border-t">
-                <span className="text-xs text-muted-foreground">
-                  Showing {(page - 1) * 20 + 1}–{Math.min(page * 20, pagination.total)} of {pagination.total}
-                </span>
-                <div className="flex items-center gap-1">
-                  <Button variant="outline" size="sm" className="h-7 text-xs" disabled={page <= 1} onClick={handlePrevPage}>Prev</Button>
-                  <Button variant="outline" size="sm" className="h-7 text-xs" disabled={page >= pagination.totalPages} onClick={handleNextPage}>Next</Button>
-                </div>
-              </div>
-            )}
-          </Card>
+          <DataTable
+            data={filtered}
+            columns={columns}
+            getRowKey={(inv) => inv.id}
+            isLoading={isLoading}
+            emptyState={emptyState}
+            pagination={{
+              mode: "server",
+              page,
+              pageSize: 20,
+              total: pagination?.total ?? 0,
+              onPageChange: handlePageChange,
+            }}
+          />
         )}
       </PageWrapper>
 
