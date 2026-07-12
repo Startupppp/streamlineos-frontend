@@ -51,7 +51,8 @@ export const TicketRow = memo(function TicketRow({
     onUpdate(index, "type", v);
   }
   function handlePriorityChange(v: string) {
-    onUpdate(index, "priority", v as TicketDraft["priority"]);
+    const priority = PRIORITIES.find((p) => p === v);
+    if (priority) onUpdate(index, "priority", priority);
   }
   function handleRemove() {
     onRemove(index);

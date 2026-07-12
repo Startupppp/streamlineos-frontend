@@ -29,13 +29,13 @@ import type { NumberSequence, SystemAccountMapping, PaymentTerm } from "@/types/
 import type { ApprovalPolicy, ApprovalRecordType } from "@/types/accounting/taxes";
 import { PURPOSE_LABELS } from "./fin-settings-sections";
 
-const RECORD_TYPES: ApprovalRecordType[] = [
+const RECORD_TYPES: ReadonlyArray<string> = [
   "MANUAL_JOURNAL", "PURCHASE_BILL", "VENDOR_PAYMENT",
   "EXPENSE", "CREDIT_NOTE", "PERIOD_REOPEN", "BANK_ADJUSTMENT",
 ];
 
 function isApprovalRecordType(value: string): value is ApprovalRecordType {
-  return (RECORD_TYPES as ReadonlyArray<string>).includes(value);
+  return RECORD_TYPES.includes(value);
 }
 
 const sequenceSchema = z.object({

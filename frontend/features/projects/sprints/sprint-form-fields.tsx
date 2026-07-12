@@ -28,7 +28,7 @@ export function SprintFormFields({
     <>
       <FormField
         control={form.control}
-        name={"name" as Path<T & SprintFieldShape>}
+        name="name"
         render={({ field }) => (
           <FormItem>
             <FormLabel className="flex items-center gap-2">
@@ -45,7 +45,7 @@ export function SprintFormFields({
       <div className="grid grid-cols-2 gap-4">
         <FormField
           control={form.control}
-          name={"startDate" as Path<T>}
+          name="startDate"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Start date</FormLabel>
@@ -58,7 +58,7 @@ export function SprintFormFields({
         />
         <FormField
           control={form.control}
-          name={"endDate" as Path<T>}
+          name="endDate"
           render={({ field }) => (
             <FormItem>
               <FormLabel>End date</FormLabel>
@@ -72,7 +72,7 @@ export function SprintFormFields({
       </div>
       <FormField
         control={form.control}
-        name={"goal" as Path<T>}
+        name="goal"
         render={({ field }) => (
           <FormItem>
             <FormLabel className="flex items-center gap-2">
