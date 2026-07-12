@@ -16,6 +16,7 @@ import {
   useValidateSignEnvelope,
   useVoidSignEnvelope,
 } from "@/hooks/api/sign/envelopes";
+import { useSaveEnvelopeAsTemplate } from "@/hooks/api/sign/templates";
 import { EnvelopeStatusBadge } from "../components/envelope-status-badge";
 import type { SignEnvelope } from "@/types/sign";
 
@@ -28,6 +29,7 @@ export function BuilderTopBar({ envelope, onShowAudit }: { envelope: SignEnvelop
   const sendReminder = useSendSignEnvelopeReminder(envelope.id);
   const voidEnvelope = useVoidSignEnvelope(envelope.id);
   const downloadFinalPdf = useDownloadSignEnvelopeFinalPdf(envelope.id);
+  const saveAsTemplate = useSaveEnvelopeAsTemplate(envelope.id);
 
   const isDraft = envelope.status === "draft" || envelope.status === "ready_to_send";
   const isActive = envelope.status === "sent" || envelope.status === "delivered" || envelope.status === "partially_completed";
@@ -86,6 +88,17 @@ export function BuilderTopBar({ envelope, onShowAudit }: { envelope: SignEnvelop
     }
   }
 
+  async function handleSaveAsTemplate() {
+    const name = window.prompt("Template name:", `${envelope.title} template`);
+    if (!name) return;
+    try {
+      await saveAsTemplate.mutateAsync(name);
+      toast.success("Saved as template");
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  }
+
   return (
     <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between gap-3">
       <div className="flex items-center gap-3 min-w-0">
@@ -130,6 +143,7 @@ export function BuilderTopBar({ envelope, onShowAudit }: { envelope: SignEnvelop
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={handleSaveAsTemplate}>Save as template</DropdownMenuItem>
             {isActive && <DropdownMenuItem onClick={handleResend}>Resend to pending recipients</DropdownMenuItem>}
             {(isDraft || isActive) && (
               <DropdownMenuItem onClick={handleVoid} variant="destructive">

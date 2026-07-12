@@ -23,7 +23,18 @@ export function useCreateBulkSendJob() {
   return useMutation({
     mutationKey: ["signBulkSend", "create"],
     mutationFn: (input: CreateBulkSendJobInput) => apiClient.post<BulkSendJobResult>("/sign/bulk-send/jobs", input),
-    onSuccess: (data) => qc.invalidateQueries({ queryKey: queryKeys.signBulkSend.job(data.job.id) }),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: queryKeys.signBulkSend.job(data.job.id) });
+      qc.invalidateQueries({ queryKey: queryKeys.signBulkSend.all });
+    },
+  });
+}
+
+export function useBulkSendJobs() {
+  return useQuery({
+    queryKey: queryKeys.signBulkSend.all,
+    queryFn: () => apiClient.get<SignBulkSendJob[]>("/sign/bulk-send/jobs"),
+    staleTime: 15_000,
   });
 }
 
@@ -41,7 +52,10 @@ export function useCancelBulkSendJob() {
   return useMutation({
     mutationKey: ["signBulkSend", "cancel"],
     mutationFn: (id: number) => apiClient.post<SignBulkSendJob>(`/sign/bulk-send/jobs/${id}/cancel`),
-    onSuccess: (data) => qc.invalidateQueries({ queryKey: queryKeys.signBulkSend.job(data.id) }),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: queryKeys.signBulkSend.job(data.id) });
+      qc.invalidateQueries({ queryKey: queryKeys.signBulkSend.all });
+    },
   });
 }
 
