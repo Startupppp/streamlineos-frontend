@@ -87,6 +87,7 @@ export function AddColumn({ projectId, existingNames = [] }: AddColumnProps) {
 
   const handleAddClick = useCallback(() => {
     setIsAdding(true);
+    setNameError(null);
     setTimeout(() => inputRef.current?.focus(), 50);
   }, []);
 
@@ -100,15 +101,22 @@ export function AddColumn({ projectId, existingNames = [] }: AddColumnProps) {
     <div className="w-72 min-w-[280px] shrink-0">
       {isAdding ? (
         <div className="rounded-lg border bg-muted/20 p-2 space-y-2">
-          <Input
-            ref={inputRef}
-            value={value}
-            onChange={handleChange}
-            placeholder="Column name..."
-            className="h-8 text-sm"
-            onKeyDown={handleKeyDown}
-            disabled={createState.isPending}
-          />
+          <div className="space-y-1">
+            <Input
+              ref={inputRef}
+              value={value}
+              onChange={handleChange}
+              placeholder="Column name..."
+              className="h-8 text-sm"
+              onKeyDown={handleKeyDown}
+              disabled={createState.isPending}
+              maxLength={MAX_NAME_LENGTH}
+              aria-invalid={!!nameError}
+            />
+            {nameError && (
+              <p className="text-[11px] text-destructive leading-tight">{nameError}</p>
+            )}
+          </div>
           <ColumnColorPicker value={color} onChange={handleColorChange} showLabel={false} />
           <div className="flex gap-1.5">
             <LoadingButton

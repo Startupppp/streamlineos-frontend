@@ -32,9 +32,7 @@ const vendorSchema = z.object({
     .max(50, "Code must be at most 50 characters")
     .refine((v) => !v || VENDOR_CODE_RE.test(v.trim()), {
       message: "Code may only contain letters, numbers, hyphens, and underscores",
-    })
-    .optional()
-    .or(z.literal("")),
+    }),
   email: z.string().refine(
     (val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim()),
     { message: "Invalid email address" },
@@ -102,7 +100,7 @@ export function VendorFormSheet({ open, onOpenChange }: VendorFormSheetProps) {
   async function onSubmit(values: VendorFormValues): Promise<void> {
     const payload: CreateVendorInput = {
       name: values.name.trim(),
-      code: (typeof values.code === "string" ? values.code.trim() : "") || undefined,
+      code: values.code.trim() || undefined,
       email: values.email.trim() || undefined,
       phone: values.phone.trim() || undefined,
       address: values.address.trim() || undefined,
@@ -253,7 +251,7 @@ export function VendorFormSheet({ open, onOpenChange }: VendorFormSheetProps) {
                 <FormItem>
                   <FormLabel>Payment terms (days)</FormLabel>
                   <FormControl>
-                    <Input type="number" min="0" {...field} />
+                    <Input type="number" min="0" max="365" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

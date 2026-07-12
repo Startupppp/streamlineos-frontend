@@ -12,7 +12,7 @@ export interface ExportTicketRow {
   priority: string;
   points: number | null;
   dueDate: string | null;
-  assignee: string;
+  assignee: string | null;
 }
 
 export interface ImportTicketRow {

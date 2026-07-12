@@ -125,7 +125,12 @@ export function CreateEpicDialog({ projectId, trigger }: CreateEpicDialogProps) 
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <div className="flex items-center justify-between">
+                    <FormLabel>Description</FormLabel>
+                    <span className="text-[10px] text-muted-foreground tabular-nums">
+                      {(field.value ?? "").length} / 2000
+                    </span>
+                  </div>
                   <FormControl>
                     <Textarea
                       placeholder="Describe the epic goals and scope..."

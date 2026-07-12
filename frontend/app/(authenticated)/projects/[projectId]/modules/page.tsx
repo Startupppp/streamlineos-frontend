@@ -1,10 +1,10 @@
 "use client";
 
-import { use, useState, useCallback } from "react";
-import { useModules, useCreateModule, useProjectMembers } from "@/hooks/api/projects";
+import { use, useState, useCallback, useEffect } from "react";
+import { useModules, useCreateModule } from "@/hooks/api/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/ui/stat-card";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { ModuleCard, ModuleCardSkeleton } from "@/features/projects/modules/module-card";
 import { EmptyTasksIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -15,6 +15,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,24 +28,66 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ProjectMemberSelect } from "@/components/members/project-member-select";
 import { Plus, Calendar, Package, Activity, CheckCircle2 } from "lucide-react";
-import { useForm, Controller, useController } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 
 const MODULE_STATUSES = ["backlog", "planned", "in-progress", "paused", "completed", "cancelled"] as const;
+const DESC_MAX = 500;
 
-const createModuleSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  description: z.string().optional(),
-  status: z.enum(MODULE_STATUSES).optional(),
-  startDate: z.string().optional(),
-  endDate: z.string().optional(),
-  leadId: z.string().optional(),
-});
+const moduleNameSchema = z
+  .string()
+  .transform((v) => v.trim())
+  .pipe(
+    z
+      .string()
+      .min(2, "Module name must be at least 2 characters")
+      .max(80, "Module name must be 80 characters or fewer")
+      .regex(/[A-Za-z0-9]/, "Module name must contain at least one letter or number"),
+  );
+
+const createModuleSchema = z
+  .object({
+    name: moduleNameSchema,
+    description: z.string().max(DESC_MAX, `Description must be ${DESC_MAX} characters or fewer`).optional(),
+    status: z.enum(MODULE_STATUSES).optional(),
+    startDate: z.string().optional(),
+    endDate: z.string().optional(),
+    leadId: z.string().optional(),
+    allowPastDates: z.boolean().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.startDate && data.endDate) {
+      const start = new Date(data.startDate);
+      const end = new Date(data.endDate);
+      if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && end < start) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "End date must be on or after start date.",
+          path: ["endDate"],
+        });
+      }
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (data.startDate && !data.allowPastDates) {
+      const start = new Date(data.startDate);
+      if (!isNaN(start.getTime()) && start < today) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Start date is in the past. Check "Allow past dates" to confirm.",
+          path: ["startDate"],
+        });
+      }
+    }
+  });
+
 type CreateModuleForm = z.infer<typeof createModuleSchema>;
 
 export default function ModulesPage({
@@ -57,30 +100,52 @@ export default function ModulesPage({
   const [createOpen, setCreateOpen] = useState(false);
 
   const { data: modules, isLoading } = useModules(projectId);
-  const { data: members } = useProjectMembers(projectId);
-
   const createMutation = useCreateModule();
 
   const form = useForm<CreateModuleForm>({
     resolver: zodResolver(createModuleSchema),
-    defaultValues: { status: "backlog" },
+    defaultValues: { status: "backlog", allowPastDates: false },
   });
 
+  const descValue = form.watch("description") ?? "";
+  const startDateValue = form.watch("startDate") ?? "";
+  const endDateValue = form.watch("endDate") ?? "";
+
+  const startDateInPast = (() => {
+    if (!startDateValue) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const start = new Date(startDateValue);
+    return !isNaN(start.getTime()) && start < today;
+  })();
+
   const handleSetStartDate = useCallback(
-    (v: string) => form.setValue("startDate", v),
+    (v: string) => form.setValue("startDate", v, { shouldValidate: true }),
     [form]
   );
   const handleSetEndDate = useCallback(
-    (v: string) => form.setValue("endDate", v),
+    (v: string) => form.setValue("endDate", v, { shouldValidate: true }),
     [form]
   );
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
 
-  const { field: leadIdField } = useController({ control: form.control, name: "leadId" });
   const handleLeadChange = useCallback(
-    (v: string) => leadIdField.onChange(v || undefined),
-    [leadIdField]
+    (userId: string | null) => form.setValue("leadId", userId ?? undefined),
+    [form]
   );
+
+  const handleAllowPastDatesChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      form.setValue("allowPastDates", e.target.checked, { shouldValidate: true });
+    },
+    [form]
+  );
+
+  useEffect(() => {
+    if (!createOpen) {
+      form.reset({ status: "backlog", allowPastDates: false });
+    }
+  }, [createOpen, form]);
 
   const onSubmit = useCallback((data: CreateModuleForm) => {
     createMutation.mutate(
@@ -88,7 +153,7 @@ export default function ModulesPage({
       {
         onSuccess: () => {
           setCreateOpen(false);
-          form.reset();
+          form.reset({ status: "backlog", allowPastDates: false });
           toast.success("Module created");
         },
         onError: (err) => toast.error(getErrorMessage(err)),
@@ -147,10 +212,22 @@ export default function ModulesPage({
                     </p>
                   )}
                 </div>
+
                 <div className="space-y-1.5">
-                  <Label htmlFor="mod-desc">Description</Label>
-                  <Textarea id="mod-desc" {...form.register("description")} />
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="mod-desc">Description</Label>
+                    <span className={`text-xs ${descValue.length > DESC_MAX ? "text-destructive" : "text-muted-foreground"}`}>
+                      {descValue.length}/{DESC_MAX}
+                    </span>
+                  </div>
+                  <Textarea id="mod-desc" rows={3} {...form.register("description")} />
+                  {form.formState.errors.description && (
+                    <p className="text-xs text-destructive mt-1">
+                      {form.formState.errors.description.message}
+                    </p>
+                  )}
                 </div>
+
                 <div className="space-y-1.5">
                   <Label>Status</Label>
                   <Controller
@@ -164,7 +241,7 @@ export default function ModulesPage({
                         <SelectContent>
                           {MODULE_STATUSES.map((s) => (
                             <SelectItem key={s} value={s}>
-                              {s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+                              {s.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -172,40 +249,79 @@ export default function ModulesPage({
                     )}
                   />
                 </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="mod-start">Start Date</Label>
-                    <DatePicker id="mod-start" value={form.watch("startDate") || ""} onChange={handleSetStartDate} placeholder="Start date" />
+                    <DatePicker
+                      id="mod-start"
+                      value={startDateValue}
+                      onChange={handleSetStartDate}
+                      placeholder="Start date"
+                    />
+                    {form.formState.errors.startDate && (
+                      <p className="text-xs text-destructive mt-1">
+                        {form.formState.errors.startDate.message}
+                      </p>
+                    )}
+                    {startDateInPast && !form.formState.errors.startDate && (
+                      <label className="flex items-center gap-1.5 mt-1 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          className="h-3.5 w-3.5"
+                          {...form.register("allowPastDates")}
+                          onChange={handleAllowPastDatesChange}
+                        />
+                        <span className="text-xs text-amber-600">Allow past dates</span>
+                      </label>
+                    )}
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="mod-end">End Date</Label>
-                    <DatePicker id="mod-end" value={form.watch("endDate") || ""} onChange={handleSetEndDate} placeholder="End date" />
+                    <DatePicker
+                      id="mod-end"
+                      value={endDateValue}
+                      onChange={handleSetEndDate}
+                      placeholder="End date"
+                    />
+                    {form.formState.errors.endDate && (
+                      <p className="text-xs text-destructive mt-1">
+                        {form.formState.errors.endDate.message}
+                      </p>
+                    )}
                   </div>
                 </div>
+
                 <div className="space-y-1.5">
                   <Label>Lead</Label>
-                  <Select
-                    value={leadIdField.value?.toString() ?? ""}
-                    onValueChange={handleLeadChange}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select lead..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {members?.map((m) => (
-                        <SelectItem key={m.id} value={m.id}>
-                          {getUserDisplayName(m)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Controller
+                    control={form.control}
+                    name="leadId"
+                    render={({ field }) => (
+                      <ProjectMemberSelect
+                        projectId={projectId}
+                        mode="single"
+                        value={field.value}
+                        onChange={handleLeadChange}
+                        allowUnassigned
+                        placeholder="No lead"
+                        className="h-9 text-sm"
+                      />
+                    )}
+                  />
                 </div>
               </form>
             </div>
             <div className="shrink-0 px-6 py-4 border-t">
-              <Button type="submit" form="module-form" disabled={createMutation.isPending} className="w-full">
-                {createMutation.isPending ? "Creating..." : "Create Module"}
-              </Button>
+              <LoadingButton
+                type="submit"
+                form="module-form"
+                isPending={createMutation.isPending}
+                loadingText="Creating…"
+                className="w-full"
+              >
+                Create Module
+              </LoadingButton>
             </div>
           </SheetContent>
         </Sheet>

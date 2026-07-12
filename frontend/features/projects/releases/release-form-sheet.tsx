@@ -30,11 +30,27 @@ import {
   type Release,
 } from "@/hooks/api/projects/releases";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
+
+const MEANINGFUL_TEXT_RE = /[a-zA-Z0-9À-ɏЀ-ӿ一-鿿]/;
+const VERSION_RE = /^v?\d+(\.\d+)*(-[\w.]+)?(\+[\w.]+)?$|^\d{4}\.\d{2}(\.\d+)?$/;
 
 const schema = z.object({
-  name: z.string().min(1, "Name is required"),
-  version: z.string().min(1, "Version is required"),
-  description: z.string().nullable().optional(),
+  name: z
+    .string()
+    .min(1, "Name is required")
+    .trim()
+    .min(3, "Name must be at least 3 characters")
+    .max(120, "Name must be 120 characters or fewer")
+    .refine((v) => MEANINGFUL_TEXT_RE.test(v), "Name must contain at least one letter or number"),
+  version: z
+    .string()
+    .min(1, "Version is required")
+    .trim()
+    .max(30, "Version must be 30 characters or fewer")
+    .refine((v) => v.trim().length > 0, "Version cannot be whitespace only")
+    .refine((v) => MEANINGFUL_TEXT_RE.test(v) || VERSION_RE.test(v.trim()), "Enter a valid version, e.g. 1.4.0 or v2.0.0-beta"),
+  description: z.string().max(10000, "Release notes must be 10,000 characters or fewer").nullable().optional(),
   status: z.enum(["draft", "released", "archived"]),
   releaseDate: z.string().nullable().optional(),
 });
@@ -74,9 +90,11 @@ export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormShe
   );
 
   const handleDescriptionChange = useCallback(
-    (html: string) => setValue("description", html || null, { shouldValidate: false }),
+    (html: string) => setValue("description", html || null, { shouldValidate: true }),
     [setValue],
   );
+
+  const descriptionCharCount = (descriptionValue ?? "").replace(/<[^>]*>/g, "").length;
 
   const handleStatusChange = useCallback(
     (val: string) => {
@@ -101,7 +119,7 @@ export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormShe
           },
           {
             onSuccess: () => { toast.success("Release updated"); onClose(); },
-            onError: () => toast.error("Failed to update release"),
+            onError: (err) => toast.error(getErrorMessage(err)),
           },
         );
       } else {
@@ -115,7 +133,7 @@ export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormShe
           },
           {
             onSuccess: () => { toast.success("Release created"); onClose(); },
-            onError: () => toast.error("Failed to create release"),
+            onError: (err) => toast.error(getErrorMessage(err)),
           },
         );
       }
@@ -173,7 +191,12 @@ export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormShe
             </div>
 
             <div className="space-y-1.5">
-              <Label>Release Notes</Label>
+              <div className="flex items-center justify-between">
+                <Label>Release Notes</Label>
+                <span className={`text-[10px] tabular-nums ${descriptionCharCount > 10000 ? "text-destructive" : "text-muted-foreground"}`}>
+                  {descriptionCharCount.toLocaleString()} / 10,000
+                </span>
+              </div>
               <div className="rounded-md border border-input min-h-[140px]">
                 <TiptapEditor
                   content={descriptionValue ?? ""}
@@ -182,6 +205,9 @@ export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormShe
                   menuMode="static"
                 />
               </div>
+              {errors.description && (
+                <p className="text-xs text-destructive">{errors.description.message}</p>
+              )}
             </div>
           </div>
 

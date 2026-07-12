@@ -61,7 +61,12 @@ export default function BacklogPage({ params }: PageProps) {
     if (filterStatus) result = result.filter((t) => t.status === filterStatus);
     if (filterPriority) result = result.filter((t) => t.priority === filterPriority);
     if (filterType) result = result.filter((t) => t.type === filterType);
-    if (filterAssigneeId) result = result.filter((t) => t.assigneeId === filterAssigneeId);
+    if (filterAssigneeId) {
+      const assigneeSet = new Set(filterAssigneeId.split(",").filter(Boolean));
+      result = result.filter((t) =>
+        assigneeSet.has("__unassigned__") ? !t.assigneeId : t.assigneeId != null && assigneeSet.has(t.assigneeId),
+      );
+    }
     return result;
   }, [tickets, q, filterStatus, filterPriority, filterType, filterAssigneeId]);
 

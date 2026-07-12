@@ -23,6 +23,7 @@ export interface Approval {
   entityType: ApprovalEntityType;
   entityId: number;
   title: string;
+  reason: string | null;
   requestedById: string | null;
   approverId: string | null;
   status: ApprovalStatus;
@@ -54,6 +55,7 @@ export interface CreateApprovalInput {
   entityId: number;
   title: string;
   approverId: string;
+  reason?: string;
   dueAt?: string;
   level?: number;
 }

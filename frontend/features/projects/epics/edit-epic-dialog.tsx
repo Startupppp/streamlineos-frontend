@@ -31,9 +31,17 @@ import { getErrorMessage } from "@/lib/get-error-message";
 const PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
 const STATUSES = ["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"] as const;
 
+const MEANINGFUL_TEXT_RE = /[a-zA-Z0-9À-ɏЀ-ӿ一-鿿]/;
+
 const editEpicSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string().optional(),
+  title: z
+    .string()
+    .min(1, "Title is required")
+    .trim()
+    .min(3, "Title must be at least 3 characters")
+    .max(120, "Title must be 120 characters or fewer")
+    .refine((v) => MEANINGFUL_TEXT_RE.test(v), "Title must contain at least one letter or number"),
+  description: z.string().max(2000, "Description must be 2,000 characters or fewer").optional(),
   priority: z.enum(PRIORITIES),
   status: z.enum(STATUSES),
 });
@@ -145,7 +153,12 @@ export function EditEpicDialog({ epic, projectId, trigger }: EditEpicDialogProps
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <div className="flex items-center justify-between">
+                    <FormLabel>Description</FormLabel>
+                    <span className="text-[10px] text-muted-foreground tabular-nums">
+                      {(field.value ?? "").length} / 2000
+                    </span>
+                  </div>
                   <FormControl>
                     <Textarea
                       className="resize-none"

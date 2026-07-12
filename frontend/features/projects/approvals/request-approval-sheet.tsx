@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -27,33 +28,46 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import type { OrgMember } from "@/types/organization";
-import type { CreateApprovalInput } from "@/types/projects";
+import { Combobox } from "@/components/ui/combobox";
+import { UserCombobox } from "@/components/ui/user-combobox";
+import { useProject } from "@/hooks/api/projects";
+import { useTickets } from "@/hooks/api/projects/tickets";
+import { useProjectMilestones } from "@/hooks/api/projects/milestones";
+import { useReleases } from "@/hooks/api/projects/releases";
+import type { ApprovalEntityType, CreateApprovalInput } from "@/types/projects";
 
-const ENTITY_TYPES = [
+const ENTITY_TYPES: { value: ApprovalEntityType; label: string }[] = [
   { value: "task", label: "Task" },
   { value: "milestone", label: "Milestone" },
-  { value: "budget", label: "Budget" },
   { value: "release", label: "Release" },
+  { value: "budget", label: "Budget" },
   { value: "change_request", label: "Change Request" },
   { value: "document", label: "Document" },
   { value: "timesheet", label: "Timesheet" },
   { value: "client_approval", label: "Client Approval" },
 ];
 
+const TITLE_REGEX = /\S/;
+
 const schema = z.object({
   entityType: z.enum([
     "task", "milestone", "budget", "release",
     "change_request", "document", "timesheet", "client_approval",
-  ]),
-  entityId: z.string().min(1, "Required").regex(/^\d+$/, "Must be a number"),
-  title: z.string().min(1, "Required").max(200),
-  approverId: z.string().min(1, "Required"),
-  dueAt: z.string(),
-  level: z.string(),
+  ] as [ApprovalEntityType, ...ApprovalEntityType[]]),
+  entityId: z.string().min(1, "Select an item"),
+  title: z
+    .string()
+    .min(1, "Required")
+    .max(200, "Max 200 characters")
+    .refine((v) => TITLE_REGEX.test(v), { message: "Title cannot be blank" }),
+  approverId: z.string().min(1, "Select an approver"),
+  reason: z.string().max(2000, "Max 2000 characters").optional(),
+  dueAt: z.string().optional(),
+  level: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -63,8 +77,70 @@ interface RequestApprovalSheetProps {
   onOpenChange: (open: boolean) => void;
   onSubmit: (input: CreateApprovalInput) => void;
   isPending?: boolean;
-  members: OrgMember[];
+  projectId: number;
   currentUserId?: string;
+  defaultEntityType?: ApprovalEntityType;
+}
+
+function useEntityItems(projectId: number, entityType: ApprovalEntityType) {
+  const { data: project } = useProject(projectId);
+  const projectKey = project?.key ?? "";
+
+  const ticketsEnabled = entityType === "task";
+  const { data: ticketsData, isFetching: ticketsFetching } = useTickets(
+    projectId,
+    { limit: 50 },
+    { enabled: ticketsEnabled },
+  );
+
+  const milestonesEnabled = entityType === "milestone";
+  const { data: milestones, isFetching: milestonesFetching } = useProjectMilestones(
+    milestonesEnabled ? projectId : 0,
+  );
+
+  const releasesEnabled = entityType === "release";
+  const { data: releases, isFetching: releasesFetching } = useReleases(
+    releasesEnabled ? projectId : 0,
+  );
+
+  if (entityType === "task") {
+    const tickets = ticketsData?.data ?? [];
+    return {
+      options: tickets.map((t) => ({
+        value: String(t.id),
+        label: projectKey ? `${projectKey}-${t.ticketNumber} · ${t.title}` : t.title,
+        sublabel: t.status,
+        title: t.title,
+      })),
+      isFetching: ticketsFetching,
+    };
+  }
+
+  if (entityType === "milestone") {
+    return {
+      options: (milestones ?? []).map((m) => ({
+        value: String(m.id),
+        label: m.name,
+        sublabel: m.status,
+        title: m.name,
+      })),
+      isFetching: milestonesFetching,
+    };
+  }
+
+  if (entityType === "release") {
+    return {
+      options: (releases ?? []).map((r) => ({
+        value: String(r.id),
+        label: `${r.name} (${r.version})`,
+        sublabel: r.status,
+        title: r.name,
+      })),
+      isFetching: releasesFetching,
+    };
+  }
+
+  return { options: [], isFetching: false };
 }
 
 export function RequestApprovalSheet({
@@ -72,39 +148,70 @@ export function RequestApprovalSheet({
   onOpenChange,
   onSubmit,
   isPending,
-  members,
+  projectId,
   currentUserId,
+  defaultEntityType,
 }: RequestApprovalSheetProps) {
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      entityType: "task",
+      entityType: defaultEntityType ?? "task",
       entityId: "",
       title: "",
       approverId: "",
+      reason: "",
       dueAt: "",
       level: "",
     },
   });
 
-  const approverCandidates = members.filter((m) => m.userId !== currentUserId);
+  const entityType = form.watch("entityType");
+  const entityId = form.watch("entityId");
+
+  const { options: entityOptions, isFetching: entityFetching } = useEntityItems(projectId, entityType);
+
+  useEffect(() => {
+    form.setValue("entityId", "");
+    form.setValue("title", "");
+  }, [entityType, form]);
+
+  useEffect(() => {
+    if (!entityId) return;
+    const item = entityOptions.find((o) => o.value === entityId);
+    if (!item) return;
+    const entityTypeLabels: Record<ApprovalEntityType, string> = {
+      task: "Approve task",
+      milestone: "Approve milestone",
+      budget: "Approve budget",
+      release: "Approve release",
+      change_request: "Approve change request",
+      document: "Approve document",
+      timesheet: "Approve timesheet",
+      client_approval: "Approve client request",
+    };
+    const prefix = entityTypeLabels[entityType] ?? "Approve";
+    form.setValue("title", `${prefix}: ${item.title}`);
+  }, [entityId, entityOptions, entityType, form]);
 
   function handleSubmit(values: FormValues) {
     const input: CreateApprovalInput = {
       entityType: values.entityType,
       entityId: parseInt(values.entityId, 10),
-      title: values.title,
+      title: values.title.trim(),
       approverId: values.approverId,
+      ...(values.reason?.trim() ? { reason: values.reason.trim() } : {}),
       ...(values.dueAt ? { dueAt: values.dueAt } : {}),
       ...(values.level ? { level: parseInt(values.level, 10) } : {}),
     };
     onSubmit(input);
   }
 
-  function handleOpenChange(open: boolean) {
-    if (!open) form.reset();
-    onOpenChange(open);
+  function handleOpenChange(next: boolean) {
+    if (!next) form.reset({ entityType: defaultEntityType ?? "task", entityId: "", title: "", approverId: "", reason: "", dueAt: "", level: "" });
+    onOpenChange(next);
   }
+
+  const showEntitySelector = ["task", "milestone", "release"].includes(entityType);
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
@@ -143,19 +250,50 @@ export function RequestApprovalSheet({
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="entityId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Entity ID</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="e.g. 42" inputMode="numeric" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {showEntitySelector && (
+                <FormField
+                  control={form.control}
+                  name="entityId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        {entityType === "task" ? "Task" : entityType === "milestone" ? "Milestone" : "Release"}
+                      </FormLabel>
+                      <FormControl>
+                        <Combobox
+                          options={entityOptions}
+                          value={field.value}
+                          onChange={field.onChange}
+                          placeholder={
+                            entityFetching
+                              ? "Loading…"
+                              : `Search ${entityType === "task" ? "tasks" : entityType === "milestone" ? "milestones" : "releases"}…`
+                          }
+                          searchPlaceholder="Search by name…"
+                          emptyText={entityFetching ? "Loading…" : "No items found."}
+                          disabled={entityFetching}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              {!showEntitySelector && (
+                <FormField
+                  control={form.control}
+                  name="entityId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Entity ID</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="e.g. 42" inputMode="numeric" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
               <FormField
                 control={form.control}
                 name="title"
@@ -175,20 +313,31 @@ export function RequestApprovalSheet({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Approver</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select approver" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {approverCandidates.map((m) => (
-                          <SelectItem key={m.userId} value={m.userId}>
-                            {m.name ?? m.email}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <UserCombobox
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Search for approver…"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="reason"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Reason / Notes (optional)</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        {...field}
+                        placeholder="Provide context: risk, deadline, decision needed…"
+                        className="resize-none h-20 text-sm"
+                        maxLength={2000}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

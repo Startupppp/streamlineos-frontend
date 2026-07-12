@@ -463,6 +463,7 @@ export function KanbanBoard({
                 ticketCount={columnTickets.length}
                 wipLimit={wip}
                 canManage={canManage}
+                existingNames={(optimisticStatuses ?? []).map((s) => s.name)}
                 onRename={handleColumnRename}
                 onColorChange={handleColumnColorChange}
                 quickAdd={
@@ -476,7 +477,10 @@ export function KanbanBoard({
             </div>
           );
         })}
-        <AddColumn projectId={projectId} />
+        <AddColumn
+          projectId={projectId}
+          existingNames={(optimisticStatuses ?? []).map((s) => s.name)}
+        />
       </div>
     </DragDropContext>
   );

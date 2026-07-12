@@ -20,12 +20,20 @@ import { hydrateDisplayOptions, useDisplayOptions } from "@/features/projects/vi
 import { CreateTicketDialog } from "@/features/projects/tickets/create-ticket-dialog";
 import { SaveViewDialog, type SaveViewMeta } from "@/features/projects/views/save-view-dialog";
 import { buildTicketDetailUrl } from "@/features/projects/ticket-details/build-ticket-detail-url";
+import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { DownloadIcon, UploadIcon } from "@animateicons/react/lucide";
-import { Bookmark, X } from "lucide-react";
+import { Bookmark, X, Download } from "lucide-react";
 import { exportToCsv } from "@/lib/export-csv";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -328,14 +336,35 @@ export default function ProjectBoardPage({ params }: PageProps) {
 
   const doneCount = allTickets.filter((t) => t.status === "DONE").length;
 
-  const handleExportCsv = useCallback(() => {
+  const handleExportCurrentView = useCallback(() => {
+    if (filteredTickets.length === 0) {
+      toast.info("No tickets to export");
+      return;
+    }
+    exportToCsv(
+      `${data?.key ?? "export"}-filtered-tickets.csv`,
+      filteredTickets.map((t) => ({
+        number: t.ticketNumber,
+        title: t.title,
+        type: t.type,
+        status: t.status,
+        priority: t.priority ?? "",
+        points: t.points ?? "",
+        dueDate: t.dueDate ?? "",
+        assignee: t.assignee ? getUserDisplayName(t.assignee) : "",
+      })),
+    );
+    toast.success("Exported current view");
+  }, [filteredTickets, data?.key]);
+
+  const handleExportAllTickets = useCallback(() => {
     exportQuery.refetch().then(({ data: rows }) => {
       if (!rows || rows.length === 0) {
         toast.info("No tickets to export");
         return;
       }
       exportToCsv(
-        `${data?.key ?? "export"}-tickets.csv`,
+        `${data?.key ?? "export"}-all-tickets.csv`,
         rows.map((r) => ({
           number: r.number,
           title: r.title,
@@ -344,7 +373,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
           priority: r.priority,
           points: r.points ?? "",
           dueDate: r.dueDate ?? "",
-          assignee: r.assignee,
+          assignee: r.assignee ?? "",
         })),
       );
     }).catch((err: unknown) => toast.error(getErrorMessage(err)));

@@ -39,12 +39,26 @@ import type { KanbanColumn } from "../shared/types";
 import { ColumnColorPicker } from "../shared/column-color-picker";
 import { resolveColumnColor } from "../shared/column-colors";
 
+const MAX_COLUMN_NAME = 50;
+
+function validateRename(name: string, currentName: string, existingNames: string[]): string | null {
+  if (!name) return "Name is required";
+  if (!/[a-zA-Z0-9]/.test(name)) return "Name must contain at least one letter or number";
+  if (name.length > MAX_COLUMN_NAME) return `Name must be ${MAX_COLUMN_NAME} characters or fewer`;
+  if (name.toLowerCase() === currentName.toLowerCase()) return null;
+  if (existingNames.some((n) => n.toLowerCase() === name.toLowerCase())) {
+    return "A column with this name already exists";
+  }
+  return null;
+}
+
 interface KanbanColumnHeaderProps {
   column: KanbanColumn;
   projectId: number;
   ticketCount: number;
   wipLimit?: number;
   canManage: boolean;
+  existingNames?: string[];
   onRename?: (oldName: string, newName: string) => void;
   onColorChange?: (statusId: number, color: string) => void;
   quickAdd?: React.ReactNode;
@@ -56,12 +70,14 @@ export function KanbanColumnHeader({
   ticketCount,
   wipLimit,
   canManage,
+  existingNames = [],
   onRename,
   onColorChange,
   quickAdd,
 }: KanbanColumnHeaderProps) {
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState(column.name);
+  const [renameError, setRenameError] = useState<string | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
@@ -75,6 +91,7 @@ export function KanbanColumnHeader({
 
   const handleStartRename = useCallback(() => {
     setRenameValue(column.name);
+    setRenameError(null);
     setIsRenaming(true);
     setMenuOpen(false);
     setTimeout(() => inputRef.current?.focus(), 0);
@@ -82,11 +99,23 @@ export function KanbanColumnHeader({
 
   const handleRenameSubmit = useCallback(() => {
     const trimmed = renameValue.trim();
-    if (!trimmed || trimmed === column.name || column.statusId == null) {
+    if (!trimmed || column.statusId == null) {
       setIsRenaming(false);
       setRenameValue(column.name);
+      setRenameError(null);
       return;
     }
+    if (trimmed === column.name) {
+      setIsRenaming(false);
+      setRenameError(null);
+      return;
+    }
+    const error = validateRename(trimmed, column.name, existingNames);
+    if (error) {
+      setRenameError(error);
+      return;
+    }
+    setRenameError(null);
     const oldName = column.id;
     updateState.mutate(
       { stateId: column.statusId, name: trimmed },
@@ -96,14 +125,14 @@ export function KanbanColumnHeader({
           setIsRenaming(false);
           toast.success("Column renamed");
         },
-        onError: (error) => {
-          toast.error(getErrorMessage(error));
+        onError: (err) => {
+          toast.error(getErrorMessage(err));
           setRenameValue(column.name);
           setIsRenaming(false);
         },
       },
     );
-  }, [renameValue, column, updateState, onRename]);
+  }, [renameValue, column, existingNames, updateState, onRename]);
 
   const handleRenameKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -111,17 +140,25 @@ export function KanbanColumnHeader({
       if (e.key === "Escape") {
         setIsRenaming(false);
         setRenameValue(column.name);
+        setRenameError(null);
       }
     },
     [handleRenameSubmit, column.name],
   );
 
   const handleRenameBlur = useCallback(() => {
-    handleRenameSubmit();
-  }, [handleRenameSubmit]);
+    if (renameError) {
+      setIsRenaming(false);
+      setRenameValue(column.name);
+      setRenameError(null);
+    } else {
+      handleRenameSubmit();
+    }
+  }, [handleRenameSubmit, renameError, column.name]);
 
   const handleRenameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setRenameValue(e.target.value);
+    setRenameError(null);
   }, []);
 
   const handleDeleteConfirm = useCallback(() => {
@@ -206,15 +243,23 @@ export function KanbanColumnHeader({
           />
         )}
         {isRenaming ? (
-          <Input
-            ref={inputRef}
-            value={renameValue}
-            onChange={handleRenameChange}
-            onKeyDown={handleRenameKeyDown}
-            onBlur={handleRenameBlur}
-            className="h-6 text-[13px] px-1.5 flex-1 min-w-0"
-            disabled={updateState.isPending}
-          />
+          <div className="flex flex-col flex-1 min-w-0">
+            <Input
+              ref={inputRef}
+              value={renameValue}
+              onChange={handleRenameChange}
+              onKeyDown={handleRenameKeyDown}
+              onBlur={handleRenameBlur}
+              className={cn("h-6 text-[13px] px-1.5 min-w-0", renameError && "border-destructive focus-visible:ring-destructive")}
+              disabled={updateState.isPending}
+              maxLength={MAX_COLUMN_NAME}
+              aria-invalid={!!renameError}
+              title={renameError ?? undefined}
+            />
+            {renameError && (
+              <p className="text-[10px] text-destructive leading-tight mt-0.5 truncate">{renameError}</p>
+            )}
+          </div>
         ) : (
           <h3
             className={cn(
