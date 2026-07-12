@@ -168,7 +168,7 @@ export function SoEditSheet({ open, onOpenChange, soId, so }: SoEditSheetProps) 
     values: {
       orderDate: so.orderDate ?? "",
       requiredDate: so.expectedShipDate ?? "",
-      warehouseId: "",
+      warehouseId: so.warehouseId ? String(so.warehouseId) : "",
       currency: so.currency ?? "INR",
       shippingAddress: so.shippingAddress ?? "",
       notes: so.notes ?? "",

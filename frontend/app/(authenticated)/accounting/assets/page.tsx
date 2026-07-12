@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -19,16 +19,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { LoadingState, ErrorState } from "@/components/shared";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { ErrorState } from "@/components/shared";
 import { EntityFormSheet } from "@/components/shared/entity-form-sheet";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { Badge } from "@/components/ui/badge";
@@ -44,6 +37,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import type {
   AssetStatus,
   AssetCategory,
+  AssetListItem,
   DepreciationMethod,
 } from "@/types/accounting/assets";
 
@@ -105,6 +99,77 @@ function formatDate(value: string | null | undefined): string {
   return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
 }
 
+function isStatusFilter(value: string): value is StatusFilter {
+  return STATUS_OPTIONS.some((opt) => opt.value === value);
+}
+
+function isDepreciationMethod(value: string): value is DepreciationMethod {
+  return METHOD_OPTIONS.some((opt) => opt.value === value);
+}
+
+const ASSET_COLUMNS: DataTableColumn<AssetListItem>[] = [
+  {
+    key: "assetNumber",
+    header: "Asset #",
+    cell: (row) => <span className="font-mono text-xs">{row.asset.assetNumber}</span>,
+  },
+  {
+    key: "name",
+    header: "Name",
+    cell: (row) => (
+      <Link
+        href={`/accounting/assets/${row.asset.id}`}
+        className="text-foreground hover:text-blue-600 hover:underline font-medium"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {row.asset.name}
+      </Link>
+    ),
+  },
+  {
+    key: "category",
+    header: "Category",
+    cell: (row) => <span className="text-muted-foreground">{row.categoryName ?? "—"}</span>,
+  },
+  {
+    key: "acquired",
+    header: "Acquired",
+    cell: (row) => <span className="text-muted-foreground">{formatDate(row.asset.acquisitionDate)}</span>,
+  },
+  {
+    key: "cost",
+    header: "Cost",
+    headerClassName: "text-right",
+    className: "text-right",
+    cell: (row) => <Money value={parseFloat(row.asset.acquisitionCost)} />,
+  },
+  {
+    key: "accumDepr",
+    header: "Accum. Depr.",
+    headerClassName: "text-right",
+    className: "text-right",
+    cell: (row) => <Money value={parseFloat(row.asset.accumulatedDepreciation)} />,
+  },
+  {
+    key: "bookValue",
+    header: "Book Value",
+    headerClassName: "text-right",
+    className: "text-right",
+    cell: (row) => {
+      const bookValue = Math.max(
+        0,
+        parseFloat(row.asset.acquisitionCost) - parseFloat(row.asset.accumulatedDepreciation),
+      );
+      return <Money value={bookValue} />;
+    },
+  },
+  {
+    key: "status",
+    header: "Status",
+    cell: (row) => <AssetStatusBadge status={row.asset.status} />,
+  },
+];
+
 export default function FixedAssetsPage() {
   const router = useRouter();
   const canCreate = useCan("accounting:assets:create");
@@ -127,16 +192,59 @@ export default function FixedAssetsPage() {
 
   const createAsset = useCreateAsset();
 
+  const categoryColumns = useMemo<DataTableColumn<AssetCategory>[]>(
+    () => [
+      {
+        key: "name",
+        header: "Name",
+        cell: (row) => <span className="font-medium">{row.name}</span>,
+      },
+      {
+        key: "defaultMethod",
+        header: "Default Method",
+        cell: (row) => (
+          <span className="text-muted-foreground">{row.defaultMethod.replace(/_/g, " ")}</span>
+        ),
+      },
+      {
+        key: "defaultLife",
+        header: "Default Life",
+        cell: (row) => (
+          <span className="text-muted-foreground">
+            {row.defaultUsefulLifeMonths != null ? `${row.defaultUsefulLifeMonths} mo` : "—"}
+          </span>
+        ),
+      },
+      {
+        key: "actions",
+        header: "",
+        className: "text-right",
+        cell: (row) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 text-xs"
+            onClick={() => handleEditCategory(row)}
+          >
+            Edit
+          </Button>
+        ),
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+
   function handleStatusChange(value: string): void {
-    setStatusFilter(value as StatusFilter);
+    if (isStatusFilter(value)) setStatusFilter(value);
   }
 
   function handleCategoryFilterChange(value: string): void {
     setCategoryFilter(value);
   }
 
-  function handleRowClick(assetId: number): void {
-    router.push(`/accounting/assets/${assetId}`);
+  function handleAssetRowClick(row: AssetListItem): void {
+    router.push(`/accounting/assets/${row.asset.id}`);
   }
 
   function handleCreateAsset(values: CreateAssetFormValues): void {
@@ -179,6 +287,14 @@ export default function FixedAssetsPage() {
     setEditingCategory(cat);
     setCategoryDialogOpen(true);
   }, []);
+
+  function getAssetRowKey(row: AssetListItem): number {
+    return row.asset.id;
+  }
+
+  function getCategoryRowKey(row: AssetCategory): number {
+    return row.id;
+  }
 
   return (
     <>
@@ -235,7 +351,6 @@ export default function FixedAssetsPage() {
               </Select>
             </div>
 
-            {assetsQuery.isLoading && <LoadingState variant="table" rows={8} />}
             {assetsQuery.error && (
               <ErrorState
                 title="Failed to load assets"
@@ -243,77 +358,23 @@ export default function FixedAssetsPage() {
                 onRetry={handleAssetsRetry}
               />
             )}
-            {!assetsQuery.isLoading && !assetsQuery.error && assetItems.length === 0 && (
-              <EmptyState
-                illustration={<EmptyReportIllustration />}
-                title="No assets yet"
-                description="Add your first fixed asset to start tracking depreciation."
-                action={canCreate ? { label: "Add Asset", onClick: () => setCreateOpen(true) } : undefined}
+            {!assetsQuery.error && (
+              <DataTable<AssetListItem>
+                data={assetItems}
+                columns={ASSET_COLUMNS}
+                getRowKey={getAssetRowKey}
+                onRowClick={handleAssetRowClick}
+                isLoading={assetsQuery.isLoading}
+                minWidth="820px"
+                emptyState={
+                  <EmptyState
+                    illustration={<EmptyReportIllustration />}
+                    title="No assets yet"
+                    description="Add your first fixed asset to start tracking depreciation."
+                    action={canCreate ? { label: "Add Asset", onClick: () => setCreateOpen(true) } : undefined}
+                  />
+                }
               />
-            )}
-            {assetItems.length > 0 && (
-              <div className="rounded-lg border border-border overflow-hidden">
-                <div className="overflow-x-auto">
-                  <Table className="min-w-[820px]">
-                    <TableHeader>
-                      <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Asset #</TableHead>
-                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Name</TableHead>
-                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 hidden md:table-cell">Category</TableHead>
-                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 hidden md:table-cell">Acquired</TableHead>
-                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Cost</TableHead>
-                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right hidden lg:table-cell">Accum. Depr.</TableHead>
-                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right hidden lg:table-cell">Book Value</TableHead>
-                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {assetItems.map(({ asset, categoryName }) => {
-                        const bookValue = Math.max(
-                          0,
-                          parseFloat(asset.acquisitionCost) - parseFloat(asset.accumulatedDepreciation),
-                        );
-                        return (
-                          <TableRow
-                            key={asset.id}
-                            className="border-b border-border/50 hover:bg-muted/30 cursor-pointer"
-                            onClick={() => handleRowClick(asset.id)}
-                          >
-                            <TableCell className="font-mono text-xs px-3 py-2">{asset.assetNumber}</TableCell>
-                            <TableCell className="text-sm font-medium px-3 py-2">
-                              <Link
-                                href={`/accounting/assets/${asset.id}`}
-                                className="text-foreground hover:text-blue-600 hover:underline"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                {asset.name}
-                              </Link>
-                            </TableCell>
-                            <TableCell className="text-sm text-muted-foreground px-3 py-2 hidden md:table-cell">
-                              {categoryName ?? "—"}
-                            </TableCell>
-                            <TableCell className="text-sm text-muted-foreground px-3 py-2 hidden md:table-cell">
-                              {formatDate(asset.acquisitionDate)}
-                            </TableCell>
-                            <TableCell className="text-sm text-right px-3 py-2">
-                              <Money value={parseFloat(asset.acquisitionCost)} />
-                            </TableCell>
-                            <TableCell className="text-sm text-right px-3 py-2 hidden lg:table-cell">
-                              <Money value={parseFloat(asset.accumulatedDepreciation)} />
-                            </TableCell>
-                            <TableCell className="text-sm text-right px-3 py-2 hidden lg:table-cell">
-                              <Money value={bookValue} />
-                            </TableCell>
-                            <TableCell className="px-3 py-2">
-                              <AssetStatusBadge status={asset.status} />
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
             )}
           </TabsContent>
 
@@ -326,7 +387,6 @@ export default function FixedAssetsPage() {
                 </Button>
               )}
             </div>
-            {categoriesQuery.isLoading && <LoadingState variant="table" rows={5} />}
             {categoriesQuery.error && (
               <ErrorState
                 title="Failed to load categories"
@@ -334,52 +394,22 @@ export default function FixedAssetsPage() {
                 onRetry={handleCategoriesRetry}
               />
             )}
-            {!categoriesQuery.isLoading && !categoriesQuery.error && categories.length === 0 && (
-              <EmptyState
-                illustration={<EmptyReportIllustration />}
-                title="No categories yet"
-                description="Create a category to group your fixed assets."
-                action={canCreate ? { label: "Add Category", onClick: handleOpenCreateCategory } : undefined}
+            {!categoriesQuery.error && (
+              <DataTable<AssetCategory>
+                data={categories}
+                columns={categoryColumns}
+                getRowKey={getCategoryRowKey}
+                isLoading={categoriesQuery.isLoading}
+                minWidth="500px"
+                emptyState={
+                  <EmptyState
+                    illustration={<EmptyReportIllustration />}
+                    title="No categories yet"
+                    description="Create a category to group your fixed assets."
+                    action={canCreate ? { label: "Add Category", onClick: handleOpenCreateCategory } : undefined}
+                  />
+                }
               />
-            )}
-            {categories.length > 0 && (
-              <div className="rounded-lg border border-border overflow-hidden">
-                <div className="overflow-x-auto">
-                  <Table className="min-w-[500px]">
-                    <TableHeader>
-                      <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Name</TableHead>
-                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 hidden md:table-cell">Default Method</TableHead>
-                        <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 hidden md:table-cell">Default Life</TableHead>
-                        <TableHead className="w-16 px-3 py-2" />
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {categories.map((cat) => (
-                        <TableRow key={cat.id} className="border-b border-border/50 hover:bg-muted/30">
-                          <TableCell className="text-sm font-medium px-3 py-2">{cat.name}</TableCell>
-                          <TableCell className="text-sm text-muted-foreground px-3 py-2 hidden md:table-cell">
-                            {cat.defaultMethod.replace(/_/g, " ")}
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground px-3 py-2 hidden md:table-cell">
-                            {cat.defaultUsefulLifeMonths != null ? `${cat.defaultUsefulLifeMonths} mo` : "—"}
-                          </TableCell>
-                          <TableCell className="px-3 py-2 text-right">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 text-xs"
-                              onClick={() => handleEditCategory(cat)}
-                            >
-                              Edit
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
             )}
           </TabsContent>
         </Tabs>
@@ -465,7 +495,7 @@ export default function FixedAssetsPage() {
                 <Label>Depreciation Method</Label>
                 <Select
                   value={form.watch("depreciationMethod")}
-                  onValueChange={(v) => form.setValue("depreciationMethod", v as DepreciationMethod)}
+                  onValueChange={(v) => { if (isDepreciationMethod(v)) form.setValue("depreciationMethod", v); }}
                 >
                   <SelectTrigger className="h-9 text-sm">
                     <SelectValue />

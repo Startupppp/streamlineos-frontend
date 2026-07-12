@@ -59,6 +59,8 @@ export interface SalesOrderDetail {
   currency: string | null;
   shippingAddress: string | null;
   notes: string | null;
+  warehouseId: number | null;
+  warehouseName: string | null;
   subtotal: string;
   total: string;
   invoiceId: number | null;
@@ -148,10 +150,12 @@ export interface RawDetailSalesOrder {
   currency: string | null;
   shippingAddress: string | null;
   notes: string | null;
+  warehouseId: number | null;
   subtotal: string;
   total: string;
   invoiceId: number | null;
   client: RawNamedRef | null;
+  warehouse: RawNamedRef | null;
   invoice: RawInvoiceRef | null;
   lines: RawDetailLine[];
 }
@@ -201,6 +205,8 @@ export function mapDetail(raw: RawDetailSalesOrder): SalesOrderDetail {
     currency: raw.currency,
     shippingAddress: raw.shippingAddress,
     notes: raw.notes,
+    warehouseId: raw.warehouseId ?? raw.warehouse?.id ?? null,
+    warehouseName: raw.warehouse?.name ?? null,
     subtotal: raw.subtotal,
     total: raw.total,
     invoiceId: raw.invoiceId,

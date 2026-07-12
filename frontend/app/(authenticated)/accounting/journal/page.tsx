@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Plus, BookOpen } from "lucide-react";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import {
   Select,
   SelectContent,
@@ -14,21 +15,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { LoadingState, ErrorState } from "@/components/shared";
+import { ErrorState } from "@/components/shared";
+import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyDocumentsIllustration } from "@/components/illustrations";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { FinanceStatusBadge } from "@/features/accounting/shared";
 import { useJournal } from "@/hooks/api/accounting";
 import { useSubmitJournalApproval } from "@/hooks/api/accounting/core";
+import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { RecurringJournalsTab } from "@/features/accounting/core/recurring-journals-tab";
-import type { JournalEntryStatus } from "@/types/accounting";
+import type { JournalEntry, JournalEntryStatus } from "@/types/accounting";
 
 type TabValue = "entries" | "recurring";
 type SourceFilter = "ALL" | "invoice" | "payment" | "manual";
@@ -94,15 +91,16 @@ function SubmitApprovalButton({ entryId }: SubmitApprovalButtonProps) {
   }
 
   return (
-    <Button
+    <LoadingButton
       variant="ghost"
       size="sm"
       className="h-6 text-xs px-2"
+      isPending={submitMutation.isPending}
+      loadingText="Submitting…"
       onClick={handleSubmit}
-      disabled={submitMutation.isPending}
     >
-      {submitMutation.isPending ? "Submitting…" : "Submit"}
-    </Button>
+      Submit
+    </LoadingButton>
   );
 }
 
@@ -111,6 +109,8 @@ function EntriesTab() {
   const [to, setTo] = useState<string>("");
   const [sourceType, setSourceType] = useState<SourceFilter>("ALL");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
+
+  const canCreate = useCan("accounting:journal:create");
 
   const query = useJournal({
     page: 1,
@@ -144,11 +144,78 @@ function EntriesTab() {
   const items = query.data?.items ?? [];
   const total = query.data?.total ?? 0;
 
+  const columns: DataTableColumn<JournalEntry>[] = [
+    {
+      key: "entryNumber",
+      header: "Entry #",
+      headerClassName: "w-[160px]",
+      className: "font-mono text-xs",
+      cell: (entry) => (
+        <Link
+          href={`/accounting/journal/${entry.id}`}
+          className="text-foreground hover:text-blue-600 hover:underline"
+        >
+          {entry.entryNumber}
+        </Link>
+      ),
+    },
+    {
+      key: "entryDate",
+      header: "Date",
+      headerClassName: "w-[140px]",
+      className: "text-sm text-muted-foreground tabular-nums",
+      cell: (entry) => formatDate(entry.entryDate),
+    },
+    {
+      key: "description",
+      header: "Description",
+      className: "text-sm hidden md:table-cell",
+      headerClassName: "hidden md:table-cell",
+      cell: (entry) => entry.description ?? "",
+    },
+    {
+      key: "status",
+      header: "Status",
+      headerClassName: "w-[130px]",
+      cell: (entry) => <FinanceStatusBadge status={entry.status} size="row" />,
+    },
+    {
+      key: "action",
+      header: "",
+      headerClassName: "w-[100px]",
+      className: "text-right",
+      cell: (entry) =>
+        entry.status === "DRAFT" ? (
+          <SubmitApprovalButton entryId={entry.id} />
+        ) : null,
+    },
+  ];
+
+  const emptyStateNode = (
+    <EmptyState
+      illustration={<EmptyDocumentsIllustration />}
+      title="No journal entries yet"
+      description={
+        statusFilter !== "ALL" || sourceType !== "ALL"
+          ? "Try different filters."
+          : "Entries appear once invoices, payments, or manual journals post."
+      }
+      action={
+        canCreate
+          ? { label: "New entry", href: "/accounting/journal/new" }
+          : undefined
+      }
+    />
+  );
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex items-center gap-1.5">
-          <label htmlFor="journal-from" className="text-xs text-muted-foreground whitespace-nowrap">
+          <label
+            htmlFor="journal-from"
+            className="text-xs text-muted-foreground whitespace-nowrap"
+          >
             From
           </label>
           <DatePicker
@@ -160,7 +227,10 @@ function EntriesTab() {
           />
         </div>
         <div className="flex items-center gap-1.5">
-          <label htmlFor="journal-to" className="text-xs text-muted-foreground whitespace-nowrap">
+          <label
+            htmlFor="journal-to"
+            className="text-xs text-muted-foreground whitespace-nowrap"
+          >
             To
           </label>
           <DatePicker
@@ -196,88 +266,27 @@ function EntriesTab() {
           </SelectContent>
         </Select>
         {total > 0 && (
-          <span className="text-xs text-muted-foreground ml-auto">{total} entries</span>
+          <span className="text-xs text-muted-foreground ml-auto">
+            {total} entries
+          </span>
         )}
       </div>
 
-      {query.isLoading ? (
-        <LoadingState variant="table" rows={8} />
-      ) : query.error ? (
+      {query.error ? (
         <ErrorState
           title="Failed to load journal"
-          description={query.error.message}
+          description={getErrorMessage(query.error)}
           onRetry={handleRetry}
         />
-      ) : items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/20 py-14 px-6 text-center">
-          <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-blue-500/10 text-blue-600 mb-3">
-            <BookOpen className="h-5 w-5" />
-          </div>
-          <h3 className="text-sm font-semibold text-foreground">No journal entries yet.</h3>
-          <p className="mt-1 text-sm text-muted-foreground max-w-xs">
-            {statusFilter !== "ALL" || sourceType !== "ALL"
-              ? "Try different filters."
-              : "Entries appear here once invoices, payments, or manual journals post."}
-          </p>
-          <Button size="sm" className="mt-4" asChild>
-            <Link href="/accounting/journal/new">
-              <Plus className="mr-2 h-4 w-4" />
-              New entry
-            </Link>
-          </Button>
-        </div>
       ) : (
-        <div className="rounded-lg border border-border overflow-hidden">
-          <div className="overflow-x-auto">
-            <Table className="min-w-[580px]">
-              <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[160px]">
-                    Entry #
-                  </TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[140px]">
-                    Date
-                  </TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 hidden md:table-cell">
-                    Description
-                  </TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[130px]">
-                    Status
-                  </TableHead>
-                  <TableHead className="w-[100px] px-3 py-2" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {items.map((entry) => (
-                  <TableRow key={entry.id} className="border-b border-border/50 hover:bg-muted/30">
-                    <TableCell className="font-mono text-xs px-3 py-2">
-                      <Link
-                        href={`/accounting/journal/${entry.id}`}
-                        className="text-foreground hover:text-blue-600 hover:underline"
-                      >
-                        {entry.entryNumber}
-                      </Link>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground tabular-nums px-3 py-2">
-                      {formatDate(entry.entryDate)}
-                    </TableCell>
-                    <TableCell className="text-sm text-foreground px-3 py-2 hidden md:table-cell">
-                      {entry.description ?? ""}
-                    </TableCell>
-                    <TableCell className="px-3 py-2">
-                      <FinanceStatusBadge status={entry.status} size="row" />
-                    </TableCell>
-                    <TableCell className="px-3 py-2 text-right">
-                      {entry.status === "DRAFT" && (
-                        <SubmitApprovalButton entryId={entry.id} />
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
+        <DataTable<JournalEntry>
+          data={items}
+          columns={columns}
+          getRowKey={(row) => row.id}
+          isLoading={query.isLoading}
+          emptyState={emptyStateNode}
+          minWidth="580px"
+        />
       )}
     </div>
   );

@@ -348,31 +348,6 @@ function toStockSummaryRow(row: RawStockLevelRow): StockSummaryRow {
   };
 }
 
-function toReorderRow(row: RawStockLevelRow): ReorderReportRow {
-  const variant = row.productVariant;
-  const product = variant?.product ?? null;
-  const onHand = toNumber(row.onHand);
-  const reservedQty = toNumber(row.committed);
-  const reorderPoint = product?.reorderPoint != null ? toNumber(product.reorderPoint) : 0;
-  const deficit = Math.max(reorderPoint - onHand, 0);
-  const variantSku = variant?.sku ?? "—";
-  return {
-    productId: product?.id ?? variant?.id ?? 0,
-    productName: product?.name ?? variant?.name ?? "—",
-    sku: variantSku,
-    variantSku,
-    categoryName: null,
-    warehouseName: row.location?.warehouse?.name ?? null,
-    onHand,
-    availableQty: onHand - reservedQty,
-    reorderPoint,
-    reorderQty: deficit > 0 ? deficit : null,
-    deficit,
-    costPrice: variant?.costPrice ?? null,
-    vendorName: null,
-    urgency: reorderUrgency(onHand, reorderPoint),
-  };
-}
 
 function toMovementRow(row: RawTransactionRow): MovementReportRow {
   const variant = row.productVariant;

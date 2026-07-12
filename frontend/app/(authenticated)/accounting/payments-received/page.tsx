@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -24,23 +24,10 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { Money } from "@/features/accounting/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useInvoices } from "@/hooks/api/invoice";
-import type { Invoice, Payment, PaymentMethod } from "@/types/invoice";
+import { useArPayments } from "@/hooks/api/accounting/ar";
+import type { ArPayment, ArPaymentMethod } from "@/types/accounting/ar";
 
-type PaymentRow = {
-  id: string;
-  invoiceId: number;
-  invoiceNumber: string;
-  clientName: string;
-  paymentDate: string;
-  amount: string;
-  paymentMethod: PaymentMethod;
-  referenceNumber: string | null;
-  notes: string | null;
-  invoiceTotal: string;
-};
-
-const METHOD_LABELS: Record<PaymentMethod, string> = {
+const METHOD_LABELS: Record<ArPaymentMethod, string> = {
   bank_transfer: "Bank Transfer",
   upi: "UPI",
   cheque: "Cheque",
@@ -49,33 +36,29 @@ const METHOD_LABELS: Record<PaymentMethod, string> = {
   other: "Other",
 };
 
+const PAYMENT_METHOD_VALUES: ArPaymentMethod[] = [
+  "bank_transfer",
+  "upi",
+  "cheque",
+  "cash",
+  "card",
+  "other",
+];
+
 const ALL_METHODS = "all" as const;
 
-function formatDate(value: string | Date | null | undefined): string {
-  if (!value) return "—";
-  const d = typeof value === "string" ? new Date(value) : value;
-  return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleDateString();
+function isArPaymentMethod(value: string): value is ArPaymentMethod {
+  return (PAYMENT_METHOD_VALUES as string[]).includes(value);
 }
 
-function derivePaymentRows(invoices: Invoice[]): PaymentRow[] {
-  return invoices.flatMap((inv) =>
-    (inv.payments ?? []).map((p: Payment, i: number) => ({
-      id: `${inv.id}-${i}`,
-      invoiceId: inv.id,
-      invoiceNumber: inv.invoiceNumber,
-      clientName: inv.client?.name ?? "—",
-      paymentDate: p.paymentDate,
-      amount: p.amount,
-      paymentMethod: p.paymentMethod,
-      referenceNumber: p.referenceNumber,
-      notes: p.notes,
-      invoiceTotal: inv.total,
-    })),
-  );
+function formatDate(value: string | null | undefined): string {
+  if (!value) return "—";
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
 }
 
 interface PaymentDetailSheetProps {
-  payment: PaymentRow | null;
+  payment: ArPayment | null;
   onClose: () => void;
 }
 
@@ -99,7 +82,7 @@ function PaymentDetailSheet({ payment, onClose }: PaymentDetailSheetProps) {
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Customer</p>
-            <p className="font-medium">{payment.clientName}</p>
+            <p className="font-medium">{payment.clientName ?? "—"}</p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Payment Date</p>
@@ -107,15 +90,11 @@ function PaymentDetailSheet({ payment, onClose }: PaymentDetailSheetProps) {
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Method</p>
-            <p className="font-medium">{METHOD_LABELS[payment.paymentMethod] ?? payment.paymentMethod}</p>
+            <p className="font-medium">{METHOD_LABELS[payment.paymentMethod]}</p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Amount</p>
             <Money value={Number(payment.amount)} className="font-semibold text-base" />
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Invoice Total</p>
-            <Money value={Number(payment.invoiceTotal)} />
           </div>
         </div>
         {payment.referenceNumber && (
@@ -128,6 +107,24 @@ function PaymentDetailSheet({ payment, onClose }: PaymentDetailSheetProps) {
           <div>
             <p className="text-xs text-muted-foreground">Notes</p>
             <p className="text-sm">{payment.notes}</p>
+          </div>
+        )}
+        {payment.allocations.length > 0 && (
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Allocations</p>
+            <div className="space-y-1">
+              {payment.allocations.map((alloc) => (
+                <div key={alloc.invoiceId} className="flex justify-between text-xs">
+                  <Link
+                    href={`/accounting/invoices/${alloc.invoiceId}`}
+                    className="text-blue-600 hover:underline"
+                  >
+                    Invoice #{alloc.invoiceId}
+                  </Link>
+                  <Money value={Number(alloc.amount)} />
+                </div>
+              ))}
+            </div>
           </div>
         )}
         <div className="pt-2">
@@ -144,8 +141,8 @@ function PaymentDetailSheet({ payment, onClose }: PaymentDetailSheetProps) {
 }
 
 interface RowActionsProps {
-  row: PaymentRow;
-  onView: (row: PaymentRow) => void;
+  row: ArPayment;
+  onView: (row: ArPayment) => void;
 }
 
 function PaymentRowActions({ row, onView }: RowActionsProps) {
@@ -176,26 +173,26 @@ function PaymentRowActions({ row, onView }: RowActionsProps) {
 }
 
 export default function PaymentsReceivedPage() {
-  const [methodFilter, setMethodFilter] = useState<PaymentMethod | typeof ALL_METHODS>(ALL_METHODS);
-  const [selectedPayment, setSelectedPayment] = useState<PaymentRow | null>(null);
+  const [methodFilter, setMethodFilter] = useState<ArPaymentMethod | typeof ALL_METHODS>(ALL_METHODS);
+  const [page, setPage] = useState(1);
+  const [selectedPayment, setSelectedPayment] = useState<ArPayment | null>(null);
 
-  const { data: invoiceData, isLoading, error, refetch } = useInvoices({ page: 1, limit: 100 });
-
-  const allRows = useMemo(
-    () => derivePaymentRows(invoiceData?.items ?? []),
-    [invoiceData],
-  );
-
-  const filteredRows = useMemo(() => {
-    if (methodFilter === ALL_METHODS) return allRows;
-    return allRows.filter((r) => r.paymentMethod === methodFilter);
-  }, [allRows, methodFilter]);
+  const { data, isLoading, error, refetch } = useArPayments({
+    method: methodFilter === ALL_METHODS ? undefined : methodFilter,
+    page,
+    pageSize: 50,
+  });
 
   function handleMethodFilterChange(value: string): void {
-    setMethodFilter(value as PaymentMethod | typeof ALL_METHODS);
+    if (value === ALL_METHODS) {
+      setMethodFilter(ALL_METHODS);
+    } else if (isArPaymentMethod(value)) {
+      setMethodFilter(value);
+    }
+    setPage(1);
   }
 
-  function handleViewPayment(row: PaymentRow): void {
+  function handleViewPayment(row: ArPayment): void {
     setSelectedPayment(row);
   }
 
@@ -208,7 +205,7 @@ export default function PaymentsReceivedPage() {
     toast.info("Retrying…");
   }
 
-  const columns: DataTableColumn<PaymentRow>[] = [
+  const columns: DataTableColumn<ArPayment>[] = [
     {
       key: "invoiceNumber",
       header: "Invoice #",
@@ -221,7 +218,7 @@ export default function PaymentsReceivedPage() {
     {
       key: "clientName",
       header: "Customer",
-      cell: (row) => <span className="text-sm">{row.clientName}</span>,
+      cell: (row) => <span className="text-sm">{row.clientName ?? "—"}</span>,
     },
     {
       key: "paymentDate",
@@ -238,7 +235,7 @@ export default function PaymentsReceivedPage() {
       header: "Method",
       cell: (row) => (
         <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4">
-          {METHOD_LABELS[row.paymentMethod] ?? row.paymentMethod}
+          {METHOD_LABELS[row.paymentMethod]}
         </Badge>
       ),
     },
@@ -292,7 +289,7 @@ export default function PaymentsReceivedPage() {
         </Select>
       }
     >
-      {filteredRows.length === 0 && !isLoading ? (
+      {data?.items.length === 0 && !isLoading ? (
         <EmptyState
           illustrationPreset="expenses"
           title="No payments received"
@@ -300,12 +297,17 @@ export default function PaymentsReceivedPage() {
         />
       ) : (
         <DataTable
-          data={filteredRows}
+          data={data?.items ?? []}
           columns={columns}
-          getRowKey={(row) => row.id}
+          getRowKey={(row) => String(row.id)}
           isLoading={isLoading}
           onRowClick={handleViewPayment}
-          pagination={{ pageSize: 50 }}
+          pagination={{
+            pageSize: 50,
+            page,
+            total: data?.total ?? 0,
+            onPageChange: setPage,
+          }}
         />
       )}
 

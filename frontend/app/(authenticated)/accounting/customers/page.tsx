@@ -6,28 +6,76 @@ import { Search } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { LoadingState, ErrorState } from "@/components/shared";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTeamIllustration } from "@/components/illustrations";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useCustomersOutstanding } from "@/hooks/api/accounting";
+import type { CustomerOutstanding } from "@/types/accounting";
 
 function formatCurrency(value: string): string {
   const n = Number(value);
   if (!Number.isFinite(n)) return value;
-  return n.toLocaleString(undefined, {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 2,
-  });
+  return n.toLocaleString(undefined, { style: "currency", currency: "INR", maximumFractionDigits: 2 });
 }
+
+const columns: DataTableColumn<CustomerOutstanding>[] = [
+  {
+    key: "clientName",
+    header: "Customer",
+    sortable: true,
+    sortValue: (row) => row.clientName,
+    cell: (row) => (
+      <Link
+        href={`/accounting/customers/${row.clientId}`}
+        className="text-sm font-medium text-foreground hover:text-blue-600 hover:underline"
+      >
+        {row.clientName}
+      </Link>
+    ),
+  },
+  {
+    key: "state",
+    header: "State",
+    cell: (row) => <span className="text-muted-foreground">{row.state ?? "—"}</span>,
+  },
+  {
+    key: "gstin",
+    header: "GSTIN",
+    cell: (row) => <span className="font-mono text-muted-foreground">{row.gstin ?? "—"}</span>,
+  },
+  {
+    key: "invoiceCount",
+    header: "Invoices",
+    sortable: true,
+    sortValue: (row) => row.invoiceCount,
+    headerClassName: "text-right",
+    className: "text-right tabular-nums",
+    cell: (row) => row.invoiceCount,
+  },
+  {
+    key: "outstanding",
+    header: "Outstanding",
+    sortable: true,
+    sortValue: (row) => Number(row.outstanding),
+    headerClassName: "text-right",
+    className: "text-right font-mono font-medium tabular-nums",
+    cell: (row) => formatCurrency(row.outstanding),
+  },
+  {
+    key: "statement",
+    header: "",
+    cell: (row) => (
+      <Link
+        href={`/accounting/reports/customer-statement?clientId=${row.clientId}`}
+        className="text-xs text-blue-600 hover:underline whitespace-nowrap"
+      >
+        Statement
+      </Link>
+    ),
+  },
+];
 
 export default function CustomerLedgersPage() {
   const [search, setSearch] = useState<string>("");
@@ -44,9 +92,7 @@ export default function CustomerLedgersPage() {
     setSearch(event.target.value);
   }
 
-  function handleOnlyOutstandingToggle(
-    checked: boolean | "indeterminate",
-  ): void {
+  function handleOnlyOutstandingToggle(checked: boolean | "indeterminate"): void {
     setOnlyOutstanding(checked === true);
   }
 
@@ -55,14 +101,18 @@ export default function CustomerLedgersPage() {
   }
 
   const items = query.data?.items ?? [];
-  const total = query.data?.total ?? 0;
+
+  const emptyDescription = search
+    ? "Try a different search term."
+    : onlyOutstanding
+      ? "No customers currently owe receivables."
+      : "No customers yet.";
 
   return (
     <PageWrapper
       eyebrow="Accounting · Customers"
       title="Customer ledgers"
-      subtitle="Outstanding receivables by customer."
-      badge={`${total}`}
+      subtitle="Track outstanding receivables by customer."
       filters={
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative flex-1 max-w-[240px]">
@@ -75,102 +125,35 @@ export default function CustomerLedgersPage() {
             />
           </div>
           <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer select-none">
-            <Checkbox
-              checked={onlyOutstanding}
-              onCheckedChange={handleOnlyOutstandingToggle}
-            />
+            <Checkbox checked={onlyOutstanding} onCheckedChange={handleOnlyOutstandingToggle} />
             Only outstanding
           </label>
         </div>
       }
     >
-      {query.isLoading ? (
-          <LoadingState variant="table" rows={8} />
-        ) : query.error ? (
-          <ErrorState
-            title="Failed to load customers"
-            description={query.error.message}
-            onRetry={handleRetry}
-          />
-        ) : items.length === 0 ? (
-          <EmptyState
-            illustration={<EmptyTeamIllustration />}
-            title="No customers found"
-            description={
-              search
-                ? "Try a different search term."
-                : onlyOutstanding
-                  ? "No customers currently owe receivables."
-                  : "No customers yet."
-            }
-          />
-        ) : (
-          <div className="rounded-lg border border-border overflow-hidden">
-            <div className="overflow-x-auto">
-              <Table className="min-w-[500px]">
-                <TableHeader>
-                  <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">
-                      Customer
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[160px] hidden md:table-cell">
-                      State
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[180px] hidden md:table-cell">
-                      GSTIN
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[100px] text-right">
-                      Invoices
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[160px] text-right">
-                      Outstanding
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-[80px]">
-                      &nbsp;
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {items.map((row) => (
-                    <TableRow
-                      key={row.clientId}
-                      className="border-b border-border/50 hover:bg-muted/30"
-                    >
-                      <TableCell className="px-3 py-2">
-                        <Link
-                          href={`/accounting/customers/${row.clientId}`}
-                          className="text-sm font-medium text-foreground hover:text-violet-600 hover:underline"
-                        >
-                          {row.clientName}
-                        </Link>
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground px-3 py-2 hidden md:table-cell">
-                        {row.state ?? "—"}
-                      </TableCell>
-                      <TableCell className="font-mono text-xs text-muted-foreground px-3 py-2 hidden md:table-cell">
-                        {row.gstin ?? "—"}
-                      </TableCell>
-                      <TableCell className="text-right text-sm tabular-nums px-3 py-2">
-                        {row.invoiceCount}
-                      </TableCell>
-                      <TableCell className="text-right font-mono text-sm font-medium tabular-nums px-3 py-2">
-                        {formatCurrency(row.outstanding)}
-                      </TableCell>
-                      <TableCell className="px-3 py-2">
-                        <Link
-                          href={`/accounting/reports/customer-statement?clientId=${row.clientId}`}
-                          className="text-xs text-blue-600 hover:underline whitespace-nowrap"
-                        >
-                          Statement
-                        </Link>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
-        )}
+      {query.error ? (
+        <ErrorState
+          title="Failed to load customers"
+          description={getErrorMessage(query.error)}
+          onRetry={handleRetry}
+        />
+      ) : (
+        <DataTable<CustomerOutstanding>
+          data={items}
+          columns={columns}
+          getRowKey={(row) => row.clientId}
+          isLoading={query.isLoading}
+          pagination={{ pageSize: 100 }}
+          emptyState={
+            <EmptyState
+              illustration={<EmptyTeamIllustration />}
+              title="No customers found"
+              description={emptyDescription}
+              compact
+            />
+          }
+        />
+      )}
     </PageWrapper>
   );
 }
