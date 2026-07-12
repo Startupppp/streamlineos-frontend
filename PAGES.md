@@ -289,7 +289,8 @@ Ordered money-path first. Check off each page after fixing.
 - [x] `/projects/resource-allocation` — Resource allocation: compact StatCardGrid + dense member cards with semantic load bars and inline project chips
 - [x] `/projects/command-center` — Command Center: eyebrow on all states, StatCardGrid + PageSection pattern (reference-aligned)
 - [x] `/projects/my-work` — My Work: eyebrow + StatCardGrid (open/overdue/today/upcoming), bucketed list states
-- [x] `/projects/all-work` — All Work: cross-project ticket view (list/table/board via ?view=), server-driven `GET /projects/all-work` (paginated + full filters), project chips per row, Me scope toggle, URL-persisted filters
+- [x] `/projects/all-work` — All Work: cross-project ticket view (list/table/board via ?view=), server-driven `GET /projects/all-work` (paginated + full filters), project chips per row, Me scope toggle, URL-persisted filters, workspace saved-views menu
+- [x] `/projects/settings/integrations` — + AI Agent Access (MCP): personal agent tokens (create/reveal-once/revoke) + Cursor/Claude Code config snippets; backed by `/agent-tokens` CRUD + PAT-authenticated `/agent/v1/*` API + `backend/scripts/mcp-server.mjs` (docs/mcp-agent-access.md)
 - [x] `/projects/portfolio` — Portfolio health view: eyebrow, subtitle, StatCardGrid, filters in PageWrapper, rounded-xl table shell
 - [x] `/projects/[projectId]/releases` — Releases (list + create/edit Sheet w/ TipTap notes, status badges, delete confirm; wired to existing releases API — screen was previously missing)
 - [x] `/projects/[projectId]/workload` — Workload (dedicated route exposing existing `WorkloadView`; was only a hidden view-switcher tab)

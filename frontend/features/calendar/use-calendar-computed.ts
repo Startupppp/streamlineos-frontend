@@ -25,6 +25,7 @@ interface UseCalendarComputedParams {
   view: View;
   hrCalEvents?: BigCalEvent[];
   hrVisible?: boolean;
+  crmVisible?: boolean;
 }
 
 export function useCalendarComputed({
@@ -36,6 +37,7 @@ export function useCalendarComputed({
   view,
   hrCalEvents = [],
   hrVisible = true,
+  crmVisible = true,
 }: UseCalendarComputedParams) {
   const calEvents = useMemo<BigCalEvent[]>(
     () =>
@@ -92,9 +94,22 @@ export function useCalendarComputed({
     [hrCalEvents, hrVisible],
   );
 
+  const visibleCalEvents = useMemo(
+    () =>
+      crmVisible
+        ? calEvents
+        : calEvents.filter(
+            (e) =>
+              e.resource?.entityType !== "LEAD" &&
+              e.resource?.entityType !== "DEAL" &&
+              e.resource?.entityType !== "CONTACT",
+          ),
+    [calEvents, crmVisible],
+  );
+
   const allCalEvents = useMemo(
-    () => [...calEvents, ...externalCalEvents, ...visibleHrCalEvents],
-    [calEvents, externalCalEvents, visibleHrCalEvents],
+    () => [...visibleCalEvents, ...externalCalEvents, ...visibleHrCalEvents],
+    [visibleCalEvents, externalCalEvents, visibleHrCalEvents],
   );
 
   const todayActivities = useMemo(

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -39,6 +39,7 @@ import { ExternalEventDetailSheet } from "./external-event-detail-sheet";
 import { HrEventDetailSheet } from "./hr-event-detail-sheet";
 import { useCalendarAccountFilters } from "./use-calendar-account-filters";
 import { useHrCalendarEventsMapped, useHrEventsVisible } from "./use-hr-calendar-events";
+import { useCrmEventsVisible } from "./use-crm-calendar-events";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useFinalizeIntegrationConnection,
@@ -129,6 +130,7 @@ export function CalendarView() {
 
   const { hiddenIds } = useCalendarAccountFilters();
   const { visible: hrEventsVisible, toggle: toggleHrEvents } = useHrEventsVisible();
+  const { visible: crmEventsVisible, toggle: toggleCrmEvents } = useCrmEventsVisible();
   const { hrCalEvents } = useHrCalendarEventsMapped(rangeStart, rangeEnd);
   const { data: externalData } = useExternalCalendarEvents(
     rangeStart,
@@ -153,6 +155,7 @@ export function CalendarView() {
     view,
     hrCalEvents,
     hrVisible: hrEventsVisible,
+    crmVisible: crmEventsVisible,
   });
 
   const handleSelectSlot = useCallback((slotInfo: SlotInfo) => {
@@ -281,6 +284,7 @@ export function CalendarView() {
         currentDate={currentDate}
         activeConnectionCount={activeConnectionCount}
         hrEventsVisible={hrEventsVisible}
+        crmEventsVisible={crmEventsVisible}
         onPrev={handlePrev}
         onNext={handleNext}
         onToday={handleToday}
@@ -291,6 +295,7 @@ export function CalendarView() {
         onOpenCreate={handleOpenCreate}
         onOpenCreateTicket={handleOpenCreateTicket}
         onToggleHrEvents={toggleHrEvents}
+        onToggleCrmEvents={toggleCrmEvents}
       />
 
       {externalData?.errors && externalData.errors.length > 0 && (
@@ -406,3 +411,4 @@ export function CalendarView() {
     </div>
   );
 }
+

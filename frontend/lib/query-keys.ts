@@ -279,6 +279,7 @@ export const queryKeys = {
     },
     allWork: (filters?: Record<string, unknown>) => [...base, "projects", "all-work", filters] as const,
     workspaceViews: () => [...base, "projects", "workspace-views"] as const,
+    agentTokens: () => [...base, "projects", "agent-tokens"] as const,
   },
 
   chat: {

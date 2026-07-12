@@ -128,7 +128,6 @@ const ROUTE_PERMISSION_MAP: Record<string, string[]> = {
   "/crm/companies": ["crm:leads:view"],
   "/crm/deals": ["crm:leads:view"],
   "/crm/activities": ["crm:leads:view"],
-  "/crm/calendar": ["crm:leads:view"],
   "/crm/tasks": ["crm:leads:view"],
   "/crm/reports": ["crm:reports:view"],
   "/crm/analytics": ["crm:reports:view"],

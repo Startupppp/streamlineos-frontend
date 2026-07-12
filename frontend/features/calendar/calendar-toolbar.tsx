@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { memo, useCallback, useMemo } from "react";
 import { format } from "date-fns";
@@ -13,6 +13,7 @@ import {
   Link2,
   Ticket,
   Building2,
+  Handshake,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ViewToggle, type ViewOption } from "@/components/ui/view-toggle";
@@ -46,6 +47,7 @@ interface CalendarToolbarProps {
   currentDate: Date;
   activeConnectionCount: number;
   hrEventsVisible: boolean;
+  crmEventsVisible: boolean;
   onPrev: () => void;
   onNext: () => void;
   onToday: () => void;
@@ -56,6 +58,7 @@ interface CalendarToolbarProps {
   onOpenCreate: () => void;
   onOpenCreateTicket: () => void;
   onToggleHrEvents: () => void;
+  onToggleCrmEvents: () => void;
 }
 
 export const CalendarToolbar = memo(function CalendarToolbar({
@@ -64,6 +67,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
   currentDate,
   activeConnectionCount,
   hrEventsVisible,
+  crmEventsVisible,
   onPrev,
   onNext,
   onToday,
@@ -74,6 +78,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
   onOpenCreate,
   onOpenCreateTicket,
   onToggleHrEvents,
+  onToggleCrmEvents,
 }: CalendarToolbarProps) {
   const handleViewChange = useCallback(
     (v: string) => onViewChange(v as View),
@@ -191,6 +196,17 @@ export const CalendarToolbar = memo(function CalendarToolbar({
           <span className="hidden md:inline">HR events</span>
         </Button>
 
+        <Button
+          variant={crmEventsVisible ? "secondary" : "outline"}
+          size="sm"
+          className="h-8 text-xs font-medium gap-1 px-3"
+          aria-label={crmEventsVisible ? "Hide CRM events" : "Show CRM events"}
+          onClick={onToggleCrmEvents}
+        >
+          <Handshake className="h-3.5 w-3.5" />
+          <span className="hidden md:inline">CRM events</span>
+        </Button>
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -225,3 +241,4 @@ export const CalendarToolbar = memo(function CalendarToolbar({
     </div>
   );
 });
+

@@ -1034,12 +1034,6 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "crm:leads:view",
       },
       {
-        label: "Calendar",
-        icon: CalendarDays,
-        href: "/crm/calendar",
-        requiredPermission: "crm:leads:view",
-      },
-      {
         label: "Tasks",
         icon: CheckSquare,
         href: "/crm/tasks",
