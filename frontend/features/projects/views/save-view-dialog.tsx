@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +10,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
+
+type ViewVisibility = "private" | "shared";
+
+export interface SaveViewMeta {
+  visibility: ViewVisibility;
+  displayOptions?: Record<string, unknown>;
+}
 
 interface SaveViewDialogProps {
   open: boolean;
@@ -19,6 +27,8 @@ interface SaveViewDialogProps {
   onSave: () => void;
   isSaving: boolean;
   activeLayout: string;
+  displayOptions?: Record<string, unknown>;
+  onSaveWithMeta?: (meta: SaveViewMeta) => void;
 }
 
 export function SaveViewDialog({
@@ -29,15 +39,32 @@ export function SaveViewDialog({
   onSave,
   isSaving,
   activeLayout,
+  displayOptions,
+  onSaveWithMeta,
 }: SaveViewDialogProps) {
+  const [visibility, setVisibility] = useState<ViewVisibility>("shared");
+
+  const dispatchSave = useCallback(() => {
+    if (onSaveWithMeta) {
+      onSaveWithMeta({ visibility, displayOptions });
+    } else {
+      onSave();
+    }
+  }, [onSave, onSaveWithMeta, visibility, displayOptions]);
+
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Enter") onSave();
+      if (e.key === "Enter") dispatchSave();
     },
-    [onSave],
+    [dispatchSave],
   );
 
   const handleCancel = useCallback(() => onOpenChange(false), [onOpenChange]);
+
+  const handleSave = useCallback(() => dispatchSave(), [dispatchSave]);
+
+  const handleSetShared = useCallback(() => setVisibility("shared"), []);
+  const handleSetPrivate = useCallback(() => setVisibility("private"), []);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -58,6 +85,35 @@ export function SaveViewDialog({
               autoFocus
             />
           </div>
+          <div>
+            <Label className="text-sm">Visibility</Label>
+            <div className="flex mt-1.5 rounded-md border border-border overflow-hidden">
+              <button
+                type="button"
+                onClick={handleSetShared}
+                className={cn(
+                  "flex-1 py-1.5 text-xs font-medium transition-colors",
+                  visibility === "shared"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-card text-muted-foreground hover:bg-muted",
+                )}
+              >
+                Shared
+              </button>
+              <button
+                type="button"
+                onClick={handleSetPrivate}
+                className={cn(
+                  "flex-1 py-1.5 text-xs font-medium transition-colors border-l border-border",
+                  visibility === "private"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-card text-muted-foreground hover:bg-muted",
+                )}
+              >
+                Personal
+              </button>
+            </div>
+          </div>
           <p className="text-xs text-muted-foreground">
             Saves current layout ({activeLayout}) and active filters.
           </p>
@@ -65,7 +121,7 @@ export function SaveViewDialog({
             <Button variant="outline" size="sm" onClick={handleCancel} disabled={isSaving}>
               Cancel
             </Button>
-            <Button size="sm" onClick={onSave} disabled={!viewName.trim() || isSaving}>
+            <Button size="sm" onClick={handleSave} disabled={!viewName.trim() || isSaving}>
               {isSaving ? "Saving..." : "Save view"}
             </Button>
           </div>

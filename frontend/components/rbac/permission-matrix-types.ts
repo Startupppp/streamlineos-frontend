@@ -30,6 +30,7 @@ export const SCOPABLE_MODULES = new Set([
   "inventory",
   "support",
   "kb",
+  "accounting",
 ]);
 
 export const SCOPABLE_ACTIONS = new Set([

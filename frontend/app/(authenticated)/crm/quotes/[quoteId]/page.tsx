@@ -4,11 +4,24 @@ import { use, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useReducedMotion, motion } from "framer-motion";
-import { Send, CheckCircle2, XCircle, Trash2, FileText, Calendar, User, Building2 } from "lucide-react";
+import {
+  Send,
+  CheckCircle2,
+  XCircle,
+  Trash2,
+  FileText,
+  Calendar,
+  User,
+  Building2,
+  AlertTriangle,
+  FileCheck2,
+  Receipt,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertDialog,
@@ -26,7 +39,16 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ErrorState } from "@/components/shared";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { cn } from "@/lib/utils";
-import { useQuoteDetail, useUpdateQuoteStatus, useDeleteQuote } from "@/hooks/api/crm";
+import {
+  useQuoteDetail,
+  useUpdateQuoteStatus,
+  useDeleteQuote,
+  useApproveQuote,
+  useRejectQuote,
+  useConvertQuoteToInvoice,
+  useMarkQuoteSigned,
+} from "@/hooks/api/crm/quotes";
+import { useCan } from "@/lib/api/hooks/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { QuoteStatusProgress } from "@/features/crm/quotes/components/quote-status-progress";
 import { QuoteLineItemsTable } from "@/features/crm/quotes/components/quote-line-items-table";
@@ -50,6 +72,11 @@ export default function QuoteDetailPage({
   const { data, isLoading, isError, refetch } = useQuoteDetail(quoteId);
   const updateStatus = useUpdateQuoteStatus();
   const deleteQuote = useDeleteQuote();
+  const approveQuote = useApproveQuote();
+  const rejectQuote = useRejectQuote();
+  const convertToInvoice = useConvertQuoteToInvoice();
+  const markSigned = useMarkQuoteSigned();
+  const canApprove = useCan("crm:quotes:approve");
 
   const quote = data ?? null;
 
@@ -102,6 +129,46 @@ export default function QuoteDetailPage({
     );
   }, [quoteId, deleteQuote, router]);
 
+  const handleApprove = useCallback(() => {
+    approveQuote.mutate(
+      { id: quoteId },
+      {
+        onSuccess: () => toast.success("Quote approved"),
+        onError: (e) => toast.error(getErrorMessage(e)),
+      },
+    );
+  }, [quoteId, approveQuote]);
+
+  const handleRejectApproval = useCallback(() => {
+    rejectQuote.mutate(
+      { id: quoteId },
+      {
+        onSuccess: () => toast.success("Approval rejected"),
+        onError: (e) => toast.error(getErrorMessage(e)),
+      },
+    );
+  }, [quoteId, rejectQuote]);
+
+  const handleConvertToInvoice = useCallback(() => {
+    convertToInvoice.mutate(
+      { id: quoteId },
+      {
+        onSuccess: (res) => toast.success(`Invoice ${res.invoice.invoiceNumber} created`),
+        onError: (e) => toast.error(getErrorMessage(e)),
+      },
+    );
+  }, [quoteId, convertToInvoice]);
+
+  const handleMarkSigned = useCallback(() => {
+    markSigned.mutate(
+      { id: quoteId },
+      {
+        onSuccess: () => toast.success("Quote marked as signed"),
+        onError: (e) => toast.error(getErrorMessage(e)),
+      },
+    );
+  }, [quoteId, markSigned]);
+
   if (isLoading) {
     return (
       <PageWrapper title="Quote" backHref="/crm/quotes">
@@ -153,9 +220,11 @@ export default function QuoteDetailPage({
     0,
   );
 
-  const canSend = quote.status === "DRAFT";
+  const canSend = quote.status === "DRAFT" && quote.approvalStatus !== "pending";
   const canAcceptOrReject = quote.status === "SENT";
   const canDelete = quote.status === "DRAFT";
+  const canConvert = quote.status === "ACCEPTED" && quote.convertedInvoiceId === null;
+  const canMarkSigned = quote.status === "ACCEPTED" && quote.signedAt === null;
 
   return (
     <PageWrapper
@@ -212,6 +281,30 @@ export default function QuoteDetailPage({
               </Button>
             </>
           )}
+          {canConvert && (
+            <LoadingButton
+              size="sm"
+              variant="outline"
+              onClick={handleConvertToInvoice}
+              isPending={convertToInvoice.isPending}
+              loadingText="Converting..."
+            >
+              <Receipt className="h-3.5 w-3.5 mr-1.5" />
+              Convert to Invoice
+            </LoadingButton>
+          )}
+          {canMarkSigned && (
+            <LoadingButton
+              size="sm"
+              variant="outline"
+              onClick={handleMarkSigned}
+              isPending={markSigned.isPending}
+              loadingText="Saving..."
+            >
+              <FileCheck2 className="h-3.5 w-3.5 mr-1.5" />
+              Mark Signed
+            </LoadingButton>
+          )}
           {canDelete && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
@@ -246,6 +339,53 @@ export default function QuoteDetailPage({
         </div>
       }
     >
+      {quote.approvalStatus === "pending" && (
+        <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+          <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-amber-800">Pending Approval</p>
+            <p className="text-xs text-amber-700 mt-0.5">
+              This quote requires approval before it can be sent.
+            </p>
+          </div>
+          {canApprove && (
+            <div className="flex items-center gap-2 shrink-0">
+              <LoadingButton
+                size="sm"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white h-7 text-xs"
+                onClick={handleApprove}
+                isPending={approveQuote.isPending}
+                loadingText="Approving..."
+              >
+                Approve
+              </LoadingButton>
+              <LoadingButton
+                size="sm"
+                variant="outline"
+                className="border-red-300 text-red-600 hover:bg-red-50 h-7 text-xs"
+                onClick={handleRejectApproval}
+                isPending={rejectQuote.isPending}
+                loadingText="Rejecting..."
+              >
+                Reject
+              </LoadingButton>
+            </div>
+          )}
+        </div>
+      )}
+      {quote.approvalStatus === "rejected" && (
+        <div className="mb-4 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+          <XCircle className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
+          <p className="text-sm text-red-700">Approval was rejected. Edit the quote and resubmit.</p>
+        </div>
+      )}
+      {quote.approvalStatus === "approved" && (
+        <div className="mb-4 flex items-start gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
+          <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+          <p className="text-sm text-emerald-700">Quote approved — ready to send.</p>
+        </div>
+      )}
+
       <motion.div
         className="space-y-4"
         variants={staggerContainer}

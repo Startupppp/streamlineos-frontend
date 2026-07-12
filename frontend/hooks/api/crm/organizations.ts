@@ -13,6 +13,8 @@ import type {
   OrgTimelineEvent,
   RelatedLead,
   CrmPersonProfile,
+  MergeOrgsInput,
+  DuplicateOrgPair,
 } from "@/types/crm";
 
 export function useCrmOrganizations(filters?: CrmOrganizationFilters) {
@@ -123,5 +125,27 @@ export function useCrmPerson(slug: string) {
     queryFn: () => apiClient.get<CrmPersonProfile | null>(`/crm/people/${slug}`),
     staleTime: 2 * 60_000,
     enabled: !!slug,
+  });
+}
+
+export function useCrmOrgDuplicates(params?: { page?: number; limit?: number }) {
+  return useQuery({
+    queryKey: queryKeys.crmOrganizations.duplicates(params as Record<string, unknown>),
+    queryFn: () =>
+      apiClient.get<DuplicateOrgPair[]>("/crm/organizations/duplicates", params as Record<string, unknown>),
+    staleTime: 5 * 60_000,
+  });
+}
+
+export function useMergeCrmOrganizations() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["crmOrganizations", "merge"] as const,
+    mutationFn: (input: MergeOrgsInput) =>
+      apiClient.post<{ success: boolean; primaryId: number; mergedId: number }>("/crm/organizations/merge", input),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.crmOrganizations.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.crmOrganizations.duplicates() });
+    },
   });
 }

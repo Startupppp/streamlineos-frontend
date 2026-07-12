@@ -5,3 +5,8 @@ export * from "./clients";
 export * from "./quotes";
 export * from "./products";
 export * from "./metadata";
+export * from "./customer360";
+export * from "./pricebooks";
+export * from "./campaigns";
+export * from "./automations";
+export * from "./inbox";

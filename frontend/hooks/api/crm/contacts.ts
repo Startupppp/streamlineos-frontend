@@ -9,6 +9,10 @@ import type {
   ContactFilters,
   CreateContactInput,
   UpdateContactInput,
+  ContactRole,
+  ContactRoleCreateInput,
+  MergeContactsInput,
+  DuplicateContactPair,
 } from "@/types/crm";
 
 export function useContacts(filters?: ContactFilters) {
@@ -64,6 +68,62 @@ export function useDeleteContact() {
       apiClient.delete<{ success: boolean }>(`/contacts/${id}`),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.contacts.all });
+    },
+  });
+}
+
+export function useContactRoles(contactId: number, params?: { entityType?: string; entityId?: number }) {
+  return useQuery({
+    queryKey: queryKeys.contactRoles.list(contactId, params as Record<string, unknown>),
+    queryFn: () =>
+      apiClient.get<ContactRole[]>(`/contacts/${contactId}/roles`, params as Record<string, unknown>),
+    enabled: contactId > 0,
+    staleTime: 2 * 60_000,
+  });
+}
+
+export function useAddContactRole() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["contactRoles", "add"] as const,
+    mutationFn: ({ contactId, input }: { contactId: number; input: ContactRoleCreateInput }) =>
+      apiClient.post<ContactRole>(`/contacts/${contactId}/roles`, input),
+    onSuccess: (_data, variables) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.contactRoles.list(variables.contactId) });
+    },
+  });
+}
+
+export function useRemoveContactRole() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["contactRoles", "remove"] as const,
+    mutationFn: ({ contactId, roleId }: { contactId: number; roleId: string }) =>
+      apiClient.delete<{ success: boolean }>(`/contacts/${contactId}/roles/${roleId}`),
+    onSuccess: (_data, variables) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.contactRoles.list(variables.contactId) });
+    },
+  });
+}
+
+export function useContactDuplicates(params?: { page?: number; limit?: number }) {
+  return useQuery({
+    queryKey: queryKeys.contactDuplicates.list(params as Record<string, unknown>),
+    queryFn: () =>
+      apiClient.get<DuplicateContactPair[]>("/contacts/duplicates", params as Record<string, unknown>),
+    staleTime: 5 * 60_000,
+  });
+}
+
+export function useMergeContacts() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["contacts", "merge"] as const,
+    mutationFn: (input: MergeContactsInput) =>
+      apiClient.post<{ success: boolean; primaryId: number; mergedId: number }>("/contacts/merge", input),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.contacts.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.contactDuplicates.all });
     },
   });
 }

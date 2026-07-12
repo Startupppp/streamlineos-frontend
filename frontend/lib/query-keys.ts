@@ -272,6 +272,8 @@ export const queryKeys = {
     workflow: {
       transitions: (projectId: number) => [...base, "projects", projectId, "workflow", "transitions"] as const,
     },
+    allWork: (filters?: Record<string, unknown>) => [...base, "projects", "all-work", filters] as const,
+    workspaceViews: () => [...base, "projects", "workspace-views"] as const,
   },
 
   chat: {
@@ -300,6 +302,13 @@ export const queryKeys = {
     history: () => [...base, "aiChat", "history"] as const,
     conversations: () => [...base, "aiChat", "conversations"] as const,
     conversationMessages: (conversationId: number) => [...base, "aiChat", "conversations", conversationId, "messages"] as const,
+  },
+
+  aiCrm: {
+    leadSummary: (leadId: number) => [...base, "ai", "crm", "lead-summary", leadId] as const,
+    dealSummary: (dealId: number) => [...base, "ai", "crm", "deal-summary", dealId] as const,
+    nextBestActions: () => [...base, "ai", "crm", "next-best-actions"] as const,
+    duplicateSuggestions: (leadId: number) => [...base, "ai", "crm", "duplicate-suggestions", leadId] as const,
   },
 
   dashboard: {
@@ -429,6 +438,7 @@ export const queryKeys = {
     slaPolicies: () => [...base, "crmSettings", "slaPolicies"] as const,
     slaReport: () => [...base, "crmSettings", "slaReport"] as const,
     slaBreachedLeads: (params?: Record<string, unknown>) => [...base, "crmSettings", "slaBreachedLeads", params] as const,
+    territories: () => [...base, "crmSettings", "territories"] as const,
   },
 
   crmOrganizations: {
@@ -439,6 +449,24 @@ export const queryKeys = {
     rollup: (id: number) => [...base, "crmOrganizations", "rollup", id] as const,
     timeline: (id: number) => [...base, "crmOrganizations", "timeline", id] as const,
     relatedLeads: (id: number) => [...base, "crmOrganizations", "relatedLeads", id] as const,
+    duplicates: (params?: Record<string, unknown>) => [...base, "crmOrganizations", "duplicates", params] as const,
+  },
+
+  contactRoles: {
+    all: [...base, "contactRoles"] as const,
+    list: (contactId: number, params?: Record<string, unknown>) => [...base, "contactRoles", "list", contactId, params] as const,
+  },
+
+  contactDuplicates: {
+    all: [...base, "contactDuplicates"] as const,
+    list: (params?: Record<string, unknown>) => [...base, "contactDuplicates", "list", params] as const,
+  },
+
+  customer360: {
+    all: [...base, "customer360"] as const,
+    company: (id: number) => [...base, "customer360", "company", id] as const,
+    client: (id: number) => [...base, "customer360", "client", id] as const,
+    companyTimeline: (id: number, cursor?: string) => [...base, "customer360", "companyTimeline", id, cursor] as const,
   },
 
   dealActivities: {
@@ -1093,6 +1121,36 @@ export const queryKeys = {
     options: (type: string) => [...base, "crmMetadata", "options", type] as const,
     validationRules: (params?: Record<string, unknown>) => [...base, "crmMetadata", "validationRules", params] as const,
     blueprints: (params?: Record<string, unknown>) => [...base, "crmMetadata", "blueprints", params] as const,
+  },
+
+  crmCampaigns: {
+    all: [...base, "crmCampaigns"] as const,
+    list: (params?: Record<string, unknown>) => [...base, "crmCampaigns", "list", params] as const,
+    detail: (id: number) => [...base, "crmCampaigns", "detail", id] as const,
+    roi: (id: number) => [...base, "crmCampaigns", "roi", id] as const,
+    leads: (id: number, params?: Record<string, unknown>) => [...base, "crmCampaigns", "leads", id, params] as const,
+    attribution: (model: string) => [...base, "crmCampaigns", "attribution", model] as const,
+  },
+
+  crmAutomations: {
+    all: [...base, "crmAutomations"] as const,
+    list: () => [...base, "crmAutomations", "list"] as const,
+    events: () => [...base, "crmAutomations", "events"] as const,
+    actions: () => [...base, "crmAutomations", "actions"] as const,
+    runs: (ruleId: number, page: number) => [...base, "crmAutomations", "runs", ruleId, page] as const,
+  },
+
+  crmSequences: {
+    all: [...base, "crmSequences"] as const,
+    list: () => [...base, "crmSequences", "list"] as const,
+    steps: (sequenceId: string) => [...base, "crmSequences", "steps", sequenceId] as const,
+    enrollments: (sequenceId: string, page: number) => [...base, "crmSequences", "enrollments", sequenceId, page] as const,
+  },
+
+  crmInbox: {
+    all: [...base, "crmInbox"] as const,
+    data: () => [...base, "crmInbox", "data"] as const,
+    counts: () => [...base, "crmInbox", "counts"] as const,
   },
 
 } as const;

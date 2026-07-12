@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
 import type { ActionItem, CreateActionItemInput, UpdateActionItemInput, ProjectMemberRecord } from "@/types/projects";
 
@@ -159,19 +160,20 @@ export function ActionItemFormSheet({
                 </FormItem>
               )} />
             </div>
-            <SheetFooter className="shrink-0 flex w-full gap-2 px-6 py-4 border-t">
-              <Button
-                type="button"
-                variant="outline"
-                className="flex-1"
-                onClick={() => onOpenChange(false)}
-                disabled={isPending}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" variant="default" className="flex-1" disabled={isPending}>
-                {isPending ? "Saving…" : mode === "edit" ? "Save Changes" : "Add Item"}
-              </Button>
+            <SheetFooter className="shrink-0 px-6 py-4 border-t">
+              <div className="grid w-full grid-cols-2 gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                  disabled={isPending}
+                >
+                  Cancel
+                </Button>
+                <LoadingButton type="submit" isPending={isPending} loadingText="Saving…">
+                  {mode === "edit" ? "Save Changes" : "Add Item"}
+                </LoadingButton>
+              </div>
             </SheetFooter>
           </form>
         </Form>

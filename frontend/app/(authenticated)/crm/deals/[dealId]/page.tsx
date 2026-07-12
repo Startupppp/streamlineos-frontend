@@ -442,6 +442,8 @@ export default function DealDetailPage({
 
           <motion.div variants={itemVariants} className="lg:col-span-2 space-y-6">
             <DealSidebarCards
+              dealId={dealId}
+              dealName={deal.name}
               assignedTo={deal.assignedTo}
               lead={deal.lead}
               client={deal.client}

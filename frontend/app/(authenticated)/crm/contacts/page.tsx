@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useCallback, useTransition } from "react";
+import { useState, useCallback, useTransition, useMemo } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { Download, LayoutGrid, Plus, Search, TableIcon } from "lucide-react";
+import { Download, GitMerge, LayoutGrid, Plus, Search, TableIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -28,7 +28,8 @@ import { useEnrichContact } from "@/features/crm/contacts/contact-actions-menu";
 import { ContactTableView } from "@/features/crm/contacts/contact-table-view";
 import { ContactCardView } from "@/features/crm/contacts/contact-card-view";
 import { ContactDeleteDialog } from "@/features/crm/contacts/contact-delete-dialog";
-import type { Contact } from "@/types/crm";
+import { ContactMergeDialog } from "@/features/crm/contacts/detail/contact-merge-dialog";
+import type { Contact, DuplicateContactPair } from "@/types/crm";
 
 export default function ContactsPage() {
   const searchParams = useSearchParams();
@@ -38,6 +39,8 @@ export default function ContactsPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [editContact, setEditContact] = useState<Contact | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [bulkMergeOpen, setBulkMergeOpen] = useState(false);
   const deleteContact = useDeleteContact();
   const enrichContact = useEnrichContact();
 
@@ -163,6 +166,28 @@ export default function ContactsPage() {
     [updateParams],
   );
 
+  const handleBulkMerge = useCallback(() => {
+    setBulkMergeOpen(true);
+  }, []);
+
+  const handleClearSelection = useCallback(() => {
+    setSelectedIds(new Set());
+  }, []);
+
+  const bulkMergePair = useMemo<DuplicateContactPair | null>(() => {
+    if (selectedIds.size !== 2) return null;
+    const [id1, id2] = [...selectedIds];
+    if (id1 === undefined || id2 === undefined) return null;
+    const c1 = data?.items.find((c) => c.id === id1);
+    const c2 = data?.items.find((c) => c.id === id2);
+    if (!c1 || !c2) return null;
+    return {
+      contact1: { id: c1.id, name: c1.name, email: c1.email ?? null, phone: c1.phone ?? null },
+      contact2: { id: c2.id, name: c2.name, email: c2.email ?? null, phone: c2.phone ?? null },
+      matchReason: "name" as const,
+    };
+  }, [selectedIds, data?.items]);
+
   if (isLoading) {
     return (
       <PageWrapper title="Contacts" subtitle="Loading...">
@@ -184,7 +209,7 @@ export default function ContactsPage() {
     );
   }
 
-  const viewProps = {
+  const sharedViewProps = {
     items: data?.items ?? [],
     total,
     page,
@@ -279,8 +304,40 @@ export default function ContactsPage() {
           initial="hidden"
           animate="visible"
         >
-          {view === "table" && <ContactTableView {...viewProps} />}
-          {view === "card" && <ContactCardView {...viewProps} />}
+          {selectedIds.size > 0 && (
+            <div className="flex items-center gap-2 rounded-md border border-border bg-muted/50 px-3 py-2 text-xs">
+              <span className="font-medium">{selectedIds.size} selected</span>
+              <div className="ml-auto flex items-center gap-2">
+                {selectedIds.size === 2 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={handleBulkMerge}
+                  >
+                    <GitMerge className="h-3.5 w-3.5 mr-1.5" />
+                    Merge
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-xs text-muted-foreground"
+                  onClick={handleClearSelection}
+                >
+                  Clear
+                </Button>
+              </div>
+            </div>
+          )}
+          {view === "table" && (
+            <ContactTableView
+              {...sharedViewProps}
+              selectedIds={selectedIds}
+              onSelectionChange={setSelectedIds}
+            />
+          )}
+          {view === "card" && <ContactCardView {...sharedViewProps} />}
         </motion.div>
       </PageWrapper>
 
@@ -298,6 +355,19 @@ export default function ContactsPage() {
         onOpenChange={handleDeleteDialogOpenChange}
         onConfirm={handleConfirmDelete}
       />
+
+      {bulkMergePair && (
+        <ContactMergeDialog
+          pair={bulkMergePair}
+          currentContactId={bulkMergePair.contact1.id}
+          open={bulkMergeOpen}
+          onOpenChange={(open) => {
+            setBulkMergeOpen(open);
+            if (!open) setSelectedIds(new Set());
+          }}
+          onMergeComplete={handleClearSelection}
+        />
+      )}
     </>
   );
 }

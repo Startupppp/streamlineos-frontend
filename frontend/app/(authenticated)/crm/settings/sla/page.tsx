@@ -13,13 +13,15 @@ import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { EmptyTimeIllustration } from "@/components/illustrations";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
-} from "@/components/ui/dialog";
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter,
+} from "@/components/ui/sheet";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -34,6 +36,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useSlaPolicies, useSlaReport, useSlaBreachedLeads,
   useCreateSlaPolicy, useUpdateSlaPolicy, useDeleteSlaPolicy,
@@ -59,6 +62,9 @@ const policySchema = z.object({
     .string()
     .min(1, "Required")
     .refine((v) => !isNaN(Number(v)) && Number.isInteger(Number(v)) && Number(v) > 0, "Must be a positive integer"),
+  sourcesText: z.string().optional(),
+  prioritiesText: z.string().optional(),
+  businessHours: z.boolean(),
 });
 type PolicyForm = z.infer<typeof policySchema>;
 
@@ -69,7 +75,19 @@ type SlaPolicyData = {
   priority: string;
   firstResponseHours: number;
   resolutionHours: number;
+  conditions?: Record<string, unknown>;
 };
+
+function summarizeConditions(conditions: Record<string, unknown> | undefined): string {
+  if (!conditions) return "";
+  const parts: string[] = [];
+  if (conditions["source"]) parts.push(`Source: ${String(conditions["source"])}`);
+  if (conditions["priority"]) parts.push(`Priority: ${String(conditions["priority"])}`);
+  if (conditions["scoreMin"] !== undefined || conditions["scoreMax"] !== undefined) {
+    parts.push(`Score: ${conditions["scoreMin"] ?? ""}–${conditions["scoreMax"] ?? ""}`);
+  }
+  return parts.join(" | ");
+}
 
 interface SlaTableRowProps {
   policy: SlaPolicyData;
@@ -80,6 +98,7 @@ interface SlaTableRowProps {
 function SlaTableRow({ policy, onEdit, onDeleteRequest }: SlaTableRowProps) {
   const handleEdit = useCallback(() => onEdit(policy), [policy, onEdit]);
   const handleDeleteRequest = useCallback(() => onDeleteRequest(policy.id), [policy.id, onDeleteRequest]);
+  const conditionsSummary = summarizeConditions(policy.conditions);
 
   return (
     <TableRow className="h-8 hover:bg-muted/30 transition-colors">
@@ -92,10 +111,13 @@ function SlaTableRow({ policy, onEdit, onDeleteRequest }: SlaTableRowProps) {
       <TableCell className="text-[11px] px-2 py-1">
         <Badge
           variant="outline"
-          className={cn("text-[9px] h-4 px-1.5 py-0 capitalize", PRIORITY_BADGE[policy.priority] ?? PRIORITY_BADGE.medium)}
+          className={cn("text-[9px] h-4 px-1.5 py-0 capitalize", PRIORITY_BADGE[policy.priority] ?? PRIORITY_BADGE["medium"])}
         >
           {policy.priority}
         </Badge>
+      </TableCell>
+      <TableCell className="text-[11px] px-2 py-1 text-muted-foreground max-w-[180px] truncate">
+        {conditionsSummary || <span className="text-muted-foreground/50">—</span>}
       </TableCell>
       <TableCell className="text-[11px] px-2 py-1 text-right font-mono tabular-nums">{policy.firstResponseHours}h</TableCell>
       <TableCell className="text-[11px] px-2 py-1 text-right font-mono tabular-nums">{policy.resolutionHours}h</TableCell>
@@ -113,85 +135,200 @@ function SlaTableRow({ policy, onEdit, onDeleteRequest }: SlaTableRowProps) {
   );
 }
 
+interface PolicySheetProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  editing: SlaPolicyData | null;
+  isPending: boolean;
+  onSubmit: (data: PolicyForm) => void;
+}
+
+function PolicySheet({ open, onOpenChange, editing, isPending, onSubmit }: PolicySheetProps) {
+  const form = useForm<PolicyForm>({
+    resolver: zodResolver(policySchema),
+    defaultValues: editing
+      ? {
+          name: editing.name,
+          appliesTo: editing.appliesTo as PolicyForm["appliesTo"],
+          priority: editing.priority as PolicyForm["priority"],
+          firstResponseHours: String(editing.firstResponseHours),
+          resolutionHours: String(editing.resolutionHours),
+          sourcesText: "",
+          prioritiesText: "",
+          businessHours: false,
+        }
+      : { name: "", appliesTo: "both", priority: "medium", firstResponseHours: "4", resolutionHours: "24", sourcesText: "", prioritiesText: "", businessHours: false },
+  });
+
+  const handleOpenChange = useCallback((next: boolean) => {
+    if (!next) form.reset();
+    onOpenChange(next);
+  }, [form, onOpenChange]);
+
+  const handleSubmit = useCallback((data: PolicyForm) => onSubmit(data), [onSubmit]);
+
+  return (
+    <Sheet open={open} onOpenChange={handleOpenChange}>
+      <SheetContent className="w-full sm:max-w-lg flex flex-col overflow-hidden">
+        <SheetHeader>
+          <SheetTitle>{editing ? "Edit Policy" : "New Policy"}</SheetTitle>
+        </SheetHeader>
+        <div className="flex-1 overflow-y-auto py-4 px-1">
+          <Form {...form}>
+            <form id="sla-policy-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+              <FormField control={form.control} name="name" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Policy Name</FormLabel>
+                  <FormControl><Input {...field} placeholder="e.g. Hot Lead SLA" /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <div className="grid grid-cols-2 gap-4">
+                <FormField control={form.control} name="appliesTo" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Applies To</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                      <SelectContent>
+                        <SelectItem value="lead">Lead</SelectItem>
+                        <SelectItem value="deal">Deal</SelectItem>
+                        <SelectItem value="both">Both</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="priority" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Priority</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                      <SelectContent>
+                        <SelectItem value="low">Low</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="high">High</SelectItem>
+                        <SelectItem value="urgent">Urgent</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="firstResponseHours" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>First Response (hrs)</FormLabel>
+                    <FormControl><Input type="number" min={1} {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="resolutionHours" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Resolution (hrs)</FormLabel>
+                    <FormControl><Input type="number" min={1} {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </div>
+              <p className="text-sm font-medium">Conditions</p>
+              <FormField control={form.control} name="sourcesText" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs">Source Keys (comma-separated)</FormLabel>
+                  <FormControl><Input {...field} placeholder="referral, campaign" className="h-8 text-xs" /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="prioritiesText" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs">Priority Keys (comma-separated)</FormLabel>
+                  <FormControl><Input {...field} placeholder="HOT, WARM" className="h-8 text-xs" /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="businessHours" render={({ field }) => (
+                <FormItem className="flex items-center gap-3">
+                  <FormControl>
+                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                  </FormControl>
+                  <FormLabel className="cursor-pointer">Business Hours Only</FormLabel>
+                  <FormMessage />
+                </FormItem>
+              )} />
+            </form>
+          </Form>
+        </div>
+        <SheetFooter className="border-t pt-4 flex gap-2 justify-end">
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <LoadingButton type="submit" form="sla-policy-form" isPending={isPending} loadingText="Saving...">
+            {editing ? "Save Changes" : "Create Policy"}
+          </LoadingButton>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
 export default function SlaPage() {
   const { data: policies, isLoading, isError, refetch } = useSlaPolicies();
   const { data: slaReport, isLoading: reportLoading } = useSlaReport();
   const { data: breachedLeads } = useSlaBreachedLeads({ limit: 10 });
-  const [createOpen, setCreateOpen] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [editingPolicy, setEditingPolicy] = useState<SlaPolicyData | null>(null);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 
   const createPolicy = useCreateSlaPolicy();
   const updatePolicy = useUpdateSlaPolicy();
   const deletePolicy = useDeleteSlaPolicy();
 
-  const createForm = useForm<PolicyForm>({
-    resolver: zodResolver(policySchema),
-    defaultValues: { name: "", appliesTo: "both", priority: "medium", firstResponseHours: "4", resolutionHours: "24" },
-  });
-
-  const editForm = useForm<PolicyForm>({
-    resolver: zodResolver(policySchema),
-  });
-
-  const onCreateSubmit = useCallback((data: PolicyForm) => {
-    createPolicy.mutate(
-      {
-        ...data,
-        firstResponseHours: Number(data.firstResponseHours),
-        resolutionHours: Number(data.resolutionHours),
-      },
-      {
-        onSuccess: () => { toast.success("SLA policy created"); setCreateOpen(false); createForm.reset(); },
-        onError: (err) => toast.error(err.message),
-      }
-    );
-  }, [createPolicy, createForm]);
-
-  const onEditSubmit = useCallback((data: PolicyForm) => {
-    if (editingId === null) return;
-    updatePolicy.mutate(
-      {
-        id: editingId,
-        ...data,
-        firstResponseHours: Number(data.firstResponseHours),
-        resolutionHours: Number(data.resolutionHours),
-      },
-      {
-        onSuccess: () => { toast.success("Policy updated"); setEditingId(null); },
-        onError: (err) => toast.error(err.message),
-      }
-    );
-  }, [editingId, updatePolicy]);
+  const handleOpenNew = useCallback(() => {
+    setEditingPolicy(null);
+    setSheetOpen(true);
+  }, []);
 
   const handleStartEdit = useCallback((policy: SlaPolicyData) => {
-    setEditingId(policy.id);
-    editForm.reset({
-      name: policy.name,
-      appliesTo: policy.appliesTo as PolicyForm["appliesTo"],
-      priority: policy.priority as PolicyForm["priority"],
-      firstResponseHours: String(policy.firstResponseHours),
-      resolutionHours: String(policy.resolutionHours),
-    });
-  }, [editForm]);
+    setEditingPolicy(policy);
+    setSheetOpen(true);
+  }, []);
 
-  const handleCancelEdit = useCallback(() => setEditingId(null), []);
+  const handleSheetSubmit = useCallback((data: PolicyForm) => {
+    const base = {
+      name: data.name,
+      appliesTo: data.appliesTo,
+      priority: data.priority,
+      firstResponseHours: Number(data.firstResponseHours),
+      resolutionHours: Number(data.resolutionHours),
+    };
+    if (editingPolicy) {
+      updatePolicy.mutate(
+        { id: editingPolicy.id, ...base },
+        {
+          onSuccess: () => { toast.success("Policy updated"); setSheetOpen(false); },
+          onError: (err) => toast.error(getErrorMessage(err)),
+        }
+      );
+    } else {
+      createPolicy.mutate(base, {
+        onSuccess: () => { toast.success("SLA policy created"); setSheetOpen(false); },
+        onError: (err) => toast.error(getErrorMessage(err)),
+      });
+    }
+  }, [editingPolicy, updatePolicy, createPolicy]);
+
   const handleDeleteRequest = useCallback((id: number) => setDeleteTargetId(id), []);
 
   const handleDeleteConfirm = useCallback(() => {
     if (deleteTargetId === null) return;
     deletePolicy.mutate(deleteTargetId, {
       onSuccess: () => { toast.success("Policy deleted"); setDeleteTargetId(null); },
-      onError: (err) => { toast.error(err.message); setDeleteTargetId(null); },
+      onError: (err) => { toast.error(getErrorMessage(err)); setDeleteTargetId(null); },
     });
   }, [deletePolicy, deleteTargetId]);
 
   const handleDeleteCancel = useCallback(() => setDeleteTargetId(null), []);
-  const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
+  const handleOpenCreate = useCallback(() => handleOpenNew(), [handleOpenNew]);
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
   const handleAlertOpenChange = useCallback((open: boolean) => { if (!open) handleDeleteCancel(); }, [handleDeleteCancel]);
 
   const count = policies?.length ?? 0;
+  const isPending = createPolicy.isPending || updatePolicy.isPending;
 
   return (
     <>
@@ -215,88 +352,28 @@ export default function SlaPage() {
         </AlertDialogContent>
       </AlertDialog>
 
+      <PolicySheet
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        editing={editingPolicy}
+        isPending={isPending}
+        onSubmit={handleSheetSubmit}
+      />
+
       <PageWrapper
         title="SLA Policies"
-        subtitle={isLoading ? undefined : `${count} polic${count !== 1 ? "ies" : "y"}`}
+        subtitle={isLoading ? undefined : `${count} polic${count !== 1 ? "ies" : "y"} defined`}
         actions={
-          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                New Policy
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-lg">
-              <DialogHeader>
-                <DialogTitle>Create SLA Policy</DialogTitle>
-              </DialogHeader>
-              <Form {...createForm}>
-                <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4">
-                  <FormField control={createForm.control} name="name" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Policy Name</FormLabel>
-                      <FormControl><Input {...field} placeholder="e.g. Hot Lead SLA" /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField control={createForm.control} name="appliesTo" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Applies To</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                          <SelectContent>
-                            <SelectItem value="lead">Lead</SelectItem>
-                            <SelectItem value="deal">Deal</SelectItem>
-                            <SelectItem value="both">Both</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-                    <FormField control={createForm.control} name="priority" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Priority</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                          <SelectContent>
-                            <SelectItem value="low">Low</SelectItem>
-                            <SelectItem value="medium">Medium</SelectItem>
-                            <SelectItem value="high">High</SelectItem>
-                            <SelectItem value="urgent">Urgent</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-                    <FormField control={createForm.control} name="firstResponseHours" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>First Response (hrs)</FormLabel>
-                        <FormControl><Input type="number" min={1} {...field} /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-                    <FormField control={createForm.control} name="resolutionHours" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Resolution (hrs)</FormLabel>
-                        <FormControl><Input type="number" min={1} {...field} /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={createPolicy.isPending}>
-                    {createPolicy.isPending ? "Creating..." : "Create Policy"}
-                  </Button>
-                </form>
-              </Form>
-            </DialogContent>
-          </Dialog>
+          <Button onClick={handleOpenNew}>
+            <Plus className="h-4 w-4 mr-2" />
+            New Policy
+          </Button>
         }
       >
         {isLoading || reportLoading ? (
           <div className="space-y-4">
             <div className="grid gap-2 grid-cols-2 lg:grid-cols-4">
-              {[0, 1, 2, 3].map(i => <Skeleton key={i} className="h-14" />)}
+              {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-14" />)}
             </div>
             <Skeleton className="h-64 w-full" />
           </div>
@@ -336,13 +413,14 @@ export default function SlaPage() {
                         <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Name</TableHead>
                         <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Applies To</TableHead>
                         <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Priority</TableHead>
+                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Conditions</TableHead>
                         <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">First Response</TableHead>
                         <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Resolution</TableHead>
                         <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {policies.map(policy => (
+                      {policies.map((policy) => (
                         <SlaTableRow
                           key={policy.id}
                           policy={policy}
@@ -366,78 +444,6 @@ export default function SlaPage() {
               </CardContent>
             </Card>
 
-            {editingId !== null && (
-              <Card className="bg-card rounded-lg border border-border shadow-sm">
-                <CardHeader className="px-4 py-3">
-                  <CardTitle className="text-sm font-semibold">Edit Policy</CardTitle>
-                </CardHeader>
-                <CardContent className="px-4 pb-4">
-                  <Form {...editForm}>
-                    <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
-                      <FormField control={editForm.control} name="name" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Policy Name</FormLabel>
-                          <FormControl><Input {...field} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )} />
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField control={editForm.control} name="appliesTo" render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Applies To</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                              <SelectContent>
-                                <SelectItem value="lead">Lead</SelectItem>
-                                <SelectItem value="deal">Deal</SelectItem>
-                                <SelectItem value="both">Both</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )} />
-                        <FormField control={editForm.control} name="priority" render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Priority</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                              <SelectContent>
-                                <SelectItem value="low">Low</SelectItem>
-                                <SelectItem value="medium">Medium</SelectItem>
-                                <SelectItem value="high">High</SelectItem>
-                                <SelectItem value="urgent">Urgent</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )} />
-                        <FormField control={editForm.control} name="firstResponseHours" render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>First Response (hrs)</FormLabel>
-                            <FormControl><Input type="number" min={1} {...field} /></FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )} />
-                        <FormField control={editForm.control} name="resolutionHours" render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Resolution (hrs)</FormLabel>
-                            <FormControl><Input type="number" min={1} {...field} /></FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )} />
-                      </div>
-                      <div className="flex justify-end gap-3">
-                        <Button type="button" variant="outline" onClick={handleCancelEdit}>Cancel</Button>
-                        <Button type="submit" disabled={updatePolicy.isPending}>
-                          {updatePolicy.isPending ? "Saving..." : "Save Changes"}
-                        </Button>
-                      </div>
-                    </form>
-                  </Form>
-                </CardContent>
-              </Card>
-            )}
-
             {breachedLeads && breachedLeads.length > 0 && (
               <Card className="bg-card rounded-lg border border-border shadow-sm overflow-hidden">
                 <CardHeader className="px-4 py-3">
@@ -456,7 +462,7 @@ export default function SlaPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {breachedLeads.map(lead => (
+                      {breachedLeads.map((lead) => (
                         <TableRow key={lead.id} className="h-8 hover:bg-muted/30 transition-colors">
                           <TableCell className="text-[11px] px-2 py-1 font-medium">{lead.name}</TableCell>
                           <TableCell className="text-[11px] px-2 py-1">

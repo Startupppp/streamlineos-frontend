@@ -8,6 +8,7 @@ import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -267,13 +268,15 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
           </form>
         </ScrollArea>
 
-        <SheetFooter className="px-5 py-3 border-t shrink-0 flex gap-2">
-          <SheetClose asChild>
-            <Button variant="outline" size="sm" className="text-[11px]">Cancel</Button>
-          </SheetClose>
-          <Button type="submit" form="bug-form" size="sm" className="text-[11px]" disabled={isPending}>
-            {isPending ? "Saving..." : editBug ? "Save Changes" : "Report Bug"}
-          </Button>
+        <SheetFooter className="px-5 py-3 border-t shrink-0">
+          <div className="grid w-full grid-cols-2 gap-2">
+            <SheetClose asChild>
+              <Button variant="outline" size="sm" className="text-[11px]">Cancel</Button>
+            </SheetClose>
+            <LoadingButton type="submit" form="bug-form" size="sm" className="text-[11px]" isPending={isPending} loadingText="Saving…">
+              {editBug ? "Save Changes" : "Report Bug"}
+            </LoadingButton>
+          </div>
         </SheetFooter>
       </SheetContent>
     </Sheet>

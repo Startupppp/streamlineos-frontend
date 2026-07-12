@@ -20,10 +20,15 @@ import { cn } from "@/lib/utils";
 import { useCreateView } from "@/hooks/api/projects";
 
 const LAYOUT_TYPES = ["board", "list", "table", "calendar", "gantt"] as const;
+const VISIBILITY_OPTIONS = [
+  { value: "shared" as const, label: "Shared" },
+  { value: "private" as const, label: "Personal" },
+];
 
 const createViewSchema = z.object({
   name: z.string().min(1, "Name is required"),
   layoutType: z.enum(LAYOUT_TYPES).optional(),
+  visibility: z.enum(["shared", "private"]).optional(),
 });
 type CreateViewForm = z.infer<typeof createViewSchema>;
 
@@ -46,7 +51,7 @@ export function CreateViewSheet({ projectId, open, onOpenChange, onCreated }: Cr
   const createMutation = useCreateView();
   const form = useForm<CreateViewForm>({
     resolver: zodResolver(createViewSchema),
-    defaultValues: { layoutType: "board" },
+    defaultValues: { layoutType: "board", visibility: "shared" },
   });
 
   const onSubmit = useCallback(
@@ -56,7 +61,7 @@ export function CreateViewSheet({ projectId, open, onOpenChange, onCreated }: Cr
         {
           onSuccess: () => {
             onOpenChange(false);
-            form.reset();
+            form.reset({ layoutType: "board", visibility: "shared" });
             toast.success("View created");
             onCreated();
           },
@@ -111,6 +116,33 @@ export function CreateViewSheet({ projectId, open, onOpenChange, onCreated }: Cr
                         </button>
                       );
                     })}
+                  </div>
+                )}
+              />
+            </div>
+            <div>
+              <Label>Visibility</Label>
+              <Controller
+                control={form.control}
+                name="visibility"
+                render={({ field }) => (
+                  <div className="flex mt-1.5 rounded-md border border-border overflow-hidden">
+                    {VISIBILITY_OPTIONS.map((opt, idx) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => field.onChange(opt.value)}
+                        className={cn(
+                          "flex-1 py-1.5 text-xs font-medium transition-colors",
+                          idx > 0 && "border-l border-border",
+                          field.value === opt.value
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-card text-muted-foreground hover:bg-muted",
+                        )}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
                   </div>
                 )}
               />

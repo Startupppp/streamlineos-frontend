@@ -112,20 +112,26 @@ function ToggleRow({ id, label, checked, onCheckedChange }: ToggleRowProps) {
   );
 }
 
+export type { DisplayOptions };
+
 interface DisplayOptionsPanelProps {
   options: DisplayOptions;
   onChange: (opts: DisplayOptions) => void;
+  onOptionsChange?: (opts: DisplayOptions) => void;
 }
 
 export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
   options,
   onChange,
+  onOptionsChange,
 }: DisplayOptionsPanelProps) {
   const set = useCallback(
     <K extends keyof DisplayOptions>(key: K, value: DisplayOptions[K]) => {
-      onChange({ ...options, [key]: value });
+      const next = { ...options, [key]: value };
+      onChange(next);
+      onOptionsChange?.(next);
     },
-    [options, onChange],
+    [options, onChange, onOptionsChange],
   );
 
   function handleColumnByChange(v: string) {
@@ -169,7 +175,10 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
   function handleToggleUpdated() { set("showUpdated", !options.showUpdated); }
   function handleTogglePRs() { set("showPRs", !options.showPRs); }
 
-  function handleReset() { onChange(DEFAULT_DISPLAY_OPTIONS); }
+  function handleReset() {
+    onChange(DEFAULT_DISPLAY_OPTIONS);
+    onOptionsChange?.(DEFAULT_DISPLAY_OPTIONS);
+  }
 
   return (
     <Popover>

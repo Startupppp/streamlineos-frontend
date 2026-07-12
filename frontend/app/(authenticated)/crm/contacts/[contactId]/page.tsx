@@ -19,6 +19,8 @@ import { ContactStatsBar } from "@/features/crm/contacts/detail/contact-stats-ba
 import { ContactTimeline } from "@/features/crm/contacts/detail/contact-timeline";
 import { ContactRelatedDeals } from "@/features/crm/contacts/detail/contact-related-deals";
 import { ContactNotes } from "@/features/crm/contacts/detail/contact-notes";
+import { ContactRolesCard } from "@/features/crm/contacts/detail/contact-roles-card";
+import { ContactDuplicateBanner } from "@/features/crm/contacts/detail/contact-merge-dialog";
 import { CreateTaskDialog } from "@/features/crm/tasks/create-task-dialog";
 
 function ContactDetailSkeleton() {
@@ -142,6 +144,8 @@ export default function ContactDetailPage({
             exit={{ opacity: 0, x: -24 }}
             transition={{ duration: 0.22, ease: "easeOut" }}
           >
+            <ContactDuplicateBanner contactId={id} />
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <div className="space-y-4">
                 <ContactInfoCard
@@ -152,6 +156,7 @@ export default function ContactDetailPage({
                   entityId={id}
                 />
                 <ContactStatsBar contactId={id} openDealsCount={openDealsCount} />
+                <ContactRolesCard contactId={id} />
               </div>
 
               <div className="lg:col-span-2 space-y-4">

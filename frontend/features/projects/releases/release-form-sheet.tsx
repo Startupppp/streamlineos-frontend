@@ -12,6 +12,7 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
@@ -185,13 +186,13 @@ export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormShe
           </div>
 
           <SheetFooter className="px-6 py-4 border-t">
-            <div className="flex gap-2 w-full">
-              <Button type="button" variant="outline" className="flex-1" onClick={onClose}>
+            <div className="grid w-full grid-cols-2 gap-2">
+              <Button type="button" variant="outline" onClick={onClose}>
                 Cancel
               </Button>
-              <Button type="submit" className="flex-1" disabled={isPending}>
-                {isPending ? "Saving…" : isEdit ? "Save Changes" : "Create Release"}
-              </Button>
+              <LoadingButton type="submit" isPending={isPending} loadingText="Saving…">
+                {isEdit ? "Save Changes" : "Create Release"}
+              </LoadingButton>
             </div>
           </SheetFooter>
         </form>

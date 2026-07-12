@@ -2,6 +2,7 @@
 
 import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter,
 } from "@/components/ui/sheet";
@@ -71,10 +72,12 @@ export function CompleteSprintSheet({
           </div>
         </div>
         <SheetFooter className="px-6 py-3 border-t shrink-0">
-          <Button variant="outline" onClick={onCancel}>Cancel</Button>
-          <Button onClick={onConfirm} disabled={isUpdating}>
-            {isUpdating ? "Completing..." : "Complete Sprint"}
-          </Button>
+          <div className="grid w-full grid-cols-2 gap-2">
+            <Button variant="outline" onClick={onCancel}>Cancel</Button>
+            <LoadingButton onClick={onConfirm} isPending={isUpdating} loadingText="Completing…">
+              Complete Sprint
+            </LoadingButton>
+          </div>
         </SheetFooter>
       </SheetContent>
     </Sheet>

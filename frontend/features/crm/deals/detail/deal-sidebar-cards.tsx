@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ActivityTimeline } from "./activity-timeline";
 import { MeetingsCard } from "./meetings-card";
+import { DealAiInsightsCard } from "./deal-ai-insights-card";
 import type { DealActivity, DealMeeting } from "@/hooks/api/crm";
 
 interface AssignedTo {
@@ -38,6 +39,8 @@ interface DealSidebarCardsProps {
   onQuickActionClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
   onAddMeeting: () => void;
   onDeleteMeeting: (meetingId: number) => void;
+  dealId: number;
+  dealName?: string | null;
 }
 
 const QUICK_ACTIONS = [
@@ -57,6 +60,8 @@ export function DealSidebarCards({
   onQuickActionClick,
   onAddMeeting,
   onDeleteMeeting,
+  dealId,
+  dealName,
 }: DealSidebarCardsProps) {
   return (
     <>
@@ -178,6 +183,8 @@ export function DealSidebarCards({
           <ActivityTimeline activities={activities} />
         </CardContent>
       </Card>
+
+      <DealAiInsightsCard dealId={dealId} dealName={dealName} />
     </>
   );
 }

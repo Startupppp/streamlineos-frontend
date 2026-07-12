@@ -22,6 +22,14 @@ export interface Quote {
   rejectedAt: string | null;
   rejectionReason: string | null;
   notes: string | null;
+  pricebookId: string | null;
+  templateId: string | null;
+  approvalStatus: "pending" | "approved" | "rejected" | null;
+  approvedById: string | null;
+  approvedAt: string | null;
+  signedAt: string | null;
+  signedDocumentRef: string | null;
+  convertedInvoiceId: number | null;
   createdAt: string;
   updatedAt: string;
   createdBy?: { id: string; name: string | null; image: string | null } | null;

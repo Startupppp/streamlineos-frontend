@@ -1,6 +1,7 @@
 "use client";
 
 import { use, useState, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import { useViews, useUpdateView, useDeleteView } from "@/hooks/api/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,8 @@ export default function ViewsPage({
   const projectId = parseInt(projectIdStr);
   const [createOpen, setCreateOpen] = useState(false);
   const router = useRouter();
+  const { data: session } = useSession();
+  const currentUserId = session?.user?.id;
 
   const { data: views, isLoading } = useViews(projectId);
   const togglePinMutation = useUpdateView();
@@ -112,6 +115,7 @@ export default function ViewsPage({
                       key={view.id}
                       view={view as ViewItem}
                       isPinned
+                      currentUserId={currentUserId}
                       onNavigate={handleNavigateToView}
                       onTogglePin={handleTogglePin}
                       onDelete={handleDelete}
@@ -133,6 +137,7 @@ export default function ViewsPage({
                       key={view.id}
                       view={view as ViewItem}
                       isPinned={false}
+                      currentUserId={currentUserId}
                       onNavigate={handleNavigateToView}
                       onTogglePin={handleTogglePin}
                       onDelete={handleDelete}

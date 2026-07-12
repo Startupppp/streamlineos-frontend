@@ -156,7 +156,7 @@ export interface ProjectPage {
 
 export interface ProjectView {
   id: number;
-  projectId: number;
+  projectId: number | null;
   orgId: string;
   createdBy: string;
   name: string;
@@ -165,6 +165,9 @@ export interface ProjectView {
   orderBy: string | null;
   layoutType: ViewLayoutType;
   isPinned: boolean;
+  visibility: "private" | "shared";
+  scope: "project" | "workspace";
+  displayOptions: Record<string, unknown> | null;
   createdAt: string | Date | null;
   updatedAt: string | Date | null;
 }
@@ -325,6 +328,8 @@ export interface CreateViewInput {
   orderBy?: string;
   layoutType?: ViewLayoutType;
   isPinned?: boolean;
+  visibility?: "private" | "shared";
+  displayOptions?: Record<string, unknown>;
 }
 
 export interface UpdateViewInput {
@@ -335,6 +340,31 @@ export interface UpdateViewInput {
   orderBy?: string | null;
   layoutType?: ViewLayoutType;
   isPinned?: boolean;
+  visibility?: "private" | "shared";
+  displayOptions?: Record<string, unknown>;
+}
+
+export interface CreateWorkspaceViewInput {
+  name: string;
+  filters?: Record<string, unknown>;
+  groupBy?: string;
+  orderBy?: string;
+  layoutType?: ViewLayoutType;
+  isPinned?: boolean;
+  visibility?: "private" | "shared";
+  displayOptions?: Record<string, unknown>;
+}
+
+export interface UpdateWorkspaceViewInput {
+  id: number;
+  name?: string;
+  filters?: Record<string, unknown>;
+  groupBy?: string | null;
+  orderBy?: string | null;
+  layoutType?: ViewLayoutType;
+  isPinned?: boolean;
+  visibility?: "private" | "shared";
+  displayOptions?: Record<string, unknown>;
 }
 
 export interface CreateIntakeRequestInput {

@@ -22,6 +22,8 @@ export interface ViewItem {
   layoutType: string;
   isPinned: boolean;
   filters?: Record<string, unknown> | null;
+  visibility?: "private" | "shared";
+  createdBy?: string;
 }
 
 const LAYOUT_META: Record<string, { icon: React.ReactNode; label: string; color: string }> = {
@@ -35,6 +37,7 @@ const LAYOUT_META: Record<string, { icon: React.ReactNode; label: string; color:
 interface ViewCardProps {
   view: ViewItem;
   isPinned: boolean;
+  currentUserId?: string;
   onNavigate: (view: ViewItem) => void;
   onTogglePin: (viewId: number, isPinned: boolean) => void;
   onDelete: (viewId: number) => void;
@@ -43,6 +46,7 @@ interface ViewCardProps {
 export const ViewCard = memo(function ViewCard({
   view,
   isPinned,
+  currentUserId,
   onNavigate,
   onTogglePin,
   onDelete,
@@ -57,6 +61,8 @@ export const ViewCard = memo(function ViewCard({
 
   const filterCount = view.filters ? Object.keys(view.filters).length : 0;
   const meta = LAYOUT_META[view.layoutType] ?? LAYOUT_META["board"];
+  const isOwner = !view.createdBy || !currentUserId || view.createdBy === currentUserId;
+  const isPrivate = view.visibility === "private";
 
   return (
     <div
@@ -74,24 +80,35 @@ export const ViewCard = memo(function ViewCard({
             {filterCount > 0 && ` · ${filterCount} filter${filterCount > 1 ? "s" : ""}`}
           </p>
         </div>
-        {isPinned && (
-          <Badge variant="outline" className="text-[10px] shrink-0 bg-amber-50 text-amber-700 border-amber-200">
-            Pinned
-          </Badge>
-        )}
+        <div className="flex items-center gap-1 shrink-0">
+          {isPinned && (
+            <Badge variant="outline" className="text-[10px] bg-amber-50 text-amber-700 border-amber-200">
+              Pinned
+            </Badge>
+          )}
+          {isPrivate && (
+            <Badge variant="outline" className="text-[10px] text-muted-foreground">
+              Personal
+            </Badge>
+          )}
+        </div>
       </div>
       <div className="flex items-center gap-1 shrink-0" onClick={handleStopPropagation}>
-        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={handleTogglePin}>
-          {isPinned ? <PinOff className="h-3.5 w-3.5" /> : <Pin className="h-3.5 w-3.5" />}
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-7 w-7 p-0 text-destructive hover:text-destructive"
-          onClick={handleDelete}
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </Button>
+        {isOwner && (
+          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={handleTogglePin}>
+            {isPinned ? <PinOff className="h-3.5 w-3.5" /> : <Pin className="h-3.5 w-3.5" />}
+          </Button>
+        )}
+        {isOwner && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 p-0 text-destructive hover:text-destructive"
+            onClick={handleDelete}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        )}
         <ArrowRight className="h-4 w-4 text-muted-foreground ml-1" />
       </div>
     </div>

@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import type { OrgMember } from "@/types/organization";
 import type { Portfolio, CreatePortfolioInput, UpdatePortfolioInput, PortfolioStatus, PortfolioHealth } from "@/types/projects";
 
@@ -173,10 +174,12 @@ export function PortfolioFormSheet({ open, onOpenChange, mode, defaultValues, on
               )} />
             </div>
             <SheetFooter className="px-6 py-4 border-t shrink-0">
-              <Button type="button" variant="outline" size="sm" onClick={() => onOpenChange(false)} disabled={isPending}>Cancel</Button>
-              <Button type="submit" size="sm" disabled={isPending}>
-                {isPending ? "Saving…" : mode === "edit" ? "Save Changes" : "Create Portfolio"}
-              </Button>
+              <div className="grid w-full grid-cols-2 gap-2">
+                <Button type="button" variant="outline" size="sm" onClick={() => onOpenChange(false)} disabled={isPending}>Cancel</Button>
+                <LoadingButton type="submit" size="sm" isPending={isPending} loadingText="Saving…">
+                  {mode === "edit" ? "Save Changes" : "Create Portfolio"}
+                </LoadingButton>
+              </div>
             </SheetFooter>
           </form>
         </Form>

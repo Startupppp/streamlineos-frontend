@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import type { OrgMember } from "@/types/organization";
 
 const schema = z.object({
@@ -111,9 +112,9 @@ export function DelegateDialog({
               >
                 Cancel
               </Button>
-              <Button type="submit" size="sm" disabled={isPending}>
-                {isPending ? "Delegating…" : "Delegate"}
-              </Button>
+              <LoadingButton type="submit" size="sm" isPending={isPending} loadingText="Delegating…">
+                Delegate
+              </LoadingButton>
             </DialogFooter>
           </form>
         </Form>

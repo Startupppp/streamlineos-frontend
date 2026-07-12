@@ -17,11 +17,13 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { cn } from "@/lib/utils";
 import { useClientAccount } from "@/hooks/api/crm/clients";
+import { useClient360 } from "@/hooks/api/crm";
 import { ErrorState } from "@/components/shared";
 import { ClientOverviewTab } from "@/features/crm/clients/client-overview-tab";
 import { ClientTimelineTab } from "@/features/crm/clients/client-timeline-tab";
 import { ClientOpportunitiesTab } from "@/features/crm/clients/client-opportunities-tab";
 import { ClientOnboardingTab } from "@/features/crm/clients/client-onboarding-tab";
+import { Customer360Section } from "@/features/crm/shared/customer-360-section";
 import type { ClientAccountStatus } from "@/types/crm";
 
 const STATUS_LABELS: Record<ClientAccountStatus, string> = {
@@ -52,6 +54,8 @@ export default function ClientDetailPage({
     isError,
     refetch,
   } = useClientAccount(clientId);
+
+  const { data: client360, isLoading: client360Loading } = useClient360(clientId);
 
   const shouldReduceMotion = useReducedMotion();
   const handleRetry = useCallback(() => void refetch(), [refetch]);
@@ -154,6 +158,7 @@ export default function ClientDetailPage({
               <TabsTrigger value="timeline">Timeline</TabsTrigger>
               <TabsTrigger value="opportunities">Opportunities</TabsTrigger>
               <TabsTrigger value="onboarding">Onboarding</TabsTrigger>
+              <TabsTrigger value="customer360">Customer 360</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview">
@@ -190,6 +195,10 @@ export default function ClientDetailPage({
                   <ClientOnboardingTab clientId={clientId} />
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="customer360">
+              <Customer360Section data={client360} isLoading={client360Loading} />
             </TabsContent>
           </Tabs>
         </motion.div>

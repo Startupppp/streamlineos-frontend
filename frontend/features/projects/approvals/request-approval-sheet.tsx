@@ -29,6 +29,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import type { OrgMember } from "@/types/organization";
 import type { CreateApprovalInput } from "@/types/projects";
 
@@ -220,18 +221,20 @@ export function RequestApprovalSheet({
               />
             </div>
             <SheetFooter className="px-6 py-4 border-t shrink-0">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => handleOpenChange(false)}
-                disabled={isPending}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" size="sm" disabled={isPending}>
-                {isPending ? "Submitting…" : "Submit Request"}
-              </Button>
+              <div className="grid w-full grid-cols-2 gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleOpenChange(false)}
+                  disabled={isPending}
+                >
+                  Cancel
+                </Button>
+                <LoadingButton type="submit" size="sm" isPending={isPending} loadingText="Submitting…">
+                  Submit Request
+                </LoadingButton>
+              </div>
             </SheetFooter>
           </form>
         </Form>

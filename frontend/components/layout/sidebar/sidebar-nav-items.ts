@@ -1630,6 +1630,12 @@ export const NAV_GROUPS: NavGroup[] = [
         requiredPermission: "projects:tickets:view",
       },
       {
+        label: "All Work",
+        icon: Layers,
+        href: "/projects/all-work",
+        requiredPermission: "projects:tickets:view",
+      },
+      {
         label: "Approvals",
         icon: ClipboardCheck,
         href: "/projects/approvals",

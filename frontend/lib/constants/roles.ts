@@ -16,6 +16,7 @@ export const ROLES = {
   VIDEO_EDITOR: "VIDEO_EDITOR",
   DIGITAL_MARKETING: "DIGITAL_MARKETING",
   BLOG_EDITOR: "BLOG_EDITOR",
+  ACCOUNTANT: "ACCOUNTANT",
 } as const;
 
 export const ADMIN_ROLES: readonly string[] = [

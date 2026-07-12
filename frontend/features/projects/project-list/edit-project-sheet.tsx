@@ -29,7 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
 import { useUpdateProject } from "@/hooks/api/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -170,20 +170,14 @@ export function EditProjectSheet({ open, onOpenChange, project }: EditProjectShe
               >
                 Cancel
               </Button>
-              <Button
+              <LoadingButton
                 type="submit"
-                disabled={updateProject.isPending}
+                isPending={updateProject.isPending}
+                loadingText="Saving…"
                 className="flex-1"
               >
-                {updateProject.isPending ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
-                    Saving…
-                  </>
-                ) : (
-                  "Save Changes"
-                )}
-              </Button>
+                Save Changes
+              </LoadingButton>
             </SheetFooter>
           </form>
         </Form>

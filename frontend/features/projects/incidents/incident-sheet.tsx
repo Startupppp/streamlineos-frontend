@@ -8,6 +8,7 @@ import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -221,13 +222,15 @@ export function IncidentSheet({ projectId, open, onOpenChange, editIncident }: I
           </form>
         </ScrollArea>
 
-        <SheetFooter className="px-5 py-3 border-t shrink-0 flex gap-2">
-          <SheetClose asChild>
-            <Button variant="outline" size="sm" className="text-[11px]">Cancel</Button>
-          </SheetClose>
-          <Button type="submit" form="incident-form" size="sm" className="text-[11px]" disabled={isPending}>
-            {isPending ? "Saving..." : editIncident ? "Save Changes" : "Create Incident"}
-          </Button>
+        <SheetFooter className="px-5 py-3 border-t shrink-0">
+          <div className="grid w-full grid-cols-2 gap-2">
+            <SheetClose asChild>
+              <Button variant="outline" size="sm" className="text-[11px]">Cancel</Button>
+            </SheetClose>
+            <LoadingButton type="submit" form="incident-form" size="sm" className="text-[11px]" isPending={isPending} loadingText="Saving…">
+              {editIncident ? "Save Changes" : "Create Incident"}
+            </LoadingButton>
+          </div>
         </SheetFooter>
       </SheetContent>
     </Sheet>

@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Switch } from "@/components/ui/switch";
 import type { CustomState } from "@/hooks/api/projects/custom-states";
 import type { WorkflowTransition, CreateTransitionInput } from "@/types/projects/workflow";
@@ -259,18 +260,20 @@ export function TransitionFormSheet({
               />
             </div>
             <SheetFooter className="px-6 py-4 border-t shrink-0">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => handleOpenChange(false)}
-                disabled={isPending}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" size="sm" disabled={isPending}>
-                {isPending ? "Saving…" : isEdit ? "Save changes" : "Add transition"}
-              </Button>
+              <div className="grid w-full grid-cols-2 gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleOpenChange(false)}
+                  disabled={isPending}
+                >
+                  Cancel
+                </Button>
+                <LoadingButton type="submit" size="sm" isPending={isPending} loadingText="Saving…">
+                  {isEdit ? "Save changes" : "Add transition"}
+                </LoadingButton>
+              </div>
             </SheetFooter>
           </form>
         </Form>

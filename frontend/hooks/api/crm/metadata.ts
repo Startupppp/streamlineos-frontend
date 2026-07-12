@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient, queryOptions } from "@tanstack/r
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
+  CrmMetadataRaw,
   CrmMetadataResponse,
   CrmPipelineWithStages,
   CrmPipelineStage,
@@ -33,10 +34,35 @@ export function resolveStage(
   return stages.find((s) => s.key === key) ?? { key, label: key, color: "slate" };
 }
 
+function normalizeRaw(raw: CrmMetadataRaw): CrmMetadataResponse {
+  const pipelineMap = new Map<string, CrmPipelineWithStages>(
+    raw.pipelines.map((p) => [p.id, { ...p, stages: [] }])
+  );
+  for (const stage of raw.stages) {
+    const pipeline = pipelineMap.get(stage.pipelineId);
+    if (pipeline) {
+      pipeline.stages.push(stage);
+    }
+  }
+  const optionsByType: Partial<Record<CrmOptionType, CrmOption[]>> = {};
+  for (const opt of raw.options) {
+    const bucket = optionsByType[opt.type] ?? [];
+    bucket.push(opt);
+    optionsByType[opt.type] = bucket;
+  }
+  return {
+    pipelines: Array.from(pipelineMap.values()),
+    options: optionsByType as Record<CrmOptionType, CrmOption[]>,
+  };
+}
+
 export function crmMetadataQueryOptions() {
   return queryOptions({
     queryKey: queryKeys.crmMetadata.detail(),
-    queryFn: () => apiClient.get<CrmMetadataResponse>("/crm/metadata"),
+    queryFn: async () => {
+      const raw = await apiClient.get<CrmMetadataRaw>("/crm/metadata");
+      return normalizeRaw(raw);
+    },
     staleTime: CRM_METADATA_STALE_TIME,
   });
 }
@@ -102,7 +128,7 @@ export function useUpdatePipeline() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["crmMetadata", "pipelines", "update"] as const,
-    mutationFn: ({ id, ...data }: { id: string } & Partial<CrmPipelineWithStages>) =>
+    mutationFn: ({ id, ...data }: { id: string } & Partial<Omit<CrmPipelineWithStages, "stages">>) =>
       apiClient.patch<CrmPipelineWithStages>(`/crm/pipelines/${id}`, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.all });
@@ -141,7 +167,7 @@ export function useUpdateStage() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["crmMetadata", "stages", "update"] as const,
-    mutationFn: ({ id, ...data }: { id: string } & Partial<CrmPipelineStage>) =>
+    mutationFn: ({ id, ...data }: { id: string } & Partial<Omit<CrmPipelineStage, "id">>) =>
       apiClient.patch<CrmPipelineStage>(`/crm/stages/${id}`, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.all });
@@ -205,7 +231,7 @@ export function useUpdateOption() {
       type,
       id,
       ...data
-    }: { type: CrmOptionType; id: string } & Partial<CrmOption>) =>
+    }: { type: CrmOptionType; id: string } & Partial<Omit<CrmOption, "id" | "type">>) =>
       apiClient.patch<CrmOption>(`/crm/options/${type}/${id}`, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.all });
@@ -250,7 +276,7 @@ export function useUpdateValidationRule() {
   const qc = useQueryClient();
   return useMutation({
     mutationKey: ["crmMetadata", "validationRules", "update"] as const,
-    mutationFn: ({ id, ...data }: { id: string } & Partial<CrmValidationRule>) =>
+    mutationFn: ({ id, ...data }: { id: string } & Partial<Omit<CrmValidationRule, "id">>) =>
       apiClient.patch<CrmValidationRule>(`/crm/validation-rules/${id}`, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.validationRules() });
@@ -274,10 +300,11 @@ export function useTestValidationRules() {
   return useMutation({
     mutationKey: ["crmMetadata", "validationRules", "test"] as const,
     mutationFn: (input: {
-      entityType: string;
-      values: Record<string, unknown>;
+      entityType: CrmValidationRule["entityType"];
+      record: Record<string, unknown>;
       pipelineId?: string;
       stageKey?: string;
+      sourceKey?: string;
     }) => apiClient.post<{ errors: Record<string, string> }>("/crm/validation-rules/test", input),
   });
 }
@@ -309,7 +336,7 @@ export function useUpdateBlueprint() {
     mutationFn: ({
       id,
       ...data
-    }: { id: string } & Partial<CrmBlueprint>) =>
+    }: { id: string } & Partial<Omit<CrmBlueprint, "id" | "createdAt" | "updatedAt">>) =>
       apiClient.patch<CrmBlueprint>(`/crm/blueprints/${id}`, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crmMetadata.blueprints() });

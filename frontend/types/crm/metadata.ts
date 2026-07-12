@@ -66,6 +66,13 @@ export interface CrmOption {
   metadata: Record<string, unknown> | null;
 }
 
+export interface CrmMetadataRaw {
+  pipelines: CrmPipeline[];
+  stages: CrmPipelineStage[];
+  options: CrmOption[];
+  uiMetadata: unknown[];
+}
+
 export interface CrmMetadataResponse {
   pipelines: CrmPipelineWithStages[];
   options: Record<CrmOptionType, CrmOption[]>;
@@ -115,7 +122,6 @@ export interface CrmBlueprint {
   description: string | null;
   pipelineId: string;
   isActive: boolean;
-  sortOrder: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -123,14 +129,13 @@ export interface CrmBlueprint {
 export interface CrmBlueprintTransition {
   id: string;
   blueprintId: string;
-  fromStageKey: string | null;
+  fromStageKey: string;
   toStageKey: string;
   requiredFields: string[];
+  requiredActivityTypeKeys: string[];
   requiresApproval: boolean;
-  approverRoles: string[];
-  conditions: Record<string, unknown> | null;
-  actions: Record<string, unknown> | null;
-  isActive: boolean;
+  requiresQuote: boolean;
+  autoTaskTemplates: Record<string, unknown>[];
   sortOrder: number;
 }
 

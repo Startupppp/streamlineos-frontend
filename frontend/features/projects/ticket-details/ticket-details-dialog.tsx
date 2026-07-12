@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
-import { Loader2, AlertCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { isApiError, getApiErrorCode } from "@/lib/api-client";
 import { TicketHeader } from "./ticket-header";
@@ -76,9 +77,16 @@ export function TicketDetailsDialog({
 
         <div className="flex-1 min-h-0 overflow-y-auto">
           {isLoading ? (
-            <div className="py-16 text-center">
-              <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary mb-4" />
-              <p className="text-muted-foreground text-sm">Loading...</p>
+            <div className="p-6 space-y-4">
+              <Skeleton className="h-6 w-2/3" />
+              <Skeleton className="h-4 w-1/2" />
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <Skeleton className="h-8" />
+                <Skeleton className="h-8" />
+                <Skeleton className="h-8" />
+                <Skeleton className="h-8" />
+              </div>
+              <Skeleton className="h-32 w-full" />
             </div>
           ) : isApiError(ticketError) && getApiErrorCode(ticketError) === "PROJECTS_FORBIDDEN_TICKET" ? (
             <div className="py-16 text-center">

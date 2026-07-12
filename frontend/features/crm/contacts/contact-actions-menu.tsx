@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import {
+  GitMerge,
   Link2,
   MoreHorizontal,
   Pencil,
@@ -45,6 +46,7 @@ export interface ContactActionsMenuProps {
   onDelete: (id: number) => void;
   onEdit: (contact: Contact) => void;
   onEnrich: (contact: Contact) => void;
+  onMerge?: (contact: Contact) => void;
   triggerClassName?: string;
 }
 
@@ -54,6 +56,7 @@ export function ContactActionsMenu({
   onDelete,
   onEdit,
   onEnrich,
+  onMerge,
   triggerClassName,
 }: ContactActionsMenuProps) {
   const router = useRouter();
@@ -69,6 +72,10 @@ export function ContactActionsMenu({
   const handleEnrich = useCallback(() => {
     onEnrich(contact);
   }, [contact, onEnrich]);
+
+  const handleMerge = useCallback(() => {
+    onMerge?.(contact);
+  }, [contact, onMerge]);
 
   const handleDelete = useCallback(() => {
     onDelete(contact.id);
@@ -99,6 +106,12 @@ export function ContactActionsMenu({
           <Sparkles className="h-3.5 w-3.5 mr-2 text-blue-600" />
           Enrich with AI
         </DropdownMenuItem>
+        {onMerge && (
+          <DropdownMenuItem onClick={handleMerge}>
+            <GitMerge className="h-3.5 w-3.5 mr-2" />
+            Merge
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem variant="destructive" onClick={handleDelete}>
           <Trash2 className="h-3.5 w-3.5 mr-2" />

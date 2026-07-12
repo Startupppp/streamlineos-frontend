@@ -29,6 +29,8 @@ interface EmailComposeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   toEmail?: string | null;
+  defaultSubject?: string;
+  defaultBody?: string;
   entityType: TaskEntityType;
   entityId: number;
 }
@@ -37,6 +39,8 @@ export function EmailComposeDialog({
   open,
   onOpenChange,
   toEmail,
+  defaultSubject = "",
+  defaultBody = "",
   entityType,
   entityId,
 }: EmailComposeDialogProps) {
@@ -71,7 +75,7 @@ export function EmailComposeDialog({
       title="Compose Email"
       description="Email will be logged as an activity on this record."
       resolver={zodResolver(emailSchema)}
-      defaultValues={{ to: toEmail ?? "", subject: "", body: "" }}
+      defaultValues={{ to: toEmail ?? "", subject: defaultSubject, body: defaultBody }}
       onSubmit={handleSubmit}
       isSubmitting={createTask.isPending}
       submitLabel="Send & Log"

@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import type { DecideApprovalInput } from "@/types/projects";
 
 const schema = z.object({
@@ -130,9 +131,9 @@ export function DecideDialog({
               >
                 Cancel
               </Button>
-              <Button type="submit" size="sm" disabled={isPending}>
-                {isPending ? "Submitting…" : "Submit"}
-              </Button>
+              <LoadingButton type="submit" size="sm" isPending={isPending} loadingText="Submitting…">
+                Submit
+              </LoadingButton>
             </DialogFooter>
           </form>
         </Form>

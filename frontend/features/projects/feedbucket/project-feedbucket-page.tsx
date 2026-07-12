@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Copy, Plus, RefreshCcw } from "lucide-react";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { formatDistanceToNow } from "date-fns";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
@@ -123,26 +124,30 @@ function CreateWidgetSheet({ open, projectId, onClose }: CreateWidgetSheetProps)
 
   return (
     <Sheet open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <SheetContent className="w-full sm:max-w-md overflow-y-auto">
-        <SheetHeader>
+      <SheetContent className="w-full sm:max-w-md p-0 flex flex-col gap-0">
+        <SheetHeader className="px-6 py-4 border-b shrink-0">
           <SheetTitle>Create Feedback Widget</SheetTitle>
         </SheetHeader>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4 mt-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="widget-name">Widget name</Label>
-            <Input
-              id="widget-name"
-              value={name}
-              onChange={handleNameChange}
-              placeholder="e.g. Production feedback"
-              required
-            />
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-y-auto">
+          <div className="flex-1 px-6 py-5 space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="widget-name">Widget name</Label>
+              <Input
+                id="widget-name"
+                value={name}
+                onChange={handleNameChange}
+                placeholder="e.g. Production feedback"
+                required
+              />
+            </div>
           </div>
-          <SheetFooter className="mt-4">
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button type="submit" disabled={createWidget.isPending}>
-              {createWidget.isPending ? "Creating…" : "Create"}
-            </Button>
+          <SheetFooter className="px-6 py-4 border-t shrink-0">
+            <div className="grid w-full grid-cols-2 gap-2">
+              <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+              <LoadingButton type="submit" isPending={createWidget.isPending} loadingText="Creating…">
+                Create
+              </LoadingButton>
+            </div>
           </SheetFooter>
         </form>
       </SheetContent>

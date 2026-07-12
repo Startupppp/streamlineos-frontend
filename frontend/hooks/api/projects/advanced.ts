@@ -20,6 +20,8 @@ import type {
   UpdatePageInput,
   CreateViewInput,
   UpdateViewInput,
+  CreateWorkspaceViewInput,
+  UpdateWorkspaceViewInput,
   CreateIntakeRequestInput,
   UpdateIntakeRequestInput,
 } from "@/types/projects";
@@ -250,6 +252,62 @@ export function useDeleteView(options?: Parameters<typeof useMutation>[0]) {
     onSuccess: (_data: unknown, variables: { id: number; projectId: number }) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.views(variables.projectId),
+      });
+    },
+    ...options,
+  });
+}
+
+export function useWorkspaceViews(
+  options?: Omit<UseQueryOptions<ProjectView[]>, "queryKey" | "queryFn">
+) {
+  return useQuery<ProjectView[]>({
+    queryKey: queryKeys.projects.workspaceViews(),
+    queryFn: () => apiClient.get<ProjectView[]>("/projects/views"),
+    staleTime: 60_000,
+    ...options,
+  });
+}
+
+export function useCreateWorkspaceView(options?: Parameters<typeof useMutation>[0]) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["projects", "workspace-views", "create"],
+    mutationFn: (data: CreateWorkspaceViewInput) =>
+      apiClient.post<ProjectView>("/projects/views", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.workspaceViews(),
+      });
+    },
+    ...options,
+  });
+}
+
+export function useUpdateWorkspaceView(options?: Parameters<typeof useMutation>[0]) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["projects", "workspace-views", "update"],
+    mutationFn: ({ id, ...data }: UpdateWorkspaceViewInput) =>
+      apiClient.patch<ProjectView>(`/projects/views/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.workspaceViews(),
+      });
+    },
+    ...options,
+  });
+}
+
+export function useDeleteWorkspaceView(options?: Parameters<typeof useMutation>[0]) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ["projects", "workspace-views", "delete"],
+    mutationFn: ({ id }: { id: number }) =>
+      apiClient.delete<{ success: boolean }>(`/projects/views/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.workspaceViews(),
       });
     },
     ...options,

@@ -5,9 +5,12 @@ import { useForm, useFieldArray, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
-  Plus, Trash2, ChevronUp, ChevronDown,
+  DragDropContext, Droppable, Draggable, type DropResult,
+} from "@hello-pangea/dnd";
+import {
+  Plus, Trash2, GripVertical, Eye, CheckCircle2, XCircle,
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -15,6 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Switch } from "@/components/ui/switch";
 import { EmptyState } from "@/components/ui/empty-state";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { EmptyTargetIllustration } from "@/components/illustrations";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
@@ -30,9 +34,10 @@ import {
   Form, FormField, FormItem, FormLabel, FormControl, FormMessage,
 } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useAssignmentRules, useCreateAssignmentRule, useUpdateAssignmentRule,
-  useDeleteAssignmentRule, useReorderAssignmentRules,
+  useDeleteAssignmentRule, useReorderAssignmentRules, usePreviewAssignmentRule,
   type AssignmentRuleCondition,
 } from "@/hooks/api/crm-settings";
 import { useHrEmployees } from "@/hooks/api/hr";
@@ -55,6 +60,14 @@ const OPERATORS = [
   { value: "in", label: "In (comma-sep)" },
 ];
 
+const ASSIGNMENT_TYPES = [
+  { value: "assign_user", label: "Assign to User" },
+  { value: "round_robin", label: "Round Robin" },
+  { value: "weighted_round_robin", label: "Weighted Round Robin" },
+  { value: "least_loaded", label: "Least Loaded" },
+  { value: "territory", label: "Territory" },
+];
+
 const conditionSchema = z.object({
   field: z.string().min(1),
   operator: z.string().min(1),
@@ -63,7 +76,7 @@ const conditionSchema = z.object({
 
 const createRuleSchema = z.object({
   name: z.string().min(1, "Name required").max(100),
-  assignmentType: z.enum(["assign_user", "round_robin"]),
+  assignmentType: z.enum(["assign_user", "round_robin", "weighted_round_robin", "least_loaded", "territory"]),
   assignToUserId: z.string().optional(),
   roundRobinUserIds: z.string().optional(),
   conditions: z.array(conditionSchema).min(1, "At least one condition required"),
@@ -79,30 +92,26 @@ interface RuleCardProps {
     priority: number;
     conditions: AssignmentRuleCondition[];
   };
-  index: number;
-  totalRules: number;
-  onMove: (index: number, direction: "up" | "down") => void;
+  dragHandleProps: Record<string, unknown> | null | undefined;
   onToggle: (id: number, isActive: boolean) => void;
   onDeleteRequest: (id: number) => void;
 }
 
-function RuleCard({ rule, index, totalRules, onMove, onToggle, onDeleteRequest }: RuleCardProps) {
-  const handleMoveUp = useCallback(() => onMove(index, "up"), [index, onMove]);
-  const handleMoveDown = useCallback(() => onMove(index, "down"), [index, onMove]);
+function RuleCard({ rule, dragHandleProps, onToggle, onDeleteRequest }: RuleCardProps) {
   const handleToggle = useCallback(() => onToggle(rule.id, rule.isActive), [rule.id, rule.isActive, onToggle]);
   const handleDeleteRequest = useCallback(() => onDeleteRequest(rule.id), [rule.id, onDeleteRequest]);
+  const typeLabel = ASSIGNMENT_TYPES.find((t) => t.value === rule.assignmentType)?.label ?? rule.assignmentType;
 
   return (
     <Card className={cn("bg-card rounded-lg border border-border shadow-sm transition-shadow", !rule.isActive && "opacity-60")}>
       <CardContent className="p-4">
         <div className="flex items-center gap-3">
-          <div className="flex flex-col gap-0.5">
-            <Button variant="ghost" size="icon" className="h-5 w-5" disabled={index === 0} onClick={handleMoveUp} aria-label="Move rule up">
-              <ChevronUp className="h-3 w-3" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-5 w-5" disabled={index === totalRules - 1} onClick={handleMoveDown} aria-label="Move rule down">
-              <ChevronDown className="h-3 w-3" />
-            </Button>
+          <div
+            {...(dragHandleProps as Record<string, unknown>)}
+            className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground shrink-0"
+            aria-label="Drag to reorder"
+          >
+            <GripVertical className="h-4 w-4" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
@@ -111,13 +120,13 @@ function RuleCard({ rule, index, totalRules, onMove, onToggle, onDeleteRequest }
                 Priority {rule.priority}
               </Badge>
               <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-blue-50 text-blue-700 border-blue-200">
-                {rule.assignmentType === "round_robin" ? "Round Robin" : "Direct Assign"}
+                {typeLabel}
               </Badge>
             </div>
             <div className="flex flex-wrap gap-1.5 mt-1.5">
               {rule.conditions.map((c, ci) => (
                 <Badge key={ci} variant="outline" className="text-[9px] h-4 px-1.5 py-0">
-                  {FIELDS.find(f => f.value === c.field)?.label ?? c.field} {c.operator} {c.value}
+                  {FIELDS.find((f) => f.value === c.field)?.label ?? c.field} {c.operator} {c.value}
                 </Badge>
               ))}
             </div>
@@ -149,13 +158,13 @@ function ConditionRow({ index: i, control, showRemove, onRemove }: ConditionRowP
       <FormField control={control} name={`conditions.${i}.field`} render={({ field }) => (
         <Select onValueChange={field.onChange} value={field.value}>
           <SelectTrigger className="h-8 w-28 text-xs"><SelectValue placeholder="Field" /></SelectTrigger>
-          <SelectContent>{FIELDS.map(f => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}</SelectContent>
+          <SelectContent>{FIELDS.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}</SelectContent>
         </Select>
       )} />
       <FormField control={control} name={`conditions.${i}.operator`} render={({ field }) => (
         <Select onValueChange={field.onChange} value={field.value}>
           <SelectTrigger className="h-8 w-28 text-xs"><SelectValue placeholder="Op" /></SelectTrigger>
-          <SelectContent>{OPERATORS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
+          <SelectContent>{OPERATORS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
         </Select>
       )} />
       <FormField control={control} name={`conditions.${i}.value`} render={({ field }) => (
@@ -174,6 +183,94 @@ function resolveEmployees(raw: Employee[] | PaginatedEmployees | undefined): Emp
   if (!raw) return [];
   if (Array.isArray(raw)) return raw;
   return raw.data;
+}
+
+function PreviewPanel() {
+  const [source, setSource] = useState("");
+  const [priority, setPriority] = useState("");
+  const [score, setScore] = useState("");
+  const [city, setCity] = useState("");
+  const previewRule = usePreviewAssignmentRule();
+
+  const handleRunPreview = useCallback(() => {
+    previewRule.mutate(
+      {
+        source: source || undefined,
+        priority: priority || undefined,
+        score: score ? Number(score) : undefined,
+        city: city || undefined,
+      },
+      { onError: (err) => toast.error(getErrorMessage(err)) }
+    );
+  }, [previewRule, source, priority, score, city]);
+
+  const handleSourceChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSource(e.target.value), []);
+  const handlePriorityChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setPriority(e.target.value), []);
+  const handleScoreChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setScore(e.target.value), []);
+  const handleCityChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setCity(e.target.value), []);
+
+  return (
+    <Card className="bg-card rounded-lg border border-border shadow-sm">
+      <CardHeader className="px-4 py-3">
+        <CardTitle className="text-sm font-semibold flex items-center gap-2">
+          <Eye className="h-4 w-4 text-blue-500" />
+          Preview Assignment
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="px-4 pb-4 space-y-4">
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-xs font-medium mb-1 block">Source</label>
+            <Input value={source} onChange={handleSourceChange} placeholder="referral" className="h-8 text-xs" />
+          </div>
+          <div>
+            <label className="text-xs font-medium mb-1 block">Priority</label>
+            <Input value={priority} onChange={handlePriorityChange} placeholder="HOT" className="h-8 text-xs" />
+          </div>
+          <div>
+            <label className="text-xs font-medium mb-1 block">Score</label>
+            <Input type="number" value={score} onChange={handleScoreChange} placeholder="85" className="h-8 text-xs" />
+          </div>
+          <div>
+            <label className="text-xs font-medium mb-1 block">City</label>
+            <Input value={city} onChange={handleCityChange} placeholder="Mumbai" className="h-8 text-xs" />
+          </div>
+        </div>
+        <LoadingButton
+          type="button"
+          size="sm"
+          onClick={handleRunPreview}
+          isPending={previewRule.isPending}
+          loadingText="Running..."
+        >
+          Run Preview
+        </LoadingButton>
+        {previewRule.data && (
+          <div className="rounded-lg border border-border bg-muted/40 p-3 text-xs space-y-2">
+            <div className="font-semibold text-[11px] uppercase tracking-wide text-muted-foreground">Trace</div>
+            {previewRule.data.trace.map((step) => (
+              <div key={step.ruleId} className="flex items-start gap-2">
+                {step.matched
+                  ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                  : <XCircle className="h-3.5 w-3.5 text-slate-400 shrink-0 mt-0.5" />}
+                <div>
+                  <span className="font-medium">{step.ruleName}</span>
+                  <span className="text-muted-foreground ml-1">— {step.reason}</span>
+                </div>
+              </div>
+            ))}
+            <div className="pt-1 border-t border-border">
+              {previewRule.data.wouldAssignTo ? (
+                <span className="text-emerald-700 font-medium">Assign to: {previewRule.data.wouldAssignTo}</span>
+              ) : (
+                <span className="text-muted-foreground">No rule matched</span>
+              )}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
 }
 
 export default function AssignmentRulesPage() {
@@ -206,21 +303,32 @@ export default function AssignmentRulesPage() {
 
   const assignmentType = form.watch("assignmentType");
 
+  const handleDragEnd = useCallback((result: DropResult) => {
+    if (!result.destination || !rules) return;
+    const reordered = Array.from(rules);
+    const [moved] = reordered.splice(result.source.index, 1);
+    reordered.splice(result.destination.index, 0, moved);
+    reorderRules.mutate(
+      { rules: reordered.map((r, i) => ({ id: r.id, priority: reordered.length - i })) },
+      { onError: (err) => toast.error(getErrorMessage(err)) }
+    );
+  }, [rules, reorderRules]);
+
   const onCreateSubmit = useCallback((data: CreateRuleForm) => {
     createRule.mutate(
       {
         name: data.name,
-        assignmentType: data.assignmentType,
+        assignmentType: data.assignmentType as "assign_user" | "round_robin",
         assignToUserId: data.assignmentType === "assign_user" ? data.assignToUserId || undefined : undefined,
         roundRobinUserIds: data.assignmentType === "round_robin"
-          ? data.roundRobinUserIds?.split(",").map(s => s.trim()).filter(Boolean) ?? []
+          ? data.roundRobinUserIds?.split(",").map((s) => s.trim()).filter(Boolean) ?? []
           : undefined,
         conditions: data.conditions,
         priority: rules?.length ?? 0,
       },
       {
         onSuccess: () => { toast.success("Rule created"); setCreateOpen(false); form.reset(); },
-        onError: (err) => toast.error(err.message),
+        onError: (err) => toast.error(getErrorMessage(err)),
       }
     );
   }, [createRule, form, rules]);
@@ -228,21 +336,9 @@ export default function AssignmentRulesPage() {
   const handleToggleActive = useCallback((id: number, currentActive: boolean) => {
     updateRule.mutate(
       { id, isActive: !currentActive },
-      { onSuccess: () => toast.success("Rule updated"), onError: (err) => toast.error(err.message) }
+      { onSuccess: () => toast.success("Rule updated"), onError: (err) => toast.error(getErrorMessage(err)) }
     );
   }, [updateRule]);
-
-  const handleMoveRule = useCallback((index: number, direction: "up" | "down") => {
-    if (!rules) return;
-    const newRules = [...rules];
-    const targetIndex = direction === "up" ? index - 1 : index + 1;
-    if (targetIndex < 0 || targetIndex >= newRules.length) return;
-    [newRules[index], newRules[targetIndex]] = [newRules[targetIndex], newRules[index]];
-    reorderRules.mutate(
-      { rules: newRules.map((r, i) => ({ id: r.id, priority: i })) },
-      { onError: (err) => toast.error(err.message) }
-    );
-  }, [rules, reorderRules]);
 
   const handleAddCondition = useCallback(() => {
     addCondition({ field: "", operator: "eq", value: "" });
@@ -254,7 +350,7 @@ export default function AssignmentRulesPage() {
     if (deleteTargetId === null) return;
     deleteRule.mutate(deleteTargetId, {
       onSuccess: () => { toast.success("Rule deleted"); setDeleteTargetId(null); },
-      onError: (err) => { toast.error(err.message); setDeleteTargetId(null); },
+      onError: (err) => { toast.error(getErrorMessage(err)); setDeleteTargetId(null); },
     });
   }, [deleteRule, deleteTargetId]);
 
@@ -293,7 +389,7 @@ export default function AssignmentRulesPage() {
         actions={
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button onClick={handleOpenCreate}>
                 <Plus className="h-4 w-4 mr-2" />
                 New Rule
               </Button>
@@ -337,8 +433,9 @@ export default function AssignmentRulesPage() {
                           <SelectTrigger><SelectValue /></SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="assign_user">Assign to User</SelectItem>
-                          <SelectItem value="round_robin">Round Robin</SelectItem>
+                          {ASSIGNMENT_TYPES.map((t) => (
+                            <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -353,7 +450,7 @@ export default function AssignmentRulesPage() {
                             <SelectTrigger><SelectValue placeholder="Select user" /></SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {employees.map(e => (
+                            {employees.map((e) => (
                               <SelectItem key={e.id} value={e.id}>{e.name ?? e.email}</SelectItem>
                             ))}
                           </SelectContent>
@@ -362,7 +459,7 @@ export default function AssignmentRulesPage() {
                       </FormItem>
                     )} />
                   )}
-                  {assignmentType === "round_robin" && (
+                  {(assignmentType === "round_robin" || assignmentType === "weighted_round_robin") && (
                     <FormField control={form.control} name="roundRobinUserIds" render={({ field }) => (
                       <FormItem>
                         <FormLabel>User IDs (comma-separated)</FormLabel>
@@ -371,9 +468,9 @@ export default function AssignmentRulesPage() {
                       </FormItem>
                     )} />
                   )}
-                  <Button type="submit" className="w-full" disabled={createRule.isPending}>
-                    {createRule.isPending ? "Creating..." : "Create Rule"}
-                  </Button>
+                  <LoadingButton type="submit" className="w-full" isPending={createRule.isPending} loadingText="Creating...">
+                    Create Rule
+                  </LoadingButton>
                 </form>
               </Form>
             </DialogContent>
@@ -382,7 +479,7 @@ export default function AssignmentRulesPage() {
       >
         {isLoading ? (
           <div className="space-y-3">
-            {[0, 1, 2].map(i => <Skeleton key={i} className="h-20 w-full" />)}
+            {[0, 1, 2].map((i) => <Skeleton key={i} className="h-20 w-full" />)}
           </div>
         ) : isError ? (
           <EmptyState
@@ -393,27 +490,46 @@ export default function AssignmentRulesPage() {
             className="flex-1 min-h-[40vh] border-0 bg-transparent"
           />
         ) : rules && rules.length > 0 ? (
-          <div className="space-y-3">
-            {rules.map((rule, index) => (
-              <RuleCard
-                key={rule.id}
-                rule={rule}
-                index={index}
-                totalRules={rules.length}
-                onMove={handleMoveRule}
-                onToggle={handleToggleActive}
-                onDeleteRequest={handleDeleteRequest}
-              />
-            ))}
+          <div className="space-y-6">
+            <DragDropContext onDragEnd={handleDragEnd}>
+              <Droppable droppableId="assignment-rules">
+                {(provided) => (
+                  <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-3">
+                    {rules.map((rule, index) => (
+                      <Draggable key={rule.id} draggableId={String(rule.id)} index={index}>
+                        {(draggableProvided) => (
+                          <div
+                            ref={draggableProvided.innerRef}
+                            {...draggableProvided.draggableProps}
+                          >
+                            <RuleCard
+                              rule={rule}
+                              dragHandleProps={draggableProvided.dragHandleProps}
+                              onToggle={handleToggleActive}
+                              onDeleteRequest={handleDeleteRequest}
+                            />
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </DragDropContext>
+            <PreviewPanel />
           </div>
         ) : (
-          <EmptyState
-            illustration={<EmptyTargetIllustration />}
-            title="No assignment rules"
-            description="Create rules to automatically assign incoming leads to the right people."
-            action={{ label: "New Rule", onClick: handleOpenCreate }}
-            className="flex-1 min-h-[40vh] border-0 bg-transparent"
-          />
+          <div className="space-y-6">
+            <EmptyState
+              illustration={<EmptyTargetIllustration />}
+              title="No assignment rules"
+              description="Create rules to automatically assign incoming leads to the right people."
+              action={{ label: "New Rule", onClick: handleOpenCreate }}
+              className="flex-1 min-h-[40vh] border-0 bg-transparent"
+            />
+            <PreviewPanel />
+          </div>
         )}
       </PageWrapper>
     </>

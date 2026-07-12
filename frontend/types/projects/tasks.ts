@@ -223,8 +223,57 @@ export interface TicketFilters {
   limit?: number;
   search?: string;
   status?: string;
-  sprintId?: number;
+  priority?: string;
+  type?: string;
   assigneeId?: string;
+  labelIds?: string;
+  sprintId?: number;
+  cycleId?: string;
+  epicId?: number;
+  dueDateFrom?: string;
+  dueDateTo?: string;
+  orderBy?: "created" | "updated" | "priority" | "dueDate" | "order";
+  orderDir?: "asc" | "desc";
+}
+
+export interface AllWorkFilters extends TicketFilters {
+  projectIds?: string;
+  scope?: "all" | "mine";
+}
+
+export interface AllWorkTicketLabel {
+  id: number;
+  name: string;
+  color: string;
+}
+
+export interface AllWorkTicket {
+  id: number;
+  orgId: string;
+  title: string;
+  description: string | null;
+  type: string;
+  status: string;
+  priority: string | null;
+  projectId: number;
+  projectKey: string;
+  projectName: string;
+  ticketNumber: number;
+  sprintId: number | null;
+  epicId: number | null;
+  assigneeId: string | null;
+  reporterId: string | null;
+  points: number | null;
+  storyPoints: number | null;
+  order: number | null;
+  startDate: string | null;
+  dueDate: string | null;
+  cycleId: number | null;
+  sequenceId: string | null;
+  createdAt: string | Date | null;
+  updatedAt: string | Date | null;
+  assignee: TicketUser | null;
+  labels: AllWorkTicketLabel[];
 }
 
 export interface TimeEntryFilters {

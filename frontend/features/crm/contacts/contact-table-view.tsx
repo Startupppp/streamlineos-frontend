@@ -19,6 +19,8 @@ interface ContactTableViewProps {
   totalPages: number;
   apiSearch: string;
   isEnrichPending: boolean;
+  selectedIds: Set<number>;
+  onSelectionChange: (ids: Set<number>) => void;
   onRequestDelete: (id: number) => void;
   onEdit: (contact: Contact) => void;
   onEnrich: (contact: Contact) => void;
@@ -32,6 +34,8 @@ export function ContactTableView({
   page,
   apiSearch,
   isEnrichPending,
+  selectedIds,
+  onSelectionChange,
   onRequestDelete,
   onEdit,
   onEnrich,
@@ -137,12 +141,21 @@ export function ContactTableView({
     },
   ];
 
+  const selectionSet: Set<string | number> = selectedIds;
+
+  const handleSelectionChange = (sel: Set<string | number>) => {
+    const next = new Set<number>();
+    sel.forEach((v) => next.add(Number(v)));
+    onSelectionChange(next);
+  };
+
   return (
     <motion.div variants={fadeUp}>
       <DataTable
         data={items}
         columns={columns}
         getRowKey={(c) => c.id}
+        selection={{ selected: selectionSet, onChange: handleSelectionChange }}
         pagination={{
           mode: "server",
           page,

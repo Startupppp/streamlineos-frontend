@@ -124,3 +124,45 @@ export function useDeleteQuote() {
 export function downloadQuotesCsv(status?: QuoteStatus): Promise<Blob> {
   return apiClient.download("/quotes/export", status ? { status } : undefined);
 }
+
+export function useApproveQuote() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["quotes", "approve"],
+    mutationFn: ({ id }: { id: number; dealId?: number }) =>
+      apiClient.post<Quote>(`/quotes/${id}/approve`),
+    onSuccess: (_data, vars) => invalidateQuoteCaches(qc, { id: vars.id, dealId: vars.dealId }),
+  });
+}
+
+export function useRejectQuote() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["quotes", "reject"],
+    mutationFn: ({ id, reason }: { id: number; reason?: string; dealId?: number }) =>
+      apiClient.post<Quote>(`/quotes/${id}/reject`, { reason }),
+    onSuccess: (_data, vars) => invalidateQuoteCaches(qc, { id: vars.id, dealId: vars.dealId }),
+  });
+}
+
+export function useConvertQuoteToInvoice() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["quotes", "convert-to-invoice"],
+    mutationFn: ({ id }: { id: number; dealId?: number }) =>
+      apiClient.post<{ invoice: { id: number; invoiceNumber: string }; quoteId: number }>(
+        `/quotes/${id}/convert-to-invoice`,
+      ),
+    onSuccess: (_data, vars) => invalidateQuoteCaches(qc, { id: vars.id, dealId: vars.dealId }),
+  });
+}
+
+export function useMarkQuoteSigned() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["quotes", "mark-signed"],
+    mutationFn: ({ id, documentRef }: { id: number; documentRef?: string; dealId?: number }) =>
+      apiClient.post<Quote>(`/quotes/${id}/mark-signed`, { documentRef }),
+    onSuccess: (_data, vars) => invalidateQuoteCaches(qc, { id: vars.id, dealId: vars.dealId }),
+  });
+}

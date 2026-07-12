@@ -5,12 +5,15 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const TABS = [
+  { label: "Territories", href: "/crm/settings/territories" },
   { label: "Scoring Rules", href: "/crm/settings/scoring-rules" },
   { label: "Assignment Rules", href: "/crm/settings/assignment-rules" },
   { label: "SLA Policies", href: "/crm/settings/sla" },
   { label: "Email Templates", href: "/crm/settings/email-templates" },
   { label: "Custom Fields", href: "/crm/settings/custom-fields" },
   { label: "Products", href: "/crm/settings/products" },
+  { label: "Pricebooks", href: "/crm/settings/pricebooks" },
+  { label: "Quote Settings", href: "/crm/settings/quotes" },
   { label: "Automations", href: "/crm/settings/automations" },
   { label: "AI Settings", href: "/crm/settings/ai" },
   { label: "Import / Export", href: "/crm/settings/import-export" },
@@ -39,7 +42,7 @@ export default function CrmSettingsLayout({ children }: { children: React.ReactN
               >
                 {tab.label}
                 {isActive && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-violet-600 rounded-full" />
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 rounded-full" />
                 )}
               </Link>
             );

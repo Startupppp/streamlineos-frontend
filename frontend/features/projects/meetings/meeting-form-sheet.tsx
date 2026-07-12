@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import type { Meeting, CreateMeetingInput, UpdateMeetingInput } from "@/types/projects";
 
 const meetingSchema = z.object({
@@ -167,12 +168,14 @@ export function MeetingFormSheet({
               )} />
             </div>
             <SheetFooter className="px-6 py-4 border-t shrink-0">
-              <Button type="button" variant="outline" size="sm" onClick={() => onOpenChange(false)} disabled={isPending}>
-                Cancel
-              </Button>
-              <Button type="submit" size="sm" disabled={isPending}>
-                {isPending ? "Saving…" : mode === "edit" ? "Save Changes" : "Create Meeting"}
-              </Button>
+              <div className="grid w-full grid-cols-2 gap-2">
+                <Button type="button" variant="outline" size="sm" onClick={() => onOpenChange(false)} disabled={isPending}>
+                  Cancel
+                </Button>
+                <LoadingButton type="submit" size="sm" isPending={isPending} loadingText="Saving…">
+                  {mode === "edit" ? "Save Changes" : "Create Meeting"}
+                </LoadingButton>
+              </div>
             </SheetFooter>
           </form>
         </Form>

@@ -344,3 +344,119 @@ export function useDeleteSlaPolicy() {
     },
   });
 }
+
+export interface TerritoryCriteria {
+  countries?: string[];
+  states?: string[];
+  cities?: string[];
+  postalCodes?: string[];
+  industries?: string[];
+  companySizes?: string[];
+  productKeys?: string[];
+  accountTypes?: string[];
+}
+
+export interface Territory {
+  id: number;
+  orgId: string;
+  name: string;
+  description: string | null;
+  states: string[];
+  cities: string[];
+  assignedReps: number[];
+  criteria: TerritoryCriteria;
+  priority: number;
+  isActive: boolean;
+  createdAt: string | null;
+  updatedAt: string | null;
+}
+
+interface CreateTerritoryInput {
+  name: string;
+  description?: string;
+  criteria?: TerritoryCriteria;
+  priority?: number;
+  isActive?: boolean;
+  assignedRepUserIds?: string[];
+}
+
+interface UpdateTerritoryInput {
+  id: number;
+  name?: string;
+  description?: string | null;
+  criteria?: TerritoryCriteria;
+  priority?: number;
+  isActive?: boolean;
+  assignedRepUserIds?: string[];
+}
+
+export interface TerritoryPreviewResult {
+  matchedTerritory: Territory | null;
+  assignedReps: number[];
+}
+
+export function useTerritories() {
+  return useQuery({
+    queryKey: queryKeys.crmSettings.territories(),
+    queryFn: () => apiClient.get<Territory[]>("/crm/territories"),
+    staleTime: 2 * 60_000,
+  });
+}
+
+export function useCreateTerritory() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["crm-settings", "territories", "create"],
+    mutationFn: (input: CreateTerritoryInput) =>
+      apiClient.post<Territory>("/crm/territories", input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.crmSettings.territories() });
+    },
+  });
+}
+
+export function useUpdateTerritory() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["crm-settings", "territories", "update"],
+    mutationFn: ({ id, ...data }: UpdateTerritoryInput) =>
+      apiClient.patch<Territory>(`/crm/territories/${id}`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.crmSettings.territories() });
+    },
+  });
+}
+
+export function useDeleteTerritory() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ["crm-settings", "territories", "delete"],
+    mutationFn: (id: number) =>
+      apiClient.delete<{ success: boolean }>(`/crm/territories/${id}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.crmSettings.territories() });
+    },
+  });
+}
+
+export function usePreviewTerritory() {
+  return useMutation({
+    mutationKey: ["crm-settings", "territories", "preview"],
+    mutationFn: (sampleLead: { city?: string; state?: string; country?: string; industry?: string }) =>
+      apiClient.post<TerritoryPreviewResult>("/crm/territories/preview", { sampleLead }),
+  });
+}
+
+export interface AssignmentPreviewResult {
+  matchedRule: { id: number; name: string } | null;
+  wouldAssignTo: string | null;
+  trace: Array<{ ruleId: number; ruleName: string; matched: boolean; reason: string }>;
+}
+
+export function usePreviewAssignmentRule() {
+  return useMutation({
+    mutationKey: ["crm-settings", "assignment-rules", "preview"],
+    mutationFn: (sampleLead: { source?: string; priority?: string; score?: number; city?: string }) =>
+      apiClient.post<AssignmentPreviewResult>("/crm/assignment-rules/preview", { sampleLead }),
+  });
+}

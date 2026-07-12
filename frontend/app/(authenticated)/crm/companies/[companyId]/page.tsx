@@ -34,12 +34,15 @@ import {
   useCrmOrgTimeline,
   useCrmOrgRelatedLeads,
   useDeleteCrmOrganization,
+  useCompany360,
 } from "@/hooks/api/crm";
 import { AccountHealthBadge, computeHealthScore } from "@/features/crm/companies/detail/account-health-badge";
 import { HierarchyTree } from "@/features/crm/companies/detail/hierarchy-tree";
 import { AccountTimeline } from "@/features/crm/companies/detail/account-timeline";
 import { AccountNotes } from "@/features/crm/companies/detail/account-notes";
 import { LinkParentDialog } from "@/features/crm/companies/detail/link-parent-dialog";
+import { Customer360Section } from "@/features/crm/shared/customer-360-section";
+import { Customer360Timeline } from "@/features/crm/shared/customer-360-timeline";
 import { formatCurrency } from "@/lib/format-utils";
 import { cn } from "@/lib/utils";
 import type { RelatedLead } from "@/types/crm";
@@ -190,6 +193,7 @@ export default function CompanyDetailPage({
   const { data: hierarchy } = useCrmOrgHierarchy(id);
   const { data: timeline } = useCrmOrgTimeline(id);
   const { data: relatedLeads } = useCrmOrgRelatedLeads(id);
+  const { data: company360, isLoading: company360Loading } = useCompany360(id);
   const deleteMutation = useDeleteCrmOrganization();
 
   const handleOpenLinkParent = useCallback(() => setLinkParentOpen(true), []);
@@ -397,6 +401,14 @@ export default function CompanyDetailPage({
             }
             minWidth="400px"
           />
+        </PageSection>
+
+        <PageSection title="Customer 360">
+          <Customer360Section data={company360} isLoading={company360Loading} />
+        </PageSection>
+
+        <PageSection title="360 Timeline">
+          <Customer360Timeline companyId={id} />
         </PageSection>
       </div>
 
