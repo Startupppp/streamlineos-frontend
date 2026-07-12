@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { useCreateProject, useAddProjectMember } from "@/hooks/api/projects/projects";
 import { useApplyProjectTemplate } from "@/hooks/api/projects/templates";
@@ -11,6 +12,8 @@ import type { WizardDraft } from "./use-project-create";
 export function useProjectProvisioning(onSuccess: () => void) {
   const [isProvisioning, setIsProvisioning] = useState(false);
   const router = useRouter();
+  const { data: session } = useSession();
+  const creatorId = session?.user?.id;
   const createProject = useCreateProject();
   const applyTemplate = useApplyProjectTemplate();
   const addMember = useAddProjectMember();
@@ -19,6 +22,10 @@ export function useProjectProvisioning(onSuccess: () => void) {
     setIsProvisioning(true);
     try {
       let projectId: number;
+      const memberIds = creatorId
+        ? Array.from(new Set([creatorId, ...draft.memberIds]))
+        : draft.memberIds;
+      const managerId = draft.managerId || creatorId || undefined;
 
       if (draft.templateId !== null) {
         const result = await applyTemplate.mutateAsync({
@@ -26,16 +33,16 @@ export function useProjectProvisioning(onSuccess: () => void) {
           input: {
             name: draft.name,
             description: draft.description || undefined,
-            managerId: draft.managerId || undefined,
+            managerId,
             startDate: draft.startDate || undefined,
             endDate: draft.endDate || undefined,
           },
         });
         projectId = result.projectId;
 
-        if (draft.memberIds.length > 0) {
+        if (memberIds.length > 0) {
           const results = await Promise.allSettled(
-            draft.memberIds.map((userId) =>
+            memberIds.map((userId) =>
               addMember.mutateAsync({ projectId, userId })
             )
           );
@@ -49,9 +56,9 @@ export function useProjectProvisioning(onSuccess: () => void) {
           name: draft.name,
           key: draft.key || undefined,
           description: draft.description || undefined,
-          managerId: draft.managerId || undefined,
+          managerId,
           clientId: draft.clientId || undefined,
-          memberIds: draft.memberIds.length > 0 ? draft.memberIds : undefined,
+          memberIds: memberIds.length > 0 ? memberIds : undefined,
           startDate: draft.startDate || undefined,
           endDate: draft.endDate || undefined,
           modules: draft.modules,

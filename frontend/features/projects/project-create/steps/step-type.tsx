@@ -1,8 +1,9 @@
 "use client";
 
-import { Zap, Columns, Building2, CheckSquare, Bug, Map, Megaphone, Cog, Layers, Headphones } from "lucide-react";
+import { Zap, Columns, Building2, CheckSquare, Bug, Map, Megaphone, Cog, Layers, Headphones, X } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import type { StepSharedProps } from "../use-project-create";
 
 interface ProjectTypeOption {
@@ -27,14 +28,32 @@ const PROJECT_TYPES: ProjectTypeOption[] = [
 
 export function StepType({ draft, updateDraft }: StepSharedProps) {
   function handleSelect(id: string) {
-    updateDraft({ projectType: id });
+    updateDraft({ projectType: draft.projectType === id ? "" : id });
+  }
+
+  function handleClear() {
+    updateDraft({ projectType: "" });
   }
 
   return (
     <div className="space-y-3">
-      <p className="text-sm text-muted-foreground">
-        Choose a project type to get tailored defaults. You can skip this step.
-      </p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-sm text-muted-foreground">
+          Choose a project type to get tailored defaults. This step is optional.
+        </p>
+        {draft.projectType && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-7 text-xs shrink-0 text-muted-foreground gap-1 hover:text-foreground"
+            onClick={handleClear}
+          >
+            <X className="h-3 w-3" />
+            Clear
+          </Button>
+        )}
+      </div>
       <div className="grid grid-cols-2 gap-2">
         {PROJECT_TYPES.map((type) => {
           const Icon = type.icon;

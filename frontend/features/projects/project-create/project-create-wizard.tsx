@@ -153,7 +153,30 @@ export function ProjectCreateWizard({
               </Button>
             </>
           )}
-          {step > 1 && step < 7 && (
+          {step === 2 && (
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={goBack}
+              >
+                ← Back
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                className="text-muted-foreground"
+                onClick={goNext}
+              >
+                Skip
+              </Button>
+              <Button type="button" className="flex-1" onClick={goNext}>
+                Next →
+              </Button>
+            </>
+          )}
+          {step > 2 && step < 7 && (
             <>
               <Button
                 type="button"

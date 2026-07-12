@@ -210,10 +210,6 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
     handleOpenTemplate(TEMPLATES[1]!);
   }
 
-  function handleScheduleRetro() {
-    handleOpenTemplate(TEMPLATES[3]!);
-  }
-
   const handleGenerateAgenda = useCallback(
     (sources: AgendaSource[]): string =>
       generateAgenda({ sprint: activeSprint, tickets, sources }),

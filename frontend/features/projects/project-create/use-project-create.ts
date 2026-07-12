@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 
 export const TOTAL_STEPS = 7;
 
@@ -40,44 +41,56 @@ export type StepSharedProps = {
   updateDraft: (p: Partial<WizardDraft>) => void;
 };
 
-const INITIAL_DRAFT: WizardDraft = {
-  name: "",
-  key: "",
-  description: "",
-  managerId: "",
-  clientId: "",
-  startDate: "",
-  endDate: "",
-  projectType: "",
-  templateId: null,
-  modules: { sprints: true, epics: true, timeTracking: true, wiki: true },
-  features: {
-    backlog: true,
-    sprints: true,
-    kanban: true,
-    qa: false,
-    bugs: true,
-    releases: false,
-    timeTracking: true,
-    budget: false,
-    clientPortal: false,
-    changeRequests: false,
-    forms: false,
-    chat: true,
-    docs: true,
-    automations: false,
-    devops: false,
-    approvals: false,
-    ai: false,
-  },
-  workflow: "simple",
-  memberIds: [],
+const DEFAULT_FEATURES: Record<string, boolean> = {
+  backlog: true,
+  sprints: true,
+  kanban: true,
+  qa: false,
+  bugs: true,
+  releases: false,
+  timeTracking: true,
+  budget: false,
+  clientPortal: false,
+  changeRequests: false,
+  forms: false,
+  chat: true,
+  docs: true,
+  automations: false,
+  devops: false,
+  approvals: false,
+  ai: false,
 };
 
+function buildInitialDraft(creatorId: string | undefined): WizardDraft {
+  return {
+    name: "",
+    key: "",
+    description: "",
+    managerId: creatorId ?? "",
+    clientId: "",
+    startDate: "",
+    endDate: "",
+    projectType: "",
+    templateId: null,
+    modules: { sprints: true, epics: true, timeTracking: true, wiki: true },
+    features: { ...DEFAULT_FEATURES },
+    workflow: "simple",
+    memberIds: creatorId ? [creatorId] : [],
+  };
+}
+
 export function useProjectCreate() {
+  const { data: session } = useSession();
+  const creatorId = session?.user?.id;
   const [step, setStep] = useState(1);
   const [direction, setDirection] = useState(1);
-  const [draft, setDraft] = useState<WizardDraft>(INITIAL_DRAFT);
+  const [draft, setDraft] = useState<WizardDraft>(() => buildInitialDraft(creatorId));
+  const [initialized, setInitialized] = useState(!creatorId);
+
+  if (!initialized && creatorId) {
+    setDraft(buildInitialDraft(creatorId));
+    setInitialized(true);
+  }
 
   function updateDraft(partial: Partial<WizardDraft>) {
     setDraft((prev) => ({ ...prev, ...partial }));
@@ -96,7 +109,8 @@ export function useProjectCreate() {
   function reset() {
     setStep(1);
     setDirection(1);
-    setDraft(INITIAL_DRAFT);
+    setDraft(buildInitialDraft(creatorId));
+    setInitialized(!!creatorId);
   }
 
   return { step, direction, draft, updateDraft, goNext, goBack, reset };

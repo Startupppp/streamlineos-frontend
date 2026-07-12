@@ -19,7 +19,13 @@ export const updateProjectSettingsInputSchema = z.object({
 
 export const createTicketInputSchema = z.object({
   projectId: z.number().int().positive(),
-  title: z.string().min(1, "Title is required").max(500),
+  title: z
+    .string()
+    .min(1, "Title is required")
+    .max(500)
+    .refine((v) => v.trim().length >= 3, { message: "Title must be at least 3 characters" })
+    .refine((v) => v.trim().length > 0, { message: "Title cannot be only whitespace" })
+    .refine((v) => /[a-zA-Z0-9]/.test(v.trim()), { message: "Title must contain at least one letter or number" }),
   description: z.string().max(5000).optional(),
   type: ticketTypeSchema,
   priority: ticketPrioritySchema.optional(),

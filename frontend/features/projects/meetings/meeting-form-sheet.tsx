@@ -84,45 +84,6 @@ interface MeetingTemplate {
   agenda: string;
 }
 
-const TEMPLATES: MeetingTemplate[] = [
-  {
-    type: "standup",
-    label: "Daily Standup",
-    duration: 15,
-    agenda: "1. What did you do yesterday?\n2. What will you do today?\n3. Any blockers?",
-  },
-  {
-    type: "planning",
-    label: "Sprint Planning",
-    duration: 60,
-    agenda: "1. Review sprint goal\n2. Review backlog items\n3. Estimate and commit to tickets\n4. Clarify acceptance criteria",
-  },
-  {
-    type: "review",
-    label: "Sprint Review",
-    duration: 60,
-    agenda: "1. Demo completed work\n2. Gather stakeholder feedback\n3. Review sprint metrics\n4. Update product backlog",
-  },
-  {
-    type: "retro",
-    label: "Retrospective",
-    duration: 60,
-    agenda: "1. What went well?\n2. What could be improved?\n3. Action items for next sprint",
-  },
-  {
-    type: "meeting",
-    label: "1:1",
-    duration: 30,
-    agenda: "1. Updates and progress\n2. Blockers and support needed\n3. Goals for next period",
-  },
-  {
-    type: "meeting",
-    label: "Ad-hoc Meeting",
-    duration: 30,
-    agenda: "",
-  },
-];
-
 function getDefaultStart(): string {
   const d = new Date();
   d.setMinutes(d.getMinutes() + 5, 0, 0);
@@ -234,10 +195,9 @@ export function MeetingFormSheet({
     if (watchScheduledAt && watchDuration) {
       const duration = parseInt(watchDuration, 10);
       if (!isNaN(duration) && duration > 0) {
-        const computed = getDefaultEnd(watchScheduledAt, duration);
         const current = form.getValues("endAt");
-        if (!current || current === getDefaultEnd(watchScheduledAt, duration - 5)) {
-          form.setValue("endAt", computed, { shouldValidate: false });
+        if (!current) {
+          form.setValue("endAt", getDefaultEnd(watchScheduledAt, duration), { shouldValidate: false });
         }
       }
     }

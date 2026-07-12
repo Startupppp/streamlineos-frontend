@@ -143,6 +143,9 @@ export function CreateTicketDialog({
                             (titleRef as React.MutableRefObject<HTMLInputElement | null>).current = el;
                           }}
                           autoFocus
+                          autoCapitalize="off"
+                          autoCorrect="off"
+                          spellCheck={false}
                           placeholder="Issue title"
                           className="w-full bg-transparent text-lg font-semibold text-foreground placeholder:text-muted-foreground/50 outline-none border-0 focus:ring-0 p-0 leading-tight"
                         />

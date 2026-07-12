@@ -132,6 +132,12 @@ export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
 
     function handleManagerChange(value: string) {
       form.setValue("managerId", value === NONE_SENTINEL ? undefined : value);
+      setManagerOpen(false);
+      setManagerSearch("");
+    }
+
+    function handleManagerSearchChange(v: string) {
+      setManagerSearch(v);
     }
 
     function handleClientChange(value: string) {
@@ -205,33 +211,105 @@ export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
           <FormField
             control={form.control}
             name="managerId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  Project Manager{" "}
-                  <span className="text-muted-foreground font-normal">(Optional)</span>
-                </FormLabel>
-                <Select
-                  value={field.value || NONE_SENTINEL}
-                  onValueChange={handleManagerChange}
-                >
+            render={({ field }) => {
+              const selectedManager = field.value
+                ? members.find((m) => m.userId === field.value)
+                : null;
+              return (
+                <FormItem>
+                  <FormLabel>
+                    Project Manager{" "}
+                    <span className="text-muted-foreground font-normal">(Optional)</span>
+                  </FormLabel>
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select manager…" />
-                    </SelectTrigger>
+                    <Popover open={managerOpen} onOpenChange={setManagerOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          role="combobox"
+                          className={cn(
+                            "w-full justify-between gap-2 font-normal h-9",
+                            !selectedManager && "text-muted-foreground",
+                          )}
+                        >
+                          {selectedManager ? (
+                            <span className="flex items-center gap-2 min-w-0">
+                              <Avatar className="h-5 w-5 shrink-0">
+                                <AvatarImage src={resolveImageUrl(selectedManager.image)} />
+                                <AvatarFallback className="text-[7px]">
+                                  {getUserInitials({ name: selectedManager.name, email: selectedManager.email })}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="truncate text-sm">
+                                {getUserDisplayName({ name: selectedManager.name, email: selectedManager.email })}
+                              </span>
+                            </span>
+                          ) : (
+                            <span className="flex items-center gap-2">
+                              <User className="h-4 w-4 shrink-0" />
+                              <span>No manager</span>
+                            </span>
+                          )}
+                          <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                        <Command shouldFilter={false}>
+                          <CommandInput
+                            placeholder="Search by name or email…"
+                            className="h-8 text-xs"
+                            value={managerSearch}
+                            onValueChange={handleManagerSearchChange}
+                          />
+                          <CommandList className="max-h-52">
+                            <CommandEmpty className="py-2 text-center text-xs text-muted-foreground">
+                              No members found.
+                            </CommandEmpty>
+                            <CommandGroup>
+                              <CommandItem
+                                value={NONE_SENTINEL}
+                                onSelect={() => handleManagerChange(NONE_SENTINEL)}
+                              >
+                                <User className="mr-2 h-4 w-4 text-muted-foreground" />
+                                <span className="text-xs">No manager</span>
+                                {!field.value && <Check className="ml-auto h-3 w-3" />}
+                              </CommandItem>
+                              {filteredManagers.map((m) => (
+                                <CommandItem
+                                  key={m.userId}
+                                  value={m.userId}
+                                  onSelect={() => handleManagerChange(m.userId)}
+                                >
+                                  <Avatar className="mr-2 h-5 w-5 shrink-0">
+                                    <AvatarImage src={resolveImageUrl(m.image)} />
+                                    <AvatarFallback className="text-[7px]">
+                                      {getUserInitials({ name: m.name, email: m.email })}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className="min-w-0 flex-1">
+                                    <span className="truncate text-xs block">
+                                      {getUserDisplayName({ name: m.name, email: m.email })}
+                                    </span>
+                                    {m.name && (
+                                      <span className="truncate text-[10px] text-muted-foreground block">
+                                        {m.email}
+                                      </span>
+                                    )}
+                                  </div>
+                                  {m.userId === field.value && <Check className="ml-auto h-3 w-3 shrink-0" />}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                   </FormControl>
-                  <SelectContent>
-                    <SelectItem value={NONE_SENTINEL}>No manager</SelectItem>
-                    {members.map((m) => (
-                      <SelectItem key={m.userId} value={m.userId}>
-                        {m.name ?? m.email}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
           />
 
           <FormField
