@@ -20,7 +20,10 @@ export const NOTIFICATION_CATEGORY_VALUES = [
   "CALENDAR",
   "SUPPORT",
 ] as const;
-export type NotificationCategory = (typeof NOTIFICATION_CATEGORY_VALUES)[number];
+
+export type NotificationCategory =
+  (typeof NOTIFICATION_CATEGORY_VALUES)[number];
+
 export type NotificationSection =
   | "ALL"
   | "UNREAD"
@@ -251,7 +254,9 @@ export interface CreateProviderInput {
   monthlyCostLimit?: number | null;
 }
 
-export type UpdateProviderInput = Partial<Omit<CreateProviderInput, "channel" | "provider">>;
+export type UpdateProviderInput = Partial<
+  Omit<CreateProviderInput, "channel" | "provider">
+>;
 
 export interface TestProviderInput {
   to?: string;
@@ -317,7 +322,12 @@ export interface UpdateEventPolicyInput {
   rateLimitMax?: number;
 }
 
-export type PolicyScopeType = "ORG" | "ROLE" | "DEPARTMENT" | "TEAM" | "PROJECT";
+export type PolicyScopeType =
+  | "ORG"
+  | "ROLE"
+  | "DEPARTMENT"
+  | "TEAM"
+  | "PROJECT";
 
 export interface PolicyOverride {
   channels?: NotificationChannel[];
