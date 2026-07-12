@@ -1,12 +1,11 @@
 "use client";
 
+import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PhoneInput } from "@/components/ui/phone-input";
-import { isValidPhoneNumber } from "react-phone-number-input";
 import { DatePicker } from "@/components/ui/date-picker";
 import {
   Select,
@@ -22,48 +21,17 @@ import { usePersonalInfoMutation } from "@/lib/api/hooks/onboarding";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { FormNavButtons } from "@/components/onboarding/form-nav-buttons";
 import type { Variants } from "framer-motion";
-
-const MIN_AGE_YEARS = 14;
-const MAX_AGE_YEARS = 100;
-
-const dateOfBirthSchema = z
-  .string()
-  .min(1, "Date of birth is required")
-  .refine((val) => !Number.isNaN(Date.parse(val)), "Invalid date of birth")
-  .refine((val) => new Date(val).getTime() <= Date.now(), "Date of birth cannot be in the future")
-  .refine((val) => {
-    const ageYears = (Date.now() - new Date(val).getTime()) / (365.25 * 24 * 60 * 60 * 1000);
-    return ageYears >= MIN_AGE_YEARS && ageYears <= MAX_AGE_YEARS;
-  }, `Age must be between ${MIN_AGE_YEARS} and ${MAX_AGE_YEARS} years`);
-
-const personalSchema = z
-  .object({
-    phone: z
-      .string()
-      .min(1, "Phone number is required")
-      .refine((val) => isValidPhoneNumber(val), "Invalid phone number"),
-    gender: z.enum(["MALE", "FEMALE", "OTHER"], {
-      error: "Please select a gender",
-    }),
-    dateOfBirth: dateOfBirthSchema,
-    addressLine1: z.string().optional(),
-    addressCity: z.string().optional(),
-    addressState: z.string().optional(),
-    addressPostalCode: z.string().optional(),
-    addressCountry: z.string().optional(),
-    emergencyName: z.string().min(2, "Emergency contact name is required"),
-    emergencyRelation: z.string().min(2, "Relationship is required"),
-    emergencyPhone: z
-      .string()
-      .min(1, "Emergency contact phone is required")
-      .refine((val) => isValidPhoneNumber(val), "Invalid phone number"),
-  })
-  .refine((val) => val.phone !== val.emergencyPhone, {
-    message: "Emergency contact number must be different from your own phone number",
-    path: ["emergencyPhone"],
-  });
-
-type PersonalFormValues = z.infer<typeof personalSchema>;
+import {
+  ALL_COUNTRIES,
+  EMERGENCY_RELATIONSHIPS,
+  INDIA_COUNTRY_NAME,
+  INDIAN_STATE_NAMES,
+  citiesForState,
+} from "@/lib/location/address-options";
+import {
+  personalInfoSchema,
+  type PersonalInfoFormValues,
+} from "@/lib/location/personal-info-validation";
 
 interface PersonalInfoTabProps {
   onComplete: (values: Record<string, string | undefined>) => void;
@@ -73,14 +41,23 @@ interface PersonalInfoTabProps {
 const staggerVariants = staggerContainer as Variants;
 const fadeUpVariants = fadeUp as Variants;
 
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return (
+    <p role="alert" className="text-xs text-destructive">
+      {message}
+    </p>
+  );
+}
+
 export function PersonalInfoTab({
   onComplete,
   defaultValues,
 }: PersonalInfoTabProps) {
   const { mutate, isPending } = usePersonalInfoMutation();
 
-  const form = useForm<PersonalFormValues>({
-    resolver: zodResolver(personalSchema),
+  const form = useForm<PersonalInfoFormValues>({
+    resolver: zodResolver(personalInfoSchema),
     mode: "onChange",
     defaultValues: {
       phone: "",
@@ -90,17 +67,60 @@ export function PersonalInfoTab({
       addressCity: "",
       addressState: "",
       addressPostalCode: "",
-      addressCountry: "",
+      addressCountry: INDIA_COUNTRY_NAME,
       emergencyName: "",
-      emergencyRelation: "",
+      emergencyRelation: undefined,
       emergencyPhone: "",
       ...defaultValues,
+      addressCountry: defaultValues?.addressCountry?.trim() || INDIA_COUNTRY_NAME,
     },
   });
 
   const { errors } = form.formState;
+  const selectedCountry = form.watch("addressCountry");
+  const effectiveCountry = selectedCountry?.trim() || INDIA_COUNTRY_NAME;
+  const showIndianAddress = effectiveCountry === INDIA_COUNTRY_NAME;
+  const selectedState = form.watch("addressState");
+  const cityOptions = selectedState ? citiesForState(selectedState) : [];
 
-  function handleFormSubmit(values: PersonalFormValues) {
+  useEffect(() => {
+    if (!form.getValues("addressCountry")?.trim()) {
+      form.setValue("addressCountry", INDIA_COUNTRY_NAME);
+    }
+  }, [form]);
+
+  useEffect(() => {
+    if (effectiveCountry !== INDIA_COUNTRY_NAME) {
+      form.setValue("addressState", "");
+      form.setValue("addressCity", "");
+      form.setValue("addressPostalCode", "");
+    }
+  }, [effectiveCountry, form]);
+
+  useEffect(() => {
+    const currentCity = form.getValues("addressCity");
+    if (currentCity && selectedState && !cityOptions.includes(currentCity)) {
+      form.setValue("addressCity", "");
+    }
+  }, [selectedState, cityOptions, form]);
+
+  function handleClear() {
+    form.reset({
+      phone: "",
+      gender: undefined,
+      dateOfBirth: "",
+      addressLine1: "",
+      addressCity: "",
+      addressState: "",
+      addressPostalCode: "",
+      addressCountry: INDIA_COUNTRY_NAME,
+      emergencyName: "",
+      emergencyRelation: undefined,
+      emergencyPhone: "",
+    });
+  }
+
+  function handleFormSubmit(values: PersonalInfoFormValues) {
     mutate(values, {
       onSuccess: () => {
         toast.success("Personal details saved!");
@@ -146,11 +166,7 @@ export function PersonalInfoTab({
                   />
                 )}
               />
-              {errors.phone && (
-                <p role="alert" className="text-xs text-destructive">
-                  {errors.phone.message}
-                </p>
-              )}
+              <FieldError message={errors.phone?.message} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="dateOfBirth">Date of Birth</Label>
@@ -168,11 +184,7 @@ export function PersonalInfoTab({
                   />
                 )}
               />
-              {errors.dateOfBirth && (
-                <p role="alert" className="text-xs text-destructive">
-                  {errors.dateOfBirth.message}
-                </p>
-              )}
+              <FieldError message={errors.dateOfBirth?.message} />
             </div>
           </motion.div>
 
@@ -197,81 +209,137 @@ export function PersonalInfoTab({
                   <SelectContent>
                     <SelectItem value="MALE">Male</SelectItem>
                     <SelectItem value="FEMALE">Female</SelectItem>
-                    <SelectItem value="OTHER">
-                      Other / Prefer not to say
-                    </SelectItem>
+                    <SelectItem value="OTHER">Other / Prefer not to say</SelectItem>
                   </SelectContent>
                 </Select>
               )}
             />
-            {errors.gender && (
-              <p role="alert" className="text-xs text-destructive">
-                {errors.gender.message}
-              </p>
-            )}
+            <FieldError message={errors.gender?.message} />
           </motion.div>
 
           <motion.div variants={fadeUpVariants} className="space-y-3 pt-1">
             <h3 className="text-sm font-semibold text-foreground">
               Home Address{" "}
-              <span className="text-muted-foreground font-normal">
-                (optional)
-              </span>
+              <span className="text-muted-foreground font-normal">(optional)</span>
             </h3>
             <div className="space-y-1.5">
               <Label htmlFor="addressLine1">Street Address</Label>
               <Input
                 id="addressLine1"
                 {...form.register("addressLine1")}
-                placeholder="House / street"
+                placeholder="House / street / area"
                 autoComplete="address-line1"
+                aria-invalid={!!errors.addressLine1}
               />
+              <FieldError message={errors.addressLine1?.message} />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="addressCity">City</Label>
-                <Input
-                  id="addressCity"
-                  {...form.register("addressCity")}
-                  placeholder="City"
-                  autoComplete="address-level2"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="addressState">State</Label>
-                <Input
-                  id="addressState"
-                  {...form.register("addressState")}
-                  placeholder="State"
-                  autoComplete="address-level1"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="addressPostalCode">Postal Code</Label>
-                <Input
-                  id="addressPostalCode"
-                  {...form.register("addressPostalCode")}
-                  placeholder="000000"
-                  autoComplete="postal-code"
-                  inputMode="numeric"
-                />
-              </div>
-              <div className="space-y-1.5">
                 <Label htmlFor="addressCountry">Country</Label>
-                <Input
-                  id="addressCountry"
-                  {...form.register("addressCountry")}
-                  placeholder="Country"
-                  autoComplete="country-name"
+                <Controller
+                  control={form.control}
+                  name="addressCountry"
+                  render={({ field }) => (
+                    <Select
+                      value={field.value?.trim() || INDIA_COUNTRY_NAME}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger id="addressCountry" aria-invalid={!!errors.addressCountry}>
+                        <SelectValue placeholder="Select country" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-60">
+                        {ALL_COUNTRIES.map((country) => (
+                          <SelectItem key={country} value={country}>
+                            {country}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 />
+                <FieldError message={errors.addressCountry?.message} />
               </div>
+
+              {showIndianAddress ? (
+                <div className="space-y-1.5">
+                  <Label htmlFor="addressState">State</Label>
+                  <Controller
+                    control={form.control}
+                    name="addressState"
+                    render={({ field }) => (
+                      <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                        <SelectTrigger id="addressState" aria-invalid={!!errors.addressState}>
+                          <SelectValue placeholder="Select state" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-60">
+                          {INDIAN_STATE_NAMES.map((state) => (
+                            <SelectItem key={state} value={state}>
+                              {state}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  <FieldError message={errors.addressState?.message} />
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground sm:pt-8">
+                  State and city dropdowns are available for India. Select India to continue.
+                </p>
+              )}
             </div>
+
+            {showIndianAddress && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="addressCity">City</Label>
+                  <Controller
+                    control={form.control}
+                    name="addressCity"
+                    render={({ field }) => (
+                      <Select
+                        value={field.value ?? ""}
+                        onValueChange={field.onChange}
+                        disabled={!selectedState}
+                      >
+                        <SelectTrigger id="addressCity" aria-invalid={!!errors.addressCity}>
+                          <SelectValue
+                            placeholder={selectedState ? "Select city" : "Select state first"}
+                          />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-60">
+                          {cityOptions.map((city) => (
+                            <SelectItem key={city} value={city}>
+                              {city}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  <FieldError message={errors.addressCity?.message} />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="addressPostalCode">Postal Code</Label>
+                  <Input
+                    id="addressPostalCode"
+                    {...form.register("addressPostalCode")}
+                    placeholder="6-digit PIN code"
+                    autoComplete="postal-code"
+                    inputMode="numeric"
+                    maxLength={6}
+                    aria-invalid={!!errors.addressPostalCode}
+                  />
+                  <FieldError message={errors.addressPostalCode?.message} />
+                </div>
+              </div>
+            )}
           </motion.div>
 
           <motion.div variants={fadeUpVariants} className="space-y-3 pt-1">
-            <h3 className="text-sm font-semibold text-foreground">
-              Emergency Contact
-            </h3>
+            <h3 className="text-sm font-semibold text-foreground">Emergency Contact</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="emergencyName">Full Name</Label>
@@ -282,26 +350,33 @@ export function PersonalInfoTab({
                   aria-required="true"
                   aria-invalid={!!errors.emergencyName}
                 />
-                {errors.emergencyName && (
-                  <p role="alert" className="text-xs text-destructive">
-                    {errors.emergencyName.message}
-                  </p>
-                )}
+                <FieldError message={errors.emergencyName?.message} />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="emergencyRelation">Relationship</Label>
-                <Input
-                  id="emergencyRelation"
-                  {...form.register("emergencyRelation")}
-                  placeholder="e.g. Parent, Spouse"
-                  aria-required="true"
-                  aria-invalid={!!errors.emergencyRelation}
+                <Controller
+                  control={form.control}
+                  name="emergencyRelation"
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger
+                        id="emergencyRelation"
+                        aria-required="true"
+                        aria-invalid={!!errors.emergencyRelation}
+                      >
+                        <SelectValue placeholder="Select relationship" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {EMERGENCY_RELATIONSHIPS.map((rel) => (
+                          <SelectItem key={rel.value} value={rel.value}>
+                            {rel.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 />
-                {errors.emergencyRelation && (
-                  <p role="alert" className="text-xs text-destructive">
-                    {errors.emergencyRelation.message}
-                  </p>
-                )}
+                <FieldError message={errors.emergencyRelation?.message} />
               </div>
             </div>
             <div className="space-y-1.5 sm:max-w-[calc(50%-0.5rem)]">
@@ -322,16 +397,12 @@ export function PersonalInfoTab({
                   />
                 )}
               />
-              {errors.emergencyPhone && (
-                <p role="alert" className="text-xs text-destructive">
-                  {errors.emergencyPhone.message}
-                </p>
-              )}
+              <FieldError message={errors.emergencyPhone?.message} />
             </div>
           </motion.div>
 
           <motion.div variants={fadeUpVariants}>
-            <FormNavButtons isLoading={isPending} />
+            <FormNavButtons isLoading={isPending} onClear={handleClear} />
           </motion.div>
         </form>
       </motion.div>
