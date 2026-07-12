@@ -17,7 +17,9 @@ const PAN_REGEX = /^[A-Z]{5}[0-9]{4}[A-Z]$/;
 const SSN_REGEX = /^\d{3}-?\d{2}-?\d{4}$/;
 
 const bankSchema = z.object({
-  accountHolder: z.string().min(2, "Account Holder Name is required"),
+  accountHolder: z.string().trim().min(2, "Account holder name must be at least 2 characters")
+    .refine((v) => /[A-Za-z]/.test(v), "Account holder name must contain letters and match the bank account name.")
+    .refine((v) => /^[A-Za-z\s'.,-]+$/.test(v), "Account holder name can only contain letters, spaces, hyphens, apostrophes, and periods"),
   bankName: z
     .string()
     .min(2, "Bank Name is required")

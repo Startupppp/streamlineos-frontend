@@ -2,12 +2,40 @@
 
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths, isSameDay, parseISO } from "date-fns";
+import {
+  format,
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,
+  getDay,
+  addMonths,
+  subMonths,
+  isSameDay,
+  parseISO,
+  isAfter,
+  startOfDay,
+  getYear,
+  eachMonthOfInterval,
+  startOfYear,
+  endOfYear,
+} from "date-fns";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Plus, CalendarDays, Trash2, Pencil, RotateCcw, List } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  CalendarDays,
+  Trash2,
+  Pencil,
+  RotateCcw,
+  List,
+  Calendar,
+  Globe,
+  Clock,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
@@ -17,6 +45,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCan } from "@/hooks/api/access";
 import {
   useHolidays,
@@ -35,6 +64,16 @@ const holidaySchema = z.object({
 type HolidayFormValues = z.infer<typeof holidaySchema>;
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+type ViewMode = "calendar" | "list" | "year" | "upcoming" | "location";
+
+const VIEW_OPTIONS: { value: ViewMode; label: string; icon: React.ElementType }[] = [
+  { value: "calendar", label: "Calendar", icon: Calendar },
+  { value: "list", label: "List", icon: List },
+  { value: "year", label: "Year", icon: CalendarDays },
+  { value: "upcoming", label: "Upcoming", icon: Clock },
+  { value: "location", label: "By Location", icon: Globe },
+];
 
 function HolidayItem({
   holiday,
@@ -93,25 +132,26 @@ function HolidayItem({
   );
 }
 
-export default function HolidaysPage() {
-  const { data: holidays, isLoading } = useHolidays();
-  const createMutation = useCreateHoliday();
-  const updateMutation = useUpdateHoliday();
-  const deleteMutation = useDeleteHoliday();
-  const canManage = useCan("hr:leaves:manage");
-
-  const [viewDate, setViewDate] = useState(new Date());
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [editingHoliday, setEditingHoliday] = useState<Holiday | null>(null);
-  const [yearView, setYearView] = useState(false);
-
-  const form = useForm<HolidayFormValues>({
-    resolver: zodResolver(holidaySchema),
-    defaultValues: { recurring: false, name: "", date: "" },
-  });
-
+function CalendarView({
+  holidays,
+  viewDate,
+  canManage,
+  onPrev,
+  onNext,
+  onEdit,
+  onDelete,
+  onAdd,
+}: {
+  holidays: Holiday[];
+  viewDate: Date;
+  canManage: boolean;
+  onPrev: () => void;
+  onNext: () => void;
+  onEdit: (h: Holiday) => void;
+  onDelete: (id: string) => void;
+  onAdd: () => void;
+}) {
   const monthHolidays = useMemo(() => {
-    if (!holidays) return [];
     const start = startOfMonth(viewDate);
     const end = endOfMonth(viewDate);
     return holidays.filter((h) => {
@@ -126,24 +166,314 @@ export default function HolidaysPage() {
     return { days: eachDayOfInterval({ start, end }), startPad: getDay(start) };
   }, [viewDate]);
 
-  const holidaysByMonth = useMemo(() => {
-    if (!holidays) return {} as Record<string, Holiday[]>;
-    return holidays.reduce<Record<string, Holiday[]>>((acc, h) => {
-      const month = format(parseISO(h.date), "MMMM yyyy");
-      if (!acc[month]) acc[month] = [];
-      acc[month].push(h);
-      return acc;
-    }, {});
+  return (
+    <div className="space-y-4">
+      <div className="bg-card border border-border rounded-lg shadow-sm p-4">
+        <div className="flex items-center justify-between mb-4">
+          <Button variant="ghost" size="icon" onClick={onPrev}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <h2 className="text-lg font-semibold text-foreground">{format(viewDate, "MMMM yyyy")}</h2>
+          <Button variant="ghost" size="icon" onClick={onNext}>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+        <div className="grid grid-cols-7 gap-1">
+          {WEEKDAYS.map((day) => (
+            <div key={day} className="text-center text-xs font-medium text-muted-foreground py-1">
+              {day}
+            </div>
+          ))}
+          {Array.from({ length: calendarDays.startPad }).map((_, i) => (
+            <div key={`pad-${i}`} />
+          ))}
+          {calendarDays.days.map((day) => {
+            const dayHolidays = holidays.filter((h) => isSameDay(parseISO(h.date), day));
+            const isHoliday = dayHolidays.length > 0;
+            return (
+              <div
+                key={day.toISOString()}
+                className={`relative flex flex-col items-center justify-start rounded-md p-1.5 min-h-[40px] text-sm ${
+                  isHoliday ? "bg-blue-50 border border-blue-200" : "hover:bg-muted"
+                }`}
+                title={isHoliday ? dayHolidays.map((h) => h.name).join(", ") : undefined}
+              >
+                <span className={`font-medium ${isHoliday ? "text-primary" : "text-foreground"}`}>
+                  {format(day, "d")}
+                </span>
+                {isHoliday && (
+                  <div className="flex gap-0.5 mt-0.5">
+                    {dayHolidays.slice(0, 2).map((_, idx) => (
+                      <span key={idx} className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+          {format(viewDate, "MMMM")} Holidays
+        </h3>
+        {monthHolidays.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center bg-muted/20 rounded-lg border border-border">
+            <CalendarDays className="h-8 w-8 text-muted-foreground/40 mb-2" />
+            <p className="text-muted-foreground text-sm">No holidays in {format(viewDate, "MMMM")}</p>
+            {canManage && (
+              <Button variant="ghost" size="sm" className="mt-2" onClick={onAdd}>
+                <Plus className="h-3.5 w-3.5 mr-1" /> Add one
+              </Button>
+            )}
+          </div>
+        ) : (
+          monthHolidays.map((h) => (
+            <HolidayItem
+              key={h.id}
+              holiday={h}
+              canManage={canManage}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ListView({
+  holidays,
+  canManage,
+  onEdit,
+  onDelete,
+  onAdd,
+  yearFilter,
+}: {
+  holidays: Holiday[];
+  canManage: boolean;
+  onEdit: (h: Holiday) => void;
+  onDelete: (id: string) => void;
+  onAdd: () => void;
+  yearFilter: number | "all";
+}) {
+  const [search, setSearch] = useState("");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+
+  const filtered = useMemo(() => {
+    let items = holidays;
+    if (yearFilter !== "all") {
+      items = items.filter((h) => getYear(parseISO(h.date)) === yearFilter);
+    }
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      items = items.filter((h) => h.name.toLowerCase().includes(q));
+    }
+    return [...items].sort((a, b) => {
+      const diff = new Date(a.date).getTime() - new Date(b.date).getTime();
+      return sortDir === "asc" ? diff : -diff;
+    });
+  }, [holidays, yearFilter, search, sortDir]);
+
+  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setSearch(e.target.value);
+  }
+
+  function handleSortToggle() {
+    setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2 flex-wrap">
+        <Input
+          placeholder="Search holidays..."
+          value={search}
+          onChange={handleSearchChange}
+          className="h-8 text-sm max-w-xs"
+        />
+        <Button variant="outline" size="sm" className="h-8 text-xs" onClick={handleSortToggle}>
+          Date {sortDir === "asc" ? "↑" : "↓"}
+        </Button>
+      </div>
+      {filtered.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 text-center bg-muted/20 rounded-lg border border-border">
+          <List className="h-8 w-8 text-muted-foreground/40 mb-2" />
+          <p className="text-muted-foreground text-sm font-medium">
+            {search ? "No holidays match your search" : "No holidays for this period"}
+          </p>
+          {canManage && !search && (
+            <Button size="sm" className="mt-3" onClick={onAdd}>
+              <Plus className="h-4 w-4 mr-2" /> Add Holiday
+            </Button>
+          )}
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {filtered.map((h) => (
+            <HolidayItem key={h.id} holiday={h} canManage={canManage} onEdit={onEdit} onDelete={onDelete} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function YearOverview({
+  holidays,
+  yearFilter,
+}: {
+  holidays: Holiday[];
+  yearFilter: number | "all";
+}) {
+  const year = yearFilter === "all" ? getYear(new Date()) : yearFilter;
+  const months = eachMonthOfInterval({ start: startOfYear(new Date(year, 0)), end: endOfYear(new Date(year, 0)) });
+
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+      {months.map((monthStart) => {
+        const monthEnd = endOfMonth(monthStart);
+        const monthHolidays = holidays.filter((h) => {
+          const d = parseISO(h.date);
+          return d >= monthStart && d <= monthEnd;
+        });
+        return (
+          <div key={monthStart.toISOString()} className="bg-card border border-border rounded-lg p-3">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
+              {format(monthStart, "MMMM")}
+            </p>
+            {monthHolidays.length === 0 ? (
+              <p className="text-xs text-muted-foreground italic">No holidays</p>
+            ) : (
+              <div className="space-y-1">
+                {monthHolidays.map((h) => (
+                  <div key={h.id} className="flex items-center gap-1.5">
+                    <span className="text-xs font-medium text-foreground tabular-nums w-5 shrink-0">
+                      {format(parseISO(h.date), "d")}
+                    </span>
+                    <span className="text-xs text-muted-foreground truncate">{h.name}</span>
+                    {h.recurring && <RotateCcw className="h-2.5 w-2.5 text-muted-foreground/60 shrink-0" />}
+                  </div>
+                ))}
+              </div>
+            )}
+            {monthHolidays.length > 0 && (
+              <p className="text-[10px] text-muted-foreground mt-2 font-medium">
+                {monthHolidays.length} holiday{monthHolidays.length > 1 ? "s" : ""}
+              </p>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function UpcomingView({
+  holidays,
+  canManage,
+  onEdit,
+  onDelete,
+  onAdd,
+}: {
+  holidays: Holiday[];
+  canManage: boolean;
+  onEdit: (h: Holiday) => void;
+  onDelete: (id: string) => void;
+  onAdd: () => void;
+}) {
+  const upcoming = useMemo(() => {
+    const today = startOfDay(new Date());
+    return [...holidays]
+      .filter((h) => isAfter(parseISO(h.date), today) || isSameDay(parseISO(h.date), today))
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }, [holidays]);
+
+  if (upcoming.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center bg-muted/20 rounded-lg border border-border">
+        <Clock className="h-8 w-8 text-muted-foreground/40 mb-2" />
+        <p className="text-muted-foreground text-sm font-medium">No upcoming holidays</p>
+        {canManage && (
+          <Button size="sm" className="mt-3" onClick={onAdd}>
+            <Plus className="h-4 w-4 mr-2" /> Add Holiday
+          </Button>
+        )}
+      </div>
+    );
+  }
+
+  const grouped = upcoming.reduce<Record<string, Holiday[]>>((acc, h) => {
+    const key = format(parseISO(h.date), "MMMM yyyy");
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(h);
+    return acc;
+  }, {});
+
+  return (
+    <div className="space-y-6">
+      {Object.entries(grouped).map(([month, items]) => (
+        <div key={month}>
+          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{month}</h3>
+          <div className="space-y-2">
+            {items.map((h) => (
+              <HolidayItem key={h.id} holiday={h} canManage={canManage} onEdit={onEdit} onDelete={onDelete} />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function LocationView() {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 text-center bg-muted/20 rounded-lg border border-border">
+      <Globe className="h-8 w-8 text-muted-foreground/40 mb-2" />
+      <p className="text-sm font-medium text-muted-foreground">Location-based holidays not yet configured</p>
+      <p className="text-xs text-muted-foreground mt-1 max-w-xs">
+        Assign offices or regions to employees in Org settings to group holidays by location.
+      </p>
+    </div>
+  );
+}
+
+export default function HolidaysPage() {
+  const { data: holidays, isLoading } = useHolidays();
+  const createMutation = useCreateHoliday();
+  const updateMutation = useUpdateHoliday();
+  const deleteMutation = useDeleteHoliday();
+  const canManage = useCan("hr:leaves:manage");
+
+  const [viewMode, setViewMode] = useState<ViewMode>("calendar");
+  const [viewDate, setViewDate] = useState(new Date());
+  const [yearFilter, setYearFilter] = useState<number | "all">(getYear(new Date()));
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [editingHoliday, setEditingHoliday] = useState<Holiday | null>(null);
+
+  const form = useForm<HolidayFormValues>({
+    resolver: zodResolver(holidaySchema),
+    defaultValues: { recurring: false, name: "", date: "" },
+  });
+
+  const allHolidays = holidays ?? [];
+
+  const availableYears = useMemo(() => {
+    const years = new Set<number>();
+    allHolidays.forEach((h) => years.add(getYear(parseISO(h.date))));
+    const current = getYear(new Date());
+    years.add(current);
+    years.add(current + 1);
+    return [...years].sort((a, b) => a - b);
+  }, [allHolidays]);
 
   function handlePrevMonth() {
     setViewDate((d) => subMonths(d, 1));
   }
   function handleNextMonth() {
     setViewDate((d) => addMonths(d, 1));
-  }
-  function handleToggleView() {
-    setYearView((v) => !v);
   }
   function handleCreateClick() {
     setEditingHoliday(null);
@@ -192,30 +522,62 @@ export default function HolidaysPage() {
     }
   }
 
+  function handleViewChange(v: string) {
+    setViewMode(v as ViewMode);
+  }
+
+  function handleYearFilterChange(v: string) {
+    setYearFilter(v === "all" ? "all" : Number(v));
+  }
+
   const isPending = createMutation.isPending || updateMutation.isPending;
+
+  const showYearFilter = viewMode === "list" || viewMode === "year";
 
   return (
     <PageWrapper
       title="Holiday Calendar"
-      subtitle="Manage organization holidays"
+      subtitle="Manage organization holidays across the year"
       actions={
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={handleToggleView}>
-            {yearView ? (
-              <>
-                <CalendarDays className="h-4 w-4 mr-2" />
-                Month View
-              </>
-            ) : (
-              <>
-                <List className="h-4 w-4 mr-2" />
-                All Holidays
-              </>
-            )}
-          </Button>
+        <div className="flex gap-2 flex-wrap items-center">
+          {showYearFilter && (
+            <Select value={String(yearFilter)} onValueChange={handleYearFilterChange}>
+              <SelectTrigger className="h-8 text-xs w-28">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all" className="text-xs">All years</SelectItem>
+                {availableYears.map((y) => (
+                  <SelectItem key={y} value={String(y)} className="text-xs">{y}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          <div className="flex items-center border border-border rounded-md overflow-hidden h-8">
+            {VIEW_OPTIONS.map((opt) => {
+              const Icon = opt.icon;
+              const active = viewMode === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  title={opt.label}
+                  onClick={() => setViewMode(opt.value)}
+                  className={`flex items-center gap-1 px-2.5 h-full text-xs font-medium transition-colors border-r last:border-r-0 border-border ${
+                    active
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground"
+                  }`}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">{opt.label}</span>
+                </button>
+              );
+            })}
+          </div>
           {canManage && (
-            <Button onClick={handleCreateClick}>
-              <Plus className="h-4 w-4 mr-2" /> Add Holiday
+            <Button onClick={handleCreateClick} size="sm" className="h-8">
+              <Plus className="h-3.5 w-3.5 mr-1.5" /> Add Holiday
             </Button>
           )}
         </div>
@@ -231,127 +593,50 @@ export default function HolidaysPage() {
             ))}
           </div>
         </div>
-      ) : yearView ? (
-        <AnimatePresence mode="wait">
-          <motion.div
-            key="year"
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -16 }}
-            transition={{ duration: 0.22, ease: "easeOut" }}
-            className="space-y-6"
-          >
-            {Object.keys(holidaysByMonth).length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-24 text-center">
-                <CalendarDays className="h-10 w-10 text-muted-foreground/40 mb-3" />
-                <p className="text-muted-foreground font-medium">No holidays added yet</p>
-                {canManage && (
-                  <Button className="mt-4" onClick={handleCreateClick}>
-                    <Plus className="h-4 w-4 mr-2" /> Add Holiday
-                  </Button>
-                )}
-              </div>
-            ) : (
-              Object.entries(holidaysByMonth).map(([month, items]) => (
-                <div key={month}>
-                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{month}</h3>
-                  <div className="space-y-2">
-                    {items.map((h) => (
-                      <HolidayItem
-                        key={h.id}
-                        holiday={h}
-                        canManage={canManage}
-                        onEdit={handleEditClick}
-                        onDelete={handleDeleteClick}
-                      />
-                    ))}
-                  </div>
-                </div>
-              ))
-            )}
-          </motion.div>
-        </AnimatePresence>
       ) : (
         <AnimatePresence mode="wait">
           <motion.div
-            key="month"
-            initial={{ opacity: 0, y: 16 }}
+            key={viewMode}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -16 }}
-            transition={{ duration: 0.22, ease: "easeOut" }}
-            className="space-y-4"
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
           >
-            <div className="bg-card border border-border rounded-lg shadow-sm p-4">
-              <div className="flex items-center justify-between mb-4">
-                <Button variant="ghost" size="icon" onClick={handlePrevMonth}>
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <h2 className="text-lg font-semibold text-foreground">{format(viewDate, "MMMM yyyy")}</h2>
-                <Button variant="ghost" size="icon" onClick={handleNextMonth}>
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-              <div className="grid grid-cols-7 gap-1">
-                {WEEKDAYS.map((day) => (
-                  <div key={day} className="text-center text-xs font-medium text-muted-foreground py-1">
-                    {day}
-                  </div>
-                ))}
-                {Array.from({ length: calendarDays.startPad }).map((_, i) => (
-                  <div key={`pad-${i}`} />
-                ))}
-                {calendarDays.days.map((day) => {
-                  const dayHolidays = holidays?.filter((h) => isSameDay(parseISO(h.date), day)) ?? [];
-                  const isHoliday = dayHolidays.length > 0;
-                  return (
-                    <div
-                      key={day.toISOString()}
-                      className={`relative flex flex-col items-center justify-start rounded-md p-1.5 min-h-[40px] text-sm ${
-                        isHoliday ? "bg-blue-50 border border-blue-200" : "hover:bg-muted"
-                      }`}
-                    >
-                      <span className={`font-medium ${isHoliday ? "text-primary" : "text-foreground"}`}>
-                        {format(day, "d")}
-                      </span>
-                      {isHoliday && (
-                        <div className="flex gap-0.5 mt-0.5">
-                          {dayHolidays.slice(0, 2).map((_, idx) => (
-                            <span key={idx} className="w-1.5 h-1.5 rounded-full bg-blue-600" />
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                {format(viewDate, "MMMM")} Holidays
-              </h3>
-              {monthHolidays.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center bg-muted/20 rounded-lg border border-border">
-                  <CalendarDays className="h-8 w-8 text-muted-foreground/40 mb-2" />
-                  <p className="text-muted-foreground text-sm">No holidays in {format(viewDate, "MMMM")}</p>
-                  {canManage && (
-                    <Button variant="ghost" size="sm" className="mt-2" onClick={handleCreateClick}>
-                      <Plus className="h-3.5 w-3.5 mr-1" /> Add one
-                    </Button>
-                  )}
-                </div>
-              ) : (
-                monthHolidays.map((h) => (
-                  <HolidayItem
-                    key={h.id}
-                    holiday={h}
-                    canManage={canManage}
-                    onEdit={handleEditClick}
-                    onDelete={handleDeleteClick}
-                  />
-                ))
-              )}
-            </div>
+            {viewMode === "calendar" && (
+              <CalendarView
+                holidays={allHolidays}
+                viewDate={viewDate}
+                canManage={canManage}
+                onPrev={handlePrevMonth}
+                onNext={handleNextMonth}
+                onEdit={handleEditClick}
+                onDelete={handleDeleteClick}
+                onAdd={handleCreateClick}
+              />
+            )}
+            {viewMode === "list" && (
+              <ListView
+                holidays={allHolidays}
+                canManage={canManage}
+                onEdit={handleEditClick}
+                onDelete={handleDeleteClick}
+                onAdd={handleCreateClick}
+                yearFilter={yearFilter}
+              />
+            )}
+            {viewMode === "year" && (
+              <YearOverview holidays={allHolidays} yearFilter={yearFilter} />
+            )}
+            {viewMode === "upcoming" && (
+              <UpcomingView
+                holidays={allHolidays}
+                canManage={canManage}
+                onEdit={handleEditClick}
+                onDelete={handleDeleteClick}
+                onAdd={handleCreateClick}
+              />
+            )}
+            {viewMode === "location" && <LocationView />}
           </motion.div>
         </AnimatePresence>
       )}
@@ -364,47 +649,47 @@ export default function HolidaysPage() {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleFormSubmit)} className="flex-1 flex flex-col overflow-hidden">
               <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Holiday Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Independence Day" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="date"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Date</FormLabel>
-                    <FormControl>
-                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="recurring"
-                render={({ field }) => (
-                  <FormItem className="flex items-center gap-3 rounded-lg border p-3">
-                    <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
-                    </FormControl>
-                    <div>
-                      <FormLabel className="font-medium cursor-pointer">Recurring</FormLabel>
-                      <p className="text-xs text-muted-foreground">Repeat annually on the same date</p>
-                    </div>
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Holiday Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Independence Day" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Date</FormLabel>
+                      <FormControl>
+                        <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="recurring"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center gap-3 rounded-lg border p-3">
+                      <FormControl>
+                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      </FormControl>
+                      <div>
+                        <FormLabel className="font-medium cursor-pointer">Recurring</FormLabel>
+                        <p className="text-xs text-muted-foreground">Repeat annually on the same date</p>
+                      </div>
+                    </FormItem>
+                  )}
+                />
               </div>
               <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
                 <Button type="submit" disabled={isPending} className="w-full">

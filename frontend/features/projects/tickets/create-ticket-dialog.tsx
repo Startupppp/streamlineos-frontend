@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Paperclip, X, FileText, File, AlertTriangle, Link as LinkIcon } from "lucide-react";
+import { Plus, Paperclip, X, FileText, File, AlertTriangle, Link as LinkIcon, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProject } from "@/hooks/api";
 import { useTicketSearch } from "@/hooks/api/projects/ticket-search";
@@ -155,6 +155,8 @@ export function CreateTicketDialog({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrls, setPreviewUrls] = useState<(string | null)[]>([]);
   const [fileError, setFileError] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragCounterRef = useRef(0);
 
   const watchedTitle = form.watch("title") ?? "";
   const duplicates = useDuplicateTitleWarning(watchedTitle, projectId);
@@ -186,34 +188,37 @@ export function CreateTicketDialog({
   );
   const handleAttachClick = useCallback(() => fileInputRef.current?.click(), []);
 
-  const handleFileChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const selected = Array.from(e.target.files ?? []);
-      e.target.value = "";
-
+  const validateAndAddFiles = useCallback(
+    (selected: File[]) => {
       const nextCount = files.length + selected.length;
       if (nextCount > MAX_FILES) {
         setFileError(`You can upload up to ${MAX_FILES} files per ticket.`);
         return;
       }
-
       const oversized = selected.find((f) => f.size > MAX_FILE_BYTES);
       if (oversized) {
         setFileError(`${oversized.name} exceeds the 25MB per-file limit.`);
         return;
       }
-
       const currentTotal = files.reduce((sum, f) => sum + f.size, 0);
       const newTotal = selected.reduce((sum, f) => sum + f.size, currentTotal);
       if (newTotal > MAX_TOTAL_BYTES) {
         setFileError("Total attachments exceed the 100MB limit.");
         return;
       }
-
       setFileError(null);
       addFiles(selected);
     },
     [files, addFiles],
+  );
+
+  const handleFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const selected = Array.from(e.target.files ?? []);
+      e.target.value = "";
+      validateAndAddFiles(selected);
+    },
+    [validateAndAddFiles],
   );
 
   const handleRemoveFileWithPreview = useCallback(
@@ -221,6 +226,37 @@ export function CreateTicketDialog({
       handleRemoveFile(idx);
     },
     [handleRemoveFile],
+  );
+
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current += 1;
+    if (e.dataTransfer.items.length > 0) setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current -= 1;
+    if (dragCounterRef.current === 0) setIsDragging(false);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dragCounterRef.current = 0;
+      setIsDragging(false);
+      const dropped = Array.from(e.dataTransfer.files);
+      if (dropped.length > 0) validateAndAddFiles(dropped);
+    },
+    [validateAndAddFiles],
   );
 
   const handleFormSubmit = useCallback(
@@ -270,7 +306,14 @@ export function CreateTicketDialog({
           </DialogHeader>
 
           <Form {...form}>
-            <form onSubmit={handleFormSubmit} className="flex flex-col">
+            <form
+              onSubmit={handleFormSubmit}
+              className="flex flex-col"
+              onDragEnter={handleDragEnter}
+              onDragLeave={handleDragLeave}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+            >
               <div className="px-5 pt-4 pb-2 space-y-3">
                 <FormField
                   control={form.control}
@@ -346,18 +389,47 @@ export function CreateTicketDialog({
                 />
               </div>
 
-              {files.length > 0 && (
-                <div className="px-5 pb-2 space-y-1.5">
-                  {files.map((file, idx) => (
-                    <AttachmentPreview
-                      key={idx}
-                      file={file}
-                      previewUrl={previewUrls[idx] ?? null}
-                      onRemove={() => handleRemoveFileWithPreview(idx)}
-                    />
-                  ))}
-                </div>
-              )}
+              <div className="px-5 pb-2">
+                {files.length > 0 ? (
+                  <div className="space-y-1.5">
+                    {files.map((file, idx) => (
+                      <AttachmentPreview
+                        key={idx}
+                        file={file}
+                        previewUrl={previewUrls[idx] ?? null}
+                        onRemove={() => handleRemoveFileWithPreview(idx)}
+                      />
+                    ))}
+                    {isDragging && (
+                      <div className="flex items-center gap-2 rounded-md border-2 border-dashed border-primary/40 bg-primary/5 px-3 py-2.5 text-xs text-primary">
+                        <Upload className="h-3.5 w-3.5 shrink-0" />
+                        Drop files to attach
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleAttachClick}
+                    className={cn(
+                      "w-full rounded-md border-2 border-dashed px-4 py-4 transition-colors",
+                      "flex flex-col items-center gap-1.5 text-center",
+                      isDragging
+                        ? "border-primary/60 bg-primary/5 text-primary"
+                        : "border-border/60 text-muted-foreground hover:border-border hover:bg-muted/30 hover:text-foreground",
+                    )}
+                    aria-label="Attach files"
+                  >
+                    <Upload className={cn("h-5 w-5", isDragging ? "text-primary" : "text-muted-foreground/60")} />
+                    <span className="text-xs font-medium">
+                      {isDragging ? "Drop files to attach" : "Click to upload or drag files here"}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground/70">
+                      Images, PDF, DOC, XLS — up to 25MB each
+                    </span>
+                  </button>
+                )}
+              </div>
 
               {(showLinksEditor || relatedLinks.length > 0) && (
                 <div className="px-5 pb-3 border-t border-border/60 pt-3">

@@ -9,7 +9,7 @@ import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { CustomFieldsDataTable } from "@/features/hr/custom-fields/components/custom-fields-data-table";
-import { CustomFieldUpsertDialog } from "@/features/hr/custom-fields/components/custom-field-upsert-dialog";
+import { CustomFieldUpsertSheet } from "@/features/hr/custom-fields/components/custom-field-upsert-sheet";
 import { useHrCustomFields, useCreateCustomField } from "@/features/hr/custom-fields/hooks/use-hr-custom-fields";
 import type { CreateCustomFieldPayload, UpdateCustomFieldPayload } from "@/features/hr/forms/lib/types";
 
@@ -78,7 +78,7 @@ export default function HrCustomFieldsPage() {
         )}
       </PageWrapper>
 
-      <CustomFieldUpsertDialog
+      <CustomFieldUpsertSheet
         open={open}
         onOpenChange={handleOpenChange}
         entityType={entityType}

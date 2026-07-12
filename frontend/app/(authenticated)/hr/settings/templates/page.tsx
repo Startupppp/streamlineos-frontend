@@ -17,6 +17,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useCan } from "@/hooks/api/access";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { useHrTemplates, useSeedHrTemplateDefaults } from "@/hooks/api/hr/hr-templates";
 import { KindBadge, StatusBadge } from "@/features/hr/templates/template-kind-badge";
 import { TemplateUpsertSheet } from "@/features/hr/templates/template-upsert-sheet";
@@ -99,6 +101,8 @@ function buildTemplateColumns(
 }
 
 export default function HrTemplatesPage() {
+  const canView = useCan("hr:templates:view");
+  const canManage = useCan("hr:templates:manage");
   const [search, setSearch] = useState("");
   const [kind, setKind] = useState<HrTemplateKind | "all">(ALL_SENTINEL);
   const [status, setStatus] = useState<HrTemplateStatus | "all">(ALL_SENTINEL);
@@ -151,12 +155,25 @@ export default function HrTemplatesPage() {
   const templates = data?.data ?? [];
   const total = data?.total ?? 0;
 
+  if (!canView) {
+    return (
+      <PageWrapper title="HR Templates" subtitle="Unified template library for checklists, letters, reviews, surveys, and more.">
+        <NoPermissionState
+          permission="hr:templates:view"
+          title="Access Restricted"
+          description="You don't have permission to view HR templates. HR Admin role is required."
+        />
+      </PageWrapper>
+    );
+  }
+
   return (
     <>
       <PageWrapper
         title="HR Templates"
         subtitle="Unified template library for checklists, letters, reviews, surveys, and more."
         actions={
+          canManage ? (
           <div className="flex items-center gap-2">
             <LoadingButton
               variant="outline"
@@ -174,6 +191,7 @@ export default function HrTemplatesPage() {
               New Template
             </Button>
           </div>
+          ) : undefined
         }
         filters={
           <div className="flex items-center gap-2 flex-wrap">

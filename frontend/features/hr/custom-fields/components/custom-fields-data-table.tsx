@@ -4,10 +4,10 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { Pencil, Trash2 } from "lucide-react";
+import { Lock, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { CustomFieldUpsertDialog } from "./custom-field-upsert-dialog";
+import { CustomFieldUpsertSheet } from "./custom-field-upsert-sheet";
 import { useUpdateCustomField, useDeleteCustomField } from "../hooks/use-hr-custom-fields";
 import type { HrCustomFieldDefinition, UpdateCustomFieldPayload } from "@/features/hr/forms/lib/types";
 
@@ -55,7 +55,7 @@ export function CustomFieldsDataTable({ entityType, fields }: CustomFieldsDataTa
     setEditField(field);
   }
 
-  function handleDialogOpenChange(open: boolean) {
+  function handleSheetOpenChange(open: boolean) {
     if (!open) setEditField(null);
   }
 
@@ -63,7 +63,12 @@ export function CustomFieldsDataTable({ entityType, fields }: CustomFieldsDataTa
     {
       key: "name",
       header: "Name",
-      cell: (row) => <span className="font-medium">{row.name}</span>,
+      cell: (row) => (
+        <div className="flex items-center gap-1.5">
+          {row.isSensitive && <Lock className="h-3.5 w-3.5 text-amber-600 shrink-0" />}
+          <span className="font-medium">{row.name}</span>
+        </div>
+      ),
     },
     {
       key: "key",
@@ -86,7 +91,9 @@ export function CustomFieldsDataTable({ entityType, fields }: CustomFieldsDataTa
             <Badge variant="outline" className="text-[11px] text-blue-700 border-blue-200">required</Badge>
           )}
           {row.isSensitive && (
-            <Badge variant="outline" className="text-[11px] text-amber-700 border-amber-200">sensitive</Badge>
+            <Badge variant="outline" className="text-[11px] text-amber-700 border-amber-200 gap-0.5">
+              <Lock className="h-2.5 w-2.5" /> sensitive
+            </Badge>
           )}
         </div>
       ),
@@ -117,9 +124,9 @@ export function CustomFieldsDataTable({ entityType, fields }: CustomFieldsDataTa
         emptyState={emptyState}
       />
 
-      <CustomFieldUpsertDialog
+      <CustomFieldUpsertSheet
         open={editField !== null}
-        onOpenChange={handleDialogOpenChange}
+        onOpenChange={handleSheetOpenChange}
         entityType={entityType}
         field={editField ?? undefined}
         onSave={handleUpdate}

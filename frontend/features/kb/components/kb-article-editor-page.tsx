@@ -1,11 +1,12 @@
 "use client";
 
 import { useMemo } from "react";
+import { notFound } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ErrorState } from "@/components/shared/error-state";
 import { LoadingState } from "@/components/shared/loading-state";
 import { useKbArticle, useKbCategories } from "@/hooks/api/support/kb";
-import { getApiError } from "@/lib/api-client";
+import { getApiError, isApiError } from "@/lib/api-client";
 import { KbArticleEditor } from "./kb-article-editor";
 
 export function KbArticleEditorPage({ articleId }: { articleId: number }) {
@@ -25,26 +26,31 @@ export function KbArticleEditorPage({ articleId }: { articleId: number }) {
     );
   }
 
-  if (articleQuery.error || !articleQuery.data) {
+  if (articleQuery.error) {
+    if (isApiError(articleQuery.error) && articleQuery.error.status === 404) {
+      notFound();
+    }
     return (
       <PageWrapper eyebrow="Documents · Knowledge Base" title="Edit Article">
         <ErrorState
-          title="Article not found"
-          description={
-            articleQuery.error
-              ? getApiError(articleQuery.error)
-              : "This article does not exist."
-          }
+          title="Failed to load article"
+          description={getApiError(articleQuery.error)}
           onRetry={handleRetry}
         />
       </PageWrapper>
     );
   }
 
+  if (!articleQuery.data) {
+    notFound();
+  }
+
+  const article = articleQuery.data;
+
   return (
     <KbArticleEditor
-      key={articleQuery.data.id}
-      article={articleQuery.data}
+      key={article.id}
+      article={article}
       categories={categories}
     />
   );

@@ -48,17 +48,53 @@ const CHECKLIST_KINDS = ["onboarding_checklist", "offboarding_checklist", "asset
 const REVIEW_KINDS = ["probation_review", "performance_review", "exit_interview"] as const;
 const LETTER_KINDS = ["letter", "document_request", "email", "notification", "training"] as const;
 
-const schema = z.object({
-  kind: z.enum(HR_TEMPLATE_KINDS),
-  name: z.string().min(2, "Name must be at least 2 characters").max(120),
-  description: z.string().max(500).optional(),
-  letterType: z.string().optional(),
-  contentSubject: z.string().optional(),
-  contentBodyHtml: z.string().optional(),
-  contentItems: z.unknown().optional(),
-  contentSections: z.unknown().optional(),
-  contentQuestions: z.unknown().optional(),
-});
+const LETTER_EMAIL_KINDS = ["letter", "document_request", "email", "notification", "training"] as const;
+const SUBJECT_REQUIRED_KINDS: string[] = ["letter", "document_request", "email", "training"];
+
+const schema = z
+  .object({
+    kind: z.enum(HR_TEMPLATE_KINDS),
+    name: z
+      .string()
+      .min(1, "Name is required")
+      .max(100, "Name must be at most 100 characters")
+      .transform((v) => v.trim())
+      .refine((v) => v.length >= 3, "Name must be at least 3 characters")
+      .refine((v) => /[a-zA-Z]/.test(v), "Name must contain at least one letter"),
+    description: z
+      .string()
+      .max(500, "Description must be at most 500 characters")
+      .transform((v) => v.trim())
+      .optional(),
+    letterType: z.string().optional(),
+    contentSubject: z.string().optional(),
+    contentBodyHtml: z.string().optional(),
+    contentItems: z.unknown().optional(),
+    contentSections: z.unknown().optional(),
+    contentQuestions: z.unknown().optional(),
+  })
+  .superRefine((val, ctx) => {
+    const isLetterEmail = (LETTER_EMAIL_KINDS as readonly string[]).includes(val.kind);
+    if (!isLetterEmail) return;
+
+    if (SUBJECT_REQUIRED_KINDS.includes(val.kind)) {
+      if (!val.contentSubject?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Subject is required for this template type",
+          path: ["contentSubject"],
+        });
+      }
+    }
+
+    if (!val.contentBodyHtml?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Content body is required",
+        path: ["contentBodyHtml"],
+      });
+    }
+  });
 
 type FormValues = z.infer<typeof schema>;
 
@@ -284,13 +320,39 @@ export function TemplateUpsertSheet({ open, onClose, template }: TemplateUpsertS
               )}
 
               {isLetterEmail && (
-                <LetterEmailEditor
-                  subject={form.watch("contentSubject")}
-                  bodyHtml={form.watch("contentBodyHtml") ?? ""}
-                  showSubject={kind !== "notification"}
-                  onSubjectChange={(v) => form.setValue("contentSubject", v)}
-                  onBodyChange={(v) => form.setValue("contentBodyHtml", v)}
-                />
+                <div className="space-y-2">
+                  <FormField
+                    control={form.control}
+                    name="contentSubject"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormMessage className="text-xs" />
+                        <input type="hidden" {...field} />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="contentBodyHtml"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormMessage className="text-xs" />
+                        <input type="hidden" {...field} />
+                      </FormItem>
+                    )}
+                  />
+                  <LetterEmailEditor
+                    subject={form.watch("contentSubject")}
+                    bodyHtml={form.watch("contentBodyHtml") ?? ""}
+                    showSubject={kind !== "notification"}
+                    onSubjectChange={(v) => {
+                      form.setValue("contentSubject", v, { shouldValidate: form.formState.isSubmitted });
+                    }}
+                    onBodyChange={(v) => {
+                      form.setValue("contentBodyHtml", v, { shouldValidate: form.formState.isSubmitted });
+                    }}
+                  />
+                </div>
               )}
             </div>
 

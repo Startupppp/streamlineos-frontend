@@ -3,7 +3,7 @@
 import { useMemo, useState, useCallback } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Plus, ChevronDown, FileText, Zap } from "lucide-react";
+import { Plus, ChevronDown, FileText, Zap, CalendarClock, Clock, Users, ClipboardList, Layers } from "lucide-react";
 import { useMeetings, useCreateMeeting, useProjectMembers, useSprints, useTickets } from "@/hooks/api/projects";
 import { useCan } from "@/hooks/api/access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -11,6 +11,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Combobox } from "@/components/ui/combobox";
 import {
@@ -25,6 +26,7 @@ import { MeetingFormSheet } from "./meeting-form-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { generateAgenda, type AgendaSource } from "./generate-agenda";
 import type { Meeting, CreateMeetingInput, MeetingType } from "@/types/projects";
+import type { ProjectMemberRecord } from "@/types/projects";
 
 const TYPE_OPTS = [
   { value: "all", label: "All types" },
@@ -107,6 +109,62 @@ interface MeetingsListPageProps {
   projectId: number;
 }
 
+interface NextMeetingStripProps {
+  meeting: Meeting;
+  projectId: number;
+  members: ProjectMemberRecord[];
+}
+
+function NextMeetingStrip({ meeting, projectId, members }: NextMeetingStripProps) {
+  const host = members.find((m) => m.id === meeting.createdBy);
+  const hostLabel = host ? (host.name ?? host.firstName ?? host.email) : null;
+  const scheduledDate = meeting.scheduledAt ? new Date(meeting.scheduledAt) : null;
+
+  return (
+    <div className="flex items-center gap-4 px-4 py-3 mb-3 rounded-xl border border-blue-200 bg-blue-50/60 text-sm">
+      <CalendarClock className="h-4 w-4 text-blue-500 shrink-0" />
+      <div className="flex items-center gap-1.5 font-medium text-blue-900 truncate">
+        <span className="text-xs text-blue-500 font-normal shrink-0">Next meeting</span>
+        <Link
+          href={`/projects/${projectId}/meetings/${meeting.id}`}
+          className="truncate hover:underline font-semibold text-blue-800"
+        >
+          {meeting.title}
+        </Link>
+      </div>
+      <div className="flex items-center gap-3 ml-auto shrink-0 text-blue-700/80 text-xs">
+        {scheduledDate && (
+          <span className="tabular-nums">
+            {scheduledDate.toLocaleString(undefined, {
+              weekday: "short",
+              month: "short",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </span>
+        )}
+        {meeting.durationMinutes != null && (
+          <span className="flex items-center gap-1">
+            <Clock className="h-3 w-3" />
+            {meeting.durationMinutes}m
+          </span>
+        )}
+        {hostLabel && (
+          <span className="flex items-center gap-1">
+            <Users className="h-3 w-3" />
+            {hostLabel}
+          </span>
+        )}
+        {(meeting.attendeeCount ?? 0) > 0 && (
+          <span>{meeting.attendeeCount} attendee{meeting.attendeeCount !== 1 ? "s" : ""}</span>
+        )}
+        <MeetingTypeBadge type={meeting.type} />
+      </div>
+    </div>
+  );
+}
+
 export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
   const canManage = useCan("projects:meetings:manage");
 
@@ -139,6 +197,18 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
     hasActionItems: actionItemFilter === "has" ? true : undefined,
     hasUnresolvedActionItems: actionItemFilter === "unresolved" ? true : undefined,
   });
+
+  const { data: upcomingMeetings } = useMeetings(projectId, { dateFilter: "upcoming", status: "scheduled" });
+
+  const nextMeeting = useMemo(() => {
+    const list = upcomingMeetings ?? [];
+    if (list.length === 0) return null;
+    return list.reduce<Meeting | null>((nearest, m) => {
+      if (!m.scheduledAt) return nearest;
+      if (!nearest || !nearest.scheduledAt) return m;
+      return new Date(m.scheduledAt) < new Date(nearest.scheduledAt) ? m : nearest;
+    }, null);
+  }, [upcomingMeetings]);
 
   const createMeeting = useCreateMeeting(projectId);
 
@@ -226,12 +296,22 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
     [projectMembers],
   );
 
+  const memberMap = useMemo(
+    () => new Map(projectMembers.map((m) => [m.id, m])),
+    [projectMembers],
+  );
+
+  const sprintMap = useMemo(
+    () => new Map(sprints.map((s) => [s.id, s])),
+    [sprints],
+  );
+
   const columns: DataTableColumn<Meeting>[] = useMemo(
     () => [
       {
         key: "meetingNumber",
         header: "ID",
-        className: "w-24",
+        className: "w-20",
         cell: (row) => (
           <Link
             href={`/projects/${projectId}/meetings/${row.id}`}
@@ -247,12 +327,20 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
         sortable: true,
         sortValue: (row) => row.title,
         cell: (row) => (
-          <Link
-            href={`/projects/${projectId}/meetings/${row.id}`}
-            className="font-medium text-foreground hover:text-primary truncate max-w-[220px] block"
-          >
-            {row.title}
-          </Link>
+          <div className="flex flex-col gap-0.5 min-w-0">
+            <Link
+              href={`/projects/${projectId}/meetings/${row.id}`}
+              className="font-medium text-foreground hover:text-primary truncate max-w-[240px] block"
+            >
+              {row.title}
+            </Link>
+            {row.sprintId != null && sprintMap.has(row.sprintId) && (
+              <span className="flex items-center gap-1 text-[11px] text-muted-foreground truncate">
+                <Layers className="h-3 w-3 shrink-0" />
+                {sprintMap.get(row.sprintId)!.name}
+              </span>
+            )}
+          </div>
         ),
       },
       {
@@ -269,48 +357,99 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
       },
       {
         key: "scheduledAt",
-        header: "Scheduled",
+        header: "Date / Duration",
         sortable: true,
         sortValue: (row) => row.scheduledAt ?? "",
-        cell: (row) =>
-          row.scheduledAt ? (
-            <span className="text-sm text-muted-foreground tabular-nums">
-              {new Date(row.scheduledAt).toLocaleString(undefined, {
-                month: "short",
-                day: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
+        cell: (row) => (
+          <div className="flex flex-col gap-0.5">
+            {row.scheduledAt ? (
+              <span className="text-sm text-foreground tabular-nums">
+                {new Date(row.scheduledAt).toLocaleString(undefined, {
+                  month: "short",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </span>
+            ) : (
+              <span className="text-muted-foreground text-sm">—</span>
+            )}
+            {row.durationMinutes != null && (
+              <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                <Clock className="h-3 w-3 shrink-0" />
+                {row.durationMinutes}m
+              </span>
+            )}
+          </div>
+        ),
+      },
+      {
+        key: "host",
+        header: "Host",
+        className: "w-32",
+        cell: (row) => {
+          const host = row.createdBy ? memberMap.get(row.createdBy) : undefined;
+          if (!host) return <span className="text-muted-foreground text-sm">—</span>;
+          const label = host.name ?? host.firstName ?? host.email;
+          return (
+            <span className="text-sm text-foreground truncate max-w-[120px] block" title={host.email}>
+              {label}
             </span>
-          ) : (
-            <span className="text-muted-foreground">—</span>
-          ),
+          );
+        },
       },
       {
         key: "attendeeCount",
         header: "Attendees",
         className: "w-24",
         cell: (row) => (
-          <span className="text-sm text-muted-foreground tabular-nums">
-            {row.attendeeCount ?? "—"}
+          <span className="flex items-center gap-1 text-sm text-muted-foreground tabular-nums">
+            {(row.attendeeCount ?? 0) > 0 ? (
+              <>
+                <Users className="h-3 w-3 shrink-0" />
+                {row.attendeeCount}
+              </>
+            ) : (
+              "—"
+            )}
           </span>
         ),
       },
       {
         key: "actionItemCount",
         header: "Actions",
-        className: "w-24",
+        className: "w-28",
         cell: (row) => (
-          <span className="text-sm text-muted-foreground tabular-nums">
-            {row.actionItemCount ?? "—"}
-            {(row.unresolvedActionItemCount ?? 0) > 0 && (
-              <span className="ml-1 text-amber-600 text-xs">({row.unresolvedActionItemCount} open)</span>
+          <div className="flex items-center gap-1.5 text-sm text-muted-foreground tabular-nums">
+            {(row.actionItemCount ?? 0) > 0 ? (
+              <>
+                <ClipboardList className="h-3 w-3 shrink-0" />
+                {row.actionItemCount}
+                {(row.unresolvedActionItemCount ?? 0) > 0 && (
+                  <Badge variant="outline" className="text-[10px] px-1 py-0 text-amber-600 border-amber-200 ml-0.5">
+                    {row.unresolvedActionItemCount} open
+                  </Badge>
+                )}
+              </>
+            ) : (
+              "—"
             )}
-          </span>
+          </div>
         ),
       },
+      {
+        key: "notes",
+        header: "Notes",
+        className: "w-16",
+        cell: (row) =>
+          row.notes ? (
+            <FileText className="h-3.5 w-3.5 text-blue-500" aria-label="Has notes" />
+          ) : (
+            <span className="text-muted-foreground text-sm">—</span>
+          ),
+      },
     ],
-    [projectId],
+    [projectId, memberMap, sprintMap],
   );
 
   const filtersBar = (
@@ -440,6 +579,13 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
       filters={filtersBar}
       actions={newMeetingButton}
     >
+      {nextMeeting && (
+        <NextMeetingStrip
+          meeting={nextMeeting}
+          projectId={projectId}
+          members={projectMembers}
+        />
+      )}
       {isError ? (
         <ErrorState className="flex-1" onRetry={() => void refetch()} />
       ) : (
@@ -447,7 +593,7 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
           data={displayed}
           columns={columns}
           getRowKey={(row) => row.id}
-          minWidth="820px"
+          minWidth="1020px"
           isLoading={isLoading}
           search={{
             value: search,

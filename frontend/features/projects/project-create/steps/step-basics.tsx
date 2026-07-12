@@ -38,11 +38,23 @@ import { useOrgMembers } from "@/hooks/api/organization";
 import { useSimpleClientsList } from "@/hooks/api/crm/clients";
 import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
 import { generateProjectKey } from "../generate-project-key";
-import { basicsSchema } from "../project-create-schema";
+import { basicsSchema, PROJECT_NAME_MAX, PROJECT_KEY_MAX, PROJECT_DESCRIPTION_MAX } from "../project-create-schema";
 import type { BasicsValues } from "../project-create-schema";
 import type { StepSharedProps } from "../use-project-create";
 
 const NONE_SENTINEL = "__none__";
+
+function charCounter(current: string | undefined, max: number) {
+  const len = (current ?? "").length;
+  const near = len >= Math.floor(max * 0.85);
+  const over = len > max;
+  if (!near && !over) return null;
+  return (
+    <span className={over ? "text-destructive" : "text-muted-foreground"}>
+      {len}/{max}
+    </span>
+  );
+}
 
 export type BasicsHandle = {
   validate: () => Promise<boolean>;
@@ -54,6 +66,7 @@ export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
     const { data: clients } = useSimpleClientsList();
     const members = membersData?.data ?? [];
     const clientList = clients ?? [];
+
     const [managerOpen, setManagerOpen] = useState(false);
     const [managerSearch, setManagerSearch] = useState("");
 
@@ -85,6 +98,9 @@ export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
     );
 
     const watchedStartDate = form.watch("startDate");
+    const watchedName = form.watch("name");
+    const watchedKey = form.watch("key");
+    const watchedDescription = form.watch("description");
 
     useImperativeHandle(ref, () => ({
       async validate(): Promise<boolean> {
@@ -113,11 +129,12 @@ export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
       name: string,
       onChange: (value: string) => void,
     ) {
-      onChange(name);
+      const capped = name.slice(0, PROJECT_NAME_MAX);
+      onChange(capped);
       if (keyManuallyEditedRef.current) {
         return;
       }
-      const generated = generateProjectKey(name);
+      const generated = generateProjectKey(capped);
       form.setValue("key", generated, { shouldValidate: false });
     }
 
@@ -126,7 +143,7 @@ export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
       onChange: (value: string) => void,
     ) {
       keyManuallyEditedRef.current = true;
-      const sanitized = value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+      const sanitized = value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, PROJECT_KEY_MAX);
       onChange(sanitized);
     }
 
@@ -152,12 +169,16 @@ export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>
-                  Project Name <span className="text-destructive">*</span>
-                </FormLabel>
+                <div className="flex items-center justify-between">
+                  <FormLabel>
+                    Project Name <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <span className="text-xs">{charCounter(watchedName, PROJECT_NAME_MAX)}</span>
+                </div>
                 <FormControl>
                   <Input
                     placeholder="e.g. Website Redesign"
+                    maxLength={PROJECT_NAME_MAX}
                     {...field}
                     onChange={(e) => handleNameChange(e.target.value, field.onChange)}
                   />
@@ -172,12 +193,16 @@ export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
             name="key"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>
-                  Project Key <span className="text-destructive">*</span>
-                </FormLabel>
+                <div className="flex items-center justify-between">
+                  <FormLabel>
+                    Project Key <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <span className="text-xs">{charCounter(watchedKey, PROJECT_KEY_MAX)}</span>
+                </div>
                 <FormControl>
                   <Input
                     placeholder="e.g. WR"
+                    maxLength={PROJECT_KEY_MAX}
                     {...field}
                     onChange={(e) => handleKeyChange(e.target.value, field.onChange)}
                   />
@@ -192,14 +217,18 @@ export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
             name="description"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>
-                  Description{" "}
-                  <span className="text-muted-foreground font-normal">(Optional)</span>
-                </FormLabel>
+                <div className="flex items-center justify-between">
+                  <FormLabel>
+                    Description{" "}
+                    <span className="text-muted-foreground font-normal">(Optional)</span>
+                  </FormLabel>
+                  <span className="text-xs">{charCounter(watchedDescription, PROJECT_DESCRIPTION_MAX)}</span>
+                </div>
                 <FormControl>
                   <Textarea
                     placeholder="Briefly describe the project goals..."
                     className="resize-none min-h-[80px]"
+                    maxLength={PROJECT_DESCRIPTION_MAX}
                     {...field}
                   />
                 </FormControl>

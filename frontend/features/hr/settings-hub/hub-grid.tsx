@@ -87,17 +87,17 @@ interface Props {
 
 export function HubGrid({ isAdvanced }: Props) {
   return (
-    <div>
+    <div className="space-y-8">
       {CARD_GROUPS.map((group) => {
         const visibleCards = group.cards.filter((c) => isAdvanced || !c.advanced);
         if (visibleCards.length === 0) return null;
 
         return (
           <div key={group.group}>
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 mt-6 first:mt-0">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
               {group.group}
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 auto-rows-fr">
               {visibleCards.map((card) => (
                 <CardItem key={card.href + card.title} card={card} />
               ))}

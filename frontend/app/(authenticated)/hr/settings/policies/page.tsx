@@ -20,6 +20,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useCan } from "@/hooks/api/access";
 import { useHrPolicies, useSeedDefaultPolicies } from "@/hooks/api/hr/policies";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import {
   HR_POLICY_TYPES,
   HR_POLICY_STATUSES,
@@ -172,12 +173,11 @@ export default function HrPoliciesPage() {
   if (!canView) {
     return (
       <PageWrapper title="HR Policies" subtitle="Configure HR rules and compliance policies">
-        <div className="flex flex-col items-center justify-center flex-1 py-20 text-center">
-          <Archive className="h-10 w-10 text-muted-foreground/40 mb-3" />
-          <p className="text-sm text-muted-foreground">
-            You don&apos;t have permission to view HR policies.
-          </p>
-        </div>
+        <NoPermissionState
+          permission="hr:policies:view"
+          title="Access Restricted"
+          description="You don't have permission to view HR policies. HR Admin role is required."
+        />
       </PageWrapper>
     );
   }

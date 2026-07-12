@@ -56,9 +56,7 @@ export default function HrSettingsHubPage() {
         </div>
       }
     >
-      <div className="px-4 sm:px-6 py-4">
-        <HubGrid isAdvanced={isAdvanced} />
-      </div>
+      <HubGrid isAdvanced={isAdvanced} />
     </PageWrapper>
   );
 }

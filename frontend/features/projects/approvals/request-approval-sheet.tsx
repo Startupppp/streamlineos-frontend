@@ -19,6 +19,7 @@ import {
   FormLabel,
   FormControl,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import {
   Select,
@@ -68,7 +69,7 @@ const schema = z.object({
   approverId: z.string().min(1, "Select an approver"),
   reason: z.string().max(2000, "Max 2000 characters").optional(),
   dueAt: z.string().optional(),
-  level: z.string().optional(),
+  level: z.enum(["1", "2", "3"]).default("1"),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -153,7 +154,7 @@ export function RequestApprovalSheet({
       approverId: "",
       reason: "",
       dueAt: "",
-      level: "",
+      level: "1",
     },
   });
 
@@ -164,7 +165,7 @@ export function RequestApprovalSheet({
 
   useEffect(() => {
     if (open) {
-      form.reset({ entityType: defaultEntityType ?? "task", entityId: "", title: "", approverId: "", reason: "", dueAt: "", level: "" });
+      form.reset({ entityType: defaultEntityType ?? "task", entityId: "", title: "", approverId: "", reason: "", dueAt: "", level: "1" });
     }
   }, [open, defaultEntityType, form]);
 
@@ -205,7 +206,7 @@ export function RequestApprovalSheet({
   }
 
   function handleOpenChange(next: boolean) {
-    if (!next) form.reset({ entityType: defaultEntityType ?? "task", entityId: "", title: "", approverId: "", reason: "", dueAt: "", level: "" });
+    if (!next) form.reset({ entityType: defaultEntityType ?? "task", entityId: "", title: "", approverId: "", reason: "", dueAt: "", level: "1" });
     onOpenChange(next);
   }
 
@@ -359,10 +360,22 @@ export function RequestApprovalSheet({
                 name="level"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Level (optional)</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="e.g. 1" inputMode="numeric" />
-                    </FormControl>
+                    <FormLabel>Approval Level</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="1">Level 1 — Standard (team lead or peer review)</SelectItem>
+                        <SelectItem value="2">Level 2 — Escalated (department manager)</SelectItem>
+                        <SelectItem value="3">Level 3 — Executive (director or above)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormDescription className="text-xs">
+                      Higher levels route the approval to more senior stakeholders.
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

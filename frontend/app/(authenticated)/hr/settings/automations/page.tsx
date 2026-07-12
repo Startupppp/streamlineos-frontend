@@ -21,6 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -126,6 +127,7 @@ function RuleCard({
 }
 
 export default function HrAutomationsPage() {
+  const canView = useCan("hr:automations:view");
   const canManage = useCan("hr:automations:manage");
   const [search, setSearch] = useState("");
   const [triggerFilter, setTriggerFilter] = useState<string>("all");
@@ -195,6 +197,18 @@ export default function HrAutomationsPage() {
   function handleDeleteDialogChange(open: boolean) { if (!open) setDeleteTarget(null); }
   function handleRetry() { void refetch(); }
 
+  if (!canView) {
+    return (
+      <PageWrapper title="HR Automations" subtitle="Configure rules that fire automatically on HR events">
+        <NoPermissionState
+          permission="hr:automations:view"
+          title="Access Restricted"
+          description="You don't have permission to view HR automation rules. HR Admin role is required."
+        />
+      </PageWrapper>
+    );
+  }
+
   return (
     <PageWrapper
       title="HR Automations"
@@ -215,36 +229,37 @@ export default function HrAutomationsPage() {
         </div>
       )}
 
-      <div className="flex flex-col sm:flex-row gap-2 mb-4">
-        <Input
-          placeholder="Search rules…"
-          value={search}
-          onChange={handleSearchChange}
-          className="sm:max-w-xs"
-        />
-        <Select value={triggerFilter} onValueChange={handleTriggerChange}>
-          <SelectTrigger className="sm:w-52">
-            <SelectValue placeholder="All triggers" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All triggers</SelectItem>
-            {HR_TRIGGER_EVENTS.map((e) => (
-              <SelectItem key={e} value={e}>{e}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={statusFilter} onValueChange={handleStatusChange}>
-          <SelectTrigger className="sm:w-36">
-            <SelectValue placeholder="All" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
-            <SelectItem value="enabled">Enabled</SelectItem>
-            <SelectItem value="disabled">Disabled</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
+      {!isError && (
+        <div className="flex flex-col sm:flex-row gap-2 mb-4">
+          <Input
+            placeholder="Search rules…"
+            value={search}
+            onChange={handleSearchChange}
+            className="sm:max-w-xs"
+          />
+          <Select value={triggerFilter} onValueChange={handleTriggerChange}>
+            <SelectTrigger className="sm:w-52">
+              <SelectValue placeholder="All triggers" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All triggers</SelectItem>
+              {HR_TRIGGER_EVENTS.map((e) => (
+                <SelectItem key={e} value={e}>{e}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={statusFilter} onValueChange={handleStatusChange}>
+            <SelectTrigger className="sm:w-36">
+              <SelectValue placeholder="All" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All statuses</SelectItem>
+              <SelectItem value="enabled">Enabled</SelectItem>
+              <SelectItem value="disabled">Disabled</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
       {isLoading ? (
         <LoadingState variant="list" rows={5} />
       ) : isError ? (

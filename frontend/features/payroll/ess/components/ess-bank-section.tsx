@@ -62,7 +62,9 @@ const bankSchema = z.object({
   accountNumber: z.string().min(6, "Account number too short").max(34),
   confirmAccount: z.string().min(6, "Required"),
   code: z.string().min(1, "Bank code is required"),
-  accountHolder: z.string().min(2, "Account holder name required").max(100),
+  accountHolder: z.string().trim().min(2, "Account holder name must be at least 2 characters").max(100)
+    .refine((v) => /[A-Za-z]/.test(v), "Account holder name must contain letters and match the bank account name.")
+    .refine((v) => /^[A-Za-z\s'.,-]+$/.test(v), "Account holder name can only contain letters, spaces, hyphens, apostrophes, and periods"),
   bankName: z.string().optional(),
   branch: z.string().optional(),
 }).refine((d) => d.accountNumber === d.confirmAccount, {

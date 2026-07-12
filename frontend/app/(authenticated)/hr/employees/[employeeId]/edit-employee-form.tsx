@@ -110,7 +110,11 @@ const formSchema = z
       .or(z.literal("")),
     accountHolder: z
       .string()
-      .regex(/^[A-Za-z\s]+$/, "Account holder name must contain only letters")
+      .trim()
+      .min(2, "Account holder name must be at least 2 characters")
+      .refine((v) => /[A-Za-z]/.test(v), "Account holder name must contain letters and match the bank account name.")
+      .refine((v) => /^[A-Za-z\s'.,-]+$/.test(v), "Account holder name can only contain letters, spaces, hyphens, apostrophes, and periods")
+      .refine((v) => !/^\s+$/.test(v), "Account holder name cannot be whitespace only")
       .optional()
       .or(z.literal("")),
   });

@@ -150,12 +150,25 @@ export default function WorkflowSettingsPage() {
           </div>
         )}
 
-        {!isLoading && definitions.length === 0 && (
+        {!isLoading && definitions.length === 0 && (filterObjectType !== "all" || filterStatus !== "all") && (
+          <EmptyState
+            illustrationPreset="documents"
+            title="No workflows match these filters"
+            description="Try changing or clearing the filters to see your workflows"
+            action={{ label: "Clear Filters", onClick: () => { setFilterObjectType("all"); setFilterStatus("all"); } }}
+          />
+        )}
+
+        {!isLoading && definitions.length === 0 && filterObjectType === "all" && filterStatus === "all" && (
           <EmptyState
             illustrationPreset="documents"
             title="No workflows configured"
-            description="Create approval chains to route HR requests through the right approvers"
-            action={canManage ? { label: "Create Workflow", onClick: handleOpenCreate } : undefined}
+            description="Create approval chains to route HR requests through the right approvers. Common workflows include leave approval, expense approval, onboarding approval, and document approval."
+            action={
+              canManage
+                ? { label: "Create Workflow", onClick: handleOpenCreate }
+                : { label: "Request Access", onClick: () => {} }
+            }
           />
         )}
 

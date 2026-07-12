@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { ShieldOff } from "lucide-react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +16,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useCan } from "@/hooks/api/access";
+import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { useEntityVersions } from "@/hooks/api/hr/settings-hub";
 import type { VersionEntity } from "@/hooks/api/hr/settings-hub";
 import { useActivatePolicy } from "@/hooks/api/hr/policies";
@@ -67,12 +67,11 @@ export default function VersionHistoryPage() {
   if (!canView) {
     return (
       <PageWrapper title="Version History" subtitle="Browse version lineage and rollback policies, templates, and workflows">
-        <div className="flex flex-col items-center justify-center flex-1 py-24 text-center">
-          <ShieldOff className="h-10 w-10 text-muted-foreground/40 mb-3" />
-          <p className="text-sm text-muted-foreground">
-            You don&apos;t have permission to view HR policies.
-          </p>
-        </div>
+        <NoPermissionState
+          permission="hr:policies:view"
+          title="Access Restricted"
+          description="You don't have permission to view HR version history. HR Admin role is required."
+        />
       </PageWrapper>
     );
   }

@@ -106,6 +106,29 @@ export interface HrFormSubmissionListResponse {
   limit: number;
 }
 
+export interface HrCustomFieldSettings {
+  helpText?: string;
+  placeholder?: string;
+  defaultValue?: unknown;
+  validationRules?: {
+    minLength?: number;
+    maxLength?: number;
+    minValue?: number;
+    maxValue?: number;
+    allowedOptions?: string[];
+    dateMin?: string;
+    dateMax?: string;
+  };
+  visibility?: {
+    hrOnly?: boolean;
+    managerVisible?: boolean;
+    selfServiceVisible?: boolean;
+    hiddenFromExports?: boolean;
+  };
+  searchable?: boolean;
+  reportable?: boolean;
+}
+
 export interface HrCustomFieldDefinition {
   id: number;
   orgId: string;
@@ -114,6 +137,7 @@ export interface HrCustomFieldDefinition {
   key: string;
   fieldType: string;
   options: { label: string; value: string }[] | null;
+  settings: HrCustomFieldSettings | null;
   isSensitive: boolean;
   isRequired: boolean;
   isActive: boolean;
@@ -128,6 +152,7 @@ export interface CreateCustomFieldPayload {
   key: string;
   fieldType: string;
   options?: { label: string; value: string }[];
+  settings?: HrCustomFieldSettings;
   isSensitive?: boolean;
   isRequired?: boolean;
   displayOrder?: number;
@@ -136,6 +161,7 @@ export interface CreateCustomFieldPayload {
 export interface UpdateCustomFieldPayload {
   name?: string;
   options?: { label: string; value: string }[];
+  settings?: HrCustomFieldSettings;
   isSensitive?: boolean;
   isRequired?: boolean;
   isActive?: boolean;

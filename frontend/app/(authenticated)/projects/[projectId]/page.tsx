@@ -33,7 +33,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { DownloadIcon, UploadIcon } from "@animateicons/react/lucide";
-import { Bookmark, X, Download } from "lucide-react";
+import { Bookmark, X, Download, SearchX } from "lucide-react";
 import { exportToCsv } from "@/lib/export-csv";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -254,7 +254,15 @@ export default function ProjectBoardPage({ params }: PageProps) {
     }
     if (q) {
       const lower = q.toLowerCase();
-      tickets = tickets.filter((t) => t.title.toLowerCase().includes(lower));
+      tickets = tickets.filter((t) => {
+        if (t.title.toLowerCase().includes(lower)) return true;
+        const ticketKey = data?.key && t.ticketNumber != null
+          ? `${data.key}-${t.ticketNumber}`.toLowerCase()
+          : null;
+        if (ticketKey && ticketKey.includes(lower)) return true;
+        if (t.sequenceId && t.sequenceId.toLowerCase().includes(lower)) return true;
+        return false;
+      });
     }
     if (filterStatus) {
       const statusSet = new Set(filterStatus.split(",").filter(Boolean));
@@ -285,7 +293,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
       tickets = tickets.filter((t) => t.cycleId != null && cycleIds.has(t.cycleId));
     }
     return tickets;
-  }, [allTickets, hideCompleted, q, filterStatus, filterPriority, filterType, filterAssigneeId, filterLabels, filterCycle]);
+  }, [allTickets, hideCompleted, q, filterStatus, filterPriority, filterType, filterAssigneeId, filterLabels, filterCycle, data]);
 
   const members = useMemo(() => {
     if (!data?.members) return [];
@@ -335,6 +343,21 @@ export default function ProjectBoardPage({ params }: PageProps) {
   }, [selectedTicketId, data, allTickets, projectId, highlightCommentId, router]);
 
   const doneCount = allTickets.filter((t) => t.status === "DONE").length;
+
+  const hasActiveFilters = !!(q || filterStatus || filterPriority || filterType || filterAssigneeId || filterLabels || filterCycle);
+  const showEmptyFilterState = hasActiveFilters && filteredTickets.length === 0 && allTickets.length > 0;
+
+  const handleClearSearch = useCallback(() => {
+    const next = new URLSearchParams(searchParams.toString());
+    next.delete("q");
+    next.delete("status");
+    next.delete("priority");
+    next.delete("type");
+    next.delete("assigneeId");
+    next.delete("labels");
+    next.delete("cycle");
+    router.replace(`?${next.toString()}`, { scroll: false });
+  }, [router, searchParams]);
 
   const handleExportCurrentView = useCallback(() => {
     if (filteredTickets.length === 0) {
@@ -477,54 +500,77 @@ export default function ProjectBoardPage({ params }: PageProps) {
         </div>
       }
     >
-      {view === "board" && (
-        <div className="h-full w-full px-3 pb-1">
-          <KanbanBoard
-            tickets={filteredTickets}
-            projectId={projectId}
-            projectKey={data.key}
-            statuses={statuses}
-            wipLimits={wipLimits}
-            onTicketSelect={handleTicketSelect}
-            displayOptions={displayOptions}
-          />
+      {showEmptyFilterState ? (
+        <div className="flex h-full flex-1 flex-col items-center justify-center gap-3 px-4 py-12 text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted/60">
+            <SearchX className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-foreground">No tickets match your filters</p>
+            <p className="text-xs text-muted-foreground">
+              Try adjusting your search or filters to find what you&apos;re looking for.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleClearSearch}
+            className="mt-1 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted/60"
+          >
+            Clear all filters
+          </button>
         </div>
-      )}
-      {view === "list" && (
-        <div className="h-full min-h-0 overflow-y-auto px-4 pb-2 pt-0">
-          <ListView
-            tickets={filteredTickets}
-            onTicketClick={handleTicketSelect}
-            groupBy={displayOptions.groupBy !== "none" ? displayOptions.groupBy : undefined}
-            rowBy={displayOptions.rowBy !== "none" ? displayOptions.rowBy : undefined}
-            projectKey={data.key}
-            projectStatuses={statuses}
-            displayOptions={displayOptions}
-            showEmptyColumns={displayOptions.showEmptyColumns}
-            showEmptyRows={displayOptions.showEmptyRows}
-            projectId={projectId}
-          />
-        </div>
-      )}
-      {view === "table" && (
-        <div className="h-full min-h-0 overflow-y-auto px-4 pb-2 pt-0">
-          <TableView tickets={filteredTickets} onTicketClick={handleTicketSelect} projectKey={data.key} projectId={projectId} projectStatuses={statuses} />
-        </div>
-      )}
-      {view === "calendar" && (
-        <div className="flex h-full min-h-0 flex-col overflow-hidden px-4 pb-2 pt-0">
-          <CalendarView tickets={filteredTickets} onTicketClick={handleTicketSelect} projectId={projectId} projectStatuses={statuses} />
-        </div>
-      )}
-      {view === "gantt" && (
-        <div className="h-full min-h-0 flex flex-col overflow-hidden px-4 pb-2 pt-0">
-          <GanttView tickets={filteredTickets} projectId={projectId} onTicketClick={handleTicketSelect} />
-        </div>
-      )}
-      {view === "workload" && (
-        <div className="h-full min-h-0 flex flex-col overflow-hidden px-4 pb-2 pt-0">
-          <WorkloadView tickets={filteredTickets} projectId={projectId} members={members} projectStatuses={statuses} />
-        </div>
+      ) : (
+        <>
+          {view === "board" && (
+            <div className="h-full w-full px-3 pb-1">
+              <KanbanBoard
+                tickets={filteredTickets}
+                projectId={projectId}
+                projectKey={data.key}
+                statuses={statuses}
+                wipLimits={wipLimits}
+                onTicketSelect={handleTicketSelect}
+                displayOptions={displayOptions}
+              />
+            </div>
+          )}
+          {view === "list" && (
+            <div className="h-full min-h-0 overflow-y-auto px-4 pb-2 pt-0">
+              <ListView
+                tickets={filteredTickets}
+                onTicketClick={handleTicketSelect}
+                groupBy={displayOptions.groupBy !== "none" ? displayOptions.groupBy : undefined}
+                rowBy={displayOptions.rowBy !== "none" ? displayOptions.rowBy : undefined}
+                projectKey={data.key}
+                projectStatuses={statuses}
+                displayOptions={displayOptions}
+                showEmptyColumns={displayOptions.showEmptyColumns}
+                showEmptyRows={displayOptions.showEmptyRows}
+                projectId={projectId}
+              />
+            </div>
+          )}
+          {view === "table" && (
+            <div className="h-full min-h-0 overflow-y-auto px-4 pb-2 pt-0">
+              <TableView tickets={filteredTickets} onTicketClick={handleTicketSelect} projectKey={data.key} projectId={projectId} projectStatuses={statuses} />
+            </div>
+          )}
+          {view === "calendar" && (
+            <div className="flex h-full min-h-0 flex-col overflow-hidden px-4 pb-2 pt-0">
+              <CalendarView tickets={filteredTickets} onTicketClick={handleTicketSelect} projectId={projectId} projectStatuses={statuses} />
+            </div>
+          )}
+          {view === "gantt" && (
+            <div className="h-full min-h-0 flex flex-col overflow-hidden px-4 pb-2 pt-0">
+              <GanttView tickets={filteredTickets} projectId={projectId} onTicketClick={handleTicketSelect} />
+            </div>
+          )}
+          {view === "workload" && (
+            <div className="h-full min-h-0 flex flex-col overflow-hidden px-4 pb-2 pt-0">
+              <WorkloadView tickets={filteredTickets} projectId={projectId} members={members} projectStatuses={statuses} />
+            </div>
+          )}
+        </>
       )}
 
       <SaveViewDialog

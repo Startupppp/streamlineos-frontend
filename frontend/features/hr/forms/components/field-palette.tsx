@@ -20,6 +20,7 @@ export function FieldPalette({ onAddField }: FieldPaletteProps) {
           return (
             <Button
               key={type}
+              type="button"
               variant="ghost"
               size="sm"
               className="h-8 justify-start text-xs font-normal text-left px-2"

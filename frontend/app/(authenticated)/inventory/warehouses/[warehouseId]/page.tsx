@@ -213,6 +213,14 @@ export default function WarehouseDetailPage({
               Default
             </Badge>
           )}
+          {!warehouse.isActive && (
+            <Badge
+              variant="outline"
+              className="h-4 text-[9px] px-1.5 py-0 bg-slate-100 text-slate-700 border-slate-200"
+            >
+              Inactive
+            </Badge>
+          )}
         </span>
       }
       badge={`${locations.length} location${locations.length !== 1 ? "s" : ""}`}
