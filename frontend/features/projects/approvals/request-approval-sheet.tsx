@@ -33,6 +33,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Combobox } from "@/components/ui/combobox";
+import type { ComboboxOption } from "@/components/ui/combobox";
 import { UserCombobox } from "@/components/ui/user-combobox";
 import { useProject } from "@/hooks/api/projects";
 import { useTickets } from "@/hooks/api/projects/tickets";
@@ -82,35 +83,26 @@ interface RequestApprovalSheetProps {
   defaultEntityType?: ApprovalEntityType;
 }
 
+interface EntityItem extends ComboboxOption {
+  rawTitle: string;
+}
+
 function useEntityItems(projectId: number, entityType: ApprovalEntityType) {
   const { data: project } = useProject(projectId);
   const projectKey = project?.key ?? "";
 
-  const ticketsEnabled = entityType === "task";
-  const { data: ticketsData, isFetching: ticketsFetching } = useTickets(
-    projectId,
-    { limit: 50 },
-    { enabled: ticketsEnabled },
-  );
-
-  const milestonesEnabled = entityType === "milestone";
-  const { data: milestones, isFetching: milestonesFetching } = useProjectMilestones(
-    milestonesEnabled ? projectId : 0,
-  );
-
-  const releasesEnabled = entityType === "release";
-  const { data: releases, isFetching: releasesFetching } = useReleases(
-    releasesEnabled ? projectId : 0,
-  );
+  const { data: ticketsData, isFetching: ticketsFetching } = useTickets(projectId, { limit: 50 });
+  const { data: milestones, isFetching: milestonesFetching } = useProjectMilestones(projectId);
+  const { data: releases, isFetching: releasesFetching } = useReleases(projectId);
 
   if (entityType === "task") {
     const tickets = ticketsData?.data ?? [];
     return {
-      options: tickets.map((t) => ({
+      items: tickets.map((t): EntityItem => ({
         value: String(t.id),
         label: projectKey ? `${projectKey}-${t.ticketNumber} · ${t.title}` : t.title,
         sublabel: t.status,
-        title: t.title,
+        rawTitle: t.title,
       })),
       isFetching: ticketsFetching,
     };
@@ -118,11 +110,11 @@ function useEntityItems(projectId: number, entityType: ApprovalEntityType) {
 
   if (entityType === "milestone") {
     return {
-      options: (milestones ?? []).map((m) => ({
+      items: (milestones ?? []).map((m): EntityItem => ({
         value: String(m.id),
         label: m.name,
         sublabel: m.status,
-        title: m.name,
+        rawTitle: m.name,
       })),
       isFetching: milestonesFetching,
     };
@@ -130,17 +122,17 @@ function useEntityItems(projectId: number, entityType: ApprovalEntityType) {
 
   if (entityType === "release") {
     return {
-      options: (releases ?? []).map((r) => ({
+      items: (releases ?? []).map((r): EntityItem => ({
         value: String(r.id),
         label: `${r.name} (${r.version})`,
         sublabel: r.status,
-        title: r.name,
+        rawTitle: r.name,
       })),
       isFetching: releasesFetching,
     };
   }
 
-  return { options: [], isFetching: false };
+  return { items: [] as EntityItem[], isFetching: false };
 }
 
 export function RequestApprovalSheet({
@@ -168,7 +160,13 @@ export function RequestApprovalSheet({
   const entityType = form.watch("entityType");
   const entityId = form.watch("entityId");
 
-  const { options: entityOptions, isFetching: entityFetching } = useEntityItems(projectId, entityType);
+  const { items: entityItems, isFetching: entityFetching } = useEntityItems(projectId, entityType);
+
+  useEffect(() => {
+    if (open) {
+      form.reset({ entityType: defaultEntityType ?? "task", entityId: "", title: "", approverId: "", reason: "", dueAt: "", level: "" });
+    }
+  }, [open, defaultEntityType, form]);
 
   useEffect(() => {
     form.setValue("entityId", "");
@@ -177,7 +175,7 @@ export function RequestApprovalSheet({
 
   useEffect(() => {
     if (!entityId) return;
-    const item = entityOptions.find((o) => o.value === entityId);
+    const item = entityItems.find((o) => o.value === entityId);
     if (!item) return;
     const entityTypeLabels: Record<ApprovalEntityType, string> = {
       task: "Approve task",
@@ -190,8 +188,8 @@ export function RequestApprovalSheet({
       client_approval: "Approve client request",
     };
     const prefix = entityTypeLabels[entityType] ?? "Approve";
-    form.setValue("title", `${prefix}: ${item.title}`);
-  }, [entityId, entityOptions, entityType, form]);
+    form.setValue("title", `${prefix}: ${item.rawTitle}`);
+  }, [entityId, entityItems, entityType, form]);
 
   function handleSubmit(values: FormValues) {
     const input: CreateApprovalInput = {
@@ -261,7 +259,7 @@ export function RequestApprovalSheet({
                       </FormLabel>
                       <FormControl>
                         <Combobox
-                          options={entityOptions}
+                          options={entityItems}
                           value={field.value}
                           onChange={field.onChange}
                           placeholder={
@@ -318,6 +316,7 @@ export function RequestApprovalSheet({
                         value={field.value}
                         onChange={field.onChange}
                         placeholder="Search for approver…"
+                        excludeUserId={currentUserId}
                       />
                     </FormControl>
                     <FormMessage />

@@ -1,9 +1,18 @@
 export type MeetingType = "meeting" | "standup" | "retro" | "planning" | "review";
 export type MeetingStatus = "scheduled" | "in_progress" | "completed" | "cancelled";
 export type ActionItemStatus = "open" | "in_progress" | "done" | "converted" | "cancelled";
+export type RecurrenceFrequency = "daily" | "weekly" | "biweekly" | "custom";
+
+export interface RecurrenceRule {
+  frequency: RecurrenceFrequency;
+  weekdays?: number[];
+  endDate?: string;
+  occurrences?: number;
+}
 
 export interface Meeting {
   id: number;
+  orgId?: string;
   projectId: number;
   meetingNumber: number;
   title: string;
@@ -12,10 +21,15 @@ export interface Meeting {
   agenda: string | null;
   notes: string | null;
   scheduledAt: string | null;
+  endAt: string | null;
   durationMinutes: number | null;
+  timezone: string | null;
+  recurrenceRule: RecurrenceRule | null;
   sprintId: number | null;
+  createdBy?: string | null;
   attendeeCount?: number;
   actionItemCount?: number;
+  unresolvedActionItemCount?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -62,8 +76,12 @@ export interface CreateMeetingInput {
   status: MeetingStatus;
   agenda?: string;
   scheduledAt?: string;
+  endAt?: string;
   durationMinutes?: number;
+  timezone?: string;
+  recurrenceRule?: RecurrenceRule;
   sprintId?: number;
+  attendeeUserIds?: string[];
 }
 
 export interface UpdateMeetingInput {
@@ -74,7 +92,10 @@ export interface UpdateMeetingInput {
   agenda?: string | null;
   notes?: string | null;
   scheduledAt?: string | null;
+  endAt?: string | null;
   durationMinutes?: number | null;
+  timezone?: string | null;
+  recurrenceRule?: RecurrenceRule | null;
   sprintId?: number | null;
 }
 

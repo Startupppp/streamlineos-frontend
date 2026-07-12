@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useImperativeHandle, useRef } from "react";
+import { forwardRef, useImperativeHandle, useRef, useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -14,6 +14,17 @@ import {
 import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Select,
   SelectContent,
@@ -21,8 +32,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Check, ChevronDown, User } from "lucide-react";
+import { cn, resolveImageUrl } from "@/lib/utils";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { useSimpleClientsList } from "@/hooks/api/crm/clients";
+import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
 import { generateProjectKey } from "../generate-project-key";
 import { basicsSchema } from "../project-create-schema";
 import type { BasicsValues } from "../project-create-schema";
@@ -40,6 +54,18 @@ export const StepBasics = forwardRef<BasicsHandle, StepSharedProps>(
     const { data: clients } = useSimpleClientsList();
     const members = membersData?.data ?? [];
     const clientList = clients ?? [];
+    const [managerOpen, setManagerOpen] = useState(false);
+    const [managerSearch, setManagerSearch] = useState("");
+
+    const filteredManagers = useMemo(() => {
+      if (!managerSearch.trim()) return members;
+      const q = managerSearch.toLowerCase();
+      return members.filter(
+        (m) =>
+          (m.name ?? "").toLowerCase().includes(q) ||
+          m.email.toLowerCase().includes(q),
+      );
+    }, [members, managerSearch]);
 
     const form = useForm<BasicsValues>({
       resolver: zodResolver(basicsSchema),

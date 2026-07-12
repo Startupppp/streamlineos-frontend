@@ -20,12 +20,22 @@ import type {
 interface MeetingFilters {
   status?: string;
   type?: string;
+  dateFilter?: "today" | "this_week" | "upcoming" | "past";
+  hostId?: string;
+  attendeeId?: string;
+  hasActionItems?: boolean;
+  hasUnresolvedActionItems?: boolean;
 }
 
 export function useMeetings(projectId: number, filters?: MeetingFilters) {
   const params: Record<string, string> = {};
   if (filters?.status) params["status"] = filters.status;
   if (filters?.type) params["type"] = filters.type;
+  if (filters?.dateFilter) params["dateFilter"] = filters.dateFilter;
+  if (filters?.hostId) params["hostId"] = filters.hostId;
+  if (filters?.attendeeId) params["attendeeId"] = filters.attendeeId;
+  if (filters?.hasActionItems === true) params["hasActionItems"] = "true";
+  if (filters?.hasUnresolvedActionItems === true) params["hasUnresolvedActionItems"] = "true";
   const hasParams = Object.keys(params).length > 0;
 
   return useQuery<Meeting[]>({

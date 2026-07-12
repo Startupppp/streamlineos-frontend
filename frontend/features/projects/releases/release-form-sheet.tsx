@@ -50,7 +50,14 @@ const schema = z.object({
     .max(30, "Version must be 30 characters or fewer")
     .refine((v) => v.trim().length > 0, "Version cannot be whitespace only")
     .refine((v) => MEANINGFUL_TEXT_RE.test(v) || VERSION_RE.test(v.trim()), "Enter a valid version, e.g. 1.4.0 or v2.0.0-beta"),
-  description: z.string().max(10000, "Release notes must be 10,000 characters or fewer").nullable().optional(),
+  description: z
+    .string()
+    .nullable()
+    .optional()
+    .refine(
+      (v) => !v || v.replace(/<[^>]*>/g, "").length <= 10000,
+      "Release notes must be 10,000 characters or fewer",
+    ),
   status: z.enum(["draft", "released", "archived"]),
   releaseDate: z.string().nullable().optional(),
 });

@@ -405,11 +405,27 @@ export default function ProjectBoardPage({ params }: PageProps) {
               <ViewSwitcher activeView={view} onViewChange={handleViewChange} />
               <DisplayOptionsPanel options={displayOptions} onChange={setDisplayOptions} />
               <div className="flex items-center gap-1.5">
-                <AnimatedToolbarIconButton
-                  onClick={handleExportCsv}
-                  ariaLabel="Export tickets"
-                  Icon={DownloadIcon}
-                />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8 shrink-0 bg-card"
+                      aria-label="Export tickets"
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-48">
+                    <DropdownMenuItem onClick={handleExportCurrentView}>
+                      Export current view
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleExportAllTickets}>
+                      Export all tickets
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <AnimatedToolbarIconButton
                   onClick={handleOpenImport}
                   ariaLabel="Import tickets"

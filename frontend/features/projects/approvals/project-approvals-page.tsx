@@ -48,7 +48,7 @@ import { ApprovalStatusBadge, entityTypeLabel } from "./approval-status-badge";
 import { DecideDialog } from "./decide-dialog";
 import { DelegateDialog } from "./delegate-dialog";
 import { RequestApprovalSheet } from "./request-approval-sheet";
-import type { Approval, ApprovalStatus, CreateApprovalInput, DecideApprovalInput } from "@/types/projects";
+import type { Approval, ApprovalEntityType, ApprovalStatus, CreateApprovalInput, DecideApprovalInput } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 const STATUS_OPTIONS: { value: string; label: string }[] = [
@@ -90,6 +90,7 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
   const [status, setStatus] = useState("all");
   const [entityType, setEntityType] = useState("all");
   const [requestOpen, setRequestOpen] = useState(false);
+  const [defaultEntityType, setDefaultEntityType] = useState<ApprovalEntityType | undefined>(undefined);
   const [decideTarget, setDecideTarget] = useState<Approval | null>(null);
   const [delegateTarget, setDelegateTarget] = useState<Approval | null>(null);
   const [cancelTarget, setCancelTarget] = useState<Approval | null>(null);
@@ -112,6 +113,11 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
     const m = members.find((x) => x.userId === userId);
     return m?.name ?? m?.email ?? userId;
   }, [members]);
+
+  const handleOpenRequest = useCallback((preset?: ApprovalEntityType) => {
+    setDefaultEntityType(preset);
+    setRequestOpen(true);
+  }, []);
 
   const handleCreate = useCallback((input: CreateApprovalInput) => {
     createApproval.mutate(input, {
@@ -304,7 +310,7 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
       filters={filtersBar}
       actions={
         canRequest ? (
-          <Button size="sm" className="h-8 text-xs" onClick={() => setRequestOpen(true)}>
+          <Button size="sm" className="h-8 text-xs" onClick={() => handleOpenRequest()}>
             Request Approval
           </Button>
         ) : undefined
@@ -322,18 +328,35 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
             description={
               isFiltered
                 ? "No approvals match your filters."
-                : "Request an approval on a task, milestone, budget or release to get started."
+                : "Use approvals to get sign-off on tasks, milestones, and releases before they ship."
             }
             action={
               isFiltered
                 ? { label: "Clear filters", onClick: () => { setStatus("all"); setEntityType("all"); } }
                 : canRequest
-                  ? { label: "Request Approval", onClick: () => setRequestOpen(true) }
+                  ? { label: "Request task approval", onClick: () => handleOpenRequest("task") }
                   : undefined
+            }
+            secondaryAction={
+              !isFiltered && canRequest
+                ? { label: "Request release approval", onClick: () => handleOpenRequest("release") }
+                : undefined
             }
           />
         ) : (
           <DataTable data={items} columns={columns} getRowKey={(row) => row.id} minWidth="720px" />
+        )}
+        {!isFiltered && items.length === 0 && canRequest && (
+          <div className="flex justify-center mt-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs text-muted-foreground h-7"
+              onClick={() => handleOpenRequest("milestone")}
+            >
+              Request milestone approval
+            </Button>
+          </div>
         )}
       </div>
 
@@ -342,8 +365,9 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
         onOpenChange={setRequestOpen}
         onSubmit={handleCreate}
         isPending={createApproval.isPending}
-        members={members}
+        projectId={projectId}
         currentUserId={currentUserId}
+        defaultEntityType={defaultEntityType}
       />
       <DecideDialog
         open={!!decideTarget}

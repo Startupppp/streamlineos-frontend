@@ -9,6 +9,7 @@ interface UserComboboxProps {
   placeholder?: string;
   disabled?: boolean;
   allowUnassigned?: boolean;
+  excludeUserId?: string;
   className?: string;
 }
 
@@ -18,15 +19,18 @@ export function UserCombobox({
   placeholder = "Select member…",
   disabled,
   allowUnassigned = false,
+  excludeUserId,
   className,
 }: UserComboboxProps) {
   const { data } = useOrgMembers(1, 200);
 
-  const memberOptions = (data?.data ?? []).map((m) => ({
-    value: m.userId,
-    label: m.name ?? m.email,
-    sublabel: m.email,
-  }));
+  const memberOptions = (data?.data ?? [])
+    .filter((m) => !excludeUserId || m.userId !== excludeUserId)
+    .map((m) => ({
+      value: m.userId,
+      label: m.name ?? m.email,
+      sublabel: m.email,
+    }));
 
   const options = allowUnassigned
     ? [{ value: "", label: "Unassigned" }, ...memberOptions]

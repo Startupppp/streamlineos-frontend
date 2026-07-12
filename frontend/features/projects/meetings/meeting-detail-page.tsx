@@ -157,6 +157,7 @@ export function MeetingDetailPage({ projectId, meetingId }: MeetingDetailPagePro
         onSubmitCreate={() => undefined}
         onSubmitEdit={handleUpdate}
         isPending={updateMeeting.isPending}
+        projectMembers={projectMembers}
       />
 
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>

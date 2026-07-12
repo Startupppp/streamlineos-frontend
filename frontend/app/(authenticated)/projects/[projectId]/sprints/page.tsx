@@ -16,7 +16,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import type { DropResult } from "@hello-pangea/dnd";
 import { SprintCard } from "@/features/projects/sprints/sprint-card";
 import { CompleteSprintSheet } from "@/features/projects/sprints/complete-sprint-sheet";
-import { SprintPlanningPanel } from "@/features/projects/sprints/sprint-planning-panel";
+import { SprintPlanningPanel, type PlanningTicket } from "@/features/projects/sprints/sprint-planning-panel";
 import { ModuleDisabledState } from "@/features/projects/shared/module-disabled-state";
 
 interface PageProps {
@@ -57,6 +57,7 @@ export default function SprintsPage({ params }: PageProps) {
 
   const handleClosePlanningSheet = useCallback(() => {
     setPlanningSprintId(null);
+    toast.success("Sprint planning saved");
   }, []);
 
   const handleCancelCompletion = useCallback(() => {
@@ -100,9 +101,43 @@ export default function SprintsPage({ params }: PageProps) {
     const newSprintId = destination.droppableId === "backlog" ? undefined : parseInt(destination.droppableId);
 
     updateTicket.mutate(
-      { ticketId, ...(newSprintId !== undefined ? { sprintId: newSprintId } : {}) },
+      { ticketId, ...(newSprintId !== undefined ? { sprintId: newSprintId } : { sprintId: null }) },
       { onError: (error) => toast.error(getErrorMessage(error)) }
     );
+  }, [updateTicket]);
+
+  const handleAddTicket = useCallback((ticketId: number) => {
+    if (!planningSprintId) return;
+    updateTicket.mutate(
+      { ticketId, sprintId: planningSprintId },
+      { onError: (error) => toast.error(getErrorMessage(error)) }
+    );
+  }, [planningSprintId, updateTicket]);
+
+  const handleRemoveTicket = useCallback((ticketId: number) => {
+    updateTicket.mutate(
+      { ticketId, sprintId: null },
+      { onError: (error) => toast.error(getErrorMessage(error)) }
+    );
+  }, [updateTicket]);
+
+  const handleBulkAdd = useCallback((ticketIds: number[]) => {
+    if (!planningSprintId) return;
+    const promises = ticketIds.map((ticketId) =>
+      updateTicket.mutateAsync({ ticketId, sprintId: planningSprintId })
+    );
+    Promise.all(promises)
+      .then(() => toast.success(`${ticketIds.length} ticket${ticketIds.length !== 1 ? "s" : ""} added to sprint`))
+      .catch((err) => toast.error(getErrorMessage(err)));
+  }, [planningSprintId, updateTicket]);
+
+  const handleBulkRemove = useCallback((ticketIds: number[]) => {
+    const promises = ticketIds.map((ticketId) =>
+      updateTicket.mutateAsync({ ticketId, sprintId: null })
+    );
+    Promise.all(promises)
+      .then(() => toast.success(`${ticketIds.length} ticket${ticketIds.length !== 1 ? "s" : ""} removed from sprint`))
+      .catch((err) => toast.error(getErrorMessage(err)));
   }, [updateTicket]);
 
   if (project?.settings?.modules?.sprints === false) {
@@ -135,7 +170,23 @@ export default function SprintsPage({ params }: PageProps) {
   const completedSprints = sprints?.filter((s) => s.status === "COMPLETED") || [];
 
   const allTickets = project?.tickets || [];
-  const backlogTickets = allTickets.filter((t) => !t.sprintId && t.type !== "EPIC");
+  const sprintTicketIds = new Set(
+    (sprints ?? []).flatMap((s) => (s.tickets ?? []).map((t) => t.id))
+  );
+  const backlogTickets: PlanningTicket[] = allTickets
+    .filter((t) => !t.sprintId && t.type !== "EPIC" && !sprintTicketIds.has(t.id))
+    .map((t) => ({
+      id: t.id,
+      title: t.title,
+      status: t.status,
+      points: t.points,
+      sprintId: t.sprintId ?? null,
+      type: t.type,
+      priority: t.priority,
+      ticketNumber: t.ticketNumber,
+      assigneeId: t.assigneeId,
+      assignee: t.assignee ?? null,
+    }));
 
   const planningSprint = planningSprintId ? sprints?.find((s) => s.id === planningSprintId) : null;
   const completionSprint = completionSprintId ? sprints?.find((s) => s.id === completionSprintId) : null;
@@ -153,8 +204,15 @@ export default function SprintsPage({ params }: PageProps) {
         <SprintPlanningPanel
           sprint={planningSprint}
           backlogTickets={backlogTickets}
+          projectKey={project?.key ?? null}
           onDragEnd={handlePlanningDragEnd}
+          onAddTicket={handleAddTicket}
+          onRemoveTicket={handleRemoveTicket}
+          onBulkAdd={handleBulkAdd}
+          onBulkRemove={handleBulkRemove}
           onDone={handleClosePlanningSheet}
+          isMutating={updateTicket.isPending}
+          sprintCapacity={null}
         />
       )}
 

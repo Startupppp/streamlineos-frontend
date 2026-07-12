@@ -24,6 +24,18 @@ export interface SprintData {
     title?: string;
     status: string | null;
     points: number | null;
+    type?: string | null;
+    priority?: string | null;
+    ticketNumber?: number | null;
+    assigneeId?: string | null;
+    assignee?: {
+      id: string;
+      name?: string | null;
+      firstName?: string | null;
+      lastName?: string | null;
+      email?: string | null;
+      image?: string | null;
+    } | null;
   }>;
 }
 
