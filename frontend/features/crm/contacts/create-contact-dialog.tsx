@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { useCreateContact } from "@/hooks/api/crm";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const createContactSchema = z.object({
   name: z.string().min(1, "Name is required").max(200),
@@ -73,7 +74,7 @@ export function CreateContactDialog({
             toast.success("Contact created");
             onOpenChange(false);
           },
-          onError: (err) => toast.error(err.message),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },

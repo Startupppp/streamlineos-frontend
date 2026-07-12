@@ -1,43 +1,11 @@
 "use client";
 
 import { use, useState, useCallback } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useReducedMotion, motion } from "framer-motion";
-import {
-  Send,
-  CheckCircle2,
-  XCircle,
-  Trash2,
-  FileText,
-  Calendar,
-  User,
-  Building2,
-  AlertTriangle,
-  FileCheck2,
-  Receipt,
-  Pencil,
-} from "lucide-react";
 import { toast } from "sonner";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Separator } from "@/components/ui/separator";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ErrorState } from "@/components/shared";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
@@ -56,16 +24,17 @@ import { useCan } from "@/hooks/api/access";
 import { useQuoteSettings, usePricebooks, useQuoteTemplates } from "@/hooks/api/crm/pricebooks";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { QuoteStatusProgress } from "@/features/crm/quotes/components/quote-status-progress";
-import { QuoteLineItemsTable } from "@/features/crm/quotes/components/quote-line-items-table";
 import {
   QuoteCreateSheet,
   type QuoteSubmitValues,
 } from "@/features/crm/quotes/components/quote-create-sheet";
+import { QuoteActionBar } from "@/features/crm/quotes/components/quote-action-bar";
+import { QuoteApprovalBanner } from "@/features/crm/quotes/components/quote-approval-banner";
+import { QuoteDetailContent } from "@/features/crm/quotes/components/quote-detail-content";
+import { QuoteDetailDialogs } from "@/features/crm/quotes/components/quote-detail-dialogs";
 import {
   STATUS_LABELS,
   STATUS_BADGE_CLASSES,
-  formatCurrency,
-  formatDate,
 } from "@/features/crm/quotes/lib/quote-utils";
 
 export default function QuoteDetailPage({
@@ -261,478 +230,98 @@ export default function QuoteDetailPage({
     0,
   );
 
-  const canSend = quote.status === "DRAFT" && quote.approvalStatus !== "pending";
-  const canAcceptOrReject = quote.status === "SENT";
-  const canDelete = quote.status === "DRAFT";
-  const canConvert = quote.status === "ACCEPTED" && quote.convertedInvoiceId === null;
-  const canMarkSigned = quote.status === "ACCEPTED" && quote.signedAt === null;
-
   return (
     <>
-    <PageWrapper
-      title={quote.subject}
-      backHref="/crm/quotes"
-      subtitle={
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-mono text-sm text-muted-foreground">
-            {quote.quoteNumber}
-          </span>
-          <Badge
-            variant="outline"
-            className={cn("text-[10px]", STATUS_BADGE_CLASSES[quote.status])}
-          >
-            {STATUS_LABELS[quote.status]}
-          </Badge>
-        </div>
-      }
-      actions={
-        <div className="flex items-center gap-2 flex-wrap">
-          {canApprove && quote.approvalStatus === "pending" && (
-            <>
-              <LoadingButton
-                size="sm"
-                className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                onClick={handleApprove}
-                isPending={approveQuote.isPending}
-                loadingText="Approving..."
-              >
-                <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
-                Approve
-              </LoadingButton>
-              <LoadingButton
-                size="sm"
-                variant="outline"
-                className="border-red-300 text-red-600 hover:bg-red-50"
-                onClick={handleApprovalRejectOpen}
-                isPending={rejectQuote.isPending}
-                loadingText="Rejecting..."
-              >
-                Reject Approval
-              </LoadingButton>
-            </>
-          )}
-          {quote.status === "DRAFT" && (
-            <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>
-              <Pencil className="h-3.5 w-3.5 mr-1.5" />
-              Edit
-            </Button>
-          )}
-          {canSend && (
-            <Button
-              size="sm"
+      <PageWrapper
+        title={quote.subject}
+        backHref="/crm/quotes"
+        subtitle={
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-mono text-sm text-muted-foreground">
+              {quote.quoteNumber}
+            </span>
+            <Badge
               variant="outline"
-              onClick={handleSend}
-              disabled={updateStatus.isPending}
-              title={quote.approvalStatus === "pending" ? "Pending approval" : undefined}
+              className={cn("text-[10px]", STATUS_BADGE_CLASSES[quote.status])}
             >
-              <Send className="h-3.5 w-3.5 mr-1.5" />
-              Send
-            </Button>
-          )}
-          {canAcceptOrReject && (
-            <>
-              <Button
-                size="sm"
-                variant="outline"
-                className="text-emerald-600 border-emerald-200 hover:bg-emerald-50"
-                onClick={handleAccept}
-                disabled={updateStatus.isPending}
-              >
-                <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
-                Accept
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="text-red-600 border-red-200 hover:bg-red-50"
-                onClick={handleRejectOpen}
-                disabled={updateStatus.isPending}
-              >
-                <XCircle className="h-3.5 w-3.5 mr-1.5" />
-                Reject
-              </Button>
-            </>
-          )}
-          {canConvert && (
-            <LoadingButton
-              size="sm"
-              variant="outline"
-              onClick={handleConvertToInvoice}
-              isPending={convertToInvoice.isPending}
-              loadingText="Converting..."
-            >
-              <Receipt className="h-3.5 w-3.5 mr-1.5" />
-              Convert to Invoice
-            </LoadingButton>
-          )}
-          {canMarkSigned && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleMarkSignedOpen}
-            >
-              <FileCheck2 className="h-3.5 w-3.5 mr-1.5" />
-              Mark Signed
-            </Button>
-          )}
-          {canDelete && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="text-destructive border-destructive/30 hover:bg-destructive/10"
-                >
-                  <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-                  Delete
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete quote?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This action cannot be undone. The quote will be permanently removed.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    onClick={handleDelete}
-                  >
-                    Delete
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
-        </div>
-      }
-    >
-      {quote.approvalStatus === "pending" && (
-        <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
-          <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-amber-800">Pending Approval</p>
-            <p className="text-xs text-amber-700 mt-0.5">
-              This quote requires approval before it can be sent.
-            </p>
+              {STATUS_LABELS[quote.status]}
+            </Badge>
           </div>
-          {canApprove && (
-            <div className="flex items-center gap-2 shrink-0">
-              <LoadingButton
-                size="sm"
-                className="bg-emerald-600 hover:bg-emerald-700 text-white h-7 text-xs"
-                onClick={handleApprove}
-                isPending={approveQuote.isPending}
-                loadingText="Approving..."
-              >
-                Approve
-              </LoadingButton>
-              <LoadingButton
-                size="sm"
-                variant="outline"
-                className="border-red-300 text-red-600 hover:bg-red-50 h-7 text-xs"
-                onClick={handleApprovalRejectOpen}
-                isPending={rejectQuote.isPending}
-                loadingText="Rejecting..."
-              >
-                Reject
-              </LoadingButton>
-            </div>
-          )}
-        </div>
-      )}
-      {quote.approvalStatus === "rejected" && (
-        <div className="mb-4 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3">
-          <XCircle className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
-          <p className="text-sm text-red-700">Approval was rejected. Edit the quote and resubmit.</p>
-        </div>
-      )}
-      {quote.approvalStatus === "approved" && (
-        <div className="mb-4 flex items-start gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
-          <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-          <p className="text-sm text-emerald-700">Quote approved — ready to send.</p>
-        </div>
-      )}
-
-      <motion.div
-        className="space-y-4"
-        variants={staggerContainer}
-        initial="hidden"
-        animate="visible"
+        }
+        actions={
+          <QuoteActionBar
+            quote={quote}
+            canApprove={canApprove}
+            onEdit={() => setEditOpen(true)}
+            onSend={handleSend}
+            onAccept={handleAccept}
+            onRejectOpen={handleRejectOpen}
+            onApprove={handleApprove}
+            onApprovalRejectOpen={handleApprovalRejectOpen}
+            onConvertToInvoice={handleConvertToInvoice}
+            onMarkSignedOpen={handleMarkSignedOpen}
+            onDelete={handleDelete}
+            updateStatusPending={updateStatus.isPending}
+            approvePending={approveQuote.isPending}
+            rejectPending={rejectQuote.isPending}
+            convertPending={convertToInvoice.isPending}
+            deletePending={deleteQuote.isPending}
+          />
+        }
       >
-        <motion.div variants={sectionVariants}>
-          <QuoteStatusProgress status={quote.status} />
-        </motion.div>
+        <QuoteApprovalBanner
+          quote={quote}
+          canApprove={canApprove}
+          onApprove={handleApprove}
+          onApprovalRejectOpen={handleApprovalRejectOpen}
+          approvePending={approveQuote.isPending}
+          rejectPending={rejectQuote.isPending}
+        />
 
         <motion.div
-          variants={sectionVariants}
-          className="grid grid-cols-1 lg:grid-cols-3 gap-4"
+          className="space-y-4"
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
         >
-          <div className="lg:col-span-2 space-y-4">
-            <Card className="shadow-sm">
-              <CardHeader className="px-4 py-3 border-b">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-muted-foreground" />
-                  Line Items
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4">
-                <QuoteLineItemsTable lineItems={lineItems} currency={quote.currency} />
-                <div className="mt-4 space-y-1.5 max-w-xs ml-auto">
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>Subtotal</span>
-                    <span className="tabular-nums">
-                      {formatCurrency(String(subtotal), quote.currency)}
-                    </span>
-                  </div>
-                  {parseFloat(quote.taxAmount) > 0 && (
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>Tax</span>
-                      <span className="tabular-nums">
-                        {formatCurrency(quote.taxAmount, quote.currency)}
-                      </span>
-                    </div>
-                  )}
-                  {parseFloat(quote.discountAmount) > 0 && (
-                    <div className="flex justify-between text-xs text-emerald-600">
-                      <span>Discount</span>
-                      <span className="tabular-nums">
-                        −{formatCurrency(quote.discountAmount, quote.currency)}
-                      </span>
-                    </div>
-                  )}
-                  <Separator />
-                  <div className="flex justify-between text-sm font-semibold">
-                    <span>Net Total</span>
-                    <span className="tabular-nums">
-                      {formatCurrency(quote.netAmount, quote.currency)}
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+          <motion.div variants={sectionVariants}>
+            <QuoteStatusProgress status={quote.status} />
+          </motion.div>
 
-            {quote.termsAndConditions && (
-              <Card className="shadow-sm">
-                <CardHeader className="px-4 py-3 border-b">
-                  <CardTitle className="text-sm font-medium">
-                    Terms &amp; Conditions
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="px-4 py-3">
-                  <p className="text-xs text-muted-foreground whitespace-pre-wrap">
-                    {quote.termsAndConditions}
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-
-            {quote.notes && (
-              <Card className="shadow-sm">
-                <CardHeader className="px-4 py-3 border-b">
-                  <CardTitle className="text-sm font-medium">Notes</CardTitle>
-                </CardHeader>
-                <CardContent className="px-4 py-3">
-                  <p className="text-xs text-muted-foreground whitespace-pre-wrap">
-                    {quote.notes}
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-
-          <div className="space-y-4">
-            <Card className="shadow-sm">
-              <CardHeader className="px-4 py-3 border-b">
-                <CardTitle className="text-sm font-medium">Details</CardTitle>
-              </CardHeader>
-              <CardContent className="px-4 py-3 space-y-3">
-                {quote.deal && (
-                  <div className="flex items-start gap-2.5">
-                    <Building2 className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
-                    <div className="min-w-0">
-                      <p className="text-[10px] text-muted-foreground">Deal</p>
-                      <Link
-                        href={`/crm/deals/${quote.deal.id}`}
-                        className="text-xs font-medium text-blue-600 hover:underline truncate block"
-                      >
-                        {quote.deal.name}
-                      </Link>
-                    </div>
-                  </div>
-                )}
-                {quote.client && (
-                  <div className="flex items-start gap-2.5">
-                    <User className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
-                    <div className="min-w-0">
-                      <p className="text-[10px] text-muted-foreground">Client</p>
-                      <Link
-                        href={`/crm/clients/${quote.client.id}`}
-                        className="text-xs font-medium text-blue-600 hover:underline truncate block"
-                      >
-                        {quote.client.clientName}
-                      </Link>
-                    </div>
-                  </div>
-                )}
-                <div className="flex items-start gap-2.5">
-                  <Calendar className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
-                  <div>
-                    <p className="text-[10px] text-muted-foreground">Valid Until</p>
-                    <p className="text-xs font-medium">{formatDate(quote.validUntil)}</p>
-                  </div>
-                </div>
-                {quote.createdBy && (
-                  <div className="flex items-start gap-2.5">
-                    <User className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
-                    <div>
-                      <p className="text-[10px] text-muted-foreground">Created By</p>
-                      <p className="text-xs font-medium">{quote.createdBy.name ?? "—"}</p>
-                    </div>
-                  </div>
-                )}
-                <div className="flex items-start gap-2.5">
-                  <Calendar className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
-                  <div>
-                    <p className="text-[10px] text-muted-foreground">Created</p>
-                    <p className="text-xs">{formatDate(quote.createdAt)}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {(quote.sentAt ?? quote.acceptedAt ?? quote.rejectedAt) && (
-              <Card className="shadow-sm">
-                <CardHeader className="px-4 py-3 border-b">
-                  <CardTitle className="text-sm font-medium">History</CardTitle>
-                </CardHeader>
-                <CardContent className="px-4 py-3 space-y-2">
-                  {quote.sentAt && (
-                    <div className="flex items-center gap-2">
-                      <Send className="h-3 w-3 text-blue-500 shrink-0" />
-                      <div>
-                        <p className="text-[10px] text-muted-foreground">Sent</p>
-                        <p className="text-xs">{formatDate(quote.sentAt)}</p>
-                      </div>
-                    </div>
-                  )}
-                  {quote.acceptedAt && (
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-3 w-3 text-emerald-500 shrink-0" />
-                      <div>
-                        <p className="text-[10px] text-muted-foreground">Accepted</p>
-                        <p className="text-xs">{formatDate(quote.acceptedAt)}</p>
-                      </div>
-                    </div>
-                  )}
-                  {quote.rejectedAt && (
-                    <div className="flex items-center gap-2">
-                      <XCircle className="h-3 w-3 text-red-500 shrink-0" />
-                      <div>
-                        <p className="text-[10px] text-muted-foreground">Rejected</p>
-                        <p className="text-xs">{formatDate(quote.rejectedAt)}</p>
-                        {quote.rejectionReason && (
-                          <p className="text-[10px] text-muted-foreground mt-0.5">
-                            {quote.rejectionReason}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-          </div>
+          <motion.div variants={sectionVariants}>
+            <QuoteDetailContent quote={quote} subtotal={subtotal} />
+          </motion.div>
         </motion.div>
-      </motion.div>
-    </PageWrapper>
+      </PageWrapper>
 
-    <QuoteCreateSheet
-      open={editOpen}
-      onOpenChange={setEditOpen}
-      editTarget={quote}
-      isPending={updateQuote.isPending}
-      onSubmit={handleEditSubmit}
-      quoteSettings={settings ?? undefined}
-      pricebooks={pricebooks ?? undefined}
-      quoteTemplates={templates ?? undefined}
-    />
+      <QuoteCreateSheet
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        editTarget={quote}
+        isPending={updateQuote.isPending}
+        onSubmit={handleEditSubmit}
+        quoteSettings={settings ?? undefined}
+        pricebooks={pricebooks ?? undefined}
+        quoteTemplates={templates ?? undefined}
+      />
 
-    <AlertDialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Reject quote?</AlertDialogTitle>
-          <AlertDialogDescription>Optionally provide a reason for rejection.</AlertDialogDescription>
-        </AlertDialogHeader>
-        <div className="px-6 pb-2">
-          <Textarea
-            placeholder="Rejection reason (optional)"
-            value={rejectReason}
-            onChange={(e) => setRejectReason(e.target.value)}
-            rows={2}
-            className="resize-none text-sm"
-          />
-        </div>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            onClick={handleRejectConfirm}
-          >
-            Reject
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-
-    <AlertDialog open={approvalRejectOpen} onOpenChange={setApprovalRejectOpen}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Reject approval request?</AlertDialogTitle>
-          <AlertDialogDescription>Optionally provide a reason.</AlertDialogDescription>
-        </AlertDialogHeader>
-        <div className="px-6 pb-2">
-          <Textarea
-            placeholder="Reason (optional)"
-            value={approvalRejectReason}
-            onChange={(e) => setApprovalRejectReason(e.target.value)}
-            rows={2}
-            className="resize-none text-sm"
-          />
-        </div>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            onClick={handleApprovalRejectConfirm}
-          >
-            Reject Approval
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-
-    <AlertDialog open={signedDialogOpen} onOpenChange={setSignedDialogOpen}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Mark as signed?</AlertDialogTitle>
-          <AlertDialogDescription>Optionally attach a document reference.</AlertDialogDescription>
-        </AlertDialogHeader>
-        <div className="px-6 pb-2">
-          <Input
-            placeholder="Document reference (optional)"
-            value={signedDocRef}
-            onChange={(e) => setSignedDocRef(e.target.value)}
-          />
-        </div>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={handleMarkSignedConfirm}>Mark Signed</AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+      <QuoteDetailDialogs
+        rejectDialogOpen={rejectDialogOpen}
+        onRejectDialogOpenChange={setRejectDialogOpen}
+        rejectReason={rejectReason}
+        onRejectReasonChange={setRejectReason}
+        onRejectConfirm={handleRejectConfirm}
+        approvalRejectOpen={approvalRejectOpen}
+        onApprovalRejectOpenChange={setApprovalRejectOpen}
+        approvalRejectReason={approvalRejectReason}
+        onApprovalRejectReasonChange={setApprovalRejectReason}
+        onApprovalRejectConfirm={handleApprovalRejectConfirm}
+        signedDialogOpen={signedDialogOpen}
+        onSignedDialogOpenChange={setSignedDialogOpen}
+        signedDocRef={signedDocRef}
+        onSignedDocRefChange={setSignedDocRef}
+        onMarkSignedConfirm={handleMarkSignedConfirm}
+      />
     </>
   );
 }

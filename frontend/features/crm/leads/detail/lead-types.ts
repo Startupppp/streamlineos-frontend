@@ -16,7 +16,7 @@ export const STATUS_STYLES: Record<string, { color: string; bg: string }> = {
   NEW:        { color: "text-white", bg: "bg-blue-600    border border-blue-500"    },
   CONTACTED:  { color: "text-white", bg: "bg-cyan-600    border border-cyan-500"    },
   INTERESTED: { color: "text-white", bg: "bg-amber-600   border border-amber-500"   },
-  QUALIFIED:  { color: "text-white", bg: "bg-violet-600  border border-violet-500"  },
+  QUALIFIED:  { color: "text-white", bg: "bg-blue-600  border border-blue-500"  },
   CONVERTED:  { color: "text-white", bg: "bg-emerald-600 border border-emerald-500" },
   LOST:       { color: "text-white", bg: "bg-rose-600    border border-rose-500"    },
 };
@@ -35,7 +35,7 @@ export const TIMELINE_ICONS: Record<
   { icon: React.ComponentType<{ className?: string }>; color: string }
 > = {
   note: { icon: StickyNote, color: "bg-amber-500/15 text-amber-400" },
-  task: { icon: ListTodo, color: "bg-purple-500/15 text-purple-400" },
+  task: { icon: ListTodo, color: "bg-blue-500/15 text-blue-400" },
   email: { icon: Mail, color: "bg-blue-500/15 text-blue-400" },
   activity: { icon: Phone, color: "bg-green-500/15 text-green-400" },
 };

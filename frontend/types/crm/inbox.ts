@@ -16,8 +16,18 @@ export interface CrmInboxSection {
   total: number;
 }
 
+export interface CrmAiAction {
+  type: string;
+  entityType: "lead" | "deal" | "quote";
+  entityId: number;
+  title: string;
+  reason: string;
+  href: string;
+}
+
 export interface CrmInboxResponse {
   sections: CrmInboxSection[];
+  aiActions: CrmAiAction[];
 }
 
 export interface CrmInboxCounts {

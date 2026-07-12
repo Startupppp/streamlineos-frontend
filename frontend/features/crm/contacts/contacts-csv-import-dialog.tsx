@@ -29,6 +29,7 @@ import {
 import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { CsvFieldMapper } from "@/features/crm/leads/csv-field-mapper";
 
 const VALID_SOURCES = [
@@ -456,7 +457,7 @@ export function ContactsCsvImportDialog({
           toast.warning("No contacts were imported");
         }
       },
-      onError: (err) => toast.error(err.message),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [parsed, bulkImport, onSuccess]);
 

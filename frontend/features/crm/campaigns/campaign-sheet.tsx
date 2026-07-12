@@ -11,6 +11,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
+  SheetFooter,
 } from "@/components/ui/sheet";
 import {
   Form,
@@ -29,6 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateCampaign, useUpdateCampaign } from "@/hooks/api/crm/campaigns";
@@ -137,8 +139,8 @@ export function CampaignSheet({ open, onOpenChange, campaign }: CampaignSheetPro
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-        <SheetHeader className="mb-4">
+      <SheetContent className="w-full sm:max-w-lg flex flex-col gap-0 p-0">
+        <SheetHeader className="px-6 py-4 border-b shrink-0">
           <SheetTitle>{isEditing ? "Edit Campaign" : "New Campaign"}</SheetTitle>
           <SheetDescription>
             {isEditing ? "Update campaign details." : "Create a new marketing campaign."}
@@ -146,96 +148,126 @@ export function CampaignSheet({ open, onOpenChange, campaign }: CampaignSheetPro
         </SheetHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Summer Email Blast" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="channel"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Channel</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select channel" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {CAMPAIGN_CHANNELS.map((c) => (
-                        <SelectItem key={c.value} value={c.value}>
-                          {c.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="utmCampaignKey"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>UTM Campaign Key</FormLabel>
-                  <FormControl>
-                    <Input placeholder="summer_2024_email" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="budgetAllocated"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Budget (₹)</FormLabel>
-                  <FormControl>
-                    <Input type="number" placeholder="50000" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-2 gap-3">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col flex-1 overflow-y-auto">
+            <div className="flex-1 px-6 py-5 space-y-4">
               <FormField
                 control={form.control}
-                name="startDate"
+                name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Start Date</FormLabel>
+                    <FormLabel>Name</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input placeholder="Summer Email Blast" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
-                name="endDate"
+                name="channel"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>End Date</FormLabel>
+                    <FormLabel>Channel</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select channel" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {CAMPAIGN_CHANNELS.map((c) => (
+                          <SelectItem key={c.value} value={c.value}>
+                            {c.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="utmCampaignKey"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>UTM Campaign Key</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input placeholder="summer_2024_email" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="budgetAllocated"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Budget (₹)</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="50000" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="startDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Start Date</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="endDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>End Date</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="targetAudience"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Target Audience</FormLabel>
+                    <FormControl>
+                      <Input placeholder="SMB decision-makers" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Campaign objectives and notes..." rows={3} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -243,37 +275,16 @@ export function CampaignSheet({ open, onOpenChange, campaign }: CampaignSheetPro
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name="targetAudience"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Target Audience</FormLabel>
-                  <FormControl>
-                    <Input placeholder="SMB decision-makers" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Campaign objectives and notes..." rows={3} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <LoadingButton type="submit" isPending={isPending} loadingText="Saving..." className="w-full">
-              {isEditing ? "Save Changes" : "Create Campaign"}
-            </LoadingButton>
+            <SheetFooter className="px-6 py-4 border-t shrink-0">
+              <div className="grid w-full grid-cols-2 gap-2">
+                <Button type="button" variant="outline" size="sm" onClick={() => onOpenChange(false)} disabled={isPending}>
+                  Cancel
+                </Button>
+                <LoadingButton type="submit" size="sm" isPending={isPending} loadingText="Saving...">
+                  {isEditing ? "Save Changes" : "Create Campaign"}
+                </LoadingButton>
+              </div>
+            </SheetFooter>
           </form>
         </Form>
       </SheetContent>

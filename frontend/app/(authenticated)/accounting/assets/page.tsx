@@ -59,14 +59,14 @@ const METHOD_OPTIONS: ReadonlyArray<{ value: DepreciationMethod; label: string }
 
 const createAssetSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  categoryId: z.coerce.number().min(1, "Category is required"),
+  categoryId: z.number().min(1, "Category is required"),
   acquisitionDate: z.string().min(1, "Date is required"),
   acquisitionCost: z.string().min(1, "Cost is required"),
-  salvageValue: z.string().default("0"),
-  usefulLifeMonths: z.coerce.number().min(1, "Useful life is required"),
+  salvageValue: z.string(),
+  usefulLifeMonths: z.number().min(1, "Useful life is required"),
   depreciationMethod: z.enum(["STRAIGHT_LINE", "DECLINING_BALANCE", "UNITS_OF_PRODUCTION"]),
-  vendorId: z.coerce.number().optional(),
-  billId: z.coerce.number().optional(),
+  vendorId: z.number().optional(),
+  billId: z.number().optional(),
 });
 
 type CreateAssetFormValues = z.infer<typeof createAssetSchema>;
@@ -415,7 +415,7 @@ export default function FixedAssetsPage() {
         </Tabs>
       </PageWrapper>
 
-      <EntityFormSheet
+      <EntityFormSheet<CreateAssetFormValues>
         open={createOpen}
         onOpenChange={setCreateOpen}
         title="Add Fixed Asset"
@@ -486,7 +486,7 @@ export default function FixedAssetsPage() {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="asset-life">Useful Life (months)</Label>
-                <Input id="asset-life" type="number" min={1} {...form.register("usefulLifeMonths")} placeholder="60" />
+                <Input id="asset-life" type="number" min={1} {...form.register("usefulLifeMonths", { valueAsNumber: true })} placeholder="60" />
                 {form.formState.errors.usefulLifeMonths && (
                   <p className="text-xs text-destructive">{form.formState.errors.usefulLifeMonths.message}</p>
                 )}

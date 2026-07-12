@@ -33,6 +33,10 @@ const RECORD_TYPES: ApprovalRecordType[] = [
   "EXPENSE", "CREDIT_NOTE", "PERIOD_REOPEN", "BANK_ADJUSTMENT",
 ];
 
+function isApprovalRecordType(value: string): value is ApprovalRecordType {
+  return (RECORD_TYPES as ReadonlyArray<string>).includes(value);
+}
+
 const sequenceSchema = z.object({
   prefix: z.string().min(1),
   padding: z.string().min(1),
@@ -148,12 +152,17 @@ export function SystemAccountMapDialog({
       isSubmitting={upsert.isPending}
       resetOnOpen
     >
-      {(form) => (
+      {(form) => {
+        function handleAccountChange(v: string): void {
+          form.setValue("accountId", v, { shouldValidate: true });
+        }
+
+        return (
         <div className="space-y-1.5">
           <Label>Account</Label>
           <Select
             value={form.watch("accountId")}
-            onValueChange={(v) => form.setValue("accountId", v, { shouldValidate: true })}
+            onValueChange={handleAccountChange}
           >
             <SelectTrigger className="h-8 text-xs">
               <SelectValue placeholder="Select account" />
@@ -217,13 +226,18 @@ export function PolicyDialog({
       isSubmitting={isPending}
       resetOnOpen
     >
-      {(form) => (
+      {(form) => {
+        function handleRecordTypeChange(v: string): void {
+          if (isApprovalRecordType(v)) form.setValue("recordType", v, { shouldValidate: true });
+        }
+
+        return (
         <>
           <div className="space-y-1.5">
             <Label>Record type</Label>
             <Select
               value={form.watch("recordType")}
-              onValueChange={(v) => form.setValue("recordType", v as ApprovalRecordType, { shouldValidate: true })}
+              onValueChange={handleRecordTypeChange}
             >
               <SelectTrigger className="h-8 text-xs">
                 <SelectValue />
@@ -248,7 +262,8 @@ export function PolicyDialog({
             <Label htmlFor="policy-isActive">Active</Label>
           </div>
         </>
-      )}
+        );
+      }}
     </EntityFormDialog>
   );
 }

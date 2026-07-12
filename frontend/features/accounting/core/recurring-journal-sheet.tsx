@@ -53,8 +53,8 @@ const FREQUENCY_LABELS: Record<RecurringFrequency, string> = {
 
 const lineSchema = z.object({
   accountId: z.string().min(1, "Account required"),
-  debit: z.string().default(""),
-  credit: z.string().default(""),
+  debit: z.string(),
+  credit: z.string(),
   description: z.string().optional(),
 });
 

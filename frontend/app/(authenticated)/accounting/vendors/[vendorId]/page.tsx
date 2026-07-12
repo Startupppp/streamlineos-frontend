@@ -19,6 +19,7 @@ import {
 import { LoadingState, ErrorState } from "@/components/shared";
 import { DS } from "@/lib/design-system";
 import { useVendorLedger } from "@/hooks/api/accounting";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 function formatCurrency(value: string): string {
   const n = Number(value);

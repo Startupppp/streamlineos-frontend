@@ -17,6 +17,7 @@ import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { useCashFlow, type CashFlowSection } from "@/hooks/api/accounting";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const inrFormatter = new Intl.NumberFormat("en-IN", {
   style: "currency",
@@ -187,7 +188,7 @@ export default function CashFlowPage() {
         ) : query.error ? (
           <ErrorState
             title="Failed to load cash flow"
-            description={query.error.message}
+            description={getErrorMessage(query.error)}
             onRetry={handleRetry}
           />
         ) : !report || !hasActivity ? (

@@ -938,7 +938,7 @@ export const queryKeys = {
     salesOrders: (params?: Record<string, unknown>) => [...base, "inventory", "salesOrders", params] as const,
     salesOrder: (id: number) => [...base, "inventory", "salesOrder", id] as const,
     dashboard: () => [...base, "inventory", "dashboard"] as const,
-    stockSummary: (params?: Record<string, unknown>) => [...base, "inventory", "stockSummary", params] as const,
+    stockSummary: (params?: object) => [...base, "inventory", "stockSummary", params] as const,
     reorderReport: (params?: Record<string, unknown>) => [...base, "inventory", "reorderReport", params] as const,
     movementsReport: (params?: Record<string, unknown>) => [...base, "inventory", "movementsReport", params] as const,
     lots: (params?: Record<string, unknown>) => [...base, "inventory", "lots", params] as const,
@@ -958,7 +958,7 @@ export const queryKeys = {
     goodsReceipts: (params?: Record<string, unknown>) => [...base, "inventory", "goodsReceipts", params] as const,
     goodsReceipt: (id: number) => [...base, "inventory", "goodsReceipt", id] as const,
     replenishmentRules: (params?: Record<string, unknown>) => [...base, "inventory", "replenishmentRules", params] as const,
-    replenishmentSuggestions: (params?: Record<string, unknown>) => [...base, "inventory", "replenishmentSuggestions", params] as const,
+    replenishmentSuggestions: (params?: object) => [...base, "inventory", "replenishmentSuggestions", params] as const,
     forecasting: (params?: Record<string, unknown>) => [...base, "inventory", "forecasting", params] as const,
     valuationReport: (params?: Record<string, unknown>) => [...base, "inventory", "valuationReport", params] as const,
     qualityInspections: (params?: Record<string, unknown>) => [...base, "inventory", "qualityInspections", params] as const,
@@ -983,7 +983,7 @@ export const queryKeys = {
     exportJob: (id: number) => [...base, "inventory", "exportJob", id] as const,
     settings: () => [...base, "inventory", "settings"] as const,
     numberSequences: () => [...base, "inventory", "numberSequences"] as const,
-    aiInsights: (params?: Record<string, unknown>) => [...base, "inventory", "aiInsights", params] as const,
+    aiInsights: (params?: object) => [...base, "inventory", "aiInsights", params] as const,
     barcodeLookup: (code: string) => [...base, "inventory", "barcodeLookup", code] as const,
     qualityHold: (id: number) => [...base, "inventory", "qualityHold", id] as const,
     webhooks: () => [...base, "inventory", "webhooks"] as const,
@@ -1163,6 +1163,11 @@ export const queryKeys = {
     all: [...base, "crmInbox"] as const,
     data: () => [...base, "crmInbox", "data"] as const,
     counts: () => [...base, "crmInbox", "counts"] as const,
+  },
+
+  crmDataQuality: {
+    all: ["crm", "data-quality"] as const,
+    report: () => ["crm", "data-quality", "report"] as const,
   },
 
 } as const;

@@ -5,7 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
 const apRunKeys = {
-  paymentRuns: (params?: Record<string, unknown>) =>
+  paymentRuns: (params?: object) =>
     ["streamlineos", "accounting", "ap", "payment-runs", params] as const,
   paymentRun: (id: number) =>
     ["streamlineos", "accounting", "ap", "payment-runs", id] as const,

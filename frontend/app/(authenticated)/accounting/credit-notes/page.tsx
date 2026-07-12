@@ -28,6 +28,7 @@ import { FinanceStatusBadge, Money } from "@/features/accounting/shared";
 import { CreditNoteFormSheet } from "@/features/accounting/sales/credit-note-form-sheet";
 import { ApplyCreditNoteDialog } from "@/features/accounting/sales/apply-credit-note-dialog";
 import { useCreditNotes, usePostCreditNote } from "@/hooks/api/accounting/ar";
+import { useCan } from "@/hooks/api/access";
 import type { CreditNote, CreditNoteStatus } from "@/types/accounting/ar";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -117,6 +118,7 @@ function CreditNoteRowActions({ credit, onApply, canManage }: RowActionsProps) {
 }
 
 export default function CreditNotesPage() {
+  const canCreate = useCan("accounting:credit-notes:create");
   const [createOpen, setCreateOpen] = useState(false);
   const [applyDialogOpen, setApplyDialogOpen] = useState(false);
   const [applyTarget, setApplyTarget] = useState<CreditNote | null>(null);
@@ -236,10 +238,12 @@ export default function CreditNotesPage() {
       title="Credit Notes"
       subtitle="Manage refunds and billing adjustments"
       actions={
-        <Button size="sm" onClick={handleNewClick}>
-          <Plus className="size-4 mr-1" />
-          New credit note
-        </Button>
+        canCreate ? (
+          <Button size="sm" onClick={handleNewClick}>
+            <Plus className="size-4 mr-1" />
+            New credit note
+          </Button>
+        ) : undefined
       }
       filters={
         <div className="flex flex-wrap items-center gap-2">

@@ -18,6 +18,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { useAgedReceivables } from "@/hooks/api/accounting";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
@@ -57,7 +58,7 @@ export default function AgedReceivablesPage() {
       {query.isLoading ? (
         <LoadingState variant="table" />
       ) : query.error ? (
-        <ErrorState description={query.error.message} onRetry={handleRetry} />
+        <ErrorState description={getErrorMessage(query.error)} onRetry={handleRetry} />
       ) : !report || report.rows.length === 0 ? (
         <EmptyState
           illustration={<EmptyExpensesIllustration />}

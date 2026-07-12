@@ -26,6 +26,10 @@ import type { AccountTreeNode } from "@/hooks/api/accounting/core";
 
 const ACCOUNT_TYPES = ["ASSET", "LIABILITY", "EQUITY", "INCOME", "EXPENSE"] as const;
 
+function isAccountType(value: string): value is AccountValues["accountType"] {
+  return (ACCOUNT_TYPES as ReadonlyArray<string>).includes(value);
+}
+
 const accountSchema = z.object({
   code: z.string().min(1, "Code is required").max(20),
   name: z.string().min(1, "Name is required").max(120),
@@ -61,7 +65,7 @@ export function CreateAccountDialog({
     ? {
         code: editAccount.code,
         name: editAccount.name,
-        accountType: editAccount.accountType as AccountValues["accountType"],
+        accountType: isAccountType(editAccount.accountType) ? editAccount.accountType : "ASSET",
         description: editAccount.description ?? "",
       }
     : DEFAULT_VALUES;

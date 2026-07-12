@@ -50,6 +50,8 @@ import {
 import { StatusTimeline, LocationCell } from "@/features/inventory/components/stock/transfer-detail-widgets";
 import { cn } from "@/lib/utils";
 
+const TH = "px-2 py-1.5 text-left text-[11px] font-medium text-muted-foreground";
+
 function TransferDetailSkeleton() {
   return (
     <PageWrapper title="Transfer" eyebrow="Inventory / Transfers">

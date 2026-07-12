@@ -233,7 +233,6 @@ export default function TaxCodesPage() {
       eyebrow="Accounting · Taxes"
       title="Tax Codes"
       subtitle="Manage tax codes and rates applied to transactions."
-      backHref="/accounting/taxes"
       actions={
         canManage ? (
           <div className="flex items-center gap-2">

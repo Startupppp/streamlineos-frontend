@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
@@ -311,10 +312,10 @@ export default function NewPurchaseBillPage() {
     return <LoadingState variant="form" />;
   }
   if (clientsQuery.error) {
-    return <ErrorState description={clientsQuery.error.message} />;
+    return <ErrorState description={getErrorMessage(clientsQuery.error)} />;
   }
   if (accountsQuery.error) {
-    return <ErrorState description={accountsQuery.error.message} />;
+    return <ErrorState description={getErrorMessage(accountsQuery.error)} />;
   }
 
   const vendors = clientsQuery.data?.accounts ?? [];
@@ -766,17 +767,14 @@ export default function NewPurchaseBillPage() {
             >
               Cancel
             </Button>
-            <Button
+            <LoadingButton
               type="submit"
               className="w-full sm:w-auto"
-              disabled={createMutation.isPending}
+              isPending={createMutation.isPending}
+              loadingText="Saving…"
             >
-              {createMutation.isPending
-                ? "Saving…"
-                : watchedStatus === "POSTED"
-                  ? "Create and post"
-                  : "Save as draft"}
-            </Button>
+              {watchedStatus === "POSTED" ? "Create and post" : "Save as draft"}
+            </LoadingButton>
           </div>
         </form>
       </Form>

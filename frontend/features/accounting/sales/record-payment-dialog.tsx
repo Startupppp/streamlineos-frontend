@@ -43,7 +43,7 @@ const allocationSchema = z.object({
 });
 
 const schema = z.object({
-  amount: z.coerce.number().positive("Amount must be positive"),
+  amount: z.number().positive("Amount must be positive"),
   paymentDate: z.string().min(1, "Date is required"),
   paymentMethod: z.string().min(1, "Method is required"),
   referenceNumber: z.string().optional(),
@@ -188,7 +188,7 @@ export function RecordPaymentDialog({
                 step="0.01"
                 min="0.01"
                 className="h-8 text-sm"
-                {...form.register("amount")}
+                {...form.register("amount", { valueAsNumber: true })}
               />
               {form.formState.errors.amount && (
                 <p className="text-[10px] text-destructive">

@@ -48,7 +48,6 @@ export default function ReceiptInboxPage() {
       eyebrow="Accounting · Expenses"
       title="Receipt Inbox"
       subtitle="Submitted expenses with policy flags needing review."
-      backHref="/accounting/expenses"
     >
       {query.isLoading && (
         <div className="grid gap-3 sm:grid-cols-2">

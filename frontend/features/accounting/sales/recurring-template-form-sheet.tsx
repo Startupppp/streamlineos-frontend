@@ -28,9 +28,9 @@ const recurringTemplateSchema = z.object({
   frequency: z.enum(["DAILY", "WEEKLY", "MONTHLY", "QUARTERLY", "YEARLY"]),
   nextRunDate: z.string().optional(),
   endDate: z.string().optional(),
-  currency: z.string().min(1).default("INR"),
+  currency: z.string().min(1),
   notes: z.string().optional(),
-  isActive: z.boolean().default(true),
+  isActive: z.boolean(),
 });
 
 type TemplateFormValues = z.infer<typeof recurringTemplateSchema>;

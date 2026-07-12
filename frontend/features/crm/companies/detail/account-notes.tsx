@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { RichNotesEditor } from "@/features/crm/shared/rich-notes-editor";
 import { useUpdateCrmOrganization } from "@/hooks/api/crm";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 interface AccountNotesProps {
   organizationId: number;
@@ -31,7 +32,7 @@ export function AccountNotes({
           toast.success("Notes saved");
           setEditing(false);
         },
-        onError: (e) => toast.error(e.message),
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }, [organizationId, notes, updateMutation]);

@@ -4,7 +4,6 @@ import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
@@ -24,16 +23,13 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { cn } from "@/lib/utils";
 import { useCreateDeal } from "@/hooks/api/crm";
-import { DEAL_STAGES } from "@/features/crm/shared/constants";
-import type { DealStage } from "@/features/crm/shared/constants";
+import { useCrmStages } from "@/hooks/api/crm/metadata";
+import { getCrmTokenClasses } from "@/features/crm/shared/metadata";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
-
-const DEAL_STAGE_KEYS = DEAL_STAGES.map((s) => s.key) as [
-  DealStage,
-  ...DealStage[],
-];
 
 const createDealSchema = z.object({
   name: z
@@ -45,7 +41,7 @@ const createDealSchema = z.object({
     .optional()
     .or(z.literal(""))
     .refine((v) => !v || Number(v) >= 0, "Value cannot be negative"),
-  stage: z.enum(DEAL_STAGE_KEYS),
+  stage: z.string().min(1),
   probability: z
     .string()
     .optional()
@@ -79,13 +75,14 @@ interface CreateDealFormProps {
 
 export function CreateDealForm({ employees, onSuccess }: CreateDealFormProps) {
   const createMutation = useCreateDeal();
+  const { data: stages = [] } = useCrmStages("deal");
 
   const form = useForm<CreateDealFormValues>({
     resolver: zodResolver(createDealSchema),
     defaultValues: {
       name: "",
       value: "",
-      stage: "LEAD",
+      stage: "",
       probability: "0",
       contactPerson: "",
       contactEmail: "",
@@ -116,7 +113,7 @@ export function CreateDealForm({ employees, onSuccess }: CreateDealFormProps) {
             toast.success("Deal created");
             onSuccess();
           },
-          onError: (err) => toast.error(err.message),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },
@@ -172,10 +169,10 @@ export function CreateDealForm({ employees, onSuccess }: CreateDealFormProps) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {DEAL_STAGES.map((s) => (
+                    {stages.map((s) => (
                       <SelectItem key={s.key} value={s.key}>
                         <div className="flex items-center gap-2">
-                          <div className={cn("w-2 h-2 rounded-full", s.dot)} />
+                          <div className={cn("w-2 h-2 rounded-full", getCrmTokenClasses(s.color).dotClass)} />
                           {s.label}
                         </div>
                       </SelectItem>
@@ -306,13 +303,14 @@ export function CreateDealForm({ employees, onSuccess }: CreateDealFormProps) {
             </FormItem>
           )}
         />
-        <Button
+        <LoadingButton
           type="submit"
           className="w-full"
-          disabled={createMutation.isPending}
+          isPending={createMutation.isPending}
+          loadingText="Creating..."
         >
-          {createMutation.isPending ? "Creating..." : "Create Deal"}
-        </Button>
+          Create Deal
+        </LoadingButton>
       </form>
     </Form>
   );

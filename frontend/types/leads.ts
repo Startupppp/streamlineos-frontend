@@ -325,7 +325,7 @@ export interface AssignLeadInput {
 
 export interface LogActivityInput {
   leadId: number;
-  type: ActivityType;
+  type: string;
   date: string;
   duration?: number;
   subject?: string;

@@ -21,19 +21,6 @@ interface ReservationsResult {
   totalPages: number;
 }
 
-interface ReserveStockInput {
-  sourceType: string;
-  sourceId: string;
-  sourceLineId?: string;
-  productVariantId: number;
-  warehouseId?: number;
-  locationId?: number;
-  lotId?: number;
-  serialId?: number;
-  qty: string;
-  expiresAt?: string;
-}
-
 interface OpeningStockLine {
   productVariantId: number;
   locationId: number;
@@ -59,21 +46,6 @@ export function useReservations(filters?: ReservationsFilters) {
         limit: filters?.limit ?? 50,
       }),
     staleTime: 30_000,
-  });
-}
-
-export function useReserveStock() {
-  const qc = useQueryClient();
-  return useMutation<StockReservation, Error, ReserveStockInput>({
-    mutationKey: ["inventory", "stock", "reserve"],
-    mutationFn: (data) =>
-      apiClient.post<StockReservation>("/inventory/stock/reserve", data, {
-        headers: { "Idempotency-Key": crypto.randomUUID() },
-      }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: [...queryKeys.inventory.all, "reservations"] });
-      qc.invalidateQueries({ queryKey: [...queryKeys.inventory.all, "stockLevels"] });
-    },
   });
 }
 

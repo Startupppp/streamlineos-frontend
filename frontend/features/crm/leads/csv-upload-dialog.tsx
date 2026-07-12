@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import { Upload, FileText, Download } from "lucide-react";
+import { Upload } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -12,8 +12,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { useBulkImportLeads } from "@/hooks/api/leads";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { CsvFieldMapper } from "./csv-field-mapper";
 import { CsvUploadPreview } from "./csv-upload-preview";
+import { CsvUploadStepUpload } from "./csv-upload-step-upload";
 
 const VALID_SOURCES = [
   "referral",

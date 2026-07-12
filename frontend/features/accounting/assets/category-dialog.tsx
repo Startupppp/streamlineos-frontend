@@ -27,13 +27,19 @@ const METHOD_OPTIONS: ReadonlyArray<{ value: DepreciationMethod; label: string }
   { value: "UNITS_OF_PRODUCTION", label: "Units of Production" },
 ];
 
+const DEPRECIATION_METHODS_LIST: ReadonlyArray<DepreciationMethod> = ["STRAIGHT_LINE", "DECLINING_BALANCE", "UNITS_OF_PRODUCTION"];
+
+function isDepreciationMethod(v: string): v is DepreciationMethod {
+  return (DEPRECIATION_METHODS_LIST as ReadonlyArray<string>).includes(v);
+}
+
 const categorySchema = z.object({
   name: z.string().min(1, "Name is required"),
-  assetAccountId: z.coerce.number().min(1, "Account required"),
-  depreciationExpenseAccountId: z.coerce.number().min(1, "Account required"),
-  accumulatedDepreciationAccountId: z.coerce.number().min(1, "Account required"),
+  assetAccountId: z.number().min(1, "Account required"),
+  depreciationExpenseAccountId: z.number().min(1, "Account required"),
+  accumulatedDepreciationAccountId: z.number().min(1, "Account required"),
   defaultMethod: z.enum(["STRAIGHT_LINE", "DECLINING_BALANCE", "UNITS_OF_PRODUCTION"]),
-  defaultUsefulLifeMonths: z.coerce.number().optional(),
+  defaultUsefulLifeMonths: z.number().optional(),
 });
 
 type CategoryFormValues = z.infer<typeof categorySchema>;
@@ -92,7 +98,12 @@ export function CategoryDialog({ open, onOpenChange, editing }: CategoryDialogPr
       submitLabel={editing ? "Update" : "Create"}
       resetOnOpen
     >
-      {(form) => (
+      {(form) => {
+        function handleDefaultMethodChange(v: string): void {
+          if (isDepreciationMethod(v)) form.setValue("defaultMethod", v, { shouldValidate: true });
+        }
+
+        return (
         <>
           <div className="space-y-1.5">
             <Label htmlFor="cat-name">Name</Label>
@@ -159,7 +170,7 @@ export function CategoryDialog({ open, onOpenChange, editing }: CategoryDialogPr
             <Label>Default Depreciation Method</Label>
             <Select
               value={form.watch("defaultMethod")}
-              onValueChange={(v) => form.setValue("defaultMethod", v as DepreciationMethod)}
+              onValueChange={handleDefaultMethodChange}
             >
               <SelectTrigger className="h-9 text-sm">
                 <SelectValue />
@@ -182,7 +193,8 @@ export function CategoryDialog({ open, onOpenChange, editing }: CategoryDialogPr
             />
           </div>
         </>
-      )}
+        );
+      }}
     </EntityFormDialog>
   );
 }

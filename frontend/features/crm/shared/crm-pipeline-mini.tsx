@@ -3,7 +3,8 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { PIPELINE_STAGES } from "@/features/crm/shared/constants";
+import { useCrmOptions } from "@/hooks/api/crm/metadata";
+import { getCrmTokenClasses } from "@/features/crm/shared/metadata";
 
 interface CrmPipelineMiniProps {
   byStatus: Record<string, number>;
@@ -12,6 +13,7 @@ interface CrmPipelineMiniProps {
 
 export function CrmPipelineMini({ byStatus, total }: CrmPipelineMiniProps) {
   const prefersReducedMotion = useReducedMotion();
+  const { data: statusOptions = [] } = useCrmOptions("lead_status");
   const maxCount = Math.max(1, ...Object.values(byStatus));
 
   return (
@@ -22,16 +24,17 @@ export function CrmPipelineMini({ byStatus, total }: CrmPipelineMiniProps) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2 px-3 pb-3">
-        {PIPELINE_STAGES.filter((s) => s.key !== "LOST").map((stage, i) => {
-          const count = byStatus[stage.key] ?? 0;
+        {statusOptions.filter((o) => o.key !== "LOST").map((option, i) => {
+          const count = byStatus[option.key] ?? 0;
           const pct = total > 0 ? ((count / total) * 100).toFixed(0) : "0";
           const scaleTarget = count / maxCount;
+          const dotClass = getCrmTokenClasses(option.color).dotClass;
           return (
-            <div key={stage.key} className="space-y-0.5">
+            <div key={option.key} className="space-y-0.5">
               <div className="flex items-center justify-between text-[10px]">
                 <div className="flex items-center gap-1.5">
-                  <div className={cn("w-1.5 h-1.5 rounded-full", stage.dot)} />
-                  <span className="font-medium">{stage.label}</span>
+                  <div className={cn("w-1.5 h-1.5 rounded-full", dotClass)} />
+                  <span className="font-medium">{option.label}</span>
                 </div>
                 <div className="flex items-center gap-1.5 tabular-nums">
                   <span className="font-bold">{count}</span>
@@ -41,12 +44,12 @@ export function CrmPipelineMini({ byStatus, total }: CrmPipelineMiniProps) {
               <div className="h-1.5 rounded-full bg-muted overflow-hidden">
                 {prefersReducedMotion ? (
                   <div
-                    className={cn("h-full rounded-full", stage.dot)}
+                    className={cn("h-full rounded-full", dotClass)}
                     style={{ width: `${scaleTarget * 100}%` }}
                   />
                 ) : (
                   <motion.div
-                    className={cn("h-full rounded-full w-full", stage.dot)}
+                    className={cn("h-full rounded-full w-full", dotClass)}
                     style={{ transformOrigin: "left" }}
                     initial={{ scaleX: 0 }}
                     animate={{ scaleX: scaleTarget }}

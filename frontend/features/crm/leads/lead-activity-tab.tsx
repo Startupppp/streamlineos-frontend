@@ -48,7 +48,7 @@ export function LeadActivityTab({ activities }: LeadActivityTabProps) {
                 activity.type === "call"
                   ? "bg-blue-500/15 text-blue-400"
                   : activity.type === "email"
-                    ? "bg-purple-500/15 text-purple-400"
+                    ? "bg-blue-500/15 text-blue-400"
                     : activity.type === "whatsapp"
                       ? "bg-green-500/15 text-green-400"
                       : activity.type === "meeting"

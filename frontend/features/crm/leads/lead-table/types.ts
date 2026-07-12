@@ -63,7 +63,6 @@ export interface LeadTableViewProps {
   isAdmin: boolean;
 }
 
-export const STATUSES = ["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CONVERTED", "LOST"] as const;
 export const PRIORITIES = ["HOT", "WARM", "COLD"] as const;
 export const PAGE_SIZES = [25, 50, 100] as const;
 
@@ -77,31 +76,6 @@ export const LOST_REASONS = [
   "Duplicate",
   "Other",
 ] as const;
-
-export const STATUS_COLORS: Record<string, string> = {
-  NEW: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-  CONTACTED: "bg-sky-500/10 text-sky-400 border-sky-500/20",
-  INTERESTED: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-  QUALIFIED: "bg-purple-500/10 text-purple-400 border-purple-500/20",
-  CONVERTED: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-  LOST: "bg-red-500/10 text-red-400 border-red-500/20",
-};
-
-export const PRIORITY_COLORS: Record<string, string> = {
-  HOT: "bg-red-500/15 text-red-400 border-red-500/20",
-  WARM: "bg-amber-500/15 text-amber-400 border-amber-500/20",
-  COLD: "bg-blue-400/15 text-blue-400 border-blue-400/20",
-};
-
-export const SOURCE_COLORS: Record<string, string> = {
-  referral: "bg-green-500/10 text-green-400",
-  campaign: "bg-indigo-500/10 text-indigo-400",
-  cold_call: "bg-orange-500/10 text-orange-400",
-  website: "bg-blue-500/10 text-blue-400",
-  social_media: "bg-purple-500/10 text-purple-400",
-  walk_in: "bg-teal-500/10 text-teal-400",
-  other: "bg-slate-500/10 text-slate-400",
-};
 
 export const ALL_COLUMNS = [
   { key: "leadId",             label: "Lead ID",           defaultVisible: true,  sortable: false },

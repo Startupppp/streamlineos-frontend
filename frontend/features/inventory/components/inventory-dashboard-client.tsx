@@ -86,7 +86,8 @@ function LowStockSkeleton() {
 }
 
 function LowStockAlertSection() {
-  const { data: items = [], isLoading, error, refetch } = useReorderReport();
+  const { data: reorderData, isLoading, error, refetch } = useReorderReport();
+  const items = reorderData?.items ?? [];
 
   function handleRetry(): void {
     void refetch();

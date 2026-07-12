@@ -21,7 +21,7 @@ const STAGE_LABELS: Record<Stage, string> = {
 const STAGE_COLORS: Record<Stage, string> = {
   NEW: "from-slate-400 to-slate-500",
   CONTACTED: "from-blue-400 to-blue-500",
-  INTERESTED: "from-violet-400 to-violet-500",
+  INTERESTED: "from-blue-400 to-blue-500",
   QUALIFIED: "from-amber-400 to-amber-500",
   CONVERTED: "from-emerald-400 to-emerald-500",
 };
@@ -29,7 +29,7 @@ const STAGE_COLORS: Record<Stage, string> = {
 const STAGE_BG: Record<Stage, string> = {
   NEW: "bg-slate-50 border-slate-200",
   CONTACTED: "bg-blue-50 border-blue-200",
-  INTERESTED: "bg-violet-50 border-violet-200",
+  INTERESTED: "bg-blue-50 border-blue-200",
   QUALIFIED: "bg-amber-50 border-amber-200",
   CONVERTED: "bg-emerald-50 border-emerald-200",
 };

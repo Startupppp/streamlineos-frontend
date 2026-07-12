@@ -24,6 +24,7 @@ import {
 import { PhoneInput } from "@/components/ui/phone-input";
 import { useUpdateContact } from "@/hooks/api/crm";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import type { Contact } from "@/types/crm";
 
 const editContactSchema = z.object({
@@ -101,7 +102,7 @@ export function EditContactSheet({
             toast.success("Contact updated");
             onOpenChange(false);
           },
-          onError: (err) => toast.error(err.message),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     },

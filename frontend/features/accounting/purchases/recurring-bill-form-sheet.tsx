@@ -28,7 +28,7 @@ const recurringBillFormSchema = z.object({
   vendorId: z.string().min(1, "Select a vendor"),
   frequency: z.enum(["DAILY", "WEEKLY", "MONTHLY", "QUARTERLY", "YEARLY"]),
   nextRunDate: z.string().optional(),
-  isActive: z.boolean().default(true),
+  isActive: z.boolean(),
   billDate: z.string().min(1, "Required"),
   expenseAccountCode: z.string().min(1, "Required"),
   notes: z.string().optional(),

@@ -34,7 +34,6 @@ export default function ReimbursementsPage() {
       eyebrow="Accounting · Expenses"
       title="Reimbursement Batches"
       subtitle="Group and process employee reimbursements."
-      backHref="/accounting/expenses"
       actions={
         canManage ? (
           <LoadingButton size="sm" onClick={handleOpenCreate} isPending={false}>

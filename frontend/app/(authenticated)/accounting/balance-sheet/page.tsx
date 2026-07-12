@@ -16,6 +16,7 @@ import {
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { useBalanceSheet } from "@/hooks/api/accounting";
+import { getErrorMessage } from "@/lib/get-error-message";
 import type { BalanceSheetRow } from "@/types/accounting";
 
 function todayIso(): string {
@@ -131,7 +132,7 @@ export default function BalanceSheetPage() {
     >
       {query.isLoading && <LoadingState variant="table" />}
       {query.error && (
-        <ErrorState description={query.error.message} onRetry={handleRetry} />
+        <ErrorState description={getErrorMessage(query.error)} onRetry={handleRetry} />
       )}
 
       {report && (

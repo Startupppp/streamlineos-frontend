@@ -17,6 +17,7 @@ import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTimeIllustration } from "@/components/illustrations";
 import { useTrialBalance } from "@/hooks/api/accounting";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);

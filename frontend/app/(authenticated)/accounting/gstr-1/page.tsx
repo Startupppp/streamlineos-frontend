@@ -16,6 +16,7 @@ import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { useGstr1 } from "@/hooks/api/accounting";
+import { getErrorMessage } from "@/lib/get-error-message";
 import type {
   Gstr1PlaceBucket,
   Gstr1RateBucket,

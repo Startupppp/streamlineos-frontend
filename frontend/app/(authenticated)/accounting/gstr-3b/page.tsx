@@ -17,6 +17,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { useGstr3B } from "@/hooks/api/accounting";
+import { getErrorMessage } from "@/lib/get-error-message";
 import type { Gstr3BTaxBlock } from "@/types/accounting";
 
 function firstOfMonth(): string {

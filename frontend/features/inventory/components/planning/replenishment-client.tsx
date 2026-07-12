@@ -159,11 +159,13 @@ export function ReplenishmentClient() {
       const [[vendorId, items]] = vendorGroups.entries();
       const input: GeneratePOInput = {
         vendorId,
-        suggestions: items.map((s) => ({
-          variantId: s.variantId,
-          warehouseId: s.warehouseId,
-          qty: s.suggestedQty,
-        })),
+        suggestions: items
+          .filter((s): s is typeof s & { warehouseId: number } => s.warehouseId !== null)
+          .map((s) => ({
+            variantId: s.variantId,
+            warehouseId: s.warehouseId,
+            qty: s.suggestedQty,
+          })),
       };
       generatePO.mutate(input, {
         onSuccess: (result) => {

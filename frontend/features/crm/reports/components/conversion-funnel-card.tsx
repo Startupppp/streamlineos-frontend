@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils";
 import type { LeadStats } from "@/types/leads";
 import type { CrmOption } from "@/types/crm/metadata";
 import { getCrmTokenClasses } from "@/features/crm/shared/metadata";
-import { PIPELINE_COLORS, FUNNEL_STAGES } from "../lib/types";
 
 interface ConversionFunnelCardProps {
   stats: LeadStats;
@@ -18,33 +17,22 @@ interface ConversionFunnelCardProps {
 export function ConversionFunnelCard({ stats, statusOptions }: ConversionFunnelCardProps) {
   const shouldReduceMotion = useReducedMotion();
 
-  const stages = statusOptions && statusOptions.length > 0
-    ? statusOptions
-        .filter((o) => o.isActive)
-        .slice()
-        .sort((a, b) => a.sortOrder - b.sortOrder)
-        .map((opt) => {
-          const cls = getCrmTokenClasses(opt.color);
-          return {
-            key: opt.key,
-            label: opt.label,
-            bgLight: `${cls.badgeClass.split(" ")[0]}`,
-            borderLeft: `border-l-2`,
-            borderColor: cls.chartHex,
-            text: cls.textClass,
-          };
-        })
-    : FUNNEL_STAGES.map((status) => {
-        const config = PIPELINE_COLORS[status] ?? PIPELINE_COLORS["NEW"];
-        return {
-          key: status,
-          label: status.charAt(0) + status.slice(1).toLowerCase(),
-          bgLight: config.bgLight,
-          borderLeft: config.borderLeft,
-          borderColor: undefined,
-          text: config.text,
-        };
-      });
+  if (!statusOptions || statusOptions.length === 0) return null;
+
+  const stages = statusOptions
+    .filter((o) => o.isActive)
+    .slice()
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+    .map((opt) => {
+      const cls = getCrmTokenClasses(opt.color);
+      return {
+        key: opt.key,
+        label: opt.label,
+        bgLight: cls.badgeClass.split(" ")[0] ?? "",
+        borderColor: cls.chartHex,
+        text: cls.textClass,
+      };
+    });
 
   const byStatus = stats.byStatus as Record<string, number>;
 
@@ -87,7 +75,6 @@ export function ConversionFunnelCard({ stats, statusOptions }: ConversionFunnelC
                   className={cn(
                     "h-11 rounded-lg flex items-center justify-between px-4 gap-3 w-full max-w-full transition-all border-l-[3px]",
                     stage.bgLight,
-                    stage.borderLeft,
                   )}
                   style={{
                     maxWidth: `${widthPct}%`,

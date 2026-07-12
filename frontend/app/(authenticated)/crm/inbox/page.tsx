@@ -12,6 +12,7 @@ import { useInbox, useInboxCounts, useSnoozeCrmTask, useCompleteCrmTask } from "
 import { getErrorMessage } from "@/lib/get-error-message";
 import { InboxStatCards } from "@/features/crm/inbox/inbox-stat-cards";
 import { InboxSectionCard } from "@/features/crm/inbox/inbox-section-card";
+import { AiActionsSection } from "@/features/crm/inbox/ai-actions-section";
 
 const SECTION_ORDER = [
   "dueTasks",
@@ -87,6 +88,7 @@ function InboxContent() {
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
   const sections = inboxData?.sections ?? [];
+  const aiActions = inboxData?.aiActions ?? [];
   const totalItems = sections.reduce((sum, s) => sum + s.total, 0);
   const isInboxZero = !inboxLoading && !inboxError && totalItems === 0;
 
@@ -94,6 +96,12 @@ function InboxContent() {
     <PageWrapper title="Sales Inbox" subtitle="Your daily command center">
       <div className="space-y-3">
         <InboxStatCards counts={counts} isLoading={countsLoading} />
+
+        {!inboxError && aiActions.length > 0 && (
+          <motion.div variants={shouldReduceMotion ? undefined : itemVariants} initial="hidden" animate="visible">
+            <AiActionsSection actions={aiActions} />
+          </motion.div>
+        )}
 
         {inboxError && (
           <ErrorState

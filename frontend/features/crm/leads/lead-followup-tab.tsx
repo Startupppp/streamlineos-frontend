@@ -277,7 +277,7 @@ export function LeadFollowupTab({ leadId }: LeadFollowupTabProps) {
                       task.type === "CALL"
                         ? "bg-blue-500/15 text-blue-400"
                         : task.type === "EMAIL"
-                          ? "bg-purple-500/15 text-purple-400"
+                          ? "bg-blue-500/15 text-blue-400"
                           : task.type === "MEETING"
                             ? "bg-amber-500/15 text-amber-400"
                             : "bg-muted text-muted-foreground",
