@@ -358,7 +358,7 @@ export function useUnmatch(bankAccountId: number) {
         const txn = snapshot.unmatched.find((t) => t.id === vars.transactionId)
           ?? snapshot.suggested.find((t) => t.id === vars.transactionId);
         const unmatchedTxn: ReconciliationTxn | undefined = txn
-          ? { ...txn, status: "UNMATCHED" as BankTxnStatus }
+          ? { ...txn, status: "UNMATCHED" satisfies BankTxnStatus }
           : undefined;
         const patchedWorkspace: ReconciliationWorkspace = {
           ...snapshot,

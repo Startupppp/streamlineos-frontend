@@ -22,9 +22,11 @@ function formatDate(value: string | null | undefined): string {
 
 type ExpenseWithExtras = ExpenseWithRelations & { policyFlag?: string; taxAmount?: string };
 
+const EXPENSE_STATUS_VALUES: ReadonlyArray<string> = ["DRAFT", "SUBMITTED", "APPROVED", "REIMBURSEMENT_PENDING", "REIMBURSED", "REJECTED"];
+
 function isExpenseStatus(v: string | null | undefined): v is ExpenseStatus {
   if (!v) return false;
-  return (["DRAFT", "SUBMITTED", "APPROVED", "REIMBURSEMENT_PENDING", "REIMBURSED", "REJECTED"] as ReadonlyArray<string>).includes(v);
+  return EXPENSE_STATUS_VALUES.includes(v);
 }
 
 interface ExpenseTableProps {

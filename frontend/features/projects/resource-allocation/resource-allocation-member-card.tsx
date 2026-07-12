@@ -80,7 +80,7 @@ export const ResourceAllocationMemberCard = memo(function ResourceAllocationMemb
               <div className="h-1 flex-1 overflow-hidden rounded-full bg-muted">
                 <div
                   className={cn(
-                    "h-full rounded-full transition-[width] duration-500 ease-out motion-reduce:transition-none",
+                    "h-full rounded-full transition-[width] duration-300 ease-out motion-reduce:transition-none",
                     loadStyle.bar,
                   )}
                   style={{ width: `${utilPct}%` }}
@@ -99,7 +99,7 @@ export const ResourceAllocationMemberCard = memo(function ResourceAllocationMemb
           <div className="h-1 overflow-hidden rounded-full bg-muted sm:hidden">
             <div
               className={cn(
-                "h-full rounded-full transition-[width] duration-500 ease-out motion-reduce:transition-none",
+                "h-full rounded-full transition-[width] duration-300 ease-out motion-reduce:transition-none",
                 loadStyle.bar,
               )}
               style={{ width: `${utilPct}%` }}

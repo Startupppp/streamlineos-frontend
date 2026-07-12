@@ -58,10 +58,10 @@ const STATUS_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "VOID", label: "Void" },
 ];
 
-const VENDOR_CREDIT_STATUSES = ["DRAFT", "POSTED", "APPLIED", "VOID"] as const;
+const VENDOR_CREDIT_STATUSES: ReadonlyArray<string> = ["DRAFT", "POSTED", "APPLIED", "VOID"];
 
-function isVendorCreditStatus(value: string): value is typeof VENDOR_CREDIT_STATUSES[number] {
-  return (VENDOR_CREDIT_STATUSES as ReadonlyArray<string>).includes(value);
+function isVendorCreditStatus(value: string): value is VendorCreditSummary["status"] {
+  return VENDOR_CREDIT_STATUSES.includes(value);
 }
 
 interface CreditRowActionsProps {

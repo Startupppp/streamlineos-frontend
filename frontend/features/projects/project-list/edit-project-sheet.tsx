@@ -34,10 +34,17 @@ import { toast } from "sonner";
 import { useUpdateProject } from "@/hooks/api/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 
+const PROJECT_STATUSES = ["ACTIVE", "COMPLETED", "ARCHIVED"] as const;
+type ProjectStatus = (typeof PROJECT_STATUSES)[number];
+
+function toProjectStatus(raw: string | null | undefined): ProjectStatus {
+  return PROJECT_STATUSES.find((s) => s === raw) ?? "ACTIVE";
+}
+
 const editProjectSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   description: z.string().optional(),
-  status: z.enum(["ACTIVE", "COMPLETED", "ARCHIVED"]),
+  status: z.enum(PROJECT_STATUSES),
 });
 
 type EditProjectFormValues = z.infer<typeof editProjectSchema>;
@@ -61,7 +68,7 @@ export function EditProjectSheet({ open, onOpenChange, project }: EditProjectShe
     defaultValues: {
       name: project.name,
       description: project.description ?? "",
-      status: (project.status as EditProjectFormValues["status"]) ?? "ACTIVE",
+      status: toProjectStatus(project.status),
     },
   });
 
@@ -70,7 +77,7 @@ export function EditProjectSheet({ open, onOpenChange, project }: EditProjectShe
       form.reset({
         name: project.name,
         description: project.description ?? "",
-        status: (project.status as EditProjectFormValues["status"]) ?? "ACTIVE",
+        status: toProjectStatus(project.status),
       });
     }
   }, [open, project, form]);

@@ -22,7 +22,7 @@ function ForecastSkeleton() {
     <div className="space-y-4">
       <StatCardGrid cols={3}>
         <StatCard label="Total Pipeline" value="" isLoading icon={TrendingUp} tone="blue" />
-        <StatCard label="Weighted Forecast" value="" isLoading icon={Target} tone="violet" />
+        <StatCard label="Weighted Forecast" value="" isLoading icon={Target} tone="blue" />
         <StatCard label="Commit Forecast" value="" isLoading icon={Handshake} tone="emerald" />
       </StatCardGrid>
       <Skeleton className="h-48 rounded-lg" />

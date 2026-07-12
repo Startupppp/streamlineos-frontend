@@ -11,6 +11,7 @@ import { GanttView } from "@/features/projects/views/gantt-view";
 import { WorkloadView } from "@/features/projects/views/workload-view";
 import {
   ViewSwitcher,
+  parseViewType,
   type ViewType,
 } from "@/features/projects/views/view-switcher";
 import { TicketFilterBar } from "@/features/projects/shared/ticket-filter-bar";
@@ -43,7 +44,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const view = (searchParams.get("view") as ViewType) ?? "board";
+  const view = parseViewType(searchParams.get("view"));
   const [hideCompleted, setHideCompleted] = useState(true);
   const [saveViewOpen, setSaveViewOpen] = useState(false);
   const [saveViewName, setSaveViewName] = useState("");
@@ -115,7 +116,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
         projectId,
         name,
         filters,
-        layoutType: view as "board" | "list" | "table" | "calendar" | "gantt",
+        layoutType: view === "workload" ? "board" : view,
         ...(meta ? { visibility: meta.visibility, displayOptions: meta.displayOptions } : {}),
       },
       {
@@ -151,10 +152,6 @@ export default function ProjectBoardPage({ params }: PageProps) {
   const allTickets: KanbanTicket[] = useMemo(() => {
     if (!data) return [];
     return (data.tickets || []).map((t) => {
-      const raw = t as typeof t & {
-        cycleId?: number | null;
-        cycle?: { id: number; name: string; status: string; startDate: string; endDate: string } | null;
-      };
       return {
         id: t.id,
         title: t.title,
@@ -168,7 +165,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
         epicId: t.epicId ?? undefined,
         assigneeId: t.assigneeId ?? undefined,
         sprintId: t.sprintId ?? undefined,
-        cycleId: raw.cycleId ?? null,
+        cycleId: t.cycleId ?? null,
         dueDate: t.dueDate ?? null,
         startDate: t.startDate ?? null,
         sequenceId: t.sequenceId ?? null,
@@ -182,22 +179,18 @@ export default function ProjectBoardPage({ params }: PageProps) {
               image: t.assignee.image ?? null,
             }
           : null,
-        labels: (t.labels || [])
-          .filter((l) => !!l.label)
-          .map((l) => ({
-            label: {
-              id: l.label!.id,
-              name: l.label!.name,
-              color: l.label!.color,
-            },
-          })),
-        cycle: raw.cycle
+        labels: (t.labels || []).flatMap((l) =>
+          l.label
+            ? [{ label: { id: l.label.id, name: l.label.name, color: l.label.color } }]
+            : [],
+        ),
+        cycle: t.cycle
           ? {
-              id: raw.cycle.id,
-              name: raw.cycle.name,
-              status: raw.cycle.status,
-              startDate: raw.cycle.startDate,
-              endDate: raw.cycle.endDate,
+              id: t.cycle.id,
+              name: t.cycle.name,
+              status: t.cycle.status,
+              startDate: t.cycle.startDate,
+              endDate: t.cycle.endDate,
             }
           : null,
       };

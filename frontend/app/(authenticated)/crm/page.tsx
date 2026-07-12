@@ -225,7 +225,7 @@ export default function CrmHubPage() {
               label="Win Rate"
               value={`${winRate}%`}
               icon={BarChart3}
-              tone={winRate >= 50 ? "emerald" : "violet"}
+              tone={winRate >= 50 ? "emerald" : "blue"}
               href="/crm/reports"
             />
           </StatCardGrid>

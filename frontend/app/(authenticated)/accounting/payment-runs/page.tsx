@@ -32,10 +32,10 @@ const STATUS_OPTIONS: Array<{ value: RunStatusFilter; label: string }> = [
   { value: "CANCELLED", label: "Cancelled" },
 ];
 
-const RUN_STATUS_FILTER_VALUES = ["all", "DRAFT", "APPROVED", "COMPLETED", "CANCELLED"] as const;
+const RUN_STATUS_FILTER_VALUES: ReadonlyArray<string> = ["all", "DRAFT", "APPROVED", "COMPLETED", "CANCELLED"];
 
 function isRunStatusFilter(v: string): v is RunStatusFilter {
-  return (RUN_STATUS_FILTER_VALUES as ReadonlyArray<string>).includes(v);
+  return RUN_STATUS_FILTER_VALUES.includes(v);
 }
 
 function formatDate(value: string | null | undefined): string {

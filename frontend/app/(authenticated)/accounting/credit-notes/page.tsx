@@ -46,10 +46,10 @@ const STATUS_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "VOID", label: "Void" },
 ];
 
-const CREDIT_NOTE_STATUS_VALUES = ["DRAFT", "POSTED", "APPLIED", "VOID"] as const;
+const CREDIT_NOTE_STATUS_VALUES: ReadonlyArray<string> = ["DRAFT", "POSTED", "APPLIED", "VOID"];
 
 function isCreditNoteStatus(v: string): v is CreditNoteStatus {
-  return (CREDIT_NOTE_STATUS_VALUES as ReadonlyArray<string>).includes(v);
+  return CREDIT_NOTE_STATUS_VALUES.includes(v);
 }
 
 function CreditNoteStatusBadge({ status }: { status: CreditNoteStatus }) {

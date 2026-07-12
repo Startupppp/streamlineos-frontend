@@ -8,10 +8,10 @@ import type { CalendarListItem } from "@/hooks/api/calendar";
 const CATEGORY_BLOCK_COLORS: Record<string, string> = {
   meeting: "bg-blue-500 text-white",
   call: "bg-green-500 text-white",
-  demo: "bg-indigo-500 text-white",
+  demo: "bg-blue-500 text-white",
   deadline: "bg-red-500 text-white",
   general: "bg-amber-500 text-white",
-  reminder: "bg-purple-500 text-white",
+  reminder: "bg-blue-600 text-white",
   other: "bg-slate-400 text-white",
 };
 

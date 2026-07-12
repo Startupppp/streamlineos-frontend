@@ -1,6 +1,6 @@
 "use client";
 
-import type { UseFormReturn, FieldValues, Path } from "react-hook-form";
+import type { UseFormReturn } from "react-hook-form";
 import { Calendar, Target } from "lucide-react";
 import {
   FormControl,
@@ -13,20 +13,22 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/ui/date-picker";
 
-interface SprintFormFieldsProps<T extends FieldValues> {
-  form: UseFormReturn<T>;
+export type SprintFieldShape = { name: string; startDate: string; endDate: string; goal?: string };
+
+interface SprintFormFieldsProps {
+  form: UseFormReturn<SprintFieldShape>;
   goalPlaceholder?: string;
 }
 
-export function SprintFormFields<T extends FieldValues>({
+export function SprintFormFields({
   form,
   goalPlaceholder = "What do you want to achieve in this sprint?",
-}: SprintFormFieldsProps<T>) {
+}: SprintFormFieldsProps) {
   return (
     <>
       <FormField
         control={form.control}
-        name={"name" as Path<T>}
+        name={"name" as Path<T & SprintFieldShape>}
         render={({ field }) => (
           <FormItem>
             <FormLabel className="flex items-center gap-2">

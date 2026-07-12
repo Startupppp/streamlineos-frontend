@@ -23,9 +23,15 @@ function formatDate(value: string | null | undefined): string {
 }
 
 interface ExpenseDetailSheetProps {
-  expense: ExpenseWithRelations | null;
+  expense: ExpenseWithExtras | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+}
+
+const EXPENSE_STATUS_VALUES: ReadonlyArray<string> = ["DRAFT", "SUBMITTED", "APPROVED", "REIMBURSEMENT_PENDING", "REIMBURSED", "REJECTED"];
+
+function isExpenseStatus(s: string): s is ExpenseStatus {
+  return EXPENSE_STATUS_VALUES.includes(s);
 }
 
 type ExpenseWithExtras = ExpenseWithRelations & { policyFlag?: string; taxAmount?: string; receiptNumber?: string };
@@ -79,10 +85,9 @@ export function ExpenseDetailSheet({ expense, open, onOpenChange }: ExpenseDetai
 
   if (!expense) return null;
 
-  const expenseExt = expense as ExpenseWithExtras;
   const isSubmitted = expense.status === "SUBMITTED";
   const showActions = canManage && isSubmitted;
-  const policyFlag = expenseExt.policyFlag;
+  const policyFlag = expense.policyFlag;
 
   return (
     <AppSheet
@@ -152,8 +157,8 @@ export function ExpenseDetailSheet({ expense, open, onOpenChange }: ExpenseDetai
           </div>
           <div>
             <p className="text-[11px] text-muted-foreground mb-0.5">Status</p>
-            {expense.status && (
-              <FinanceStatusBadge status={expense.status as ExpenseStatus} size="chip" />
+            {expense.status && isExpenseStatus(expense.status) && (
+              <FinanceStatusBadge status={expense.status} size="chip" />
             )}
           </div>
           <div>
@@ -172,10 +177,10 @@ export function ExpenseDetailSheet({ expense, open, onOpenChange }: ExpenseDetai
             <p className="text-[11px] text-muted-foreground mb-0.5">Merchant</p>
             <p className="text-sm">{expense.merchant ?? "—"}</p>
           </div>
-          {expenseExt.taxAmount !== undefined && expenseExt.taxAmount !== null && (
+          {expense.taxAmount !== undefined && expense.taxAmount !== null && (
             <div>
               <p className="text-[11px] text-muted-foreground mb-0.5">Tax</p>
-              <Money value={parseFloat(expenseExt.taxAmount)} className="text-sm" />
+              <Money value={parseFloat(expense.taxAmount)} className="text-sm" />
             </div>
           )}
           {expense.description && (

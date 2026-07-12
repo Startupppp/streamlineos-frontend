@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -87,9 +88,9 @@ function AddUpdateForm({ projectId, incidentId }: AddUpdateFormProps) {
             </SelectContent>
           </Select>
         </div>
-        <Button type="submit" size="sm" className="h-7 text-[11px]" disabled={addUpdate.isPending}>
-          {addUpdate.isPending ? "Posting..." : "Post Update"}
-        </Button>
+        <LoadingButton type="submit" size="sm" className="h-7 text-[11px]" isPending={addUpdate.isPending} loadingText="Posting…">
+          Post Update
+        </LoadingButton>
       </div>
     </form>
   );

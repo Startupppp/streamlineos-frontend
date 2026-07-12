@@ -24,7 +24,7 @@ import type { AccountTreeNode } from "@/hooks/api/accounting/core";
 
 type TypeFilter = "ALL" | "ASSET" | "LIABILITY" | "EQUITY" | "INCOME" | "EXPENSE";
 
-const TYPE_FILTER_VALUES: ReadonlyArray<TypeFilter> = [
+const TYPE_FILTER_VALUES: ReadonlyArray<string> = [
   "ALL",
   "ASSET",
   "LIABILITY",
@@ -34,7 +34,7 @@ const TYPE_FILTER_VALUES: ReadonlyArray<TypeFilter> = [
 ];
 
 function isTypeFilter(value: string): value is TypeFilter {
-  return (TYPE_FILTER_VALUES as ReadonlyArray<string>).includes(value);
+  return TYPE_FILTER_VALUES.includes(value);
 }
 
 interface FlatNode {

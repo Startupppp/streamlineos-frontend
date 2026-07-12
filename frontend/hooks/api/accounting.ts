@@ -39,7 +39,7 @@ interface TrialBalanceResponse {
   balanced: boolean;
 }
 
-export interface ListAccountsParams {
+interface ListAccountsParams {
   page?: number;
   pageSize?: number;
   q?: string;
@@ -98,7 +98,7 @@ export function useUpdateAccount(accountId: number) {
   });
 }
 
-export interface ListJournalParams {
+interface ListJournalParams {
   page?: number;
   pageSize?: number;
   from?: string;
@@ -124,7 +124,7 @@ export function useJournalEntry(entryId: number) {
   });
 }
 
-export interface ReverseJournalEntryResult {
+interface ReverseJournalEntryResult {
   id: number;
   entryNumber: string;
   created: boolean;
@@ -143,7 +143,7 @@ export function useReverseJournalEntry(entryId: number) {
   });
 }
 
-export interface CreateJournalEntryLine {
+interface CreateJournalEntryLine {
   accountCode: string;
   debit: number;
   credit: number;
@@ -209,9 +209,9 @@ export function useProfitLoss(from: string, to: string) {
   });
 }
 
-export type CashFlowSectionKey = "operating" | "investing" | "financing";
+type CashFlowSectionKey = "operating" | "investing" | "financing";
 
-export interface CashFlowLineItem {
+interface CashFlowLineItem {
   label: string;
   amount: string;
 }
@@ -223,7 +223,7 @@ export interface CashFlowSection {
   total: string;
 }
 
-export interface CashFlowReport {
+interface CashFlowReport {
   from: string;
   to: string;
   openingCash: string;
@@ -233,7 +233,7 @@ export interface CashFlowReport {
   sections: CashFlowSection[];
 }
 
-export interface CashFlowParams {
+interface CashFlowParams {
   from: string;
   to: string;
 }
@@ -247,7 +247,7 @@ export function useCashFlow({ from, to }: CashFlowParams) {
   });
 }
 
-export interface ListCustomersOutstandingParams {
+interface ListCustomersOutstandingParams {
   page?: number;
   pageSize?: number;
   q?: string;
@@ -263,7 +263,7 @@ export function useCustomersOutstanding(params: ListCustomersOutstandingParams =
   });
 }
 
-export interface CustomerLedgerParams {
+interface CustomerLedgerParams {
   from?: string;
   to?: string;
 }
@@ -305,7 +305,7 @@ export function useAgedReceivables(asOf: string) {
   });
 }
 
-export interface ListPurchaseBillsParams {
+interface ListPurchaseBillsParams {
   page?: number;
   pageSize?: number;
   q?: string;
@@ -331,7 +331,7 @@ export function usePurchaseBill(billId: number) {
   });
 }
 
-export interface CreatePurchaseBillLine {
+interface CreatePurchaseBillLine {
   description: string;
   hsnSacCode?: string;
   quantity: number;
@@ -392,7 +392,7 @@ export function useGstr3B(from: string, to: string) {
   });
 }
 
-export interface ListVendorsOutstandingParams {
+interface ListVendorsOutstandingParams {
   page?: number;
   pageSize?: number;
   q?: string;
@@ -408,7 +408,7 @@ export function useVendorsOutstanding(params: ListVendorsOutstandingParams = {})
   });
 }
 
-export interface VendorLedgerParams {
+interface VendorLedgerParams {
   from?: string;
   to?: string;
 }
@@ -432,7 +432,7 @@ export function useAgedPayables(asOf: string) {
   });
 }
 
-export interface RecordVendorPaymentInput {
+interface RecordVendorPaymentInput {
   amount: number;
   paymentDate: string;
   paymentMethod: "bank_transfer" | "upi" | "cheque" | "cash" | "card" | "other";

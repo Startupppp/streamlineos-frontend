@@ -23,10 +23,10 @@ const METHOD_OPTIONS: ReadonlyArray<{ value: DepreciationMethod; label: string }
   { value: "UNITS_OF_PRODUCTION", label: "Units of Production" },
 ];
 
-const DEPRECIATION_METHODS_LIST: ReadonlyArray<DepreciationMethod> = ["STRAIGHT_LINE", "DECLINING_BALANCE", "UNITS_OF_PRODUCTION"];
+const DEPRECIATION_METHODS_LIST: ReadonlyArray<string> = ["STRAIGHT_LINE", "DECLINING_BALANCE", "UNITS_OF_PRODUCTION"];
 
 function isDepreciationMethod(v: string): v is DepreciationMethod {
-  return (DEPRECIATION_METHODS_LIST as ReadonlyArray<string>).includes(v);
+  return DEPRECIATION_METHODS_LIST.includes(v);
 }
 
 const editAssetSchema = z.object({

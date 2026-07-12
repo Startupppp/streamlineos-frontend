@@ -77,7 +77,7 @@ function DetailPageSkeleton() {
           <StatCard label="Total Deal Value" value="" icon={DollarSign} tone="emerald" isLoading />
           <StatCard label="Active Deals" value="" icon={TrendingUp} tone="blue" isLoading />
           <StatCard label="Open Leads" value="" icon={Inbox} tone="amber" isLoading />
-          <StatCard label="Total Contacts" value="" icon={Users} tone="violet" isLoading />
+          <StatCard label="Total Contacts" value="" icon={Users} tone="blue" isLoading />
         </StatCardGrid>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="space-y-4">
@@ -258,7 +258,7 @@ export default function CompanyDetailPage({
             label="Total Contacts"
             value={rollup?.totalContacts ?? "—"}
             icon={Users}
-            color="violet"
+            color="blue"
           />
         </StatCardGrid>
 

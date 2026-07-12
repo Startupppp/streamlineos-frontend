@@ -48,13 +48,15 @@ import type { Invoice, InvoiceStatus } from "@/types/invoice";
 import type { FinanceStatus } from "@/features/accounting/shared";
 import type { PayableInvoice } from "@/features/accounting/sales/record-payment-dialog";
 
-const SERVER_FILTERABLE: InvoiceStatus[] = ["DRAFT", "ISSUED", "PAID", "FAILED", "VOIDED"];
+const SERVER_FILTERABLE: ReadonlyArray<string> = ["DRAFT", "ISSUED", "PAID", "FAILED", "VOIDED"];
 
 function isInvoiceStatus(v: string): v is InvoiceStatus {
-  return (SERVER_FILTERABLE as ReadonlyArray<string>).includes(v);
+  return SERVER_FILTERABLE.includes(v);
 }
 
-const ALL_DISPLAY_STATUSES = [
+type DisplayStatus = "DRAFT" | "ISSUED" | "SENT" | "PARTIALLY_PAID" | "PAID" | "OVERDUE" | "FAILED" | "VOIDED";
+
+const ALL_DISPLAY_STATUSES: ReadonlyArray<string> = [
   "DRAFT",
   "ISSUED",
   "SENT",
@@ -63,9 +65,7 @@ const ALL_DISPLAY_STATUSES = [
   "OVERDUE",
   "FAILED",
   "VOIDED",
-] as const;
-
-type DisplayStatus = (typeof ALL_DISPLAY_STATUSES)[number];
+];
 
 const FINANCE_STATUS_MAP: Record<string, FinanceStatus> = {
   DRAFT: "DRAFT",
@@ -299,7 +299,7 @@ export default function AccountingInvoicesPage() {
 
   function handleStatusFilterChange(value: string): void {
     const isDisplayStatusOrAll = (v: string): v is DisplayStatus | "ALL" =>
-      v === "ALL" || (ALL_DISPLAY_STATUSES as ReadonlyArray<string>).includes(v);
+      v === "ALL" || ALL_DISPLAY_STATUSES.includes(v);
     if (isDisplayStatusOrAll(value)) {
       setStatusFilter(value);
       setPage(1);

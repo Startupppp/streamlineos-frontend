@@ -23,9 +23,9 @@ export function useProjects(
   options?: Omit<UseQueryOptions<PaginatedResponse<ProjectListItem>>, "queryKey" | "queryFn">
 ) {
   return useQuery<PaginatedResponse<ProjectListItem>>({
-    queryKey: queryKeys.projects.list(filters as Record<string, unknown>),
+    queryKey: queryKeys.projects.list(filters ? { ...filters } : undefined),
     queryFn: () =>
-      apiClient.get<PaginatedResponse<ProjectListItem>>("/projects", filters as Record<string, unknown>),
+      apiClient.get<PaginatedResponse<ProjectListItem>>("/projects", filters ? { ...filters } : undefined),
     staleTime: 30_000,
     refetchInterval: 30_000,
     ...options,

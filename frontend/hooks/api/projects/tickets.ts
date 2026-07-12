@@ -26,7 +26,7 @@ export function useTickets(
   return useQuery<PaginatedResponse<Ticket>>({
     queryKey: queryKeys.projects.tickets({ projectId, ...filters }),
     queryFn: () =>
-      apiClient.get<PaginatedResponse<Ticket>>(`/projects/${projectId}/tickets`, filters as Record<string, unknown>),
+      apiClient.get<PaginatedResponse<Ticket>>(`/projects/${projectId}/tickets`, filters ? { ...filters } : undefined),
     enabled: !!projectId,
     staleTime: 30_000,
     ...options,

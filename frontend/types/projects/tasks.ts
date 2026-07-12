@@ -112,6 +112,7 @@ export interface Ticket {
   watchers?: TicketWatcher[];
   project?: { id: number; name: string; key: string } | null;
   sprint?: { id: number; name: string } | null;
+  cycle?: { id: number; name: string; status: string; startDate: string; endDate: string } | null;
 }
 
 export type Epic = Ticket;

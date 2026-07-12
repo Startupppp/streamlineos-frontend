@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -82,16 +83,17 @@ export function CfdSection({ projectId }: { projectId: number }) {
           <SelectItem value="90">90 days</SelectItem>
         </SelectContent>
       </Select>
-      <Button
+      <LoadingButton
         size="sm"
         variant="outline"
         className="h-8"
         onClick={handleCapture}
-        disabled={capture.isPending}
+        isPending={capture.isPending}
+        loadingText="Capturing…"
       >
         <Camera className="h-3.5 w-3.5 mr-1.5" />
-        {capture.isPending ? "Capturing…" : "Capture today"}
-      </Button>
+        Capture today
+      </LoadingButton>
     </div>
   );
 

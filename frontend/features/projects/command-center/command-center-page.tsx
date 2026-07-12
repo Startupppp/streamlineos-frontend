@@ -92,7 +92,7 @@ const ProjectCard = memo(function ProjectCard({ project, index }: { project: Pro
             <div className="flex items-center gap-1.5">
               <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
                 <div
-                  className="h-full bg-blue-500 rounded-full transition-[width] duration-500"
+                  className="h-full bg-blue-500 rounded-full transition-[width] duration-300"
                   style={{ width: `${project.progress.percentage}%` }}
                 />
               </div>

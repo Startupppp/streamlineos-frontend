@@ -185,7 +185,7 @@ const ACTIVITY_TYPE_LABELS: Record<CollectionActivityType, string> = {
   EMAIL: "Email",
 };
 
-const COLLECTION_ACTIVITY_TYPE_KEYS = Object.keys(ACTIVITY_TYPE_LABELS) as Array<keyof typeof ACTIVITY_TYPE_LABELS>;
+const COLLECTION_ACTIVITY_TYPE_KEYS: CollectionActivityType[] = ["NOTE", "PROMISE_TO_PAY", "CALL", "EMAIL"];
 
 function isCollectionActivityType(v: string): v is CollectionActivityType {
   return v in ACTIVITY_TYPE_LABELS;

@@ -204,7 +204,7 @@ export default function DealAgingPage() {
               label="Oldest Deal"
               value={`${stats.oldestDays}d`}
               icon={TrendingDown}
-              tone="violet"
+              tone="blue"
               isLoading={isLoading}
             />
             <StatCard

@@ -144,10 +144,10 @@ export function RecurringBillFormSheet({
     >
       {(form) => {
         function handleFrequencyChange(v: string): void {
-          const FREQUENCY_VALUES = ["DAILY", "WEEKLY", "MONTHLY", "QUARTERLY", "YEARLY"] as const;
-          type FrequencyValue = (typeof FREQUENCY_VALUES)[number];
+          const FREQUENCY_VALUES: ReadonlyArray<string> = ["DAILY", "WEEKLY", "MONTHLY", "QUARTERLY", "YEARLY"];
+          type FrequencyValue = "DAILY" | "WEEKLY" | "MONTHLY" | "QUARTERLY" | "YEARLY";
           function isFrequency(val: string): val is FrequencyValue {
-            return (FREQUENCY_VALUES as ReadonlyArray<string>).includes(val);
+            return FREQUENCY_VALUES.includes(val);
           }
           if (isFrequency(v)) form.setValue("frequency", v, { shouldValidate: true });
         }

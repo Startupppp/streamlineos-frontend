@@ -422,7 +422,7 @@ export function useRejectJournal(entryId: number) {
 
 export function useRecurringJournals(params: RecurringJournalParams = {}) {
   return useQuery<{ items: RecurringJournal[]; total: number }, Error>({
-    queryKey: coreKeys.recurringJournals(params as Record<string, unknown>),
+    queryKey: coreKeys.recurringJournals(params),
     queryFn: () =>
       apiClient.get<{ items: RecurringJournal[]; total: number }>(
         "/accounting/recurring-journals",

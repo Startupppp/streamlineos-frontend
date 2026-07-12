@@ -26,8 +26,10 @@ import type { AccountTreeNode } from "@/hooks/api/accounting/core";
 
 const ACCOUNT_TYPES = ["ASSET", "LIABILITY", "EQUITY", "INCOME", "EXPENSE"] as const;
 
+const ACCOUNT_TYPES_LIST: ReadonlyArray<string> = ["ASSET", "LIABILITY", "EQUITY", "INCOME", "EXPENSE"];
+
 function isAccountType(value: string): value is AccountValues["accountType"] {
-  return (ACCOUNT_TYPES as ReadonlyArray<string>).includes(value);
+  return ACCOUNT_TYPES_LIST.includes(value);
 }
 
 const accountSchema = z.object({

@@ -392,7 +392,7 @@ export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-7 text-xs border-dashed border-violet-300 text-violet-700 hover:bg-violet-50"
+                    className="h-7 text-xs border-dashed border-blue-300 text-blue-700 hover:bg-blue-50"
                     onClick={handleAddBranchNode}
                   >
                     <Plus className="h-3 w-3 mr-1" /> Branch

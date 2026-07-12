@@ -135,23 +135,27 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
   );
 
   function handleColumnByChange(v: string) {
-    const valid: ColumnByOption[] = ["status", "assignee", "priority", "label", "cycle", "project"];
-    if (valid.includes(v as ColumnByOption)) set("columnBy", v as ColumnByOption);
+    const valid: readonly ColumnByOption[] = ["status", "assignee", "priority", "label", "cycle", "project"];
+    const match = valid.find((option) => option === v);
+    if (match) set("columnBy", match);
   }
 
   function handleRowByChange(v: string) {
-    const valid: SwimlaneBy[] = ["none", "status", "assignee", "priority", "cycle"];
-    if (valid.includes(v as SwimlaneBy)) set("rowBy", v as SwimlaneBy);
+    const valid: readonly SwimlaneBy[] = ["none", "status", "assignee", "priority", "cycle"];
+    const match = valid.find((option) => option === v);
+    if (match) set("rowBy", match);
   }
 
   function handleOrderByChange(v: string) {
-    const valid: OrderByOption[] = ["manual", "created", "priority", "dueDate"];
-    if (valid.includes(v as OrderByOption)) set("orderBy", v as OrderByOption);
+    const valid: readonly OrderByOption[] = ["manual", "created", "priority", "dueDate"];
+    const match = valid.find((option) => option === v);
+    if (match) set("orderBy", match);
   }
 
   function handleCompletedIssuesChange(v: string) {
-    const valid: CompletedIssuesFilter[] = ["all", "none", "last-day", "last-week", "last-month"];
-    if (valid.includes(v as CompletedIssuesFilter)) set("completedIssues", v as CompletedIssuesFilter);
+    const valid: readonly CompletedIssuesFilter[] = ["all", "none", "last-day", "last-week", "last-month"];
+    const match = valid.find((option) => option === v);
+    if (match) set("completedIssues", match);
   }
 
   function handleOrderCompleteByRecency(checked: boolean) { set("orderCompleteByRecency", checked); }

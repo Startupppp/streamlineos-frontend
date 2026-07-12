@@ -124,8 +124,13 @@ export function ReconciliationRulesSheet({ bankAccountId, open, onOpenChange }: 
     setForm((prev) => ({ ...prev, priority: e.target.value }));
   }
 
+  function isRuleActionType(v: string): v is ReconciliationRuleAction["type"] {
+    return ACTION_OPTIONS.some((o) => o.value === v);
+  }
+
   function handleActionTypeChange(value: string) {
-    setForm((prev) => ({ ...prev, actionType: value as ReconciliationRuleAction["type"] }));
+    if (!isRuleActionType(value)) return;
+    setForm((prev) => ({ ...prev, actionType: value }));
   }
 
   function handleIsActiveChange(checked: boolean) {

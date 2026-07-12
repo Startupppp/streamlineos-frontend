@@ -37,7 +37,7 @@ const CR_STATUS_STYLES: Record<ChangeRequestStatus, string> = {
   awaiting_approval: "text-orange-600 border-orange-200",
   approved: "text-green-600 border-green-200",
   rejected: "text-red-600 border-red-200",
-  in_progress: "text-purple-600 border-purple-200",
+  in_progress: "text-blue-600 border-blue-200",
   completed: "text-emerald-700 border-emerald-300",
 };
 

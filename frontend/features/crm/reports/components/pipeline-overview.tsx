@@ -36,7 +36,7 @@ export function PipelineOverview({
           label="Active Deals"
           value={dealStats?.active ?? 0}
           icon={Target}
-          color="violet"
+          color="blue"
           index={1}
         />
         <StatCard
