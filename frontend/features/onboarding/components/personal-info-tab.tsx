@@ -67,7 +67,6 @@ export function PersonalInfoTab({
       addressCity: "",
       addressState: "",
       addressPostalCode: "",
-      addressCountry: INDIA_COUNTRY_NAME,
       emergencyName: "",
       emergencyRelation: undefined,
       emergencyPhone: "",
