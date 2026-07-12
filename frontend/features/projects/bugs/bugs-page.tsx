@@ -11,7 +11,7 @@ import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { SkeletonTable } from "@/components/shared/skeletons/skeleton-table";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -247,7 +247,7 @@ export function BugsPage({ projectId }: BugsPageProps) {
     >
       <div className="px-4 pb-4">
         {isLoading ? (
-          <SkeletonTable rows={8} columns={6} />
+          <DataTableSkeleton rows={8} columns={6} />
         ) : isError ? (
           <ErrorState onRetry={refetch} />
         ) : (bugs ?? []).length === 0 ? (

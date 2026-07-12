@@ -1,5 +1,5 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { SkeletonTable } from "@/components/shared/skeletons/skeleton-table";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ProjectApprovalsLoading() {

@@ -12,7 +12,8 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyCompaniesIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState, SkeletonTable } from "@/components/shared";
+import { ErrorState } from "@/components/shared";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useCrmOrganizations, useDeleteCrmOrganization } from "@/hooks/api/crm";
@@ -236,7 +237,7 @@ export default function CompaniesPage() {
   if (isLoading) {
     return (
       <PageWrapper title="Companies" subtitle="Your company directory">
-        <SkeletonTable rows={8} columns={6} className="h-[calc(100dvh-16rem)]" />
+        <DataTableSkeleton rows={8} columns={6} className="h-[calc(100dvh-16rem)]" />
       </PageWrapper>
     );
   }

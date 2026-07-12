@@ -18,7 +18,7 @@ import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { SkeletonTable } from "@/components/shared/skeletons/skeleton-table";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -312,7 +312,7 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
     >
       <div className="px-4 pb-4">
         {isLoading ? (
-          <SkeletonTable rows={6} columns={7} />
+          <DataTableSkeleton rows={6} columns={7} />
         ) : isError ? (
           <ErrorState className="flex-1" onRetry={() => void refetch()} />
         ) : items.length === 0 ? (

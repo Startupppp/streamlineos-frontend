@@ -16,7 +16,13 @@ import {
 } from "recharts";
 import { Timer } from "lucide-react";
 import { useCycleTimeReport } from "@/hooks/api/projects/reports";
-import { ChartCard, TOOLTIP_STYLE, AXIS_TICK } from "./chart-card";
+import {
+  ChartCard,
+  TOOLTIP_STYLE,
+  AXIS_TICK,
+  GRID_STROKE,
+  CHART_BLUE,
+} from "./chart-card";
 
 export function CycleTimeSection({ projectId }: { projectId: number }) {
   const { data = [], isLoading, isError, refetch } =
@@ -51,7 +57,7 @@ export function CycleTimeSection({ projectId }: { projectId: number }) {
               <CartesianGrid
                 strokeDasharray="3 3"
                 vertical={false}
-                stroke="#f1f5f9"
+                stroke={GRID_STROKE}
               />
               <XAxis
                 dataKey="week"
@@ -72,7 +78,7 @@ export function CycleTimeSection({ projectId }: { projectId: number }) {
               />
               <Bar
                 dataKey="avgDays"
-                fill="#1d4ed8"
+                fill={CHART_BLUE[500]}
                 radius={[4, 4, 0, 0]}
                 name="Avg Days"
               />

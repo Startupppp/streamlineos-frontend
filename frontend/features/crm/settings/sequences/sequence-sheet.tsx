@@ -28,7 +28,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { SkeletonTable } from "@/components/shared";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useCreateCrmSequence,
@@ -119,7 +119,7 @@ function StepsTab({ sequenceId }: { sequenceId: string }) {
 
   const steps = data?.steps ?? [];
 
-  if (isLoading) return <SkeletonTable rows={3} columns={3} />;
+  if (isLoading) return <DataTableSkeleton rows={3} columns={3} />;
 
   return (
     <div className="space-y-3">
@@ -230,7 +230,7 @@ function EnrollmentsTab({ sequenceId }: { sequenceId: string }) {
 
   const enrollments = data?.enrollments ?? [];
 
-  if (isLoading) return <SkeletonTable rows={3} columns={4} />;
+  if (isLoading) return <DataTableSkeleton rows={3} columns={4} />;
 
   if (enrollments.length === 0) {
     return <p className="text-sm text-muted-foreground text-center py-6">No enrollments yet.</p>;

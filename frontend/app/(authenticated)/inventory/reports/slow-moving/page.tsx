@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { SkeletonTable, ErrorState } from "@/components/shared";
+import { DataTableSkeleton } from "@/components/ui/data-table";
+import { ErrorState } from "@/components/shared";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyReportIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { useSlowMovingReport, type SlowMovingRow } from "@/hooks/api/inventory/reports";
@@ -190,7 +191,7 @@ function SlowMovingReportContent() {
         </div>
       }
     >
-      {query.isLoading && <SkeletonTable rows={8} columns={6} />}
+      {query.isLoading && <DataTableSkeleton rows={8} columns={6} />}
       {query.error && (
         <ErrorState description={query.error.message} onRetry={handleRetry} className="flex-1" />
       )}

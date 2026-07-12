@@ -149,6 +149,22 @@ export function DimensionsTable({ canManage }: Props) {
 
   const columns = buildColumns(canManage, setEditDimension, setValuesDimension);
 
+  function handleOpenCreate(): void {
+    setCreateOpen(true);
+  }
+
+  function getDimensionRowClass(): string {
+    return "group";
+  }
+
+  function handleEditOpenChange(o: boolean): void {
+    if (!o) setEditDimension(undefined);
+  }
+
+  function handleValuesOpenChange(o: boolean): void {
+    if (!o) setValuesDimension(undefined);
+  }
+
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center flex-1 py-16 text-center">
@@ -165,7 +181,7 @@ export function DimensionsTable({ canManage }: Props) {
         Add cost centres, projects, or departments to tag GL entries for richer reporting.
       </p>
       {canManage && (
-        <Button size="sm" className="mt-4" onClick={() => setCreateOpen(true)}>
+        <Button size="sm" className="mt-4" onClick={handleOpenCreate}>
           <Plus className="size-3.5 mr-1.5" />
           New Dimension
         </Button>
@@ -182,7 +198,7 @@ export function DimensionsTable({ canManage }: Props) {
             : `${items.length} dimension${items.length !== 1 ? "s" : ""}`}
         </p>
         {canManage && (
-          <Button size="sm" onClick={() => setCreateOpen(true)}>
+          <Button size="sm" onClick={handleOpenCreate}>
             <Plus className="size-3.5 mr-1.5" />
             New Dimension
           </Button>
@@ -195,7 +211,7 @@ export function DimensionsTable({ canManage }: Props) {
         getRowKey={(row) => row.id}
         isLoading={isLoading}
         emptyState={emptyState}
-        rowClassName={() => "group"}
+        rowClassName={getDimensionRowClass}
       />
 
       {createOpen && (
@@ -205,7 +221,7 @@ export function DimensionsTable({ canManage }: Props) {
       {editDimension && (
         <DimensionFormDialog
           open={!!editDimension}
-          onOpenChange={(o) => { if (!o) setEditDimension(undefined); }}
+          onOpenChange={handleEditOpenChange}
           dimension={editDimension}
         />
       )}
@@ -213,7 +229,7 @@ export function DimensionsTable({ canManage }: Props) {
       {valuesDimension && (
         <DimensionValuesSheet
           open={!!valuesDimension}
-          onOpenChange={(o) => { if (!o) setValuesDimension(undefined); }}
+          onOpenChange={handleValuesOpenChange}
           dimension={valuesDimension}
           canManage={canManage}
         />

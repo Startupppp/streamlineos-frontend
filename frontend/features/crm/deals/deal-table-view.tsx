@@ -2,14 +2,11 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import {
-  TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { cn } from "@/lib/utils";
 import { formatDealId } from "@/lib/format-utils";
 import { useCrmStages, resolveStage } from "@/hooks/api/crm/metadata";
@@ -65,44 +62,6 @@ function timeAgo(date: string | Date | null | undefined): string {
   const days = Math.floor(diff / 86400);
   if (days < 30) return `${days}d`;
   return d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
-}
-
-interface SortIconProps {
-  column: string;
-  sortColumn: string;
-  sortDirection: "asc" | "desc";
-}
-
-function SortIcon({ column, sortColumn, sortDirection }: SortIconProps) {
-  if (sortColumn !== column) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-30" />;
-  return sortDirection === "asc"
-    ? <ArrowUp className="h-3 w-3 ml-1 text-blue-600" />
-    : <ArrowDown className="h-3 w-3 ml-1 text-blue-600" />;
-}
-
-interface SortableHeadProps {
-  col: { key: string; label: string; sortable: boolean };
-  sortColumn: string;
-  sortDirection: "asc" | "desc";
-  onSort: (key: string) => void;
-}
-
-function SortableHead({ col, sortColumn, sortDirection, onSort }: SortableHeadProps) {
-  const handleClick = useCallback(() => { if (col.sortable) onSort(col.key); }, [col.key, col.sortable, onSort]);
-  return (
-    <TableHead
-      className={cn(
-        "text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 whitespace-nowrap",
-        col.sortable && "cursor-pointer select-none hover:text-foreground",
-      )}
-      onClick={handleClick}
-    >
-      <span className="flex items-center">
-        {col.label}
-        {col.sortable && <SortIcon column={col.key} sortColumn={sortColumn} sortDirection={sortDirection} />}
-      </span>
-    </TableHead>
-  );
 }
 
 interface DealNameButtonProps {
@@ -164,120 +123,134 @@ export function DealTableView({
     setEditingCell(null);
   }, [onStageChange]);
   const handleStartStageEdit = useCallback((dealId: number) => setEditingCell({ dealId, column: "stage" }), []);
+  const handleRowClick = useCallback((row: Deal) => handleNavigate(row.id), [handleNavigate]);
 
-  const columns = [
-    { key: "dealId", label: "Deal ID", sortable: false },
-    { key: "name", label: "Deal Name", sortable: true },
-    { key: "value", label: "Value", sortable: true },
-    { key: "stage", label: "Stage", sortable: true },
-    { key: "probability", label: "Prob%", sortable: true },
-    { key: "ai", label: "AI", sortable: false },
-    { key: "contactPerson", label: "Contact", sortable: false },
-    { key: "assignedTo", label: "Assigned", sortable: false },
-    { key: "expectedCloseDate", label: "Close", sortable: false },
-    { key: "createdAt", label: "Created", sortable: true },
+  const columns: DataTableColumn<Deal>[] = [
+    {
+      key: "dealId",
+      header: "Deal ID",
+      cell: (row) => (
+        <span className="font-mono text-[10px] text-muted-foreground select-all">
+          {formatDealId(row.id)}
+        </span>
+      ),
+    },
+    {
+      key: "name",
+      header: "Deal Name",
+      sortable: true,
+      sortValue: (row) => row.name,
+      cell: (row) => (
+        <DealNameButton dealId={row.id} name={row.name} onNavigate={handleNavigate} />
+      ),
+    },
+    {
+      key: "value",
+      header: "Value",
+      sortable: true,
+      sortValue: (row) => parseFloat(row.value ?? "0") || 0,
+      cell: (row) => (
+        <span className="font-mono tabular-nums text-blue-600 font-semibold">
+          {formatINR(row.value)}
+        </span>
+      ),
+    },
+    {
+      key: "stage",
+      header: "Stage",
+      sortable: true,
+      cell: (row) => (
+        <StageCell
+          deal={row}
+          isEditing={editingCell?.dealId === row.id && editingCell?.column === "stage"}
+          onStageChange={handleStageChange}
+          onStartEdit={handleStartStageEdit}
+        />
+      ),
+    },
+    {
+      key: "probability",
+      header: "Prob%",
+      sortable: true,
+      sortValue: (row) => row.probability ?? 0,
+      cell: (row) => (
+        <span className="tabular-nums">
+          {row.probability != null ? `${row.probability}%` : "—"}
+        </span>
+      ),
+    },
+    {
+      key: "ai",
+      header: "AI",
+      cell: (row) => (
+        <span onClick={stopPropagation}>
+          <AIPredictDealButton dealId={row.id} compact />
+        </span>
+      ),
+    },
+    {
+      key: "contactPerson",
+      header: "Contact",
+      className: "truncate max-w-[100px]",
+      cell: (row) => row.contactPerson || "—",
+    },
+    {
+      key: "assignedTo",
+      header: "Assigned",
+      cell: (row) => row.assignedTo?.name ? (
+        <div className="flex items-center gap-1">
+          <Avatar className="h-4 w-4">
+            <AvatarImage src={row.assignedTo.image || ""} />
+            <AvatarFallback className="text-[7px]">{row.assignedTo.name.charAt(0)}</AvatarFallback>
+          </Avatar>
+          <span className="truncate max-w-[70px]">{row.assignedTo.name}</span>
+        </div>
+      ) : <span className="text-muted-foreground/50">—</span>,
+    },
+    {
+      key: "expectedCloseDate",
+      header: "Close",
+      cell: (row) => (
+        <span className="text-muted-foreground tabular-nums">
+          {row.expectedCloseDate ? formatDate(row.expectedCloseDate) : "—"}
+        </span>
+      ),
+    },
+    {
+      key: "createdAt",
+      header: "Created",
+      sortable: true,
+      sortValue: (row) => new Date(row.createdAt ?? 0).getTime(),
+      cell: (row) => (
+        <span className="text-muted-foreground tabular-nums">{timeAgo(row.createdAt)}</span>
+      ),
+    },
   ];
+
+  const emptyState = (
+    <div className="flex flex-col items-center justify-center min-h-[40vh] text-center py-12 px-6">
+      <p className="text-sm font-semibold text-foreground">No deals found</p>
+      <p className="text-xs text-muted-foreground mt-1">Try adjusting your filters or create a new deal.</p>
+    </div>
+  );
 
   return (
     <div className="flex flex-col h-[calc(100dvh-18rem)] min-h-[320px]">
       <div className="shrink-0 flex items-center px-1 pb-1.5">
         <span className="text-[11px] text-muted-foreground tabular-nums">{deals.length} deals</span>
       </div>
-
-      <div className="flex-1 min-h-0 rounded-lg border border-border overflow-hidden overflow-auto">
-        <div className="min-w-max">
-          <table className="w-full caption-bottom text-[11px]">
-            <TableHeader className="sticky top-0 z-10 bg-muted/80">
-              <TableRow className="border-b-2 border-border hover:bg-transparent">
-                {columns.map(col => (
-                  <SortableHead
-                    key={col.key}
-                    col={col}
-                    sortColumn={sortColumn}
-                    sortDirection={sortDirection}
-                    onSort={onSort}
-                  />
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                Array.from({ length: 8 }).map((_, i) => (
-                  <TableRow key={i}>
-                    <TableCell colSpan={columns.length} className="h-7 px-2">
-                      <div className="h-3 w-full bg-muted/50 rounded animate-pulse" />
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : deals.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={columns.length} className="p-0 border-0">
-                    <div className="flex flex-col items-center justify-center min-h-[40vh] text-center py-12 px-6">
-                      <p className="text-sm font-semibold text-foreground">No deals found</p>
-                      <p className="text-xs text-muted-foreground mt-1">Try adjusting your filters or create a new deal.</p>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                deals.map((deal, idx) => {
-                  const isEditingStage = editingCell?.dealId === deal.id && editingCell?.column === "stage";
-                  return (
-                    <TableRow
-                      key={deal.id}
-                      className={cn("h-8", idx % 2 === 1 && "bg-muted/10", "hover:bg-muted/30 transition-colors")}
-                    >
-                      <TableCell className="px-2 py-1">
-                        <span className="font-mono text-[10px] text-muted-foreground select-all">
-                          {formatDealId(deal.id)}
-                        </span>
-                      </TableCell>
-                      <TableCell className="px-2 py-1">
-                        <DealNameButton dealId={deal.id} name={deal.name} onNavigate={handleNavigate} />
-                      </TableCell>
-                      <TableCell className="px-2 py-1 font-mono tabular-nums text-blue-600 font-semibold">
-                        {formatINR(deal.value)}
-                      </TableCell>
-                      <TableCell className="px-2 py-1">
-                        <StageCell
-                          deal={deal}
-                          isEditing={isEditingStage}
-                          onStageChange={handleStageChange}
-                          onStartEdit={handleStartStageEdit}
-                        />
-                      </TableCell>
-                      <TableCell className="px-2 py-1 tabular-nums">
-                        {deal.probability != null ? `${deal.probability}%` : "—"}
-                      </TableCell>
-                      <TableCell className="px-2 py-1" onClick={stopPropagation}>
-                        <AIPredictDealButton dealId={deal.id} compact />
-                      </TableCell>
-                      <TableCell className="px-2 py-1 truncate max-w-[100px]">
-                        {deal.contactPerson || "—"}
-                      </TableCell>
-                      <TableCell className="px-2 py-1">
-                        {deal.assignedTo?.name ? (
-                          <div className="flex items-center gap-1">
-                            <Avatar className="h-4 w-4">
-                              <AvatarImage src={deal.assignedTo.image || ""} />
-                              <AvatarFallback className="text-[7px]">{deal.assignedTo.name.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                            <span className="truncate max-w-[70px]">{deal.assignedTo.name}</span>
-                          </div>
-                        ) : <span className="text-muted-foreground/50">—</span>}
-                      </TableCell>
-                      <TableCell className="px-2 py-1 text-muted-foreground tabular-nums">
-                        {deal.expectedCloseDate ? formatDate(deal.expectedCloseDate) : "—"}
-                      </TableCell>
-                      <TableCell className="px-2 py-1 text-muted-foreground tabular-nums">
-                        {timeAgo(deal.createdAt)}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </table>
-        </div>
+      <div className="flex-1 min-h-0">
+        <DataTable
+          data={deals}
+          columns={columns}
+          getRowKey={(row) => row.id}
+          onRowClick={handleRowClick}
+          sortState={{ field: sortColumn, direction: sortDirection, onChange: (field) => onSort(field) }}
+          isLoading={isLoading}
+          emptyState={emptyState}
+          minWidth="max-content"
+          className="h-full"
+        />
       </div>
     </div>
   );

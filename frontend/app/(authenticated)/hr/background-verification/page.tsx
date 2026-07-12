@@ -17,16 +17,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Select,
   SelectContent,
@@ -156,72 +148,93 @@ function ComplianceDashboard() {
   );
 }
 
-interface BgvRowProps {
-  bgv: BackgroundVerification;
-  onUpdateStatus: (id: number, status: string) => void;
-  onOpenEdit: (bgv: BackgroundVerification) => void;
-  isPending: boolean;
-}
-
-function BgvRow({ bgv, onUpdateStatus, onOpenEdit, isPending }: BgvRowProps) {
-  const statusCfg = getStatusConfig(bgv.status);
-  const employeeName = bgv.user?.name ?? bgv.user?.email ?? "Employee";
-
-  const handlePass = useCallback(() => onUpdateStatus(bgv.id, "PASSED"), [bgv.id, onUpdateStatus]);
-  const handleFail = useCallback(() => onUpdateStatus(bgv.id, "FAILED"), [bgv.id, onUpdateStatus]);
-  const handleEdit = useCallback(() => onOpenEdit(bgv), [bgv, onOpenEdit]);
-
-  return (
-    <TableRow className="hover:bg-muted/20 transition-colors duration-200">
-      <TableCell>
-        <div className="flex items-center gap-2">
-          <Avatar className="h-6 w-6 shrink-0">
-            <AvatarFallback className="text-[9px] bg-muted text-muted-foreground">
-              {getInitials(bgv.user?.name)}
-            </AvatarFallback>
-          </Avatar>
-          <span className="text-xs font-medium whitespace-nowrap">
-            {employeeName}
-          </span>
-        </div>
-      </TableCell>
-      <TableCell>
+function buildBgvColumns(
+  onUpdateStatus: (id: number, status: string) => void,
+  onOpenEdit: (bgv: BackgroundVerification) => void,
+  isPending: boolean,
+): DataTableColumn<BackgroundVerification>[] {
+  return [
+    {
+      key: "employee",
+      header: "Employee",
+      cell: (bgv) => {
+        const employeeName = bgv.user?.name ?? bgv.user?.email ?? "Employee";
+        return (
+          <div className="flex items-center gap-2">
+            <Avatar className="h-6 w-6 shrink-0">
+              <AvatarFallback className="text-[9px] bg-muted text-muted-foreground">
+                {getInitials(bgv.user?.name)}
+              </AvatarFallback>
+            </Avatar>
+            <span className="text-xs font-medium whitespace-nowrap">{employeeName}</span>
+          </div>
+        );
+      },
+    },
+    {
+      key: "type",
+      header: "Type",
+      cell: (bgv) => (
         <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-slate-100 text-slate-700 dark:bg-slate-900/40 dark:text-slate-300 border-slate-200 dark:border-slate-800">
           {bgv.type}
         </span>
-      </TableCell>
-      <TableCell>
-        {bgv.provider ? (
+      ),
+    },
+    {
+      key: "vendor",
+      header: "Vendor",
+      cell: (bgv) =>
+        bgv.provider ? (
           <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300 border-violet-200 dark:border-violet-800">
             <Building2 className="h-2.5 w-2.5" />
             {bgv.provider}
           </span>
         ) : (
           <span className="text-xs text-muted-foreground">—</span>
-        )}
-      </TableCell>
-      <TableCell className="text-xs text-muted-foreground">
-        {bgv.referenceNumber ?? "—"}
-      </TableCell>
-      <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-        {bgv.createdAt
-          ? format(new Date(bgv.createdAt), "MMM d, yyyy")
-          : "—"}
-      </TableCell>
-      <TableCell>
-        <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border", statusCfg.badge)}>
-          {statusCfg.icon}
-          {statusCfg.label}
+        ),
+    },
+    {
+      key: "reference",
+      header: "Reference",
+      cell: (bgv) => <span className="text-xs text-muted-foreground">{bgv.referenceNumber ?? "—"}</span>,
+    },
+    {
+      key: "initiated",
+      header: "Initiated",
+      cell: (bgv) => (
+        <span className="text-xs text-muted-foreground whitespace-nowrap">
+          {bgv.createdAt ? format(new Date(bgv.createdAt), "MMM d, yyyy") : "—"}
         </span>
-      </TableCell>
-      <TableCell className="text-right">
+      ),
+      sortable: true,
+      sortValue: (bgv) => bgv.createdAt ?? "",
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (bgv) => {
+        const statusCfg = getStatusConfig(bgv.status);
+        return (
+          <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border", statusCfg.badge)}>
+            {statusCfg.icon}
+            {statusCfg.label}
+          </span>
+        );
+      },
+    },
+    {
+      key: "actions",
+      header: "",
+      headerClassName: "text-right",
+      className: "text-right",
+      cell: (bgv) => (
         <div className="flex gap-1 justify-end">
           {(bgv.status === "PENDING" || bgv.status === "IN_PROGRESS") && (
             <>
               <Button
                 size="sm"
                 className="h-7 gap-1 text-xs"
-                onClick={handlePass}
+                onClick={(e) => { e.stopPropagation(); onUpdateStatus(bgv.id, "PASSED"); }}
                 disabled={isPending}
               >
                 <CheckCircle2 className="h-3 w-3" />
@@ -231,7 +244,7 @@ function BgvRow({ bgv, onUpdateStatus, onOpenEdit, isPending }: BgvRowProps) {
                 size="sm"
                 variant="outline"
                 className="h-7 gap-1 text-xs"
-                onClick={handleFail}
+                onClick={(e) => { e.stopPropagation(); onUpdateStatus(bgv.id, "FAILED"); }}
                 disabled={isPending}
               >
                 <XCircle className="h-3 w-3" />
@@ -243,15 +256,15 @@ function BgvRow({ bgv, onUpdateStatus, onOpenEdit, isPending }: BgvRowProps) {
             size="sm"
             variant="ghost"
             className="h-7 w-7 p-0"
-            onClick={handleEdit}
+            onClick={(e) => { e.stopPropagation(); onOpenEdit(bgv); }}
             aria-label="Edit verification"
           >
             <Pencil className="h-3 w-3" />
           </Button>
         </div>
-      </TableCell>
-    </TableRow>
-  );
+      ),
+    },
+  ];
 }
 
 function BGVContent() {
@@ -384,38 +397,6 @@ function BGVContent() {
     [update],
   );
 
-  if (isLoading) {
-    return (
-      <PageWrapper
-        title="Background Verification"
-        subtitle="Initiate, track employee background checks, and view candidate compliance"
-      >
-        <Skeleton className="h-9 w-64 rounded-lg mb-4" />
-        <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-          <div className="bg-muted/40 border-b border-border flex gap-4 px-3 py-2.5">
-            {["Employee", "Type", "Vendor", "Reference", "Initiated", "Status", "Actions"].map((h) => (
-              <Skeleton key={h} className="h-3" style={{ width: `${h.length * 9}px` }} />
-            ))}
-          </div>
-          <div className="divide-y divide-border">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-4 px-3 py-3">
-                <Skeleton className="h-6 w-6 rounded-full" />
-                <Skeleton className="h-4 w-28" />
-                <Skeleton className="h-5 w-16 rounded-full" />
-                <Skeleton className="h-5 w-16 rounded-full" />
-                <Skeleton className="h-4 w-20" />
-                <Skeleton className="h-4 w-20" />
-                <Skeleton className="h-5 w-14 rounded-full" />
-                <Skeleton className="h-7 w-24 rounded-md ml-auto" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </PageWrapper>
-    );
-  }
-
   if (isError) {
     return (
       <PageWrapper
@@ -476,46 +457,19 @@ function BGVContent() {
         </TabsList>
 
         <TabsContent value="employee-bgv">
-          {!items?.length ? (
-            <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+          <DataTable<BackgroundVerification>
+            data={items ?? []}
+            columns={buildBgvColumns(handleUpdateStatus, handleOpenEdit, update.isPending)}
+            getRowKey={(bgv) => bgv.id}
+            isLoading={isLoading}
+            emptyState={
               <EmptyState
                 illustrationPreset="security"
                 title="No background verifications initiated"
                 description="Initiate background checks for employees to track their verification status."
               />
-            </div>
-          ) : (
-            <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-              <ScrollArea className="w-full" type="auto">
-                <div className="min-w-max">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-muted/40 hover:bg-muted/40">
-                        <TableHead className="px-3 py-2 font-semibold text-foreground/80 text-xs">Employee</TableHead>
-                        <TableHead className="px-3 py-2 font-semibold text-foreground/80 text-xs">Type</TableHead>
-                        <TableHead className="px-3 py-2 font-semibold text-foreground/80 text-xs">Vendor</TableHead>
-                        <TableHead className="px-3 py-2 font-semibold text-foreground/80 text-xs">Reference</TableHead>
-                        <TableHead className="px-3 py-2 font-semibold text-foreground/80 text-xs">Initiated</TableHead>
-                        <TableHead className="px-3 py-2 font-semibold text-foreground/80 text-xs">Status</TableHead>
-                        <TableHead className="px-3 py-2 font-semibold text-foreground/80 text-xs text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {items.map((bgv: BackgroundVerification) => (
-                        <BgvRow
-                          key={bgv.id}
-                          bgv={bgv}
-                          onUpdateStatus={handleUpdateStatus}
-                          onOpenEdit={handleOpenEdit}
-                          isPending={update.isPending}
-                        />
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </ScrollArea>
-            </Card>
-          )}
+            }
+          />
         </TabsContent>
 
         <TabsContent value="candidate-compliance">

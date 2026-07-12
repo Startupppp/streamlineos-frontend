@@ -120,6 +120,168 @@ function MyBenefitsTab() {
   );
 }
 
+function buildPlanColumns(
+  canManage: boolean,
+  onEdit: (plan: BenefitPlan) => void,
+): DataTableColumn<BenefitPlan>[] {
+  const cols: DataTableColumn<BenefitPlan>[] = [
+    {
+      key: "name",
+      header: "Name",
+      cell: (plan) => <span className="text-sm font-medium">{plan.name}</span>,
+      sortable: true,
+      sortValue: (p) => p.name,
+    },
+    {
+      key: "category",
+      header: "Category",
+      cell: (plan) => <span className="text-xs capitalize">{plan.category}</span>,
+    },
+    {
+      key: "provider",
+      header: "Provider",
+      cell: (plan) => <span className="text-xs text-muted-foreground">{plan.provider ?? "—"}</span>,
+    },
+    {
+      key: "premium",
+      header: "Premium",
+      cell: (plan) => (
+        <span className="text-xs">
+          {plan.premiumCents != null
+            ? `₹${(plan.premiumCents / 100).toLocaleString("en-IN")}`
+            : "—"}
+        </span>
+      ),
+    },
+    {
+      key: "effectiveFrom",
+      header: "Effective",
+      cell: (plan) => <span className="text-xs">{plan.effectiveFrom}</span>,
+      sortable: true,
+      sortValue: (p) => p.effectiveFrom,
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (plan) => (
+        <Badge
+          variant="outline"
+          className={cn(
+            "text-[10px]",
+            plan.status === "active" && "bg-emerald-100 text-emerald-700 border-emerald-200",
+            plan.status === "draft" && "bg-amber-100 text-amber-700 border-amber-200",
+            plan.status === "archived" && "bg-slate-100 text-slate-600 border-slate-200",
+          )}
+        >
+          {plan.status}
+        </Badge>
+      ),
+    },
+  ];
+
+  if (canManage) {
+    cols.push({
+      key: "actions",
+      header: "",
+      className: "w-16",
+      cell: (plan) => (
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-7 text-xs"
+          onClick={(e) => { e.stopPropagation(); onEdit(plan); }}
+        >
+          Edit
+        </Button>
+      ),
+    });
+  }
+
+  return cols;
+}
+
+function buildClaimColumns(
+  canManage: boolean,
+  onReview: (claim: InsuranceClaim) => void,
+): DataTableColumn<InsuranceClaim>[] {
+  const cols: DataTableColumn<InsuranceClaim>[] = [
+    {
+      key: "claimNumber",
+      header: "Claim #",
+      cell: (claim) => <span className="text-xs font-mono">{claim.claimNumber}</span>,
+    },
+    {
+      key: "claimant",
+      header: "Claimant",
+      cell: (claim) => (
+        <span className="text-sm">{claim.user?.name ?? claim.user?.email ?? claim.userId}</span>
+      ),
+    },
+    {
+      key: "plan",
+      header: "Plan",
+      cell: (claim) => (
+        <span className="text-xs text-muted-foreground">
+          {claim.plan?.name ?? `Plan #${claim.planId}`}
+        </span>
+      ),
+    },
+    {
+      key: "amount",
+      header: "Amount",
+      cell: (claim) => (
+        <span className="text-sm font-medium">
+          ₹{(claim.amountCents / 100).toLocaleString("en-IN")}
+        </span>
+      ),
+      sortable: true,
+      sortValue: (c) => c.amountCents,
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (claim) => {
+        const meta = CLAIM_STATUS_META[claim.status];
+        return (
+          <Badge variant="outline" className={cn("text-[10px]", meta.className)}>
+            {meta.label}
+          </Badge>
+        );
+      },
+    },
+    {
+      key: "payoutRoute",
+      header: "Payout Route",
+      cell: (claim) => (
+        <span className="text-xs text-muted-foreground capitalize">
+          {claim.payoutRoute?.replace(/_/g, " ") ?? "—"}
+        </span>
+      ),
+    },
+  ];
+
+  if (canManage) {
+    cols.push({
+      key: "actions",
+      header: "",
+      className: "w-20",
+      cell: (claim) =>
+        claim.status === "submitted" || claim.status === "in_review" ? (
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 text-xs"
+            onClick={(e) => { e.stopPropagation(); onReview(claim); }}
+          >
+            Review
+          </Button>
+        ) : null,
+    });
+  }
+
+  return cols;
+}
+
 function PlansAdminTab({ canManage }: { canManage: boolean }) {
   const { data, isLoading } = useBenefitPlans();
   const [sheetOpen, setSheetOpen] = useState(false);

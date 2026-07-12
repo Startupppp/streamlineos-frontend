@@ -10,21 +10,19 @@ import { TicketFilterBar } from "@/features/projects/shared/ticket-filter-bar";
 import { buildTicketDetailUrl } from "@/features/projects/ticket-details/build-ticket-detail-url";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { BacklogTicketRow } from "@/features/projects/backlog/backlog-ticket-row";
+import type { BacklogTicket } from "@/features/projects/backlog/backlog-ticket-row";
 import { BulkActionBar } from "@/features/projects/backlog/bulk-action-bar";
+import { TicketTypeIcon } from "@/features/projects/shared/ticket-type-icon";
+import { PriorityBadge } from "@/features/projects/shared/priority-badge";
+import { StatusBadge } from "@/features/projects/shared/status-badge";
+import { formatTicketKey } from "@/features/projects/shared/format-ticket-key";
+import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
+import { resolveImageUrl } from "@/lib/utils";
+import { format } from "date-fns";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -39,7 +37,7 @@ export default function BacklogPage({ params }: PageProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set());
 
   const ticketParam = searchParams.get("ticket");
   const selectedTicketId = ticketParam ? parseInt(ticketParam) : null;
@@ -93,27 +91,11 @@ export default function BacklogPage({ params }: PageProps) {
     if (href) router.replace(href);
   }, [selectedTicketId, data, tickets, projectId, router]);
 
-  const toggleSelect = useCallback((id: number) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
-  }, []);
-
-  const toggleSelectAll = useCallback(() => {
-    setSelectedIds((prev) =>
-      prev.size === filteredTickets.length
-        ? new Set()
-        : new Set(filteredTickets.map((t) => t.id)),
-    );
-  }, [filteredTickets]);
-
   const handleBulkUpdate = useCallback(
     (update: Partial<Pick<BulkUpdateTicketsInput, "assigneeId" | "status" | "sprintId" | "priority">>) => {
       if (selectedIds.size === 0) { toast.error("No tickets selected"); return; }
       bulkUpdate.mutate(
-        { ticketIds: Array.from(selectedIds), ...update },
+        { ticketIds: [...selectedIds].map(Number), ...update },
         {
           onSuccess: (d) => {
             toast.success(`${d.updated} ticket${d.updated !== 1 ? "s" : ""} updated`);
@@ -142,31 +124,85 @@ export default function BacklogPage({ params }: PageProps) {
   );
   const handleClearSelection = useCallback(() => setSelectedIds(new Set()), []);
 
-  const statuses =
-    data && "statuses" in data
-      ? (data.statuses as { id: number; name: string; color: string | null; order: number }[])
-      : undefined;
+  const handleSelectionChange = useCallback((sel: Set<string | number>) => {
+    setSelectedIds(sel);
+  }, []);
+
+  const handleRowClick = useCallback(
+    (ticket: BacklogTicket) => handleTicketSelect(ticket.id),
+    [handleTicketSelect],
+  );
+
+  const columns = useMemo<DataTableColumn<BacklogTicket>[]>(
+    () => [
+      {
+        key: "id",
+        header: "ID",
+        className: "w-[80px] font-mono text-[11px] text-muted-foreground",
+        cell: (ticket) => (
+          <span className="flex items-center gap-1.5">
+            <TicketTypeIcon type={ticket.type} />
+            {formatTicketKey(data?.key, ticket.ticketNumber)}
+          </span>
+        ),
+      },
+      {
+        key: "title",
+        header: "Title",
+        className: "max-w-md",
+        cell: (ticket) => (
+          <span className="text-[11px] font-medium line-clamp-1">{ticket.title}</span>
+        ),
+      },
+      {
+        key: "status",
+        header: "Status",
+        className: "w-[120px]",
+        cell: (ticket) => <StatusBadge status={ticket.status} />,
+      },
+      {
+        key: "priority",
+        header: "Priority",
+        className: "hidden sm:table-cell w-[100px]",
+        headerClassName: "hidden sm:table-cell",
+        cell: (ticket) => <PriorityBadge priority={ticket.priority} showLabel />,
+      },
+      {
+        key: "assignee",
+        header: "Assignee",
+        className: "hidden md:table-cell w-[140px]",
+        headerClassName: "hidden md:table-cell",
+        cell: (ticket) =>
+          ticket.assignee ? (
+            <div className="flex items-center gap-1.5">
+              <Avatar className="h-6 w-6">
+                <AvatarImage src={resolveImageUrl(ticket.assignee.image)} />
+                <AvatarFallback className="text-[8px]">
+                  {getUserInitials(ticket.assignee)}
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-[11px] truncate">{getUserDisplayName(ticket.assignee)}</span>
+            </div>
+          ) : (
+            <span className="text-xs text-muted-foreground">—</span>
+          ),
+      },
+      {
+        key: "created",
+        header: "Created",
+        className: "hidden lg:table-cell w-[110px] text-[11px] text-muted-foreground",
+        headerClassName: "hidden lg:table-cell",
+        cell: (ticket) =>
+          ticket.createdAt ? format(new Date(ticket.createdAt), "MMM d") : "—",
+      },
+    ],
+    [data?.key],
+  );
 
   if (isLoading) {
     return (
       <PageWrapper title="Backlog" subtitle="Loading...">
-        <div className="rounded-lg border border-border overflow-hidden">
-          <div className="h-8 bg-muted/40 border-b flex items-center px-2 gap-2">
-            <Skeleton className="h-4 w-4" />
-            {[80, 200, 100, 80, 120].map((w, i) => (
-              <Skeleton key={i} className="h-3" style={{ width: w }} />
-            ))}
-          </div>
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="h-8 border-b border-border/50 flex items-center px-2 gap-2">
-              <Skeleton className="h-3 w-3" />
-              <Skeleton className="h-3 w-16" />
-              <Skeleton className="h-3 flex-1" />
-              <Skeleton className="h-4 w-16" />
-              <Skeleton className="h-3 w-12 hidden sm:block" />
-            </div>
-          ))}
-        </div>
+        <DataTableSkeleton rows={8} columns={7} />
       </PageWrapper>
     );
   }
@@ -193,59 +229,23 @@ export default function BacklogPage({ params }: PageProps) {
         />
       )}
 
-      <Card className="overflow-hidden">
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <caption className="sr-only">Backlog tickets</caption>
-              <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40">
-                  <TableHead className="w-10 px-2 py-1.5" scope="col">
-                    <Checkbox
-                      checked={filteredTickets.length > 0 && selectedIds.size === filteredTickets.length}
-                      onCheckedChange={toggleSelectAll}
-                      aria-label="Select all tickets"
-                    />
-                  </TableHead>
-                  <TableHead className="w-[80px] px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground" scope="col">ID</TableHead>
-                  <TableHead className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground" scope="col">Title</TableHead>
-                  <TableHead className="w-[120px] px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground" scope="col">Status</TableHead>
-                  <TableHead className="w-[100px] hidden sm:table-cell px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground" scope="col">Priority</TableHead>
-                  <TableHead className="w-[140px] hidden md:table-cell px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground" scope="col">Assignee</TableHead>
-                  <TableHead className="w-[110px] hidden lg:table-cell px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground" scope="col">Created</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredTickets.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="p-0">
-                      <EmptyState
-                        illustrationPreset="projects"
-                        title="No tickets found"
-                        description={tickets.length === 0 ? "Create a ticket to get started." : "No tickets match the active filters."}
-                        compact
-                        className="min-h-[200px] border-0 bg-transparent"
-                      />
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredTickets.map((ticket) => (
-                    <BacklogTicketRow
-                      key={ticket.id}
-                      ticket={ticket}
-                      projectKey={data?.key}
-                      isSelected={selectedIds.has(ticket.id)}
-                      onSelect={handleTicketSelect}
-                      onToggleSelect={toggleSelect}
-                    />
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
-
+      <DataTable
+        data={filteredTickets}
+        columns={columns}
+        getRowKey={(ticket) => ticket.id}
+        onRowClick={handleRowClick}
+        selection={{ selected: selectedIds, onChange: handleSelectionChange }}
+        minWidth="640px"
+        emptyState={
+          <EmptyState
+            illustrationPreset="projects"
+            title="No tickets found"
+            description={tickets.length === 0 ? "Create a ticket to get started." : "No tickets match the active filters."}
+            compact
+            className="min-h-[200px] border-0 bg-transparent"
+          />
+        }
+      />
     </PageWrapper>
   );
 }

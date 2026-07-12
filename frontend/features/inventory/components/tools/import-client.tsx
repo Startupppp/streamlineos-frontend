@@ -15,7 +15,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useCan } from "@/hooks/api/access";
-import { JOB_STATUS_BADGE, JOB_STATUS_LABEL } from "@/features/inventory/lib";
+import { JOB_STATUS_BADGE, JOB_STATUS_LABEL, type JobStatus } from "@/features/inventory/lib";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useImportPreview,
@@ -316,7 +316,7 @@ function ExportTab() {
 interface ImportJobRow {
   id: number;
   importType: string;
-  status: string;
+  status: JobStatus;
   totalRows: number;
   processedRows: number;
   errorCount: number;
@@ -341,8 +341,8 @@ const IMPORT_HISTORY_COLUMNS: DataTableColumn<ImportJobRow>[] = [
     key: "status",
     header: "Status",
     cell: (job) => (
-      <Badge className={JOB_STATUS_BADGE[job.status as keyof typeof JOB_STATUS_BADGE]}>
-        {JOB_STATUS_LABEL[job.status as keyof typeof JOB_STATUS_LABEL]}
+      <Badge className={JOB_STATUS_BADGE[job.status]}>
+        {JOB_STATUS_LABEL[job.status]}
       </Badge>
     ),
   },

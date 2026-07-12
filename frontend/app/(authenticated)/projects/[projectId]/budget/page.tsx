@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState, type ChangeEvent } from "react";
+import { use, useState, useMemo, type ChangeEvent } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -16,6 +16,12 @@ import { useProjectBudget, useUpdateProjectBudget, useProjectMembers } from "@/h
 import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
 import { resolveImageUrl } from "@/lib/utils";
 import { toast } from "sonner";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+
+type MemberBreakdownRow = { userId: string; hours: number; cost: number };
+
+const fmt = (n: number) =>
+  new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n);
 
 export default function BudgetPage({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId: projectIdStr } = use(params);

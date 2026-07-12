@@ -4,7 +4,8 @@ import { useState, useMemo, useCallback } from "react";
 import type { DropResult } from "@hello-pangea/dnd";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { ErrorState, SkeletonTable } from "@/components/shared";
+import { ErrorState } from "@/components/shared";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 import { CsvUploadDialog } from "@/features/crm/leads/csv-upload-dialog";
 import { LeadTableView } from "@/features/crm/leads/lead-table-view";
 import { LeadExportDialog } from "@/features/crm/leads/lead-export-dialog";
@@ -380,7 +381,7 @@ export default function LeadsPipelinePage() {
               <Skeleton key={i} className="h-[52px] flex-1 rounded-lg" />
             ))}
           </div>
-          <SkeletonTable rows={8} columns={6} />
+          <DataTableSkeleton rows={8} columns={6} />
         </div>
       </PageWrapper>
     );

@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { CrmOptionSelect } from "@/features/crm/shared/metadata";
-import { ErrorState, SkeletonTable } from "@/components/shared";
+import { ErrorState } from "@/components/shared";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 import { staggerContainer } from "@/lib/motion-variants";
 import { useContacts, useDeleteContact } from "@/hooks/api/crm";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
@@ -185,7 +186,7 @@ export default function ContactsPage() {
   if (isLoading) {
     return (
       <PageWrapper title="Contacts" subtitle="Loading...">
-        <SkeletonTable rows={8} columns={7} className="h-[calc(100dvh-16rem)]" />
+        <DataTableSkeleton rows={8} columns={7} className="h-[calc(100dvh-16rem)]" />
       </PageWrapper>
     );
   }

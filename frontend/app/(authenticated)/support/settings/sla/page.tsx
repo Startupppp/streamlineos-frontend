@@ -253,14 +253,7 @@ export default function SupportSlaPage() {
           </Dialog>
         }
       >
-        {isLoading ? (
-          <div className="space-y-4">
-            <div className="grid gap-2 grid-cols-2 lg:grid-cols-2">
-              {[0, 1].map(i => <Skeleton key={i} className="h-14" />)}
-            </div>
-            <Skeleton className="h-64 w-full" />
-          </div>
-        ) : isError ? (
+        {isError ? (
           <EmptyState
             illustrationPreset="security"
             title="Failed to load SLA policies"
@@ -280,43 +273,23 @@ export default function SupportSlaPage() {
                 <CardTitle className="text-sm font-semibold">Policies</CardTitle>
               </CardHeader>
               <CardContent className="p-0">
-                {policies && policies.length > 0 ? (
-                  <Table>
-                    <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
-                      <TableRow className="border-b-2 border-border hover:bg-transparent">
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Name</TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Priority</TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Category</TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Business Hours</TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">First Response</TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Resolution</TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Status</TableHead>
-                        <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {policies.map(policy => (
-                        <SlaTableRow
-                          key={policy.id}
-                          policy={policy}
-                          businessHoursName={policy.businessHoursId !== null ? businessHoursNameById.get(policy.businessHoursId) ?? null : null}
-                          onEdit={handleStartEdit}
-                          onDeleteRequest={handleDeleteRequest}
-                        />
-                      ))}
-                    </TableBody>
-                  </Table>
-                ) : (
-                  <div className="py-14 px-4">
-                    <EmptyState
-                      illustrationPreset="security"
-                      title="No SLA policies defined"
-                      description="Create a policy to track response and resolution time commitments for tickets."
-                      action={{ label: "New Policy", onClick: handleOpenCreate }}
-                      className="border-0 bg-transparent"
-                    />
-                  </div>
-                )}
+                <DataTable
+                  data={policies ?? []}
+                  columns={columns}
+                  getRowKey={(policy) => policy.id}
+                  isLoading={isLoading}
+                  emptyState={
+                    <div className="py-14 px-4">
+                      <EmptyState
+                        illustrationPreset="security"
+                        title="No SLA policies defined"
+                        description="Create a policy to track response and resolution time commitments for tickets."
+                        action={{ label: "New Policy", onClick: handleOpenCreate }}
+                        className="border-0 bg-transparent"
+                      />
+                    </div>
+                  }
+                />
               </CardContent>
             </Card>
 

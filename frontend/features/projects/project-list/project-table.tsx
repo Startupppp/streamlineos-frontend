@@ -3,9 +3,6 @@
 import React, { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ArrowUp,
-  ArrowDown,
-  ArrowUpDown,
   Calendar,
   MoreHorizontal,
   Pencil,
@@ -25,14 +22,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { cn } from "@/lib/utils";
 import { format, isPast, differenceInDays } from "date-fns";
 import {
@@ -47,53 +37,11 @@ import type { ProjectListItem } from "@/types/projects/projects";
 import { ProjectCardDialogs } from "./project-card-dialogs";
 import { statusDotColors } from "./project-card-utils";
 
-type SortField = "name" | "status" | "lead" | "endDate" | "progress";
-type SortDir = "asc" | "desc";
-
-interface SortState {
-  field: SortField;
-  dir: SortDir;
-}
-
 interface ProjectTableProps {
   projects: ProjectListItem[];
 }
 
-function SortIcon({ field, sort }: { field: SortField; sort: SortState }) {
-  if (sort.field !== field)
-    return <ArrowUpDown className="ml-1 h-3 w-3 text-muted-foreground/40" aria-hidden="true" />;
-  if (sort.dir === "asc")
-    return <ArrowUp className="ml-1 h-3 w-3 text-foreground" aria-hidden="true" />;
-  return <ArrowDown className="ml-1 h-3 w-3 text-foreground" aria-hidden="true" />;
-}
-
-function SortHeader({
-  field,
-  sort,
-  onSort,
-  children,
-  className,
-}: {
-  field: SortField;
-  sort: SortState;
-  onSort: (field: SortField) => void;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  const handleClick = useCallback(() => onSort(field), [onSort, field]);
-  return (
-    <TableHead
-      className={cn("select-none cursor-pointer group/th whitespace-nowrap", className)}
-      onClick={handleClick}
-      aria-sort={sort.field === field ? (sort.dir === "asc" ? "ascending" : "descending") : "none"}
-    >
-      <span className="inline-flex items-center gap-0.5 text-[11px] font-medium text-muted-foreground group-hover/th:text-foreground transition-colors">
-        {children}
-        <SortIcon field={field} sort={sort} />
-      </span>
-    </TableHead>
-  );
-}
+type ActiveDialog = "edit" | "delete" | "archive" | null;
 
 function StatusDot({ status }: { status: string }) {
   const dotColor = getColorSafe(statusDotColors, status);
@@ -125,77 +73,130 @@ const dateToneClasses = {
   overdue: "text-red-600 dark:text-red-400",
 } as const;
 
-function ProjectTableRow({ project }: { project: ProjectListItem }) {
-  const router = useRouter();
-  const [editOpen, setEditOpen] = useState(false);
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
-
+function ActionsCell({
+  project,
+  onEdit,
+  onArchive,
+  onDelete,
+}: {
+  project: ProjectListItem;
+  onEdit: (p: ProjectListItem) => void;
+  onArchive: (p: ProjectListItem) => void;
+  onDelete: (p: ProjectListItem) => void;
+}) {
   const canUpdate = useCan("projects:update");
   const canDelete = useCan("projects:delete");
+  const isArchived = (project.status ?? "ACTIVE") === "ARCHIVED";
 
-  const status = project.status ?? "ACTIVE";
-  const isArchived = status === "ARCHIVED";
-  const displayLabel = projectStatusDisplayLabels[status] ?? status;
-  const statusColor = getColorSafe(projectStatusColors, status);
-  const targetDate = resolveTargetDate(project.endDate, status);
-  const progressValue = project.progress.total > 0 ? project.progress.percentage : 0;
-  const leadName = getUserDisplayName(project.manager);
-  const leadInitials = getUserInitials(project.manager);
+  if (!canUpdate && !canDelete) return null;
 
-  const handleRowClick = useCallback(() => {
-    router.push(`/projects/${project.id}`);
-  }, [router, project.id]);
-
-  const handleRowKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "Enter") handleRowClick();
-    },
-    [handleRowClick],
-  );
-
-  const handleStopPropagation = useCallback((e: React.MouseEvent) => e.stopPropagation(), []);
-  const handleEditClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    setEditOpen(true);
-  }, []);
-  const handleArchiveClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    setArchiveConfirmOpen(true);
-  }, []);
-  const handleDeleteClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    setDeleteConfirmOpen(true);
-  }, []);
+  function handleStopPropagation(e: React.MouseEvent) { e.stopPropagation(); }
+  function handleEditClick(e: React.MouseEvent) { e.stopPropagation(); onEdit(project); }
+  function handleArchiveClick(e: React.MouseEvent) { e.stopPropagation(); onArchive(project); }
+  function handleDeleteClick(e: React.MouseEvent) { e.stopPropagation(); onDelete(project); }
 
   return (
-    <>
-      <TableRow
-        className="group cursor-pointer hover:bg-muted/40 transition-colors"
-        onClick={handleRowClick}
-        onKeyDown={handleRowKeyDown}
-        tabIndex={0}
-        role="row"
-        aria-label={`${project.name} — ${displayLabel}`}
-      >
-        <TableCell className="py-2 pl-3 pr-2">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <span
-              className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-[9px] font-bold tracking-tight bg-muted text-muted-foreground"
-              aria-hidden="true"
-            >
-              {project.key.slice(0, 2).toUpperCase()}
-            </span>
-            <span className="text-sm font-medium text-foreground truncate group-hover:text-blue-600 transition-colors min-w-0">
-              {project.name}
-            </span>
-            <span className="hidden sm:inline-block text-[10px] font-mono text-muted-foreground/60 shrink-0">
-              {project.key}
-            </span>
-          </div>
-        </TableCell>
+    <div onClick={handleStopPropagation}>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+            aria-label={`Actions for ${project.name}`}
+          >
+            <MoreHorizontal className="h-3.5 w-3.5" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-44">
+          {canUpdate && (
+            <DropdownMenuItem onClick={handleEditClick}>
+              <Pencil className="mr-2 h-3.5 w-3.5" />
+              Edit project
+            </DropdownMenuItem>
+          )}
+          {canUpdate && (
+            <DropdownMenuItem onClick={handleArchiveClick}>
+              {isArchived ? (
+                <><RotateCcw className="mr-2 h-3.5 w-3.5" />Restore project</>
+              ) : (
+                <><Archive className="mr-2 h-3.5 w-3.5" />Archive project</>
+              )}
+            </DropdownMenuItem>
+          )}
+          {canDelete && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem variant="destructive" onClick={handleDeleteClick}>
+                <Trash2 className="mr-2 h-3.5 w-3.5" />
+                Delete project
+              </DropdownMenuItem>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+}
 
-        <TableCell className="py-2 w-[120px]">
+export const ProjectTable = React.memo(function ProjectTable({ projects }: ProjectTableProps) {
+  const router = useRouter();
+  const [activeProject, setActiveProject] = useState<ProjectListItem | null>(null);
+  const [activeDialog, setActiveDialog] = useState<ActiveDialog>(null);
+
+  const handleEdit = useCallback((p: ProjectListItem) => {
+    setActiveProject(p);
+    setActiveDialog("edit");
+  }, []);
+
+  const handleArchive = useCallback((p: ProjectListItem) => {
+    setActiveProject(p);
+    setActiveDialog("archive");
+  }, []);
+
+  const handleDelete = useCallback((p: ProjectListItem) => {
+    setActiveProject(p);
+    setActiveDialog("delete");
+  }, []);
+
+  function handleDialogClose(open: boolean) {
+    if (!open) setActiveDialog(null);
+  }
+
+  const columns = useMemo<DataTableColumn<ProjectListItem>[]>(() => [
+    {
+      key: "name",
+      header: "Name",
+      sortable: true,
+      sortValue: (p) => p.name,
+      cell: (p) => (
+        <div className="flex items-center gap-2.5 min-w-0">
+          <span
+            className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-[9px] font-bold tracking-tight bg-muted text-muted-foreground"
+            aria-hidden="true"
+          >
+            {p.key.slice(0, 2).toUpperCase()}
+          </span>
+          <span className="text-sm font-medium text-foreground truncate group-hover:text-blue-600 transition-colors min-w-0">
+            {p.name}
+          </span>
+          <span className="hidden sm:inline-block text-[10px] font-mono text-muted-foreground/60 shrink-0">
+            {p.key}
+          </span>
+        </div>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      sortable: true,
+      sortValue: (p) => p.status ?? "",
+      className: "w-[120px]",
+      cell: (p) => {
+        const status = p.status ?? "ACTIVE";
+        const displayLabel = projectStatusDisplayLabels[status] ?? status;
+        const statusColor = getColorSafe(projectStatusColors, status);
+        return (
           <Badge
             variant="secondary"
             className={cn(
@@ -206,178 +207,120 @@ function ProjectTableRow({ project }: { project: ProjectListItem }) {
             <StatusDot status={status} />
             {displayLabel}
           </Badge>
-        </TableCell>
-
-        <TableCell className="py-2 w-[140px] hidden md:table-cell">
-          {project.manager ? (
-            <div className="flex items-center gap-1.5">
-              <Avatar className="h-5 w-5 shrink-0">
-                {project.manager.image ? (
-                  <AvatarImage src={resolveImageUrl(project.manager.image)} alt={leadName} />
-                ) : null}
-                <AvatarFallback className="text-[9px]">{leadInitials}</AvatarFallback>
-              </Avatar>
-              <span className="text-xs text-muted-foreground truncate max-w-[100px]">{leadName}</span>
-            </div>
-          ) : (
-            <span className="flex items-center gap-1 text-xs text-muted-foreground/50">
-              <User className="h-3.5 w-3.5" aria-hidden="true" />
-              Unassigned
+        );
+      },
+    },
+    {
+      key: "lead",
+      header: "Lead",
+      sortable: true,
+      sortValue: (p) => getUserDisplayName(p.manager),
+      headerClassName: "hidden md:table-cell",
+      className: "w-[140px] hidden md:table-cell",
+      cell: (p) => {
+        const leadName = getUserDisplayName(p.manager);
+        const leadInitials = getUserInitials(p.manager);
+        return p.manager ? (
+          <div className="flex items-center gap-1.5">
+            <Avatar className="h-5 w-5 shrink-0">
+              {p.manager.image ? (
+                <AvatarImage src={resolveImageUrl(p.manager.image)} alt={leadName} />
+              ) : null}
+              <AvatarFallback className="text-[9px]">{leadInitials}</AvatarFallback>
+            </Avatar>
+            <span className="text-xs text-muted-foreground truncate max-w-[100px]">{leadName}</span>
+          </div>
+        ) : (
+          <span className="flex items-center gap-1 text-xs text-muted-foreground/50">
+            <User className="h-3.5 w-3.5" aria-hidden="true" />
+            Unassigned
+          </span>
+        );
+      },
+    },
+    {
+      key: "endDate",
+      header: "Target",
+      sortable: true,
+      sortValue: (p) => (p.endDate ? new Date(p.endDate).getTime() : Infinity),
+      headerClassName: "hidden lg:table-cell",
+      className: "w-[100px] hidden lg:table-cell",
+      cell: (p) => {
+        const status = p.status ?? "ACTIVE";
+        const targetDate = resolveTargetDate(p.endDate, status);
+        return targetDate ? (
+          <div className={cn("flex items-center gap-1 text-xs font-medium", dateToneClasses[targetDate.tone])}>
+            <Calendar className="h-3 w-3 shrink-0" aria-hidden="true" />
+            {targetDate.label}
+          </div>
+        ) : (
+          <span className="text-xs text-muted-foreground/40">—</span>
+        );
+      },
+    },
+    {
+      key: "progress",
+      header: "Progress",
+      sortable: true,
+      sortValue: (p) => p.progress.percentage,
+      headerClassName: "hidden sm:table-cell",
+      className: "w-[130px] hidden sm:table-cell",
+      cell: (p) => {
+        const progressValue = p.progress.total > 0 ? p.progress.percentage : 0;
+        return p.progress.total > 0 ? (
+          <div className="flex items-center gap-2">
+            <Progress value={progressValue} className="h-1 flex-1 min-w-0" />
+            <span className="text-[10px] text-muted-foreground tabular-nums shrink-0 w-7 text-right">
+              {Math.round(progressValue)}%
             </span>
-          )}
-        </TableCell>
+          </div>
+        ) : (
+          <span className="text-xs text-muted-foreground/40">—</span>
+        );
+      },
+    },
+    {
+      key: "actions",
+      header: "",
+      className: "w-10 pr-3",
+      cell: (p) => (
+        <ActionsCell
+          project={p}
+          onEdit={handleEdit}
+          onArchive={handleArchive}
+          onDelete={handleDelete}
+        />
+      ),
+    },
+  ], [handleEdit, handleArchive, handleDelete]);
 
-        <TableCell className="py-2 w-[100px] hidden lg:table-cell">
-          {targetDate ? (
-            <div className={cn("flex items-center gap-1 text-xs font-medium", dateToneClasses[targetDate.tone])}>
-              <Calendar className="h-3 w-3 shrink-0" aria-hidden="true" />
-              {targetDate.label}
-            </div>
-          ) : (
-            <span className="text-xs text-muted-foreground/40">—</span>
-          )}
-        </TableCell>
-
-        <TableCell className="py-2 w-[130px] hidden sm:table-cell">
-          {project.progress.total > 0 ? (
-            <div className="flex items-center gap-2">
-              <Progress value={progressValue} className="h-1 flex-1 min-w-0" />
-              <span className="text-[10px] text-muted-foreground tabular-nums shrink-0 w-7 text-right">
-                {Math.round(progressValue)}%
-              </span>
-            </div>
-          ) : (
-            <span className="text-xs text-muted-foreground/40">—</span>
-          )}
-        </TableCell>
-
-        <TableCell className="py-2 w-10 pr-3" onClick={handleStopPropagation}>
-          {(canUpdate || canDelete) ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                  aria-label={`Actions for ${project.name}`}
-                >
-                  <MoreHorizontal className="h-3.5 w-3.5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-44">
-                {canUpdate && (
-                  <DropdownMenuItem onClick={handleEditClick}>
-                    <Pencil className="mr-2 h-3.5 w-3.5" />
-                    Edit project
-                  </DropdownMenuItem>
-                )}
-                {canUpdate && (
-                  <DropdownMenuItem onClick={handleArchiveClick}>
-                    {isArchived ? (
-                      <><RotateCcw className="mr-2 h-3.5 w-3.5" />Restore project</>
-                    ) : (
-                      <><Archive className="mr-2 h-3.5 w-3.5" />Archive project</>
-                    )}
-                  </DropdownMenuItem>
-                )}
-                {canDelete && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem variant="destructive"
-                      onClick={handleDeleteClick}
-                    >
-                      <Trash2 className="mr-2 h-3.5 w-3.5" />
-                      Delete project
-                    </DropdownMenuItem>
-                  </>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : null}
-        </TableCell>
-      </TableRow>
-
-      <ProjectCardDialogs
-        project={project}
-        isArchived={isArchived}
-        editOpen={editOpen}
-        onEditOpenChange={setEditOpen}
-        archiveConfirmOpen={archiveConfirmOpen}
-        onArchiveConfirmOpenChange={setArchiveConfirmOpen}
-        deleteConfirmOpen={deleteConfirmOpen}
-        onDeleteConfirmOpenChange={setDeleteConfirmOpen}
-      />
-    </>
-  );
-}
-
-export const ProjectTable = React.memo(function ProjectTable({ projects }: ProjectTableProps) {
-  const [sort, setSort] = useState<SortState>({ field: "name", dir: "asc" });
-
-  const handleSort = useCallback((field: SortField) => {
-    setSort((prev) =>
-      prev.field === field
-        ? { field, dir: prev.dir === "asc" ? "desc" : "asc" }
-        : { field, dir: "asc" },
-    );
-  }, []);
-
-  const sorted = useMemo(() => {
-    return [...projects].sort((a, b) => {
-      let cmp = 0;
-      switch (sort.field) {
-        case "name":
-          cmp = a.name.localeCompare(b.name);
-          break;
-        case "status":
-          cmp = (a.status ?? "").localeCompare(b.status ?? "");
-          break;
-        case "lead":
-          cmp = getUserDisplayName(a.manager).localeCompare(getUserDisplayName(b.manager));
-          break;
-        case "endDate": {
-          const da = a.endDate ? new Date(a.endDate).getTime() : Infinity;
-          const db = b.endDate ? new Date(b.endDate).getTime() : Infinity;
-          cmp = da - db;
-          break;
-        }
-        case "progress":
-          cmp = a.progress.percentage - b.progress.percentage;
-          break;
-      }
-      return sort.dir === "asc" ? cmp : -cmp;
-    });
-  }, [projects, sort]);
+  function handleRowClick(project: ProjectListItem) {
+    router.push(`/projects/${project.id}`);
+  }
 
   return (
     <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-muted/30 hover:bg-muted/30 border-b border-border">
-            <SortHeader field="name" sort={sort} onSort={handleSort} className="pl-3 pr-2 w-full">
-              Name
-            </SortHeader>
-            <SortHeader field="status" sort={sort} onSort={handleSort} className="w-[120px]">
-              Status
-            </SortHeader>
-            <SortHeader field="lead" sort={sort} onSort={handleSort} className="w-[140px] hidden md:table-cell">
-              Lead
-            </SortHeader>
-            <SortHeader field="endDate" sort={sort} onSort={handleSort} className="w-[100px] hidden lg:table-cell">
-              Target
-            </SortHeader>
-            <SortHeader field="progress" sort={sort} onSort={handleSort} className="w-[130px] hidden sm:table-cell">
-              Progress
-            </SortHeader>
-            <TableHead className="w-10 pr-3" />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {sorted.map((project) => (
-            <ProjectTableRow key={project.id} project={project} />
-          ))}
-        </TableBody>
-      </Table>
+      <DataTable
+        data={projects}
+        columns={columns}
+        getRowKey={(p) => p.id}
+        onRowClick={handleRowClick}
+        rowClassName={() => "group"}
+        className="border-0 rounded-none"
+        emptyState={<div className="text-center py-8 text-muted-foreground text-sm">No projects found</div>}
+      />
+      {activeProject && (
+        <ProjectCardDialogs
+          project={activeProject}
+          isArchived={activeProject.status === "ARCHIVED"}
+          editOpen={activeDialog === "edit"}
+          onEditOpenChange={handleDialogClose}
+          archiveConfirmOpen={activeDialog === "archive"}
+          onArchiveConfirmOpenChange={handleDialogClose}
+          deleteConfirmOpen={activeDialog === "delete"}
+          onDeleteConfirmOpenChange={handleDialogClose}
+        />
+      )}
     </div>
   );
 });

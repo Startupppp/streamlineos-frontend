@@ -21,7 +21,6 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,6 +28,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { viewFile, downloadFile } from "@/hooks/common/use-file-url";
@@ -174,6 +174,7 @@ export function DocumentTable({
   page,
   pageSize,
   totalFiltered,
+  totalPages,
   selectedCategory,
   searchTerm,
   onPageChange,
@@ -223,238 +224,258 @@ export function DocumentTable({
     }
   }, [filesWithUrl]);
 
-  const columns = useMemo<DataTableColumn<Document>[]>(() => [
-    {
-      key: "name",
-      header: "Name",
-      cell: (doc) => {
-        const fileConfig = getFileIconConfig(doc.fileName ?? doc.name);
-        const FileIcon = fileConfig.icon;
-        return (
-          <div className="flex items-center gap-3">
-            <div
-              className={cn(
-                "h-7 w-7 rounded-lg flex items-center justify-center shrink-0",
-                fileConfig.bg,
-              )}
-            >
-              <FileIcon className={cn("h-3.5 w-3.5", fileConfig.text)} />
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-foreground truncate leading-snug">
-                {doc.fileName ?? doc.name}
-              </p>
-              {doc.tags && doc.tags.length > 0 && (
-                <div className="flex gap-1 mt-0.5 flex-wrap">
-                  {doc.tags.slice(0, 3).map((tag) => (
-                    <span
-                      key={tag}
-                      className={cn(
-                        "inline-flex items-center text-[10px] font-semibold px-1.5 py-0 rounded-full border",
-                        tag.toLowerCase().includes("confidential")
-                          ? "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/40 dark:text-rose-300 dark:border-rose-800"
-                          : "bg-muted text-muted-foreground border-border",
-                      )}
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        );
-      },
-    },
-    {
-      key: "type",
-      header: "Type",
-      cell: (doc) => {
-        const typeLabel =
-          DOCUMENT_TYPES.find((t) => t.value === doc.type)?.label ?? "General";
-        const badgeColor = TYPE_BADGE_COLORS[typeLabel] ?? TYPE_BADGE_COLORS["General"];
-        return (
-          <span
-            className={cn(
-              "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
-              badgeColor,
-            )}
-          >
-            {typeLabel}
-          </span>
-        );
-      },
-    },
-    {
-      key: "date",
-      header: "Date",
-      cell: (doc) => (
-        <span className="text-sm text-muted-foreground tabular-nums">
-          {doc.createdAt ? format(new Date(doc.createdAt), "MMM dd, yyyy") : "—"}
-        </span>
-      ),
-    },
-    {
-      key: "size",
-      header: "Size",
-      headerClassName: "text-right",
-      className: "text-right",
-      cell: (doc) => (
-        <span className="text-sm text-muted-foreground tabular-nums">
-          {formatFileSize(doc.fileSize)}
-        </span>
-      ),
-    },
-    {
-      key: "actions",
-      header: "Actions",
-      headerClassName: "text-right",
-      className: "text-right",
-      cell: (doc) => {
-        const hasFileUrl = !!doc.fileUrl;
-
-        function handleView(e: React.MouseEvent) {
-          e.stopPropagation();
-          if (!hasFileUrl) {
-            toast.error("No file attached to this document.");
-            return;
-          }
-          viewFile(doc.fileUrl);
-        }
-
-        function handleDownload(e: React.MouseEvent) {
-          e.stopPropagation();
-          if (!hasFileUrl) {
-            toast.error("No file attached to this document.");
-            return;
-          }
-          downloadFile(doc.fileUrl, doc.fileName ?? doc.name);
-        }
-
-        function handleVersionHistory(e: React.MouseEvent) {
-          e.stopPropagation();
-          toast.info(`"${doc.name}" has ${doc.version} versions.`);
-        }
-
-        function handleDelete(e: React.MouseEvent) {
-          e.stopPropagation();
-          void onDelete(doc.id);
-        }
-
-        function handleEdit(e: React.MouseEvent) {
-          e.stopPropagation();
-          onEdit(doc);
-        }
-
-        function handleMenuTriggerClick(e: React.MouseEvent) {
-          e.stopPropagation();
-        }
-
-        function handleSendForSignature(e: React.MouseEvent) {
-          e.stopPropagation();
-          onSendForSignature(doc);
-        }
-
-        return (
-          <div className="flex items-center justify-end gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 text-muted-foreground hover:text-foreground"
-              disabled={!hasFileUrl}
-              onClick={handleView}
-              aria-label="View document"
-            >
-              <Eye className="h-3.5 w-3.5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 text-muted-foreground hover:text-foreground"
-              disabled={!hasFileUrl}
-              onClick={handleDownload}
-              aria-label="Download document"
-            >
-              <Download className="h-3.5 w-3.5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 text-muted-foreground hover:text-foreground"
-              onClick={handleEdit}
-              aria-label="Edit document"
-            >
-              <Pencil className="h-3.5 w-3.5" />
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild onClick={handleMenuTriggerClick}>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                  aria-label="More options"
-                >
-                  <MoreHorizontal className="h-3.5 w-3.5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-44">
-                <DropdownMenuItem disabled={!hasFileUrl} onClick={handleView}>
-                  <Eye className="mr-2 h-3.5 w-3.5" />
-                  View file
-                </DropdownMenuItem>
-                <DropdownMenuItem disabled={!hasFileUrl} onClick={handleDownload}>
-                  <Download className="mr-2 h-3.5 w-3.5" />
-                  Download
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleEdit}>
-                  <Pencil className="mr-2 h-3.5 w-3.5" />
-                  Edit details
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleSendForSignature}>
-                  <FileSignature className="mr-2 h-3.5 w-3.5" />
-                  Send for e-signature
-                </DropdownMenuItem>
-                {(doc.version ?? 1) > 1 && (
-                  <DropdownMenuItem onClick={handleVersionHistory}>
-                    <History className="mr-2 h-3.5 w-3.5" />
-                    History ({doc.version})
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={handleDelete}
-                  className="text-rose-600 focus:text-rose-600 focus:bg-rose-50 dark:focus:bg-rose-950/40"
-                >
-                  <Trash2 className="mr-2 h-3.5 w-3.5" />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        );
-      },
-    },
-  ], [onDelete, onEdit, onSendForSignature]);
-
   const showFolders =
     page === 1 && selectedCategory === "All Files" && searchTerm === "";
 
-  const zipFooter =
-    filesWithUrl.length > 0 ? (
-      <Button
-        variant="outline"
-        size="sm"
-        className="h-7 text-xs gap-1.5"
-        onClick={handleDownloadZip}
-        disabled={isZipping}
-      >
-        {isZipping ? (
-          <Loader2 className="h-3 w-3 animate-spin" />
-        ) : (
-          <Download className="h-3 w-3" />
-        )}
-        ZIP ({filesWithUrl.length})
-      </Button>
+  const columns = useMemo<DataTableColumn<Document>[]>(
+    () => [
+      {
+        key: "name",
+        header: "Name",
+        cell(doc) {
+          const fileConfig = getFileIconConfig(doc.fileName ?? doc.name);
+          const FileIcon = fileConfig.icon;
+          return (
+            <div className="flex items-center gap-3">
+              <div
+                className={cn(
+                  "h-7 w-7 rounded-lg flex items-center justify-center shrink-0",
+                  fileConfig.bg,
+                )}
+              >
+                <FileIcon className={cn("h-3.5 w-3.5", fileConfig.text)} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-foreground truncate leading-snug">
+                  {doc.fileName ?? doc.name}
+                </p>
+                {doc.tags && doc.tags.length > 0 && (
+                  <div className="flex gap-1 mt-0.5 flex-wrap">
+                    {doc.tags.slice(0, 3).map((tag) => (
+                      <span
+                        key={tag}
+                        className={cn(
+                          "inline-flex items-center text-[10px] font-semibold px-1.5 py-0 rounded-full border",
+                          tag.toLowerCase().includes("confidential")
+                            ? "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/40 dark:text-rose-300 dark:border-rose-800"
+                            : "bg-muted text-muted-foreground border-border",
+                        )}
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        },
+      },
+      {
+        key: "type",
+        header: "Type",
+        cell(doc) {
+          const typeLabel =
+            DOCUMENT_TYPES.find((t) => t.value === doc.type)?.label ??
+            "General";
+          const badgeColor =
+            TYPE_BADGE_COLORS[typeLabel] ?? TYPE_BADGE_COLORS["General"];
+          return (
+            <span
+              className={cn(
+                "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+                badgeColor,
+              )}
+            >
+              {typeLabel}
+            </span>
+          );
+        },
+      },
+      {
+        key: "date",
+        header: "Date",
+        className: "text-sm text-muted-foreground tabular-nums",
+        cell(doc) {
+          return doc.createdAt
+            ? format(new Date(doc.createdAt), "MMM dd, yyyy")
+            : "—";
+        },
+      },
+      {
+        key: "size",
+        header: "Size",
+        headerClassName: "text-right",
+        className: "text-sm text-muted-foreground text-right tabular-nums",
+        cell(doc) {
+          return formatFileSize(doc.fileSize);
+        },
+      },
+      {
+        key: "actions",
+        header: "Actions",
+        headerClassName: "text-right",
+        cell(doc) {
+          const hasFileUrl = !!doc.fileUrl;
+
+          function handleView(e: React.MouseEvent) {
+            e.stopPropagation();
+            if (!hasFileUrl) {
+              toast.error("No file attached to this document.");
+              return;
+            }
+            viewFile(doc.fileUrl);
+          }
+
+          function handleDownload(e: React.MouseEvent) {
+            e.stopPropagation();
+            if (!hasFileUrl) {
+              toast.error("No file attached to this document.");
+              return;
+            }
+            downloadFile(doc.fileUrl, doc.fileName ?? doc.name);
+          }
+
+          function handleVersionHistory(e: React.MouseEvent) {
+            e.stopPropagation();
+            toast.info(`"${doc.name}" has ${doc.version} versions.`);
+          }
+
+          function handleDelete(e: React.MouseEvent) {
+            e.stopPropagation();
+            void onDelete(doc.id);
+          }
+
+          function handleEdit(e: React.MouseEvent) {
+            e.stopPropagation();
+            onEdit(doc);
+          }
+
+          function handleMenuTriggerClick(e: React.MouseEvent) {
+            e.stopPropagation();
+          }
+
+          function handleSendForSignature(e: React.MouseEvent) {
+            e.stopPropagation();
+            onSendForSignature(doc);
+          }
+
+          return (
+            <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                disabled={!hasFileUrl}
+                onClick={handleView}
+                aria-label="View document"
+              >
+                <Eye className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                disabled={!hasFileUrl}
+                onClick={handleDownload}
+                aria-label="Download document"
+              >
+                <Download className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                onClick={handleEdit}
+                aria-label="Edit document"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild onClick={handleMenuTriggerClick}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                    aria-label="More options"
+                  >
+                    <MoreHorizontal className="h-3.5 w-3.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-44">
+                  <DropdownMenuItem disabled={!hasFileUrl} onClick={handleView}>
+                    <Eye className="mr-2 h-3.5 w-3.5" />
+                    View file
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    disabled={!hasFileUrl}
+                    onClick={handleDownload}
+                  >
+                    <Download className="mr-2 h-3.5 w-3.5" />
+                    Download
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleEdit}>
+                    <Pencil className="mr-2 h-3.5 w-3.5" />
+                    Edit details
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleSendForSignature}>
+                    <FileSignature className="mr-2 h-3.5 w-3.5" />
+                    Send for e-signature
+                  </DropdownMenuItem>
+                  {(doc.version ?? 1) > 1 && (
+                    <DropdownMenuItem onClick={handleVersionHistory}>
+                      <History className="mr-2 h-3.5 w-3.5" />
+                      History ({doc.version})
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={handleDelete}
+                    className="text-rose-600 focus:text-rose-600 focus:bg-rose-50 dark:focus:bg-rose-950/40"
+                  >
+                    <Trash2 className="mr-2 h-3.5 w-3.5" />
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          );
+        },
+      },
+    ],
+    [onDelete, onEdit, onSendForSignature],
+  );
+
+  const emptyState = (
+    <EmptyState
+      illustration={<Upload className="h-8 w-8 text-muted-foreground" />}
+      title="No documents found"
+      description="Upload your first document to get started"
+      action={{
+        label: "Upload Document",
+        onClick: onOpenUpload,
+      }}
+    />
+  );
+
+  const footer =
+    totalFiltered > 0 && filesWithUrl.length > 0 ? (
+      <div className="flex items-center gap-2.5">
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-7 text-xs gap-1.5"
+          onClick={handleDownloadZip}
+          disabled={isZipping}
+        >
+          {isZipping ? (
+            <Loader2 className="h-3 w-3 animate-spin" />
+          ) : (
+            <Download className="h-3 w-3" />
+          )}
+          ZIP ({filesWithUrl.length})
+        </Button>
+      </div>
     ) : undefined;
 
   return (
@@ -497,8 +518,6 @@ export function DocumentTable({
           data={paginatedDocuments}
           columns={columns}
           getRowKey={(doc) => doc.id}
-          minWidth="640px"
-          className="border-0 rounded-none"
           pagination={{
             mode: "server",
             page,
@@ -506,20 +525,9 @@ export function DocumentTable({
             total: totalFiltered,
             onPageChange,
           }}
-          emptyState={
-            <EmptyState
-              illustration={
-                <Upload className="h-8 w-8 text-muted-foreground" />
-              }
-              title="No documents found"
-              description="Upload your first document to get started"
-              action={{
-                label: "Upload Document",
-                onClick: onOpenUpload,
-              }}
-            />
-          }
-          footer={zipFooter}
+          emptyState={emptyState}
+          footer={footer}
+          minWidth="640px"
         />
       </CardContent>
     </Card>

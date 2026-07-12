@@ -5,7 +5,7 @@ import { useClientVisibility, useUpdateTicketVisibility, useUpdateMilestoneVisib
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { SkeletonTable } from "@/components/shared/skeletons/skeleton-table";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -91,7 +91,7 @@ export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
         </div>
 
         {isLoading ? (
-          <SkeletonTable rows={6} columns={3} />
+          <DataTableSkeleton rows={6} columns={3} />
         ) : isError ? (
           <ErrorState onRetry={refetch} />
         ) : (

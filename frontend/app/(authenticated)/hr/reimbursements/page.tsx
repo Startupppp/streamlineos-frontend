@@ -10,11 +10,9 @@ import {
 } from "@/hooks/api/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   Select,
   SelectContent,
@@ -22,14 +20,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -192,18 +182,6 @@ export default function ReimbursementsPage() {
 
   function handleRetry() { void refetch(); }
 
-  if (isLoading) {
-    return (
-      <PageWrapper title="Reimbursements" subtitle="Expense reimbursement requests">
-        <div className="space-y-3">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-12 rounded-2xl" />
-          ))}
-        </div>
-      </PageWrapper>
-    );
-  }
-
   if (isError) {
     return (
       <PageWrapper title="Reimbursements" subtitle="Submit and track expense reimbursements">
@@ -218,6 +196,84 @@ export default function ReimbursementsPage() {
     );
   }
 
+  const reimbursementColumns: DataTableColumn<Reimbursement>[] = [
+    {
+      key: "employee",
+      header: "Employee",
+      cell: (r) => <span className="text-xs font-medium">{r.user?.name ?? r.user?.email ?? "—"}</span>,
+    },
+    {
+      key: "category",
+      header: "Category",
+      cell: (r) => (
+        <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-slate-100 text-slate-700 dark:bg-slate-900/40 dark:text-slate-300 border-slate-200 dark:border-slate-800">
+          {r.category}
+        </span>
+      ),
+    },
+    {
+      key: "description",
+      header: "Description",
+      className: "max-w-[200px] truncate",
+      cell: (r) => <span className="text-xs text-muted-foreground">{r.description ?? "—"}</span>,
+    },
+    {
+      key: "date",
+      header: "Date",
+      cell: (r) => (
+        <span className="text-xs text-muted-foreground whitespace-nowrap">
+          {r.createdAt ? format(new Date(r.createdAt), "MMM d, yyyy") : "—"}
+        </span>
+      ),
+      sortable: true,
+      sortValue: (r) => r.createdAt ?? "",
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (r) => {
+        const statusCfg = getStatusConfig(r.status);
+        return (
+          <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border", statusCfg.badge)}>
+            {statusCfg.icon}
+            {r.status ?? "PENDING"}
+          </span>
+        );
+      },
+    },
+    {
+      key: "amount",
+      header: "Amount",
+      headerClassName: "text-right",
+      className: "text-right",
+      cell: (r) => (
+        <span className="text-sm font-semibold tabular-nums whitespace-nowrap">
+          ₹{Number(r.amount).toLocaleString("en-IN")}
+        </span>
+      ),
+      sortable: true,
+      sortValue: (r) => Number(r.amount),
+    },
+    {
+      key: "actions",
+      header: "",
+      headerClassName: "text-right",
+      className: "text-right",
+      cell: (r) =>
+        r.status === "PENDING" ? (
+          <ReimbursementActions
+            reimbursementId={r.id}
+            reimbursementUserId={r.userId}
+            currentUserId={session?.user?.id}
+            isAdmin={isAdmin}
+            isPending={process.isPending}
+            onApprove={handleApprove}
+            onStartReject={setRejectId}
+          />
+        ) : null,
+    },
+  ];
+
   return (
     <PageWrapper
       title="Reimbursements"
@@ -230,80 +286,19 @@ export default function ReimbursementsPage() {
         </Button>
       }
     >
-      {!items?.length ? (
-        <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+      <DataTable<Reimbursement>
+        data={items ?? []}
+        columns={reimbursementColumns}
+        getRowKey={(r) => r.id}
+        isLoading={isLoading}
+        emptyState={
           <EmptyState
             illustration={<Receipt className="h-8 w-8 text-muted-foreground" />}
             title="No reimbursement requests"
             description="Submit expense reimbursement requests for approval."
           />
-        </div>
-      ) : (
-        <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-          <ScrollArea className="w-full" type="auto">
-            <div className="min-w-max">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/40 hover:bg-muted/40">
-                    <TableHead className="font-semibold text-foreground/80 text-xs">Employee</TableHead>
-                    <TableHead className="font-semibold text-foreground/80 text-xs">Category</TableHead>
-                    <TableHead className="font-semibold text-foreground/80 text-xs">Description</TableHead>
-                    <TableHead className="font-semibold text-foreground/80 text-xs">Date</TableHead>
-                    <TableHead className="font-semibold text-foreground/80 text-xs">Status</TableHead>
-                    <TableHead className="font-semibold text-foreground/80 text-xs text-right">Amount</TableHead>
-                    <TableHead className="font-semibold text-foreground/80 text-xs text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {items.map((r: Reimbursement) => {
-                    const statusCfg = getStatusConfig(r.status);
-                    return (
-                      <TableRow key={r.id} className="hover:bg-muted/20 transition-colors duration-200">
-                        <TableCell className="text-xs font-medium">
-                          {r.user?.name ?? r.user?.email ?? "—"}
-                        </TableCell>
-                        <TableCell>
-                          <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-slate-100 text-slate-700 dark:bg-slate-900/40 dark:text-slate-300 border-slate-200 dark:border-slate-800">
-                            {r.category}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">
-                          {r.description ?? "—"}
-                        </TableCell>
-                        <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                          {r.createdAt ? format(new Date(r.createdAt), "MMM d, yyyy") : "—"}
-                        </TableCell>
-                        <TableCell>
-                          <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border", statusCfg.badge)}>
-                            {statusCfg.icon}
-                            {r.status ?? "PENDING"}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-right text-sm font-semibold tabular-nums whitespace-nowrap">
-                          ₹{Number(r.amount).toLocaleString("en-IN")}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {r.status === "PENDING" && (
-                            <ReimbursementActions
-                              reimbursementId={r.id}
-                              reimbursementUserId={r.userId}
-                              currentUserId={session?.user?.id}
-                              isAdmin={isAdmin}
-                              isPending={process.isPending}
-                              onApprove={handleApprove}
-                              onStartReject={setRejectId}
-                            />
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          </ScrollArea>
-        </Card>
-      )}
+        }
+      />
 
       <HrSheet
         open={sheetOpen}

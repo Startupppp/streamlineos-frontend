@@ -314,7 +314,7 @@ function AttendanceTab({ periodId }: { periodId: number }) {
         mode: "server",
         page,
         pageSize: 25,
-        total: (data?.pagination.totalPages ?? 1) * 25,
+        total: data?.pagination.total ?? 0,
         onPageChange: setPage,
       }}
     />
@@ -336,7 +336,7 @@ function LeaveTab({ periodId }: { periodId: number }) {
         mode: "server",
         page,
         pageSize: 25,
-        total: (data?.pagination.totalPages ?? 1) * 25,
+        total: data?.pagination.total ?? 0,
         onPageChange: setPage,
       }}
     />
@@ -358,7 +358,7 @@ function OvertimeTab({ periodId }: { periodId: number }) {
         mode: "server",
         page,
         pageSize: 25,
-        total: (data?.pagination.totalPages ?? 1) * 25,
+        total: data?.pagination.total ?? 0,
         onPageChange: setPage,
       }}
     />
@@ -380,7 +380,7 @@ function ReimbursementsTab({ periodId }: { periodId: number }) {
         mode: "server",
         page,
         pageSize: 25,
-        total: (data?.pagination.totalPages ?? 1) * 25,
+        total: data?.pagination.total ?? 0,
         onPageChange: setPage,
       }}
     />
@@ -407,7 +407,7 @@ function AdjustmentsTab({ periodId, isLocked }: { periodId: number; isLocked: bo
         mode: "server",
         page,
         pageSize: 25,
-        total: (data?.pagination.totalPages ?? 1) * 25,
+        total: data?.pagination.total ?? 0,
         onPageChange: setPage,
       }}
     />

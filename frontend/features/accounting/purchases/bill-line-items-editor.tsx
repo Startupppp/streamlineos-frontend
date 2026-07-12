@@ -182,7 +182,7 @@ export function BillLineItemsEditor({
     },
   ];
 
-  const toolbar = (
+  const footer = (
     <Button type="button" variant="outline" size="sm" onClick={onAddItem}>
       <Plus className="size-4 mr-1" />
       Add line
@@ -194,7 +194,7 @@ export function BillLineItemsEditor({
       data={rows}
       columns={columns}
       getRowKey={(row) => row.id}
-      toolbar={toolbar}
+      footer={footer}
       minWidth="760px"
       className="overflow-hidden"
     />

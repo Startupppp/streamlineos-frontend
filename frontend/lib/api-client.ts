@@ -7,6 +7,7 @@ if (!process.env.NEXT_PUBLIC_API_URL) {
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const MIGRATED_PREFIXES = [
+  "/agent-tokens",
   "/contacts",
   "/targets",
   "/csat",

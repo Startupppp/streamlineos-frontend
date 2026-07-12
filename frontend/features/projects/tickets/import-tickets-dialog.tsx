@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useImportTickets, type ImportTicketRow } from "@/hooks/api/projects/import-export";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 
 const CSV_COLUMNS = ["title", "type", "status", "priority", "points", "assigneeEmail", "dueDate"] as const;
 const TICKET_TYPES = ["TASK", "BUG", "STORY", "EPIC"] as const;
@@ -21,6 +22,33 @@ const TICKET_PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
 type CsvColumn = (typeof CSV_COLUMNS)[number];
 
 const MAX_ROWS = 500;
+
+type PreviewRow = ImportTicketRow & { _idx: number };
+
+const previewColumns: DataTableColumn<PreviewRow>[] = [
+  {
+    key: "title",
+    header: "Title",
+    className: "max-w-[140px]",
+    cell: (row) => <span className="truncate max-w-[140px] block">{row.title}</span>,
+  },
+  {
+    key: "type",
+    header: "Type",
+    cell: (row) => <span>{row.type ?? "—"}</span>,
+  },
+  {
+    key: "priority",
+    header: "Priority",
+    cell: (row) => <span>{row.priority ?? "—"}</span>,
+  },
+  {
+    key: "assigneeEmail",
+    header: "Assignee Email",
+    className: "max-w-[120px]",
+    cell: (row) => <span className="truncate max-w-[120px] block">{row.assigneeEmail ?? "—"}</span>,
+  },
+];
 
 function parseCSV(raw: string): ImportTicketRow[] {
   const lines = raw.split(/\r?\n/).filter((l) => l.trim().length > 0);
@@ -188,6 +216,10 @@ export function ImportTicketsDialog({ open, onOpenChange, projectId }: ImportTic
   );
 
   const capped = rows.length >= MAX_ROWS;
+  const previewRows = useMemo<PreviewRow[]>(
+    () => rows.slice(0, 10).map((r, i) => ({ ...r, _idx: i })),
+    [rows],
+  );
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -246,33 +278,17 @@ export function ImportTicketsDialog({ open, onOpenChange, projectId }: ImportTic
                 </Badge>
               </div>
               <div className="max-h-40 overflow-y-auto">
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className="text-left text-muted-foreground border-b border-border">
-                      <th className="pb-1 pr-2 font-medium">Title</th>
-                      <th className="pb-1 pr-2 font-medium">Type</th>
-                      <th className="pb-1 pr-2 font-medium">Priority</th>
-                      <th className="pb-1 font-medium">Assignee Email</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.slice(0, 10).map((r, idx) => (
-                      <tr key={idx} className="border-b border-border/50 last:border-0">
-                        <td className="py-0.5 pr-2 truncate max-w-[140px]">{r.title}</td>
-                        <td className="py-0.5 pr-2">{r.type ?? "—"}</td>
-                        <td className="py-0.5 pr-2">{r.priority ?? "—"}</td>
-                        <td className="py-0.5 truncate max-w-[120px]">{r.assigneeEmail ?? "—"}</td>
-                      </tr>
-                    ))}
-                    {rows.length > 10 && (
-                      <tr>
-                        <td colSpan={4} className="py-0.5 text-muted-foreground">
-                          …and {rows.length - 10} more
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+                <DataTable
+                  data={previewRows}
+                  columns={previewColumns}
+                  getRowKey={(row) => row._idx}
+                  className="text-xs border-0 rounded-none"
+                  footer={
+                    rows.length > 10 ? (
+                      <span className="text-muted-foreground">…and {rows.length - 10} more</span>
+                    ) : undefined
+                  }
+                />
               </div>
             </div>
           )}

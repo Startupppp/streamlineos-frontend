@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useMemo, useCallback, memo, useEffect } from "react";
+import { use, useMemo, useCallback, useEffect } from "react";
 import { EmptyTasksIllustration } from "@/components/illustrations";
 import { useSession } from "next-auth/react";
 import { useProject } from "@/hooks/api";
@@ -11,79 +11,25 @@ import { PriorityBadge } from "@/features/projects/shared/priority-badge";
 import { StatusBadge } from "@/features/projects/shared/status-badge";
 import { buildTicketDetailUrl } from "@/features/projects/ticket-details/build-ticket-detail-url";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { formatTicketKey } from "@/features/projects/shared/format-ticket-key";
 
-interface MyTicketRowProps {
-  ticket: {
-    id: number;
-    type: string;
-    ticketNumber: string | number;
-    title: string | null;
-    status: string;
-    priority: string | null;
-    points?: number | null;
-    dueDate?: string | Date | null;
-  };
-  projectKey?: string | null;
-  onSelect: (id: number) => void;
+interface MyTicket {
+  id: number;
+  type: string;
+  ticketNumber: string | number;
+  title: string | null;
+  status: string;
+  priority: string | null;
+  points?: number | null;
+  dueDate?: string | Date | null;
+  description?: string | null;
+  assigneeId?: string | null;
+  reporterId?: string | null;
+  assignees?: { userId: string }[] | null;
 }
-
-const TicketRow = memo(function TicketRow({
-  ticket,
-  projectKey,
-  onSelect,
-}: MyTicketRowProps) {
-  const handleClick = useCallback(
-    () => onSelect(ticket.id),
-    [onSelect, ticket.id],
-  );
-
-  return (
-    <TableRow
-      className="cursor-pointer hover:bg-muted/50 h-10 border-b border-border/50"
-      onClick={handleClick}
-    >
-      <TableCell className="px-3 py-1.5 font-mono text-xs text-muted-foreground">
-        <span className="flex items-center gap-1.5">
-          <TicketTypeIcon type={ticket.type} />
-          {formatTicketKey(projectKey, ticket.ticketNumber)}
-        </span>
-      </TableCell>
-      <TableCell className="px-3 py-1.5 max-w-md">
-        <span className="text-sm font-medium line-clamp-1">{ticket.title}</span>
-      </TableCell>
-      <TableCell className="px-3 py-1.5">
-        <StatusBadge status={ticket.status} />
-      </TableCell>
-      <TableCell className="px-3 py-1.5 hidden sm:table-cell">
-        <PriorityBadge priority={ticket.priority} showLabel />
-      </TableCell>
-      <TableCell className="px-3 py-1.5 hidden md:table-cell">
-        {ticket.points != null && ticket.points > 0 ? (
-          <Badge variant="secondary" className="text-xs">
-            {ticket.points}
-          </Badge>
-        ) : (
-          <span className="text-xs text-muted-foreground">—</span>
-        )}
-      </TableCell>
-      <TableCell className="px-3 py-1.5 text-xs text-muted-foreground hidden md:table-cell">
-        {ticket.dueDate ? format(new Date(ticket.dueDate), "MMM d") : "—"}
-      </TableCell>
-    </TableRow>
-  );
-});
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -111,9 +57,7 @@ export default function MyTicketsPage({ params }: PageProps) {
     if (!data?.tickets || !userId) return [];
     return data.tickets.filter((t) => {
       if (t.assigneeId === userId) return true;
-
       if (t.assignees?.some((a) => a.userId === userId)) return true;
-
       if (t.reporterId === userId) return true;
       return false;
     });
@@ -130,8 +74,7 @@ export default function MyTicketsPage({ params }: PageProps) {
       );
     }
     if (filterStatus) result = result.filter((t) => t.status === filterStatus);
-    if (filterPriority)
-      result = result.filter((t) => t.priority === filterPriority);
+    if (filterPriority) result = result.filter((t) => t.priority === filterPriority);
     if (filterType) result = result.filter((t) => t.type === filterType);
     return result;
   }, [myTickets, q, filterStatus, filterPriority, filterType]);
@@ -144,45 +87,81 @@ export default function MyTicketsPage({ params }: PageProps) {
     [router, projectId, data?.key, myTickets],
   );
 
+  const handleRowClick = useCallback(
+    (ticket: MyTicket) => handleTicketSelect(ticket.id),
+    [handleTicketSelect],
+  );
+
   useEffect(() => {
     if (!selectedTicketId || !data) return;
     const href = buildTicketDetailUrl(projectId, data.key, selectedTicketId, myTickets);
     if (href) router.replace(href);
   }, [selectedTicketId, data, myTickets, projectId, router]);
 
-  const statuses =
-    data && "statuses" in data
-      ? (data.statuses as {
-          id: number;
-          name: string;
-          color: string | null;
-          order: number;
-        }[])
-      : undefined;
+  const columns = useMemo<DataTableColumn<MyTicket>[]>(
+    () => [
+      {
+        key: "id",
+        header: "ID",
+        className: "w-[80px] font-mono text-xs text-muted-foreground",
+        cell: (ticket) => (
+          <span className="flex items-center gap-1.5">
+            <TicketTypeIcon type={ticket.type} />
+            {formatTicketKey(data?.key, ticket.ticketNumber)}
+          </span>
+        ),
+      },
+      {
+        key: "title",
+        header: "Title",
+        className: "max-w-md",
+        cell: (ticket) => (
+          <span className="text-sm font-medium line-clamp-1">{ticket.title}</span>
+        ),
+      },
+      {
+        key: "status",
+        header: "Status",
+        className: "w-[120px]",
+        cell: (ticket) => <StatusBadge status={ticket.status} />,
+      },
+      {
+        key: "priority",
+        header: "Priority",
+        className: "hidden sm:table-cell w-[100px]",
+        headerClassName: "hidden sm:table-cell",
+        cell: (ticket) => <PriorityBadge priority={ticket.priority} showLabel />,
+      },
+      {
+        key: "points",
+        header: "Points",
+        className: "hidden md:table-cell w-[80px]",
+        headerClassName: "hidden md:table-cell",
+        cell: (ticket) =>
+          ticket.points != null && ticket.points > 0 ? (
+            <Badge variant="secondary" className="text-xs">
+              {ticket.points}
+            </Badge>
+          ) : (
+            <span className="text-xs text-muted-foreground">—</span>
+          ),
+      },
+      {
+        key: "dueDate",
+        header: "Due Date",
+        className: "hidden md:table-cell w-[100px] text-xs text-muted-foreground",
+        headerClassName: "hidden md:table-cell",
+        cell: (ticket) =>
+          ticket.dueDate ? format(new Date(ticket.dueDate), "MMM d") : "—",
+      },
+    ],
+    [data?.key],
+  );
 
   if (isLoading) {
     return (
       <PageWrapper title="My Tickets" subtitle="Tickets assigned to or reported by you">
-        <div className="rounded-lg border border-border overflow-hidden mx-4 mb-4">
-          <div className="flex items-center gap-4 px-3 py-2 border-b bg-muted/30">
-            <Skeleton className="h-3 w-12" />
-            <Skeleton className="h-3 flex-1" />
-            <Skeleton className="h-3 w-16" />
-            <Skeleton className="h-3 w-16" />
-            <Skeleton className="h-3 w-12" />
-            <Skeleton className="h-3 w-16" />
-          </div>
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-4 px-3 py-2 border-b last:border-b-0">
-              <Skeleton className="h-3 w-12" />
-              <Skeleton className="h-3 flex-1" />
-              <Skeleton className="h-5 w-16 rounded-full" />
-              <Skeleton className="h-5 w-16 rounded-full" />
-              <Skeleton className="h-5 w-8 rounded-full" />
-              <Skeleton className="h-3 w-12" />
-            </div>
-          ))}
-        </div>
+        <DataTableSkeleton rows={8} columns={6} />
       </PageWrapper>
     );
   }
@@ -197,70 +176,29 @@ export default function MyTicketsPage({ params }: PageProps) {
         <TicketFilterBar showSprintFilter={false} showAssigneeFilter={false} />
       }
     >
-      {myTickets.length === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center py-16 text-center min-h-[400px]">
-          <EmptyTasksIllustration className="mb-4 h-40 w-40 opacity-95" />
-          <p className="font-medium text-foreground mb-1">
-            No tickets assigned to you
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Tickets you create or get assigned to will appear here.
-          </p>
-        </div>
-      ) : (
-        <div className="rounded-lg border border-border overflow-hidden mx-4 mb-4">
-          <div className="overflow-x-auto">
-          <Table>
-            <caption className="sr-only">My tickets</caption>
-            <TableHeader>
-              <TableRow className="bg-muted/40 hover:bg-muted/40">
-                <TableHead className="w-[80px] px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground" scope="col">
-                  ID
-                </TableHead>
-                <TableHead className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground" scope="col">Title</TableHead>
-                <TableHead className="w-[120px] px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground" scope="col">
-                  Status
-                </TableHead>
-                <TableHead className="w-[100px] hidden sm:table-cell px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground" scope="col">
-                  Priority
-                </TableHead>
-                <TableHead className="w-[80px] hidden md:table-cell px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground" scope="col">
-                  Points
-                </TableHead>
-                <TableHead className="w-[100px] hidden md:table-cell px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground" scope="col">
-                  Due Date
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredTickets.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    className="text-center py-8 text-muted-foreground text-sm"
-                  >
-                    <div className="flex flex-col items-center justify-center gap-2">
-                      <EmptyTasksIllustration className="h-32 w-32 opacity-95" />
-                      <p>No tickets match your filters.</p>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredTickets.map((ticket) => (
-                  <TicketRow
-                    key={ticket.id}
-                    ticket={ticket}
-                    projectKey={data?.key}
-                    onSelect={handleTicketSelect}
-                  />
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
-        </div>
-      )}
-
+      <DataTable
+        data={filteredTickets}
+        columns={columns}
+        getRowKey={(ticket) => ticket.id}
+        onRowClick={handleRowClick}
+        minWidth="640px"
+        emptyState={
+          myTickets.length === 0 ? (
+            <div className="flex flex-1 flex-col items-center justify-center py-16 text-center min-h-[400px]">
+              <EmptyTasksIllustration className="mb-4 h-40 w-40 opacity-95" />
+              <p className="font-medium text-foreground mb-1">No tickets assigned to you</p>
+              <p className="text-sm text-muted-foreground">
+                Tickets you create or get assigned to will appear here.
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center gap-2 py-8">
+              <EmptyTasksIllustration className="h-32 w-32 opacity-95" />
+              <p className="text-sm text-muted-foreground">No tickets match your filters.</p>
+            </div>
+          )
+        }
+      />
     </PageWrapper>
   );
 }

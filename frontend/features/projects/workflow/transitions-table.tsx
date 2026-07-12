@@ -10,10 +10,9 @@ import {
   useDeleteTransition,
 } from "@/hooks/api/projects/workflow";
 import { useCan } from "@/hooks/api/access";
-import { DataTable } from "@/components/ui/data-table";
+import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { SkeletonTable } from "@/components/shared/skeletons/skeleton-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {

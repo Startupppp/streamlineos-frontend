@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, memo } from "react";
-import { Check, AlertTriangle, ArrowUp, Minus, ArrowDown, User, MoreHorizontal, Zap, Tag, X } from "lucide-react";
+import { useState, memo, forwardRef } from "react";
+import { Check, AlertTriangle, ArrowUp, Minus, ArrowDown, User, Zap, Tag, X } from "lucide-react";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -53,22 +53,19 @@ interface TicketCreatePropertiesProps {
   cycles: Cycle[];
 }
 
-function PillButton({
-  children,
-  className,
-  label,
-  onClick,
-}: {
-  children: React.ReactNode;
-  className?: string;
-  label: string;
-  onClick?: () => void;
-}) {
+const PillButton = forwardRef<
+  HTMLButtonElement,
+  {
+    children: React.ReactNode;
+    className?: string;
+    label: string;
+  }
+>(function PillButton({ children, className, label }, ref) {
   return (
     <button
+      ref={ref}
       type="button"
       aria-label={label}
-      onClick={onClick}
       className={cn(
         "inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2 py-1 text-xs font-medium text-foreground hover:bg-muted/60 transition-colors shrink-0",
         className,
@@ -77,7 +74,7 @@ function PillButton({
       {children}
     </button>
   );
-}
+});
 
 export const TicketCreateProperties = memo(function TicketCreateProperties({
   value,
@@ -164,16 +161,30 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
     };
   }
 
+  function handleEstimateOpenChange(nextOpen: boolean) {
+    if (nextOpen) {
+      setEstimateInput(value.points !== null ? String(value.points) : "");
+    }
+    setEstimateOpen(nextOpen);
+  }
+
+  const labelsPillText =
+    selectedLabels.length === 0
+      ? null
+      : selectedLabels.length === 1
+        ? selectedLabels[0]?.name
+        : `${selectedLabels[0]?.name} +${selectedLabels.length - 1}`;
+
   return (
     <div className="flex flex-wrap items-center gap-1.5">
-      <Popover open={statusOpen} onOpenChange={setStatusOpen}>
+      <Popover open={statusOpen} onOpenChange={setStatusOpen} modal>
         <PopoverTrigger asChild>
           <PillButton label="Set status">
             <span className={cn("h-2 w-2 rounded-full shrink-0", currentStatus.dotColor)} />
             {currentStatus.label}
           </PillButton>
         </PopoverTrigger>
-        <PopoverContent className="w-44 p-1" align="start">
+        <PopoverContent className="z-[60] w-44 p-1" align="start">
           {statusList.map((s) => {
             const entry = getStatusEntry(statusConfig, s);
             return (
@@ -195,14 +206,14 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
         </PopoverContent>
       </Popover>
 
-      <Popover open={priorityOpen} onOpenChange={setPriorityOpen}>
+      <Popover open={priorityOpen} onOpenChange={setPriorityOpen} modal>
         <PopoverTrigger asChild>
           <PillButton label="Set priority" className={priorityColor}>
             <PriorityIcon className="h-3.5 w-3.5 shrink-0" />
             {selectedPriorityDef?.label ?? "Priority"}
           </PillButton>
         </PopoverTrigger>
-        <PopoverContent className="w-36 p-1" align="start">
+        <PopoverContent className="z-[60] w-36 p-1" align="start">
           {PRIORITIES.map(({ value: pVal, label, Icon }) => (
             <button
               key={pVal}
@@ -221,7 +232,7 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
         </PopoverContent>
       </Popover>
 
-      <Popover open={assigneeOpen} onOpenChange={setAssigneeOpen}>
+      <Popover open={assigneeOpen} onOpenChange={setAssigneeOpen} modal>
         <PopoverTrigger asChild>
           <PillButton label="Set assignee">
             {selectedAssignee ? (
@@ -240,7 +251,7 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
             )}
           </PillButton>
         </PopoverTrigger>
-        <PopoverContent className="w-52 p-0" align="start">
+        <PopoverContent className="z-[60] w-52 p-0" align="start">
           <Command>
             <CommandInput placeholder="Search members…" className="h-8 text-xs" />
             <CommandList className="max-h-48">
@@ -271,7 +282,7 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
         </PopoverContent>
       </Popover>
 
-      <Popover open={estimateOpen} onOpenChange={setEstimateOpen}>
+      <Popover open={estimateOpen} onOpenChange={handleEstimateOpenChange} modal>
         <PopoverTrigger asChild>
           <PillButton label="Set estimate">
             <Zap className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
@@ -282,7 +293,7 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
             )}
           </PillButton>
         </PopoverTrigger>
-        <PopoverContent className="w-36 p-3" align="start">
+        <PopoverContent className="z-[60] w-36 p-3" align="start">
           <p className="mb-2 text-xs font-medium text-muted-foreground">Story points</p>
           <div className="flex gap-2">
             <Input
@@ -307,18 +318,18 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
         </PopoverContent>
       </Popover>
 
-      <Popover open={labelsOpen} onOpenChange={setLabelsOpen}>
+      <Popover open={labelsOpen} onOpenChange={setLabelsOpen} modal>
         <PopoverTrigger asChild>
           <PillButton label="Set labels">
             <Tag className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-            {selectedLabels.length > 0 ? (
-              <span>{selectedLabels.length} label{selectedLabels.length > 1 ? "s" : ""}</span>
+            {labelsPillText ? (
+              <span className="truncate max-w-[120px]">{labelsPillText}</span>
             ) : (
               <span className="text-muted-foreground">Labels</span>
             )}
           </PillButton>
         </PopoverTrigger>
-        <PopoverContent className="w-48 p-1" align="start">
+        <PopoverContent className="z-[60] w-48 p-1" align="start">
           {labels.length === 0 ? (
             <p className="py-2 text-center text-xs text-muted-foreground">No labels available.</p>
           ) : (
@@ -348,18 +359,18 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
         </PopoverContent>
       </Popover>
 
-      <Popover open={cycleOpen} onOpenChange={setCycleOpen}>
+      <Popover open={cycleOpen} onOpenChange={setCycleOpen} modal>
         <PopoverTrigger asChild>
           <PillButton label="Set cycle">
             <span className="h-3 w-3 shrink-0 rounded-full border-2 border-current opacity-70" />
             {selectedCycle ? (
-              <span className="truncate max-w-[80px]">{selectedCycle.name}</span>
+              <span className="truncate max-w-[120px]">{selectedCycle.name}</span>
             ) : (
               <span className="text-muted-foreground">Cycle</span>
             )}
           </PillButton>
         </PopoverTrigger>
-        <PopoverContent className="w-56 p-1" align="start">
+        <PopoverContent className="z-[60] w-56 p-1" align="start">
           <button
             type="button"
             onClick={makeCycleHandler(null)}

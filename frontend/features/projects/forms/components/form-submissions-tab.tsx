@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { SkeletonTable } from "@/components/shared/skeletons/skeleton-table";
+import { DataTableSkeleton } from "@/components/ui/data-table";
 import { useCan } from "@/hooks/api/access";
 import { useFormSubmissions, useUpdateSubmission } from "@/hooks/api/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -138,7 +138,7 @@ export function FormSubmissionsTab({ projectId, formId }: FormSubmissionsTabProp
   return (
     <div className="pt-3 space-y-3">
       {isLoading ? (
-        <SkeletonTable rows={4} columns={6} />
+        <DataTableSkeleton rows={4} columns={6} />
       ) : isError ? (
         <ErrorState compact onRetry={() => void refetch()} />
       ) : items.length === 0 ? (

@@ -14,6 +14,15 @@ export const AXIS_TICK = {
   fontSize: 11,
 } as const;
 
+export const GRID_STROKE = "hsl(var(--border))";
+
+export const CHART_BLUE = {
+  200: "#bfdbfe",
+  300: "#93c5fd",
+  500: "#3b82f6",
+  600: "#2563eb",
+} as const;
+
 export const numberFormatter = new Intl.NumberFormat("en-IN");
 
 export function ChartCard({

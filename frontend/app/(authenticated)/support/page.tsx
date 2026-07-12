@@ -2,6 +2,8 @@
 
 import { useMemo } from "react";
 import { motion } from "framer-motion";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import type { SupportTeamMember } from "@/types/crm/contacts";
 import {
   Ticket,
   Clock,

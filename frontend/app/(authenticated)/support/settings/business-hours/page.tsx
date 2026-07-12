@@ -1,32 +1,30 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus } from "lucide-react";
+import { Plus, Pencil, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Table, TableBody, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   useBusinessHoursList, useCreateBusinessHours, useUpdateBusinessHours, useDeleteBusinessHours,
   type BusinessHours,
 } from "@/hooks/api/support/business-hours";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import {
   businessHoursSchema, DEFAULT_FORM_VALUES, businessHoursToFormValues, buildMutationPayload,
   type BusinessHoursForm,
 } from "@/features/support/settings/business-hours-form.schema";
 import { BusinessHoursSheet } from "@/features/support/settings/business-hours-sheet";
-import { BusinessHoursTableRow } from "@/features/support/settings/business-hours-table-row";
 
 export default function BusinessHoursPage() {
   const { data: businessHoursList, isLoading, isError, refetch } = useBusinessHoursList();
@@ -93,6 +91,67 @@ export default function BusinessHoursPage() {
 
   const count = businessHoursList?.length ?? 0;
 
+  function makeEditBhHandler(bh: BusinessHours) {
+    return function handleEditBh() { handleStartEdit(bh); };
+  }
+
+  function makeDeleteBhHandler(id: number) {
+    return function handleDeleteBh() { handleDeleteRequest(id); };
+  }
+
+  const columns = useMemo<DataTableColumn<BusinessHours>[]>(() => [
+    {
+      key: "name",
+      header: "Name",
+      cell: (bh) => <span className="text-[11px] font-medium">{bh.name}</span>,
+    },
+    {
+      key: "timezone",
+      header: "Timezone",
+      cell: (bh) => <span className="text-[11px]">{bh.timezone}</span>,
+    },
+    {
+      key: "coverage",
+      header: "Coverage",
+      cell: (bh) => (
+        <Badge
+          variant="outline"
+          className={cn(
+            "text-[9px] h-4 px-1.5 py-0",
+            bh.is24x7 ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-slate-100 text-slate-600 border-slate-200",
+          )}
+        >
+          {bh.is24x7 ? "24/7" : "Scheduled"}
+        </Badge>
+      ),
+    },
+    {
+      key: "isDefault",
+      header: "Default",
+      cell: (bh) => bh.isDefault ? (
+        <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-blue-50 text-blue-700 border-blue-200">
+          Default
+        </Badge>
+      ) : null,
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      headerClassName: "text-right",
+      className: "text-right",
+      cell: (bh) => (
+        <div className="flex items-center justify-end gap-1">
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={makeEditBhHandler(bh)} aria-label="Edit">
+            <Pencil className="h-3.5 w-3.5" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={makeDeleteBhHandler(bh.id)} aria-label="Delete">
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      ),
+    },
+  ], [handleStartEdit, handleDeleteRequest]);
+
   return (
     <>
       <AlertDialog open={deleteTargetId !== null} onOpenChange={handleAlertOpenChange}>
@@ -145,9 +204,7 @@ export default function BusinessHoursPage() {
           </Button>
         }
       >
-        {isLoading ? (
-          <Skeleton className="h-64 w-full" />
-        ) : isError ? (
+        {isError ? (
           <EmptyState
             illustrationPreset="settings"
             title="Failed to load business hours"
@@ -161,39 +218,23 @@ export default function BusinessHoursPage() {
               <CardTitle className="text-sm font-semibold">Calendars</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              {businessHoursList && businessHoursList.length > 0 ? (
-                <Table>
-                  <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
-                    <TableRow className="border-b-2 border-border hover:bg-transparent">
-                      <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Name</TableHead>
-                      <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Timezone</TableHead>
-                      <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Coverage</TableHead>
-                      <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5">Default</TableHead>
-                      <TableHead className="text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {businessHoursList.map((bh) => (
-                      <BusinessHoursTableRow
-                        key={bh.id}
-                        bh={bh}
-                        onEdit={handleStartEdit}
-                        onDeleteRequest={handleDeleteRequest}
-                      />
-                    ))}
-                  </TableBody>
-                </Table>
-              ) : (
-                <div className="py-14 px-4">
-                  <EmptyState
-                    illustrationPreset="settings"
-                    title="No business hours calendars defined"
-                    description="Create a calendar to scope SLA targets to your team's working hours."
-                    action={{ label: "New Calendar", onClick: handleOpenCreate }}
-                    className="border-0 bg-transparent"
-                  />
-                </div>
-              )}
+              <DataTable
+                data={businessHoursList ?? []}
+                columns={columns}
+                getRowKey={(bh) => bh.id}
+                isLoading={isLoading}
+                emptyState={
+                  <div className="py-14 px-4">
+                    <EmptyState
+                      illustrationPreset="settings"
+                      title="No business hours calendars defined"
+                      description="Create a calendar to scope SLA targets to your team's working hours."
+                      action={{ label: "New Calendar", onClick: handleOpenCreate }}
+                      className="border-0 bg-transparent"
+                    />
+                  </div>
+                }
+              />
             </CardContent>
           </Card>
         )}

@@ -16,7 +16,13 @@ import {
 } from "recharts";
 import { TrendingUp } from "lucide-react";
 import { useLeadTimeReport } from "@/hooks/api/projects/reports";
-import { ChartCard, TOOLTIP_STYLE, AXIS_TICK } from "./chart-card";
+import {
+  ChartCard,
+  TOOLTIP_STYLE,
+  AXIS_TICK,
+  GRID_STROKE,
+  CHART_BLUE,
+} from "./chart-card";
 
 export function LeadTimeSection({ projectId }: { projectId: number }) {
   const { data = [], isLoading, isError, refetch } =
@@ -51,7 +57,7 @@ export function LeadTimeSection({ projectId }: { projectId: number }) {
               <CartesianGrid
                 strokeDasharray="3 3"
                 vertical={false}
-                stroke="#f1f5f9"
+                stroke={GRID_STROKE}
               />
               <XAxis
                 dataKey="week"
@@ -71,17 +77,22 @@ export function LeadTimeSection({ projectId }: { projectId: number }) {
                 formatter={(v) => [`${v ?? 0} days`]}
               />
               <Area
+                type="monotone"
                 dataKey="p90Days"
-                fill="#93c5fd"
-                stroke="#60a5fa"
+                fill={CHART_BLUE[300]}
+                fillOpacity={0.35}
+                stroke={CHART_BLUE[600]}
                 strokeWidth={1.5}
                 name="P90"
               />
               <Area
+                type="monotone"
                 dataKey="p50Days"
-                fill="#60a5fa"
-                stroke="#1d4ed8"
+                fill={CHART_BLUE[500]}
+                fillOpacity={0.2}
+                stroke={CHART_BLUE[500]}
                 strokeWidth={2}
+                dot={{ r: 3, fill: CHART_BLUE[500] }}
                 name="P50 (Median)"
               />
             </AreaChart>

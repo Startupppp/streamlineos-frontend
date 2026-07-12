@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import {
   Dialog,
   DialogContent,
@@ -109,7 +110,7 @@ export function CreateTicketDialog({
       )}
 
       <Dialog open={resolvedOpen} onOpenChange={handleOpenChange}>
-        <DialogContent className="max-w-2xl gap-0 p-0 overflow-hidden">
+        <DialogContent className="gap-0 p-0 overflow-hidden md:max-w-2xl md:sm:max-w-2xl">
           <DialogHeader className="px-5 pt-4 pb-3 border-b border-border/60">
             <div className="flex items-center gap-2">
               {project && (
@@ -250,14 +251,15 @@ export function CreateTicketDialog({
                     <span className="text-xs text-muted-foreground">Create more</span>
                   </label>
 
-                  <Button
+                  <LoadingButton
                     type="submit"
-                    disabled={isPending || isUploading}
+                    isPending={isPending || isUploading}
+                    loadingText="Creating…"
                     className="h-8 px-4 text-xs"
                     size="sm"
                   >
-                    {isPending || isUploading ? "Creating…" : "Create issue"}
-                  </Button>
+                    Create issue
+                  </LoadingButton>
                 </div>
               </div>
             </form>

@@ -2,14 +2,7 @@
 
 import { useCallback } from "react";
 import { ArrowRight, AlertCircle, ChevronLeft, FileText, X } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   Select,
   SelectContent,
@@ -17,7 +10,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -53,45 +45,34 @@ interface CsvFieldMapperProps {
   onBack: () => void;
 }
 
-interface FieldMappingRowProps {
+interface MappingRow {
   header: string;
   index: number;
   previewVal: string | undefined;
   currentMapping: string;
-  fields: { value: string; label: string }[];
-  onMappingChange: (index: number, value: string) => void;
 }
 
-function FieldMappingRow({ header, index, previewVal, currentMapping, fields, onMappingChange }: FieldMappingRowProps) {
-  const handleValueChange = useCallback((v: string) => onMappingChange(index, v), [index, onMappingChange]);
+interface MappingSelectCellProps {
+  row: MappingRow;
+  fields: { value: string; label: string }[];
+  onMappingChange: (idx: number, value: string) => void;
+}
+
+function MappingSelectCell({ row, fields, onMappingChange }: MappingSelectCellProps) {
+  const handleChange = useCallback((v: string) => onMappingChange(row.index, v), [row.index, onMappingChange]);
   return (
-    <TableRow>
-      <TableCell className="text-xs">
-        <span className="font-medium">{header || `(column ${index + 1})`}</span>
-        {previewVal && (
-          <span className="block text-[10px] text-muted-foreground truncate max-w-[160px]">
-            e.g. {previewVal}
-          </span>
-        )}
-      </TableCell>
-      <TableCell className="text-center text-muted-foreground px-1">
-        <ArrowRight className="h-3.5 w-3.5" />
-      </TableCell>
-      <TableCell>
-        <Select value={currentMapping} onValueChange={handleValueChange}>
-          <SelectTrigger className="h-7 text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {fields.map((f) => (
-              <SelectItem key={f.value} value={f.value} className="text-xs">
-                {f.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </TableCell>
-    </TableRow>
+    <Select value={row.currentMapping} onValueChange={handleChange}>
+      <SelectTrigger className="h-7 text-xs">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {fields.map((f) => (
+          <SelectItem key={f.value} value={f.value} className="text-xs">
+            {f.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }
 
@@ -112,6 +93,49 @@ export function CsvFieldMapper({
     onMappingChange({ ...fieldMappings, [index]: value });
   }, [fieldMappings, onMappingChange]);
 
+  const mappingRows: MappingRow[] = rawHeaders.map((header, i) => ({
+    header,
+    index: i,
+    previewVal: rawRows[0]?.[i],
+    currentMapping: fieldMappings[i] ?? "_skip",
+  }));
+
+  const columns: DataTableColumn<MappingRow>[] = [
+    {
+      key: "csvColumn",
+      header: "CSV Column",
+      headerClassName: "w-1/2",
+      cell: (row) => (
+        <span className="text-xs">
+          <span className="font-medium">{row.header || `(column ${row.index + 1})`}</span>
+          {row.previewVal && (
+            <span className="block text-[10px] text-muted-foreground truncate max-w-[160px]">
+              e.g. {row.previewVal}
+            </span>
+          )}
+        </span>
+      ),
+    },
+    {
+      key: "arrow",
+      header: "",
+      headerClassName: "w-8 text-center",
+      className: "text-center text-muted-foreground px-1",
+      cell: () => <ArrowRight className="h-3.5 w-3.5" />,
+    },
+    {
+      key: "mapsTo",
+      header: "Maps To CRM Field",
+      cell: (row) => (
+        <MappingSelectCell
+          row={row}
+          fields={resolvedFields}
+          onMappingChange={handleSelectChange}
+        />
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -131,30 +155,11 @@ export function CsvFieldMapper({
         incorrect or skip columns you don&apos;t need.
       </p>
 
-      <ScrollArea className="max-h-[320px] border rounded-lg">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="text-xs w-1/2">CSV Column</TableHead>
-              <TableHead className="text-xs w-8 text-center"></TableHead>
-              <TableHead className="text-xs">Maps To CRM Field</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rawHeaders.map((header, i) => (
-              <FieldMappingRow
-                key={i}
-                header={header}
-                index={i}
-                previewVal={rawRows[0]?.[i]}
-                currentMapping={fieldMappings[i] ?? "_skip"}
-                fields={resolvedFields}
-                onMappingChange={handleSelectChange}
-              />
-            ))}
-          </TableBody>
-        </Table>
-      </ScrollArea>
+      <DataTable
+        data={mappingRows}
+        columns={columns}
+        getRowKey={(row) => row.index}
+      />
 
       {!hasNameMapped && (
         <div className="flex items-center gap-2 p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">

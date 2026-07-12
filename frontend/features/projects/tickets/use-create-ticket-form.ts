@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCreateTicket, useAddAttachment, useProject } from "@/hooks/api";
@@ -42,6 +42,7 @@ export function useCreateTicketForm({ projectId, defaultStatus, onCreated }: Use
   const [createMore, setCreateMore] = useState(false);
   const titleRef = useRef<HTMLInputElement | null>(null);
   const queryClient = useQueryClient();
+  const pendingCycleDefaultRef = useRef(true);
 
   const { data: projectData } = useProject(projectId);
   const { data: cyclesRaw } = useCycles(projectId);
@@ -90,10 +91,22 @@ export function useCreateTicketForm({ projectId, defaultStatus, onCreated }: Use
     setProperties((prev) => ({ ...prev, ...patch }));
   }, []);
 
+  useEffect(() => {
+    setProperties((prev) => ({ ...prev, status: defaultStatusValue }));
+  }, [defaultStatusValue]);
+
+  useEffect(() => {
+    if (pendingCycleDefaultRef.current && activeCycle?.id != null) {
+      setProperties((prev) => (prev.cycleId === null ? { ...prev, cycleId: activeCycle.id } : prev));
+      pendingCycleDefaultRef.current = false;
+    }
+  }, [activeCycle?.id]);
+
   const resetForm = useCallback((preserveContext: boolean) => {
     form.reset({ title: "", type: "TASK", description: "" });
     setFiles([]);
     if (!preserveContext) {
+      pendingCycleDefaultRef.current = true;
       setProperties({
         status: defaultStatusValue,
         priority: null,

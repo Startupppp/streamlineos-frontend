@@ -4,9 +4,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Copy, RefreshCw, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Skeleton } from "@/components/ui/skeleton";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import {
@@ -15,7 +14,62 @@ import {
   useRetryWebhookEvent,
   usePaymentProviders,
   type PaymentEnvironment,
+  type PaymentWebhookEvent,
 } from "@/hooks/api/payments";
+
+function buildWebhookColumns(
+  retry: { isPending: boolean; mutate: (id: number, opts: { onError: (err: unknown) => void }) => void },
+): DataTableColumn<PaymentWebhookEvent>[] {
+  return [
+    {
+      key: "eventType",
+      header: "Event",
+      className: "text-[12px] font-mono",
+      cell: (row) => row.eventType,
+    },
+    {
+      key: "processingStatus",
+      header: "Status",
+      cell: (row) => (
+        <span
+          className={cn(
+            "text-[11px] font-medium",
+            row.processingStatus === "failed" ? "text-rose-600" : "text-emerald-600",
+          )}
+        >
+          {row.processingStatus}
+        </span>
+      ),
+    },
+    {
+      key: "receivedAt",
+      header: "Received",
+      className: "text-[11px] text-muted-foreground",
+      cell: (row) => new Date(row.receivedAt).toLocaleString(),
+    },
+    {
+      key: "actions",
+      header: "Action",
+      headerClassName: "text-right",
+      className: "text-right",
+      cell: (row) =>
+        row.processingStatus === "failed" ? (
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 text-xs gap-1"
+            onClick={() =>
+              retry.mutate(row.id, {
+                onError: (err) => toast.error(getErrorMessage(err)),
+              })
+            }
+          >
+            <RefreshCw className="h-3 w-3" /> Retry
+          </Button>
+        ) : null,
+    },
+  ];
+}
 
 export function WebhooksTab({ providerKey, environment }: { providerKey: string; environment: PaymentEnvironment }) {
   const { data: providers } = usePaymentProviders();
@@ -39,7 +93,8 @@ export function WebhooksTab({ providerKey, environment }: { providerKey: string;
     navigator.clipboard.writeText(url).then(() => toast.success("Copied"));
   }
 
-  const environmentEvents = (events ?? []).filter((e) => e.environment === environment);
+  const environmentEvents: PaymentWebhookEvent[] = (events ?? []).filter((e) => e.environment === environment);
+  const columns = buildWebhookColumns(retry);
 
   return (
     <div className="space-y-4">
@@ -76,56 +131,15 @@ export function WebhooksTab({ providerKey, environment }: { providerKey: string;
       <div>
         <p className="text-[13px] font-medium text-foreground mb-2">Recent events</p>
         {isLoading ? (
-          <div className="space-y-2">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-10 rounded-lg" />
-            ))}
-          </div>
+          <DataTableSkeleton rows={3} columns={4} />
         ) : environmentEvents.length === 0 ? (
           <EmptyState title="No webhook events yet" description="Events will appear here as they're received." compact />
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Event</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Received</TableHead>
-                <TableHead className="text-right">Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {environmentEvents.map((event) => (
-                <TableRow key={event.id}>
-                  <TableCell className="text-[12px] font-mono">{event.eventType}</TableCell>
-                  <TableCell>
-                    <span
-                      className={cn(
-                        "text-[11px] font-medium",
-                        event.processingStatus === "failed" ? "text-rose-600" : "text-emerald-600",
-                      )}
-                    >
-                      {event.processingStatus}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-[11px] text-muted-foreground">
-                    {new Date(event.receivedAt).toLocaleString()}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {event.processingStatus === "failed" && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-6 text-xs gap-1"
-                        onClick={() => retry.mutate(event.id, { onError: (err) => toast.error(getErrorMessage(err)) })}
-                      >
-                        <RefreshCw className="h-3 w-3" /> Retry
-                      </Button>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <DataTable
+            data={environmentEvents}
+            columns={columns}
+            getRowKey={(row) => row.id}
+          />
         )}
       </div>
     </div>

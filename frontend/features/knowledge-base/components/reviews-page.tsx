@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   Select,
   SelectContent,
@@ -240,116 +240,14 @@ function RejectDialog({ review, onClose }: RejectDialogProps) {
   );
 }
 
-type ReviewRowProps = {
-  review: KbPageReview;
-  canManage: boolean;
-};
-
-function ReviewRow({ review, canManage }: ReviewRowProps) {
-  const [approveOpen, setApproveOpen] = useState(false);
-  const [rejectOpen, setRejectOpen] = useState(false);
-
-  const handleOpenApprove = useCallback(() => setApproveOpen(true), []);
-  const handleCloseApprove = useCallback(() => setApproveOpen(false), []);
-  const handleOpenReject = useCallback(() => setRejectOpen(true), []);
-  const handleCloseReject = useCallback(() => setRejectOpen(false), []);
-
-  const overdue = isOverdue(review.dueAt, review.status);
-
-  return (
-    <>
-      <tr className="border-b border-border/60 hover:bg-muted/30 transition-colors">
-        <td className="px-3 py-2.5">
-          <Link
-            href={pageHref(review.pageId)}
-            className="text-sm font-medium text-foreground hover:text-accent transition-colors line-clamp-1"
-          >
-            {review.pageTitle || "Untitled"}
-          </Link>
-        </td>
-        <td className="px-3 py-2.5 hidden sm:table-cell">
-          <TypeBadge type={review.type} />
-        </td>
-        <td className="px-3 py-2.5">
-          <StatusBadge status={review.status} />
-        </td>
-        <td className="px-3 py-2.5 hidden md:table-cell">
-          <span className="text-sm text-muted-foreground">
-            {review.reviewerName ?? "—"}
-          </span>
-        </td>
-        <td className="px-3 py-2.5 hidden lg:table-cell">
-          <span
-            className={cn(
-              "text-sm tabular-nums",
-              overdue ? "text-red-600 font-medium" : "text-muted-foreground",
-            )}
-          >
-            {review.dueAt ? formatDate(review.dueAt) : "—"}
-            {overdue && " (overdue)"}
-          </span>
-        </td>
-        <td className="px-3 py-2.5 hidden lg:table-cell">
-          <span className="text-sm text-muted-foreground">
-            {review.requestedByName ?? "—"}
-          </span>
-        </td>
-        <td className="px-3 py-2.5">
-          {canManage && review.status === "pending" && (
-            <div className="flex items-center gap-1.5">
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-7 text-xs text-emerald-700 border-emerald-200 hover:bg-emerald-50"
-                onClick={handleOpenApprove}
-              >
-                Approve
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-7 text-xs text-red-700 border-red-200 hover:bg-red-50"
-                onClick={handleOpenReject}
-              >
-                Reject
-              </Button>
-            </div>
-          )}
-        </td>
-      </tr>
-      {approveOpen && (
-        <ApproveDialog review={review} onClose={handleCloseApprove} />
-      )}
-      {rejectOpen && (
-        <RejectDialog review={review} onClose={handleCloseReject} />
-      )}
-    </>
-  );
-}
-
-function TableSkeleton() {
-  return (
-    <div className="rounded-lg border border-border bg-card overflow-hidden">
-      <div className="divide-y divide-border/60">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="flex items-center gap-3 px-3 py-2.5">
-            <Skeleton className="h-4 w-48" />
-            <Skeleton className="h-4 w-16 hidden sm:block" />
-            <Skeleton className="h-4 w-16" />
-            <Skeleton className="h-4 w-24 hidden md:block ml-auto" />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 export default function ReviewsPage() {
   const canView = useCan("kb:reviews:view");
   const canManage = useCan("kb:reviews:manage");
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
+  const [approveTarget, setApproveTarget] = useState<KbPageReview | null>(null);
+  const [rejectTarget, setRejectTarget] = useState<KbPageReview | null>(null);
 
   const params = {
     status: statusFilter === "all" ? undefined : statusFilter,
@@ -365,6 +263,111 @@ export default function ReviewsPage() {
   const handleTypeChange = useCallback((val: string) => {
     setTypeFilter(val as TypeFilter);
   }, []);
+
+  const handleCloseApprove = useCallback(() => setApproveTarget(null), []);
+  const handleCloseReject = useCallback(() => setRejectTarget(null), []);
+
+  function makeApproveHandler(review: KbPageReview) {
+    return function handleApprove() { setApproveTarget(review); };
+  }
+
+  function makeRejectHandler(review: KbPageReview) {
+    return function handleReject() { setRejectTarget(review); };
+  }
+
+  const columns = useMemo<DataTableColumn<KbPageReview>[]>(() => [
+    {
+      key: "page",
+      header: "Page",
+      sortable: true,
+      sortValue: (r) => r.pageTitle,
+      cell: (review) => (
+        <Link
+          href={pageHref(review.pageId)}
+          className="text-sm font-medium text-foreground hover:text-accent transition-colors line-clamp-1"
+        >
+          {review.pageTitle || "Untitled"}
+        </Link>
+      ),
+    },
+    {
+      key: "type",
+      header: "Type",
+      headerClassName: "hidden sm:table-cell",
+      className: "hidden sm:table-cell",
+      cell: (review) => <TypeBadge type={review.type} />,
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (review) => <StatusBadge status={review.status} />,
+    },
+    {
+      key: "reviewer",
+      header: "Reviewer",
+      headerClassName: "hidden md:table-cell",
+      className: "hidden md:table-cell",
+      cell: (review) => (
+        <span className="text-sm text-muted-foreground">{review.reviewerName ?? "—"}</span>
+      ),
+    },
+    {
+      key: "dueDate",
+      header: "Due date",
+      headerClassName: "hidden lg:table-cell",
+      className: "hidden lg:table-cell",
+      cell: (review) => {
+        const overdue = isOverdue(review.dueAt, review.status);
+        return (
+          <span
+            className={cn(
+              "text-sm tabular-nums",
+              overdue ? "text-red-600 font-medium" : "text-muted-foreground",
+            )}
+          >
+            {review.dueAt ? formatDate(review.dueAt) : "—"}
+            {overdue && " (overdue)"}
+          </span>
+        );
+      },
+    },
+    {
+      key: "requestedBy",
+      header: "Requested by",
+      headerClassName: "hidden lg:table-cell",
+      className: "hidden lg:table-cell",
+      cell: (review) => (
+        <span className="text-sm text-muted-foreground">{review.requestedByName ?? "—"}</span>
+      ),
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      cell: (review) => {
+        if (!canManage || review.status !== "pending") return null;
+        return (
+          <div className="flex items-center gap-1.5">
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs text-emerald-700 border-emerald-200 hover:bg-emerald-50"
+              onClick={makeApproveHandler(review)}
+            >
+              Approve
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs text-red-700 border-red-200 hover:bg-red-50"
+              onClick={makeRejectHandler(review)}
+            >
+              Reject
+            </Button>
+          </div>
+        );
+      },
+    },
+  ], [canManage]);
 
   if (!canView) {
     return (
@@ -407,75 +410,48 @@ export default function ReviewsPage() {
   );
 
   return (
-    <PageWrapper
-      title="Reviews"
-      badge={reviews.length > 0 ? String(reviews.length) : undefined}
-      filters={filters}
-    >
-      {isLoading ? (
-        <TableSkeleton />
-      ) : isError ? (
-        <EmptyState
-          illustration={
-            <KbAlertCircleIcon className="h-8 w-8 text-muted-foreground/40" />
-          }
-          title="Failed to load reviews"
-          description="An error occurred while fetching reviews."
-        />
-      ) : reviews.length === 0 ? (
-        <EmptyState
-          illustration={
-            <KbClipboardCheckIcon className="h-8 w-8 text-muted-foreground/40" />
-          }
-          title="No reviews"
-          description={
-            statusFilter !== "all" || typeFilter !== "all"
-              ? "No reviews match the current filters."
-              : "No pages are currently under review."
-          }
-        />
-      ) : (
-        <div className="rounded-lg border border-border bg-card overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border bg-muted/30">
-                  <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">
-                    Page
-                  </th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground hidden sm:table-cell">
-                    Type
-                  </th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">
-                    Status
-                  </th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground hidden md:table-cell">
-                    Reviewer
-                  </th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground hidden lg:table-cell">
-                    Due date
-                  </th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground hidden lg:table-cell">
-                    Requested by
-                  </th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {reviews.map((review) => (
-                  <ReviewRow
-                    key={review.id}
-                    review={review}
-                    canManage={canManage}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+    <>
+      {approveTarget && (
+        <ApproveDialog review={approveTarget} onClose={handleCloseApprove} />
       )}
-    </PageWrapper>
+      {rejectTarget && (
+        <RejectDialog review={rejectTarget} onClose={handleCloseReject} />
+      )}
+      <PageWrapper
+        title="Reviews"
+        badge={reviews.length > 0 ? String(reviews.length) : undefined}
+        filters={filters}
+      >
+        {isError ? (
+          <EmptyState
+            illustration={
+              <KbAlertCircleIcon className="h-8 w-8 text-muted-foreground/40" />
+            }
+            title="Failed to load reviews"
+            description="An error occurred while fetching reviews."
+          />
+        ) : (
+          <DataTable
+            data={reviews}
+            columns={columns}
+            getRowKey={(review) => review.id}
+            isLoading={isLoading}
+            emptyState={
+              <EmptyState
+                illustration={
+                  <KbClipboardCheckIcon className="h-8 w-8 text-muted-foreground/40" />
+                }
+                title="No reviews"
+                description={
+                  statusFilter !== "all" || typeFilter !== "all"
+                    ? "No reviews match the current filters."
+                    : "No pages are currently under review."
+                }
+              />
+            }
+          />
+        )}
+      </PageWrapper>
+    </>
   );
 }

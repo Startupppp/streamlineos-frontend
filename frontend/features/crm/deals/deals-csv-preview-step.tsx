@@ -1,14 +1,7 @@
 "use client";
 
 import { FileText, ChevronLeft, AlertCircle, CheckCircle2 } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -25,6 +18,10 @@ export interface DealsPreviewStepProps {
   onClose: () => void;
 }
 
+interface ParsedDealWithIdx extends ParsedDeal {
+  _idx: number;
+}
+
 export function DealsPreviewStep({
   fileName,
   parsed,
@@ -35,6 +32,42 @@ export function DealsPreviewStep({
   onImport,
   onClose,
 }: DealsPreviewStepProps) {
+  const indexedParsed: ParsedDealWithIdx[] = parsed.slice(0, 20).map((d, i) => ({ ...d, _idx: i }));
+
+  const columns: DataTableColumn<ParsedDealWithIdx>[] = [
+    {
+      key: "name",
+      header: "Name",
+      cell: (row) => <span className="text-xs font-medium">{row.name}</span>,
+    },
+    {
+      key: "value",
+      header: "Value",
+      cell: (row) => (
+        <span className="text-xs text-muted-foreground">
+          {row.value !== undefined ? `₹${row.value.toLocaleString()}` : "—"}
+        </span>
+      ),
+    },
+    {
+      key: "stage",
+      header: "Stage",
+      cell: (row) => row.stage ? (
+        <Badge variant="outline" className="text-[10px]">{row.stage}</Badge>
+      ) : "—",
+    },
+    {
+      key: "ownerEmail",
+      header: "Owner Email",
+      cell: (row) => <span className="text-xs text-muted-foreground">{row.ownerEmail || "—"}</span>,
+    },
+    {
+      key: "expectedCloseDate",
+      header: "Close Date",
+      cell: (row) => <span className="text-xs text-muted-foreground">{row.expectedCloseDate || "—"}</span>,
+    },
+  ];
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -73,53 +106,18 @@ export function DealsPreviewStep({
       )}
 
       {parsed.length > 0 && (
-        <div className="border rounded-lg overflow-hidden max-h-[260px] overflow-y-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="text-xs">Name</TableHead>
-                <TableHead className="text-xs">Value</TableHead>
-                <TableHead className="text-xs">Stage</TableHead>
-                <TableHead className="text-xs">Owner Email</TableHead>
-                <TableHead className="text-xs">Close Date</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {parsed.slice(0, 20).map((deal, i) => (
-                <TableRow key={i}>
-                  <TableCell className="text-xs font-medium">
-                    {deal.name}
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {deal.value !== undefined
-                      ? `₹${deal.value.toLocaleString()}`
-                      : "—"}
-                  </TableCell>
-                  <TableCell className="text-xs">
-                    {deal.stage ? (
-                      <Badge variant="outline" className="text-[10px]">
-                        {deal.stage}
-                      </Badge>
-                    ) : (
-                      "—"
-                    )}
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {deal.ownerEmail || "—"}
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {deal.expectedCloseDate || "—"}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+        <>
+          <DataTable
+            data={indexedParsed}
+            columns={columns}
+            getRowKey={(row) => row._idx}
+          />
           {parsed.length > 20 && (
             <p className="text-xs text-center text-muted-foreground py-2">
               ...and {parsed.length - 20} more
             </p>
           )}
-        </div>
+        </>
       )}
 
       {importResult ? (
