@@ -38,7 +38,7 @@ export function AllWorkPage() {
   } = useAllWorkFilters();
 
   const { data: allWorkData, isLoading, isError, refetch } = useAllWork(filters);
-  const { data: projectsData } = useProjects({ limit: 100 } as Record<string, unknown>);
+  const { data: projectsData } = useProjects({ limit: 100 });
 
   const tickets = allWorkData?.data ?? [];
   const total = allWorkData?.total ?? 0;
@@ -59,9 +59,9 @@ export function AllWorkPage() {
       allProjects
         .flatMap((p) => p.members)
         .filter((m, i, arr) => arr.findIndex((x) => x.id === m.id) === i)
-        .map((m) => ({
+        .map((m): { id: string; name: string | null; firstName: string | null; lastName: string | null; image: string | null } => ({
           id: m.id,
-          name: null as string | null,
+          name: null,
           firstName: m.firstName,
           lastName: m.lastName,
           image: m.image,

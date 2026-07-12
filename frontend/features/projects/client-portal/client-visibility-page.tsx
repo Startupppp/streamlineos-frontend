@@ -70,8 +70,10 @@ export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
   const ticketCount = data?.tickets.length ?? 0;
   const milestoneCount = data?.milestones.length ?? 0;
 
+  const VISIBILITY_TABS = ["tickets", "milestones"] as const;
   function handleTabChange(value: string) {
-    setActiveTab(value as VisibilityTab);
+    const found = VISIBILITY_TABS.find((t) => t === value);
+    if (found) setActiveTab(found);
   }
 
   return (

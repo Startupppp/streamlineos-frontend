@@ -136,11 +136,15 @@ export default function GoalsPage() {
   }
 
   function handleLevelFilterChange(v: string) {
-    setLevelFilter(v as GoalLevel | "all");
+    if (v === "all") { setLevelFilter("all"); return; }
+    const found = LEVEL_OPTIONS.find((o) => o.value === v);
+    if (found) setLevelFilter(found.value);
   }
 
   function handleStatusFilterChange(v: string) {
-    setStatusFilter(v as GoalStatus | "all");
+    if (v === "all") { setStatusFilter("all"); return; }
+    const found = STATUS_OPTIONS.find((o) => o.value === v);
+    if (found) setStatusFilter(found.value);
   }
 
   function handleRetry() {

@@ -57,6 +57,8 @@ const TAB_CONFIG: Record<WorkTab, { label: string }> = {
   recent: { label: "Recent" },
 };
 
+const WORK_TABS: readonly WorkTab[] = ["assigned", "created", "subscribed", "recent"];
+
 function getDueBucket(item: MyWorkItem): DueBucket {
   if (!item.dueDate) return "none";
   try {
@@ -292,7 +294,7 @@ export function MyWorkPage() {
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="mb-4">
-          {(Object.keys(TAB_CONFIG) as WorkTab[]).map((tab) => (
+          {WORK_TABS.map((tab) => (
             <TabsTrigger key={tab} value={tab}>
               {TAB_CONFIG[tab].label}
             </TabsTrigger>

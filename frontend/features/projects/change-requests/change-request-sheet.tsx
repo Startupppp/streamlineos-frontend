@@ -95,7 +95,7 @@ export function ChangeRequestSheet({ projectId, open, onOpenChange, editCr }: Ch
       title: values.title,
       description: values.description || undefined,
       impact: values.impact || undefined,
-      status: (values.status as ChangeRequestStatus) || undefined,
+      status: CR_STATUSES.find((s) => s === values.status),
       estimateMinutes,
       budgetImpactCents,
       timelineImpactDays,

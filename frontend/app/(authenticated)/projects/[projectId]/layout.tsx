@@ -22,12 +22,16 @@ export default async function ProjectLayout({
   } catch (err) {
     if (isAxiosError(err)) {
       const status = err.response?.status;
-      const body = err.response?.data as Record<string, unknown> | undefined;
+      const rawData: unknown = err.response?.data;
+      const body = rawData !== null && typeof rawData === "object"
+        ? (rawData as Record<string, unknown>)
+        : undefined;
       const code = typeof body?.code === "string" ? body.code : undefined;
-      const reason =
-        typeof (body?.details as Record<string, unknown> | undefined)?.reason === "string"
-          ? (body?.details as Record<string, unknown>).reason
-          : undefined;
+      const detailsRaw = body?.details;
+      const details = detailsRaw !== null && typeof detailsRaw === "object"
+        ? (detailsRaw as Record<string, unknown>)
+        : undefined;
+      const reason = typeof details?.reason === "string" ? details.reason : undefined;
       if (status === 404 || code === "PROJECTS_NOT_FOUND") {
         return notFound();
       }

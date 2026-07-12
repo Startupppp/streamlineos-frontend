@@ -51,6 +51,11 @@ export function FormBuilder({ form, onSave, isPending, readOnly = false }: FormB
     setDescription(e.target.value);
   }
 
+  function handleTypeChange(v: string) {
+    const found = FORM_TYPES.find((t) => t === v);
+    if (found) setType(found);
+  }
+
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -68,7 +73,7 @@ export function FormBuilder({ form, onSave, isPending, readOnly = false }: FormB
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs">Type</Label>
-          <Select value={type} onValueChange={(v) => setType(v as FormType)} disabled={readOnly}>
+          <Select value={type} onValueChange={handleTypeChange} disabled={readOnly}>
             <SelectTrigger className="h-8 text-sm">
               <SelectValue />
             </SelectTrigger>

@@ -113,7 +113,8 @@ export function FormBuilderTab({ projectId, formId }: FormBuilderTabProps) {
   }
 
   function handleTypeChange(v: string) {
-    setType(v as FormType);
+    const found = FORM_TYPES.find((t) => t === v);
+    if (found) setType(found);
   }
 
   function handleActiveChange(v: boolean) {

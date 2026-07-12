@@ -22,6 +22,9 @@ import { ErrorState } from "@/components/shared/error-state";
 type StatusFilter = "ALL" | "ACTIVE" | "COMPLETED" | "ARCHIVED";
 type ViewMode = "grid" | "list";
 
+const STATUS_FILTERS: readonly StatusFilter[] = ["ALL", "ACTIVE", "COMPLETED", "ARCHIVED"];
+const VIEW_MODES: readonly ViewMode[] = ["grid", "list"];
+
 export default function ProjectsPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -49,9 +52,9 @@ export default function ProjectsPage() {
   );
 
   const search = searchParams.get("q") || "";
-  const status = (searchParams.get("status") as StatusFilter) || "ALL";
+  const status = STATUS_FILTERS.find((s) => s === searchParams.get("status")) ?? "ALL";
   const page = Number(searchParams.get("page")) || 1;
-  const viewMode = (searchParams.get("view") as ViewMode) || "list";
+  const viewMode = VIEW_MODES.find((v) => v === searchParams.get("view")) ?? "list";
 
   const debouncedSearch = useDebouncedValue(search, 300);
 

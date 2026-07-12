@@ -115,6 +115,11 @@ const FieldRow = memo(function FieldRow({
 }: FieldRowProps) {
   const meta = FIELD_TYPE_META[field.type];
 
+  function handleTypeChange(v: string) {
+    const found = FIELD_TYPES.find((t) => t === v);
+    if (found) onTypeChange(index, found);
+  }
+
   return (
     <div className="rounded-lg border bg-card p-3 space-y-2">
       <div className="flex items-center gap-2">
@@ -138,7 +143,7 @@ const FieldRow = memo(function FieldRow({
           placeholder="Field label"
           className="h-8 text-sm flex-1 min-w-0"
         />
-        <Select value={field.type} onValueChange={(v) => onTypeChange(index, v as FormFieldType)}>
+        <Select value={field.type} onValueChange={handleTypeChange}>
           <SelectTrigger className="h-8 w-36 text-xs shrink-0">
             <SelectValue />
           </SelectTrigger>

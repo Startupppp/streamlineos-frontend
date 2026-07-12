@@ -244,6 +244,18 @@ export default function AutomationsPage({ params }: PageProps) {
   function makeRemoveActionHandler(idx: number) {
     return () => removeAction(idx);
   }
+  function makeConditionOperatorHandler(conditionIdx: number) {
+    return (v: string) => {
+      const found = CONDITION_OPERATORS.find((o) => o === v);
+      if (found) form.setValue(`conditions.${conditionIdx}.operator`, found);
+    };
+  }
+  function makeActionTypeHandler(actionIdx: number) {
+    return (v: string) => {
+      const found = ACTION_TYPES.find((a) => a.value === v);
+      if (found) form.setValue(`actions.${actionIdx}.type`, found.value);
+    };
+  }
 
   const handleAppendCondition = useCallback(() => {
     appendCondition({ field: "status", operator: "equals", value: "" });
@@ -381,7 +393,7 @@ export default function AutomationsPage({ params }: PageProps) {
                           ))}
                         </SelectContent>
                       </Select>
-                      <Select value={form.watch(`conditions.${idx}.operator`)} onValueChange={v => form.setValue(`conditions.${idx}.operator`, v as AutomationCondition["operator"])}>
+                      <Select value={form.watch(`conditions.${idx}.operator`)} onValueChange={makeConditionOperatorHandler(idx)}>
                         <SelectTrigger className={cn(FIELD_CLASS, "w-28")}><SelectValue /></SelectTrigger>
                         <SelectContent>
                           {CONDITION_OPERATORS.map(o => (
@@ -415,7 +427,7 @@ export default function AutomationsPage({ params }: PageProps) {
                   </div>
                   {actionFields.map((f, idx) => (
                     <div key={f.id} className="flex items-center gap-1.5 p-2 rounded-lg border border-border bg-muted/40">
-                      <Select value={form.watch(`actions.${idx}.type`)} onValueChange={v => form.setValue(`actions.${idx}.type`, v as AutomationAction["type"])}>
+                      <Select value={form.watch(`actions.${idx}.type`)} onValueChange={makeActionTypeHandler(idx)}>
                         <SelectTrigger className={cn(FIELD_CLASS, "flex-1")}><SelectValue /></SelectTrigger>
                         <SelectContent>
                           {ACTION_TYPES.map(a => (
