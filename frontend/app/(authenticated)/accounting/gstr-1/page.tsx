@@ -248,7 +248,7 @@ export default function Gstr1Page() {
         ) : query.error ? (
           <ErrorState
             title="Failed to load GSTR-1"
-            description={query.error.message}
+            description={getErrorMessage(query.error)}
             onRetry={handleRetry}
           />
         ) : !report || !hasAnyRows ? (

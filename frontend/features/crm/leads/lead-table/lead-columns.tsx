@@ -150,21 +150,23 @@ export function useLeadCellRenderer({
             >
               <SelectTrigger className="h-6 text-[10px] w-[100px]"><SelectValue /></SelectTrigger>
               <SelectContent>
-                {STATUSES.map((s) => (
-                  <SelectItem key={s} value={s} className="text-[11px]">{s}</SelectItem>
+                {statusOptions.map((s) => (
+                  <SelectItem key={s.id} value={s.key} className="text-[11px]">{s.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           );
         }
         return (
-          <Badge
-            variant="outline"
-            className={cn("text-[9px] px-1.5 py-0 h-5 cursor-pointer border font-medium", STATUS_COLORS[lead.status])}
+          <div
+            className="cursor-pointer"
             onDoubleClick={() => setEditingCell({ leadId: lead.id, column: "status" })}
           >
-            {lead.status}
-          </Badge>
+            <CrmOptionBadge
+              option={resolveOption(statusOptions, lead.status)}
+              size="table"
+            />
+          </div>
         );
 
       case "priority":

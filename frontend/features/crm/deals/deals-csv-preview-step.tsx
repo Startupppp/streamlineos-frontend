@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LoadingButton } from "@/components/ui/loading-button";
-import type { ParsedDeal } from "./deals-csv-import-dialog";
+import type { ParsedDeal } from "./deals-csv-mapping-step";
 
 export interface DealsPreviewStepProps {
   fileName: string;

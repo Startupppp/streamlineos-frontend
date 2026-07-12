@@ -142,7 +142,17 @@ export function RecurringBillFormSheet({
       submitLabel={isEdit ? "Save changes" : "Create"}
       resetOnOpen
     >
-      {(form) => (
+      {(form) => {
+        function handleFrequencyChange(v: string): void {
+          const FREQUENCY_VALUES = ["DAILY", "WEEKLY", "MONTHLY", "QUARTERLY", "YEARLY"] as const;
+          type FrequencyValue = (typeof FREQUENCY_VALUES)[number];
+          function isFrequency(val: string): val is FrequencyValue {
+            return (FREQUENCY_VALUES as ReadonlyArray<string>).includes(val);
+          }
+          if (isFrequency(v)) form.setValue("frequency", v, { shouldValidate: true });
+        }
+
+        return (
         <div className="space-y-4 px-6 py-4">
           <div className="space-y-1.5">
             <Label htmlFor="name" className="text-xs font-medium">

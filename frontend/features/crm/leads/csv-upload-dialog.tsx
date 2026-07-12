@@ -427,42 +427,13 @@ export function CsvUploadDialog({ onSuccess }: { onSuccess?: () => void }) {
         </div>
 
         {step === "upload" && !isParsing && (
-          <div className="space-y-4">
-            <div
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={handleDrop}
-              className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-blue-500/50 transition-colors"
-            >
-              <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-              <p className="text-sm font-medium mb-1">Drop your file here</p>
-              <p className="text-xs text-muted-foreground mb-3">
-                Supports .csv, .xlsx, and .xls
-              </p>
-              <input
-                type="file"
-                accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
-                className="hidden"
-                id="lead-file-upload"
-                aria-label="Upload leads file"
-                onChange={handleFileInputChange}
-              />
-              <Button variant="outline" size="sm" onClick={handleBrowseClick}>
-                <FileText className="h-4 w-4 mr-2" />
-                Browse Files
-              </Button>
-            </div>
-            <div className="flex items-center justify-between px-1">
-              <p className="text-xs text-muted-foreground">
-                Required: <code className="text-foreground">name</code>.
-                Optional: email, phone, company, source, city, designation,
-                priority, notes
-              </p>
-              <Button variant="ghost" size="sm" onClick={downloadTemplate}>
-                <Download className="h-3.5 w-3.5 mr-1" />
-                Template
-              </Button>
-            </div>
-          </div>
+          <CsvUploadStepUpload
+            onBrowseClick={handleBrowseClick}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={handleDrop}
+            onFileInputChange={handleFileInputChange}
+            onDownloadTemplate={downloadTemplate}
+          />
         )}
 
         {isParsing && (
