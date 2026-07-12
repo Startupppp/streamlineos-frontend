@@ -8,8 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cn } from "@/lib/utils";
 import { useCrmOptions } from "@/hooks/api/crm";
 
-const FALLBACK_STATUSES = ["NEW", "CONTACTED", "INTERESTED", "QUALIFIED", "CONVERTED", "LOST"] as const;
-
 interface LeadsToolbarProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
@@ -34,9 +32,9 @@ export function LeadsToolbar({
   const { data: priorityOptions = [] } = useCrmOptions("priority");
   const { data: sourceOptions = [] } = useCrmOptions("source");
 
-  const statuses = statusOptions.length > 0 ? statusOptions : FALLBACK_STATUSES.map((s) => ({ key: s, label: s }));
-  const priorities = priorityOptions.length > 0 ? priorityOptions : [];
-  const sources = sourceOptions.length > 0 ? sourceOptions : [];
+  const statuses = statusOptions;
+  const priorities = priorityOptions;
+  const sources = sourceOptions;
 
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => onSearchChange(e.target.value), [onSearchChange]);
   const handleViewTable = useCallback(() => onViewChange("table"), [onViewChange]);

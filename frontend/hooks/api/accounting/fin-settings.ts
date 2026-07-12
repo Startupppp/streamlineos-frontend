@@ -6,8 +6,10 @@ import { queryKeys } from "@/lib/query-keys";
 import type {
   AccountingSettings,
   NumberSequence,
+  PaymentTerm,
   SetupStatus,
   SystemAccountMapping,
+  UpdatePaymentTermsInput,
   UpdateSequenceInput,
   UpdateSettingsInput,
 } from "@/types/accounting/fin-settings";
@@ -18,6 +20,7 @@ const finSettingsKeys = {
   setupStatus: () => [...queryKeys.accounting.all, "fin-settings", "setup-status"] as const,
   sequences: () => [...queryKeys.accounting.all, "fin-settings", "sequences"] as const,
   systemAccounts: () => [...queryKeys.accounting.all, "fin-settings", "system-accounts"] as const,
+  paymentTerms: () => [...queryKeys.accounting.all, "fin-settings", "payment-terms"] as const,
 };
 
 export function useAccountingSettings() {
@@ -35,7 +38,7 @@ export function useUpdateAccountingSettings() {
     mutationFn: (data) =>
       apiClient.patch<AccountingSettings>("/accounting/settings", data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: finSettingsKeys.all });
+      void queryClient.invalidateQueries({ queryKey: finSettingsKeys.all });
     },
   });
 }
@@ -66,7 +69,7 @@ export function useUpdateNumberSequence(entityType: string) {
         data,
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: finSettingsKeys.all });
+      void queryClient.invalidateQueries({ queryKey: finSettingsKeys.all });
     },
   });
 }
@@ -90,7 +93,19 @@ export function useUpsertSystemAccount(purpose: string) {
         data,
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: finSettingsKeys.all });
+      void queryClient.invalidateQueries({ queryKey: finSettingsKeys.all });
+    },
+  });
+}
+
+export function useUpdatePaymentTerms() {
+  const queryClient = useQueryClient();
+  return useMutation<{ terms: PaymentTerm[] }, Error, UpdatePaymentTermsInput>({
+    mutationKey: ["accounting", "settings", "payment-terms", "update"],
+    mutationFn: (data) =>
+      apiClient.patch<{ terms: PaymentTerm[] }>("/accounting/settings/payment-terms", data),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: finSettingsKeys.all });
     },
   });
 }

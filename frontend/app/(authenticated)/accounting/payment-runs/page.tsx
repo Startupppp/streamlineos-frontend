@@ -32,6 +32,12 @@ const STATUS_OPTIONS: Array<{ value: RunStatusFilter; label: string }> = [
   { value: "CANCELLED", label: "Cancelled" },
 ];
 
+const RUN_STATUS_FILTER_VALUES = ["all", "DRAFT", "APPROVED", "COMPLETED", "CANCELLED"] as const;
+
+function isRunStatusFilter(v: string): v is RunStatusFilter {
+  return (RUN_STATUS_FILTER_VALUES as ReadonlyArray<string>).includes(v);
+}
+
 function formatDate(value: string | null | undefined): string {
   if (!value) return "—";
   const d = new Date(value);
@@ -112,7 +118,7 @@ export default function PaymentRunsPage() {
   }
 
   function handleStatusFilterChange(value: string): void {
-    setStatusFilter(value as RunStatusFilter);
+    if (isRunStatusFilter(value)) setStatusFilter(value);
   }
 
   function handleRowClick(run: PaymentRunSummary): void {

@@ -2,12 +2,13 @@
 
 import { useReducer, useCallback, useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, ChevronLeft, History, FlaskConical, Save } from "lucide-react";
+import { Plus, ChevronLeft, History, FlaskConical } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion, LayoutGroup } from "framer-motion";
 import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -25,9 +26,11 @@ import {
 import {
   builderReducer,
   initialBuilderState,
+  serializeToGraph,
   type BuilderNode,
 } from "./builder-types";
 import { TriggerCard, ConditionRowCard, ActionNodeCard, WaitCard } from "./node-cards";
+import { BranchNodeCard, ExitNodeCard } from "./branch-exit-cards";
 import { RunHistoryDrawer } from "./run-history-drawer";
 
 interface AutomationBuilderProps {
@@ -106,6 +109,14 @@ export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
   const handleUpdateWaitHours = useCallback((nodeId: string, hours: number) => dispatch({ type: "UPDATE_NODE_WAIT_HOURS", nodeId, hours }), []);
   const handleRemoveNode = useCallback((nodeId: string) => dispatch({ type: "REMOVE_NODE", nodeId }), []);
 
+  const handleAddBranchBranch = useCallback((nodeId: string) => dispatch({ type: "ADD_BRANCH_BRANCH", nodeId }), []);
+  const handleUpdateBranchCondition = useCallback((nodeId: string, branchIndex: number, field: "field" | "operator" | "value", val: string) => {
+    dispatch({ type: "UPDATE_BRANCH_CONDITION", nodeId, branchIndex, field, value: val });
+  }, []);
+  const handleRemoveBranchBranch = useCallback((nodeId: string, branchIndex: number) => dispatch({ type: "REMOVE_BRANCH_BRANCH", nodeId, branchIndex }), []);
+  const handleAddBranchNode = useCallback(() => dispatch({ type: "ADD_NODE", nodeType: "branch" }), []);
+  const handleAddExitNode = useCallback(() => dispatch({ type: "ADD_NODE", nodeType: "exit" }), []);
+
   const handleDragEnd = useCallback((result: DropResult) => {
     if (!result.destination) return;
     const reordered = Array.from(state.nodes);
@@ -138,7 +149,7 @@ export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
       lastRunAt: null,
       version: 1,
       isDraft: false,
-      graph: null,
+      graph: serializeToGraph(state.nodes),
       cooldownMinutes: 0,
       createdAt: null,
     };
@@ -232,10 +243,9 @@ export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
                 History
               </Button>
             )}
-            <Button size="sm" className="h-8 text-xs" onClick={handleSave} disabled={isPending}>
-              <Save className="h-3.5 w-3.5 mr-1.5" />
-              {isPending ? "Saving..." : "Save"}
-            </Button>
+            <LoadingButton size="sm" className="h-8 text-xs" onClick={handleSave} isPending={isPending} loadingText="Saving...">
+              Save
+            </LoadingButton>
           </div>
         }
       >
@@ -325,6 +335,21 @@ export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
                                         onChangeHours={(h) => handleUpdateWaitHours(node.id, h)}
                                         onRemove={() => handleRemoveNode(node.id)}
                                       />
+                                    ) : node.nodeType === "branch" ? (
+                                      <BranchNodeCard
+                                        node={node}
+                                        dragHandleProps={draggableProvided.dragHandleProps ?? undefined}
+                                        onAddBranch={handleAddBranchBranch}
+                                        onUpdateBranchCondition={handleUpdateBranchCondition}
+                                        onRemoveBranch={handleRemoveBranchBranch}
+                                        onRemoveNode={handleRemoveNode}
+                                      />
+                                    ) : node.nodeType === "exit" ? (
+                                      <ExitNodeCard
+                                        nodeId={node.id}
+                                        dragHandleProps={draggableProvided.dragHandleProps ?? undefined}
+                                        onRemove={handleRemoveNode}
+                                      />
                                     ) : (
                                       <ActionNodeCard
                                         node={node}
@@ -347,7 +372,7 @@ export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
                   </DragDropContext>
                 </motion.div>
 
-                <motion.div variants={itemVariants} className="flex gap-2">
+                <motion.div variants={itemVariants} className="flex gap-2 flex-wrap">
                   <Button
                     variant="outline"
                     size="sm"
@@ -363,6 +388,22 @@ export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
                     onClick={handleAddWaitNode}
                   >
                     <Plus className="h-3 w-3 mr-1" /> Wait
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs border-dashed border-violet-300 text-violet-700 hover:bg-violet-50"
+                    onClick={handleAddBranchNode}
+                  >
+                    <Plus className="h-3 w-3 mr-1" /> Branch
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs border-dashed border-red-300 text-red-600 hover:bg-red-50"
+                    onClick={handleAddExitNode}
+                  >
+                    <Plus className="h-3 w-3 mr-1" /> Exit
                   </Button>
                 </motion.div>
               </motion.div>

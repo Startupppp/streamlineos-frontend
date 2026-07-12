@@ -9,6 +9,17 @@ export type SequenceEntityType =
   | "payment"
   | "asset";
 
+export interface PaymentTerm {
+  key: string;
+  label: string;
+  days: number;
+  isDefault?: boolean;
+}
+
+export interface UpdatePaymentTermsInput {
+  terms: PaymentTerm[];
+}
+
 export interface AccountingSettings {
   id: number;
   orgId: string;
@@ -17,6 +28,7 @@ export interface AccountingSettings {
   accountingBasis: AccountingBasis;
   taxRegistration: Record<string, unknown> | null;
   coaTemplate: string | null;
+  paymentTerms?: PaymentTerm[];
   createdAt: string;
   updatedAt: string;
 }

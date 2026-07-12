@@ -34,6 +34,7 @@ import {
   SystemAccountsSection,
   PoliciesSection,
   ExchangeRatesSection,
+  PaymentTermsSection,
   QuickLinks,
 } from "@/features/accounting/settings/fin-settings-sections";
 
@@ -134,6 +135,7 @@ export default function FinanceSettingsPage() {
   const systemAccounts = systemAccountsQuery.data?.items ?? [];
   const policies = policiesQuery.data?.items ?? [];
   const rates = ratesQuery.data?.items ?? [];
+  const paymentTerms = settingsQuery.data?.paymentTerms ?? [];
 
   return (
     <PageWrapper title="Finance Settings" subtitle="Company financial configuration">
@@ -235,6 +237,7 @@ export default function FinanceSettingsPage() {
         <SystemAccountsSection systemAccounts={systemAccounts} canManage={canManage} />
         <PoliciesSection policies={policies} canManage={canManage} />
         <ExchangeRatesSection rates={rates} canManage={canManage} />
+        <PaymentTermsSection terms={paymentTerms} canManage={canManage} />
         <QuickLinks />
       </div>
     </PageWrapper>

@@ -252,7 +252,7 @@ export default function TaxPage() {
       {error ? (
         <ErrorState
           title="Failed to load tax dashboard"
-          description={error.message}
+          description={getErrorMessage(error)}
           onRetry={handleRetry}
         />
       ) : (

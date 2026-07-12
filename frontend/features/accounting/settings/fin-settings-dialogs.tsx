@@ -17,6 +17,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useUpdateNumberSequence,
   useUpsertSystemAccount,
+  useUpdatePaymentTerms,
 } from "@/hooks/api/accounting/fin-settings";
 import {
   useCreateApprovalPolicy,
@@ -24,7 +25,7 @@ import {
   useUpsertExchangeRate,
 } from "@/hooks/api/accounting/settings";
 import { useAccounts } from "@/hooks/api/accounting";
-import type { NumberSequence, SystemAccountMapping } from "@/types/accounting/fin-settings";
+import type { NumberSequence, SystemAccountMapping, PaymentTerm } from "@/types/accounting/fin-settings";
 import type { ApprovalPolicy, ApprovalRecordType } from "@/types/accounting/taxes";
 import { PURPOSE_LABELS } from "./fin-settings-sections";
 
@@ -313,6 +314,91 @@ export function RateDialog({ open, onOpenChange }: { open: boolean; onOpenChange
             <Label>As of date</Label>
             <Input {...form.register("asOfDate")} type="date" />
             {form.formState.errors.asOfDate && <p className="text-xs text-destructive">{form.formState.errors.asOfDate.message}</p>}
+          </div>
+        </>
+      )}
+    </EntityFormDialog>
+  );
+}
+
+const paymentTermSchema = z.object({
+  label: z.string().min(1, "Label is required"),
+  days: z.string().min(1, "Days is required"),
+  isDefault: z.boolean(),
+});
+type PaymentTermFormValues = z.infer<typeof paymentTermSchema>;
+
+export function PaymentTermDialog({
+  term,
+  existingTerms,
+  open,
+  onOpenChange,
+}: {
+  term: PaymentTerm | null;
+  existingTerms: PaymentTerm[];
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+}) {
+  const updateTerms = useUpdatePaymentTerms();
+
+  function handleSubmit(values: PaymentTermFormValues) {
+    const days = Number(values.days);
+    const key = term?.key ?? values.label.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
+
+    let updated: PaymentTerm[];
+
+    if (term) {
+      updated = existingTerms.map((t) =>
+        t.key === term.key
+          ? { key, label: values.label, days, isDefault: values.isDefault }
+          : values.isDefault ? { ...t, isDefault: false } : t,
+      );
+    } else {
+      const withoutDefault = values.isDefault
+        ? existingTerms.map((t) => ({ ...t, isDefault: false }))
+        : existingTerms;
+      updated = [...withoutDefault, { key, label: values.label, days, isDefault: values.isDefault }];
+    }
+
+    updateTerms.mutate(
+      { terms: updated },
+      {
+        onSuccess: () => { toast.success(term ? "Payment term updated" : "Payment term added"); onOpenChange(false); },
+        onError: (err) => toast.error(getErrorMessage(err)),
+      },
+    );
+  }
+
+  return (
+    <EntityFormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={term ? "Edit payment term" : "Add payment term"}
+      resolver={zodResolver(paymentTermSchema)}
+      defaultValues={{
+        label: term?.label ?? "",
+        days: term ? String(term.days) : "",
+        isDefault: term?.isDefault ?? false,
+      }}
+      onSubmit={handleSubmit}
+      isSubmitting={updateTerms.isPending}
+      resetOnOpen
+    >
+      {(form) => (
+        <>
+          <div className="space-y-1.5">
+            <Label>Label</Label>
+            <Input {...form.register("label")} placeholder="Net 30" />
+            {form.formState.errors.label && <p className="text-xs text-destructive">{form.formState.errors.label.message}</p>}
+          </div>
+          <div className="space-y-1.5">
+            <Label>Days</Label>
+            <Input {...form.register("days")} type="number" min={0} placeholder="30" />
+            {form.formState.errors.days && <p className="text-xs text-destructive">{form.formState.errors.days.message}</p>}
+          </div>
+          <div className="flex items-center gap-2">
+            <input type="checkbox" id="term-isDefault" className="h-4 w-4" {...form.register("isDefault")} />
+            <Label htmlFor="term-isDefault">Set as default</Label>
           </div>
         </>
       )}

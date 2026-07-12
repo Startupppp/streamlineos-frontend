@@ -120,15 +120,13 @@ export function LeadDistributionDialog({
               <Button variant="outline" onClick={handleClose}>
                 Cancel
               </Button>
-              <Button
+              <LoadingButton
                 onClick={handleDistribute}
-                disabled={distributeMutation.isPending}
+                isPending={distributeMutation.isPending}
+                loadingText="Distributing..."
               >
-                {distributeMutation.isPending && (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                )}
                 Distribute Now
-              </Button>
+              </LoadingButton>
             </DialogFooter>
           </>
         ) : (

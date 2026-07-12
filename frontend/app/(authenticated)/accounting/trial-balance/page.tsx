@@ -79,7 +79,7 @@ export default function TrialBalancePage() {
         ) : query.error ? (
           <ErrorState
             title="Failed to load trial balance"
-            description={query.error.message}
+            description={getErrorMessage(query.error)}
             onRetry={handleRetry}
           />
         ) : rows.length === 0 ? (

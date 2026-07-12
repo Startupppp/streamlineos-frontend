@@ -22,11 +22,19 @@ export interface AutomationRun {
   entityType: string;
   entityId: string;
   status: AutomationRunStatus;
-  steps: Array<{nodeId: string; type: string; status: string; message?: string; at: string}> | null;
+  steps: Array<{nodeId: string; type: string; status: string; message?: string; branchTaken?: string; at: string}> | null;
   error: string | null;
   triggeredBy: string;
   startedAt: string;
   finishedAt: string | null;
+}
+
+export interface AutomationGraphNode {
+  id: string;
+  type: string;
+  config?: Record<string, unknown>;
+  nextId?: string;
+  branches?: { condition: Record<string, unknown>; nextId: string }[];
 }
 
 export interface CrmAutomationRule {
@@ -38,7 +46,7 @@ export interface CrmAutomationRule {
   lastRunAt: string | null;
   version: number;
   isDraft: boolean;
-  graph: Record<string, unknown> | null;
+  graph: AutomationGraphNode[] | null;
   conditions: Array<{field: string; operator: string; value: string}>;
   actions: string[];
   cooldownMinutes: number;

@@ -65,7 +65,7 @@ function AttributionChart({ data }: { data: CampaignAttribution[] }) {
     name: d.campaignName.length > 18 ? d.campaignName.slice(0, 18) + "…" : d.campaignName,
     revenue: Math.round(d.dealRevenueCents / 100),
     fill: getCrmTokenClasses(
-      ["blue", "emerald", "amber", "sky", "violet", "cyan", "orange", "pink"][i % 8] ?? "blue"
+      ["blue", "emerald", "amber", "sky", "blue", "cyan", "orange", "pink"][i % 8] ?? "blue"
     ).chartHex,
   }));
 

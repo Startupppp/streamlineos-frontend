@@ -16,7 +16,7 @@ import type { Contact } from "@/types/crm";
 const STAGE_CONFIG: Record<string, { label: string; className: string }> = {
   LEAD: { label: "Lead", className: "bg-blue-500/10 text-blue-600" },
   CONTACTED: { label: "Contacted", className: "bg-cyan-500/10 text-cyan-600" },
-  PROPOSAL: { label: "Proposal", className: "bg-violet-500/10 text-violet-600" },
+  PROPOSAL: { label: "Proposal", className: "bg-blue-500/10 text-blue-600" },
   NEGOTIATION: { label: "Negotiation", className: "bg-amber-500/10 text-amber-600" },
   WON: { label: "Won", className: "bg-emerald-500/10 text-emerald-600" },
   LOST: { label: "Lost", className: "bg-muted text-muted-foreground" },
@@ -47,8 +47,8 @@ function DealRow({ dealId }: { dealId: number }) {
     <tr className="border-b border-border/50 last:border-0 hover:bg-accent/40 transition-colors">
       <td className="px-4 py-2.5">
         <div className="flex items-center gap-2">
-          <div className="h-6 w-6 rounded-md bg-violet-500/10 flex items-center justify-center shrink-0">
-            <TrendingUp className="h-3 w-3 text-violet-600" />
+          <div className="h-6 w-6 rounded-md bg-blue-500/10 flex items-center justify-center shrink-0">
+            <TrendingUp className="h-3 w-3 text-blue-600" />
           </div>
           <Link
             href={`/crm/deals/${deal.id}`}

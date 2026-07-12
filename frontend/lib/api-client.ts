@@ -13,6 +13,7 @@ const MIGRATED_PREFIXES = [
   "/surveys",
   "/inventory",
   "/accounting",
+  "/finance",
   "/ai",
   "/audit-log",
   "/careers",

@@ -9,6 +9,7 @@ import { FinanceStatusBadge } from "@/features/accounting/shared";
 import { PeriodChecklistPanel } from "@/features/accounting/core/period-checklist-panel";
 import { GeneratePeriodsDialog } from "@/features/accounting/core/generate-periods-dialog";
 import { usePeriods, usePeriodChecklist } from "@/hooks/api/accounting/core";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import type { AccountingPeriod } from "@/hooks/api/accounting/core";
 
@@ -65,7 +66,7 @@ export default function PeriodClosePage() {
           ) : periodsQuery.error ? (
             <ErrorState
               title="Failed to load periods"
-              description={periodsQuery.error.message}
+              description={getErrorMessage(periodsQuery.error)}
               onRetry={handleRetry}
             />
           ) : periods.length === 0 ? (

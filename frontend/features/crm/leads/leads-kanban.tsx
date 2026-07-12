@@ -79,6 +79,7 @@ export function LeadsKanban({ filteredBoard, onDragEnd, onOpenLead, onMoveStatus
                             lead={lead}
                             index={index}
                             status={option.key}
+                            allStatusKeys={columns.map((c) => c.key)}
                             onOpen={onOpenLead}
                             onMoveStatus={onMoveStatus}
                           />

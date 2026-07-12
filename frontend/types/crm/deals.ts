@@ -335,6 +335,9 @@ export interface ForecastSnapshot {
   capturedAt: string;
   createdById: string | null;
   data: ForecastSnapshotData;
+  overrideAmount: string | null;
+  overrideNote: string | null;
+  overriddenBy: string | null;
   createdAt: string;
 }
 
@@ -368,6 +371,44 @@ export interface PatchNextStepInput {
 
 export interface CaptureForecastSnapshotInput {
   period: string;
+}
+
+export interface DealStakeholder {
+  id: string;
+  dealId: number;
+  contactId: number;
+  roleKey: string | null;
+  influence: string | null;
+  isPrimary: boolean;
+  notes: string | null;
+  createdAt: string;
+  contact: {
+    id: number;
+    name: string;
+    email: string | null;
+    title: string | null;
+    company: string | null;
+  };
+}
+
+export interface CreateStakeholderInput {
+  contactId: number;
+  roleKey?: string | null;
+  influence?: string | null;
+  isPrimary?: boolean;
+  notes?: string | null;
+}
+
+export interface UpdateStakeholderInput {
+  roleKey?: string | null;
+  influence?: string | null;
+  isPrimary?: boolean;
+  notes?: string | null;
+}
+
+export interface OverrideForecastInput {
+  overrideAmount?: number;
+  overrideNote?: string;
 }
 
 export interface CrmPersonProfile {

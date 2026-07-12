@@ -61,6 +61,7 @@ export default function JournalEntryDetailPage({ params }: JournalEntryDetailPag
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
 
+  const lines = entry?.lines ?? [];
   const isDraft = entry?.status === "DRAFT";
   const isPosted = entry?.status === "POSTED";
   const isPendingApproval = entry?.status === "PENDING_APPROVAL";
@@ -176,6 +177,7 @@ export default function JournalEntryDetailPage({ params }: JournalEntryDetailPag
         ) : (
           <JournalEntryView
             entry={entry}
+            lines={lines}
             isPendingApproval={isPendingApproval}
             canApproveJournal={canApproveJournal}
             onApproveClick={handleApproveClick}

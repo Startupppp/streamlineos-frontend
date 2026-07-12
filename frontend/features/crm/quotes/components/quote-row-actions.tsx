@@ -2,14 +2,7 @@
 
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Eye,
-  Send,
-  CheckCircle2,
-  XCircle,
-  Trash2,
-  MoreHorizontal,
-} from "lucide-react";
+import { Eye, Send, CheckCircle2, XCircle, Trash2, MoreHorizontal } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -60,7 +53,12 @@ export function QuoteRowActions({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="More options">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          aria-label="More options"
+        >
           <MoreHorizontal className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>

@@ -18,6 +18,7 @@ import {
   useUpdateCrmOrganization,
 } from "@/hooks/api/crm";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 
 interface OrgSelectButtonProps {
@@ -97,7 +98,7 @@ export function LinkParentDialog({
           );
           onOpenChange(false);
         },
-        onError: (e) => toast.error(e.message),
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }, [organizationId, selectedId, updateMutation, onOpenChange]);

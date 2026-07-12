@@ -317,8 +317,8 @@ export function BulkActionsBar({
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
-            {STATUSES.map((s) => (
-              <SelectItem key={s} value={s} className="text-xs">{s}</SelectItem>
+            {statusOptions.map((s) => (
+              <SelectItem key={s.id} value={s.key} className="text-xs">{s.label}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -328,8 +328,8 @@ export function BulkActionsBar({
             <SelectValue placeholder="Priority" />
           </SelectTrigger>
           <SelectContent>
-            {PRIORITIES.map((p) => (
-              <SelectItem key={p} value={p} className="text-xs">{p}</SelectItem>
+            {priorityOptions.map((p) => (
+              <SelectItem key={p.id} value={p.key} className="text-xs">{p.label}</SelectItem>
             ))}
           </SelectContent>
         </Select>

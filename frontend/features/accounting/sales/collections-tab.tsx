@@ -222,7 +222,7 @@ export function CollectionsTab() {
   }
 
   function handleActivityTypeChange(value: string): void {
-    setActivityType(value as CollectionActivityType);
+    if (isCollectionActivityType(value)) setActivityType(value);
   }
 
   function handleActivityNoteChange(e: React.ChangeEvent<HTMLTextAreaElement>): void {
@@ -409,9 +409,7 @@ export function CollectionsTab() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {(
-                  Object.keys(ACTIVITY_TYPE_LABELS) as CollectionActivityType[]
-                ).map((key) => (
+                {COLLECTION_ACTIVITY_TYPE_KEYS.map((key) => (
                   <SelectItem key={key} value={key}>
                     {ACTIVITY_TYPE_LABELS[key]}
                   </SelectItem>

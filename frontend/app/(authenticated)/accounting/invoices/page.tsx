@@ -50,6 +50,10 @@ import type { PayableInvoice } from "@/features/accounting/sales/record-payment-
 
 const SERVER_FILTERABLE: InvoiceStatus[] = ["DRAFT", "ISSUED", "PAID", "FAILED", "VOIDED"];
 
+function isInvoiceStatus(v: string): v is InvoiceStatus {
+  return (SERVER_FILTERABLE as ReadonlyArray<string>).includes(v);
+}
+
 const ALL_DISPLAY_STATUSES = [
   "DRAFT",
   "ISSUED",
@@ -181,8 +185,8 @@ export default function AccountingInvoicesPage() {
   const [paymentInvoice, setPaymentInvoice] = useState<PayableInvoice | null>(null);
 
   const serverStatus =
-    statusFilter !== "ALL" && SERVER_FILTERABLE.includes(statusFilter as InvoiceStatus)
-      ? (statusFilter as InvoiceStatus)
+    statusFilter !== "ALL" && isInvoiceStatus(statusFilter)
+      ? statusFilter
       : undefined;
 
   const invoicesQuery = useInvoices({
@@ -198,8 +202,9 @@ export default function AccountingInvoicesPage() {
   const allItems = invoicesQuery.data?.items ?? [];
 
   const filteredItems = allItems.filter((inv) => {
-    if (statusFilter !== "ALL" && !SERVER_FILTERABLE.includes(statusFilter as InvoiceStatus)) {
-      if (inv.status !== statusFilter) return false;
+    if (statusFilter !== "ALL" && !isInvoiceStatus(statusFilter)) {
+      const displayFilter: string = statusFilter;
+      if (inv.status !== displayFilter) return false;
     }
     if (search) {
       const q = search.toLowerCase();
@@ -293,8 +298,12 @@ export default function AccountingInvoicesPage() {
   ];
 
   function handleStatusFilterChange(value: string): void {
-    setStatusFilter(value as DisplayStatus | "ALL");
-    setPage(1);
+    const isDisplayStatusOrAll = (v: string): v is DisplayStatus | "ALL" =>
+      v === "ALL" || (ALL_DISPLAY_STATUSES as ReadonlyArray<string>).includes(v);
+    if (isDisplayStatusOrAll(value)) {
+      setStatusFilter(value);
+      setPage(1);
+    }
   }
 
   function handleSearchChange(value: string): void {

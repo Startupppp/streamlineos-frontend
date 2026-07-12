@@ -11,6 +11,7 @@ import { DealHealthChip } from "./deal-health-chip";
 import { DealNextStepInline } from "./deal-next-step-inline";
 import { DealApprovalBanner } from "./deal-approval-banner";
 import { DealCompetitorsCard } from "./deal-competitors-card";
+import { DealStakeholdersCard } from "./deal-stakeholders-card";
 import type { DealActivity, DealMeeting } from "@/hooks/api/crm";
 
 interface AssignedTo {
@@ -156,6 +157,7 @@ export function DealSidebarCards({
       )}
 
       <DealCompetitorsCard dealId={dealId} />
+      <DealStakeholdersCard dealId={dealId} />
 
       <Card className="shadow-noir">
         <CardHeader>

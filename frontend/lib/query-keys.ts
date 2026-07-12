@@ -163,6 +163,7 @@ export const queryKeys = {
     health: (dealId: number) => [...base, "deals", "health", dealId] as const,
     forecastSnapshots: (params?: Record<string, unknown>) => [...base, "deals", "forecastSnapshots", params] as const,
     forecastCompare: (period: string) => [...base, "deals", "forecastCompare", period] as const,
+    stakeholders: (dealId: number) => [...base, "deals", "stakeholders", dealId] as const,
   },
 
   contacts: {

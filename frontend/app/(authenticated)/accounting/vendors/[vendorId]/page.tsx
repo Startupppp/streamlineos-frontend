@@ -163,7 +163,7 @@ export default function VendorLedgerDetailPage({ params }: PageProps) {
         ) : query.error ? (
           <ErrorState
             title="Failed to load ledger"
-            description={query.error.message}
+            description={getErrorMessage(query.error)}
             onRetry={handleRetry}
           />
         ) : lines.length === 0 ? (
