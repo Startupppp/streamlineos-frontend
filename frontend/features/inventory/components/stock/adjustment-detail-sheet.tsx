@@ -45,9 +45,9 @@ type AdjustmentLine = {
   id: number;
   productVariantId: number;
   locationId: number;
-  variantName: string | null;
-  variantSku: string | null;
-  locationName: string | null;
+  variantName?: string | null;
+  variantSku?: string | null;
+  locationName?: string | null;
   quantityChange: number;
 };
 

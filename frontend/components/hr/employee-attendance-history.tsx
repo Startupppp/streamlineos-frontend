@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 
 type AttendanceRecord = {
-  id: string;
+  id: number;
   date: string;
   status: string;
   checkIn?: string | null;

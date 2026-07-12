@@ -194,6 +194,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Employees",
         icon: Users,
         href: "/hr",
+        exact: true,
         requiredPermission: "hr:employees:view",
         children: [
           {
@@ -715,6 +716,48 @@ export const NAV_GROUPS: NavGroup[] = [
             requiredPermission: "hr:employees:view",
           },
           {
+            label: "Policies",
+            icon: FileText,
+            href: "/hr/settings/policies",
+            requiredPermission: "hr:employees:view",
+          },
+          {
+            label: "Workflows",
+            icon: Workflow,
+            href: "/hr/settings/workflows",
+            requiredPermission: "hr:employees:view",
+          },
+          {
+            label: "Templates",
+            icon: LayoutTemplate,
+            href: "/hr/settings/templates",
+            requiredPermission: "hr:employees:view",
+          },
+          {
+            label: "Forms",
+            icon: ClipboardList,
+            href: "/hr/settings/forms",
+            requiredPermission: "hr:employees:view",
+          },
+          {
+            label: "Custom Fields",
+            icon: Sliders,
+            href: "/hr/settings/custom-fields",
+            requiredPermission: "hr:employees:view",
+          },
+          {
+            label: "Preview",
+            icon: FileSearch,
+            href: "/hr/settings/preview",
+            requiredPermission: "hr:employees:view",
+          },
+          {
+            label: "Versions",
+            icon: History,
+            href: "/hr/settings/versions",
+            requiredPermission: "hr:employees:view",
+          },
+          {
             label: "Automations",
             icon: Workflow,
             href: "/hr/settings/automations",
@@ -739,6 +782,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Command Center",
         icon: LayoutDashboard,
         href: "/hr/recruitment",
+        exact: true,
       },
       {
         label: "Jobs",
@@ -749,6 +793,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Candidates",
         icon: Users,
         href: "/hr/recruitment/candidates",
+        exact: true,
       },
       {
         label: "Pipeline",

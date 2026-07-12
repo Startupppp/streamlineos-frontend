@@ -226,7 +226,7 @@ export default function ReimbursementsPage() {
         </span>
       ),
       sortable: true,
-      sortValue: (r) => r.createdAt ?? "",
+      sortValue: (r) => r.createdAt ? new Date(r.createdAt).getTime() : 0,
     },
     {
       key: "status",

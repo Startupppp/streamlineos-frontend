@@ -157,7 +157,7 @@ export function CustomFieldUpsertSheet({
     } else {
       const keyResult = keySchema.safeParse(values.key);
       if (!keyResult.success) {
-        form.setError("key", { message: keyResult.error.errors[0]?.message ?? "Invalid key" });
+        form.setError("key", { message: keyResult.error.issues[0]?.message ?? "Invalid key" });
         return;
       }
       await onSave({

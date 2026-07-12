@@ -69,7 +69,7 @@ const schema = z.object({
   approverId: z.string().min(1, "Select an approver"),
   reason: z.string().max(2000, "Max 2000 characters").optional(),
   dueAt: z.string().optional(),
-  level: z.enum(["1", "2", "3"]).default("1"),
+  level: z.enum(["1", "2", "3"]),
 });
 
 type FormValues = z.infer<typeof schema>;

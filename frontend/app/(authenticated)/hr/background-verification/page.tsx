@@ -207,7 +207,7 @@ function buildBgvColumns(
         </span>
       ),
       sortable: true,
-      sortValue: (bgv) => bgv.createdAt ?? "",
+      sortValue: (bgv) => bgv.createdAt ? new Date(bgv.createdAt).getTime() : 0,
     },
     {
       key: "status",

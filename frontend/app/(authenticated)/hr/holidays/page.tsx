@@ -45,8 +45,10 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCan } from "@/hooks/api/access";
+import { getErrorMessage } from "@/lib/api-client";
 import {
   useHolidays,
   useCreateHoliday,
@@ -56,7 +58,18 @@ import {
 } from "@/hooks/api/hr/holidays";
 
 const holidaySchema = z.object({
-  name: z.string().min(1, "Name is required"),
+  name: z
+    .string()
+    .transform((v) => v.trim())
+    .pipe(
+      z
+        .string()
+        .min(3, "Name must be at least 3 characters")
+        .max(100, "Name must be at most 100 characters")
+        .refine((v) => /[a-zA-Z]/.test(v), "Name must contain at least one letter")
+        .refine((v) => /[a-zA-Z]{3}/.test(v), "Name must contain at least 3 letters")
+        .refine((v) => !/\s{2,}/.test(v), "Name cannot have consecutive spaces"),
+    ),
   date: z.string().min(1, "Date is required"),
   recurring: z.boolean(),
 });
@@ -488,7 +501,7 @@ export default function HolidaysPage() {
   function handleDeleteClick(id: string) {
     deleteMutation.mutate(id, {
       onSuccess: () => toast.success("Holiday deleted"),
-      onError: () => toast.error("Failed to delete holiday"),
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }
   function handleSheetOpenChange(open: boolean) {
@@ -498,6 +511,7 @@ export default function HolidaysPage() {
     }
   }
   function handleFormSubmit(values: HolidayFormValues) {
+    const trimmedName = values.name.trim().toLowerCase();
     if (editingHoliday) {
       updateMutation.mutate(
         { id: editingHoliday.id, ...values },
@@ -507,17 +521,24 @@ export default function HolidaysPage() {
             setSheetOpen(false);
             setEditingHoliday(null);
           },
-          onError: () => toast.error("Failed to update holiday"),
+          onError: (err) => toast.error(getErrorMessage(err)),
         },
       );
     } else {
+      const duplicate = allHolidays.find(
+        (h) => h.date === values.date && h.name.trim().toLowerCase() === trimmedName,
+      );
+      if (duplicate) {
+        toast.error("A holiday with this name already exists on this date.");
+        return;
+      }
       createMutation.mutate(values, {
         onSuccess: () => {
           toast.success("Holiday added");
           setSheetOpen(false);
           form.reset();
         },
-        onError: () => toast.error("Failed to add holiday"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       });
     }
   }
@@ -692,9 +713,9 @@ export default function HolidaysPage() {
                 />
               </div>
               <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
-                <Button type="submit" disabled={isPending} className="w-full">
-                  {isPending ? "Saving..." : editingHoliday ? "Update Holiday" : "Add Holiday"}
-                </Button>
+                <LoadingButton type="submit" isPending={isPending} loadingText="Saving..." className="w-full">
+                  {editingHoliday ? "Update Holiday" : "Add Holiday"}
+                </LoadingButton>
               </SheetFooter>
             </form>
           </Form>

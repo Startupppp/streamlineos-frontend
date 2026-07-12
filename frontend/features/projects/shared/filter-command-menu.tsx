@@ -405,7 +405,7 @@ export function FilterCommandMenu({
       <PopoverContent
         align="start"
         className={cn(
-          "w-auto max-h-[var(--radix-popover-content-available-height)] overflow-hidden p-0",
+          "w-auto max-w-[min(520px,var(--radix-popover-content-available-width))] overflow-hidden p-0",
           datesExpanded ? "min-w-[280px]" : "min-w-[200px]",
         )}
         onInteractOutside={handleInteractOutside}
@@ -420,10 +420,10 @@ export function FilterCommandMenu({
             {...sharedProps}
           />
         ) : (
-          <div className="flex max-h-[var(--radix-popover-content-available-height)]">
+          <div className="flex max-h-[min(480px,var(--radix-popover-content-available-height))]">
             <div
               className={cn(
-                "flex flex-col",
+                "flex min-w-0 flex-col",
                 datesExpanded ? "min-w-[280px]" : "min-w-[200px]",
               )}
             >
@@ -440,7 +440,7 @@ export function FilterCommandMenu({
                 role="menu"
                 aria-label="Filter categories"
                 onMouseLeave={handleListMouseLeave}
-                className="max-h-[min(360px,calc(var(--radix-popover-content-available-height)-2.25rem))] overflow-y-auto p-1"
+                className="overflow-y-auto p-1"
               >
                 {visibleCategories.map((cat) => {
                   const isHovered = hoveredCategory === cat.key;
@@ -479,7 +479,7 @@ export function FilterCommandMenu({
             {hoveredCategory !== null && hoveredCategory !== "dates" && (
               <div
                 ref={submenuRef}
-                className="max-h-[var(--radix-popover-content-available-height)] overflow-y-auto border-l border-border bg-popover"
+                className="max-w-[220px] overflow-y-auto border-l border-border bg-popover"
               >
                 <FilterCategorySubmenu
                   category={hoveredCategory}

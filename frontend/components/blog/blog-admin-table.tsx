@@ -10,16 +10,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { StatusBadge } from "./status-badge";
 import { formatBlogDate } from "@/lib/blog-utils";
 import { useAdminPosts, useDeletePost, useUpdatePost } from "@/hooks/api/blog";
-
-type Post = {
-  id: string;
-  title: string;
-  status: string;
-  isFeatured: boolean;
-  category?: { name: string } | null;
-  author?: { name: string } | null;
-  updatedAt?: string | null;
-};
+import type { BlogPostWithRelations } from "@/types/blog";
 
 const emptyState = (
   <div className="flex flex-col items-center gap-3 py-12 text-center">
@@ -74,7 +65,7 @@ export function BlogAdminTable() {
     };
   }
 
-  const columns: DataTableColumn<Post>[] = [
+  const columns: DataTableColumn<BlogPostWithRelations>[] = [
     {
       key: "title",
       header: "Title",
@@ -168,7 +159,7 @@ export function BlogAdminTable() {
 
   return (
     <>
-      <DataTable
+      <DataTable<BlogPostWithRelations>
         data={posts ?? []}
         columns={columns}
         getRowKey={(post) => post.id}

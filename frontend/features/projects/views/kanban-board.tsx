@@ -423,6 +423,7 @@ export function KanbanBoard({
                           ticketCount={columnTickets.length}
                           wipLimit={wip}
                           canManage={canManage}
+                          existingNames={(optimisticStatuses ?? []).map((s) => s.name)}
                           onRename={handleColumnRename}
                           onColorChange={handleColumnColorChange}
                         />

@@ -38,7 +38,7 @@ export const newTransferSchema = z
         z.object({
           productVariantId: z.number({ error: "Variant required" }).int().positive({ message: "Variant required" }),
           quantity: z
-            .number({ invalid_type_error: "Quantity must be a number" })
+            .number({ error: "Quantity must be a number" })
             .positive({ message: "Quantity must be greater than 0" }),
           lotId: z.number().int().positive().optional(),
           serialId: z.number().int().positive().optional(),

@@ -33,7 +33,7 @@ interface ParsedRow {
   [key: string]: string;
 }
 
-type IndexedRow = ParsedRow & { _idx: number };
+type IndexedRow = { [key: string]: string | number } & { _idx: number };
 
 type Step = "upload" | "map" | "preview" | "done";
 

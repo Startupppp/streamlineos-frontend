@@ -18,15 +18,15 @@ const STAGE_BADGE: Record<string, string> = {
 };
 
 type PipelineRow = {
-  applicationId?: string;
-  id: string;
+  applicationId?: number | null;
+  id: number;
   name: string;
-  jobTitle?: string;
+  jobTitle?: string | null;
   email?: string;
-  source?: string;
-  rating?: number;
-  slaStatus?: string;
-  appliedAt?: string;
+  source?: string | null;
+  rating?: number | null;
+  slaStatus?: string | null;
+  appliedAt?: Date | string | null;
   stage: string;
 };
 

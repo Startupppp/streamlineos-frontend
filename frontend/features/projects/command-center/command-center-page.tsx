@@ -40,6 +40,7 @@ import {
   GanttChart,
   BarChart2,
   Settings,
+  ExternalLink,
 } from "lucide-react";
 import { useProjects } from "@/hooks/api/projects/projects";
 import { useMyWork } from "@/hooks/api/projects/my-work";
@@ -60,6 +61,7 @@ const STATUS_COLOR: Record<string, string> = {
 const PINNED_LINKS = [
   { label: "Backlog", href: "/projects/backlog", icon: LayoutList },
   { label: "Board", href: "/projects/board", icon: LayoutGrid },
+  { label: "Sprints", href: "/projects/sprints", icon: GitBranch },
   { label: "Timeline", href: "/projects/timeline", icon: GanttChart },
   { label: "Reports", href: "/projects/reports", icon: BarChart2 },
   { label: "Settings", href: "/projects/settings", icon: Settings },
@@ -176,14 +178,26 @@ const ProjectCard = memo(function ProjectCard({ project, index }: { project: Pro
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Link
-                    href={`${base}/timeline`}
+                    href={`${base}/tickets/new`}
                     className="h-6 w-6 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                    aria-label="Open Timeline"
+                    aria-label="New Task"
                   >
-                    <GanttChart className="h-3 w-3" />
+                    <ListPlus className="h-3 w-3" />
                   </Link>
                 </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs">Timeline</TooltipContent>
+                <TooltipContent side="top" className="text-xs">New Task</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link
+                    href={`${base}/sprints`}
+                    className="h-6 w-6 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                    aria-label="New Sprint"
+                  >
+                    <GitBranch className="h-3 w-3" />
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">New Sprint</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -252,11 +266,11 @@ function PinnedNav() {
         <Link
           key={href}
           href={href}
-          className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground hover:border-border/80 hover:bg-muted/30 transition-colors"
+          className="group inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground hover:border-border/80 hover:bg-muted/30 transition-colors"
         >
           <Icon className="h-3 w-3" />
           {label}
-          <ExternalLink className="h-2.5 w-2.5 opacity-0 group-hover:opacity-100" />
+          <ExternalLink className="h-2.5 w-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
         </Link>
       ))}
     </div>

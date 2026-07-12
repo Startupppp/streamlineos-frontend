@@ -160,7 +160,7 @@ export default function HRDashboardPage() {
   }, [filteredEmployees, page, pageSize]);
 
   const handlePageSizeChange = useCallback(
-    (size: PageSizeOption) =>
+    (size: number) =>
       updateParams({
         size: size === PAGE_SIZE ? null : String(size),
         page: null,

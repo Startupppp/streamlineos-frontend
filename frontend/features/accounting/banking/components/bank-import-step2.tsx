@@ -37,7 +37,10 @@ interface Props {
   isValid: boolean;
 }
 
-type CsvPreviewRow = Record<string, string> & { _rowIdx: number };
+interface CsvPreviewRow {
+  [key: string]: string | number;
+  _rowIdx: number;
+}
 
 export function BankImportStep2({
   parsedCsv,

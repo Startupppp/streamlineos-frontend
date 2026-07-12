@@ -155,7 +155,7 @@ export function FilterFlatSearch({
         value={search}
         onValueChange={onSearchChange}
       />
-      <CommandList className="max-h-[360px]">
+      <CommandList className="max-h-[min(360px,var(--radix-popover-content-available-height))]">
         <CommandEmpty className="py-4 text-center text-xs text-muted-foreground">
           No matching filters.
         </CommandEmpty>
@@ -399,19 +399,18 @@ export function FilterFlatSearch({
                     <span>Select a date range</span>
                   )}
                 </div>
-                <div className="flex items-center gap-1.5">
+                <div className="grid grid-cols-2 gap-2">
                   <DatePicker
                     value={dueDateFrom}
                     onChange={onDueDateFromChange}
                     placeholder="From"
-                    className="h-7 flex-1 min-w-0 text-xs"
+                    className="h-7 w-full text-xs"
                   />
-                  <span className="shrink-0 text-xs text-muted-foreground">–</span>
                   <DatePicker
                     value={dueDateTo}
                     onChange={onDueDateToChange}
                     placeholder="To"
-                    className="h-7 flex-1 min-w-0 text-xs"
+                    className="h-7 w-full text-xs"
                   />
                 </div>
               </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState, useCallback, useEffect } from "react";
+import { use, useState, useCallback } from "react";
 import { useModules, useCreateModule } from "@/hooks/api/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard } from "@/components/ui/stat-card";
@@ -81,7 +81,7 @@ const createModuleSchema = z
       if (!isNaN(start.getTime()) && start < today) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Start date is in the past. Check "Allow past dates" to confirm.",
+          message: 'Start date is in the past. Check "Allow past dates" to confirm.',
           path: ["startDate"],
         });
       }
@@ -89,6 +89,8 @@ const createModuleSchema = z
   });
 
 type CreateModuleForm = z.infer<typeof createModuleSchema>;
+
+const FORM_DEFAULTS: Partial<CreateModuleForm> = { status: "backlog", allowPastDates: false };
 
 export default function ModulesPage({
   params,
@@ -104,7 +106,7 @@ export default function ModulesPage({
 
   const form = useForm<CreateModuleForm>({
     resolver: zodResolver(createModuleSchema),
-    defaultValues: { status: "backlog", allowPastDates: false },
+    defaultValues: FORM_DEFAULTS,
   });
 
   const descValue = form.watch("description") ?? "";
@@ -127,6 +129,16 @@ export default function ModulesPage({
     (v: string) => form.setValue("endDate", v, { shouldValidate: true }),
     [form]
   );
+  const handleOpenChange = useCallback(
+    (open: boolean) => {
+      if (!open) {
+        form.reset(FORM_DEFAULTS);
+      }
+      setCreateOpen(open);
+    },
+    [form],
+  );
+
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
 
   const handleLeadChange = useCallback(
@@ -141,19 +153,13 @@ export default function ModulesPage({
     [form]
   );
 
-  useEffect(() => {
-    if (!createOpen) {
-      form.reset({ status: "backlog", allowPastDates: false });
-    }
-  }, [createOpen, form]);
-
   const onSubmit = useCallback((data: CreateModuleForm) => {
     createMutation.mutate(
       { ...data, projectId },
       {
         onSuccess: () => {
+          form.reset(FORM_DEFAULTS);
           setCreateOpen(false);
-          form.reset({ status: "backlog", allowPastDates: false });
           toast.success("Module created");
         },
         onError: (err) => toast.error(getErrorMessage(err)),
@@ -191,7 +197,7 @@ export default function ModulesPage({
       eyebrow="Project"
       subtitle="Organize work into feature groups and track module progress"
       actions={
-        <Sheet open={createOpen} onOpenChange={setCreateOpen}>
+        <Sheet open={createOpen} onOpenChange={handleOpenChange}>
           <SheetTrigger asChild>
             <Button size="sm">
               <Plus className="h-4 w-4 mr-1" /> New Module
@@ -264,7 +270,7 @@ export default function ModulesPage({
                         {form.formState.errors.startDate.message}
                       </p>
                     )}
-                    {startDateInPast && !form.formState.errors.startDate && (
+                    {startDateInPast && (
                       <label className="flex items-center gap-1.5 mt-1 cursor-pointer">
                         <input
                           type="checkbox"

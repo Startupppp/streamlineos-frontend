@@ -20,7 +20,7 @@ import {
   useRollbackImportJob,
 } from "@/hooks/api/hr/import-export";
 
-type ErrorRow = { row: number; field: string | null | undefined; message: string; _idx: number };
+type ErrorRow = { row: number; field?: string | null; message: string; _idx: number };
 
 const errorColumns: DataTableColumn<ErrorRow>[] = [
   { key: "row", header: "Row", cell: (r) => <span className="tabular-nums text-muted-foreground">{r.row}</span> },

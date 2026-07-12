@@ -63,12 +63,7 @@ export function generateAgenda(options: GenerateAgendaOptions): string {
 
   if (sources.includes("blocked")) {
     const blocked = sortByPriority(
-      tickets.filter(
-        (t) =>
-          t.status === "BLOCKED" &&
-          t.status !== "DONE" &&
-          t.status !== "CANCELLED",
-      ),
+      tickets.filter((t) => t.status === "BLOCKED"),
     ).slice(0, 6);
 
     if (blocked.length > 0) {

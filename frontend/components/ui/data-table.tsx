@@ -57,7 +57,7 @@ type ServerPagination = {
 export interface DataTableProps<T> {
   data: T[];
   columns: DataTableColumn<T>[];
-  getRowKey: (row: T) => string | number;
+  getRowKey: (row: T, index: number) => string | number;
   onRowClick?: (row: T) => void;
   selection?: {
     selected: Set<string | number>;
@@ -69,7 +69,7 @@ export interface DataTableProps<T> {
   footer?: ReactNode;
   minWidth?: string;
   className?: string;
-  rowClassName?: (row: T) => string;
+  rowClassName?: (row: T, index: number) => string;
   search?: {
     value: string;
     onChange: (value: string) => void;
@@ -173,7 +173,7 @@ export function DataTable<T>({
   const table = useReactTable<T>({
     data,
     columns: columnDefs,
-    getRowId: (row) => String(getRowKey(row)),
+    getRowId: (row, index) => String(getRowKey(row, index)),
     state: {
       sorting: sortState ? externalSorting : sorting,
       rowSelection,
@@ -374,13 +374,13 @@ export function DataTable<T>({
                 ))}
               </TableHeader>
               <TableBody>
-                {rows.map((row) => (
+                {rows.map((row, rowIndex) => (
                   <TableRow
                     key={row.id}
                     className={cn(
                       "h-8 hover:bg-muted/30 transition-colors",
                       onRowClick && "cursor-pointer",
-                      rowClassName?.(row.original),
+                      rowClassName?.(row.original, rowIndex),
                     )}
                     onClick={onRowClick ? () => onRowClick(row.original) : undefined}
                     data-state={row.getIsSelected() ? "selected" : undefined}

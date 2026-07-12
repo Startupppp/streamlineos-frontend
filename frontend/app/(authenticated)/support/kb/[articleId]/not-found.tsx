@@ -4,7 +4,11 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { NotFoundIllustration } from "@/components/illustrations";
-import { ArrowLeft, Search, BookOpen } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import {
+  KbBookOpenTextIcon,
+  KbSearchIcon,
+} from "@/features/knowledge-base/lib/kb-icons";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 
 export default function KbArticleNotFound() {
@@ -35,13 +39,13 @@ export default function KbArticleNotFound() {
       >
         <Button asChild size="default" className="min-w-[180px]">
           <Link href="/support/kb">
-            <BookOpen className="mr-2 h-4 w-4" />
+            <KbBookOpenTextIcon className="mr-2 h-4 w-4" />
             Browse Knowledge Base
           </Link>
         </Button>
         <Button asChild variant="outline" size="default" className="min-w-[180px]">
           <Link href="/support/kb">
-            <Search className="mr-2 h-4 w-4" />
+            <KbSearchIcon className="mr-2 h-4 w-4" />
             Search Articles
           </Link>
         </Button>

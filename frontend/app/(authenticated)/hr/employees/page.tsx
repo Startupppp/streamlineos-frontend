@@ -120,6 +120,7 @@ const VIEW_OPTIONS = [
 export default function EmployeesPage() {
   const { data: rawEmployees, isLoading } = useHrEmployees();
   const { data: departments } = useHrDepartments();
+  const router = useRouter();
 
   const [search, setSearch] = useState("");
   const [filterDept, setFilterDept] = useState("all");

@@ -18,6 +18,7 @@ import {
 } from "./use-project-create";
 import type { StepSharedProps } from "./use-project-create";
 import { useProjectProvisioning } from "./use-project-provisioning";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { StepBasics } from "./steps/step-basics";
 import type { BasicsHandle } from "./steps/step-basics";
 import { StepType } from "./steps/step-type";
@@ -202,14 +203,15 @@ export function ProjectCreateWizard({
                 ← Back
               </Button>
               <motion.div className="flex-1" whileTap={{ scale: 0.97 }}>
-                <Button
+                <LoadingButton
                   type="button"
                   className="w-full"
-                  disabled={isProvisioning}
+                  isPending={isProvisioning}
+                  loadingText="Creating…"
                   onClick={handleCreate}
                 >
-                  {isProvisioning ? "Creating…" : "Create Project"}
-                </Button>
+                  Create Project
+                </LoadingButton>
               </motion.div>
             </>
           )}

@@ -47,7 +47,7 @@ interface PayrollExportDialogProps {
 
 interface PreviewRow {
   rowIndex: number;
-  cells: string[];
+  cells: (string | number)[];
 }
 
 function buildPreviewColumns(

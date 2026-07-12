@@ -94,7 +94,7 @@ const createWarehouseSchema = z.object({
     .regex(GEO_SAFE_RE, "Country contains unsupported characters")
     .optional()
     .or(z.literal("")),
-  isActive: z.boolean().default(true),
+  isActive: z.boolean(),
 });
 
 type CreateWarehouseValues = z.infer<typeof createWarehouseSchema>;

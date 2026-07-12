@@ -443,11 +443,12 @@ export function CreateTicketDialog({
                   <button
                     type="button"
                     onClick={handleAttachClick}
+                    disabled={files.length >= MAX_FILES}
                     aria-label="Attach file"
-                    className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors"
+                    className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors disabled:pointer-events-none disabled:opacity-40"
                   >
                     <Paperclip className="h-3.5 w-3.5" />
-                    Attach
+                    {files.length >= MAX_FILES ? "Limit reached" : "Attach"}
                   </button>
                   <button
                     type="button"

@@ -13,14 +13,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useSignEnvelopes } from "@/hooks/api/sign/envelopes";
 import { EnvelopeStatusBadge } from "../components/envelope-status-badge";
 import { CreateEnvelopeDialog } from "../components/create-envelope-dialog";
-
-type Envelope = {
-  id: string;
-  title: string;
-  status: string;
-  sentAt: string | null;
-  expiresAt: string | null;
-};
+import type { SignEnvelope } from "@/types/sign";
 
 const STATUS_FILTERS = [
   { value: "all", label: "All" },
@@ -48,11 +41,11 @@ export function EnvelopeList() {
     void refetch();
   }
 
-  function handleRowClick(envelope: Envelope) {
+  function handleRowClick(envelope: SignEnvelope) {
     router.push(`/sign/envelopes/${envelope.id}`);
   }
 
-  function makeOpenHandler(id: string) {
+  function makeOpenHandler(id: number) {
     return function handleOpenClick() {
       router.push(`/sign/envelopes/${id}`);
     };
@@ -74,7 +67,7 @@ export function EnvelopeList() {
     </div>
   );
 
-  const columns: DataTableColumn<Envelope>[] = [
+  const columns: DataTableColumn<SignEnvelope>[] = [
     {
       key: "title",
       header: "Title",

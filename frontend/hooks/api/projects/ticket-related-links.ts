@@ -39,9 +39,9 @@ export function useAddRelatedLink(
     mutationKey: ["projects", "tickets", "related-links", "add"],
     mutationFn: ({ projectId, ticketId, url, label }) =>
       apiClient.post<TicketRelatedLink>(`/projects/${projectId}/tickets/${ticketId}/related-links`, { url, label }),
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, onMutateResult, context) => {
       queryClient.invalidateQueries({ queryKey: relatedLinksKey(variables.projectId, variables.ticketId) });
-      options?.onSuccess?.(data, variables, context);
+      options?.onSuccess?.(data, variables, onMutateResult, context);
     },
     ...options,
   });
@@ -61,9 +61,9 @@ export function useDeleteRelatedLink(
     mutationKey: ["projects", "tickets", "related-links", "delete"],
     mutationFn: ({ projectId, ticketId, linkId }) =>
       apiClient.delete<void>(`/projects/${projectId}/tickets/${ticketId}/related-links/${linkId}`),
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, onMutateResult, context) => {
       queryClient.invalidateQueries({ queryKey: relatedLinksKey(variables.projectId, variables.ticketId) });
-      options?.onSuccess?.(data, variables, context);
+      options?.onSuccess?.(data, variables, onMutateResult, context);
     },
     ...options,
   });

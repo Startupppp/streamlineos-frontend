@@ -32,7 +32,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { DownloadIcon, UploadIcon } from "@animateicons/react/lucide";
+import { UploadIcon } from "@animateicons/react/lucide";
 import { Bookmark, X, Download, SearchX } from "lucide-react";
 import { exportToCsv } from "@/lib/export-csv";
 import { toast } from "sonner";

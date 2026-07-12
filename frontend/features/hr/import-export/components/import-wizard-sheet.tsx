@@ -163,14 +163,16 @@ export function ImportWizardSheet({
     );
   }, [commitJob, job, entityLabel, handleOpenChange]);
 
-  const previewHeaders = parsedRows.length > 0 ? Object.keys(parsedRows[0]) : [];
-  const previewRows = parsedRows.slice(0, 5).map((row, i) => ({ ...row, _rowIdx: i }));
+  type PreviewRow = { [key: string]: string | number } & { _rowIdx: number };
 
-  const previewColumns: DataTableColumn<Record<string, string> & { _rowIdx: number }>[] =
+  const previewHeaders = parsedRows.length > 0 ? Object.keys(parsedRows[0]) : [];
+  const previewRows: PreviewRow[] = parsedRows.slice(0, 5).map((row, i) => ({ ...row, _rowIdx: i }));
+
+  const previewColumns: DataTableColumn<PreviewRow>[] =
     previewHeaders.map((h) => ({
       key: h,
       header: h,
-      cell: (row) => row[h] ?? "",
+      cell: (row) => String(row[h] ?? ""),
     }));
 
   return (
