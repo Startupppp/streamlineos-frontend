@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ChangeEvent } from "react";
+import { useState, type ChangeEvent, type ReactNode } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Copy, GitBranch, CheckCircle, Send } from "lucide-react";
 import { toast } from "sonner";
@@ -13,21 +13,14 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Card, CardContent } from "@/components/ui/card";
 import { AppSheet } from "@/components/shared/app-sheet";
 import { EntityFormSheet } from "@/components/shared/entity-form-sheet";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { FinanceStatusBadge } from "@/features/accounting/shared";
 import { Money } from "@/features/accounting/shared";
 import { BudgetMatrix } from "@/features/accounting/planning/budget-matrix";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   useBudget,
   useSubmitBudget,
@@ -38,7 +31,7 @@ import {
 } from "@/hooks/api/accounting/planning";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type { BudgetStatus } from "@/types/accounting/planning";
+import type { BudgetStatus, BvaAccountPeriodRow } from "@/types/accounting/planning";
 
 function toBudgetStatus(value: string): BudgetStatus | undefined {
   if (
@@ -105,6 +98,68 @@ function BvaFilters({ from, to, onFromChange, onToChange }: BvaFiltersProps) {
   );
 }
 
+const BVA_COLUMNS: DataTableColumn<BvaAccountPeriodRow>[] = [
+  {
+    key: "code",
+    header: "Code",
+    className: "font-mono text-xs px-3 py-2",
+    cell: (row: BvaAccountPeriodRow): ReactNode => row.accountCode,
+  },
+  {
+    key: "account",
+    header: "Account",
+    className: "text-sm px-3 py-2",
+    cell: (row: BvaAccountPeriodRow): ReactNode => row.accountName,
+  },
+  {
+    key: "period",
+    header: "Period",
+    className: "text-xs text-muted-foreground px-3 py-2",
+    cell: (row: BvaAccountPeriodRow): ReactNode => row.periodKey,
+  },
+  {
+    key: "budgeted",
+    header: "Budgeted",
+    className: "text-right px-3 py-2",
+    headerClassName: "text-right",
+    cell: (row: BvaAccountPeriodRow): ReactNode => (
+      <Money value={parseFloat(row.budgeted)} />
+    ),
+  },
+  {
+    key: "actual",
+    header: "Actual",
+    className: "text-right px-3 py-2",
+    headerClassName: "text-right",
+    cell: (row: BvaAccountPeriodRow): ReactNode => (
+      <Money value={parseFloat(row.actual)} />
+    ),
+  },
+  {
+    key: "variance",
+    header: "Variance",
+    className: "text-right px-3 py-2",
+    headerClassName: "text-right",
+    cell: (row: BvaAccountPeriodRow): ReactNode => {
+      const varianceNum = parseFloat(row.variance);
+      return (
+        <Money value={varianceNum} className={varianceNum > 0 ? "text-red-600" : undefined} />
+      );
+    },
+  },
+  {
+    key: "status",
+    header: "Status",
+    className: "px-3 py-2 w-20",
+    cell: (row: BvaAccountPeriodRow): ReactNode =>
+      row.exceeded ? (
+        <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-[9px] px-1.5 py-0 h-4">
+          Over
+        </Badge>
+      ) : null,
+  },
+];
+
 interface BvaTabProps {
   budgetId: number;
 }
@@ -125,6 +180,21 @@ function BvaTab({ budgetId }: BvaTabProps) {
     void query.refetch();
   }
 
+  const tableFooter = totals ? (
+    <div className="flex items-center gap-2 text-sm font-semibold">
+      <span className="flex-1">Total</span>
+      <Money value={parseFloat(totals.budgeted)} />
+      <span className="w-4" />
+      <Money value={parseFloat(totals.actual)} />
+      <span className="w-4" />
+      <Money
+        value={parseFloat(totals.variance)}
+        className={parseFloat(totals.variance) > 0 ? "text-red-600" : undefined}
+      />
+      <span className="w-20" />
+    </div>
+  ) : undefined;
+
   return (
     <div>
       <BvaFilters
@@ -133,79 +203,25 @@ function BvaTab({ budgetId }: BvaTabProps) {
         onFromChange={setFrom}
         onToChange={setTo}
       />
-      {query.isLoading ? (
-        <LoadingState variant="table" rows={6} />
-      ) : query.error ? (
+      {query.error ? (
         <ErrorState
           title="Failed to load vs-actual data"
           description={getErrorMessage(query.error)}
           onRetry={handleRetry}
         />
-      ) : rows.length === 0 ? (
+      ) : rows.length === 0 && !query.isLoading ? (
         <p className="text-sm text-muted-foreground py-8 text-center">
           No budget vs actual data for this range.
         </p>
       ) : (
-        <div className="rounded-lg border border-border overflow-hidden">
-          <div className="overflow-x-auto">
-            <Table className="min-w-[700px]">
-              <TableHeader>
-                <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Code</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Account</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2">Period</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Budgeted</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Actual</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 text-right">Variance</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2 w-20">Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rows.map((row, idx) => {
-                  const varianceNum = parseFloat(row.variance);
-                  return (
-                    <TableRow key={idx} className="border-b border-border/50 hover:bg-muted/30">
-                      <TableCell className="font-mono text-xs px-3 py-2">{row.accountCode}</TableCell>
-                      <TableCell className="text-sm px-3 py-2">{row.accountName}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground px-3 py-2">{row.periodKey}</TableCell>
-                      <TableCell className="text-right px-3 py-2">
-                        <Money value={parseFloat(row.budgeted)} />
-                      </TableCell>
-                      <TableCell className="text-right px-3 py-2">
-                        <Money value={parseFloat(row.actual)} />
-                      </TableCell>
-                      <TableCell className="text-right px-3 py-2">
-                        <Money value={varianceNum} className={varianceNum > 0 ? "text-red-600" : undefined} />
-                      </TableCell>
-                      <TableCell className="px-3 py-2">
-                        {row.exceeded && (
-                          <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-[9px] px-1.5 py-0 h-4">
-                            Over
-                          </Badge>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-                {totals && (
-                  <TableRow className="bg-muted/30 font-semibold border-t border-border">
-                    <TableCell colSpan={3} className="px-3 py-2 text-sm">Total</TableCell>
-                    <TableCell className="text-right px-3 py-2">
-                      <Money value={parseFloat(totals.budgeted)} />
-                    </TableCell>
-                    <TableCell className="text-right px-3 py-2">
-                      <Money value={parseFloat(totals.actual)} />
-                    </TableCell>
-                    <TableCell className="text-right px-3 py-2">
-                      <Money value={parseFloat(totals.variance)} className={parseFloat(totals.variance) > 0 ? "text-red-600" : undefined} />
-                    </TableCell>
-                    <TableCell className="px-3 py-2" />
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
+        <DataTable
+          data={rows}
+          columns={BVA_COLUMNS}
+          getRowKey={(row) => `${row.accountId}-${row.periodKey}`}
+          isLoading={query.isLoading}
+          minWidth="700px"
+          footer={tableFooter}
+        />
       )}
     </div>
   );

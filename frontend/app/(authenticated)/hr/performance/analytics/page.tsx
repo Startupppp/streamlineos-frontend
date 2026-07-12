@@ -2,6 +2,7 @@
 
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { useMemo } from "react";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -33,6 +34,40 @@ const CYCLE_STATUS_STYLES: Record<string, string> = {
   COMPLETED: "bg-blue-50 text-blue-700 border-blue-200",
   CANCELLED: "bg-red-50 text-red-700 border-red-200",
 };
+
+const REVIEW_CYCLE_COLUMNS: DataTableColumn<ReviewCycle>[] = [
+  {
+    key: "name",
+    header: "Name",
+    cell: (c) => <span className="text-sm font-medium text-foreground">{c.name}</span>,
+    sortable: true,
+    sortValue: (c) => c.name,
+  },
+  {
+    key: "type",
+    header: "Type",
+    cell: (c) => <Badge variant="outline" className="text-xs">{c.type}</Badge>,
+  },
+  {
+    key: "status",
+    header: "Status",
+    cell: (c) => (
+      <Badge
+        variant="outline"
+        className={`text-xs ${CYCLE_STATUS_STYLES[c.status ?? ""] ?? "bg-muted text-muted-foreground border-border"}`}
+      >
+        {c.status}
+      </Badge>
+    ),
+  },
+  {
+    key: "period",
+    header: "Period",
+    className: "text-sm text-muted-foreground",
+    cell: (c) =>
+      `${new Date(c.periodStart).toLocaleDateString()} — ${new Date(c.periodEnd).toLocaleDateString()}`,
+  },
+];
 
 interface StatCardProps {
   label: string;

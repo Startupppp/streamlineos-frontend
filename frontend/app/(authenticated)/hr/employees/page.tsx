@@ -251,60 +251,12 @@ export default function EmployeesPage() {
           ))}
         </div>
       ) : (
-        <div className="rounded-lg border border-border bg-card shadow-sm overflow-hidden">
-          <Table>
-            <caption className="sr-only">Employee directory</caption>
-            <TableHeader>
-              <TableRow className="bg-muted/40 hover:bg-muted/40">
-                <TableHead
-                  scope="col"
-                  className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
-                >
-                  Employee
-                </TableHead>
-                <TableHead
-                  scope="col"
-                  className="w-[110px] text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell"
-                >
-                  Employee ID
-                </TableHead>
-                <TableHead
-                  scope="col"
-                  className="w-[160px] text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell"
-                >
-                  Designation
-                </TableHead>
-                <TableHead
-                  scope="col"
-                  className="w-[140px] text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell"
-                >
-                  Department
-                </TableHead>
-                <TableHead
-                  scope="col"
-                  className="w-[200px] text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden lg:table-cell"
-                >
-                  Email
-                </TableHead>
-                <TableHead
-                  scope="col"
-                  className="w-[90px] text-xs font-semibold uppercase tracking-wider text-muted-foreground"
-                >
-                  Status
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map((emp) => (
-                <EmployeeRow
-                  key={emp.id}
-                  employee={emp}
-                  department={getDept(emp)}
-                />
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <DataTable<Employee>
+          data={filtered}
+          columns={buildEmployeeListColumns(getDept)}
+          getRowKey={(emp) => emp.id}
+          onRowClick={(emp) => router.push(`/hr/employees/${emp.id}`)}
+        />
       )}
     </PageWrapper>
   );

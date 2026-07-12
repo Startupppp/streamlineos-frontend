@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useHrTemplates, useSeedHrTemplateDefaults } from "@/hooks/api/hr/hr-templates";
 import { KindBadge, StatusBadge } from "@/features/hr/templates/template-kind-badge";
@@ -33,6 +33,70 @@ import {
 } from "@/types/hr/templates";
 
 const ALL_SENTINEL = "all";
+
+function buildTemplateColumns(
+  onEdit: (t: HrTemplate) => void,
+): DataTableColumn<HrTemplate>[] {
+  return [
+    {
+      key: "name",
+      header: "Name",
+      cell: (t) => (
+        <div>
+          <p className="font-medium text-[13px] text-foreground">{t.name}</p>
+          {t.description && (
+            <p className="text-[11px] text-muted-foreground truncate max-w-xs mt-0.5">{t.description}</p>
+          )}
+        </div>
+      ),
+      sortable: true,
+      sortValue: (t) => t.name,
+    },
+    {
+      key: "kind",
+      header: "Kind",
+      cell: (t) => <KindBadge kind={t.kind} />,
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (t) => <StatusBadge status={t.status} />,
+    },
+    {
+      key: "version",
+      header: "Version",
+      cell: (t) => <span className="text-[11px] font-mono text-muted-foreground">v{t.version}</span>,
+    },
+    {
+      key: "updatedAt",
+      header: "Updated",
+      cell: (t) => (
+        <span className="text-[11px] text-muted-foreground">
+          {t.updatedAt ? new Date(t.updatedAt).toLocaleDateString() : "—"}
+        </span>
+      ),
+    },
+    {
+      key: "actions",
+      header: "",
+      headerClassName: "text-right",
+      className: "text-right",
+      cell: (t) => (
+        <div className="flex items-center gap-1 justify-end">
+          {(t.kind === "letter" || t.kind === "email") && (
+            <TemplatePreviewDialog template={t} />
+          )}
+          <TemplateLifecycleActions template={t} />
+          {(t.status === "draft" || t.status === "review") && (
+            <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); onEdit(t); }}>
+              Edit
+            </Button>
+          )}
+        </div>
+      ),
+    },
+  ];
+}
 
 export default function HrTemplatesPage() {
   const [search, setSearch] = useState("");
@@ -149,97 +213,39 @@ export default function HrTemplatesPage() {
           </div>
         }
       >
-        {isLoading && (
-          <div className="space-y-2 p-1">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-14 w-full rounded-xl" />
-            ))}
-          </div>
-        )}
-
-        {isError && (
-          <EmptyState
-            illustrationPreset="alert"
-            title="Failed to load templates"
-            description="Could not fetch templates. Please try again."
-          />
-        )}
-
-        {!isLoading && !isError && templates.length === 0 && (
-          <EmptyState
-            illustrationPreset="documents"
-            title="No templates yet"
-            description="Create your first template or seed default templates to get started."
-            action={{ label: "New Template", onClick: handleOpenCreate }}
-          />
-        )}
-
-        {!isLoading && !isError && templates.length > 0 && (
-          <div className="rounded-xl border border-border overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/40 border-b">
-                <tr>
-                  <th className="text-left px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Name</th>
-                  <th className="text-left px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Kind</th>
-                  <th className="text-left px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
-                  <th className="text-left px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Version</th>
-                  <th className="text-left px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Updated</th>
-                  <th className="px-4 py-2.5" />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {templates.map((template) => (
-                  <tr key={template.id} className="hover:bg-muted/20 transition-colors group">
-                    <td className="px-4 py-3">
-                      <div>
-                        <p className="font-medium text-[13px] text-foreground">{template.name}</p>
-                        {template.description && (
-                          <p className="text-[11px] text-muted-foreground truncate max-w-xs mt-0.5">{template.description}</p>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <KindBadge kind={template.kind} />
-                    </td>
-                    <td className="px-4 py-3">
-                      <StatusBadge status={template.status} />
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="text-[11px] font-mono text-muted-foreground">v{template.version}</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="text-[11px] text-muted-foreground">
-                        {template.updatedAt ? new Date(template.updatedAt).toLocaleDateString() : "—"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                        {(template.kind === "letter" || template.kind === "email") && (
-                          <TemplatePreviewDialog template={template} />
-                        )}
-                        <TemplateLifecycleActions template={template} />
-                        {(template.status === "draft" || template.status === "review") && (
-                          <Button variant="outline" size="sm" onClick={() => handleOpenEdit(template)}>
-                            Edit
-                          </Button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {total > 50 && (
-              <div className="flex items-center justify-between px-4 py-3 border-t text-[11px] text-muted-foreground">
-                <span>Page {page} of {Math.ceil(total / 50)}</span>
-                <div className="flex items-center gap-1">
-                  <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>Previous</Button>
-                  <Button variant="outline" size="sm" disabled={page * 50 >= total} onClick={() => setPage((p) => p + 1)}>Next</Button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+        <DataTable<HrTemplate>
+          data={templates}
+          columns={buildTemplateColumns(handleOpenEdit)}
+          getRowKey={(t) => t.id}
+          isLoading={isLoading}
+          pagination={
+            total > 50
+              ? {
+                  mode: "server",
+                  page,
+                  pageSize: 50,
+                  total,
+                  onPageChange: setPage,
+                }
+              : undefined
+          }
+          emptyState={
+            isError ? (
+              <EmptyState
+                illustrationPreset="alert"
+                title="Failed to load templates"
+                description="Could not fetch templates. Please try again."
+              />
+            ) : (
+              <EmptyState
+                illustrationPreset="documents"
+                title="No templates yet"
+                description="Create your first template or seed default templates to get started."
+                action={{ label: "New Template", onClick: handleOpenCreate }}
+              />
+            )
+          }
+        />
       </PageWrapper>
 
       <TemplateUpsertSheet

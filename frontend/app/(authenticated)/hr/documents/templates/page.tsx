@@ -23,14 +23,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,7 +31,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
 import {
@@ -155,72 +147,85 @@ function TemplatesPageSkeleton() {
   );
 }
 
-interface TemplateTableRowProps {
-  template: DocumentTemplate;
-  currentDefault: DocumentTemplate | undefined;
-  onDelete: (id: number) => void;
-  onSetDefault: (id: number, isDefault: boolean) => void;
-  isDeletePending: boolean;
-  isSetDefaultPending: boolean;
-}
-
-function TemplateTableRow({
-  template,
-  currentDefault,
-  onDelete,
-  onSetDefault,
-  isDeletePending,
-  isSetDefaultPending,
-}: TemplateTableRowProps) {
-  const router = useRouter();
-  const cfg = getTypeConfig(template.type);
-  const TypeIcon = cfg.icon;
-
-  const handleEdit = useCallback(
-    () => router.push(`/hr/documents/templates/${template.id}/edit`),
-    [router, template.id],
-  );
-
-  return (
-    <TableRow className="hover:bg-muted/30 transition-colors duration-200">
-      <TableCell className="py-3">
+function buildTemplateColumns(
+  currentDefault: DocumentTemplate | undefined,
+  onDelete: (id: number) => void,
+  onSetDefault: (id: number, isDefault: boolean) => void,
+  isDeletePending: boolean,
+  isSetDefaultPending: boolean,
+  router: ReturnType<typeof useRouter>,
+): DataTableColumn<DocumentTemplate>[] {
+  return [
+    {
+      key: "star",
+      header: "",
+      headerClassName: "w-[32px]",
+      className: "w-[32px]",
+      cell: (template) => (
         <DefaultStarButton
           template={template}
           currentDefault={currentDefault}
           onSetDefault={onSetDefault}
           isPending={isSetDefaultPending}
         />
-      </TableCell>
-      <TableCell className="py-3">
-        <div className="flex items-center gap-2 min-w-0">
-          <TypeIcon className="h-4 w-4 text-muted-foreground shrink-0" />
-          <span className="font-medium text-sm truncate">{template.title}</span>
-          {template.isDefault && (
-            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-700 shrink-0">
-              Default
-            </span>
-          )}
-        </div>
-      </TableCell>
-      <TableCell className="py-3">
-        <span
-          className={cn(
-            "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
-            cfg.badgeClass,
-          )}
-        >
-          {cfg.label}
-        </span>
-      </TableCell>
-      <TableCell className="py-3">
-        <VariableChips variables={template.variables ?? []} />
-      </TableCell>
-      <TableCell className="py-3 text-center">
+      ),
+    },
+    {
+      key: "title",
+      header: "Title",
+      headerClassName: "w-[220px]",
+      cell: (template) => {
+        const cfg = getTypeConfig(template.type);
+        const TypeIcon = cfg.icon;
+        return (
+          <div className="flex items-center gap-2 min-w-0">
+            <TypeIcon className="h-4 w-4 text-muted-foreground shrink-0" />
+            <span className="font-medium text-sm truncate">{template.title}</span>
+            {template.isDefault && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-700 shrink-0">
+                Default
+              </span>
+            )}
+          </div>
+        );
+      },
+      sortable: true,
+      sortValue: (t) => t.title,
+    },
+    {
+      key: "type",
+      header: "Type",
+      headerClassName: "w-[120px]",
+      cell: (template) => {
+        const cfg = getTypeConfig(template.type);
+        return (
+          <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border", cfg.badgeClass)}>
+            {cfg.label}
+          </span>
+        );
+      },
+    },
+    {
+      key: "variables",
+      header: "Variables",
+      cell: (template) => <VariableChips variables={template.variables ?? []} />,
+    },
+    {
+      key: "version",
+      header: "Version",
+      headerClassName: "w-[90px] text-center",
+      className: "text-center",
+      cell: (template) => (
         <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-900/40 dark:text-slate-300 dark:border-slate-700">
           v{template.version}
         </span>
-      </TableCell>
-      <TableCell className="py-3">
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      headerClassName: "w-[90px]",
+      cell: (template) => (
         <span
           className={cn(
             "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
@@ -231,13 +236,21 @@ function TemplateTableRow({
         >
           {template.isActive ? "Active" : "Inactive"}
         </span>
-      </TableCell>
-      <TableCell className="py-3 text-xs text-muted-foreground">
-        {template.createdAt
-          ? format(new Date(template.createdAt), "MMM d, yyyy")
-          : "—"}
-      </TableCell>
-      <TableCell className="py-3">
+      ),
+    },
+    {
+      key: "createdAt",
+      header: "Created",
+      headerClassName: "w-[120px]",
+      className: "text-xs text-muted-foreground",
+      cell: (template) =>
+        template.createdAt ? format(new Date(template.createdAt), "MMM d, yyyy") : "—",
+    },
+    {
+      key: "actions",
+      header: "",
+      headerClassName: "w-[56px]",
+      cell: (template) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -245,12 +258,13 @@ function TemplateTableRow({
               size="icon"
               className="h-7 w-7 hover:bg-muted transition-colors duration-200"
               aria-label="Template actions"
+              onClick={(e) => e.stopPropagation()}
             >
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={handleEdit}>
+            <DropdownMenuItem onClick={() => router.push(`/hr/documents/templates/${template.id}/edit`)}>
               <Pencil className="mr-2 h-3.5 w-3.5" />
               Edit
             </DropdownMenuItem>
@@ -263,12 +277,13 @@ function TemplateTableRow({
             />
           </DropdownMenuContent>
         </DropdownMenu>
-      </TableCell>
-    </TableRow>
-  );
+      ),
+    },
+  ];
 }
 
 export default function DocumentTemplatesPage() {
+  const router = useRouter();
   const {
     data: templates,
     isLoading,
@@ -340,6 +355,14 @@ export default function DocumentTemplatesPage() {
   const ndaCount = list.filter((t) => t.type === "NDA").length;
   const offerCount = list.filter((t) => t.type === "OFFER_LETTER").length;
   const currentDefault = list.find((t) => t.isDefault);
+  const columns = buildTemplateColumns(
+    currentDefault,
+    handleDelete,
+    handleSetDefault,
+    deleteMutation.isPending,
+    setDefaultMutation.isPending,
+    router,
+  );
 
   return (
     <PageWrapper
@@ -386,63 +409,23 @@ export default function DocumentTemplatesPage() {
           />
         </div>
 
-        {list.length === 0 ? (
-          <EmptyState
-            illustration={<EmptyDocumentsIllustration className="h-40 w-40" />}
-            title="No templates yet"
-            description="Create your first document template to automate offer letters, NDAs, and more."
-            action={{
-              label: "Create your first template",
-              href: "/hr/documents/templates/new",
-            }}
-          />
-        ) : (
-          <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm">
-            <ScrollArea className="w-full" type="auto">
-              <div className="min-w-[780px]">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/40 hover:bg-muted/40">
-                      <TableHead className="w-[32px]" />
-                      <TableHead className="w-[220px] font-semibold text-foreground/80">
-                        Title
-                      </TableHead>
-                      <TableHead className="w-[120px] font-semibold text-foreground/80">
-                        Type
-                      </TableHead>
-                      <TableHead className="font-semibold text-foreground/80">
-                        Variables
-                      </TableHead>
-                      <TableHead className="w-[90px] text-center font-semibold text-foreground/80">
-                        Version
-                      </TableHead>
-                      <TableHead className="w-[90px] font-semibold text-foreground/80">
-                        Status
-                      </TableHead>
-                      <TableHead className="w-[120px] font-semibold text-foreground/80">
-                        Created
-                      </TableHead>
-                      <TableHead className="w-[56px]" />
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {list.map((template) => (
-                      <TemplateTableRow
-                        key={template.id}
-                        template={template}
-                        currentDefault={currentDefault}
-                        onDelete={handleDelete}
-                        onSetDefault={handleSetDefault}
-                        isDeletePending={deleteMutation.isPending}
-                        isSetDefaultPending={setDefaultMutation.isPending}
-                      />
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </ScrollArea>
-          </div>
-        )}
+        <DataTable<DocumentTemplate>
+          data={list}
+          columns={columns}
+          getRowKey={(t) => t.id}
+          minWidth="780px"
+          emptyState={
+            <EmptyState
+              illustration={<EmptyDocumentsIllustration className="h-40 w-40" />}
+              title="No templates yet"
+              description="Create your first document template to automate offer letters, NDAs, and more."
+              action={{
+                label: "Create your first template",
+                href: "/hr/documents/templates/new",
+              }}
+            />
+          }
+        />
       </div>
     </PageWrapper>
   );
