@@ -16,7 +16,7 @@ import type { StockTransaction } from "@/hooks/api/inventory/stock";
 const TYPE_BADGE: Record<string, string> = {
   SALE: "bg-blue-50 text-blue-700 border-blue-200",
   ADJUSTMENT_OUT: "bg-amber-50 text-amber-700 border-amber-200",
-  TRANSFER_OUT: "bg-violet-50 text-violet-700 border-violet-200",
+  TRANSFER_OUT: "bg-blue-50 text-blue-700 border-blue-200",
   RETURN_OUT: "bg-slate-100 text-slate-700 border-slate-200",
 };
 

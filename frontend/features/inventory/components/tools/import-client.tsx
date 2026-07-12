@@ -255,7 +255,7 @@ function ExportTab() {
           <CardTitle className="text-sm font-semibold">Export Data</CardTitle>
           <CardAction>
             <Link
-              href="/inventory/reports"
+              href="/inventory/reports/stock-summary"
               className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors font-medium"
             >
               Reports <ArrowRight className="h-3 w-3" aria-hidden="true" />

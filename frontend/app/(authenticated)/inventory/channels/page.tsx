@@ -32,7 +32,7 @@ const CHANNEL_TYPE_BADGE: Record<ChannelType, string> = {
   SHOPIFY: "bg-emerald-50 text-emerald-700 border-emerald-200",
   WOOCOMMERCE: "bg-blue-50 text-blue-700 border-blue-200",
   MARKETPLACE: "bg-amber-50 text-amber-700 border-amber-200",
-  B2B: "bg-violet-50 text-violet-700 border-violet-200",
+  B2B: "bg-blue-50 text-blue-700 border-blue-200",
   THREE_PL: "bg-orange-50 text-orange-700 border-orange-200",
 };
 

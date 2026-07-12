@@ -42,13 +42,30 @@ interface CreateReplenishmentRuleInput {
   vendorId?: number;
 }
 
+interface RawReplenishmentSuggestion {
+  productVariantId: number;
+  variantSku: string;
+  variantName: string;
+  productName: string;
+  ruleId: number;
+  warehouseId: number | null;
+  warehouseName: string | null;
+  currentOnHand: number;
+  forecasted: number;
+  suggestedQty: number;
+  vendorId: number | null;
+  leadTimeDays: number;
+  expectedDate: string;
+  reason: string;
+}
+
 export interface ReplenishmentSuggestion {
   id: number;
   variantId: number;
   variantSku: string;
   productName: string;
-  warehouseId: number;
-  warehouseName: string;
+  warehouseId: number | null;
+  warehouseName: string | null;
   currentStock: number;
   minQty: number;
   suggestedQty: number;
@@ -57,6 +74,25 @@ export interface ReplenishmentSuggestion {
   vendorName: string | null;
   expectedDate: string | null;
   reason: string;
+}
+
+function mapSuggestion(raw: RawReplenishmentSuggestion): ReplenishmentSuggestion {
+  return {
+    id: raw.ruleId,
+    variantId: raw.productVariantId,
+    variantSku: raw.variantSku,
+    productName: raw.productName,
+    warehouseId: raw.warehouseId,
+    warehouseName: raw.warehouseName,
+    currentStock: raw.currentOnHand,
+    minQty: 0,
+    suggestedQty: raw.suggestedQty,
+    forecastedDemand: raw.forecasted,
+    vendorId: raw.vendorId,
+    vendorName: null,
+    expectedDate: raw.expectedDate,
+    reason: raw.reason,
+  };
 }
 
 export interface GeneratePOInput {
@@ -152,6 +188,13 @@ export function useDeactivateReplenishmentRule() {
   });
 }
 
+interface RawReplenishmentSuggestionsResponse {
+  items: RawReplenishmentSuggestion[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
 export interface ReplenishmentSuggestionsResponse {
   items: ReplenishmentSuggestion[];
   total: number;
@@ -167,11 +210,13 @@ interface ReplenishmentSuggestionsParams {
 export function useReplenishmentSuggestions(params?: ReplenishmentSuggestionsParams) {
   return useQuery<ReplenishmentSuggestionsResponse, Error>({
     queryKey: queryKeys.inventory.replenishmentSuggestions(params),
-    queryFn: () =>
-      apiClient.get<ReplenishmentSuggestionsResponse>("/inventory/replenishment/suggestions", {
+    queryFn: async () => {
+      const raw = await apiClient.get<RawReplenishmentSuggestionsResponse>("/inventory/replenishment/suggestions", {
         ...(params?.page ? { page: String(params.page) } : {}),
         ...(params?.limit ? { limit: String(params.limit) } : {}),
-      }),
+      });
+      return { items: raw.items.map(mapSuggestion), total: raw.total, page: raw.page, totalPages: raw.totalPages };
+    },
     staleTime: 5 * 60_000,
   });
 }

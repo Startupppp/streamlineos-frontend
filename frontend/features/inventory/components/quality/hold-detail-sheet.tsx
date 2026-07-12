@@ -111,10 +111,10 @@ export function HoldDetailSheet({ open, onOpenChange, holdId }: Props) {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <HoldInfoRow label="Variant" value={hold.variantName} />
+              <HoldInfoRow label="Variant ID" value={String(hold.productVariantId)} />
               <HoldInfoRow
                 label="Quantity"
-                value={<span className="tabular-nums font-mono">{hold.qty}</span>}
+                value={<span className="tabular-nums font-mono">{hold.quantity}</span>}
               />
               <HoldInfoRow label="Reason" value={hold.reason} />
               {hold.lotId && <HoldInfoRow label="Lot" value={`Lot #${hold.lotId}`} />}

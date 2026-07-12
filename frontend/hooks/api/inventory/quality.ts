@@ -55,13 +55,15 @@ interface QualityHold {
   id: number;
   orgId: string;
   status: QualityHoldStatus;
-  variantId: number;
-  variantName: string;
+  productVariantId: number;
   locationId?: number | null;
   lotId?: number | null;
   serialId?: number | null;
-  qty: number;
+  quantity: string;
   reason: string;
+  releasedBy?: string | null;
+  releasedAt?: string | null;
+  createdBy?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -265,13 +267,13 @@ export function useCreateQualityHold() {
   return useMutation<
     QualityHold,
     Error,
-    { variantId: number; locationId?: number; lotId?: number; serialId?: number; qty: number; reason: string }
+    { productVariantId: number; locationId: number; lotId?: number; serialId?: number; quantity: number; reason: string }
   >({
     mutationKey: ["inventory", "quality", "hold", "create"],
-    mutationFn: (data) =>
+    mutationFn: ({ quantity, ...rest }) =>
       apiClient.post<QualityHold>(
         "/inventory/quality/holds",
-        data,
+        { ...rest, quantity: String(quantity) },
         { headers: { "Idempotency-Key": crypto.randomUUID() } },
       ),
     onSuccess: () => {

@@ -257,6 +257,54 @@ interface RawStockSummaryEnvelope {
   totalPages: number;
 }
 
+interface RawReorderRow {
+  productVariantId: number;
+  variantSku: string;
+  variantName: string;
+  productId: number;
+  productName: string;
+  productSku: string;
+  onHand: number;
+  onOrder: number;
+  committed: number;
+  reorderPoint: number;
+  minStockLevel: number;
+  reorderRuleId: number | null;
+  minQty: number | null;
+  maxQty: number | null;
+  reorderQty: number | null;
+  suggestedQty: number;
+  vendorId: number | null;
+  leadTimeDays: number | null;
+}
+
+interface RawReorderEnvelope {
+  items: RawReorderRow[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+function toReorderRowFromFlat(row: RawReorderRow): ReorderReportRow {
+  const deficit = Math.max(row.reorderPoint - row.onHand, 0);
+  return {
+    productId: row.productId,
+    productName: row.productName,
+    sku: row.productSku,
+    variantSku: row.variantSku,
+    categoryName: null,
+    warehouseName: null,
+    onHand: row.onHand,
+    availableQty: row.onHand - row.committed,
+    reorderPoint: row.reorderPoint,
+    reorderQty: row.suggestedQty > 0 ? row.suggestedQty : (deficit > 0 ? deficit : null),
+    deficit,
+    costPrice: null,
+    vendorName: null,
+    urgency: reorderUrgency(row.onHand, row.reorderPoint),
+  };
+}
+
 interface RawMovementsEnvelope {
   items: RawTransactionRow[];
   total: number;
@@ -411,11 +459,11 @@ export function useReorderReport(params?: ReorderReportParams) {
   return useQuery<PaginatedResponse<ReorderReportRow>, Error>({
     queryKey: [...queryKeys.inventory.all, "reorderReport", params ?? {}] as const,
     queryFn: async () => {
-      const data = await apiClient.get<RawStockSummaryEnvelope>("/inventory/reports/reorder", {
+      const data = await apiClient.get<RawReorderEnvelope>("/inventory/reports/reorder", {
         ...(params?.page !== undefined ? { page: String(params.page) } : {}),
         ...(params?.limit !== undefined ? { limit: String(params.limit) } : {}),
       });
-      const items = (data.items ?? []).map(toReorderRow);
+      const items = (data.items ?? []).map(toReorderRowFromFlat);
       return { items, total: data.total, page: data.page, totalPages: data.totalPages };
     },
     staleTime: 5 * 60_000,

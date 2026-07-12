@@ -36,8 +36,8 @@ const TYPE_CLASS: Record<MovementType, string> = {
   ADJUSTMENT_OUT: "bg-yellow-100 text-yellow-800 border-yellow-200",
   TRANSFER_IN: "bg-cyan-100 text-cyan-800 border-cyan-200",
   TRANSFER_OUT: "bg-orange-100 text-orange-800 border-orange-200",
-  RETURN_IN: "bg-purple-100 text-purple-800 border-purple-200",
-  RETURN_OUT: "bg-purple-100 text-purple-800 border-purple-200",
+  RETURN_IN: "bg-blue-100 text-blue-800 border-blue-200",
+  RETURN_OUT: "bg-blue-100 text-blue-800 border-blue-200",
 };
 
 function formatDate(value: string): string {

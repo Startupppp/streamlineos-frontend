@@ -51,11 +51,11 @@ export function HoldCreateSheet({ open, onOpenChange }: Props) {
   function handleSubmit(values: FormValues): void {
     createMut.mutate(
       {
-        variantId: Number(values.variantId),
-        ...(values.locationId !== "" && values.locationId !== undefined ? { locationId: Number(values.locationId) } : {}),
+        productVariantId: Number(values.variantId),
+        locationId: values.locationId !== "" && values.locationId !== undefined ? Number(values.locationId) : 0,
         ...(values.lotId !== "" && values.lotId !== undefined ? { lotId: Number(values.lotId) } : {}),
         ...(values.serialId !== "" && values.serialId !== undefined ? { serialId: Number(values.serialId) } : {}),
-        qty: Number(values.qty),
+        quantity: Number(values.qty),
         reason: values.reason,
       },
       {
