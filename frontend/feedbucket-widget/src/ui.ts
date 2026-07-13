@@ -614,7 +614,11 @@ class FeedbucketWidget {
         this.openPanel("bug");
         return;
       }
-      const annotator = new Annotator();
+      const annotator = new Annotator({
+        aiAssistEnabled: this.aiAssistEnabled,
+        apiBase: this.apiBase,
+        embedKey: this.embedKey,
+      });
       const result = await annotator.run(shot);
       if (result) await this.submitAnnotated(result);
     } finally {

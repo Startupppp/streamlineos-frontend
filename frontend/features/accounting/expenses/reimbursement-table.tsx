@@ -28,6 +28,7 @@ interface ReimbursementTableProps {
   total: number;
   onPageChange: (page: number) => void;
   emptyState: ReactNode;
+  className?: string;
 }
 
 const COLUMNS: DataTableColumn<FinReimbursementBatch>[] = [
@@ -76,11 +77,13 @@ export function ReimbursementTable({
   total,
   onPageChange,
   emptyState,
+  className,
 }: ReimbursementTableProps) {
   const getRowKey = useCallback((row: FinReimbursementBatch) => row.id, []);
 
   return (
     <DataTable
+      className={className}
       data={data}
       columns={COLUMNS}
       getRowKey={getRowKey}

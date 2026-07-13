@@ -277,7 +277,6 @@ export default function RecurringInvoicesPage() {
 
       <DataTable
         className="flex-1 min-h-0"
-        className="flex-1 min-h-0"
         data={items}
         columns={columns}
         getRowKey={(row) => row.id}

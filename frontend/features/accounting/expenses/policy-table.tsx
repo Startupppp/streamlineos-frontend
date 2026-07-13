@@ -13,9 +13,10 @@ interface PolicyTableProps {
   onDelete: (policy: FinExpensePolicy) => void;
   onToggleActive: (policy: FinExpensePolicy, isActive: boolean) => void;
   togglingId: number | null;
+  className?: string;
 }
 
-export function PolicyTable({ policies, onEdit, onDelete, onToggleActive, togglingId }: PolicyTableProps) {
+export function PolicyTable({ policies, onEdit, onDelete, onToggleActive, togglingId, className }: PolicyTableProps) {
   function getPolicyRowKey(policy: FinExpensePolicy): number {
     return policy.id;
   }
@@ -103,6 +104,7 @@ export function PolicyTable({ policies, onEdit, onDelete, onToggleActive, toggli
 
   return (
     <DataTable
+      className={className}
       data={policies}
       columns={columns}
       getRowKey={getPolicyRowKey}

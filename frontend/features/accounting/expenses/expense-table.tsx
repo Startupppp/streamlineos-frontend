@@ -38,6 +38,7 @@ interface ExpenseTableProps {
   total: number;
   onPageChange: (page: number) => void;
   emptyState: ReactNode;
+  className?: string;
 }
 
 const COLUMNS: DataTableColumn<ExpenseWithExtras>[] = [
@@ -147,11 +148,13 @@ export function ExpenseTable({
   total,
   onPageChange,
   emptyState,
+  className,
 }: ExpenseTableProps) {
   const getRowKey = useCallback((row: ExpenseWithExtras) => row.id, []);
 
   return (
     <DataTable
+      className={className}
       data={data}
       columns={COLUMNS}
       getRowKey={getRowKey}

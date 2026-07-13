@@ -1,3 +1,7 @@
+import { aiAssistFeedback } from "./api";
+import { getPageUrl } from "./metadata";
+import { getNetworkLogs } from "./network-capture";
+
 type Tool = "arrow" | "rect" | "rect-outline" | "pen" | "comment";
 
 export interface AnnotationResult {
@@ -106,8 +110,15 @@ export class Annotator {
   private resolveFn: ((r: AnnotationResult | null) => void) | null = null;
   private commentBox: HTMLDivElement | null = null;
   private selectedType = "bug";
+  private aiEnhancing = false;
+  private readonly aiAssistEnabled: boolean;
+  private readonly apiBase: string;
+  private readonly embedKey: string;
 
-  constructor() {
+  constructor(opts: { aiAssistEnabled: boolean; apiBase: string; embedKey: string }) {
+    this.aiAssistEnabled = opts.aiAssistEnabled;
+    this.apiBase = opts.apiBase;
+    this.embedKey = opts.embedKey;
     this.overlay = document.createElement("div");
     this.overlay.id = "feedbucket-annotator";
     this.overlay.style.cssText =
@@ -324,6 +335,21 @@ export class Annotator {
     desc.rows = 3;
     box.appendChild(desc);
 
+    if (this.aiAssistEnabled) {
+      const aiBtn = document.createElement("button");
+      aiBtn.type = "button";
+      aiBtn.className = "an-ai-btn";
+      aiBtn.textContent = "✨ Enhance with AI";
+      const aiNote = document.createElement("span");
+      aiNote.className = "an-ai-note";
+      aiNote.hidden = true;
+      aiBtn.addEventListener("click", () => {
+        void this.runAiEnhance(aiBtn, aiNote, typeRow, title, desc);
+      });
+      box.appendChild(aiBtn);
+      box.appendChild(aiNote);
+    }
+
     const footer = document.createElement("div");
     footer.className = "an-box-footer";
     const submit = document.createElement("button");
@@ -385,6 +411,73 @@ export class Annotator {
     return new Promise((resolve) => {
       this.canvas.toBlob((b) => resolve(b), "image/jpeg", 0.82);
     });
+  }
+
+  private exportCurrentImage(): Promise<Blob | null> {
+    this.renderPinsToCanvas();
+    return new Promise((resolve) => {
+      this.canvas.toBlob((b) => {
+        this.redraw();
+        resolve(b);
+      }, "image/jpeg", 0.82);
+    });
+  }
+
+  private async runAiEnhance(
+    btn: HTMLButtonElement,
+    note: HTMLSpanElement,
+    typeRow: HTMLDivElement,
+    title: HTMLInputElement,
+    desc: HTMLTextAreaElement,
+  ): Promise<void> {
+    if (this.aiEnhancing) return;
+    this.aiEnhancing = true;
+    btn.disabled = true;
+    btn.textContent = "✨ Thinking…";
+    note.hidden = true;
+    const image = await this.exportCurrentImage();
+    const t = title.value.trim();
+    const d = desc.value.trim();
+    const message = t && d ? `${t}\n\n${d}` : t || d;
+    const result = await aiAssistFeedback({
+      apiBase: this.apiBase,
+      key: this.embedKey,
+      type: this.selectedType,
+      message,
+      pageUrl: getPageUrl(),
+      screenshot: image,
+      networkLogs: getNetworkLogs(),
+    });
+    this.aiEnhancing = false;
+    btn.disabled = false;
+    btn.textContent = "✨ Enhance with AI";
+    if ("kind" in result) {
+      if (result.kind === "feature_off") {
+        btn.hidden = true;
+        return;
+      }
+      note.hidden = false;
+      note.textContent =
+        result.kind === "credits_exhausted"
+          ? "AI credits exhausted"
+          : result.kind === "rate_limited"
+            ? "Too many requests, try again in a moment"
+            : "AI is unavailable right now";
+      return;
+    }
+    const valid: ReadonlyArray<string> = ["bug", "idea", "feature", "question", "other"];
+    if (valid.includes(result.suggestedType)) {
+      this.selectedType = result.suggestedType;
+      const chips = typeRow.querySelectorAll(".an-chip");
+      let i = 0;
+      for (const chip of chips) {
+        const tv = TYPES[i]?.value;
+        chip.classList.toggle("active", tv === this.selectedType);
+        i += 1;
+      }
+    }
+    title.value = result.title;
+    desc.value = result.description;
   }
 
   private renderPinsToCanvas(): void {
@@ -497,6 +590,14 @@ export class Annotator {
   color: #0b1220; outline: none; resize: none;
 }
 .an-title:focus, .an-desc:focus { border-color: #6366f1; }
+.an-ai-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; width: 100%;
+  padding: 7px 12px; background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; border-radius: 8px;
+  font-size: 12px; font-weight: 600; font-family: inherit; cursor: pointer; transition: background 120ms ease;
+}
+.an-ai-btn:hover { background: #e0e7ff; }
+.an-ai-btn:disabled { opacity: 0.7; cursor: default; }
+.an-ai-note { font-size: 11px; color: #b45309; }
 .an-box-footer { display: flex; justify-content: flex-end; }
 .an-submit {
   padding: 7px 18px; background: #6366f1; color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 600;
