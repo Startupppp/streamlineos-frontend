@@ -160,8 +160,8 @@
   --popover-foreground: #f4f4f5;
   --muted: #1c1c1f;
   --muted-foreground: #a1a1aa;
-  --border: rgba(255, 255, 255, 0.22);     /* clearly visible against dark surfaces */
-  --input: rgba(255, 255, 255, 0.16);
+  --border: rgba(255, 255, 255, 0.30);     /* clearly visible against dark surfaces */
+  --input: rgba(255, 255, 255, 0.22);
   --ring: #d4d4d8;
 
   /* â”€â”€â”€ CTA & Action â€” invert ink to white for dark â”€â”€â”€ */
@@ -188,7 +188,7 @@
   --sidebar-primary-foreground: #0a0a0b;
   --sidebar-accent: color-mix(in srgb, var(--sidebar-primary) 12%, transparent);
   --sidebar-accent-foreground: #fafafa;
-  --sidebar-border: rgba(255, 255, 255, 0.16);
+  --sidebar-border: rgba(255, 255, 255, 0.22);
   --sidebar-ring: #d4d4d8;
 
   --gold: #3b82f6;

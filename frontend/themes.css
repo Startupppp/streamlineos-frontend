@@ -311,10 +311,10 @@
   --muted: color-mix(in srgb, var(--brand-core) 10%, #1c1c1f);
   --secondary: color-mix(in srgb, var(--brand-core) 12%, #202023);
   --accent: color-mix(in srgb, var(--brand-core) 12%, #202023);
-  --border: color-mix(in srgb, var(--brand-bright) 40%, transparent);
-  --input: color-mix(in srgb, var(--brand-bright) 30%, transparent);
+  --border: color-mix(in srgb, var(--brand-bright) 50%, transparent);
+  --input: color-mix(in srgb, var(--brand-bright) 38%, transparent);
   --sidebar: color-mix(in srgb, var(--brand-core) 8%, #0e0e10);
-  --sidebar-border: color-mix(in srgb, var(--brand-bright) 26%, transparent);
+  --sidebar-border: color-mix(in srgb, var(--brand-bright) 34%, transparent);
 }
 
 /* Dark-mode reconciliation — accent foregrounds lifted for contrast on dark surfaces */
