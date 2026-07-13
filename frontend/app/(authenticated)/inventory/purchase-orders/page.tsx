@@ -53,11 +53,11 @@ const STATUS_OPTIONS = [
 ] as const;
 
 const STATUS_BADGE: Record<PurchaseOrderStatus, string> = {
-  DRAFT: "bg-slate-100 text-slate-700 border-slate-200",
-  SENT: "bg-blue-50 text-blue-700 border-blue-200",
-  PARTIAL: "bg-amber-50 text-amber-700 border-amber-200",
-  RECEIVED: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  CLOSED: "bg-slate-100 text-slate-700 border-slate-200",
+  DRAFT: "bg-muted text-muted-foreground border-border",
+  SENT: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  PARTIAL: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  RECEIVED: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  CLOSED: "bg-muted text-muted-foreground border-border",
   CANCELLED: "bg-red-50 text-red-700 border-red-200",
 };
 

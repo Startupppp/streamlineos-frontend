@@ -158,7 +158,7 @@ export function WorkLogEntryRow({
               className={cn(
                 "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
                 statusPillClass[status] ??
-                  "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-700",
+                  "bg-muted text-muted-foreground border-border dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-700",
               )}
             >
               {status}

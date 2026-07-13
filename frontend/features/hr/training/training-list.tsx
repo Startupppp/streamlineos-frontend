@@ -42,7 +42,7 @@ const STATUS_COLORS: Record<TrainingProgram["status"], string> = {
   SCHEDULED: "bg-blue-50 text-blue-700 border-blue-200/70",
   IN_PROGRESS: "bg-amber-50 text-amber-700 border-amber-200/70",
   COMPLETED: "bg-emerald-50 text-emerald-700 border-emerald-200/70",
-  CANCELLED: "bg-slate-50 text-slate-500 border-slate-200/70",
+  CANCELLED: "bg-muted text-muted-foreground border-border dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700",
 };
 
 const TYPE_COLORS: Record<TrainingProgram["type"], string> = {
@@ -156,10 +156,10 @@ export function TrainingList({ canManage, onSelectProgram, selectedProgramId }: 
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.22, ease: "easeOut", delay: idx * 0.06 }}
-              className={`bg-white/90 backdrop-blur-sm rounded-2xl border shadow-xl shadow-slate-200/60 p-4 flex flex-col gap-3 cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-md ${
+              className={`bg-card rounded-2xl border shadow-sm p-4 flex flex-col gap-3 cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-md ${
                 selectedProgramId === program.id
-                  ? "border-violet-500 bg-violet-50/60"
-                  : "border-slate-200/80"
+                  ? "border-blue-500 bg-blue-50/60 dark:bg-blue-500/10"
+                  : "border-border"
               }`}
               onClick={() => handleSelectProgram(program.id)}
             >
@@ -170,7 +170,7 @@ export function TrainingList({ canManage, onSelectProgram, selectedProgramId }: 
                     <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[11px] font-medium border ${TYPE_COLORS[program.type]}`}>
                       {program.type}
                     </span>
-                    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[11px] font-medium border bg-slate-50 text-slate-600 border-slate-200/70`}>
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[11px] font-medium border bg-muted text-muted-foreground border-border">
                       {FORMAT_ICONS[program.format]}
                       {program.format.replace("_", " ")}
                     </span>

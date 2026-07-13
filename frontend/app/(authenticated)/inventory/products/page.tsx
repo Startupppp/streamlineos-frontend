@@ -70,7 +70,7 @@ function StatusBadge({ status }: { status: string }) {
     );
   }
   return (
-    <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 border-slate-200 text-slate-600 bg-slate-100">
+    <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 border-border text-muted-foreground bg-muted">
       Inactive
     </Badge>
   );

@@ -54,7 +54,7 @@ function DaysUntilExpiryCell({ days }: { days: number }) {
 
 function LotStatusBadge({ status }: { status: string }) {
   const key = status as LotStatus;
-  const badgeClass = LOT_STATUS_BADGE[key] ?? "bg-slate-100 text-slate-700 border-slate-200";
+  const badgeClass = LOT_STATUS_BADGE[key] ?? "bg-muted text-muted-foreground border-border";
   const label = LOT_STATUS_LABEL[key] ?? status;
   return (
     <Badge variant="outline" className={`h-4 text-[9px] px-1.5 py-0 ${badgeClass}`}>
