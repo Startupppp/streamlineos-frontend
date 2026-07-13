@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useTransition, useMemo } from "react";
+import { useState, useCallback, useTransition, useMemo, useEffect } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { Download, GitMerge, LayoutGrid, Plus, Search, TableIcon } from "lucide-react";
@@ -40,14 +40,15 @@ export default function ContactsPage() {
   const enrichContact = useEnrichContact();
 
   const view = (searchParams.get("view") || "table") as "table" | "card";
-  const searchInput = searchParams.get("q") || "";
+  const [search, setSearch] = useState(searchParams.get("q") ?? "");
   const sourceFilter = searchParams.get("source") || "all";
   const page = Number(searchParams.get("page")) || 1;
 
-  const debouncedSearch = useDebouncedValue(searchInput, 300);
+  const debouncedSearch = useDebouncedValue(search, 300);
+  const trimmedDebounced = debouncedSearch.trim();
   const apiSearch =
-    debouncedSearch.length >= 3 || debouncedSearch.length === 0
-      ? debouncedSearch
+    trimmedDebounced.length >= 3 || trimmedDebounced.length === 0
+      ? trimmedDebounced
       : "";
 
   const updateParams = useCallback(
@@ -63,6 +64,12 @@ export default function ContactsPage() {
     },
     [searchParams, router, pathname],
   );
+
+  useEffect(() => {
+    const current = searchParams.get("q") ?? "";
+    if (debouncedSearch === current) return;
+    updateParams({ q: debouncedSearch || null, page: null });
+  }, [debouncedSearch, searchParams, updateParams]);
 
   const { data, isLoading, error, refetch } = useContacts({
     search: apiSearch || undefined,
@@ -90,9 +97,9 @@ export default function ContactsPage() {
 
   const handleSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      updateParams({ q: e.target.value || null, page: null });
+      setSearch(e.target.value);
     },
-    [updateParams],
+    [],
   );
 
   const handleSourceChange = useCallback(
@@ -259,7 +266,7 @@ export default function ContactsPage() {
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
               <Input
                 placeholder="Search contacts (min 3 chars)..."
-                value={searchInput}
+                value={search}
                 onChange={handleSearchChange}
                 className="h-8 w-full min-w-0 pl-8 text-xs"
               />

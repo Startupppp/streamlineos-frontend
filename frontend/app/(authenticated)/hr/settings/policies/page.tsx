@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { motion } from "framer-motion";
 import { Plus, Eye, Pencil, Archive, Search } from "lucide-react";
 import { toast } from "sonner";
@@ -44,6 +45,7 @@ export default function HrPoliciesPage() {
 
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [typeFilter, setTypeFilter] = useState<HrPolicyType | "all">("all");
   const [statusFilter, setStatusFilter] = useState<HrPolicyStatus | "all">("all");
 
@@ -56,10 +58,15 @@ export default function HrPoliciesPage() {
   const { data, isLoading, isError, refetch } = useHrPolicies({
     page,
     limit: 20,
-    search: search || undefined,
+    search: debouncedSearch.trim() || undefined,
     type: typeFilter !== "all" ? typeFilter : undefined,
     status: statusFilter !== "all" ? statusFilter : undefined,
   });
+
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+    setPage(1);
+  }, []);
 
   const handleOpenCreate = useCallback(() => {
     setEditPolicy(undefined);
@@ -212,10 +219,7 @@ export default function HrPoliciesPage() {
             <Input
               placeholder="Search policies..."
               value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
+              onChange={handleSearchChange}
               className="h-8 text-xs pl-8 w-52"
             />
           </div>

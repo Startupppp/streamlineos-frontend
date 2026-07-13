@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useTransition } from "react";
+import { useState, useCallback, useTransition, useEffect } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useReducedMotion, motion } from "framer-motion";
@@ -189,8 +189,14 @@ export default function ClientsPage() {
     [searchParams, router, pathname],
   );
 
+  useEffect(() => {
+    const current = searchParams.get("q") ?? "";
+    if (debouncedSearch === current) return;
+    updateParams({ q: debouncedSearch || null, page: null });
+  }, [debouncedSearch, searchParams, updateParams]);
+
   const { data, isLoading, isError, refetch } = useClientAccounts({
-    search: debouncedSearch || undefined,
+    search: debouncedSearch.trim() || undefined,
     status: statusParam ?? undefined,
     page,
     limit: 20,
@@ -201,9 +207,8 @@ export default function ClientsPage() {
   const handleSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setRawSearch(e.target.value);
-      updateParams({ q: e.target.value || null, page: null });
     },
-    [updateParams],
+    [],
   );
 
   const handleStatusChange = useCallback(

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
@@ -27,6 +27,7 @@ export function useHrTemplates(params?: ListParams) {
     queryFn: () =>
       apiClient.get<TemplateListResponse>("/hr/templates", params as Record<string, unknown> | undefined),
     staleTime: 60_000,
+    placeholderData: keepPreviousData,
   });
 }
 

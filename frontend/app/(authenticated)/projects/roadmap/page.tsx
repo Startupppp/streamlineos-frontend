@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { ExternalLink, MessageSquare, Megaphone, Plus, Sparkles } from "lucide-react";
@@ -19,6 +20,7 @@ export default function RoadmapPage() {
   const { data: session } = useSession();
   const orgId = session?.orgId ?? null;
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [activeTab, setActiveTab] = useState<RoadmapTabValue>("roadmap");
   const [roadmapCreateOpen, setRoadmapCreateOpen] = useState(false);
   const [changelogCreateOpen, setChangelogCreateOpen] = useState(false);
@@ -117,13 +119,13 @@ export default function RoadmapPage() {
         >
           <TabsContent value="roadmap" className="mt-0">
             <RoadmapTab
-              search={search}
+              search={debouncedSearch}
               createOpen={roadmapCreateOpen}
               onCreateOpenChange={handleRoadmapCreateOpenChange}
             />
           </TabsContent>
           <TabsContent value="feedback" className="mt-0">
-            <FeedbackTab search={search} />
+            <FeedbackTab search={debouncedSearch} />
           </TabsContent>
           <TabsContent value="changelog" className="mt-0">
             <ChangelogTab

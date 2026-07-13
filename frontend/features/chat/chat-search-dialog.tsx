@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback, useDeferredValue } from "react";
+import { useState, useCallback } from "react";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Hash, Loader2, MessageSquare, Search, User } from "lucide-react";
@@ -17,11 +18,11 @@ interface ChatSearchDialogProps {
 export function ChatSearchDialog({ open, onOpenChange, onSelectChannel }: ChatSearchDialogProps) {
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState<"messages" | "channels" | "people">("messages");
-  const deferredQuery = useDeferredValue(query);
+  const debouncedQuery = useDebouncedValue(query, 300);
 
-  const { data: messageResults, isLoading: loadingMessages } = useSearchMessages(deferredQuery, open && tab === "messages");
-  const { data: channelResults, isLoading: loadingChannels } = useSearchChannels(deferredQuery, open && tab === "channels");
-  const { data: userResults, isLoading: loadingUsers } = useSearchUsers(deferredQuery, open && tab === "people");
+  const { data: messageResults, isLoading: loadingMessages } = useSearchMessages(debouncedQuery, open && tab === "messages");
+  const { data: channelResults, isLoading: loadingChannels } = useSearchChannels(debouncedQuery, open && tab === "channels");
+  const { data: userResults, isLoading: loadingUsers } = useSearchUsers(debouncedQuery, open && tab === "people");
 
   const handleQueryChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setQuery(e.target.value), []);
 
@@ -67,7 +68,7 @@ export function ChatSearchDialog({ open, onOpenChange, onSelectChannel }: ChatSe
         </div>
 
         <div className="max-h-[400px] overflow-y-auto py-2">
-          {deferredQuery.trim().length < (tab === "messages" ? 2 : 1) ? (
+          {debouncedQuery.trim().length < (tab === "messages" ? 2 : 1) ? (
             <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
               <Search className="h-8 w-8 mb-2 opacity-30" />
               <p className="text-[12px]">Type to search</p>

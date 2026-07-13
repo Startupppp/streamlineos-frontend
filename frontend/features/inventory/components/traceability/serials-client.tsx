@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import Link from "next/link";
 import { Search } from "lucide-react";
 import { EyeIcon } from "@animateicons/react/lucide";
@@ -129,12 +130,13 @@ export function SerialsClient() {
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState("ALL");
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 300);
 
   const { data, isLoading, isError, refetch } = useSerials({
     page,
     limit: 20,
     status: status !== "ALL" ? status : undefined,
-    search: search || undefined,
+    search: debouncedSearch.trim() || undefined,
   });
 
   const items = data?.items ?? [];

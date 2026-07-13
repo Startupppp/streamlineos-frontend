@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useState, useCallback } from "react";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { Search, Loader2 } from "lucide-react";
 import {
   Dialog,
@@ -46,7 +47,8 @@ function TicketPickerBody({
   onSelect: (ticket: TicketSearchResult) => void;
 }) {
   const [q, setQ] = useState("");
-  const { data: tickets = [], isLoading } = useTicketSearch(q);
+  const debouncedQ = useDebouncedValue(q, 300);
+  const { data: tickets = [], isLoading } = useTicketSearch(debouncedQ);
 
   const handleQChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -38,6 +38,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyMailIllustration } from "@/components/illustrations";
 import { Plus, Copy, Pencil, Trash2, Search } from "lucide-react";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import {
   useSupportMacros,
   useCreateMacro,
@@ -387,8 +388,9 @@ function MacroCard({
 
 export default function SupportMacrosPage() {
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 300);
   const { data: macros, isLoading, isError, refetch } = useSupportMacros(
-    search.trim() ? { search: search.trim() } : undefined,
+    debouncedSearch.trim() ? { search: debouncedSearch.trim() } : undefined,
   );
   const { data: usageData } = useMacroUsage();
   const deleteMacro = useDeleteMacro();

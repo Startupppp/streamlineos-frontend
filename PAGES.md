@@ -755,3 +755,6 @@ Full configurable PeopleOS: hardcoded HR rules refactored onto shared engines (p
 
 ### Cross-cutting
 - [x] One unified `/calendar` (HR events as a toggleable source; `/hr/calendar` removed) · [x] Central notifications for HR events · [x] 107 engine unit/integration tests green (policy/workflow/automation/template/payroll-inputs/leave-ledger/attendance/cases) · [x] blue-accent conformance (violet retired)
+
+## Search conformance pass (2026-07-13)
+- [x] All ~70 search surfaces audited (CRM/HR/Inventory/Projects/Finance/Payroll/Workflows/Surveys/Org/Settings/Users/Notifications/Support/KB/Chat/Calendar/Blog); 45 files fixed to the canonical pattern: input bound to immediate local state, `useDebouncedValue` (shared hook) drives query + guarded URL write, never URL/debounce sync-back into the input · [x] all hand-rolled setTimeout/useDeferredValue debounces replaced with the shared hook; local duplicate hook deleted; `use-expense-filters` re-export removed · [x] `placeholderData: keepPreviousData` on all search-driven query hooks (~40) — no result flash while typing · [x] backend: migration `0267_search_trgm_indexes.sql` (39 pg_trgm GIN indexes incl. functional `first_name || ' ' || last_name`) applied; chat `searchUsers` org-scoped (cross-tenant leak fix); global `/search` empty-query short-circuit

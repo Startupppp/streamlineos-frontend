@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useTransition } from "react";
+import { useState, useCallback, useTransition, useEffect } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -43,8 +43,8 @@ export default function ProductCatalogPage() {
   const [editTarget, setEditTarget] = useState<Product | null>(null);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 
-  const searchInput = searchParams.get("q") ?? "";
-  const debouncedSearch = useDebouncedValue(searchInput, 300);
+  const [search, setSearch] = useState(searchParams.get("q") ?? "");
+  const debouncedSearch = useDebouncedValue(search, 300);
 
   const updateParams = useCallback(
     (updates: Record<string, string | null>) => {
@@ -60,7 +60,13 @@ export default function ProductCatalogPage() {
     [searchParams, router, pathname],
   );
 
-  const { data, isLoading, isError, refetch } = useProducts(debouncedSearch || undefined);
+  useEffect(() => {
+    const current = searchParams.get("q") ?? "";
+    if (debouncedSearch === current) return;
+    updateParams({ q: debouncedSearch || null });
+  }, [debouncedSearch, searchParams, updateParams]);
+
+  const { data, isLoading, isError, refetch } = useProducts(debouncedSearch.trim() || undefined);
   const createProduct = useCreateProduct();
   const updateProduct = useUpdateProduct();
   const deleteProduct = useDeleteProduct();
@@ -70,9 +76,9 @@ export default function ProductCatalogPage() {
 
   const handleSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      updateParams({ q: e.target.value || null });
+      setSearch(e.target.value);
     },
-    [updateParams],
+    [],
   );
 
   const handleOpenCreate = useCallback(() => {
@@ -261,7 +267,7 @@ export default function ProductCatalogPage() {
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
               <Input
                 placeholder="Search products..."
-                value={searchInput}
+                value={search}
                 onChange={handleSearchChange}
                 className="h-8 w-full pl-8 text-xs"
               />

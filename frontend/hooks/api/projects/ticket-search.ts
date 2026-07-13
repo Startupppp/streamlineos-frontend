@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -16,6 +16,7 @@ export function useTicketSearch(
     queryFn: () =>
       apiClient.get<TicketSearchResult[]>("/projects/search/tickets", { q, limit: 10 }),
     staleTime: 30_000,
+    placeholderData: keepPreviousData,
     ...options,
   });
 }

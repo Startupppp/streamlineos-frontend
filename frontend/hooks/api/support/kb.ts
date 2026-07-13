@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -201,6 +201,7 @@ export function useKbArticles(params?: KbArticlesParams, options?: { enabled?: b
     queryFn: () => apiClient.get<KbArticleListItem[]>("/support/kb/articles", queryParams),
     staleTime: 30_000,
     enabled: options?.enabled ?? true,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -262,6 +263,7 @@ export function usePublicKb(orgId: string, params?: PublicKbParams) {
       apiClient.get<PublicKbResponse>("/public/kb", { org: orgId, ...params }),
     enabled: Boolean(orgId),
     staleTime: 60_000,
+    placeholderData: keepPreviousData,
   });
 }
 

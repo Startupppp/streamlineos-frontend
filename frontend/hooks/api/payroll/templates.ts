@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
@@ -39,6 +39,7 @@ export function usePayrollTemplates(params?: TemplateListParams) {
         params as Record<string, unknown> | undefined,
       ),
     staleTime: 5 * 60_000,
+    placeholderData: keepPreviousData,
   });
 }
 

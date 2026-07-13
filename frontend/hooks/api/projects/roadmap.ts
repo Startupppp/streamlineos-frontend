@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
@@ -137,6 +137,7 @@ export function useRoadmapItems(filters: RoadmapItemFilters = {}) {
     queryKey: queryKeys.roadmap.items(params),
     queryFn: () => apiClient.get<RoadmapItem[]>("/projects/roadmap", params),
     staleTime: 30_000,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -176,6 +177,7 @@ export function useFeedbackPosts(filters: FeedbackPostFilters = {}) {
     queryKey: queryKeys.roadmap.feedback(params),
     queryFn: () => apiClient.get<FeedbackPost[]>("/projects/feedback", params),
     staleTime: 30_000,
+    placeholderData: keepPreviousData,
   });
 }
 

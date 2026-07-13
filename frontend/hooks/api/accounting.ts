@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
@@ -260,6 +260,7 @@ export function useCustomersOutstanding(params: ListCustomersOutstandingParams =
     queryFn: () =>
       apiClient.get<ListResponse<CustomerOutstanding>>("/accounting/customers", toQuery(params)),
     staleTime: 60_000,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -319,6 +320,7 @@ export function usePurchaseBills(params: ListPurchaseBillsParams = {}) {
     queryFn: () =>
       apiClient.get<ListResponse<PurchaseBillSummary>>("/accounting/purchase-bills", toQuery(params)),
     staleTime: 60_000,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -405,6 +407,7 @@ export function useVendorsOutstanding(params: ListVendorsOutstandingParams = {})
     queryFn: () =>
       apiClient.get<ListResponse<VendorOutstanding>>("/accounting/vendors", toQuery(params)),
     staleTime: 60_000,
+    placeholderData: keepPreviousData,
   });
 }
 

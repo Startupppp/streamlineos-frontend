@@ -1,14 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 
 export function BlogSearch() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [value, setValue] = useState(searchParams.get("search") ?? "");
+  const debouncedValue = useDebouncedValue(value, 350);
   const first = useRef(true);
 
   useEffect(() => {
@@ -16,12 +18,13 @@ export function BlogSearch() {
       first.current = false;
       return;
     }
-    const id = setTimeout(() => {
-      const trimmed = value.trim();
-      router.push(trimmed ? `/blogs?search=${encodeURIComponent(trimmed)}` : "/blogs");
-    }, 350);
-    return () => clearTimeout(id);
-  }, [value, router]);
+    const trimmed = debouncedValue.trim();
+    router.push(trimmed ? `/blogs?search=${encodeURIComponent(trimmed)}` : "/blogs");
+  }, [debouncedValue, router]);
+
+  function handleChange(event: ChangeEvent<HTMLInputElement>) {
+    setValue(event.target.value);
+  }
 
   return (
     <div className="relative mx-auto w-full max-w-md">
@@ -29,7 +32,7 @@ export function BlogSearch() {
       <Input
         type="search"
         value={value}
-        onChange={(e) => setValue(e.target.value)}
+        onChange={handleChange}
         placeholder="Search articles…"
         aria-label="Search articles"
         className="pl-9"

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import Link from "next/link";
 import {
   useInterviewQuestions,
@@ -34,6 +35,7 @@ import {
 
 export default function QuestionBankPage() {
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [category, setCategory] = useState("ALL");
   const [difficulty, setDifficulty] = useState("ALL");
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -48,7 +50,7 @@ export default function QuestionBankPage() {
   } = useInterviewQuestions({
     category: category !== "ALL" ? category : undefined,
     difficulty: difficulty !== "ALL" ? difficulty : undefined,
-    q: search || undefined,
+    q: debouncedSearch.trim() || undefined,
   });
 
   const { data: jobPostings } = useJobPostings({ status: "OPEN" });

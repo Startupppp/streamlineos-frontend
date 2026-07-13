@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, useRef } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,7 @@ import { LeadDistributionDialog } from "@/features/crm/leads/lead-distribution-d
 import { Search, Users, ArrowRight, FileSpreadsheet } from "lucide-react";
 import { useLeads } from "@/hooks/api/leads";
 import { useQueryClient } from "@tanstack/react-query";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { queryKeys } from "@/lib/query-keys";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -98,15 +99,24 @@ export default function LeadDistributionPage() {
   const qc = useQueryClient();
 
   const [inputValue, setInputValue] = useState(searchParams.get("q") ?? "");
-  const [searchQuery, setSearchQuery] = useState(searchParams.get("q") ?? "");
   const [statusFilter, setStatusFilter] = useState(searchParams.get("status") ?? "all");
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [showDistribute, setShowDistribute] = useState(false);
-  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const debouncedInput = useDebouncedValue(inputValue, 300);
+
+  useEffect(() => {
+    const current = searchParams.get("q") ?? "";
+    if (debouncedInput === current) return;
+    const params = new URLSearchParams(searchParams.toString());
+    if (debouncedInput) params.set("q", debouncedInput);
+    else params.delete("q");
+    router.replace(`?${params.toString()}`);
+  }, [debouncedInput, searchParams, router]);
 
   const { data, isLoading, isError, error } = useLeads({
     status: statusFilter !== "all" ? (statusFilter as PipelineStatus) : undefined,
-    search: searchQuery || undefined,
+    search: debouncedInput.trim() || undefined,
     sortBy: "createdAt",
     sortOrder: "desc",
     limit: 100,
@@ -125,18 +135,9 @@ export default function LeadDistributionPage() {
 
   const handleSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      const val = e.target.value;
-      setInputValue(val);
-      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
-      searchTimerRef.current = setTimeout(() => {
-        setSearchQuery(val);
-        const params = new URLSearchParams(searchParams.toString());
-        if (val) params.set("q", val);
-        else params.delete("q");
-        router.replace(`?${params.toString()}`);
-      }, 300);
+      setInputValue(e.target.value);
     },
-    [searchParams, router],
+    [],
   );
 
   const handleStatusChange = useCallback(
@@ -162,7 +163,6 @@ export default function LeadDistributionPage() {
 
   const handleClearFilters = useCallback(() => {
     setStatusFilter("all");
-    setSearchQuery("");
     setInputValue("");
     router.replace(window.location.pathname);
   }, [router]);
@@ -176,10 +176,10 @@ export default function LeadDistributionPage() {
 
   const emptyAction = useMemo(
     () =>
-      statusFilter !== "all" || searchQuery
+      statusFilter !== "all" || debouncedInput
         ? { label: "Clear filters", onClick: handleClearFilters }
         : undefined,
-    [statusFilter, searchQuery, handleClearFilters],
+    [statusFilter, debouncedInput, handleClearFilters],
   );
 
   return (
@@ -278,7 +278,7 @@ export default function LeadDistributionPage() {
                 illustration={<EmptyLeadsIllustration />}
                 title="No leads found"
                 description={
-                  statusFilter !== "all" || searchQuery
+                  statusFilter !== "all" || debouncedInput
                     ? "No leads match your filters."
                     : "Upload leads or adjust your search to get started."
                 }

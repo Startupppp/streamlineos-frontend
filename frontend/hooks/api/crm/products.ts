@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { Product, CreateProductInput, UpdateProductInput, ProductsResponse } from "@/types/crm/products";
@@ -10,6 +10,7 @@ export function useProducts(search?: string) {
     queryKey: queryKeys.crmProducts.list(search ? { search } : undefined),
     queryFn: () => apiClient.get<ProductsResponse>("/crm/products", search ? { search } : undefined),
     staleTime: 5 * 60_000,
+    placeholderData: keepPreviousData,
   });
 }
 

@@ -17,6 +17,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { DragDropContext, type DropResult } from "@hello-pangea/dnd";
 import { useDeals, useUpdateDealStage, useDeleteDeal, useCrmPipelines } from "@/hooks/api/crm";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import type { Deal, DealStage } from "@/types/crm";
 import { useHrEmployees } from "@/hooks/api/hr";
 import { toast } from "sonner";
@@ -47,6 +48,7 @@ export default function DealsPage() {
   const dealSortDir: "asc" | "desc" = rawDir === "asc" ? "asc" : "desc";
 
   const [searchInput, setSearchInput] = useState(searchParams.get("q") ?? "");
+  const debouncedSearchInput = useDebouncedValue(searchInput, 300);
 
   const updateParams = useCallback(
     (updates: Record<string, string | null>) => {
@@ -63,11 +65,10 @@ export default function DealsPage() {
   );
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      updateParams({ q: searchInput || null });
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [searchInput, updateParams]);
+    const current = searchParams.get("q") ?? "";
+    if (debouncedSearchInput === current) return;
+    updateParams({ q: debouncedSearchInput || null });
+  }, [debouncedSearchInput, searchParams, updateParams]);
 
   const { data: dealPipelines = [] } = useCrmPipelines("deal");
   const defaultPipeline = dealPipelines[0];
@@ -237,13 +238,13 @@ export default function DealsPage() {
 
   const filteredDeals = useMemo(() => {
     if (!allDeals) return [];
-    const q = searchInput.toLowerCase().trim();
+    const q = debouncedSearchInput.trim().toLowerCase();
     return allDeals.filter((d) => {
       if (q && !d.name.toLowerCase().includes(q)) return false;
       if (assigneeFilter && assigneeFilter !== "all" && d.assignedToId !== assigneeFilter) return false;
       return true;
     });
-  }, [allDeals, searchInput, assigneeFilter]);
+  }, [allDeals, debouncedSearchInput, assigneeFilter]);
 
   const dealsByStage = useMemo(() => {
     const map: Record<string, Deal[]> = {};

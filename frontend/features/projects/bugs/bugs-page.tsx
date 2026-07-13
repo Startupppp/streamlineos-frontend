@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useBugs, useDeleteBug } from "@/hooks/api/projects/bugs";
 import { useCan } from "@/hooks/api/access";
 import { useProjectMembers } from "@/hooks/api/projects";
@@ -72,6 +73,7 @@ export function BugsPage({ projectId }: BugsPageProps) {
   const canDelete = useCan("projects:bugs:delete");
 
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [statusFilter, setStatusFilter] = useState("all");
   const [severityFilter, setSeverityFilter] = useState("all");
   const [assigneeFilter, setAssigneeFilter] = useState("all");
@@ -83,12 +85,16 @@ export function BugsPage({ projectId }: BugsPageProps) {
     status: statusFilter !== "all" ? statusFilter : undefined,
     severity: severityFilter !== "all" ? severityFilter : undefined,
     assigneeId: assigneeFilter !== "all" ? assigneeFilter : undefined,
-    q: search || undefined,
+    q: debouncedSearch || undefined,
   };
 
   const { data: bugs, isLoading, isError, refetch } = useBugs(projectId, filters);
   const { data: members = [] } = useProjectMembers(projectId);
   const deleteBug = useDeleteBug();
+
+  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setSearch(e.target.value);
+  }
 
   const handleEdit = useCallback((bug: Bug) => { setEditBug(bug); setSheetOpen(true); }, []);
   const handleNewBug = useCallback(() => { setEditBug(null); setSheetOpen(true); }, []);
@@ -197,7 +203,7 @@ export function BugsPage({ projectId }: BugsPageProps) {
       <Input
         placeholder="Search bugs..."
         value={search}
-        onChange={(e) => setSearch(e.target.value)}
+        onChange={handleSearchChange}
         className="h-7 text-[11px] w-44"
       />
       <Select value={statusFilter} onValueChange={setStatusFilter}>

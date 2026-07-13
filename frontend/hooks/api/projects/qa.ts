@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
@@ -90,6 +90,7 @@ export function useTestCases(projectId?: number, filters?: TestCaseFilters) {
     queryFn: () => apiClient.get<TestCase[]>(`/projects/${projectId}/test-cases`, params),
     enabled: !!projectId,
     staleTime: 60_000,
+    placeholderData: keepPreviousData,
   });
 }
 

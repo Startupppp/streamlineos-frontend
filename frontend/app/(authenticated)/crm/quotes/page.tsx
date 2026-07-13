@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useTransition, useMemo } from "react";
+import { useState, useCallback, useTransition, useMemo, useEffect } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useReducedMotion, motion } from "framer-motion";
 import Link from "next/link";
@@ -59,14 +59,15 @@ export default function QuotesPage() {
   const updateQuoteStatus = useUpdateQuoteStatus();
   const deleteQuote = useDeleteQuote();
 
-  const searchInput = searchParams.get("q") ?? "";
+  const [search, setSearch] = useState(searchParams.get("q") ?? "");
   const statusFilter = searchParams.get("status") ?? "all";
   const page = Number(searchParams.get("page")) || 1;
 
-  const debouncedSearch = useDebouncedValue(searchInput, 300);
+  const debouncedSearch = useDebouncedValue(search, 300);
+  const trimmedDebounced = debouncedSearch.trim();
   const apiSearch =
-    debouncedSearch.length >= 3 || debouncedSearch.length === 0
-      ? debouncedSearch
+    trimmedDebounced.length >= 3 || trimmedDebounced.length === 0
+      ? trimmedDebounced
       : "";
 
   const updateParams = useCallback(
@@ -83,6 +84,12 @@ export default function QuotesPage() {
     [searchParams, router, pathname],
   );
 
+  useEffect(() => {
+    const current = searchParams.get("q") ?? "";
+    if (debouncedSearch === current) return;
+    updateParams({ q: debouncedSearch || null, page: null });
+  }, [debouncedSearch, searchParams, updateParams]);
+
   const { data, isLoading, error, refetch } = useQuotes({
     search: apiSearch || undefined,
     status: isQuoteStatus(statusFilter) ? statusFilter : undefined,
@@ -95,9 +102,9 @@ export default function QuotesPage() {
 
   const handleSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      updateParams({ q: e.target.value || null, page: null });
+      setSearch(e.target.value);
     },
-    [updateParams],
+    [],
   );
 
   const handleStatusChange = useCallback(
@@ -308,7 +315,7 @@ export default function QuotesPage() {
               <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Search quotes..."
-                value={searchInput}
+                value={search}
                 onChange={handleSearchChange}
                 className="h-8 w-full min-w-0 pl-8 text-xs"
               />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { Bug, CreateBugInput, UpdateBugInput } from "@/types/projects";
@@ -24,6 +24,7 @@ export function useBugs(projectId?: number, filters?: BugFilters) {
     queryFn: () => apiClient.get<Bug[]>(`/projects/${projectId}/bugs`, params),
     enabled: !!projectId,
     staleTime: 60_000,
+    placeholderData: keepPreviousData,
   });
 }
 

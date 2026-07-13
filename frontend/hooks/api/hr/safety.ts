@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -78,6 +78,7 @@ export function useSafetyIncidents(params: ListIncidentsParams = {}) {
     queryKey: safetyKeys.incidents(params),
     queryFn: () => apiClient.get<PaginatedResult<SafetyIncident>>("/hr/safety/incidents", params as Record<string, unknown>),
     staleTime: 30_000,
+    placeholderData: keepPreviousData,
   });
 }
 

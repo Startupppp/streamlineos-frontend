@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
@@ -61,6 +61,7 @@ export function useTeamExpenses(params: TeamExpensesParams = {}) {
     queryFn: () =>
       apiClient.get<TeamExpensesResponse>("/hr/expenses/page-data", toQuery({ ...params, includeStats: true, includePending: false, includeCategories: true })),
     staleTime: 30_000,
+    placeholderData: keepPreviousData,
   });
 }
 

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback, useTransition } from "react";
+import { useState, useCallback, useTransition, useEffect } from "react";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { format, isPast } from "date-fns";
 import { Search, Mail, RefreshCw, X } from "lucide-react";
@@ -58,13 +59,16 @@ export function UserInvitationsPanel() {
   const page = Number(searchParams.get("page") ?? "1");
   const includeAccepted = status === "all" || status === "accepted";
 
+  const [localSearch, setLocalSearch] = useState(q);
+  const debouncedLocalSearch = useDebouncedValue(localSearch, 300);
+
   const { data, isLoading, isError, refetch } = useInvitations({ page, limit: 20, includeAccepted });
   const { mutate: resend, isPending: isResending } = useResendInvite();
   const { mutate: cancel, isPending: isCancelling } = useCancelInvitation();
 
   const allRows = data?.data ?? [];
   const filtered = allRows.filter((inv) => {
-    if (q && !inv.email.toLowerCase().includes(q.toLowerCase())) return false;
+    if (localSearch && !inv.email.toLowerCase().includes(localSearch.toLowerCase())) return false;
     if (status !== "all" && getStatus(inv) !== status) return false;
     return true;
   });
@@ -83,10 +87,14 @@ export function UserInvitationsPanel() {
     [searchParams, router, pathname],
   );
 
+  useEffect(() => {
+    if (debouncedLocalSearch === q) return;
+    updateParams({ q: debouncedLocalSearch || null, page: null });
+  }, [debouncedLocalSearch, q, updateParams]);
+
   const handleSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) =>
-      updateParams({ q: e.target.value || null, page: null }),
-    [updateParams],
+    (e: React.ChangeEvent<HTMLInputElement>) => setLocalSearch(e.target.value),
+    [],
   );
 
   const handleStatusChange = useCallback(
@@ -132,11 +140,14 @@ export function UserInvitationsPanel() {
   const handleOpenInvite = useCallback(() => setInviteOpen(true), []);
   const handleInviteChange = useCallback((v: boolean) => setInviteOpen(v), []);
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
-  const handleClearFilters = useCallback(() => updateParams({ q: null, status: null, page: null }), [updateParams]);
+  const handleClearFilters = useCallback(() => {
+    setLocalSearch("");
+    updateParams({ q: null, status: null, page: null });
+  }, [updateParams]);
   const handlePageChange = useCallback((p: number) => updateParams({ page: p <= 1 ? null : String(p) }), [updateParams]);
 
   const pagination = data?.pagination;
-  const hasFilters = !!q || status !== "all";
+  const hasFilters = !!localSearch || status !== "all";
 
   const columns: DataTableColumn<Invitation>[] = [
     {
@@ -250,7 +261,7 @@ export function UserInvitationsPanel() {
         filters={<>
           <div className="relative">
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input value={q} onChange={handleSearchChange} placeholder="Search by email…" className="h-8 pl-7 text-xs w-[200px]" />
+            <Input value={localSearch} onChange={handleSearchChange} placeholder="Search by email…" className="h-8 pl-7 text-xs w-[200px]" />
           </div>
           <Select value={status} onValueChange={handleStatusChange}>
             <SelectTrigger className="h-8 text-xs w-[140px]"><SelectValue /></SelectTrigger>

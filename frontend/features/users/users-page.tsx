@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useCallback, useMemo, useTransition, useEffect } from "react";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { keepPreviousData } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -83,6 +85,7 @@ export function UsersPage() {
   const page = Number(searchParams.get("page") ?? "1");
 
   const [search, setSearch] = useState(q);
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -108,11 +111,9 @@ export function UsersPage() {
   );
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      pushParams({ search: search || null, page: null });
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [search, pushParams]);
+    if (debouncedSearch === (q || "")) return;
+    pushParams({ search: debouncedSearch || null, page: null });
+  }, [debouncedSearch, q, pushParams]);
 
   const handleSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value),
@@ -146,20 +147,23 @@ export function UsersPage() {
     [pushParams],
   );
 
-  const { data, isLoading, isError, refetch } = useUsers({
-    page,
-    limit: 20,
-    search: q || undefined,
-    status:
-      status !== "all"
-        ? (status as "active" | "suspended" | "archived")
-        : undefined,
-    role: role !== "all" ? role : undefined,
-    departmentId: departmentId !== "all" ? Number(departmentId) : undefined,
-    branchId: branchId !== "all" ? Number(branchId) : undefined,
-    sortBy,
-    sortOrder,
-  });
+  const { data, isLoading, isError, refetch } = useUsers(
+    {
+      page,
+      limit: 20,
+      search: q || undefined,
+      status:
+        status !== "all"
+          ? (status as "active" | "suspended" | "archived")
+          : undefined,
+      role: role !== "all" ? role : undefined,
+      departmentId: departmentId !== "all" ? Number(departmentId) : undefined,
+      branchId: branchId !== "all" ? Number(branchId) : undefined,
+      sortBy,
+      sortOrder,
+    },
+    { placeholderData: keepPreviousData },
+  );
 
   const { data: branchesData } = useOrgBranches();
   const { data: departmentsData } = useOrgDepartments();

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useTestCases, useTestSuites, useDeleteTestCase } from "@/hooks/api/projects/qa";
 import { useCan } from "@/hooks/api/access";
 import type { TestCase, TestCasePriority, TestCaseAutomationStatus } from "@/types/projects";
@@ -66,13 +67,14 @@ interface TestCasesTabProps {
 export function TestCasesTab({ projectId }: TestCasesTabProps) {
   const canManage = useCan("projects:qa:manage");
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [suiteFilter, setSuiteFilter] = useState("all");
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editCase, setEditCase] = useState<TestCase | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<TestCase | null>(null);
 
   const filters = {
-    q: search || undefined,
+    q: debouncedSearch || undefined,
     suiteId: suiteFilter !== "all" ? Number(suiteFilter) : undefined,
   };
 

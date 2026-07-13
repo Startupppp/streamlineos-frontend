@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -105,5 +105,6 @@ export function useCostingProducts(params?: CostingParams) {
         ...(params?.page ? { page: String(params.page) } : {}),
       }),
     staleTime: 2 * 60_000,
+    placeholderData: keepPreviousData,
   });
 }

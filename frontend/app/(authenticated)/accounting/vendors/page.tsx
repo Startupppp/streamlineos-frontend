@@ -3,6 +3,7 @@
 import { useState, type ChangeEvent } from "react";
 import Link from "next/link";
 import { Search } from "lucide-react";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -77,10 +78,12 @@ export default function VendorsListPage() {
   const [search, setSearch] = useState<string>("");
   const [onlyOutstanding, setOnlyOutstanding] = useState<boolean>(true);
 
+  const debouncedSearch = useDebouncedValue(search, 300);
+
   const query = useVendorsOutstanding({
     page: 1,
     pageSize: 100,
-    q: search || undefined,
+    q: debouncedSearch.trim() || undefined,
     onlyOutstanding,
   });
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { WarehouseStockResult } from "@/types/inventory";
@@ -107,6 +107,7 @@ export function useWarehouses(filters?: WarehouseListFilters) {
       : queryKeys.inventory.warehouses(),
     queryFn: () => apiClient.get<Warehouse[]>("/inventory/warehouses", hasActiveFilters ? params : undefined),
     staleTime: 5 * 60_000,
+    placeholderData: keepPreviousData,
   });
 }
 

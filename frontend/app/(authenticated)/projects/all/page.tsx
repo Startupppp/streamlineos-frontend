@@ -14,7 +14,7 @@ import { ProjectPagination } from "@/features/projects/project-list/project-pagi
 import { ProjectsEmptyState } from "@/features/projects/project-list/projects-empty-state";
 import { EmptySearchIllustration } from "@/components/illustrations";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
-import { useDebouncedValue } from "@/hooks/common/use-expense-filters";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";

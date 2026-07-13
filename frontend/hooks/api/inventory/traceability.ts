@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { LotStatus, SerialStatus } from "@/features/inventory/lib";
@@ -152,6 +152,7 @@ export function useLots(params?: LotsParams) {
         limit: params?.limit,
       }),
     staleTime: 2 * 60_000,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -189,6 +190,7 @@ export function useSerials(params?: SerialsParams) {
         limit: params?.limit,
       }),
     staleTime: 2 * 60_000,
+    placeholderData: keepPreviousData,
   });
 }
 

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState, useCallback } from "react";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,6 +50,7 @@ type ActiveTab = "incidents" | "wellness";
 export function SafetyPageContent() {
   const canManage = useCan("hr:safety:manage");
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [status, setStatus] = useState<IncidentStatus | "">("");
   const [type, setType] = useState<IncidentType | "">("");
   const [severity, setSeverity] = useState<IncidentSeverity | "">("");
@@ -56,9 +58,14 @@ export function SafetyPageContent() {
   const [showReport, setShowReport] = useState(false);
   const [activeTab, setActiveTab] = useState<ActiveTab>("incidents");
 
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+    setPage(1);
+  }, []);
+
   const { data, isLoading } = useSafetyIncidents({
     page,
-    search: search || undefined,
+    search: debouncedSearch.trim() || undefined,
     status: status || undefined,
     type: type || undefined,
     severity: severity || undefined,
@@ -111,7 +118,7 @@ export function SafetyPageContent() {
           className="h-8 pl-8 w-44 text-sm"
           placeholder="Search..."
           value={search}
-          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+          onChange={handleSearchChange}
         />
       </div>
       <Select

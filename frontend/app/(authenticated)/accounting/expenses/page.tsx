@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
@@ -22,10 +23,12 @@ export default function TeamExpensesPage() {
   const [selected, setSelected] = useState<ExpenseWithRelations | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
+  const debouncedSearch = useDebouncedValue(search, 300);
+
   const query = useTeamExpenses({
     page,
     pageSize: 25,
-    search: search || undefined,
+    search: debouncedSearch.trim() || undefined,
     status: status === "ALL" ? undefined : status,
     startDate: startDate || undefined,
     endDate: endDate || undefined,

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, type ChangeEvent } from "react";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
@@ -100,6 +101,7 @@ function GoalCard({ goal }: { goal: GoalListItem }) {
 
 export default function GoalsPage() {
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [statusFilter, setStatusFilter] = useState<GoalStatus | "all">("all");
   const [levelFilter, setLevelFilter] = useState<GoalLevel | "all">("all");
   const [createOpen, setCreateOpen] = useState(false);
@@ -108,9 +110,9 @@ export default function GoalsPage() {
     () => ({
       ...(statusFilter !== "all" ? { status: statusFilter } : {}),
       ...(levelFilter !== "all" ? { level: levelFilter } : {}),
-      ...(search.trim() ? { search: search.trim() } : {}),
+      ...(debouncedSearch.trim() ? { search: debouncedSearch.trim() } : {}),
     }),
-    [statusFilter, levelFilter, search],
+    [statusFilter, levelFilter, debouncedSearch],
   );
 
   const { data: goals, isLoading, isError, refetch } = useGoals(params);

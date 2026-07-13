@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import {
   Select,
@@ -56,16 +57,18 @@ export function TemplatesPageContent() {
   const category = searchParams.get("category") ?? "all";
   const complexity = searchParams.get("complexity") ?? "all";
 
-  const [searchInput, setSearchInput] = useState(search);
+  const [searchInput, setSearchInput] = useState<string>(search);
   const [previewTemplate, setPreviewTemplate] = useState<TemplateRow | null>(null);
   const [duplicateTemplate, setDuplicateTemplate] = useState<TemplateRow | null>(null);
   const [deleteTemplate, setDeleteTemplate] = useState<TemplateRow | null>(null);
+
+  const debouncedSearchInput = useDebouncedValue(searchInput, 300);
 
   const { data: policyData } = usePayrollPolicyCurrent();
   const policyCountry = policyData?.policy?.country;
 
   const { data, isLoading, isError, refetch } = usePayrollTemplates({
-    search: search || undefined,
+    search: debouncedSearchInput.trim() || undefined,
     category: category === "all" ? undefined : category,
     complexity: complexity === "all" ? undefined : complexity,
     country: policyCountry,
@@ -82,12 +85,11 @@ export function TemplatesPageContent() {
     router.replace(`/payroll/templates?${params.toString()}`);
   }, [searchParams, router]);
 
-  const handleSearchKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Enter") updateUrl({ search: searchInput });
-    },
-    [searchInput, updateUrl],
-  );
+  useEffect(() => {
+    const current = searchParams.get("search") ?? "";
+    if (debouncedSearchInput === current) return;
+    updateUrl({ search: debouncedSearchInput || undefined });
+  }, [debouncedSearchInput]);
 
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchInput(e.target.value);
@@ -167,7 +169,6 @@ export function TemplatesPageContent() {
         <Input
           value={searchInput}
           onChange={handleSearchChange}
-          onKeyDown={handleSearchKeyDown}
           placeholder="Search templates…"
           className="h-8 pl-8 text-sm w-48"
         />

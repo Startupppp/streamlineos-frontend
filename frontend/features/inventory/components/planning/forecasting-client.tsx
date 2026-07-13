@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { Search } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -95,9 +96,10 @@ const columns: DataTableColumn<ForecastRow>[] = [
 
 export function ForecastingClient() {
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [page, setPage] = useState(1);
 
-  const { data, isLoading, error, refetch } = useForecasting({ search: search || undefined, page });
+  const { data, isLoading, error, refetch } = useForecasting({ search: debouncedSearch.trim() || undefined, page });
 
   const rows = data?.items ?? [];
   const total = data?.total ?? 0;

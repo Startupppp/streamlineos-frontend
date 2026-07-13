@@ -1,8 +1,15 @@
 "use client";
 
 import { getErrorMessage } from "@/lib/get-error-message";
-import React, { useState, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  useRef,
+} from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import Link from "next/link";
 import {
   useCandidates,
@@ -14,9 +21,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
-import { Plus, Search, XCircle, CheckSquare, GitCompare, Upload } from "lucide-react";
+import {
+  Plus,
+  Search,
+  XCircle,
+  CheckSquare,
+  GitCompare,
+  Upload,
+} from "lucide-react";
 import type { Candidate, CandidateStatus } from "@/types/hr";
-import { EmptyPersonIllustration, EmptySearchIllustration } from "@/components/illustrations";
+import {
+  EmptyPersonIllustration,
+  EmptySearchIllustration,
+} from "@/components/illustrations";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { CandidateComparisonDialog } from "@/components/hr/recruitment/candidate-comparison-dialog";
 import { AddCandidateSheet } from "@/features/hr/recruitment/candidates-list/add-candidate-sheet";
@@ -34,7 +51,10 @@ export default function CandidatesPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const statusFilter = searchParams.get("status") as CandidateStatus | null;
-  const searchQuery = searchParams.get("q") ?? "";
+  const [searchQuery, setSearchQueryLocal] = useState(
+    searchParams.get("q") ?? "",
+  );
+  const debouncedSearch = useDebouncedValue(searchQuery, 300);
 
   const { data: candidates, isLoading } = useCandidates(
     statusFilter ? { status: statusFilter } : undefined,
@@ -45,9 +65,13 @@ export default function CandidatesPage() {
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editSheetOpen, setEditSheetOpen] = useState(false);
-  const [editingCandidate, setEditingCandidate] = useState<Candidate | null>(null);
+  const [editingCandidate, setEditingCandidate] = useState<Candidate | null>(
+    null,
+  );
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deletingCandidate, setDeletingCandidate] = useState<Candidate | null>(null);
+  const [deletingCandidate, setDeletingCandidate] = useState<Candidate | null>(
+    null,
+  );
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [bulkRejectOpen, setBulkRejectOpen] = useState(false);
   const [compareOpen, setCompareOpen] = useState(false);
@@ -62,10 +86,17 @@ export default function CandidatesPage() {
     [searchParams, router],
   );
 
+  const debouncedSearchRef = useRef(debouncedSearch);
+  useEffect(() => {
+    if (debouncedSearchRef.current === debouncedSearch) return;
+    debouncedSearchRef.current = debouncedSearch;
+    setFilter("q", debouncedSearch || null);
+  }, [debouncedSearch, setFilter]);
+
   const filteredCandidates = useMemo(() => {
     if (!candidates) return [];
-    if (!searchQuery) return candidates;
-    const q = searchQuery.toLowerCase();
+    if (!debouncedSearch) return candidates;
+    const q = debouncedSearch.toLowerCase();
     return candidates.filter(
       (c) =>
         c.firstName.toLowerCase().includes(q) ||
@@ -73,7 +104,7 @@ export default function CandidatesPage() {
         c.email.toLowerCase().includes(q) ||
         c.currentCompany?.toLowerCase().includes(q),
     );
-  }, [candidates, searchQuery]);
+  }, [candidates, debouncedSearch]);
 
   const stageCounts = useMemo(() => {
     if (!candidates) return {} as Record<CandidateStatus, number>;
@@ -147,7 +178,9 @@ export default function CandidatesPage() {
       { candidateIds: Array.from(selectedIds), sendRejectionEmail: true },
       {
         onSuccess: (res) => {
-          toast.success(`${res.rejected} rejected, ${res.emailsSent} emails sent`);
+          toast.success(
+            `${res.rejected} rejected, ${res.emailsSent} emails sent`,
+          );
           setSelectedIds(new Set());
           setBulkRejectOpen(false);
         },
@@ -179,7 +212,7 @@ export default function CandidatesPage() {
     setSheetOpen(true);
   }
   function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setFilter("q", e.target.value || null);
+    setSearchQueryLocal(e.target.value);
   }
   function handleClearStatusFilter() {
     setFilter("status", null);
@@ -276,16 +309,26 @@ export default function CandidatesPage() {
               onClick={handleSelectAll}
             >
               <CheckSquare className="h-3.5 w-3.5" />
-              {selectedIds.size === filteredCandidates.length && filteredCandidates.length > 0
+              {selectedIds.size === filteredCandidates.length &&
+              filteredCandidates.length > 0
                 ? "Deselect all"
                 : "Select all"}
             </Button>
-            <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" asChild>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 gap-1.5 text-xs"
+              asChild
+            >
               <Link href="/hr/recruitment/candidates/import">
                 <Upload className="h-3.5 w-3.5" /> Import
               </Link>
             </Button>
-            <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={handleOpenAddSheet}>
+            <Button
+              size="sm"
+              className="h-8 gap-1.5 text-xs"
+              onClick={handleOpenAddSheet}
+            >
               <Plus className="h-3.5 w-3.5" /> Add Candidate
             </Button>
           </>
@@ -300,9 +343,17 @@ export default function CandidatesPage() {
         ) : filteredCandidates.length === 0 ? (
           <RecruitmentEmptyState
             illustration={
-              searchQuery ? <EmptySearchIllustration /> : <EmptyPersonIllustration />
+              searchQuery ? (
+                <EmptySearchIllustration />
+              ) : (
+                <EmptyPersonIllustration />
+              )
             }
-            title={searchQuery ? "No candidates match your search" : "No candidates yet"}
+            title={
+              searchQuery
+                ? "No candidates match your search"
+                : "No candidates yet"
+            }
             description={
               searchQuery
                 ? "Try a different search term or clear the filter"
@@ -337,7 +388,11 @@ export default function CandidatesPage() {
         onOpenChange={setBulkRejectOpen}
         title={`Reject ${selectedIds.size} candidate(s)?`}
         description="This will move all selected candidates to Rejected and send automated rejection emails. This action cannot be undone."
-        confirmLabel={bulkReject.isPending ? "Rejecting…" : `Reject ${selectedIds.size} Candidate(s)`}
+        confirmLabel={
+          bulkReject.isPending
+            ? "Rejecting…"
+            : `Reject ${selectedIds.size} Candidate(s)`
+        }
         destructive
         onConfirm={handleBulkReject}
       />
@@ -358,7 +413,9 @@ export default function CandidatesPage() {
         onOpenChange={handleCloseDeleteDialog}
         title="Delete candidate?"
         description={`This will permanently delete ${deletingCandidate?.firstName} ${deletingCandidate?.lastName} and all related data. This cannot be undone.`}
-        confirmLabel={deleteCandidate.isPending ? "Deleting…" : "Delete Candidate"}
+        confirmLabel={
+          deleteCandidate.isPending ? "Deleting…" : "Delete Candidate"
+        }
         destructive
         onConfirm={handleDelete}
       />

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { toast } from "sonner";
 import { Plus, Database } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -104,6 +105,7 @@ export default function HrTemplatesPage() {
   const canView = useCan("hr:templates:view");
   const canManage = useCan("hr:templates:manage");
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [kind, setKind] = useState<HrTemplateKind | "all">(ALL_SENTINEL);
   const [status, setStatus] = useState<HrTemplateStatus | "all">(ALL_SENTINEL);
   const [upsertOpen, setUpsertOpen] = useState(false);
@@ -114,11 +116,11 @@ export default function HrTemplatesPage() {
     () => ({
       ...(kind !== ALL_SENTINEL && { kind }),
       ...(status !== ALL_SENTINEL && { status }),
-      ...(search.trim() && { search: search.trim() }),
+      ...(debouncedSearch.trim() && { search: debouncedSearch.trim() }),
       page,
       limit: 50,
     }),
-    [kind, status, search, page],
+    [kind, status, debouncedSearch, page],
   );
 
   const { data, isLoading, isError } = useHrTemplates(params);

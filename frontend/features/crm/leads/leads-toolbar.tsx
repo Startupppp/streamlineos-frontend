@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Search, LayoutGrid, TableIcon, X, GitBranch } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { useCrmOptions } from "@/hooks/api/crm";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 
 interface LeadsToolbarProps {
   searchQuery: string;
@@ -36,7 +37,21 @@ export function LeadsToolbar({
   const priorities = priorityOptions;
   const sources = sourceOptions;
 
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => onSearchChange(e.target.value), [onSearchChange]);
+  const [inputValue, setInputValue] = useState(searchQuery);
+  const debouncedInput = useDebouncedValue(inputValue, 300);
+
+  useEffect(() => {
+    if (debouncedInput === searchQuery) return;
+    onSearchChange(debouncedInput);
+  }, [debouncedInput, searchQuery, onSearchChange]);
+
+  useEffect(() => {
+    if (searchQuery !== inputValue && searchQuery === "") {
+      setInputValue("");
+    }
+  }, [searchQuery, inputValue]);
+
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setInputValue(e.target.value), []);
   const handleViewTable = useCallback(() => onViewChange("table"), [onViewChange]);
   const handleViewKanban = useCallback(() => onViewChange("kanban"), [onViewChange]);
   const handleViewFunnel = useCallback(() => onViewChange("funnel"), [onViewChange]);
@@ -53,7 +68,7 @@ export function LeadsToolbar({
         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
         <Input
           placeholder="Search leads..."
-          value={searchQuery}
+          value={inputValue}
           onChange={handleSearchChange}
           className="pl-8 h-8 text-xs"
         />

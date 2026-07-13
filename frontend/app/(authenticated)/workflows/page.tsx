@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
@@ -358,8 +359,10 @@ export default function WorkflowsPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Workflow | null>(null);
 
+  const debouncedSearch = useDebouncedValue(search, 300);
+
   const { data, isLoading, isError, refetch } = useWorkflows({
-    search: search || undefined,
+    search: debouncedSearch.trim() || undefined,
     status: statusFilter === "all" ? undefined : statusFilter,
     limit: 50,
   });

@@ -7,7 +7,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion, useReducedMotion } from "framer-motion";
 import { Plus, Search, X, Filter } from "lucide-react";
-import { EmptyWarehouseIllustration, EmptySearchIllustration } from "@/components/illustrations";
+import {
+  EmptyWarehouseIllustration,
+  EmptySearchIllustration,
+} from "@/components/illustrations";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -43,7 +46,10 @@ import { ErrorState } from "@/components/shared";
 import { toast } from "sonner";
 import { staggerContainer } from "@/lib/motion-variants";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
-import { useWarehouses, useCreateWarehouse } from "@/hooks/api/inventory/warehouses";
+import {
+  useWarehouses,
+  useCreateWarehouse,
+} from "@/hooks/api/inventory/warehouses";
 import type { WarehouseListFilters } from "@/hooks/api/inventory/warehouses";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { WarehouseCard } from "@/features/inventory/components/warehouse-card";
@@ -65,7 +71,10 @@ const createWarehouseSchema = z.object({
     .trim()
     .min(2, "Code must be at least 2 characters")
     .max(20, "Code must be 20 characters or fewer")
-    .regex(WAREHOUSE_CODE_RE, "Code must be uppercase letters/numbers, e.g. WH-001"),
+    .regex(
+      WAREHOUSE_CODE_RE,
+      "Code must be uppercase letters/numbers, e.g. WH-001",
+    ),
   address: z
     .string()
     .trim()
@@ -133,35 +142,44 @@ export default function WarehousesPage() {
   const router = useRouter();
   const shouldReduceMotion = useReducedMotion();
 
-  const rawSearch = searchParams.get("q") ?? "";
-  const statusValue = (searchParams.get("status") ?? "all") as WarehouseListFilters["status"];
+  const statusValue = (searchParams.get("status") ??
+    "all") as WarehouseListFilters["status"];
   const isDefaultFilter = searchParams.get("isDefault");
   const countryFilter = searchParams.get("country") ?? "";
   const cityFilter = searchParams.get("city") ?? "";
 
-  const [localSearch, setLocalSearch] = useState(rawSearch);
+  const [localSearch, setLocalSearch] = useState(searchParams.get("q") ?? "");
   const [showFilters, setShowFilters] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  useEffect(() => {
-    setLocalSearch(rawSearch);
-  }, [rawSearch]);
-
   const debouncedSearch = useDebouncedValue(localSearch, 350);
 
-  const filters = useMemo<WarehouseListFilters>(() => ({
-    q: debouncedSearch || undefined,
-    status: statusValue !== "all" ? statusValue : undefined,
-    isDefault: isDefaultFilter === "true" ? true : isDefaultFilter === "false" ? false : undefined,
-    country: countryFilter || undefined,
-    city: cityFilter || undefined,
-  }), [debouncedSearch, statusValue, isDefaultFilter, countryFilter, cityFilter]);
+  const filters = useMemo<WarehouseListFilters>(
+    () => ({
+      q: debouncedSearch || undefined,
+      status: statusValue !== "all" ? statusValue : undefined,
+      isDefault:
+        isDefaultFilter === "true"
+          ? true
+          : isDefaultFilter === "false"
+            ? false
+            : undefined,
+      country: countryFilter || undefined,
+      city: cityFilter || undefined,
+    }),
+    [debouncedSearch, statusValue, isDefaultFilter, countryFilter, cityFilter],
+  );
 
   const { data, isLoading, isError, refetch } = useWarehouses(filters);
   const createMutation = useCreateWarehouse();
 
   const warehouses = useMemo(() => (Array.isArray(data) ? data : []), [data]);
-  const hasActiveFilters = !!rawSearch || statusValue !== "all" || !!isDefaultFilter || !!countryFilter || !!cityFilter;
+  const hasActiveFilters =
+    !!localSearch.trim() ||
+    statusValue !== "all" ||
+    !!isDefaultFilter ||
+    !!countryFilter ||
+    !!cityFilter;
 
   const form = useForm<CreateWarehouseValues>({
     resolver: zodResolver(createWarehouseSchema),
@@ -206,7 +224,9 @@ export default function WarehousesPage() {
   );
 
   useEffect(() => {
-    setParam("q", debouncedSearch || undefined);
+    const current = searchParams.get("q") ?? undefined;
+    const next = debouncedSearch || undefined;
+    if (next !== current) setParam("q", next);
   }, [debouncedSearch, setParam]);
 
   const handleStatusChange = useCallback(
@@ -215,7 +235,8 @@ export default function WarehousesPage() {
   );
 
   const handleIsDefaultChange = useCallback(
-    (value: string) => setParam("isDefault", value === "all" ? undefined : value),
+    (value: string) =>
+      setParam("isDefault", value === "all" ? undefined : value),
     [setParam],
   );
 
@@ -288,7 +309,10 @@ export default function WarehousesPage() {
           <button
             type="button"
             className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            onClick={() => { setLocalSearch(""); setParam("q", undefined); }}
+            onClick={() => {
+              setLocalSearch("");
+              setParam("q", undefined);
+            }}
             aria-label="Clear search"
           >
             <X className="h-3 w-3" aria-hidden="true" />
@@ -335,7 +359,11 @@ export default function WarehousesPage() {
 
   if (isError) {
     return (
-      <PageWrapper eyebrow="Operations · Inventory" title="Warehouses" filters={filterBar}>
+      <PageWrapper
+        eyebrow="Operations · Inventory"
+        title="Warehouses"
+        filters={filterBar}
+      >
         <ErrorState
           title="Failed to load warehouses"
           description="An error occurred while fetching warehouse data. Please try again."
@@ -352,7 +380,11 @@ export default function WarehousesPage() {
       subtitle="Physical storage facilities and their locations"
       filters={filterBar}
       actions={
-        <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={handleOpenSheet}>
+        <Button
+          size="sm"
+          className="h-8 gap-1.5 text-xs"
+          onClick={handleOpenSheet}
+        >
           <Plus className="h-3.5 w-3.5" aria-hidden="true" />
           New Warehouse
         </Button>
@@ -404,10 +436,15 @@ export default function WarehousesPage() {
       )}
 
       <Sheet open={sheetOpen} onOpenChange={handleSheetOpenChange}>
-        <SheetContent side="right" className="sm:max-w-md w-full flex flex-col gap-0 p-0">
+        <SheetContent
+          side="right"
+          className="sm:max-w-md w-full flex flex-col gap-0 p-0"
+        >
           <SheetHeader className="shrink-0 px-6 py-4 border-b">
             <SheetTitle>New Warehouse</SheetTitle>
-            <SheetDescription>Add a new storage facility to your organization.</SheetDescription>
+            <SheetDescription>
+              Add a new storage facility to your organization.
+            </SheetDescription>
           </SheetHeader>
           <Form {...form}>
             <form
@@ -443,7 +480,9 @@ export default function WarehousesPage() {
                           placeholder="WH-001"
                           className="font-mono uppercase"
                           {...field}
-                          onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                          onChange={(e) =>
+                            field.onChange(e.target.value.toUpperCase())
+                          }
                         />
                       </FormControl>
                       <FormMessage />
@@ -511,7 +550,9 @@ export default function WarehousesPage() {
                     <FormItem>
                       <div className="flex items-center justify-between rounded-md border p-3">
                         <div>
-                          <FormLabel className="text-[13px] font-medium">Active</FormLabel>
+                          <FormLabel className="text-[13px] font-medium">
+                            Active
+                          </FormLabel>
                           <p className="text-[11px] text-muted-foreground">
                             Allow stock operations in this warehouse
                           </p>

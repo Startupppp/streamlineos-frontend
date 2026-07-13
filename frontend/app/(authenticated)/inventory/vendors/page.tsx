@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Search } from "lucide-react";
@@ -9,11 +9,18 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,7 +30,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ErrorState } from "@/components/shared";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
-import { EmptyCompaniesIllustration, EmptySearchIllustration } from "@/components/illustrations";
+import {
+  EmptyCompaniesIllustration,
+  EmptySearchIllustration,
+} from "@/components/illustrations";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { VendorFormSheet } from "@/features/inventory/components/vendor-form-sheet";
 import { useVendors } from "@/hooks/api/inventory";
@@ -32,7 +42,8 @@ import type { InventoryVendor } from "@/types/inventory";
 
 function VendorRowActions({ vendor }: { vendor: InventoryVendor }) {
   const toggleMutation = useToggleVendorActive();
-  const { iconRef: ellipsisRef, hoverHandlers: ellipsisHover } = useAnimatedIcon();
+  const { iconRef: ellipsisRef, hoverHandlers: ellipsisHover } =
+    useAnimatedIcon();
 
   function handleToggleActive(): void {
     toggleMutation.mutate(
@@ -92,21 +103,15 @@ export default function VendorsListPage() {
     return p > 0 ? p : 1;
   });
 
-  const search = searchParams.get("search") ?? "";
+  const [search, setSearch] = useState<string>(
+    searchParams.get("search") ?? "",
+  );
+  const debouncedSearch = useDebouncedValue(search, 300);
   const activeParam = searchParams.get("isActive") ?? "all";
 
   function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>): void {
-    const params = new URLSearchParams(searchParams.toString());
-    if (e.target.value) {
-      params.set("search", e.target.value);
-    } else {
-      params.delete("search");
-    }
-    params.delete("page");
+    setSearch(e.target.value);
     setPage(1);
-    startTransition(() => {
-      router.replace(`?${params.toString()}`, { scroll: false });
-    });
   }
 
   function handleActiveChange(value: string): void {
@@ -145,12 +150,16 @@ export default function VendorsListPage() {
   }
 
   const isActiveFilter =
-    activeParam === "active" ? true : activeParam === "inactive" ? false : undefined;
+    activeParam === "active"
+      ? true
+      : activeParam === "inactive"
+        ? false
+        : undefined;
 
   const query = useVendors({
     page,
     limit: 20,
-    search: search || undefined,
+    search: debouncedSearch.trim() || undefined,
     isActive: isActiveFilter,
   });
   const items = query.data?.items ?? [];
@@ -188,14 +197,18 @@ export default function VendorsListPage() {
     {
       key: "leadTimeDays",
       header: "Lead time",
-      cell: (v) => <span className="font-mono tabular-nums">{v.leadTimeDays} days</span>,
+      cell: (v) => (
+        <span className="font-mono tabular-nums">{v.leadTimeDays} days</span>
+      ),
       className: "text-right",
       headerClassName: "text-right",
     },
     {
       key: "paymentTermsDays",
       header: "Payment terms",
-      cell: (v) => <span className="font-mono tabular-nums">Net {v.paymentTermsDays}</span>,
+      cell: (v) => (
+        <span className="font-mono tabular-nums">Net {v.paymentTermsDays}</span>
+      ),
       className: "text-right",
       headerClassName: "text-right",
     },
@@ -248,6 +261,20 @@ export default function VendorsListPage() {
     </div>
   );
 
+  useEffect(() => {
+    const trimmed = debouncedSearch.trim() || null;
+    const current = searchParams.get("search") ?? null;
+    if (trimmed === current) return;
+    const params = new URLSearchParams(searchParams.toString());
+    if (trimmed) params.set("search", trimmed);
+    else params.delete("search");
+    params.delete("page");
+    setPage(1);
+    startTransition(() => {
+      router.replace(`?${params.toString()}`, { scroll: false });
+    });
+  }, [debouncedSearch]);
+
   return (
     <PageWrapper
       eyebrow="Inventory"
@@ -267,14 +294,28 @@ export default function VendorsListPage() {
         columns={columns}
         getRowKey={(v) => v.id}
         isLoading={query.isLoading}
-        pagination={{ mode: "server", page, pageSize: 20, total, onPageChange: handlePageChange }}
+        pagination={{
+          mode: "server",
+          page,
+          pageSize: 20,
+          total,
+          onPageChange: handlePageChange,
+        }}
         emptyState={
           query.error ? (
-            <ErrorState description={query.error.message} onRetry={handleRetry} compact />
+            <ErrorState
+              description={query.error.message}
+              onRetry={handleRetry}
+              compact
+            />
           ) : (
             <InventoryEmptyState
               illustration={
-                search ? <EmptySearchIllustration /> : <EmptyCompaniesIllustration />
+                search ? (
+                  <EmptySearchIllustration />
+                ) : (
+                  <EmptyCompaniesIllustration />
+                )
               }
               title={search ? "No vendors found" : "No vendors yet"}
               description={

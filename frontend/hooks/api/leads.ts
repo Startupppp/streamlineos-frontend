@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
@@ -35,6 +35,7 @@ export function useLeads(filters?: LeadFilters, options?: { enabled?: boolean })
     queryFn: () =>
       apiClient.get<PaginatedLeads>("/leads", filters as Record<string, unknown>),
     staleTime: 2 * 60_000,
+    placeholderData: keepPreviousData,
     ...(options?.enabled !== undefined ? { enabled: options.enabled } : {}),
   });
 }

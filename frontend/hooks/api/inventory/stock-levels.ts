@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { StockAvailability } from "@/types/inventory";
@@ -249,6 +249,7 @@ export function useStockLevels(filters?: StockLevelFilters) {
       };
     },
     staleTime: 60_000,
+    placeholderData: keepPreviousData,
   });
 }
 

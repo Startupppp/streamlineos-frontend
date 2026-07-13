@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -44,8 +44,27 @@ export default function HRDashboardPage() {
     null,
   );
 
-  const searchTerm = searchParams.get("q") || "";
+  const updateParams = useCallback(
+    (updates: Record<string, string | null>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      for (const [key, value] of Object.entries(updates)) {
+        if (value === null || value === "") params.delete(key);
+        else params.set(key, value);
+      }
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    },
+    [searchParams, router, pathname],
+  );
+
+  const [searchTerm, setSearchTermLocal] = useState(searchParams.get("q") || "");
   const debouncedSearchTerm = useDebouncedValue(searchTerm, 300);
+  const debouncedSearchRef = useRef(debouncedSearchTerm);
+  useEffect(() => {
+    if (debouncedSearchRef.current === debouncedSearchTerm) return;
+    debouncedSearchRef.current = debouncedSearchTerm;
+    updateParams({ q: debouncedSearchTerm || null, page: null });
+  }, [debouncedSearchTerm, updateParams]);
+
   const deptFilter = searchParams.get("dept") || "All";
   const statusFilter = (searchParams.get("status") as StatusFilter) || "Active";
   const roleFilter = (searchParams.get("role") as RoleFilter) || "All";
@@ -64,21 +83,9 @@ export default function HRDashboardPage() {
     [rawEmployees],
   );
 
-  const updateParams = useCallback(
-    (updates: Record<string, string | null>) => {
-      const params = new URLSearchParams(searchParams.toString());
-      for (const [key, value] of Object.entries(updates)) {
-        if (value === null || value === "") params.delete(key);
-        else params.set(key, value);
-      }
-      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-    },
-    [searchParams, router, pathname],
-  );
-
   const setSearchTerm = useCallback(
-    (q: string) => updateParams({ q: q || null, page: null }),
-    [updateParams],
+    (q: string) => setSearchTermLocal(q),
+    [],
   );
   const setDeptFilter = useCallback(
     (d: string) => updateParams({ dept: d === "All" ? null : d, page: null }),
@@ -208,17 +215,16 @@ export default function HRDashboardPage() {
     toast.success("Employees exported");
   }, [filteredEmployees]);
 
-  const handleClearFilters = useCallback(
-    () =>
-      updateParams({
-        q: null,
-        dept: null,
-        status: null,
-        role: null,
-        page: null,
-      }),
-    [updateParams],
-  );
+  const handleClearFilters = useCallback(() => {
+    setSearchTermLocal("");
+    updateParams({
+      q: null,
+      dept: null,
+      status: null,
+      role: null,
+      page: null,
+    });
+  }, [updateParams]);
 
   const handleRequestDelete = useCallback((employee: Employee) => {
     setEmployeeToDelete(employee);

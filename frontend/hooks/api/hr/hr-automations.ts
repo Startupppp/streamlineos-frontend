@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import type {
   HrAutomationRule,
@@ -35,6 +35,7 @@ export function useHrAutomations(params?: { search?: string; triggerEvent?: stri
       return apiClient.get<HrAutomationRule[]>(`/hr/automations${qs ? `?${qs}` : ""}`);
     },
     staleTime: 30_000,
+    placeholderData: keepPreviousData,
   });
 }
 

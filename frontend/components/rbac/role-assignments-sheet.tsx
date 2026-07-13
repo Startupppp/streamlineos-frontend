@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { keepPreviousData } from "@tanstack/react-query";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { Loader2, AlertTriangle, Building2, UserCircle } from "lucide-react";
 import {
   Sheet,
@@ -80,13 +82,15 @@ function AssignmentsBody({ role, onClose }: AssignmentsBodyProps) {
   const roleId = role.id;
 
   const [userSearch, setUserSearch] = useState("");
+  const debouncedUserSearch = useDebouncedValue(userSearch, 300);
   const [userPage, setUserPage] = useState(1);
 
   const membersQuery = useRoleMembers(roleId);
   const orgMembersQuery = useOrgMembers(
     userPage,
     ORG_MEMBERS_PAGE_SIZE,
-    userSearch || undefined,
+    debouncedUserSearch.trim() || undefined,
+    { placeholderData: keepPreviousData },
   );
   const departmentsQuery = useHrDepartments();
   const assign = useAssignRoleMember();

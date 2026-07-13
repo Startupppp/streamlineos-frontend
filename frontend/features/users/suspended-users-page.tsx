@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo } from "react";
+import { keepPreviousData } from "@tanstack/react-query";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -118,26 +120,29 @@ function SuspendedActionsMenu({ user, onView }: SuspendedActionsMenuProps) {
 
 export function SuspendedUsersPage() {
   const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [page, setPage] = useState(1);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(search);
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setSearch(e.target.value);
       setPage(1);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [search]);
+    },
+    [],
+  );
 
-  const { data, isLoading, isError, refetch } = useUsers({
-    page,
-    limit: 20,
-    search: debouncedSearch || undefined,
-    status: "suspended",
-  });
+  const { data, isLoading, isError, refetch } = useUsers(
+    {
+      page,
+      limit: 20,
+      search: debouncedSearch || undefined,
+      status: "suspended",
+    },
+    { placeholderData: keepPreviousData },
+  );
 
   const { mutate: bulkRestore, isPending: isRestoring } = useBulkRestore();
 
@@ -146,11 +151,6 @@ export function SuspendedUsersPage() {
   const someSelected = selectedIds.size > 0;
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
-
-  const handleSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value),
-    [],
-  );
 
   function handleRowClick(user: User) {
     setSelectedUserId(user.id);

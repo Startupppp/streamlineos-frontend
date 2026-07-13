@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -33,19 +34,29 @@ export function ComponentsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const search = searchParams.get("search") ?? "";
   const typeFilter = searchParams.get("type") ?? "";
   const activeFilter = searchParams.get("active") ?? "";
   const page = Math.max(1, Number(searchParams.get("page") ?? "1"));
 
+  const [searchInput, setSearchInput] = useState<string>(
+    () => searchParams.get("search") ?? "",
+  );
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<SalaryComponent | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<SalaryComponent | null>(null);
 
   const deleteMutation = useDeletePayrollComponent();
 
+  const debouncedSearch = useDebouncedValue(searchInput, 300);
+
+  useEffect(() => {
+    const current = searchParams.get("search") ?? "";
+    if (debouncedSearch === current) return;
+    updateParams({ search: debouncedSearch });
+  }, [debouncedSearch]);
+
   const { data, isLoading } = usePayrollComponents({
-    search: search || undefined,
+    search: debouncedSearch.trim() || undefined,
     type: (typeFilter as ComponentType) || undefined,
     active:
       activeFilter === "true" ? true : activeFilter === "false" ? false : undefined,
@@ -63,7 +74,9 @@ export function ComponentsPageContent() {
     router.replace(`?${params.toString()}`, { scroll: false });
   }
 
-  function handleSearchChange(value: string) { updateParams({ search: value }); }
+  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setSearchInput(e.target.value);
+  }
   function handleTypeChange(value: string) { updateParams({ type: value === "all" ? "" : value }); }
   function handleActiveChange(value: string) { updateParams({ active: value === "all" ? "" : value }); }
 
@@ -107,8 +120,8 @@ export function ComponentsPageContent() {
   const filters = (
     <>
       <Input
-        value={search}
-        onChange={(e) => handleSearchChange(e.target.value)}
+        value={searchInput}
+        onChange={handleSearchChange}
         placeholder="Search components…"
         className="h-8 w-48 text-xs"
       />

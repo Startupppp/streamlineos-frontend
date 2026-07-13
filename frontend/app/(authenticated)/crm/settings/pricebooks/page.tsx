@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useTransition } from "react";
+import { useState, useCallback, useTransition, useEffect } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { Pencil, Plus, Search, Trash2, List } from "lucide-react";
 import { toast } from "sonner";
@@ -51,8 +51,8 @@ export default function PricebooksPage() {
   const [entriesTarget, setEntriesTarget] = useState<Pricebook | null>(null);
   const [entriesOpen, setEntriesOpen] = useState(false);
 
-  const searchInput = searchParams.get("q") ?? "";
-  const debouncedSearch = useDebouncedValue(searchInput, 300);
+  const [search, setSearch] = useState(searchParams.get("q") ?? "");
+  const debouncedSearch = useDebouncedValue(search, 300);
 
   const updateParams = useCallback(
     (updates: Record<string, string | null>) => {
@@ -68,6 +68,12 @@ export default function PricebooksPage() {
     [searchParams, router, pathname],
   );
 
+  useEffect(() => {
+    const current = searchParams.get("q") ?? "";
+    if (debouncedSearch === current) return;
+    updateParams({ q: debouncedSearch || null });
+  }, [debouncedSearch, searchParams, updateParams]);
+
   const { data: pricebooks, isLoading, isError, refetch } = usePricebooks();
   const createPricebook = useCreatePricebook();
   const updatePricebook = useUpdatePricebook();
@@ -82,9 +88,9 @@ export default function PricebooksPage() {
 
   const handleSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      updateParams({ q: e.target.value || null });
+      setSearch(e.target.value);
     },
-    [updateParams],
+    [],
   );
 
   const handleOpenCreate = useCallback(() => {
@@ -315,7 +321,7 @@ export default function PricebooksPage() {
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
               <Input
                 placeholder="Search pricebooks..."
-                value={searchInput}
+                value={search}
                 onChange={handleSearchChange}
                 className="h-8 w-full pl-8 text-xs"
               />

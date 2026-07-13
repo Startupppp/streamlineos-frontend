@@ -22,7 +22,6 @@ import {
   useBulkDeleteLeads,
 } from "@/hooks/api/leads";
 import { useCreateDeal } from "@/hooks/api/crm";
-import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useLeadsFilters } from "@/hooks/common/use-leads-filters";
 import { useSession } from "next-auth/react";
 import { ADMIN_ROLES } from "@/lib/constants/roles";
@@ -63,10 +62,8 @@ export default function LeadsPipelinePage() {
     clearFilters,
   } = useLeadsFilters();
 
-  const debouncedSearchQuery = useDebouncedValue(searchQuery, 300);
-
   const { data: tableData, isLoading: tableLoading } = useLeads({
-    search: debouncedSearchQuery || undefined,
+    search: searchQuery.trim() || undefined,
     sortBy: sortColumn as "name" | "email" | "company" | "status" | "priority" | "source" | "score" | "potentialValue" | "createdAt",
     sortOrder: sortDirection,
     page: tablePage,
@@ -124,13 +121,14 @@ export default function LeadsPipelinePage() {
   const filteredBoard = useMemo<Record<string, BoardLead[]> | null>(() => {
     if (!board) return null;
     const result: Record<string, BoardLead[]> = {};
-    if (!debouncedSearchQuery) {
+    const trimmed = searchQuery.trim();
+    if (!trimmed) {
       for (const [status, col] of Object.entries(board)) {
         result[status] = col.leads as BoardLead[];
       }
       return result;
     }
-    const q = debouncedSearchQuery.toLowerCase();
+    const q = trimmed.toLowerCase();
     for (const [status, col] of Object.entries(board)) {
       result[status] = (col.leads as BoardLead[]).filter(
         (l: BoardLead) =>
@@ -141,7 +139,7 @@ export default function LeadsPipelinePage() {
       );
     }
     return result;
-  }, [board, debouncedSearchQuery]);
+  }, [board, searchQuery]);
 
   const handleCreateLead = useCallback(
     async (formData: FormData) => {

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState, useCallback } from "react";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,6 +54,7 @@ type ActiveTab = "cases" | "disciplinary";
 export function CasesPageContent() {
   const canManage = useCan("hr:cases:manage");
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [status, setStatus] = useState<CaseStatus | "">("");
   const [category, setCategory] = useState<CaseCategory | "">("");
   const [severity, setSeverity] = useState<CaseSeverity | "">("");
@@ -65,13 +67,18 @@ export function CasesPageContent() {
 
   const { data: casesData, isLoading: casesLoading } = useHrCases({
     page,
-    search: search || undefined,
+    search: debouncedSearch.trim() || undefined,
     status: status || undefined,
     category: category || undefined,
     severity: severity || undefined,
   });
 
   const { data: disciplinaryData, isLoading: discLoading } = useDisciplinaryActions({ page });
+
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+    setPage(1);
+  }, []);
 
   const caseColumns: DataTableColumn<HrCase>[] = [
     {
@@ -128,7 +135,7 @@ export function CasesPageContent() {
           className="h-8 pl-8 w-48 text-sm"
           placeholder="Search cases..."
           value={search}
-          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+          onChange={handleSearchChange}
         />
       </div>
       <Select

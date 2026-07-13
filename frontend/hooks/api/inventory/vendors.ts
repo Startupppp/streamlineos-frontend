@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type { InventoryVendor, CreateVendorInput, UpdateVendorInput, VendorPerformance } from "@/types/inventory";
@@ -36,6 +36,7 @@ export function useVendors(filters?: VendorFilters) {
         ...(limit ? { limit: String(limit) } : {}),
       }),
     staleTime: 2 * 60_000,
+    placeholderData: keepPreviousData,
   });
 }
 

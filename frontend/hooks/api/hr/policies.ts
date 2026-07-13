@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import type {
   HrPolicy,
@@ -42,6 +42,7 @@ export function useHrPolicies(params?: {
     queryFn: () =>
       apiClient.get<PoliciesListResponse>(`/hr/policies${qs ? `?${qs}` : ""}`),
     staleTime: 60_000,
+    placeholderData: keepPreviousData,
   });
 }
 

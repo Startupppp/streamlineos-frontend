@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -96,6 +96,7 @@ export function useHrCases(params: ListCasesParams = {}) {
     queryKey: caseKeys.list(params),
     queryFn: () => apiClient.get<PaginatedResult<HrCase>>("/hr/cases", params as Record<string, unknown>),
     staleTime: 30_000,
+    placeholderData: keepPreviousData,
   });
 }
 

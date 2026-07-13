@@ -7,6 +7,7 @@ import {
   useMutation,
   useQueryClient,
   useInfiniteQuery,
+  keepPreviousData,
   type InfiniteData,
 } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
@@ -462,6 +463,7 @@ export function useSearchMessages(query: string, enabled: boolean) {
     queryFn: () => apiClient.get<SearchMessagesResult>("/chat/search/messages", { q: query }),
     enabled: enabled && query.trim().length >= 2,
     staleTime: 30_000,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -471,6 +473,7 @@ export function useSearchChannels(query: string, enabled: boolean) {
     queryFn: () => apiClient.get<SearchChannelResult[]>("/chat/search/channels", { q: query }),
     enabled: enabled && query.trim().length >= 1,
     staleTime: 30_000,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -480,6 +483,7 @@ export function useSearchUsers(query: string, enabled: boolean) {
     queryFn: () => apiClient.get<SearchUserResult[]>("/chat/search/users", { q: query }),
     enabled: enabled && query.trim().length >= 1,
     staleTime: 30_000,
+    placeholderData: keepPreviousData,
   });
 }
 

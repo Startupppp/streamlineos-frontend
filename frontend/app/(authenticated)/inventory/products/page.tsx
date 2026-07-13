@@ -1,7 +1,8 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import Link from "next/link";
 import { Package, Search } from "lucide-react";
 import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
@@ -207,11 +208,13 @@ function ProductsPageInner() {
   const searchParams = useSearchParams();
   const { iconRef: plusRef, hoverHandlers: plusHover } = useAnimatedIcon();
 
-  const search = searchParams.get("search") ?? "";
   const statusParam = searchParams.get("status") ?? "";
   const categoryIdParam = searchParams.get("categoryId") ?? "";
   const productTypeParam = searchParams.get("productType") ?? "";
   const page = Math.max(1, Number(searchParams.get("page") ?? "1"));
+
+  const [search, setSearch] = useState<string>(searchParams.get("search") ?? "");
+  const debouncedSearch = useDebouncedValue(search, 300);
 
   function updateParams(updates: Record<string, string | null>): void {
     const params = new URLSearchParams(searchParams.toString());
@@ -226,8 +229,16 @@ function ProductsPageInner() {
     router.replace(`?${params.toString()}`, { scroll: false });
   }
 
+  useEffect(() => {
+    const trimmed = debouncedSearch.trim() || null;
+    const current = searchParams.get("search") ?? null;
+    if (trimmed !== current) {
+      updateParams({ search: trimmed });
+    }
+  }, [debouncedSearch]);
+
   function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>): void {
-    updateParams({ search: e.target.value || null });
+    setSearch(e.target.value);
   }
 
   function handleStatusChange(value: string): void {
@@ -272,7 +283,7 @@ function ProductsPageInner() {
           : undefined;
 
   const productsQuery = useProducts({
-    search: search || undefined,
+    search: debouncedSearch.trim() || undefined,
     status: statusFilter,
     categoryId,
     productType: productTypeFilter,
@@ -291,7 +302,7 @@ function ProductsPageInner() {
     router.replace("?", { scroll: false });
   }
 
-  const hasFilters = !!(search || statusParam || categoryIdParam || productTypeParam);
+  const hasFilters = !!(search.trim() || statusParam || categoryIdParam || productTypeParam);
   const isFirstLoad = !productsQuery.isLoading && !productsQuery.error && total === 0 && !hasFilters;
 
   const columns: DataTableColumn<InventoryProduct>[] = [

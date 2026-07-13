@@ -1,7 +1,8 @@
 ﻿"use client";
 
-import { useCallback, useMemo, useTransition, type ChangeEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition, type ChangeEvent } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -168,8 +169,20 @@ export function TicketFilterBar({
     });
   }, [router, pathname, searchParams]);
 
+  const [localSearch, setLocalSearch] = useState(q);
+  const debouncedLocalSearch = useDebouncedValue(localSearch, 300);
+  const prevDebouncedRef = useRef(debouncedLocalSearch);
+
+  useEffect(() => {
+    if (debouncedLocalSearch === prevDebouncedRef.current) return;
+    prevDebouncedRef.current = debouncedLocalSearch;
+    if (debouncedLocalSearch !== q) {
+      setParam("q", debouncedLocalSearch);
+    }
+  }, [debouncedLocalSearch, q, setParam]);
+
   function handleSearchChange(e: ChangeEvent<HTMLInputElement>) {
-    setParam("q", e.target.value);
+    setLocalSearch(e.target.value);
   }
 
   function handleHideCompletedChange(checked: boolean) {
@@ -317,7 +330,7 @@ export function TicketFilterBar({
           <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search..."
-            value={q}
+            value={localSearch}
             onChange={handleSearchChange}
             className="h-8 bg-card border-border text-xs font-normal shadow-xs pl-7"
           />

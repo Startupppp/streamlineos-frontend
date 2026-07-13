@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useMemo } from "react";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useRouter } from "next/navigation";
+import { keepPreviousData } from "@tanstack/react-query";
 import { CheckCheck, X } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
@@ -47,30 +49,26 @@ export default function NotificationsPage() {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [detailId, setDetailId] = useState<number | null>(null);
   const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-
-  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const debouncedSearch = useDebouncedValue(search, 300);
 
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearch(value);
-    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
-    searchTimeoutRef.current = setTimeout(() => setDebouncedSearch(value), 300);
+    setSearch(e.target.value);
   }, []);
 
   const handleClearSearch = useCallback(() => {
     setSearch("");
-    setDebouncedSearch("");
-    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
   }, []);
 
-  const { data: notifications, isLoading, isError, refetch } = useNotifications({
-    section: activeSection,
-    category: activeCategory,
-    priority: activePriority,
-    search: debouncedSearch || undefined,
-    limit: 50,
-  });
+  const { data: notifications, isLoading, isError, refetch } = useNotifications(
+    {
+      section: activeSection,
+      category: activeCategory,
+      priority: activePriority,
+      search: debouncedSearch || undefined,
+      limit: 50,
+    },
+    { placeholderData: keepPreviousData },
+  );
   const { data: unreadData } = useUnreadNotificationCount();
   const markRead = useMarkNotificationRead();
   const markAllRead = useMarkAllNotificationsRead();

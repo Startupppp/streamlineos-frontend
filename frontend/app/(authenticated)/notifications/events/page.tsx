@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -98,15 +98,6 @@ const policySchema = z.object({
 });
 
 type PolicyFormValues = z.infer<typeof policySchema>;
-
-function useDebounce<T>(value: T, delay: number): T {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const id = setTimeout(() => setDebounced(value), delay);
-    return () => clearTimeout(id);
-  }, [value, delay]);
-  return debounced;
-}
 
 function PolicySheet({
   open,
@@ -520,8 +511,6 @@ export default function NotificationEventsPage() {
     [currentUserId, emitEvent],
   );
 
-  const debouncedSearch = useDebounce(search, 300);
-
   const sourceModules = useMemo(() => {
     if (!events) return [];
     return Array.from(new Set(events.map((e) => e.sourceModule))).sort();
@@ -529,7 +518,7 @@ export default function NotificationEventsPage() {
 
   const filtered = useMemo(() => {
     if (!events) return [];
-    const q = debouncedSearch.toLowerCase();
+    const q = search.toLowerCase();
     return events.filter((e) => {
       const matchesSearch =
         !q ||
@@ -539,7 +528,7 @@ export default function NotificationEventsPage() {
       const matchesModule = moduleFilter === "all" || e.sourceModule === moduleFilter;
       return matchesSearch && matchesModule;
     });
-  }, [events, debouncedSearch, moduleFilter]);
+  }, [events, search, moduleFilter]);
 
   const grouped = useMemo(() => {
     const map = new Map<string, NotificationEventDefinition[]>();
@@ -626,7 +615,7 @@ export default function NotificationEventsPage() {
           illustrationPreset="activity"
           title="No events found"
           description={
-            debouncedSearch || moduleFilter !== "all"
+            search || moduleFilter !== "all"
               ? "No events match your current filters. Try adjusting your search or module selection."
               : "No notification events are registered for this organization."
           }

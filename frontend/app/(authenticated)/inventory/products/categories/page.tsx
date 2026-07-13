@@ -1,14 +1,25 @@
 "use client";
 
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Plus, MoreHorizontal, Pencil, Archive, RotateCcw, Search } from "lucide-react";
-import { EmptyProductsIllustration, EmptySearchIllustration } from "@/components/illustrations";
+import {
+  Plus,
+  MoreHorizontal,
+  Pencil,
+  Archive,
+  RotateCcw,
+  Search,
+} from "lucide-react";
+import {
+  EmptyProductsIllustration,
+  EmptySearchIllustration,
+} from "@/components/illustrations";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,12 +70,24 @@ const categorySchema = z.object({
   name: z
     .string()
     .min(1, "Category name is required.")
-    .max(CATEGORY_NAME_MAX, `Name must be ${CATEGORY_NAME_MAX} characters or fewer.`)
-    .refine((v) => v.trim().length >= CATEGORY_NAME_MIN, `Name must be at least ${CATEGORY_NAME_MIN} characters.`)
-    .refine((v) => VALID_NAME_RE.test(v.trim()), "Name must contain at least one letter or number."),
+    .max(
+      CATEGORY_NAME_MAX,
+      `Name must be ${CATEGORY_NAME_MAX} characters or fewer.`,
+    )
+    .refine(
+      (v) => v.trim().length >= CATEGORY_NAME_MIN,
+      `Name must be at least ${CATEGORY_NAME_MIN} characters.`,
+    )
+    .refine(
+      (v) => VALID_NAME_RE.test(v.trim()),
+      "Name must contain at least one letter or number.",
+    ),
   description: z
     .string()
-    .max(CATEGORY_DESC_MAX, `Description must be ${CATEGORY_DESC_MAX} characters or fewer.`)
+    .max(
+      CATEGORY_DESC_MAX,
+      `Description must be ${CATEGORY_DESC_MAX} characters or fewer.`,
+    )
     .optional(),
   parentId: z.string().optional(),
 });
@@ -118,7 +141,11 @@ function CreateCategoryForm({
                   </span>
                 </div>
                 <FormControl>
-                  <Input placeholder="e.g. Electronics" maxLength={CATEGORY_NAME_MAX} {...field} />
+                  <Input
+                    placeholder="e.g. Electronics"
+                    maxLength={CATEGORY_NAME_MAX}
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -176,7 +203,12 @@ function CreateCategoryForm({
           </div>
         </div>
         <div className="flex justify-end">
-          <LoadingButton type="submit" size="sm" isPending={createMutation.isPending} loadingText="Creating…">
+          <LoadingButton
+            type="submit"
+            size="sm"
+            isPending={createMutation.isPending}
+            loadingText="Creating…"
+          >
             <Plus className="mr-1 h-3.5 w-3.5" />
             Add Category
           </LoadingButton>
@@ -282,22 +314,19 @@ function CategoriesPageInner() {
   const [editingCategory, setEditingCategory] =
     useState<InventoryCategory | null>(null);
 
-  const urlSearch = searchParams.get("search") ?? "";
   const statusParam = searchParams.get("status") ?? "all";
 
-  const [searchInput, setSearchInput] = useState<string>(urlSearch);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    setSearchInput(urlSearch);
-  }, [urlSearch]);
+  const [searchInput, setSearchInput] = useState<string>(
+    searchParams.get("search") ?? "",
+  );
+  const debouncedSearch = useDebouncedValue(searchInput, 300);
 
   const query = useCategories();
   const updateMutation = useUpdateCategory();
   const categories = query.data ?? [];
 
   const filteredCategories = categories.filter((cat) => {
-    const term = searchInput.trim().toLowerCase();
+    const term = debouncedSearch.trim().toLowerCase();
     const matchesSearch = !term || cat.name.toLowerCase().includes(term);
     const matchesStatus =
       statusParam === "all" ||
@@ -306,9 +335,7 @@ function CategoriesPageInner() {
     return matchesSearch && matchesStatus;
   });
 
-  const categoryNameById = new Map(
-    categories.map((cat) => [cat.id, cat.name]),
-  );
+  const categoryNameById = new Map(categories.map((cat) => [cat.id, cat.name]));
 
   function updateParams(updates: Record<string, string | null>) {
     const params = new URLSearchParams(searchParams.toString());
@@ -323,13 +350,16 @@ function CategoriesPageInner() {
   }
 
   function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>): void {
-    const value = e.target.value;
-    setSearchInput(value);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      updateParams({ search: value || null });
-    }, 300);
+    setSearchInput(e.target.value);
   }
+
+  useEffect(() => {
+    const trimmed = debouncedSearch.trim() || null;
+    const current = searchParams.get("search") ?? null;
+    if (trimmed !== current) {
+      updateParams({ search: trimmed });
+    }
+  }, [debouncedSearch]);
 
   function handleStatusChange(value: string): void {
     updateParams({ status: value });
@@ -363,7 +393,10 @@ function CategoriesPageInner() {
     }
   }
 
-  const hasFilters = !!(searchInput || (statusParam && statusParam !== "all"));
+  const hasFilters = !!(
+    searchInput.trim() ||
+    (statusParam && statusParam !== "all")
+  );
 
   const filtersRow = (
     <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
@@ -435,9 +468,15 @@ function CategoriesPageInner() {
                 emptyState={
                   <InventoryEmptyState
                     illustration={
-                      hasFilters ? <EmptySearchIllustration /> : <EmptyProductsIllustration />
+                      hasFilters ? (
+                        <EmptySearchIllustration />
+                      ) : (
+                        <EmptyProductsIllustration />
+                      )
                     }
-                    title={hasFilters ? "No categories found" : "No categories yet"}
+                    title={
+                      hasFilters ? "No categories found" : "No categories yet"
+                    }
                     description={
                       hasFilters
                         ? "Try adjusting your search or filters."
@@ -446,7 +485,11 @@ function CategoriesPageInner() {
                     className="border-0 bg-transparent min-h-[20vh]"
                   />
                 }
-                columns={categoriesColumns(categoryNameById, handleEditOpen, handleArchiveToggle)}
+                columns={categoriesColumns(
+                  categoryNameById,
+                  handleEditOpen,
+                  handleArchiveToggle,
+                )}
                 minWidth="560px"
               />
             </CardContent>

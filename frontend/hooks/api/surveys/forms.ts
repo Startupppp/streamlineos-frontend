@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -84,6 +84,7 @@ export function useSurveys(params?: ListSurveysParams) {
     queryKey: queryKeys.surveys.list(params as Record<string, unknown>),
     queryFn: () => apiClient.get<SurveyForm[]>("/surveys", params as Record<string, unknown>),
     staleTime: 30_000,
+    placeholderData: keepPreviousData,
   });
 }
 

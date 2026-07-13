@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useRef, useCallback, useEffect, useState } from "react";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import {
@@ -87,12 +88,7 @@ function AttachmentPreview({ file, previewUrl, onRemove }: AttachmentPreviewProp
 }
 
 function useDuplicateTitleWarning(title: string, projectId: number) {
-  const [debouncedTitle, setDebouncedTitle] = useState(title);
-
-  useEffect(() => {
-    const t = setTimeout(() => setDebouncedTitle(title), 500);
-    return () => clearTimeout(t);
-  }, [title]);
+  const debouncedTitle = useDebouncedValue(title, 500);
 
   const trimmed = debouncedTitle.trim().toLowerCase();
   const enabled = trimmed.length >= 3;

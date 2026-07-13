@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -35,7 +35,7 @@ export function useCalendarMemberSearch(search: string, enabled = true) {
       }),
     enabled: enabled && term.length > 0,
     staleTime: 30 * 1000,
-    placeholderData: (prev) => prev,
+    placeholderData: keepPreviousData,
   });
 }
 

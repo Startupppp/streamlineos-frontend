@@ -1,7 +1,8 @@
 "use client";
 
-import { Suspense, useMemo, type ChangeEvent } from "react";
+import { Suspense, useEffect, useMemo, useState, type ChangeEvent } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { Package, AlertTriangle, AlertCircle, Search, Download } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
@@ -98,25 +99,35 @@ function ReorderReportContent() {
   const router = useRouter();
   const currentPage = Number(searchParams.get("page") ?? "1");
 
+  const [search, setSearch] = useState<string>(searchParams.get("q") ?? "");
+  const debouncedSearch = useDebouncedValue(search, 300);
+
   const query = useReorderReport({ page: currentPage, limit: 50 });
   const items = query.data?.items ?? [];
 
-  const search = searchParams.get("q") ?? "";
+  useEffect(() => {
+    const trimmed = debouncedSearch.trim() || null;
+    const current = searchParams.get("q") ?? null;
+    if (trimmed === current) return;
+    const params = new URLSearchParams(searchParams.toString());
+    if (trimmed) params.set("q", trimmed);
+    else params.delete("q");
+    params.delete("page");
+    router.replace(`?${params.toString()}`, { scroll: false });
+  }, [debouncedSearch]);
 
-  const filtered = useMemo(
-    () =>
-      search
-        ? items.filter(
-            (r) =>
-              r.productName.toLowerCase().includes(search.toLowerCase()) ||
-              r.sku.toLowerCase().includes(search.toLowerCase()) ||
-              (r.categoryName?.toLowerCase() ?? "").includes(search.toLowerCase()) ||
-              (r.warehouseName?.toLowerCase() ?? "").includes(search.toLowerCase()) ||
-              (r.vendorName?.toLowerCase() ?? "").includes(search.toLowerCase()),
-          )
-        : items,
-    [items, search],
-  );
+  const filtered = useMemo(() => {
+    const term = debouncedSearch.trim().toLowerCase();
+    if (!term) return items;
+    return items.filter(
+      (r) =>
+        r.productName.toLowerCase().includes(term) ||
+        r.sku.toLowerCase().includes(term) ||
+        (r.categoryName?.toLowerCase() ?? "").includes(term) ||
+        (r.warehouseName?.toLowerCase() ?? "").includes(term) ||
+        (r.vendorName?.toLowerCase() ?? "").includes(term),
+    );
+  }, [items, debouncedSearch]);
 
   const outOfStock = items.filter((r) => r.availableQty <= 0).length;
   const critical = items.filter(
@@ -131,14 +142,7 @@ function ReorderReportContent() {
   }
 
   function handleSearchChange(e: ChangeEvent<HTMLInputElement>): void {
-    const params = new URLSearchParams(searchParams.toString());
-    if (e.target.value) {
-      params.set("q", e.target.value);
-    } else {
-      params.delete("q");
-    }
-    params.delete("page");
-    router.replace(`?${params.toString()}`, { scroll: false });
+    setSearch(e.target.value);
   }
 
   function handleClearSearch(): void {

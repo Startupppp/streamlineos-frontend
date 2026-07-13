@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useCallback, useRef } from "react";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useRouter } from "next/navigation";
 import {
   CommandDialog,
@@ -23,21 +24,15 @@ interface QuickFindDialogProps {
 export default function QuickFindDialog({ open, onOpenChange }: QuickFindDialogProps) {
   const router = useRouter();
   const [inputValue, setInputValue] = useState("");
-  const [debouncedQ, setDebouncedQ] = useState("");
+  const debouncedQ = useDebouncedValue(inputValue.trim(), 300);
   const { data: results = [], isFetching } = useKbPagesSearch(debouncedQ);
   const resultsRef = useRef<KbPageSearchResult[]>([]);
   resultsRef.current = results;
-
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedQ(inputValue.trim()), 300);
-    return () => clearTimeout(timer);
-  }, [inputValue]);
 
   const handleOpenChange = useCallback(
     (nextOpen: boolean) => {
       if (!nextOpen) {
         setInputValue("");
-        setDebouncedQ("");
       }
       onOpenChange(nextOpen);
     },

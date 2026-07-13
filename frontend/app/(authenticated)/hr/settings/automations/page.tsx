@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -130,6 +131,7 @@ export default function HrAutomationsPage() {
   const canView = useCan("hr:automations:view");
   const canManage = useCan("hr:automations:manage");
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [triggerFilter, setTriggerFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [togglingId, setTogglingId] = useState<number | null>(null);
@@ -143,7 +145,7 @@ export default function HrAutomationsPage() {
   const enabledFilter = statusFilter === "enabled" ? true : statusFilter === "disabled" ? false : undefined;
 
   const { data: rules, isLoading, isError, refetch } = useHrAutomations({
-    search: search || undefined,
+    search: debouncedSearch.trim() || undefined,
     triggerEvent: triggerFilter === "all" ? undefined : triggerFilter,
     isEnabled: enabledFilter,
   });

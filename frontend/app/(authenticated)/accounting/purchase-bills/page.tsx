@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ChangeEvent } from "react";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import Link from "next/link";
 import { Plus, Search, MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
@@ -256,10 +257,12 @@ export default function PurchaseBillsListPage() {
   const canApprove = useCan("accounting:payables:approve");
   const canManage = useCan("accounting:payables:manage");
 
+  const debouncedSearch = useDebouncedValue(search, 300);
+
   const query = usePurchaseBills({
     page: 1,
     pageSize: 100,
-    q: search || undefined,
+    q: debouncedSearch.trim() || undefined,
     status: status === "ALL" ? undefined : status,
   });
 

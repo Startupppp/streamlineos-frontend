@@ -1,19 +1,38 @@
 "use client";
 
-import { Suspense, useMemo, type ChangeEvent } from "react";
+import {
+  Suspense,
+  useEffect,
+  useMemo,
+  useState,
+  type ChangeEvent,
+} from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { Download, Search } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
-import { EmptyReportIllustration, EmptySearchIllustration } from "@/components/illustrations";
-import { useStockSummary, type StockSummaryRow } from "@/hooks/api/inventory/reports";
+import {
+  EmptyReportIllustration,
+  EmptySearchIllustration,
+} from "@/components/illustrations";
+import {
+  useStockSummary,
+  type StockSummaryRow,
+} from "@/hooks/api/inventory/reports";
 import { useWarehouses } from "@/hooks/api/inventory/warehouses";
 import { downloadCsv } from "@/features/inventory/lib";
 
@@ -26,20 +45,29 @@ function StockLevelBadge({
 }) {
   if (reorderPoint !== null && available <= 0) {
     return (
-      <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 bg-red-50 text-red-700 border-red-200">
+      <Badge
+        variant="outline"
+        className="h-4 text-[9px] px-1.5 py-0 bg-red-50 text-red-700 border-red-200"
+      >
         Out of stock
       </Badge>
     );
   }
   if (reorderPoint !== null && available <= reorderPoint) {
     return (
-      <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 bg-amber-50 text-amber-700 border-amber-200">
+      <Badge
+        variant="outline"
+        className="h-4 text-[9px] px-1.5 py-0 bg-amber-50 text-amber-700 border-amber-200"
+      >
         Low stock
       </Badge>
     );
   }
   return (
-    <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 bg-emerald-50 text-emerald-700 border-emerald-200">
+    <Badge
+      variant="outline"
+      className="h-4 text-[9px] px-1.5 py-0 bg-emerald-50 text-emerald-700 border-emerald-200"
+    >
       OK
     </Badge>
   );
@@ -48,7 +76,20 @@ function StockLevelBadge({
 function exportToCsv(rows: StockSummaryRow[]): void {
   downloadCsv(
     `stock-summary-${new Date().toISOString().slice(0, 10)}.csv`,
-    ["Product", "SKU", "Category", "UOM", "Warehouse", "On Hand", "Reserved", "Available", "Reorder Point", "Cost Price", "Total Value", "Status"],
+    [
+      "Product",
+      "SKU",
+      "Category",
+      "UOM",
+      "Warehouse",
+      "On Hand",
+      "Reserved",
+      "Available",
+      "Reorder Point",
+      "Cost Price",
+      "Total Value",
+      "Status",
+    ],
     rows.map((r) => [
       r.productName,
       r.sku,
@@ -74,22 +115,30 @@ const STOCK_SUMMARY_COLUMNS: DataTableColumn<StockSummaryRow>[] = [
   {
     key: "productName",
     header: "Product",
-    cell: (row) => <span className="font-medium text-[11px]">{row.productName}</span>,
+    cell: (row) => (
+      <span className="font-medium text-[11px]">{row.productName}</span>
+    ),
   },
   {
     key: "sku",
     header: "SKU",
-    cell: (row) => <span className="font-mono tabular-nums text-[11px]">{row.sku}</span>,
+    cell: (row) => (
+      <span className="font-mono tabular-nums text-[11px]">{row.sku}</span>
+    ),
   },
   {
     key: "categoryName",
     header: "Category",
-    cell: (row) => <span className="text-[11px]">{row.categoryName ?? "—"}</span>,
+    cell: (row) => (
+      <span className="text-[11px]">{row.categoryName ?? "—"}</span>
+    ),
   },
   {
     key: "warehouseName",
     header: "Warehouse",
-    cell: (row) => <span className="text-[11px]">{row.warehouseName ?? "—"}</span>,
+    cell: (row) => (
+      <span className="text-[11px]">{row.warehouseName ?? "—"}</span>
+    ),
   },
   {
     key: "onHandQty",
@@ -124,12 +173,17 @@ const STOCK_SUMMARY_COLUMNS: DataTableColumn<StockSummaryRow>[] = [
     header: "Total Value",
     headerClassName: "text-right",
     className: "text-right font-mono tabular-nums text-[11px]",
-    cell: (row) => row.totalValue > 0 ? row.totalValue.toFixed(2) : "—",
+    cell: (row) => (row.totalValue > 0 ? row.totalValue.toFixed(2) : "—"),
   },
   {
     key: "status",
     header: "Status",
-    cell: (row) => <StockLevelBadge available={row.availableQty} reorderPoint={row.reorderPoint} />,
+    cell: (row) => (
+      <StockLevelBadge
+        available={row.availableQty}
+        reorderPoint={row.reorderPoint}
+      />
+    ),
   },
 ];
 
@@ -139,42 +193,35 @@ function StockSummaryContent() {
   const warehousesQuery = useWarehouses();
   const warehouses = warehousesQuery.data ?? [];
 
-  const search = searchParams.get("q") ?? "";
+  const [search, setSearch] = useState<string>(searchParams.get("q") ?? "");
+  const debouncedSearch = useDebouncedValue(search, 300);
   const warehouseParam = searchParams.get("warehouse") ?? "all";
   const currentPage = Number(searchParams.get("page") ?? "1");
 
   const query = useStockSummary({ page: currentPage, limit: 50 });
   const items = query.data?.items ?? [];
 
-  const filtered = useMemo(
-    () =>
-      items.filter((r) => {
-        const matchesSearch =
-          !search ||
-          r.productName.toLowerCase().includes(search.toLowerCase()) ||
-          r.sku.toLowerCase().includes(search.toLowerCase()) ||
-          (r.categoryName?.toLowerCase() ?? "").includes(search.toLowerCase()) ||
-          (r.warehouseName?.toLowerCase() ?? "").includes(search.toLowerCase());
-        const matchesWarehouse =
-          warehouseParam === "all" || r.warehouseName === warehouseParam;
-        return matchesSearch && matchesWarehouse;
-      }),
-    [items, search, warehouseParam],
-  );
+  const filtered = useMemo(() => {
+    const term = debouncedSearch.trim().toLowerCase();
+    return items.filter((r) => {
+      const matchesSearch =
+        !term ||
+        r.productName.toLowerCase().includes(term) ||
+        r.sku.toLowerCase().includes(term) ||
+        (r.categoryName?.toLowerCase() ?? "").includes(term) ||
+        (r.warehouseName?.toLowerCase() ?? "").includes(term);
+      const matchesWarehouse =
+        warehouseParam === "all" || r.warehouseName === warehouseParam;
+      return matchesSearch && matchesWarehouse;
+    });
+  }, [items, debouncedSearch, warehouseParam]);
 
   function handleRetry(): void {
     void query.refetch();
   }
 
   function handleSearchChange(e: ChangeEvent<HTMLInputElement>): void {
-    const params = new URLSearchParams(searchParams.toString());
-    if (e.target.value) {
-      params.set("q", e.target.value);
-    } else {
-      params.delete("q");
-    }
-    params.delete("page");
-    router.replace(`?${params.toString()}`, { scroll: false });
+    setSearch(e.target.value);
   }
 
   function handleClearSearch(): void {
@@ -208,6 +255,17 @@ function StockSummaryContent() {
   const hasData = !query.isLoading && !query.error;
   const noResults = hasData && items.length > 0 && filtered.length === 0;
   const noData = hasData && items.length === 0;
+
+  useEffect(() => {
+    const trimmed = debouncedSearch.trim() || null;
+    const current = searchParams.get("q") ?? null;
+    if (trimmed === current) return;
+    const params = new URLSearchParams(searchParams.toString());
+    if (trimmed) params.set("q", trimmed);
+    else params.delete("q");
+    params.delete("page");
+    router.replace(`?${params.toString()}`, { scroll: false });
+  }, [debouncedSearch]);
 
   return (
     <PageWrapper
@@ -257,7 +315,11 @@ function StockSummaryContent() {
       }
     >
       {query.error && (
-        <ErrorState description={query.error.message} onRetry={handleRetry} className="flex-1" />
+        <ErrorState
+          description={query.error.message}
+          onRetry={handleRetry}
+          className="flex-1"
+        />
       )}
 
       {noData && (

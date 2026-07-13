@@ -1,7 +1,8 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { Plus, Search } from "lucide-react";
 import { EmptyProductsIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { toast } from "sonner";
@@ -248,17 +249,19 @@ function UomPageInner() {
   const searchParams = useSearchParams();
   const [formKey, setFormKey] = useState<number>(0);
 
-  const search = searchParams.get("search") ?? "";
   const statusParam = searchParams.get("status") ?? "all";
+  const [search, setSearch] = useState<string>(searchParams.get("search") ?? "");
+  const debouncedSearch = useDebouncedValue(search, 300);
 
   const query = useUom();
   const uomList = query.data ?? [];
 
   const filteredUom = uomList.filter((uom) => {
+    const term = debouncedSearch.trim().toLowerCase();
     const matchesSearch =
-      !search ||
-      uom.name.toLowerCase().includes(search.toLowerCase()) ||
-      uom.abbreviation.toLowerCase().includes(search.toLowerCase());
+      !term ||
+      uom.name.toLowerCase().includes(term) ||
+      uom.abbreviation.toLowerCase().includes(term);
     const matchesStatus =
       statusParam === "all" ||
       (statusParam === "active" && uom.isActive) ||
@@ -278,8 +281,16 @@ function UomPageInner() {
     router.replace(`?${params.toString()}`, { scroll: false });
   }
 
+  useEffect(() => {
+    const trimmed = debouncedSearch.trim() || null;
+    const current = searchParams.get("search") ?? null;
+    if (trimmed !== current) {
+      updateParams({ search: trimmed });
+    }
+  }, [debouncedSearch]);
+
   function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>): void {
-    updateParams({ search: e.target.value || null });
+    setSearch(e.target.value);
   }
 
   function handleStatusChange(value: string): void {
@@ -294,7 +305,7 @@ function UomPageInner() {
     void query.refetch();
   }
 
-  const hasFilters = !!(search || (statusParam && statusParam !== "all"));
+  const hasFilters = !!(search.trim() || (statusParam && statusParam !== "all"));
 
   const filtersRow = (
     <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">

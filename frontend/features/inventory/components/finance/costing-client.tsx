@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import Link from "next/link";
 import { Lock, Search } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -151,10 +152,11 @@ const columns: DataTableColumn<CostingProductRow>[] = [
 
 export function CostingClient() {
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [page, setPage] = useState(1);
 
   const { data, isLoading, error, refetch } = useCostingProducts({
-    search: search || undefined,
+    search: debouncedSearch.trim() || undefined,
     page,
   });
 

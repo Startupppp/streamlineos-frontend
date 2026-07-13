@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { AlertTriangle, TrendingDown, CheckCircle2, Search } from "lucide-react";
@@ -31,6 +31,7 @@ import { AvailabilityPopover } from "@/features/inventory/components/stock/avail
 import { ReservationsPanel } from "@/features/inventory/components/stock/reservations-panel";
 import { OpeningStockSheet } from "@/features/inventory/components/stock/opening-stock-sheet";
 import { cn } from "@/lib/utils";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 
 const PAGE_LIMIT = 50;
 
@@ -42,8 +43,10 @@ export default function StockLevelsPage() {
   const warehouseParam = searchParams.get("warehouse") ?? "all";
   const locationParam = searchParams.get("location") ?? "all";
   const stockStatusParam = searchParams.get("stockStatus") ?? "all";
-  const searchQ = searchParams.get("q") ?? "";
   const pageParam = Number(searchParams.get("page") ?? "1") || 1;
+
+  const [searchInput, setSearchInput] = useState<string>(searchParams.get("q") ?? "");
+  const debouncedSearch = useDebouncedValue(searchInput, 300);
 
   const warehouseId = warehouseParam !== "all" ? Number(warehouseParam) || undefined : undefined;
   const locationId = locationParam !== "all" && warehouseId ? Number(locationParam) || undefined : undefined;
@@ -51,6 +54,18 @@ export default function StockLevelsPage() {
   const negative = stockStatusParam === "negative" ? true : undefined;
 
   const [page, setPage] = useState(pageParam);
+
+  useEffect(() => {
+    const trimmed = debouncedSearch.trim() || null;
+    const current = searchParams.get("q") ?? null;
+    if (trimmed === current) return;
+    const params = new URLSearchParams(searchParams.toString());
+    if (trimmed) params.set("q", trimmed);
+    else params.delete("q");
+    params.delete("page");
+    setPage(1);
+    router.replace(`?${params.toString()}`);
+  }, [debouncedSearch]);
   const [availabilityVariantId, setAvailabilityVariantId] = useState<number | null>(null);
   const [availabilityVariantName, setAvailabilityVariantName] = useState<string>("");
   const [availabilityOpen, setAvailabilityOpen] = useState(false);
@@ -64,11 +79,11 @@ export default function StockLevelsPage() {
       locationId,
       lowStock,
       negative,
-      search: searchQ || undefined,
+      search: debouncedSearch.trim() || undefined,
       page,
       limit: PAGE_LIMIT,
     }),
-    [warehouseId, locationId, lowStock, negative, searchQ, page],
+    [warehouseId, locationId, lowStock, negative, debouncedSearch, page],
   );
 
   const { data: stockData, isLoading: stockLoading, isError: stockError, refetch } =
@@ -95,14 +110,10 @@ export default function StockLevelsPage() {
 
   const handleSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      const params = new URLSearchParams(searchParams.toString());
-      if (e.target.value) params.set("q", e.target.value);
-      else params.delete("q");
-      params.delete("page");
+      setSearchInput(e.target.value);
       setPage(1);
-      router.replace(`?${params.toString()}`);
     },
-    [router, searchParams],
+    [],
   );
 
   const handleWarehouseChange = useCallback(
@@ -177,7 +188,7 @@ export default function StockLevelsPage() {
   }
 
   const hasActiveFilters =
-    searchQ || warehouseParam !== "all" || stockStatusParam !== "all" || locationParam !== "all";
+    searchInput.trim() || warehouseParam !== "all" || stockStatusParam !== "all" || locationParam !== "all";
   const subtitle = stockData
     ? `${total} item${total !== 1 ? "s" : ""}`
     : undefined;
@@ -220,7 +231,7 @@ export default function StockLevelsPage() {
         />
         <Input
           placeholder="Search product or SKU…"
-          value={searchQ}
+          value={searchInput}
           onChange={handleSearchChange}
           className="h-8 w-full pl-8 text-xs"
         />

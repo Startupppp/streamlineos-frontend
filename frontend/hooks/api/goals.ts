@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -156,6 +156,7 @@ export function useGoals(params?: GoalsParams) {
     queryKey: queryKeys.goals.list(queryParams),
     queryFn: () => apiClient.get<GoalListItem[]>("/goals", queryParams),
     staleTime: 30_000,
+    placeholderData: keepPreviousData,
   });
 }
 
