@@ -58,7 +58,7 @@ const COLUMNS: DataTableColumn<RunEmployee>[] = [
     header: "Deductions",
     className: "text-right",
     cell: (row) => (
-      <span className="font-mono text-[11px] tabular-nums text-red-600">
+      <span className="font-mono text-[11px] tabular-nums text-red-600 dark:text-red-400">
         {row.totalDeductions ? `−${formatMoney(row.totalDeductions)}` : "—"}
       </span>
     ),

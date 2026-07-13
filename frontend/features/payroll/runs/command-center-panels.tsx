@@ -53,9 +53,9 @@ function VariancePanel({ summary, runId }: { summary: VarianceSummary | null; ru
             className={cn(
               "text-[10px] font-medium px-1.5 py-0.5 rounded border",
               isPositive
-                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
                 : isNegative
-                ? "bg-red-50 text-red-700 border-red-200"
+                ? "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30"
                 : "bg-muted text-muted-foreground border-border",
             )}
           >

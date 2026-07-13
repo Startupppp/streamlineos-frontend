@@ -113,7 +113,7 @@ export function NotificationFilterBar({
     (activeSection !== "ALL" ? 1 : 0) + (activeCategory ? 1 : 0) + (activePriority ? 1 : 0);
 
   const filterControlClassName =
-    "h-9 bg-card border-border text-xs font-normal shadow-xs hover:border-blue-300 focus-visible:border-blue-500 focus-visible:ring-blue-200 focus-visible:ring-[3px]";
+    "h-9 bg-card border-border text-xs font-normal shadow-xs hover:border-ring/50 focus-visible:border-ring focus-visible:ring-ring/30 focus-visible:ring-[3px]";
 
   return (
     <div className="flex w-full min-w-0 items-center gap-2">
@@ -145,7 +145,7 @@ export function NotificationFilterBar({
             <SlidersHorizontal className="h-3.5 w-3.5 shrink-0" />
             <span className="truncate">{mobileFilterLabel}</span>
             {activeFilterCount > 0 && (
-              <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-blue-500 text-[10px] font-semibold text-white">
+              <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground">
                 {activeFilterCount}
               </span>
             )}

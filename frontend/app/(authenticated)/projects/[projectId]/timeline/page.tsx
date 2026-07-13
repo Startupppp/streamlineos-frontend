@@ -41,7 +41,7 @@ export default function TimelinePage({ params }: PageProps) {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Timeline" subtitle="Loading...">
+      <PageWrapper title="Timeline" subtitle="Loading..." noInternalScroll contentClassName="!p-0">
         <div className="px-4 pt-4 pb-4 space-y-1">
           <Skeleton className="h-8 w-full mb-3" />
           {[0, 1, 2, 3, 4, 5].map((i) => (
@@ -58,8 +58,13 @@ export default function TimelinePage({ params }: PageProps) {
   if (!data) return notFound();
 
   return (
-    <PageWrapper title="Timeline" subtitle="Visual timeline of project tickets and deadlines">
-      <div className="flex h-full min-h-0 flex-col">
+    <PageWrapper
+      title="Timeline"
+      subtitle="Visual timeline of project tickets and deadlines"
+      noInternalScroll
+      contentClassName="!p-0"
+    >
+      <div className="flex h-full min-h-0 flex-col px-4 pb-4 pt-0 sm:px-6">
         <GanttView tickets={tickets} projectId={projectId} onTicketClick={handleTicketClick} />
       </div>
     </PageWrapper>

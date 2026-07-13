@@ -37,7 +37,7 @@ export function StepWorkflow({ draft, updateDraft }: StepSharedProps) {
             className={cn(
               "cursor-pointer rounded-xl border p-4 flex items-start justify-between gap-4 transition-all",
               draft.workflow === w.id
-                ? "border-primary bg-primary/5"
+                ? "border-primary bg-brand-core/5"
                 : "border-border bg-card hover:border-muted-foreground/40"
             )}
           >

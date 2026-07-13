@@ -59,7 +59,7 @@ export function StepTemplate({ draft, updateDraft }: StepSharedProps) {
           className={cn(
             "cursor-pointer rounded-xl border p-4 transition-all",
             draft.templateId === null
-              ? "border-primary bg-primary/5"
+              ? "border-primary bg-brand-core/5"
               : "border-border bg-card hover:border-muted-foreground/40"
           )}
         >
@@ -74,7 +74,7 @@ export function StepTemplate({ draft, updateDraft }: StepSharedProps) {
             className={cn(
               "cursor-pointer rounded-xl border p-4 transition-all",
               draft.templateId === t.id
-                ? "border-primary bg-primary/5"
+                ? "border-primary bg-brand-core/5"
                 : "border-border bg-card hover:border-muted-foreground/40"
             )}
           >

@@ -269,14 +269,14 @@ export function ActivityFeed({
       </div>
 
       {commentNotFound && (
-        <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-800">
-          <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-amber-500" />
+        <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 dark:border-amber-500/30 dark:bg-amber-500/10 px-3 py-2.5 text-xs text-amber-800 dark:text-amber-300">
+          <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-amber-500 dark:text-amber-400" />
           <span className="flex-1">Comment not found — it may have been deleted.</span>
           <button
             type="button"
             onClick={handleDismissNotFound}
             aria-label="Dismiss"
-            className="shrink-0 text-amber-500 hover:text-amber-700 transition-colors"
+            className="shrink-0 text-amber-500 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors"
           >
             <X className="h-3.5 w-3.5" />
           </button>

@@ -57,21 +57,89 @@ export function useCreateProject(options?: Omit<UseMutationOptions<Project, Erro
   });
 }
 
+type ProjectPatch = Omit<UpdateProjectInput, "projectId">;
+
+interface UpdateProjectContext {
+  listSnapshots: [readonly unknown[], PaginatedResponse<ProjectListItem> | undefined][];
+  detailKey: ReturnType<typeof queryKeys.projects.detail>;
+  previousDetail: ProjectWithDetails | null | undefined;
+}
+
+function applyProjectListPatch(project: ProjectListItem, patch: ProjectPatch): ProjectListItem {
+  const next: ProjectListItem = { ...project };
+  if (patch.name !== undefined) next.name = patch.name;
+  if (patch.description !== undefined) next.description = patch.description ?? null;
+  if (patch.status !== undefined) next.status = patch.status;
+  if (patch.startDate !== undefined) next.startDate = patch.startDate;
+  if (patch.endDate !== undefined) next.endDate = patch.endDate;
+  return next;
+}
+
+function applyProjectDetailPatch(project: ProjectWithDetails, patch: ProjectPatch): ProjectWithDetails {
+  const next: ProjectWithDetails = { ...project };
+  if (patch.name !== undefined) next.name = patch.name;
+  if (patch.description !== undefined) next.description = patch.description ?? null;
+  if (patch.status !== undefined) next.status = patch.status;
+  if (patch.startDate !== undefined) next.startDate = patch.startDate;
+  if (patch.endDate !== undefined) next.endDate = patch.endDate;
+  return next;
+}
+
 export function useUpdateProject(
-  options?: Omit<UseMutationOptions<{ success: boolean }, Error, UpdateProjectInput>, "mutationFn">
+  options?: Omit<
+    UseMutationOptions<{ success: boolean }, Error, UpdateProjectInput, UpdateProjectContext>,
+    "mutationFn" | "mutationKey" | "onMutate"
+  >
 ) {
   const queryClient = useQueryClient();
-  return useMutation<{ success: boolean }, Error, UpdateProjectInput>({
+  return useMutation<{ success: boolean }, Error, UpdateProjectInput, UpdateProjectContext>({
+    ...options,
     mutationKey: ["projects", "update"],
     mutationFn: ({ projectId, ...data }: UpdateProjectInput) =>
       apiClient.patch<{ success: boolean }>(`/projects/${projectId}`, data),
-    onSuccess: (_data, variables) => {
+    onMutate: async (variables) => {
+      const { projectId, ...patch } = variables;
+      await queryClient.cancelQueries({ queryKey: queryKeys.projects.all });
+      const listSnapshots = queryClient.getQueriesData<PaginatedResponse<ProjectListItem>>({
+        queryKey: queryKeys.projects.all,
+      });
+      queryClient.setQueriesData<PaginatedResponse<ProjectListItem>>(
+        { queryKey: queryKeys.projects.all },
+        (old) => {
+          if (!old?.data) return old;
+          return {
+            ...old,
+            data: old.data.map((p) =>
+              p.id === projectId ? applyProjectListPatch(p, patch) : p,
+            ),
+          };
+        },
+      );
+      const detailKey = queryKeys.projects.detail(projectId);
+      const previousDetail = queryClient.getQueryData<ProjectWithDetails | null>(detailKey);
+      if (previousDetail) {
+        queryClient.setQueryData<ProjectWithDetails | null>(detailKey, (old) =>
+          old ? applyProjectDetailPatch(old, patch) : old,
+        );
+      }
+      return { listSnapshots, detailKey, previousDetail };
+    },
+    onError: (error, variables, context, mutFnCtx) => {
+      if (context) {
+        for (const [key, data] of context.listSnapshots) {
+          queryClient.setQueryData(key, data);
+        }
+        queryClient.setQueryData(context.detailKey, context.previousDetail);
+      }
+      options?.onError?.(error, variables, context, mutFnCtx);
+    },
+    onSettled: (data, error, variables, context, mutFnCtx) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.detail(variables.projectId),
       });
       queryClient.invalidateQueries({ queryKey: queryKeys.projects.all });
+      options?.onSettled?.(data, error, variables, context, mutFnCtx);
     },
-    ...options,
   });
 }
 

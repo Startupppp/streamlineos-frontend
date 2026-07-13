@@ -6,7 +6,6 @@ import {
   Layers,
   ChevronDown,
   ChevronRight,
-  BookOpen,
   Pencil,
   Trash2,
   Plus,
@@ -39,10 +38,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { EditEpicDialog } from "./edit-epic-dialog";
+import { EpicStoryRow } from "./epic-story-row";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
 import { getColorSafe, priorityColors } from "@/lib/theme-constants";
-import Link from "next/link";
+import type { ProjectStatusRecord, Ticket } from "@/types/projects";
 
 export interface EpicCardProps {
   epic: {
@@ -53,14 +53,9 @@ export interface EpicCardProps {
     priority?: string | null;
     points?: number | null;
   };
-  stories: Array<{
-    id: number;
-    title: string;
-    status: string | null;
-    points?: number | null;
-    epicId?: number | null;
-  }>;
+  stories: Ticket[];
   projectId: number;
+  projectStatuses?: ProjectStatusRecord[];
   unlinkedStories: Array<{ id: number; title: string }>;
   onDeleteEpic: (epicId: number) => void;
   onLinkStory: (storyId: number, epicId: number) => void;
@@ -85,7 +80,7 @@ export const LinkStoryItem = memo(function LinkStoryItem({ story, onSelect }: Li
   );
 });
 
-export const EpicCard = memo(function EpicCard({ epic, stories, projectId, unlinkedStories, onDeleteEpic, onLinkStory, onCreateStory, isDeleting }: EpicCardProps) {
+export const EpicCard = memo(function EpicCard({ epic, stories, projectId, projectStatuses, unlinkedStories, onDeleteEpic, onLinkStory, onCreateStory, isDeleting }: EpicCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [newStoryTitle, setNewStoryTitle] = useState("");
@@ -260,29 +255,12 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, unlin
           <CardContent className="pt-0 pb-3 px-4" id={epicCardId} role="region" aria-label={`Stories for ${epic.title}`}>
             <div className="ml-7 space-y-1.5 border-l-2 border-muted pl-3">
               {stories.map((story) => (
-                <div
+                <EpicStoryRow
                   key={story.id}
-                  className="flex items-center justify-between p-2.5 bg-muted/40 rounded-md hover:bg-muted/60 transition-colors"
-                >
-                  <div className="flex items-center gap-2 min-w-0">
-                    <BookOpen className="h-3.5 w-3.5 text-blue-500 shrink-0" />
-                    <span className="font-semibold text-sm truncate">{story.title}</span>
-                    {story.points != null && story.points > 0 && (
-                      <Badge variant="secondary" className="text-xs shrink-0">{story.points} pts</Badge>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <Badge
-                      variant="outline"
-                      className={cn("text-xs", story.status === "DONE" && "border-green-500 text-green-500")}
-                    >
-                      {story.status || "TODO"}
-                    </Badge>
-                    <Link href={`/projects/${projectId}?ticket=${story.id}`}>
-                      <Button variant="ghost" size="sm" className="h-7 text-xs">View</Button>
-                    </Link>
-                  </div>
-                </div>
+                  story={story}
+                  projectId={projectId}
+                  projectStatuses={projectStatuses}
+                />
               ))}
 
               {stories.length === 0 && (

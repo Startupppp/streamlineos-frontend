@@ -13,10 +13,10 @@ const STATUS_DOT: Record<string, string> = {
 
 const STATUS_BADGE: Record<string, string> = {
   TODO: "bg-muted text-foreground dark:bg-slate-500/10 dark:text-slate-300",
-  IN_PROGRESS: "bg-blue-50 text-blue-700",
-  IN_REVIEW: "bg-amber-50 text-amber-700",
-  DONE: "bg-emerald-50 text-emerald-700",
-  CANCELLED: "bg-red-50 text-red-700",
+  IN_PROGRESS: "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
+  IN_REVIEW: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
+  DONE: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
+  CANCELLED: "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-300",
 };
 
 const STATUS_HEX: Record<string, string> = {

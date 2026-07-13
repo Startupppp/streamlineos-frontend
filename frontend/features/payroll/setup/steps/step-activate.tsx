@@ -67,9 +67,9 @@ export function StepActivate({ draft, clearAll }: StepActivateProps) {
           initial={shouldReduceMotion ? false : { scale: 0.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
-          className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center"
+          className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center"
         >
-          <Check className="h-8 w-8 text-emerald-600" />
+          <Check className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
         </motion.div>
 
         <div className="space-y-1">

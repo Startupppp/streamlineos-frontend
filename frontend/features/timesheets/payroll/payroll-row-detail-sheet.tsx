@@ -58,14 +58,14 @@ export function PayrollRowDetailSheet({
           {row && (
             <>
               <div className="grid grid-cols-3 gap-2">
-                <div className="rounded-lg border border-border bg-blue-50 p-3 text-center">
+                <div className="rounded-lg border border-border bg-blue-50 dark:bg-blue-500/10 p-3 text-center">
                   <p className="text-[11px] text-muted-foreground">Payable</p>
-                  <p className="text-lg font-semibold tabular-nums text-blue-700">{row.totalPayableHours.toFixed(1)}</p>
+                  <p className="text-lg font-semibold tabular-nums text-blue-700 dark:text-blue-300">{row.totalPayableHours.toFixed(1)}</p>
                   <p className="text-[10px] text-muted-foreground">hours</p>
                 </div>
-                <div className="rounded-lg border border-border bg-amber-50 p-3 text-center">
+                <div className="rounded-lg border border-border bg-amber-50 dark:bg-amber-500/10 p-3 text-center">
                   <p className="text-[11px] text-muted-foreground">Overtime</p>
-                  <p className="text-lg font-semibold tabular-nums text-amber-700">{row.overtimeHours.toFixed(1)}</p>
+                  <p className="text-lg font-semibold tabular-nums text-amber-700 dark:text-amber-300">{row.overtimeHours.toFixed(1)}</p>
                   <p className="text-[10px] text-muted-foreground">hours</p>
                 </div>
                 <div className="rounded-lg border border-border bg-card p-3 text-center">
@@ -76,8 +76,8 @@ export function PayrollRowDetailSheet({
               </div>
 
               {row.hasPendingEntries && (
-                <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
-                  <p className="text-xs text-amber-800">
+                <div className="rounded-lg border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-4 py-3">
+                  <p className="text-xs text-amber-800 dark:text-amber-300">
                     <span className="font-semibold">{row.pendingHours.toFixed(1)} h</span> pending approval — excluded from this total.{" "}
                     <Link href="/timesheets/team" className="underline underline-offset-2">
                       Review

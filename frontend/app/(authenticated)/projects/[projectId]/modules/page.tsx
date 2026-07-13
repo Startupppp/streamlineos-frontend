@@ -35,6 +35,8 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { EmojiIconPicker } from "@/components/ui/emoji-icon-picker";
+import { formatModuleName } from "@/features/projects/modules/lib/module-name";
 
 const MODULE_STATUSES = ["backlog", "planned", "in-progress", "paused", "completed", "cancelled"] as const;
 const DESC_MAX = 500;
@@ -52,6 +54,7 @@ const moduleNameSchema = z
 
 const createModuleSchema = z
   .object({
+    icon: z.string().optional(),
     name: moduleNameSchema,
     description: z.string().max(DESC_MAX, `Description must be ${DESC_MAX} characters or fewer`).optional(),
     status: z.enum(MODULE_STATUSES).optional(),
@@ -61,6 +64,15 @@ const createModuleSchema = z
     allowPastDates: z.boolean().optional(),
   })
   .superRefine((data, ctx) => {
+    const fullName = formatModuleName(data.icon, data.name);
+    if (fullName.length > 80) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Module name must be 80 characters or fewer (including icon).",
+        path: ["name"],
+      });
+    }
+
     if (data.startDate && data.endDate) {
       const start = new Date(data.startDate);
       const end = new Date(data.endDate);
@@ -90,7 +102,16 @@ const createModuleSchema = z
 
 type CreateModuleForm = z.infer<typeof createModuleSchema>;
 
-const FORM_DEFAULTS: Partial<CreateModuleForm> = { status: "backlog", allowPastDates: false };
+const FORM_DEFAULTS: CreateModuleForm = {
+  icon: undefined,
+  name: "",
+  description: "",
+  status: "backlog",
+  startDate: "",
+  endDate: "",
+  leadId: undefined,
+  allowPastDates: false,
+};
 
 export default function ModulesPage({
   params,
@@ -153,9 +174,21 @@ export default function ModulesPage({
     [form]
   );
 
+  const handleIconChange = useCallback(
+    (icon: string | null) => {
+      form.setValue("icon", icon ?? undefined, { shouldValidate: true });
+    },
+    [form],
+  );
+
   const onSubmit = useCallback((data: CreateModuleForm) => {
+    const { icon, allowPastDates: _allowPastDates, ...rest } = data;
     createMutation.mutate(
-      { ...data, projectId },
+      {
+        ...rest,
+        name: formatModuleName(icon, data.name),
+        projectId,
+      },
       {
         onSuccess: () => {
           form.reset(FORM_DEFAULTS);
@@ -211,7 +244,20 @@ export default function ModulesPage({
               <form id="module-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="mod-name">Name</Label>
-                  <Input id="mod-name" {...form.register("name")} />
+                  <div className="flex gap-2">
+                    <Controller
+                      control={form.control}
+                      name="icon"
+                      render={({ field }) => (
+                        <EmojiIconPicker
+                          id="mod-icon"
+                          icon={field.value}
+                          onIconChange={handleIconChange}
+                        />
+                      )}
+                    />
+                    <Input id="mod-name" className="flex-1" {...form.register("name")} />
+                  </div>
                   {form.formState.errors.name && (
                     <p className="text-xs text-destructive mt-1">
                       {form.formState.errors.name.message}

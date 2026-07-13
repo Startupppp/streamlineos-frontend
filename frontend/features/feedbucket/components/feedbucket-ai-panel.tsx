@@ -2,20 +2,25 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Sparkles, ExternalLink, RefreshCw } from "lucide-react";
+import { Sparkles, ExternalLink, RefreshCw, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import DOMPurify from "isomorphic-dompurify";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
 import {
   useAnalyzeFeedbucketSubmission,
   useCreateTicketFromFeedbucketAi,
 } from "@/hooks/api/feedbucket/use-feedbucket-ai";
+import { useConvertFeedbucketToTicket } from "@/hooks/api/feedbucket/use-feedbucket-submissions";
 import type { FeedbucketAiAnalysis, FeedbucketAiPriority, FeedbucketAiType } from "@/types/feedbucket";
+
+const AI_UNAVAILABLE_STATUSES = new Set([400, 402, 503]);
 
 const AI_TYPE_LABELS: Record<FeedbucketAiType, string> = {
   bug: "Bug",
@@ -156,6 +161,7 @@ interface FeedbucketAiPanelProps {
   hasScreenshot: boolean;
   existingAnalysis: FeedbucketAiAnalysis | null;
   linkedTicketId: number | null;
+  linkedTicketKey: string | null;
   projectId: number | null | undefined;
   onTicketCreated: (ticketId: number) => void;
 }
@@ -165,6 +171,7 @@ export function FeedbucketAiPanel({
   hasScreenshot,
   existingAnalysis,
   linkedTicketId,
+  linkedTicketKey,
   projectId,
   onTicketCreated,
 }: FeedbucketAiPanelProps) {
@@ -172,17 +179,20 @@ export function FeedbucketAiPanel({
   const canManage = useCan("feedbucket:submissions:manage");
 
   const analyzeMutation = useAnalyzeFeedbucketSubmission();
-  const createTicketMutation = useCreateTicketFromFeedbucketAi();
+  const createAiTicketMutation = useCreateTicketFromFeedbucketAi();
+  const convertBasicMutation = useConvertFeedbucketToTicket();
 
   const [localAnalysis, setLocalAnalysis] = useState<FeedbucketAiAnalysis | null>(existingAnalysis);
   const [localTicketId, setLocalTicketId] = useState<number | null>(linkedTicketId);
+  const [localTicketKey, setLocalTicketKey] = useState<string | null>(linkedTicketKey);
+  const [aiFallbackReason, setAiFallbackReason] = useState<string | null>(null);
 
   const analysis = localAnalysis ?? existingAnalysis;
   const ticketId = localTicketId ?? linkedTicketId;
+  const ticketKey = localTicketKey ?? linkedTicketKey;
   const isAnalyzing = analyzeMutation.isPending;
-  const isCreatingTicket = createTicketMutation.isPending;
-
-  if (!canAi) return null;
+  const isCreatingAiTicket = createAiTicketMutation.isPending;
+  const isCreatingBasicTicket = convertBasicMutation.isPending;
 
   async function handleAnalyze(force = false) {
     try {
@@ -193,12 +203,33 @@ export function FeedbucketAiPanel({
     }
   }
 
-  async function handleCreateTicket() {
+  async function handleCreateAiTicket() {
+    setAiFallbackReason(null);
     try {
-      const result = await createTicketMutation.mutateAsync(submissionId);
+      const result = await createAiTicketMutation.mutateAsync(submissionId);
+      setLocalTicketId(result.ticketId);
+      if ("ticketKey" in result && typeof result.ticketKey === "string") {
+        setLocalTicketKey(result.ticketKey);
+      }
+      onTicketCreated(result.ticketId);
+      toast.success("AI-enriched ticket created");
+    } catch (error) {
+      if (isApiError(error) && AI_UNAVAILABLE_STATUSES.has(error.status ?? 0)) {
+        const reason = getErrorMessage(error);
+        setAiFallbackReason(reason);
+        await handleCreateBasicTicket(true);
+      } else {
+        toast.error(getErrorMessage(error));
+      }
+    }
+  }
+
+  async function handleCreateBasicTicket(isFallback = false) {
+    try {
+      const result = await convertBasicMutation.mutateAsync(submissionId);
       setLocalTicketId(result.ticketId);
       onTicketCreated(result.ticketId);
-      toast.success("Ticket created from AI analysis");
+      toast.success(isFallback ? "Basic ticket created (AI unavailable)" : "Ticket created");
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
@@ -212,92 +243,152 @@ export function FeedbucketAiPanel({
     void handleAnalyze(true);
   }
 
-  function handleCreateTicketClick() {
-    void handleCreateTicket();
+  function handleCreateAiTicketClick() {
+    void handleCreateAiTicket();
+  }
+
+  function handleCreateBasicTicketClick() {
+    void handleCreateBasicTicket(false);
+  }
+
+  if (canAi) {
+    return (
+      <div className="rounded-xl border border-border bg-card p-4 space-y-4">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-blue-500" aria-hidden />
+            <p className="text-sm font-semibold text-foreground">AI Triage</p>
+          </div>
+          <div className="flex items-center gap-2">
+            {analysis && (
+              <LoadingButton
+                size="sm"
+                variant="ghost"
+                isPending={isAnalyzing}
+                loadingText="Re-analyzing…"
+                onClick={handleReAnalyzeClick}
+                aria-label="Re-analyze with AI"
+                className="h-7 px-2 text-xs gap-1"
+              >
+                <RefreshCw className="h-3 w-3" aria-hidden />
+                Re-analyze
+              </LoadingButton>
+            )}
+            {!analysis && !isAnalyzing && (
+              <LoadingButton
+                size="sm"
+                isPending={isAnalyzing}
+                loadingText="Analyzing…"
+                onClick={handleAnalyzeClick}
+                className="h-8 gap-1.5"
+              >
+                <Sparkles className="h-3.5 w-3.5" aria-hidden />
+                Analyze with AI
+              </LoadingButton>
+            )}
+          </div>
+        </div>
+
+        {!hasScreenshot && !analysis && !isAnalyzing && (
+          <p className="text-xs text-muted-foreground">
+            AI works best with a screenshot; analysis will use the text only.
+          </p>
+        )}
+
+        {isAnalyzing && !analysis && <AiAnalysisSkeleton />}
+
+        {analysis && (
+          <>
+            <Separator />
+            <AiAnalysisResult analysis={analysis} />
+          </>
+        )}
+
+        {canManage && !ticketId && (
+          <>
+            <Separator />
+            <div className="space-y-2">
+              {aiFallbackReason && (
+                <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+                  <AlertTriangle className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" aria-hidden />
+                  <span>AI unavailable — basic ticket created instead. ({aiFallbackReason})</span>
+                </div>
+              )}
+              <div className="flex items-center gap-2 flex-wrap">
+                <LoadingButton
+                  size="sm"
+                  isPending={isCreatingAiTicket || isCreatingBasicTicket}
+                  loadingText="Creating with AI…"
+                  onClick={handleCreateAiTicketClick}
+                  className="gap-1.5"
+                >
+                  <Sparkles className="h-3.5 w-3.5" aria-hidden />
+                  Create ticket with AI
+                </LoadingButton>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={handleCreateBasicTicketClick}
+                  disabled={isCreatingAiTicket || isCreatingBasicTicket}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  Create basic ticket
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
+
+        {ticketId && (
+          <div className="flex items-center gap-3">
+            <Badge variant="secondary" className="text-xs">
+              {ticketKey ? ticketKey : `Ticket #${ticketId}`}
+            </Badge>
+            {projectId && (
+              <Link
+                href={`/projects/${projectId}/tickets/${ticketId}`}
+                className="flex items-center gap-1 text-sm text-blue-600 hover:underline"
+              >
+                View ticket
+                <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+              </Link>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (!canManage || ticketId) {
+    if (!ticketId) return null;
+    return (
+      <div className="rounded-xl border border-border bg-card p-4 flex items-center gap-3">
+        <Badge variant="secondary" className="text-xs">
+          {ticketKey ? ticketKey : `Ticket #${ticketId}`}
+        </Badge>
+        {projectId && (
+          <Link
+            href={`/projects/${projectId}/tickets/${ticketId}`}
+            className="flex items-center gap-1 text-sm text-blue-600 hover:underline"
+          >
+            View ticket
+            <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+          </Link>
+        )}
+      </div>
+    );
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card p-4 space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-blue-500" aria-hidden />
-          <p className="text-sm font-semibold text-foreground">AI Triage</p>
-        </div>
-        <div className="flex items-center gap-2">
-          {analysis && (
-            <LoadingButton
-              size="sm"
-              variant="ghost"
-              isPending={isAnalyzing}
-              loadingText="Re-analyzing…"
-              onClick={handleReAnalyzeClick}
-              aria-label="Re-analyze with AI"
-              className="h-7 px-2 text-xs gap-1"
-            >
-              <RefreshCw className="h-3 w-3" aria-hidden />
-              Re-analyze
-            </LoadingButton>
-          )}
-          {!analysis && (
-            <LoadingButton
-              size="sm"
-              isPending={isAnalyzing}
-              loadingText="Analyzing…"
-              onClick={handleAnalyzeClick}
-              className="h-8 gap-1.5"
-            >
-              <Sparkles className="h-3.5 w-3.5" aria-hidden />
-              Analyze with AI
-            </LoadingButton>
-          )}
-        </div>
-      </div>
-
-      {!hasScreenshot && !analysis && !isAnalyzing && (
-        <p className="text-xs text-muted-foreground">
-          AI works best with a screenshot; analysis will use the text only.
-        </p>
-      )}
-
-      {isAnalyzing && !analysis && (
-        <AiAnalysisSkeleton />
-      )}
-
-      {analysis && (
-        <>
-          <Separator />
-          <AiAnalysisResult analysis={analysis} />
-
-          {canManage && !ticketId && (
-            <LoadingButton
-              size="sm"
-              isPending={isCreatingTicket}
-              loadingText="Creating ticket…"
-              onClick={handleCreateTicketClick}
-              className="w-full sm:w-auto"
-            >
-              Create Ticket from AI
-            </LoadingButton>
-          )}
-
-          {ticketId && (
-            <div className="flex items-center gap-3">
-              <Badge variant="secondary" className="text-xs">
-                AI Ticket #{ticketId}
-              </Badge>
-              {projectId && (
-                <Link
-                  href={`/projects/${projectId}/tickets/${ticketId}`}
-                  className="flex items-center gap-1 text-sm text-blue-600 hover:underline"
-                >
-                  View ticket
-                  <ExternalLink className="h-3.5 w-3.5" aria-hidden />
-                </Link>
-              )}
-            </div>
-          )}
-        </>
-      )}
+    <div className="rounded-xl border border-border bg-card p-4">
+      <LoadingButton
+        size="sm"
+        isPending={isCreatingBasicTicket}
+        loadingText="Converting…"
+        onClick={handleCreateBasicTicketClick}
+      >
+        Convert to Ticket
+      </LoadingButton>
     </div>
   );
 }

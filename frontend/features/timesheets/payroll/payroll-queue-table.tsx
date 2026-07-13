@@ -82,7 +82,7 @@ export function PayrollQueueTable({
         key: "overtimeHours",
         header: "Overtime",
         cell: (row) => (
-          <span className={`font-mono tabular-nums text-right block ${row.overtimeHours > 0 ? "text-amber-600 font-medium" : ""}`}>
+          <span className={`font-mono tabular-nums text-right block ${row.overtimeHours > 0 ? "text-amber-600 dark:text-amber-400 font-medium" : ""}`}>
             {row.overtimeHours.toFixed(1)}
           </span>
         ),

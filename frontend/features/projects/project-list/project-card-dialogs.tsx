@@ -20,8 +20,8 @@ import type { ProjectListItem } from "@/types/projects/projects";
 interface ProjectCardDialogsProps {
   project: ProjectListItem;
   isArchived: boolean;
-  editOpen: boolean;
-  onEditOpenChange: (open: boolean) => void;
+  editOpen?: boolean;
+  onEditOpenChange?: (open: boolean) => void;
   archiveConfirmOpen: boolean;
   onArchiveConfirmOpenChange: (open: boolean) => void;
   deleteConfirmOpen: boolean;
@@ -31,7 +31,7 @@ interface ProjectCardDialogsProps {
 export function ProjectCardDialogs({
   project,
   isArchived,
-  editOpen,
+  editOpen = false,
   onEditOpenChange,
   archiveConfirmOpen,
   onArchiveConfirmOpenChange,
@@ -73,7 +73,9 @@ export function ProjectCardDialogs({
 
   return (
     <>
-      <EditProjectSheet open={editOpen} onOpenChange={onEditOpenChange} project={project} />
+      {onEditOpenChange ? (
+        <EditProjectSheet open={editOpen} onOpenChange={onEditOpenChange} project={project} />
+      ) : null}
 
       <AlertDialog open={archiveConfirmOpen} onOpenChange={onArchiveConfirmOpenChange}>
         <AlertDialogContent>

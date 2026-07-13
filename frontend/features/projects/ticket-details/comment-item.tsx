@@ -195,11 +195,11 @@ function CommentItemComponent({
 
   return (
     <div
-      className={`flex gap-2.5 group rounded-lg transition-colors duration-500 ${showHighlight ? "bg-blue-50/40 ring-1 ring-blue-200 px-2 -mx-2 py-1" : ""}`}
+      className={`flex gap-2.5 group rounded-lg transition-colors duration-500 ${showHighlight ? "bg-blue-50/40 ring-1 ring-blue-200 dark:bg-blue-500/10 dark:ring-blue-500/30 px-2 -mx-2 py-1" : ""}`}
     >
       <Avatar className="h-6 w-6 shrink-0 mt-0.5">
         <AvatarImage src={resolveImageUrl(user?.image)} />
-        <AvatarFallback className="text-[9px] bg-primary/10 text-primary">
+        <AvatarFallback className="text-[9px] bg-brand-core/10 text-primary">
           {getUserInitials(user)}
         </AvatarFallback>
       </Avatar>

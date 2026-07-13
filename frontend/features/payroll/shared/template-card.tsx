@@ -78,8 +78,8 @@ export function TemplateCard({ template, selected, onSelect, actions }: Template
         "relative rounded-lg border p-4 text-left transition-all",
         onSelect && "cursor-pointer",
         selected
-          ? "border-primary bg-primary/5 shadow-sm"
-          : "border-border bg-card hover:border-primary/40 hover:shadow-sm",
+          ? "border-primary bg-brand-core/5 shadow-sm"
+          : "border-border bg-card hover:border-brand-core/40 hover:shadow-sm",
       )}
     >
       {template.isRecommended && (
@@ -128,7 +128,7 @@ export function TemplateCard({ template, selected, onSelect, actions }: Template
             {shownToggles.map((key) => (
               <span
                 key={key}
-                className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-blue-50 text-blue-700 border border-blue-100"
+                className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-blue-50 text-blue-700 border border-blue-100 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30"
               >
                 {TOGGLE_CHIP_LABELS[key] ?? key}
               </span>

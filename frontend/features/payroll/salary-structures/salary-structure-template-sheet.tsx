@@ -80,8 +80,8 @@ function CtcPreview({ values }: { values: TemplateFormValues }) {
   ];
 
   return (
-    <div className="rounded-xl bg-violet-50 border border-violet-200/80 px-4 py-3 space-y-1.5">
-      <p className="text-[10px] font-semibold text-violet-600 uppercase tracking-wider mb-2">
+    <div className="rounded-xl bg-violet-50 border border-violet-200/80 px-4 py-3 space-y-1.5 dark:bg-violet-500/10 dark:border-violet-500/30">
+      <p className="text-[10px] font-semibold text-violet-600 dark:text-violet-400 uppercase tracking-wider mb-2">
         Live CTC Preview
       </p>
       {rows.map((row) => (
@@ -89,7 +89,7 @@ function CtcPreview({ values }: { values: TemplateFormValues }) {
           <span className={`text-xs ${row.highlight ? "font-semibold text-foreground" : "text-muted-foreground"}`}>
             {row.label}
           </span>
-          <span className={`text-xs tabular-nums ${row.highlight ? "font-bold text-violet-700" : "text-foreground"}`}>
+          <span className={`text-xs tabular-nums ${row.highlight ? "font-bold text-violet-700 dark:text-violet-300" : "text-foreground"}`}>
             {row.value}
           </span>
         </div>

@@ -78,19 +78,19 @@ export function useAuditLogs(filters: AuditFilters) {
 }
 
 const ACTION_BADGE_COLORS: Record<string, string> = {
-  created: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  updated: "bg-blue-50 text-blue-700 border-blue-200",
-  deleted: "bg-red-50 text-red-700 border-red-200",
+  created: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  updated: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  deleted: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
   archived: "bg-muted text-muted-foreground border-border",
-  restored: "bg-emerald-50 text-emerald-600 border-emerald-200",
-  assigned: "bg-blue-50 text-blue-700 border-blue-200",
-  unassigned: "bg-blue-50 text-blue-600 border-blue-200",
-  status_changed: "bg-amber-50 text-amber-700 border-amber-200",
-  stage_changed: "bg-amber-50 text-amber-700 border-amber-200",
-  converted: "bg-blue-50 text-blue-700 border-blue-200",
-  merged: "bg-blue-50 text-blue-700 border-blue-200",
-  exported: "bg-blue-50 text-blue-600 border-blue-200",
-  imported: "bg-blue-50 text-blue-600 border-blue-200",
+  restored: "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  assigned: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  unassigned: "bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  status_changed: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  stage_changed: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  converted: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  merged: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  exported: "bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  imported: "bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
 };
 
 const ENTITY_TYPE_LABELS: Record<string, string> = {
@@ -216,7 +216,7 @@ export function AuditEntryRow({ entry, isLast }: AuditEntryRowProps) {
   return (
     <motion.div variants={variants} className="flex gap-3">
       <div className="flex flex-col items-center">
-        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-xs font-semibold shrink-0">
+        <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-500/10 flex items-center justify-center text-blue-700 dark:text-blue-300 text-xs font-semibold shrink-0">
           {initials}
         </div>
         {!isLast && <div className="w-px flex-1 bg-border mt-1" />}

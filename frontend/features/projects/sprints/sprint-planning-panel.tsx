@@ -170,7 +170,7 @@ const PlanningCard = function PlanningCard({
             "p-2 bg-card rounded border text-xs group",
             "flex items-start gap-2 min-w-0",
             dragSnapshot.isDragging && "shadow-md opacity-90",
-            isSelected && "border-primary/60 bg-primary/5",
+            isSelected && "border-brand-core/60 bg-brand-core/5",
           )}
         >
           <button
@@ -390,13 +390,13 @@ export function SprintPlanningPanel({
         {(isOverCapacity || sprintUnestimatedCount > 0) && (
           <div className="flex flex-wrap gap-2 pt-1">
             {isOverCapacity && (
-              <div className="flex items-center gap-1.5 text-xs text-red-600 bg-red-50 border border-red-200 rounded px-2 py-1">
+              <div className="flex items-center gap-1.5 text-xs text-red-600 bg-red-50 border border-red-200 rounded px-2 py-1 dark:text-red-400 dark:bg-red-500/10 dark:border-red-500/30">
                 <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden />
                 Sprint exceeds capacity by {sprintTotalPoints - (sprintCapacity ?? 0)} points
               </div>
             )}
             {sprintUnestimatedCount > 0 && (
-              <div className="flex items-center gap-1.5 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded px-2 py-1">
+              <div className="flex items-center gap-1.5 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded px-2 py-1 dark:text-amber-400 dark:bg-amber-500/10 dark:border-amber-500/30">
                 <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden />
                 {sprintUnestimatedCount} ticket{sprintUnestimatedCount !== 1 ? "s" : ""} without an estimate
               </div>
@@ -527,7 +527,7 @@ export function SprintPlanningPanel({
                     aria-label="Backlog tickets"
                     className={cn(
                       "min-h-[200px] rounded-lg border border-dashed p-2 space-y-1",
-                      snapshot.isDraggingOver && "bg-primary/5 border-primary/30",
+                      snapshot.isDraggingOver && "bg-brand-core/5 border-brand-core/30",
                     )}
                   >
                     {backlogFilters.filtered.map((ticket, index) => (
@@ -599,7 +599,7 @@ export function SprintPlanningPanel({
                     aria-label={`${sprint.name} tickets`}
                     className={cn(
                       "min-h-[200px] rounded-lg border border-dashed p-2 space-y-1",
-                      snapshot.isDraggingOver && "bg-primary/5 border-primary/30",
+                      snapshot.isDraggingOver && "bg-brand-core/5 border-brand-core/30",
                     )}
                   >
                     {sprintTickets.length === 0 && !snapshot.isDraggingOver && (

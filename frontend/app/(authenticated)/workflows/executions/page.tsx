@@ -22,12 +22,12 @@ const PAGE_SIZE = 20;
 
 const STATUS_BADGE_CLASS: Record<ExecutionStatus, string> = {
   pending: "bg-muted text-muted-foreground",
-  running: "bg-blue-100 text-blue-700 animate-pulse",
-  waiting: "bg-yellow-100 text-yellow-700",
-  completed: "bg-green-100 text-green-700",
-  failed: "bg-red-100 text-red-700",
+  running: "bg-blue-100 text-blue-700 animate-pulse dark:bg-blue-500/10 dark:text-blue-300",
+  waiting: "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-300",
+  completed: "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-300",
+  failed: "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-300",
   cancelled: "bg-muted text-muted-foreground",
-  timed_out: "bg-orange-100 text-orange-700",
+  timed_out: "bg-orange-100 text-orange-700 dark:bg-orange-500/10 dark:text-orange-300",
 };
 
 const STATUS_TABS: Array<{ label: string; value: ExecutionStatus | "all" }> = [
@@ -174,7 +174,7 @@ export default function ExecutionsPage() {
         />
       ) : (
         <div className="space-y-1">
-          <div className="grid grid-cols-[2fr,1fr,1fr,1.5fr,1fr,auto] gap-3 px-4 py-2 text-xs font-medium text-muted-foreground border-b border-border/50">
+          <div className="grid grid-cols-[2fr,1fr,1fr,1.5fr,1fr,auto] gap-3 px-4 py-2 text-xs font-medium text-muted-foreground border-b border-border/60">
             <span>Workflow</span>
             <span>Status</span>
             <span>Trigger</span>
@@ -193,7 +193,7 @@ export default function ExecutionsPage() {
               }
             />
           ))}
-          <div className="flex items-center justify-between pt-4 border-t border-border/50">
+          <div className="flex items-center justify-between pt-4 border-t border-border/60">
             <p className="text-sm text-muted-foreground">
               Page {page} of {totalPages} ({data.total} total)
             </p>

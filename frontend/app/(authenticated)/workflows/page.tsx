@@ -78,9 +78,9 @@ type StatusFilter = WorkflowStatus | "all";
 
 const STATUS_BADGE_CLASS: Record<WorkflowStatus, string> = {
   draft: "bg-muted text-muted-foreground",
-  published: "bg-green-100 text-green-700",
-  disabled: "bg-yellow-100 text-yellow-700",
-  archived: "bg-red-100 text-red-700",
+  published: "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-300",
+  disabled: "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-300",
+  archived: "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-300",
 };
 
 const STATUS_LEFT_BORDER: Record<WorkflowStatus, string> = {
@@ -469,28 +469,28 @@ export default function WorkflowsPage() {
           <StatCard
             label="Total Workflows"
             value={analytics?.totalWorkflows}
-            icon={<GitBranch className="h-4 w-4 text-violet-600" />}
+            icon={<GitBranch className="h-4 w-4 text-violet-600 dark:text-violet-400" />}
             loading={analyticsLoading}
             index={0}
           />
           <StatCard
             label="Active Workflows"
             value={analytics?.activeWorkflows}
-            icon={<CheckCircle2 className="h-4 w-4 text-green-600" />}
+            icon={<CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />}
             loading={analyticsLoading}
             index={1}
           />
           <StatCard
             label="Total Executions"
             value={analytics?.totalExecutions}
-            icon={<Activity className="h-4 w-4 text-blue-600" />}
+            icon={<Activity className="h-4 w-4 text-blue-600 dark:text-blue-400" />}
             loading={analyticsLoading}
             index={2}
           />
           <StatCard
             label="Pending Approvals"
             value={analytics?.pendingApprovals}
-            icon={<Clock className="h-4 w-4 text-amber-600" />}
+            icon={<Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />}
             loading={analyticsLoading}
             index={3}
           />

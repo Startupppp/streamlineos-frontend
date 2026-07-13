@@ -9,6 +9,14 @@ export const statusAccentBar: Record<string, string> = {
   ARCHIVED: "bg-slate-300 dark:bg-slate-600",
 };
 
+export const statusStripe: Record<string, string> = {
+  ACTIVE: "border-l-emerald-500",
+  PLANNING: "border-l-blue-500",
+  COMPLETED: "border-l-slate-400",
+  ON_HOLD: "border-l-amber-500",
+  ARCHIVED: "border-l-slate-400 dark:border-l-slate-600",
+};
+
 export const statusDotColors: Record<string, string> = {
   ACTIVE: "bg-emerald-500",
   PLANNING: "bg-blue-500",

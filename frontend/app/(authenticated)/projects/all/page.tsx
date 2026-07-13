@@ -134,23 +134,20 @@ export default function ProjectsPage() {
     >
       {isLoading ? (
         viewMode === "grid" ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="rounded-xl border border-border bg-card p-4 space-y-3 shadow-sm">
-                <div className="flex justify-between">
-                  <Skeleton className="h-5 w-14 rounded" />
-                  <Skeleton className="h-5 w-16 rounded-full" />
-                </div>
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-3 w-full" />
-                <Skeleton className="h-1 w-full rounded-full" />
-                <div className="flex justify-between pt-2 border-t">
-                  <div className="flex -space-x-1.5">
-                    {[1, 2, 3].map((j) => (
-                      <Skeleton key={j} className="h-6 w-6 rounded-full" />
-                    ))}
+              <div key={i} className="rounded-xl border border-border border-l-[3px] border-l-muted bg-card p-2.5 space-y-2 shadow-sm">
+                <div className="flex gap-2">
+                  <div className="h-8 w-8 rounded-lg bg-muted shrink-0" />
+                  <div className="flex-1 space-y-1.5">
+                    <Skeleton className="h-3 w-10 rounded" />
+                    <Skeleton className="h-4 w-3/4" />
                   </div>
+                </div>
+                <Skeleton className="h-1 w-full rounded-full" />
+                <div className="flex justify-between pt-1 border-t border-border/80">
                   <Skeleton className="h-3 w-16" />
+                  <Skeleton className="h-3 w-14" />
                 </div>
               </div>
             ))}
@@ -199,7 +196,7 @@ export default function ProjectsPage() {
         />
       ) : viewMode === "grid" ? (
         <motion.div
-          className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+          className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
           role="list"
           aria-label="Projects grid"
           variants={staggerContainer}

@@ -384,7 +384,7 @@ export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-7 text-xs border-dashed border-amber-300 text-amber-700 hover:bg-amber-50"
+                    className="h-7 text-xs border-dashed border-amber-300 text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-500/10"
                     onClick={handleAddWaitNode}
                   >
                     <Plus className="h-3 w-3 mr-1" /> Wait
@@ -392,7 +392,7 @@ export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-7 text-xs border-dashed border-blue-300 text-blue-700 hover:bg-blue-50"
+                    className="h-7 text-xs border-dashed border-blue-300 text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-500/10"
                     onClick={handleAddBranchNode}
                   >
                     <Plus className="h-3 w-3 mr-1" /> Branch
@@ -400,7 +400,7 @@ export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-7 text-xs border-dashed border-red-300 text-red-600 hover:bg-red-50"
+                    className="h-7 text-xs border-dashed border-red-300 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10"
                     onClick={handleAddExitNode}
                   >
                     <Plus className="h-3 w-3 mr-1" /> Exit

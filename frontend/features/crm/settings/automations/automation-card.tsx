@@ -231,7 +231,7 @@ export function AutomationCard({ rule, onToggle, onDeleteRequest }: AutomationCa
                 </Badge>
                 <Badge
                   variant="outline"
-                  className="text-[10px] shrink-0 font-normal text-blue-700 border-blue-200 bg-blue-50/60"
+                  className="text-[10px] shrink-0 font-normal text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-500/30 bg-blue-50/60 dark:bg-blue-500/10"
                 >
                   {formatActionSummary(rule.actions)}
                 </Badge>

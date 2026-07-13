@@ -25,10 +25,10 @@ export function ThankYouScreen({
 
   const Icon = disqualified ? ShieldOff : failed ? XCircle : null;
   const iconWrap = disqualified
-    ? "bg-amber-100 text-amber-600"
+    ? "bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300"
     : failed
-      ? "bg-red-100 text-red-600"
-      : "bg-emerald-100 text-emerald-600";
+      ? "bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-300"
+      : "bg-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300";
 
   const heading = disqualified
     ? "Thanks for your time"

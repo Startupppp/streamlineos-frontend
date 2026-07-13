@@ -170,7 +170,7 @@ export function ExceptionsTab({ runId, isLocked }: ExceptionsTabProps) {
         <EmptyState
           title="No exceptions — clean run"
           description="All employees passed validation checks"
-          className="border-emerald-200 bg-emerald-50/30"
+          className="border-emerald-200 bg-emerald-50/30 dark:border-emerald-500/30 dark:bg-emerald-500/10"
         />
       )}
 

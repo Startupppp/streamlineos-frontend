@@ -71,15 +71,18 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
   const rowHeight = 36;
   const headerHeight = 40;
   const labelWidth = viewportWidth < 640 ? 120 : viewportWidth < 1024 ? 180 : 240;
-  const chartContainerRef = useRef<HTMLDivElement>(null);
-  const [containerHeight, setContainerHeight] = useState(400);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [scrollViewportHeight, setScrollViewportHeight] = useState(0);
 
   useEffect(() => {
-    const el = chartContainerRef.current;
+    const el = scrollRef.current;
     if (!el) return;
-    const ro = new ResizeObserver(([entry]) => {
-      setContainerHeight(entry.contentRect.height);
-    });
+    const syncViewportHeight = () => {
+      const next = el.clientHeight;
+      setScrollViewportHeight((prev) => (Math.abs(prev - next) < 1 ? prev : next));
+    };
+    syncViewportHeight();
+    const ro = new ResizeObserver(syncViewportHeight);
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
@@ -165,7 +168,7 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
   );
 
   const contentHeight = headerHeight + datedTickets.length * rowHeight;
-  const svgHeight = Math.max(contentHeight, containerHeight);
+  const svgHeight = Math.max(contentHeight, scrollViewportHeight || 200);
   const bodyHeight = svgHeight - headerHeight;
   const svgWidth = labelWidth + days.length * dayWidth;
 
@@ -201,10 +204,7 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
         </div>
       </div>
 
-      <div
-        ref={chartContainerRef}
-        className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border relative"
-      >
+      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border">
         {datedTickets.length === 0 && (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 bg-background/80 backdrop-blur-[2px]">
             <div className="flex flex-col items-center gap-2 text-center px-4">
@@ -228,7 +228,7 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
             </div>
           </div>
         )}
-        <div className="min-h-0 flex-1 overflow-auto">
+        <div ref={scrollRef} className="min-h-0 flex-1 overflow-auto [scrollbar-gutter:stable]">
           <div className="min-w-max">
             <svg width={svgWidth} height={svgHeight} className="text-foreground">
             <rect x={0} y={0} width={labelWidth} height={headerHeight} className="fill-muted/50" />

@@ -78,7 +78,7 @@ function BatchCard({ batch }: { batch: BankPayoutBatch }) {
           <span
             className={cn(
               "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border",
-              BATCH_STATUS_CLASS[batch.status] ?? "bg-slate-100 text-slate-600 border-slate-200",
+              BATCH_STATUS_CLASS[batch.status] ?? "bg-muted text-muted-foreground border-border",
             )}
           >
             {batch.status}

@@ -20,13 +20,13 @@ export function TemplatePickerCard({ icon: Icon, title, description, onClick, di
         if (!disabled && (e.key === "Enter" || e.key === " ")) onClick();
       }}
       className={cn(
-        "h-full cursor-pointer transition-all hover:shadow-md hover:border-primary/40",
+        "h-full cursor-pointer transition-all hover:shadow-md hover:border-brand-core/40",
         disabled && "cursor-not-allowed opacity-60",
       )}
     >
       <CardHeader className="flex flex-row items-center gap-3 space-y-0">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-          <Icon className="h-5 w-5 text-primary" />
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-core/10">
+          <Icon className="h-5 w-5 text-brand-core" />
         </div>
         <p className="font-semibold text-sm">{title}</p>
       </CardHeader>

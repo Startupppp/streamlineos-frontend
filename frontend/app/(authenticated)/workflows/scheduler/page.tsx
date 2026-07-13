@@ -61,7 +61,7 @@ function ScheduleRow({ schedule, onToggle, onDelete, isToggling }: ScheduleRowPr
             "h-8 w-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5",
             schedule.isEnabled ? "bg-violet-50 dark:bg-violet-500/10" : "bg-muted",
           )}>
-            <Clock className={cn("h-4 w-4", schedule.isEnabled ? "text-violet-600" : "text-slate-400")} />
+            <Clock className={cn("h-4 w-4", schedule.isEnabled ? "text-violet-600 dark:text-violet-400" : "text-muted-foreground")} />
           </div>
 
           <div className="flex-1 min-w-0">
@@ -105,7 +105,7 @@ function ScheduleRow({ schedule, onToggle, onDelete, isToggling }: ScheduleRowPr
               {schedule.isEnabled ? (
                 <ToggleRight className="h-4 w-4 text-violet-600" />
               ) : (
-                <ToggleLeft className="h-4 w-4 text-slate-400" />
+                <ToggleLeft className="h-4 w-4 text-muted-foreground" />
               )}
             </Button>
             <Button
@@ -179,7 +179,7 @@ export default function SchedulerPage() {
       subtitle="Manage cron-based workflow schedules"
       actions={
         activeCount > 0 ? (
-          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-violet-50 text-violet-700 border border-violet-200">
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-violet-50 text-violet-700 border border-violet-200 dark:bg-violet-500/10 dark:text-violet-300 dark:border-violet-500/30">
             {activeCount} active
           </span>
         ) : undefined

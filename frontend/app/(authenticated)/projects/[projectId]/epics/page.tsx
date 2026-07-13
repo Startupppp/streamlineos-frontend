@@ -9,10 +9,9 @@ import {
 } from "@/hooks/api/projects";
 import { CreateEpicDialog } from "@/features/projects/epics/create-epic-dialog";
 import { EpicCard } from "@/features/projects/epics/epic-card";
+import { EpicStoryRow } from "@/features/projects/epics/epic-story-row";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
@@ -22,7 +21,6 @@ import {
   Wrench,
   CheckCircle2,
 } from "lucide-react";
-import Link from "next/link";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -134,6 +132,7 @@ export default function EpicsPage({ params }: PageProps) {
                 epic={epic}
                 stories={stories.filter(s => s.epicId === epic.id)}
                 projectId={projectId}
+                projectStatuses={project?.statuses}
                 unlinkedStories={stories.filter(s => !s.epicId)}
                 onDeleteEpic={handleDeleteEpic}
                 onLinkStory={handleLinkStory}
@@ -154,19 +153,12 @@ export default function EpicsPage({ params }: PageProps) {
               <CardContent className="pt-4 pb-3">
                 <div className="space-y-1.5">
                   {stories.filter(s => !s.epicId).map((story) => (
-                    <div
+                    <EpicStoryRow
                       key={story.id}
-                      className="flex items-center justify-between p-2.5 bg-muted/40 rounded-md"
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <BookOpen className="h-3.5 w-3.5 text-blue-500 shrink-0" />
-                        <span className="font-semibold text-sm truncate">{story.title}</span>
-                        <Badge variant="outline" className="text-xs shrink-0">{story.status}</Badge>
-                      </div>
-                      <Link href={`/projects/${projectId}?ticket=${story.id}`}>
-                        <Button variant="ghost" size="sm" className="h-7 text-xs">View</Button>
-                      </Link>
-                    </div>
+                      story={story}
+                      projectId={projectId}
+                      projectStatuses={project?.statuses}
+                    />
                   ))}
                 </div>
               </CardContent>

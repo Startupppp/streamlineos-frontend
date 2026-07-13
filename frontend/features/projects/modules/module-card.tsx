@@ -7,6 +7,7 @@ import { ArrowRight, Calendar, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Module } from "@/types/projects/projects";
 import type { ModuleStatus } from "@/types/projects/shared";
+import { getModuleAvatarDisplay } from "@/features/projects/modules/lib/module-name";
 
 interface ModuleStatusStyle {
   label: string;
@@ -68,16 +69,6 @@ const MODULE_STATUS_STYLES: Record<ModuleStatus, ModuleStatusStyle> = {
   },
 };
 
-function getModuleInitials(name: string): string {
-  const trimmed = name.trim();
-  if (!trimmed) return "MD";
-  const words = trimmed.split(/\s+/);
-  if (words.length >= 2) {
-    return `${words[0]?.[0] ?? ""}${words[1]?.[0] ?? ""}`.toUpperCase();
-  }
-  return trimmed.slice(0, 2).toUpperCase();
-}
-
 function formatModuleDate(value: string | null): string {
   if (!value) return "TBD";
   return new Date(value).toLocaleDateString("en-US", {
@@ -102,7 +93,8 @@ export const ModuleCard = memo(function ModuleCard({
   const progress = mod.progress ?? 0;
   const status = mod.status ?? "backlog";
   const style = MODULE_STATUS_STYLES[status] ?? MODULE_STATUS_STYLES.backlog;
-  const initials = useMemo(() => getModuleInitials(mod.name), [mod.name]);
+  const avatarDisplay = useMemo(() => getModuleAvatarDisplay(mod.name), [mod.name]);
+  const isEmojiAvatar = avatarDisplay.length <= 4 && /\p{Extended_Pictographic}/u.test(avatarDisplay);
 
   const entrance = prefersReducedMotion
     ? { opacity: 1, y: 0 }
@@ -147,12 +139,13 @@ export const ModuleCard = memo(function ModuleCard({
             <div className="mb-3 flex items-start gap-2.5">
               <div
                 className={cn(
-                  "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[11px] font-bold tracking-tight ring-1 ring-inset",
+                  "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ring-1 ring-inset",
+                  isEmojiAvatar ? "text-xl leading-none" : "text-[11px] font-bold tracking-tight",
                   style.avatar,
                 )}
                 aria-hidden="true"
               >
-                {initials}
+                {avatarDisplay}
               </div>
 
               <div className="min-w-0 flex-1">

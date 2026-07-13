@@ -32,14 +32,14 @@ function ChoiceCard({
       }
       className={cn(
         "flex items-center gap-3 rounded-xl border px-4 py-3.5 transition-all",
-        "hover:border-primary/35 hover:bg-muted/40",
+        "hover:border-brand-core/35 hover:bg-muted/40",
         active
-          ? "border-primary bg-primary/5 ring-2 ring-primary/15 ring-offset-1"
+          ? "border-brand-core bg-brand-core/5 ring-2 ring-brand-core/15 ring-offset-1"
           : "border-border bg-background",
       )}
     >
       {children}
-      {active ? <Check className="ml-auto h-4 w-4 shrink-0 text-primary" aria-hidden /> : null}
+      {active ? <Check className="ml-auto h-4 w-4 shrink-0 text-brand-core" aria-hidden /> : null}
     </div>
   );
 }
@@ -134,7 +134,7 @@ export function YesNoInput({ value, onChange }: QuestionInputProps) {
             onClick={() => onChange({ answerValue: option.val })}
             className={cn(
               "h-12 rounded-xl border text-sm font-semibold transition-all",
-              "hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              "hover:border-brand-core/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               active
                 ? "border-primary bg-primary text-primary-foreground shadow-sm"
                 : "border-border bg-background text-foreground hover:bg-muted/50",

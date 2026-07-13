@@ -53,7 +53,7 @@ function ApprovalCard({
               </p>
               <Badge
                 variant="secondary"
-                className="text-[10px] bg-amber-50 text-amber-700 border-amber-200"
+                className="text-[10px] bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30"
               >
                 Pending
               </Badge>
@@ -84,7 +84,7 @@ function ApprovalCard({
             <Button
               size="sm"
               variant="outline"
-              className="h-8 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+              className="h-8 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-500/30 dark:hover:bg-red-500/10"
               onClick={handleReject}
             >
               Reject
@@ -167,7 +167,7 @@ export default function ApprovalsPage() {
       title="Approval Center"
       subtitle="Review and act on pending workflow approvals"
       actions={
-        <span className="inline-flex items-center px-2 py-1 rounded-md bg-amber-50 text-amber-700 text-xs font-medium border border-amber-200">
+        <span className="inline-flex items-center px-2 py-1 rounded-md bg-amber-50 text-amber-700 text-xs font-medium border border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
           {pendingApprovals.length} pending
         </span>
       }

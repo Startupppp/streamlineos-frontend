@@ -41,9 +41,9 @@ const STATE_TYPE_KEYS: readonly StateType[] = ["unstarted", "started", "complete
 
 const TYPE_CONFIG: Record<StateType, { label: string; color: string }> = {
   unstarted: { label: "Unstarted", color: "bg-muted text-muted-foreground" },
-  started: { label: "In Progress", color: "bg-blue-100 text-blue-700" },
-  completed: { label: "Completed", color: "bg-emerald-100 text-emerald-700" },
-  cancelled: { label: "Cancelled", color: "bg-red-100 text-red-700" },
+  started: { label: "In Progress", color: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300" },
+  completed: { label: "Completed", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" },
+  cancelled: { label: "Cancelled", color: "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-300" },
 };
 
 const COLORS = [
@@ -147,7 +147,7 @@ export function StatusesSettings({ projectId }: { projectId: number }) {
                 <AlertDialogTrigger asChild>
                   <button
                     type="button"
-                    className="opacity-0 group-hover:opacity-100 h-6 w-6 flex items-center justify-center rounded text-red-400 hover:text-red-600 hover:bg-red-50 transition-all"
+                    className="opacity-0 group-hover:opacity-100 h-6 w-6 flex items-center justify-center rounded text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>

@@ -1,12 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { format } from "date-fns";
 import { ChevronDown, ChevronRight, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
@@ -15,7 +12,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useFeedbucketSubmission,
   useUpdateFeedbucketSubmission,
-  useConvertFeedbucketToTicket,
 } from "@/hooks/api/feedbucket/use-feedbucket-submissions";
 import { FeedbucketAiPanel } from "./feedbucket-ai-panel";
 import type {
@@ -100,7 +96,6 @@ interface FeedbucketSubmissionDetailProps {
 export function FeedbucketSubmissionDetail({ submissionId }: FeedbucketSubmissionDetailProps) {
   const { data: submission, isLoading, isError, refetch } = useFeedbucketSubmission(submissionId);
   const updateMutation = useUpdateFeedbucketSubmission();
-  const convertMutation = useConvertFeedbucketToTicket();
   const [convertedTicketId, setConvertedTicketId] = useState<number | null>(null);
 
   if (isLoading) {
@@ -137,16 +132,6 @@ export function FeedbucketSubmissionDetail({ submissionId }: FeedbucketSubmissio
         submissionId,
         input: { priority: value === "none" ? null : (value as FeedbucketSubmissionPriority) },
       });
-    } catch (error) {
-      toast.error(getErrorMessage(error));
-    }
-  }
-
-  async function handleConvertToTicket() {
-    try {
-      const result = await convertMutation.mutateAsync(submissionId);
-      setConvertedTicketId(result.ticketId);
-      toast.success("Converted to ticket");
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
@@ -257,34 +242,10 @@ export function FeedbucketSubmissionDetail({ submissionId }: FeedbucketSubmissio
         hasScreenshot={!!submission.screenshotUrl}
         existingAnalysis={submission.aiAnalysis}
         linkedTicketId={linkedTicketId}
+        linkedTicketKey={null}
         projectId={projectId}
         onTicketCreated={setConvertedTicketId}
       />
-
-      <div className="rounded-xl border border-border bg-card p-4">
-        {linkedTicketId ? (
-          <div className="flex items-center gap-3">
-            <Badge variant="secondary" className="text-xs">Linked Ticket #{linkedTicketId}</Badge>
-            {projectId && (
-              <Link
-                href={`/projects/${projectId}/tickets/${linkedTicketId}`}
-                className="flex items-center gap-1 text-sm text-accent hover:underline"
-              >
-                View ticket
-                <ExternalLink className="h-3.5 w-3.5" />
-              </Link>
-            )}
-          </div>
-        ) : (
-          <Button
-            size="sm"
-            onClick={handleConvertToTicket}
-            disabled={convertMutation.isPending}
-          >
-            {convertMutation.isPending ? "Converting…" : "Convert to Ticket"}
-          </Button>
-        )}
-      </div>
     </div>
   );
 }

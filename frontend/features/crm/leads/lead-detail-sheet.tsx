@@ -301,17 +301,17 @@ export function LeadDetailSheet({
                   </p>
                   <div className="grid grid-cols-2 gap-3">
                     {lead.potentialValue && (
-                      <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200">
+                      <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30">
                         <p className="text-[11px] text-muted-foreground mb-1">
                           Potential Value
                         </p>
-                        <p className="text-lg font-bold text-emerald-400">
+                        <p className="text-lg font-bold text-emerald-500 dark:text-emerald-400">
                           ₹{Number(lead.potentialValue).toLocaleString("en-IN")}
                         </p>
                       </div>
                     )}
                     {lead.investmentInterest && (
-                      <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
+                      <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30">
                         <p className="text-[11px] text-muted-foreground mb-1">
                           Investment Interest
                         </p>

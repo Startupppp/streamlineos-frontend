@@ -72,7 +72,7 @@ const TemplateCard = memo(function TemplateCard({ template, index, onEdit, onDel
           variant={template.isActive ? "default" : "secondary"}
           className={
             template.isActive
-              ? "bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-100 text-[11px]"
+              ? "bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-100 text-[11px] dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30 dark:hover:bg-emerald-500/10"
               : "text-[11px]"
           }
         >
