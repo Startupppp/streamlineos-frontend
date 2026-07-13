@@ -199,7 +199,7 @@ export default function PricebooksPage() {
       header: "Default",
       cell: (pb) =>
         pb.isDefault ? (
-          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30">
             Default
           </Badge>
         ) : (
@@ -211,7 +211,7 @@ export default function PricebooksPage() {
       header: "Status",
       cell: (pb) =>
         pb.isActive ? (
-          <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
+          <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
             Active
           </Badge>
         ) : (

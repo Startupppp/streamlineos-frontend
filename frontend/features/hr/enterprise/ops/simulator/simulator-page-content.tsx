@@ -20,13 +20,13 @@ export function SimulatorPageContent() {
       title="HR Simulator"
       subtitle="Model scenarios without affecting production records"
       badge={
-        <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200 flex items-center gap-1">
+        <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30 flex items-center gap-1">
           <FlaskConical className="h-3 w-3" />
           Simulation Mode
         </Badge>
       }
     >
-      <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-800 mb-4 flex items-center gap-2">
+      <div className="rounded-xl border border-amber-200 bg-amber-50 dark:border-amber-500/30 dark:bg-amber-500/10 px-4 py-2.5 text-sm text-amber-800 dark:text-amber-300 mb-4 flex items-center gap-2">
         <FlaskConical className="h-4 w-4 shrink-0" />
         <span><strong>Simulation — no records changed.</strong> Results are modeled projections only and do not modify any production data.</span>
       </div>

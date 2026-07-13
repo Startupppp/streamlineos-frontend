@@ -9,9 +9,9 @@ const IMPACTS: RiskImpact[] = ["high", "medium", "low"];
 
 const LEGEND = [
   { label: "Low", bg: "bg-muted" },
-  { label: "Medium", bg: "bg-amber-100" },
-  { label: "High", bg: "bg-orange-100" },
-  { label: "Critical", bg: "bg-red-100" },
+  { label: "Medium", bg: "bg-amber-100 dark:bg-amber-500/20" },
+  { label: "High", bg: "bg-orange-100 dark:bg-orange-500/20" },
+  { label: "Critical", bg: "bg-red-100 dark:bg-red-500/20" },
 ] as const;
 
 interface RiskMatrixProps {

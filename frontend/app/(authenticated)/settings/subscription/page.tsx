@@ -230,7 +230,7 @@ export default function SubscriptionPage() {
                 : "No active plan"}
             </p>
             {currentStatus === "TRIAL" && trialEndsAt && (
-              <p className="text-xs text-amber-600 mt-0.5 flex items-center gap-1">
+              <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5 flex items-center gap-1">
                 <Calendar className="h-3 w-3" />
                 Trial ends{" "}
                 {new Date(trialEndsAt).toLocaleDateString("en-IN", {
@@ -264,7 +264,7 @@ export default function SubscriptionPage() {
         </div>
 
         {!data?.isConfigured && (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
             Payment gateway is not configured. Contact your administrator to enable online payments.
           </div>
         )}

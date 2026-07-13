@@ -109,7 +109,7 @@ export function ReviewTable({ list, canReview, onOpenReview }: ReviewTableProps)
             {emp.userImage && (
               <AvatarImage src={emp.userImage} alt={emp.userName ?? "Employee"} />
             )}
-            <AvatarFallback className="text-xs bg-primary/10 text-primary font-semibold">
+            <AvatarFallback className="text-xs bg-brand-core/10 text-primary font-semibold">
               {getInitials(emp.userName)}
             </AvatarFallback>
           </Avatar>

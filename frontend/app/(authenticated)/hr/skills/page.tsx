@@ -54,7 +54,7 @@ function getProficiencyMeta(level: number | null): {
 } {
   if (level === null || level === undefined) return {
     label: "Unknown",
-    badge: "bg-slate-100 border-slate-200 text-slate-600 dark:bg-slate-900/40 dark:border-slate-700 dark:text-slate-400",
+    badge: "bg-muted border-border text-muted-foreground",
     dot: "bg-slate-400",
   };
   if (level >= 5) return {

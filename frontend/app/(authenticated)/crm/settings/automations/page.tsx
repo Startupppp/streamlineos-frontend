@@ -54,7 +54,7 @@ function buildColumns(
           <div className="flex items-center gap-2">
             <span className="font-medium text-foreground">{row.name}</span>
             {row.isDraft && (
-              <Badge variant="outline" className="text-[10px] h-4 px-1.5 text-amber-600 border-amber-300">
+              <Badge variant="outline" className="text-[10px] h-4 px-1.5 text-amber-600 border-amber-300 dark:text-amber-400 dark:border-amber-500/30">
                 Draft
               </Badge>
             )}
@@ -69,7 +69,7 @@ function buildColumns(
       cell: (row): ReactNode => (
         <span className={cn(
           "inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium",
-          "bg-blue-50 text-blue-700 border border-blue-200",
+          "bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
         )}>
           {eventMap[row.trigger] ?? row.trigger}
         </span>

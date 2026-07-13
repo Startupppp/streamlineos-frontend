@@ -116,7 +116,7 @@ export function CompCycleDetail({ cycleId, canManage }: Props) {
             columns={[
               { key: "user", header: "Employee", cell: (r) => <span className="font-medium text-sm">{r.userId}</span> },
               { key: "current", header: "Current Salary", cell: (r) => formatCents(r.currentSalaryCents) },
-              { key: "increase", header: "Increase", cell: (r) => <span className="text-blue-700 font-medium">{formatCents(r.recommendedIncreaseCents)}</span> },
+              { key: "increase", header: "Increase", cell: (r) => <span className="text-blue-700 dark:text-blue-400 font-medium">{formatCents(r.recommendedIncreaseCents)}</span> },
               { key: "calibrated", header: "Calibrated", cell: (r) => formatCents(r.hrCalibratedCents) },
               {
                 key: "status",

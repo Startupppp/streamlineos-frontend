@@ -215,7 +215,7 @@ function PreviewPanel() {
             ))}
             <div className="pt-1 border-t border-border">
               {previewRule.data.wouldAssignTo ? (
-                <span className="text-emerald-700 font-medium">Assign to: {previewRule.data.wouldAssignTo}</span>
+                <span className="text-emerald-700 dark:text-emerald-400 font-medium">Assign to: {previewRule.data.wouldAssignTo}</span>
               ) : (
                 <span className="text-muted-foreground">No rule matched</span>
               )}

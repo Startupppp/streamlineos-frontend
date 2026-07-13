@@ -49,7 +49,7 @@ function RunStatusDisplay({ status }: { status: PaymentRunStatus }) {
     return (
       <Badge
         variant="outline"
-        className="text-[9px] px-1.5 py-0 h-4 bg-emerald-50 text-emerald-700 border-emerald-200"
+        className="text-[9px] px-1.5 py-0 h-4 bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
       >
         Completed
       </Badge>

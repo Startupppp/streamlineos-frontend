@@ -65,19 +65,19 @@ export function ImportPreviewStep({
     {
       key: "row",
       header: "Row",
-      className: "text-xs text-red-700",
+      className: "text-xs text-red-700 dark:text-red-400",
       cell: (e) => e.row,
     },
     {
       key: "field",
       header: "Field",
-      className: "text-xs text-red-700",
+      className: "text-xs text-red-700 dark:text-red-400",
       cell: (e) => e.field,
     },
     {
       key: "message",
       header: "Message",
-      className: "text-xs text-red-700",
+      className: "text-xs text-red-700 dark:text-red-400",
       cell: (e) => e.message,
     },
   ];
@@ -110,11 +110,11 @@ export function ImportPreviewStep({
       {preview && (
         <div className="space-y-4">
           <div className="flex items-center gap-3">
-            <Badge variant="outline" className="text-emerald-700 border-emerald-200 bg-emerald-50">
+            <Badge variant="outline" className="text-emerald-700 border-emerald-200 bg-emerald-50 dark:text-emerald-300 dark:border-emerald-500/30 dark:bg-emerald-500/10">
               {preview.validRows} valid row{preview.validRows !== 1 ? "s" : ""}
             </Badge>
             {preview.errors.length > 0 && (
-              <Badge variant="outline" className="text-red-700 border-red-200 bg-red-50 gap-1">
+              <Badge variant="outline" className="text-red-700 border-red-200 bg-red-50 gap-1 dark:text-red-300 dark:border-red-500/30 dark:bg-red-500/10">
                 <AlertCircle className="h-3 w-3" />
                 {preview.errors.length} error{preview.errors.length !== 1 ? "s" : ""}
               </Badge>

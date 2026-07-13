@@ -37,8 +37,8 @@ import {
 
 const STATUS_BADGE: Record<HrWorkflowStatus, { label: string; className: string }> = {
   draft: { label: "Draft", className: "bg-muted text-muted-foreground" },
-  active: { label: "Active", className: "bg-emerald-100 text-emerald-700" },
-  archived: { label: "Archived", className: "bg-orange-100 text-orange-700" },
+  active: { label: "Active", className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" },
+  archived: { label: "Archived", className: "bg-orange-100 text-orange-700 dark:bg-orange-500/10 dark:text-orange-300" },
 };
 
 export default function WorkflowSettingsPage() {

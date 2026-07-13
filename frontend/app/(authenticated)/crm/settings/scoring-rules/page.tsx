@@ -139,8 +139,8 @@ function ScoringRuleRow({ rule, isEditing, editForm, onEditSubmit, onEdit, onDel
               className={cn(
                 "text-[9px] h-4 px-1.5 py-0 font-mono tabular-nums",
                 rule.points >= 0
-                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                  : "bg-red-50 text-red-700 border-red-200"
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
+                  : "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30"
               )}
             >
               {rule.points > 0 ? "+" : ""}{rule.points}
@@ -422,9 +422,9 @@ export default function ScoringRulesPage() {
                     variant="outline"
                     className={cn(
                       "text-base px-4 py-1 font-bold tabular-nums font-mono",
-                      sampleScore <= 30 ? "bg-red-50 text-red-700 border-red-200" :
-                      sampleScore <= 60 ? "bg-amber-50 text-amber-700 border-amber-200" :
-                      "bg-emerald-50 text-emerald-700 border-emerald-200"
+                      sampleScore <= 30 ? "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30" :
+                      sampleScore <= 60 ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30" :
+                      "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
                     )}
                   >
                     {sampleScore} pts

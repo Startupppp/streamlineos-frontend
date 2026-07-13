@@ -60,7 +60,7 @@ export const WfhBalancesCard = memo(function WfhBalancesCard() {
       <CardHeader className="pb-3 pt-5">
         <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
           <div className="h-7 w-7 rounded-lg bg-violet-100 dark:bg-violet-950/40 flex items-center justify-center">
-            <Home className="h-4 w-4 text-violet-600" />
+            <Home className="h-4 w-4 text-violet-600 dark:text-violet-400" />
           </div>
           WFH Balance
         </CardTitle>
@@ -89,7 +89,7 @@ export const WfhBalancesCard = memo(function WfhBalancesCard() {
               Left
             </p>
           </div>
-          <div className="rounded-xl bg-violet-100 dark:bg-violet-950/40 p-3 text-center">
+          <div className="rounded-xl bg-violet-100 dark:bg-violet-500/10 p-3 text-center">
             <p className="text-3xl font-bold tabular-nums text-violet-700 dark:text-violet-400 leading-none mb-1">
               {stats.approved}
             </p>

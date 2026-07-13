@@ -41,11 +41,11 @@ function AccountCard({ account, index }: { account: BankAccount; index: number }
       transition={{ delay: index * 0.06, duration: 0.22 }}
     >
       <Link href={`/accounting/banking/${account.id}`}>
-        <div className="bg-card border border-border rounded-xl shadow-sm p-4 hover:shadow-md hover:border-blue-200 transition-all cursor-pointer">
+        <div className="bg-card border border-border rounded-xl shadow-sm p-4 hover:shadow-md hover:border-blue-200 dark:hover:border-blue-500/30 transition-all cursor-pointer">
           <div className="flex items-start justify-between mb-3">
             <div className="flex items-center gap-2">
-              <div className="h-9 w-9 rounded-lg bg-blue-50 flex items-center justify-center">
-                <Icon className="h-4 w-4 text-blue-600" />
+              <div className="h-9 w-9 rounded-lg bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center">
+                <Icon className="h-4 w-4 text-blue-600 dark:text-blue-400" />
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-foreground truncate">{account.name}</p>

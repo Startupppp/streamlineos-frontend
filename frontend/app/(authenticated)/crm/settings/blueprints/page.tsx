@@ -116,7 +116,7 @@ export default function BlueprintsPage() {
                       className={cn(
                         "w-full text-left px-3 py-2.5 flex items-center gap-2 hover:bg-muted/40 transition-colors border-l-2",
                         selectedId === bp.id
-                          ? "border-l-blue-500 bg-blue-50/50"
+                          ? "border-l-blue-500 bg-blue-50/50 dark:bg-blue-500/10"
                           : "border-l-transparent"
                       )}
                     >
@@ -158,7 +158,7 @@ export default function BlueprintsPage() {
                       className={cn(
                         "text-[9px] h-4 px-1.5",
                         selectedBlueprint.isActive
-                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
                           : "bg-muted text-muted-foreground border-border"
                       )}
                     >

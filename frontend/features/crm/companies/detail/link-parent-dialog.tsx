@@ -36,7 +36,7 @@ function OrgSelectButton({ org, selected, onSelect }: OrgSelectButtonProps) {
       className={cn(
         "w-full flex items-center gap-2 rounded-md px-2.5 py-2 text-sm text-left transition-colors",
         selected
-          ? "bg-blue-50 text-blue-600"
+          ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400"
           : "hover:bg-accent text-foreground",
       )}
     >
@@ -135,7 +135,7 @@ export function LinkParentDialog({
                 className={cn(
                   "w-full flex items-center gap-2 rounded-md px-2.5 py-2 text-sm text-left transition-colors",
                   selectedId === null
-                    ? "bg-blue-50 text-blue-600"
+                    ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400"
                     : "hover:bg-accent text-muted-foreground",
                 )}
               >

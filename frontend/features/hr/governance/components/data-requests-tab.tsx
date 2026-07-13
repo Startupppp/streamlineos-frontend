@@ -164,7 +164,7 @@ export function DataRequestsTab() {
   return (
     <>
       {processError && (
-        <div className="flex items-start gap-2 p-3 mb-4 border border-orange-200 bg-orange-50 rounded-lg text-sm text-orange-800">
+        <div className="flex items-start gap-2 p-3 mb-4 border border-orange-200 bg-orange-50 rounded-lg text-sm text-orange-800 dark:bg-orange-500/10 dark:border-orange-500/30 dark:text-orange-300">
           <ShieldAlert className="h-4 w-4 mt-0.5 shrink-0" />
           <div>
             <span className="font-medium">Blocked by Legal Hold: </span>

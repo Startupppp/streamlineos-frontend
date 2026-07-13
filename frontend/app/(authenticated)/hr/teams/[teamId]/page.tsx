@@ -42,7 +42,7 @@ import type { NodeStatus } from "@/types/org-hierarchy";
 const STATUS_STYLES: Record<NodeStatus, string> = {
   ACTIVE: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800",
   DISABLED: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800",
-  ARCHIVED: "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-900/30 dark:text-slate-400 dark:border-slate-700",
+  ARCHIVED: "bg-muted text-muted-foreground border-border dark:bg-slate-900/30 dark:text-slate-400 dark:border-slate-700",
 };
 
 const editSchema = z.object({

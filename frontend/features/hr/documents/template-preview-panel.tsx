@@ -27,7 +27,7 @@ export function TemplatePreviewPanel({ previewHtml }: TemplatePreviewPanelProps)
         </CardHeader>
         <CardContent className="p-4">
           <div
-            className="max-h-[600px] overflow-y-auto rounded-xl border bg-white dark:bg-neutral-950 p-5 text-sm prose prose-sm dark:prose-invert max-w-none"
+            className="max-h-[600px] overflow-y-auto rounded-xl border bg-card p-5 text-sm prose prose-sm dark:prose-invert max-w-none"
             dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(previewHtml) }}
           />
         </CardContent>

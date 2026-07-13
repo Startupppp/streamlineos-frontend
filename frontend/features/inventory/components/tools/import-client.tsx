@@ -90,7 +90,7 @@ function ExportTypeCard({ exportType, isSelected, onSelect }: ExportTypeCardProp
       onClick={handleClick}
       className={`text-left rounded-lg border p-3 cursor-pointer transition-colors w-full ${
         isSelected
-          ? "border-primary bg-primary/5"
+          ? "border-primary bg-brand-core/5"
           : "border-border bg-card hover:border-primary/40 hover:bg-muted/40"
       }`}
     >

@@ -143,7 +143,7 @@ function RolesContent() {
           </CardHeader>
           <CardContent className="p-0 lg:flex-1 lg:min-h-0">
             {isLoading ? (
-              <div className="divide-y divide-border/30">
+              <div className="divide-y divide-border/60">
                 {Array.from({ length: 6 }).map((_, i) => (
                   <div key={i} className="px-4 py-3 flex items-center justify-between">
                     <div className="space-y-1.5">
@@ -178,7 +178,7 @@ function RolesContent() {
               </div>
             ) : (
               <ScrollArea className="max-h-[45vh] lg:max-h-none lg:h-full" type="auto">
-                <div className="divide-y divide-border/30">
+                <div className="divide-y divide-border/60">
                   {(roles ?? []).map((role) => (
                     <RoleListItem
                       key={role.id}

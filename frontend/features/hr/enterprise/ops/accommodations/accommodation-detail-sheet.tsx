@@ -30,8 +30,8 @@ interface Props {
 
 const TASK_STATUS_COLORS: Record<AccommodationTaskStatus, string> = {
   pending: "bg-muted text-muted-foreground",
-  in_progress: "bg-blue-50 text-blue-600",
-  completed: "bg-emerald-50 text-emerald-600",
+  in_progress: "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300",
+  completed: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300",
 };
 
 export function AccommodationDetailSheet({ id, open, onOpenChange }: Props) {
@@ -80,12 +80,12 @@ export function AccommodationDetailSheet({ id, open, onOpenChange }: Props) {
           </div>
 
           {canSensitive && request.confidentialMedicalNote && (
-            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+            <div className="rounded-lg border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 p-3">
               <div className="flex items-center gap-1.5 mb-1.5">
-                <Lock className="h-3.5 w-3.5 text-amber-600" />
-                <span className="text-xs font-medium text-amber-700">Confidential Medical Note</span>
+                <Lock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                <span className="text-xs font-medium text-amber-700 dark:text-amber-300">Confidential Medical Note</span>
               </div>
-              <p className="text-sm text-amber-800">{request.confidentialMedicalNote}</p>
+              <p className="text-sm text-amber-800 dark:text-amber-300">{request.confidentialMedicalNote}</p>
             </div>
           )}
 

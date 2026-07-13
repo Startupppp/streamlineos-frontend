@@ -90,7 +90,7 @@ function PortalCard({
   );
 
   return (
-    <Card className={connected ? "border-primary/30" : ""}>
+    <Card className={connected ? "border-brand-core/30" : ""}>
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
@@ -106,7 +106,7 @@ function PortalCard({
             variant="outline"
             className={
               connected
-                ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[11px]"
+                ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[11px] dark:text-emerald-400"
                 : "bg-muted text-muted-foreground border-border text-[11px]"
             }
           >
@@ -191,7 +191,7 @@ export function HrRecruitmentIntegrationsSettings({ embedded = false }: HrRecrui
         </div>
       ) : (
         <div className="space-y-6 max-w-3xl">
-          <div className="rounded-lg border border-blue-200 bg-blue-500/5 p-4 text-sm text-blue-700">
+          <div className="rounded-lg border border-blue-200 bg-blue-500/5 p-4 text-sm text-blue-700 dark:border-blue-500/30 dark:text-blue-300">
             <strong>How it works:</strong> Each platform sends a webhook to the URL shown below
             whenever a candidate applies. The ATS automatically creates a candidate record and
             deduplicates by email/phone.

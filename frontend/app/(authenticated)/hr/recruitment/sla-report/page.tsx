@@ -29,8 +29,8 @@ const STAGE_COLORS = [
 
 function breachColor(pct: number) {
   if (pct >= 50) return "text-destructive";
-  if (pct >= 25) return "text-yellow-600";
-  return "text-green-600";
+  if (pct >= 25) return "text-yellow-600 dark:text-yellow-400";
+  return "text-green-600 dark:text-green-400";
 }
 
 function breachBg(pct: number) {

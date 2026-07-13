@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import { GripVertical, Pencil, Trash2 } from "lucide-react";
+import type { DraggableProvidedDragHandleProps } from "@hello-pangea/dnd";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -62,6 +63,7 @@ interface KanbanColumnHeaderProps {
   onRename?: (oldName: string, newName: string) => void;
   onColorChange?: (statusId: number, color: string) => void;
   quickAdd?: React.ReactNode;
+  dragHandleProps?: DraggableProvidedDragHandleProps | null;
 }
 
 export function KanbanColumnHeader({
@@ -74,6 +76,7 @@ export function KanbanColumnHeader({
   onRename,
   onColorChange,
   quickAdd,
+  dragHandleProps,
 }: KanbanColumnHeaderProps) {
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState(column.name);
@@ -218,6 +221,16 @@ export function KanbanColumnHeader({
   return (
     <div className="relative flex items-center justify-between px-3 py-2 gap-1">
       <div className="flex items-center gap-1.5 min-w-0 flex-1">
+        {dragHandleProps ? (
+          <button
+            type="button"
+            className="flex h-6 w-5 shrink-0 cursor-grab items-center justify-center rounded text-muted-foreground/60 hover:text-muted-foreground active:cursor-grabbing"
+            aria-label="Drag to reorder column"
+            {...dragHandleProps}
+          >
+            <GripVertical className="h-3.5 w-3.5" />
+          </button>
+        ) : null}
         {isEditable ? (
           <Popover open={colorPickerOpen} onOpenChange={setColorPickerOpen}>
             <PopoverTrigger asChild>

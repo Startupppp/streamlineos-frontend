@@ -16,8 +16,8 @@ import {
 import { getErrorMessage } from "@/lib/get-error-message";
 
 const STATUS_BADGE: Record<HrBookingLink["status"], { label: string; className: string }> = {
-  pending: { label: "Pending", className: "bg-yellow-500/10 text-yellow-700 border-yellow-500/20" },
-  booked: { label: "Booked", className: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20" },
+  pending: { label: "Pending", className: "bg-yellow-500/10 text-yellow-700 border-yellow-500/20 dark:text-yellow-300 dark:border-yellow-500/30" },
+  booked: { label: "Booked", className: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30" },
   expired: { label: "Expired", className: "bg-muted text-muted-foreground border-border dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700" },
   cancelled: { label: "Cancelled", className: "bg-destructive/10 text-destructive border-destructive/20" },
 };

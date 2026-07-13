@@ -24,16 +24,16 @@ import { ExitVerificationView } from "./exit-verification-view";
 import { format } from "date-fns";
 
 const STATUS_COLORS: Record<ProvisioningStatus, string> = {
-  pending: "bg-yellow-50 text-yellow-700 border-yellow-200",
-  completed: "bg-blue-50 text-blue-700 border-blue-200",
-  verified: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  failed: "bg-red-50 text-red-700 border-red-200",
+  pending: "bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-500/10 dark:text-yellow-300 dark:border-yellow-500/30",
+  completed: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  verified: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  failed: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
 };
 
 const TRIGGER_COLORS: Record<ProvisioningTrigger, string> = {
-  joiner: "bg-emerald-50 text-emerald-700",
-  mover: "bg-blue-50 text-blue-700",
-  leaver: "bg-red-50 text-red-700",
+  joiner: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
+  mover: "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
+  leaver: "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-300",
   manual: "bg-muted text-muted-foreground",
 };
 
@@ -127,7 +127,7 @@ export function IdentityPageContent() {
         <Button
           variant="ghost"
           size="sm"
-          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+          className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-500/10"
           onClick={(e) => { e.stopPropagation(); deleteTemplate.mutate(r.id); }}
         >
           Delete

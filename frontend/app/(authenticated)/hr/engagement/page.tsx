@@ -90,8 +90,8 @@ function StatCard({
 }) {
   return (
     <div className="bg-card border border-border rounded-xl p-4 flex items-start gap-3">
-      <div className="h-9 w-9 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
-        <span className="text-blue-600">{icon}</span>
+      <div className="h-9 w-9 rounded-lg bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center shrink-0">
+        <span className="text-blue-600 dark:text-blue-400">{icon}</span>
       </div>
       <div className="min-w-0">
         <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">{title}</p>
@@ -116,7 +116,7 @@ function MoodSparkline({ data }: { data: { date: string; avgMood: number }[] }) 
     <svg viewBox={`0 0 ${last14.length * 12} ${h}`} className="w-full h-10" preserveAspectRatio="none">
       <polyline
         fill="none"
-        stroke="#1d4ed8"
+        stroke="var(--primary)"
         strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -219,7 +219,7 @@ function OverviewTab() {
             </div>
           ) : eom ? (
             <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-bold text-lg">
+              <div className="h-12 w-12 rounded-full bg-amber-100 dark:bg-amber-500/10 flex items-center justify-center text-amber-700 dark:text-amber-300 font-bold text-lg">
                 🏆
               </div>
               <div>

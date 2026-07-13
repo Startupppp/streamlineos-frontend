@@ -60,7 +60,7 @@ function DeletePaymentButton({ payment, isPending, onDelete }: DeletePaymentButt
     <LoadingButton
       size="sm"
       variant="ghost"
-      className="text-red-600 hover:text-red-700 hover:bg-red-50 h-7 px-2 text-xs"
+      className="text-red-600 hover:text-red-700 hover:bg-red-50 h-7 px-2 text-xs dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-500/10"
       isPending={isPending}
       onClick={handleClick}
     >

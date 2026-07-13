@@ -143,7 +143,7 @@ const BVA_COLUMNS: DataTableColumn<BvaAccountPeriodRow>[] = [
     cell: (row: BvaAccountPeriodRow): ReactNode => {
       const varianceNum = parseFloat(row.variance);
       return (
-        <Money value={varianceNum} className={varianceNum > 0 ? "text-red-600" : undefined} />
+        <Money value={varianceNum} className={varianceNum > 0 ? "text-red-600 dark:text-red-400" : undefined} />
       );
     },
   },
@@ -189,7 +189,7 @@ function BvaTab({ budgetId }: BvaTabProps) {
       <span className="w-4" />
       <Money
         value={parseFloat(totals.variance)}
-        className={parseFloat(totals.variance) > 0 ? "text-red-600" : undefined}
+        className={parseFloat(totals.variance) > 0 ? "text-red-600 dark:text-red-400" : undefined}
       />
       <span className="w-20" />
     </div>

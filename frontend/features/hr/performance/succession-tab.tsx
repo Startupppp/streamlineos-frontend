@@ -19,8 +19,8 @@ import {
 } from "@/hooks/api/hr/succession";
 
 const READINESS_CONFIG: Record<SuccessionReadiness, { label: string; className: string }> = {
-  ready_now: { label: "Ready Now", className: "bg-emerald-100 text-emerald-700 border-emerald-200" },
-  "1_2_years": { label: "1–2 Years", className: "bg-amber-100 text-amber-700 border-amber-200" },
+  ready_now: { label: "Ready Now", className: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30" },
+  "1_2_years": { label: "1–2 Years", className: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30" },
   "3_plus": { label: "3+ Years", className: "bg-muted text-muted-foreground border-border dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700" },
 };
 

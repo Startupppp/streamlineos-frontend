@@ -153,7 +153,7 @@ function RowActions({ request, canDecide }: RowActionsProps) {
         <Button
           variant="outline"
           size="sm"
-          className="h-6 text-xs text-emerald-700 border-emerald-200 hover:bg-emerald-50"
+          className="h-6 text-xs text-emerald-700 border-emerald-200 hover:bg-emerald-50 dark:text-emerald-300 dark:border-emerald-500/30 dark:hover:bg-emerald-500/10"
           onClick={handleOpenApprove}
         >
           Approve

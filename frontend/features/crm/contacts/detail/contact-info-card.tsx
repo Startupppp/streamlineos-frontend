@@ -84,7 +84,7 @@ export function ContactInfoCard({ contact, onEdit, onSendEmail, onLogCall, entit
       <Card className="bg-card rounded-lg border border-border shadow-sm overflow-hidden">
         <CardHeader className="px-5 pt-5 pb-4">
           <div className="flex items-start gap-4">
-            <div className="h-16 w-16 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-xl font-bold shrink-0">
+            <div className="h-16 w-16 rounded-full bg-blue-100 dark:bg-blue-500/10 flex items-center justify-center text-blue-700 dark:text-blue-300 text-xl font-bold shrink-0">
               {getInitials(contact.name)}
             </div>
             <div className="flex-1 min-w-0 pt-1">

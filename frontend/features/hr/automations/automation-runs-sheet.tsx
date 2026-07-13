@@ -17,9 +17,9 @@ import type { HrAutomationRun, HrAutomationRunStatus } from "@/types/hr/automati
 import { ChevronDown, ChevronRight } from "lucide-react";
 
 const STATUS_COLORS: Record<HrAutomationRunStatus, string> = {
-  success: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  partial: "bg-amber-100 text-amber-700 border-amber-200",
-  failed: "bg-red-100 text-red-700 border-red-200",
+  success: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  partial: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  failed: "bg-red-100 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
   skipped: "bg-muted text-muted-foreground border-border",
 };
 
@@ -61,7 +61,7 @@ function RunRow({ run }: { run: HrAutomationRun }) {
       {expanded && (
         <div className="px-3 pb-3 pt-1 border-t border-border space-y-2">
           {run.error && (
-            <div className="text-xs text-red-600 bg-red-50 rounded p-2 font-mono">{run.error}</div>
+            <div className="text-xs text-red-600 bg-red-50 dark:bg-red-500/10 dark:text-red-400 rounded p-2 font-mono">{run.error}</div>
           )}
           {run.actionResults && run.actionResults.length > 0 && (
             <div className="space-y-1">

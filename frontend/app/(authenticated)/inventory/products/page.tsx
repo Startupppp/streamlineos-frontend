@@ -64,7 +64,7 @@ function formatPrice(value: string | number | null | undefined): string {
 function StatusBadge({ status }: { status: string }) {
   if (status === "ACTIVE") {
     return (
-      <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 border-emerald-200 text-emerald-700 bg-emerald-50">
+      <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 border-emerald-200 text-emerald-700 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
         Active
       </Badge>
     );
@@ -79,20 +79,20 @@ function StatusBadge({ status }: { status: string }) {
 function StockBadge({ qty }: { qty: number }) {
   if (qty <= 0) {
     return (
-      <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 tabular-nums border-red-200 text-red-700 bg-red-50">
+      <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 tabular-nums border-red-200 text-red-700 bg-red-50 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30">
         Out
       </Badge>
     );
   }
   if (qty < 10) {
     return (
-      <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 tabular-nums border-amber-200 text-amber-700 bg-amber-50">
+      <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 tabular-nums border-amber-200 text-amber-700 bg-amber-50 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
         {qty} low
       </Badge>
     );
   }
   return (
-    <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 tabular-nums border-emerald-200 text-emerald-700 bg-emerald-50">
+    <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 tabular-nums border-emerald-200 text-emerald-700 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
       {qty}
     </Badge>
   );
@@ -104,13 +104,13 @@ function TrackingBadge({ method }: { method: TrackingMethod | null | undefined }
   }
   if (method === "LOT") {
     return (
-      <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 bg-amber-50 text-amber-700 border-amber-200">
+      <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
         Lot
       </Badge>
     );
   }
   return (
-    <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 bg-blue-50 text-blue-700 border-blue-200">
+    <Badge variant="outline" className="h-4 text-[9px] px-1.5 py-0 bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30">
       Serial
     </Badge>
   );

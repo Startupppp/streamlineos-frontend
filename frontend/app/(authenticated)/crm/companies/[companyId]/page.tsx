@@ -134,7 +134,7 @@ export default function CompanyDetailPage({
       header: "Name",
       cell: (lead) => (
         <div className="flex items-center gap-2">
-          <div className="h-5 w-5 rounded-full bg-blue-50 flex items-center justify-center text-[9px] font-semibold text-blue-600 shrink-0">
+          <div className="h-5 w-5 rounded-full bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-[9px] font-semibold text-blue-600 dark:text-blue-400 shrink-0">
             {(lead.name ?? "?")[0]?.toUpperCase()}
           </div>
           <div className="min-w-0">
@@ -286,7 +286,7 @@ export default function CompanyDetailPage({
                     icon={Link2}
                     label="Website"
                     value={
-                      <a href={org.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline truncate block max-w-[180px]">
+                      <a href={org.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline truncate block max-w-[180px]">
                         {org.website}
                       </a>
                     }
@@ -297,7 +297,7 @@ export default function CompanyDetailPage({
                     icon={UserCircle}
                     label="LinkedIn"
                     value={
-                      <a href={org.linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                      <a href={org.linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">
                         View profile
                       </a>
                     }
@@ -308,7 +308,7 @@ export default function CompanyDetailPage({
                     icon={GitBranch}
                     label="Parent Account"
                     value={
-                      <Link href={`/crm/companies/${org.parentId}`} className="text-blue-600 hover:underline">
+                      <Link href={`/crm/companies/${org.parentId}`} className="text-blue-600 dark:text-blue-400 hover:underline">
                         View parent
                       </Link>
                     }

@@ -40,6 +40,10 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { notFound, useRouter, useSearchParams } from "next/navigation";
 import type { KanbanTicket } from "@/features/projects/shared/types";
+import {
+  filterHiddenCompletedTickets,
+  getCompletedStatusNames,
+} from "@/features/projects/shared/completed-status";
 import { useExportTickets } from "@/hooks/api/projects/import-export";
 import { ImportTicketsDialog } from "@/features/projects/tickets/import-tickets-dialog";
 import { BulkActionBar } from "@/features/projects/backlog/bulk-action-bar";
@@ -215,6 +219,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
         moduleId: t.moduleId ?? null,
         dueDate: t.dueDate ?? null,
         startDate: t.startDate ?? null,
+        updatedAt: t.updatedAt != null ? String(t.updatedAt) : null,
         sequenceId: t.sequenceId ?? null,
         assignee: t.assignee
           ? {
@@ -244,20 +249,27 @@ export default function ProjectBoardPage({ params }: PageProps) {
     });
   }, [data]);
 
+  const statuses =
+    data && "statuses" in data
+      ? (data.statuses as { id: number; name: string; color: string | null; order: number; wipLimit?: number | null; type?: string | null }[])
+      : undefined;
+
   const filteredTickets = useMemo(() => {
-    let tickets = hideCompleted
-      ? allTickets.filter((t) => t.status !== "DONE")
-      : allTickets;
+    let tickets = filterHiddenCompletedTickets(allTickets, hideCompleted, statuses);
     if (displayOptions.completedIssues !== "all") {
       if (displayOptions.completedIssues === "none") {
-        tickets = tickets.filter((t) => t.status !== "DONE");
+        tickets = filterHiddenCompletedTickets(tickets, true, statuses);
       } else {
         const cutoff = new Date();
         if (displayOptions.completedIssues === "last-day") cutoff.setDate(cutoff.getDate() - 1);
         else if (displayOptions.completedIssues === "last-week") cutoff.setDate(cutoff.getDate() - 7);
         else if (displayOptions.completedIssues === "last-month") cutoff.setMonth(cutoff.getMonth() - 1);
+        const completedStatuses = getCompletedStatusNames(statuses);
         tickets = tickets.filter(
-          (t) => t.status !== "DONE" || !t.updatedAt || new Date(t.updatedAt) >= cutoff,
+          (t) =>
+            !completedStatuses.has(t.status) ||
+            !t.updatedAt ||
+            new Date(t.updatedAt) >= cutoff,
         );
       }
     }
@@ -310,7 +322,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
       tickets = tickets.filter((t) => t.moduleId != null && moduleIds.has(t.moduleId));
     }
     return tickets;
-  }, [allTickets, hideCompleted, q, filterStatus, filterPriority, filterType, filterAssigneeId, filterLabels, filterCycle, filterSprint, filterModule, data]);
+  }, [allTickets, hideCompleted, q, filterStatus, filterPriority, filterType, filterAssigneeId, filterLabels, filterCycle, filterSprint, filterModule, data, displayOptions.completedIssues, statuses]);
 
   const members = useMemo(() => {
     if (!data?.members) return [];
@@ -324,11 +336,6 @@ export default function ProjectBoardPage({ params }: PageProps) {
         image: m.user!.image ?? null,
       }));
   }, [data]);
-
-  const statuses =
-    data && "statuses" in data
-      ? (data.statuses as { id: number; name: string; color: string | null; order: number; wipLimit?: number | null; type?: string | null }[])
-      : undefined;
 
   const wipLimits = useMemo<Record<string, number>>(() => {
     if (!statuses) return {};
@@ -359,7 +366,10 @@ export default function ProjectBoardPage({ params }: PageProps) {
     if (href) router.replace(href);
   }, [selectedTicketId, data, allTickets, projectId, highlightCommentId, router]);
 
-  const doneCount = allTickets.filter((t) => t.status === "DONE").length;
+  const doneCount = useMemo(() => {
+    const completedStatuses = getCompletedStatusNames(statuses);
+    return allTickets.filter((t) => completedStatuses.has(t.status)).length;
+  }, [allTickets, statuses]);
 
   const hasActiveFilters = !!(q || filterStatus || filterPriority || filterType || filterAssigneeId || filterLabels || filterCycle || filterSprint || filterModule);
   const showEmptyFilterState = hasActiveFilters && filteredTickets.length === 0 && allTickets.length > 0;
@@ -606,6 +616,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
                 wipLimits={wipLimits}
                 onTicketSelect={handleTicketSelect}
                 displayOptions={displayOptions}
+                hideCompleted={hideCompleted}
               />
             </div>
           )}

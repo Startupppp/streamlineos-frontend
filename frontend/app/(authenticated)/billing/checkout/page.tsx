@@ -412,8 +412,8 @@ export default function CheckoutPage() {
                   onClick={handlePlanSelectClick}
                   className={`w-full rounded-lg border p-4 text-left transition-colors ${
                     plan === p.id
-                      ? "border-primary bg-primary/5"
-                      : "border-border hover:border-primary/40"
+                      ? "border-primary bg-brand-core/5"
+                      : "border-border hover:border-brand-core/40"
                   }`}
                 >
                   <div className="flex justify-between items-start gap-3">
@@ -473,8 +473,8 @@ export default function CheckoutPage() {
                       onClick={handleBundleToggleClick}
                       className={`w-full rounded-lg border p-4 text-left transition-colors ${
                         isSelected
-                          ? "border-primary bg-primary/5"
-                          : "border-border hover:border-primary/40"
+                          ? "border-primary bg-brand-core/5"
+                          : "border-border hover:border-brand-core/40"
                       }`}
                     >
                       <div className="flex justify-between items-start gap-3">
@@ -494,7 +494,7 @@ export default function CheckoutPage() {
                             <p className="font-semibold text-sm">{bundle.name}</p>
                             <Badge
                               variant="secondary"
-                              className="text-xs text-green-600"
+                              className="text-xs text-green-600 dark:text-green-400"
                             >
                               Save {bundle.savings}%
                             </Badge>
@@ -529,8 +529,8 @@ export default function CheckoutPage() {
                         onClick={handleAppToggleClick}
                         className={`rounded-lg border p-3 text-left transition-colors ${
                           isSelected
-                            ? "border-primary bg-primary/5"
-                            : "border-border hover:border-primary/40"
+                            ? "border-primary bg-brand-core/5"
+                            : "border-border hover:border-brand-core/40"
                         }`}
                       >
                         <div className="flex items-start gap-2">
@@ -616,8 +616,8 @@ export default function CheckoutPage() {
                     onClick={handleAiPackSelectClick}
                     className={`w-full rounded-lg border p-4 text-left transition-colors ${
                       isSelected
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary/40"
+                        ? "border-primary bg-brand-core/5"
+                        : "border-border hover:border-brand-core/40"
                     }`}
                   >
                     <div className="flex justify-between items-center gap-3">
@@ -721,7 +721,7 @@ export default function CheckoutPage() {
                   </div>
                 )}
                 {discountAmount > 0 && (
-                  <div className="flex justify-between text-green-600">
+                  <div className="flex justify-between text-green-600 dark:text-green-400">
                     <span>Coupon ({couponCode})</span>
                     <span>-{formatPrice(discountAmount)}</span>
                   </div>
@@ -748,7 +748,7 @@ export default function CheckoutPage() {
                 </div>
                 {coupon &&
                   (coupon.valid ? (
-                    <p className="text-xs text-green-600">
+                    <p className="text-xs text-green-600 dark:text-green-400">
                       ✓ {coupon.message}
                     </p>
                   ) : (
@@ -852,7 +852,7 @@ export default function CheckoutPage() {
                   </div>
                 )}
                 {discountAmount > 0 && (
-                  <div className="flex justify-between text-green-600">
+                  <div className="flex justify-between text-green-600 dark:text-green-400">
                     <span>Discount</span>
                     <span>-{formatPrice(discountAmount)}</span>
                   </div>
@@ -868,15 +868,15 @@ export default function CheckoutPage() {
               </div>
               <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1">
-                  <ShieldCheck className="h-3.5 w-3.5 text-green-600" />
+                  <ShieldCheck className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
                   256-bit SSL Encrypted
                 </span>
                 <span className="flex items-center gap-1">
-                  <Lock className="h-3.5 w-3.5 text-green-600" />
+                  <Lock className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
                   PCI DSS Compliant
                 </span>
                 <span className="flex items-center gap-1">
-                  <RefreshCcw className="h-3.5 w-3.5 text-blue-600" />
+                  <RefreshCcw className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                   Cancel Anytime
                 </span>
               </div>
@@ -904,7 +904,7 @@ export default function CheckoutPage() {
           {step === 7 && (
             <div className="flex flex-col items-center text-center py-12 space-y-6">
               <div className="h-16 w-16 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center">
-                <CheckCircle2 className="h-8 w-8 text-green-600" />
+                <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-400" />
               </div>
               <div className="space-y-1">
                 <h2 className="text-xl font-semibold">Payment Successful!</h2>

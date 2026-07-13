@@ -49,7 +49,7 @@ function VersionItem({ version: v, isLatest, isLast, onRestore }: VersionItemPro
               v{v.version} — {v.title}
             </p>
             {isLatest && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 shrink-0">
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30 shrink-0">
                 Latest
               </span>
             )}

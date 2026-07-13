@@ -46,7 +46,7 @@ export function ClientUpdateCard({ projectId, featureEnabled, requiredPlan }: Cl
   return (
     <div className="bg-card border border-border rounded-xl shadow-sm p-4 flex flex-col gap-3 h-full">
       <div className="flex items-start gap-3">
-        <div className="shrink-0 flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 border border-emerald-100">
+        <div className="shrink-0 flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 border border-emerald-100 dark:bg-emerald-500/10 dark:border-emerald-500/30">
           <Users className="h-4 w-4 text-emerald-500" />
         </div>
         <div className="min-w-0 flex-1">

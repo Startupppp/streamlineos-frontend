@@ -33,23 +33,23 @@ import Link from "next/link";
 const LIMIT = 25;
 
 const TXN_TYPE_CONFIG: Record<TransactionType, { label: string; badgeClass: string }> = {
-  PURCHASE: { label: "Purchase", badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-  SALE: { label: "Sale", badgeClass: "bg-red-50 text-red-700 border-red-200" },
-  GRN: { label: "GRN", badgeClass: "bg-blue-50 text-blue-700 border-blue-200" },
-  ADJUSTMENT_IN: { label: "Adj In", badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-  ADJUSTMENT_OUT: { label: "Adj Out", badgeClass: "bg-amber-50 text-amber-700 border-amber-200" },
-  TRANSFER_IN: { label: "Transfer In", badgeClass: "bg-blue-50 text-blue-700 border-blue-200" },
+  PURCHASE: { label: "Purchase", badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30" },
+  SALE: { label: "Sale", badgeClass: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30" },
+  GRN: { label: "GRN", badgeClass: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30" },
+  ADJUSTMENT_IN: { label: "Adj In", badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30" },
+  ADJUSTMENT_OUT: { label: "Adj Out", badgeClass: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30" },
+  TRANSFER_IN: { label: "Transfer In", badgeClass: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30" },
   TRANSFER_OUT: { label: "Transfer Out", badgeClass: "bg-muted text-muted-foreground border-border" },
-  RETURN_IN: { label: "Return In", badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-  RETURN_OUT: { label: "Return Out", badgeClass: "bg-amber-50 text-amber-700 border-amber-200" },
-  OPENING_BALANCE: { label: "Opening Balance", badgeClass: "bg-violet-50 text-violet-700 border-violet-200" },
-  VENDOR_RETURN: { label: "Vendor Return", badgeClass: "bg-amber-50 text-amber-700 border-amber-200" },
-  CUSTOMER_RETURN: { label: "Customer Return", badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-  CYCLE_COUNT_GAIN: { label: "Count Gain", badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-  CYCLE_COUNT_LOSS: { label: "Count Loss", badgeClass: "bg-red-50 text-red-700 border-red-200" },
-  SCRAP: { label: "Scrap", badgeClass: "bg-red-50 text-red-700 border-red-200" },
-  QUARANTINE_IN: { label: "Quarantine In", badgeClass: "bg-amber-50 text-amber-700 border-amber-200" },
-  QUARANTINE_OUT: { label: "Quarantine Out", badgeClass: "bg-blue-50 text-blue-700 border-blue-200" },
+  RETURN_IN: { label: "Return In", badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30" },
+  RETURN_OUT: { label: "Return Out", badgeClass: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30" },
+  OPENING_BALANCE: { label: "Opening Balance", badgeClass: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30" },
+  VENDOR_RETURN: { label: "Vendor Return", badgeClass: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30" },
+  CUSTOMER_RETURN: { label: "Customer Return", badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30" },
+  CYCLE_COUNT_GAIN: { label: "Count Gain", badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30" },
+  CYCLE_COUNT_LOSS: { label: "Count Loss", badgeClass: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30" },
+  SCRAP: { label: "Scrap", badgeClass: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30" },
+  QUARANTINE_IN: { label: "Quarantine In", badgeClass: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30" },
+  QUARANTINE_OUT: { label: "Quarantine Out", badgeClass: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30" },
   RESERVATION_CREATE: { label: "Reserved", badgeClass: "bg-muted text-muted-foreground border-border" },
   RESERVATION_RELEASE: { label: "Res. Released", badgeClass: "bg-muted text-muted-foreground border-border" },
   RESERVATION_CONSUME: { label: "Res. Consumed", badgeClass: "bg-muted text-muted-foreground border-border" },
@@ -130,7 +130,7 @@ function renderWarehouseCell(row: StockTransaction) {
 function renderQtyChangeCell(row: StockTransaction) {
   const isPositive = row.quantityChange > 0;
   return (
-    <span className={cn("font-mono tabular-nums font-semibold", isPositive ? "text-emerald-600" : "text-red-600")}>
+    <span className={cn("font-mono tabular-nums font-semibold", isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400")}>
       {isPositive ? "+" : ""}{row.quantityChange.toLocaleString()}
     </span>
   );

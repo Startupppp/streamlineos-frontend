@@ -149,7 +149,7 @@ export function LeavesWfhContent() {
                     >
                       <Avatar className="h-7 w-7">
                         <AvatarImage src={resolveImageUrl(leave.user?.image)} />
-                        <AvatarFallback className="text-[10px] bg-amber-100 text-amber-700">
+                        <AvatarFallback className="text-[10px] bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
                           {leave.user?.firstName?.[0]}
                           {leave.user?.lastName?.[0]}
                         </AvatarFallback>

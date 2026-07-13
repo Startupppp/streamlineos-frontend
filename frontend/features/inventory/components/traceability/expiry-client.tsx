@@ -44,9 +44,9 @@ const DAY_OPTIONS = [
 ] as const;
 
 function getExpiryColorClass(daysUntilExpiry: number): string {
-  if (daysUntilExpiry < 0) return "text-red-600 font-semibold";
-  if (daysUntilExpiry <= 30) return "text-amber-600 font-semibold";
-  if (daysUntilExpiry <= 60) return "text-yellow-600 font-medium";
+  if (daysUntilExpiry < 0) return "text-red-600 dark:text-red-400 font-semibold";
+  if (daysUntilExpiry <= 30) return "text-amber-600 dark:text-amber-400 font-semibold";
+  if (daysUntilExpiry <= 60) return "text-yellow-600 dark:text-yellow-400 font-medium";
   return "text-muted-foreground";
 }
 
@@ -59,8 +59,8 @@ function formatDaysLabel(days: number): string {
 type ExpiryItem = NonNullable<ReturnType<typeof useExpiryItems>["data"]>[number];
 
 function getExpiryRowClassName(row: ExpiryItem): string {
-  if (row.daysUntilExpiry < 0) return "bg-red-50/40 hover:bg-red-50/60";
-  if (row.daysUntilExpiry <= 30) return "bg-amber-50/30 hover:bg-amber-50/50";
+  if (row.daysUntilExpiry < 0) return "bg-red-50/40 hover:bg-red-50/60 dark:bg-red-500/5 dark:hover:bg-red-500/10";
+  if (row.daysUntilExpiry <= 30) return "bg-amber-50/30 hover:bg-amber-50/50 dark:bg-amber-500/5 dark:hover:bg-amber-500/10";
   return "";
 }
 

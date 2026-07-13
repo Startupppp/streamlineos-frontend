@@ -114,7 +114,7 @@ const paymentColumns: DataTableColumn<Payment>[] = [
     key: "amount",
     header: "Amount",
     headerClassName: "text-right",
-    className: "text-right font-mono text-sm font-medium text-emerald-600",
+    className: "text-right font-mono text-sm font-medium text-emerald-600 dark:text-emerald-400",
     cell: (p) => fmt(p.amount),
   },
 ];
@@ -432,7 +432,7 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
             </Button>
           )}
           {invoice.status === "PAID" && outstanding <= 0 && (
-            <div className="flex items-center gap-1.5 text-sm text-emerald-600 font-medium">
+            <div className="flex items-center gap-1.5 text-sm text-emerald-600 dark:text-emerald-400 font-medium">
               <Check className="h-4 w-4" /> Fully Paid
             </div>
           )}

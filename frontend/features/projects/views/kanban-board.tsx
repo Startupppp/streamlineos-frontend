@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useUpdateTicketOrder } from "@/hooks/api";
+import { useUpdateTicketOrder, useReorderCustomStates } from "@/hooks/api";
 import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -26,13 +26,24 @@ import {
 } from "@/components/ui/accordion";
 import { SwimlaneRowHeader, getTicketRowKey } from "./kanban-swimlane";
 import type { KanbanTicket, KanbanColumn, DisplayOptions } from "../shared/types";
+import {
+  filterHiddenCompletedTickets,
+  isCompletedTicketStatus,
+} from "../shared/completed-status";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCan } from "@/hooks/api/access";
 
 type UpdateOrderContext = { previous: KanbanTicket[] };
 
+const COLUMN_DND_TYPE = "COLUMN";
+const TICKET_DND_TYPE = "TICKET";
+
 function isUpdateOrderContext(v: unknown): v is UpdateOrderContext {
   return typeof v === "object" && v !== null && "previous" in v;
+}
+
+function columnDraggableId(col: KanbanColumn): string {
+  return `column-${col.statusId ?? col.id}`;
 }
 
 const DEFAULT_COLUMNS: KanbanColumn[] = [
@@ -57,6 +68,7 @@ interface KanbanBoardProps {
   onTicketSelect?: (ticketId: number) => void;
   wipLimits?: Record<string, number>;
   displayOptions?: DisplayOptions;
+  hideCompleted?: boolean;
 }
 
 function encodeRowKey(key: string): string {
@@ -109,6 +121,7 @@ export function KanbanBoard({
   onTicketSelect,
   wipLimits,
   displayOptions,
+  hideCompleted = false,
 }: KanbanBoardProps) {
   const canManage = useCan("projects:manage");
   const [optimisticTickets, setOptimisticTickets] = useState(tickets);
@@ -133,39 +146,46 @@ export function KanbanBoard({
   const showEmptyColumns = displayOptions?.showEmptyColumns ?? true;
   const showEmptyRows = displayOptions?.showEmptyRows ?? false;
 
+  const displayTickets = useMemo(
+    () => filterHiddenCompletedTickets(optimisticTickets, hideCompleted, optimisticStatuses),
+    [optimisticTickets, hideCompleted, optimisticStatuses],
+  );
+
   const columns = useMemo<KanbanColumn[]>(() => {
     const built = buildColumns(
       optimisticStatuses,
-      optimisticTickets.map((t) => t.status),
+      displayTickets.map((t) => t.status),
     );
     return applyColumnOrder(built);
-  }, [optimisticStatuses, optimisticTickets]);
+  }, [optimisticStatuses, displayTickets]);
 
   const orderedColumns = optimisticColumnOrder ?? columns;
 
   const swimlaneRows = useMemo<string[]>(() => {
     if (rowBy === "none") return [];
-    const keys = [...new Set(optimisticTickets.map((t) => getTicketRowKey(t, rowBy)))];
+    const keys = [...new Set(displayTickets.map((t) => getTicketRowKey(t, rowBy)))];
     return keys;
-  }, [optimisticTickets, rowBy]);
+  }, [displayTickets, rowBy]);
 
   const visibleColumns = useMemo<KanbanColumn[]>(() => {
     if (showEmptyColumns) return orderedColumns;
     if (rowBy === "none") {
-      return orderedColumns.filter((col) => optimisticTickets.some((t) => t.status === col.id));
+      return orderedColumns.filter((col) => displayTickets.some((t) => t.status === col.id));
     }
     return orderedColumns.filter((col) =>
       swimlaneRows.some((rowKey) =>
-        optimisticTickets.some(
+        displayTickets.some(
           (t) => t.status === col.id && getTicketRowKey(t, rowBy) === rowKey,
         ),
       ),
     );
-  }, [orderedColumns, showEmptyColumns, rowBy, optimisticTickets, swimlaneRows]);
+  }, [orderedColumns, showEmptyColumns, rowBy, displayTickets, swimlaneRows]);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  const reorderStates = useReorderCustomStates(projectId);
 
   const updateOrder = useUpdateTicketOrder({
     onMutate: async (): Promise<UpdateOrderContext> => {
@@ -222,9 +242,78 @@ export function KanbanBoard({
     dragStartRef.current = null;
   }, []);
 
+  const handleColumnDragEnd = useCallback(
+    (result: DropResult) => {
+      if (!canManage) return;
+      const { destination, source } = result;
+      if (!destination) return;
+      if (destination.index === source.index) return;
+
+      const reorderedVisible = Array.from(visibleColumns);
+      const [moved] = reorderedVisible.splice(source.index, 1);
+      if (!moved?.statusId) return;
+      reorderedVisible.splice(destination.index, 0, moved);
+
+      const visibleIds = new Set(reorderedVisible.map((col) => col.id));
+      const hiddenColumns = orderedColumns.filter((col) => !visibleIds.has(col.id));
+      const mergedOrder = [...reorderedVisible, ...hiddenColumns];
+
+      let configuredOrder = 0;
+      const nextColumnOrder = mergedOrder.map((col) => {
+        if (col.statusId == null) return col;
+        const next = { ...col, order: configuredOrder };
+        configuredOrder += 1;
+        return next;
+      });
+
+      setOptimisticColumnOrder(nextColumnOrder);
+      setOptimisticStatuses((prev) =>
+        prev?.map((status) => {
+          const next = nextColumnOrder.find((col) => col.statusId === status.id);
+          return next ? { ...status, order: next.order } : status;
+        }),
+      );
+
+      reorderStates.mutate(
+        nextColumnOrder
+          .filter((col) => col.statusId != null)
+          .map((col) => ({
+            stateId: col.statusId!,
+            order: col.order,
+          })),
+        {
+          onError: (error) => {
+            setOptimisticColumnOrder(null);
+            setOptimisticStatuses(statuses);
+            toast.error(getErrorMessage(error));
+          },
+          onSettled: () => {
+            queryClient.invalidateQueries({
+              queryKey: queryKeys.projects.detail(projectId),
+            });
+          },
+        },
+      );
+    },
+    [
+      canManage,
+      visibleColumns,
+      orderedColumns,
+      reorderStates,
+      statuses,
+      queryClient,
+      projectId,
+    ],
+  );
+
   const onDragEnd = useCallback(
     (result: DropResult) => {
       dragStartRef.current = null;
+      if (result.type === COLUMN_DND_TYPE) {
+        handleColumnDragEnd(result);
+        return;
+      }
+
       const { destination, source, draggableId } = result;
       if (!destination) return;
 
@@ -247,6 +336,11 @@ export function KanbanBoard({
       const newStatus = rowBy !== "none"
         ? destination.droppableId.split("||")[1] ?? destination.droppableId
         : destination.droppableId;
+
+      if (hideCompleted && isCompletedTicketStatus(newStatus, optimisticStatuses)) {
+        toast.error("Turn off Hide done to move tickets into a completed column.");
+        return;
+      }
 
       const srcColId = rowBy !== "none"
         ? source.droppableId.split("||")[1] ?? source.droppableId
@@ -315,18 +409,28 @@ export function KanbanBoard({
       updateOrder,
       projectId,
       rowBy,
+      hideCompleted,
+      optimisticStatuses,
+      handleColumnDragEnd,
     ],
   );
 
   const renderColumnTickets = useCallback(
-    (col: KanbanColumn, columnTickets: KanbanTicket[], droppableId: string, minHeight: string) => (
-      <Droppable droppableId={droppableId}>
+    (
+      col: KanbanColumn,
+      columnTickets: KanbanTicket[],
+      droppableId: string,
+      minHeight: string,
+      stretchColumn: boolean,
+    ) => (
+      <Droppable droppableId={droppableId} type={TICKET_DND_TYPE}>
         {(provided, snapshot) => (
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}
             className={cn(
-              "flex-1 overflow-y-auto scrollbar-thin px-2 pb-2 space-y-1.5 transition-colors",
+              stretchColumn ? "flex-1" : "",
+              "overflow-y-auto scrollbar-thin px-2 pb-2 space-y-1.5 transition-colors",
               minHeight,
               snapshot.isDraggingOver && "bg-primary/5",
             )}
@@ -392,7 +496,7 @@ export function KanbanBoard({
   if (rowBy !== "none") {
     const visibleSwimlaneRows = swimlaneRows.filter((rowKey) => {
       if (showEmptyRows) return true;
-      return optimisticTickets.some((t) => getTicketRowKey(t, rowBy) === rowKey);
+      return displayTickets.some((t) => getTicketRowKey(t, rowBy) === rowKey);
     });
 
     return (
@@ -400,16 +504,16 @@ export function KanbanBoard({
         <Accordion
           type="multiple"
           defaultValue={visibleSwimlaneRows}
-          className="flex flex-col gap-4 h-full min-w-0 overflow-auto pb-1 px-1"
+          className="flex flex-col gap-1.5 h-full min-w-0 overflow-auto pb-1 px-1"
         >
           {visibleSwimlaneRows.map((rowKey) => {
-            const rowTickets = optimisticTickets.filter(
+            const rowTickets = displayTickets.filter(
               (t) => getTicketRowKey(t, rowBy) === rowKey,
             );
 
             return (
               <AccordionItem key={rowKey} value={rowKey} className="min-w-0 border-b-0">
-                <AccordionTrigger className="flex items-center gap-2 px-1 py-2 mb-1 hover:no-underline font-normal [&>svg]:ml-auto">
+                <AccordionTrigger className="flex items-center gap-2 px-1 py-1 hover:no-underline font-normal [&>svg]:ml-auto">
                   <div className="flex items-center gap-2">
                     <SwimlaneRowHeader
                       rowKey={rowKey}
@@ -420,7 +524,7 @@ export function KanbanBoard({
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="pb-0">
-                  <div className="flex gap-3 overflow-x-auto pb-1">
+                  <div className="flex items-start gap-3 overflow-x-auto pb-2 pt-0.5">
                     {visibleColumns.map((col) => {
                       const droppableId = `${encodeRowKey(rowKey)}||${col.id}`;
                       const columnTickets = rowTickets
@@ -433,7 +537,7 @@ export function KanbanBoard({
                         <div
                           key={col.id}
                           className={cn(
-                            "w-72 min-w-[280px] shrink-0 rounded-lg border bg-muted/20 flex flex-col min-h-0",
+                            "w-72 min-w-[280px] shrink-0 rounded-lg border bg-muted/20 flex flex-col",
                             overWip && "border-destructive/60",
                           )}
                         >
@@ -447,7 +551,7 @@ export function KanbanBoard({
                             onRename={handleColumnRename}
                             onColorChange={handleColumnColorChange}
                           />
-                          {renderColumnTickets(col, columnTickets, droppableId, "min-h-[60px]")}
+                          {renderColumnTickets(col, columnTickets, droppableId, "min-h-[60px]", false)}
                         </div>
                       );
                     })}
@@ -463,47 +567,73 @@ export function KanbanBoard({
 
   return (
     <DragDropContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
-      <div className="flex h-full min-w-0 gap-3 overflow-x-auto pb-1 px-1">
-        {visibleColumns.map((col) => {
-          const columnTickets = optimisticTickets
-            .filter((t) => t.status === col.id)
-            .sort((a, b) => (a.order || 0) - (b.order || 0));
-          const wip = wipLimits?.[col.id];
-          const overWip = wip != null && columnTickets.length > wip;
+      <Droppable
+        droppableId="board-columns"
+        direction="horizontal"
+        type={COLUMN_DND_TYPE}
+      >
+        {(columnsProvided) => (
+          <div
+            ref={columnsProvided.innerRef}
+            {...columnsProvided.droppableProps}
+            className="flex h-full min-w-0 items-start gap-3 overflow-x-auto pb-1 px-1"
+          >
+            {visibleColumns.map((col, index) => {
+              const columnTickets = displayTickets
+                .filter((t) => t.status === col.id)
+                .sort((a, b) => (a.order || 0) - (b.order || 0));
+              const wip = wipLimits?.[col.id];
+              const overWip = wip != null && columnTickets.length > wip;
+              const canReorderColumn = canManage && col.statusId != null;
 
-          return (
-            <div
-              key={col.id}
-              className={cn(
-                "w-72 min-w-[280px] shrink-0 rounded-lg border bg-muted/20 flex flex-col min-h-0",
-                overWip && "border-destructive/60",
-              )}
-            >
-              <KanbanColumnHeader
-                column={col}
-                projectId={projectId}
-                ticketCount={columnTickets.length}
-                wipLimit={wip}
-                canManage={canManage}
-                existingNames={(optimisticStatuses ?? []).map((s) => s.name)}
-                onRename={handleColumnRename}
-                onColorChange={handleColumnColorChange}
-                quickAdd={
-                  <QuickAddInput columnId={col.id} projectId={projectId} headerMode />
-                }
-              />
-              {renderColumnTickets(col, columnTickets, col.id, "min-h-[100px]")}
-              <div className="border-t">
-                <QuickAddInput columnId={col.id} projectId={projectId} />
-              </div>
-            </div>
-          );
-        })}
-        <AddColumn
-          projectId={projectId}
-          existingNames={(optimisticStatuses ?? []).map((s) => s.name)}
-        />
-      </div>
+              return (
+                <Draggable
+                  key={col.id}
+                  draggableId={columnDraggableId(col)}
+                  index={index}
+                  isDragDisabled={!canReorderColumn}
+                >
+                  {(columnProvided, columnSnapshot) => (
+                    <div
+                      ref={columnProvided.innerRef}
+                      {...columnProvided.draggableProps}
+                      className={cn(
+                        "w-72 min-w-[280px] shrink-0 rounded-lg border bg-muted/20 flex flex-col min-h-0 self-stretch",
+                        overWip && "border-destructive/60",
+                        columnSnapshot.isDragging && "shadow-lg ring-2 ring-primary/20",
+                      )}
+                    >
+                      <KanbanColumnHeader
+                        column={col}
+                        projectId={projectId}
+                        ticketCount={columnTickets.length}
+                        wipLimit={wip}
+                        canManage={canManage}
+                        existingNames={(optimisticStatuses ?? []).map((s) => s.name)}
+                        onRename={handleColumnRename}
+                        onColorChange={handleColumnColorChange}
+                        quickAdd={
+                          <QuickAddInput columnId={col.id} projectId={projectId} headerMode />
+                        }
+                        dragHandleProps={canReorderColumn ? columnProvided.dragHandleProps : null}
+                      />
+                      {renderColumnTickets(col, columnTickets, col.id, "min-h-[100px]", true)}
+                      <div className="border-t">
+                        <QuickAddInput columnId={col.id} projectId={projectId} />
+                      </div>
+                    </div>
+                  )}
+                </Draggable>
+              );
+            })}
+            {columnsProvided.placeholder}
+            <AddColumn
+              projectId={projectId}
+              existingNames={(optimisticStatuses ?? []).map((s) => s.name)}
+            />
+          </div>
+        )}
+      </Droppable>
     </DragDropContext>
   );
 }

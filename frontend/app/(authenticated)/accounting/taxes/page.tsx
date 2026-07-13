@@ -128,7 +128,7 @@ function DueDateCard({ label, dueDate, href }: DueDateCardProps) {
             <p className="text-sm font-semibold text-foreground">{dueDate}</p>
           </div>
           {isUrgent && (
-            <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-[10px] shrink-0">
+            <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-[10px] shrink-0 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
               {days <= 0 ? "Due today" : `${days}d left`}
             </Badge>
           )}

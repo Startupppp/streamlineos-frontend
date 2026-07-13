@@ -19,15 +19,15 @@ export function SimulationResult({ result, label }: Props) {
   }
 
   return (
-    <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 space-y-3">
+    <div className="rounded-xl border border-blue-200 bg-blue-50 dark:border-blue-500/30 dark:bg-blue-500/10 p-4 space-y-3">
       <div className="flex items-center gap-2">
-        <FlaskConical className="h-4 w-4 text-blue-600" />
-        <p className="text-sm font-medium text-blue-700">Simulation Result</p>
+        <FlaskConical className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+        <p className="text-sm font-medium text-blue-700 dark:text-blue-300">Simulation Result</p>
       </div>
       {Boolean(result.simulation) && (
-        <p className="text-xs text-blue-600 font-medium">{String(result.simulation)}</p>
+        <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">{String(result.simulation)}</p>
       )}
-      <div className="rounded-md bg-card/70 border border-blue-200/50 p-3">
+      <div className="rounded-md bg-card/70 border border-blue-200/50 dark:border-blue-500/30 p-3">
         <pre className="text-xs text-foreground overflow-auto whitespace-pre-wrap max-h-64">
           {JSON.stringify(result, null, 2)}
         </pre>

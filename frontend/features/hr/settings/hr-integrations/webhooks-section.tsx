@@ -190,10 +190,10 @@ export function WebhooksSection() {
         )}
       </div>
 
-      <div className="rounded-md border border-blue-200 bg-blue-500/5 p-3 text-xs text-blue-700">
+      <div className="rounded-md border border-blue-200 bg-blue-500/5 p-3 text-xs text-blue-700 dark:border-blue-500/30 dark:text-blue-300">
         Payloads are signed with{" "}
-        <code className="bg-blue-100 px-1 rounded">HMAC-SHA256</code> — verify the{" "}
-        <code className="bg-blue-100 px-1 rounded">X-StreamlineOS-Signature</code> header.
+        <code className="bg-blue-100 dark:bg-blue-500/10 px-1 rounded">HMAC-SHA256</code> — verify the{" "}
+        <code className="bg-blue-100 dark:bg-blue-500/10 px-1 rounded">X-StreamlineOS-Signature</code> header.
         Failed deliveries are retried up to 5 times with exponential backoff.
       </div>
 

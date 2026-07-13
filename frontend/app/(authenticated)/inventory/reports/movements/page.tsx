@@ -30,15 +30,15 @@ const TYPE_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
 ];
 
 const TYPE_CLASS: Record<MovementType, string> = {
-  PURCHASE: "bg-green-100 text-green-800 border-green-200",
-  SALE: "bg-blue-100 text-blue-800 border-blue-200",
-  GRN: "bg-emerald-100 text-emerald-800 border-emerald-200",
-  ADJUSTMENT_IN: "bg-green-100 text-green-800 border-green-200",
-  ADJUSTMENT_OUT: "bg-yellow-100 text-yellow-800 border-yellow-200",
-  TRANSFER_IN: "bg-cyan-100 text-cyan-800 border-cyan-200",
-  TRANSFER_OUT: "bg-orange-100 text-orange-800 border-orange-200",
-  RETURN_IN: "bg-blue-100 text-blue-800 border-blue-200",
-  RETURN_OUT: "bg-blue-100 text-blue-800 border-blue-200",
+  PURCHASE: "bg-green-100 text-green-800 border-green-200 dark:bg-green-500/10 dark:text-green-300 dark:border-green-500/30",
+  SALE: "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  GRN: "bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  ADJUSTMENT_IN: "bg-green-100 text-green-800 border-green-200 dark:bg-green-500/10 dark:text-green-300 dark:border-green-500/30",
+  ADJUSTMENT_OUT: "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-500/10 dark:text-yellow-300 dark:border-yellow-500/30",
+  TRANSFER_IN: "bg-cyan-100 text-cyan-800 border-cyan-200 dark:bg-cyan-500/10 dark:text-cyan-300 dark:border-cyan-500/30",
+  TRANSFER_OUT: "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-500/30",
+  RETURN_IN: "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  RETURN_OUT: "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
 };
 
 function formatDate(value: string): string {
@@ -109,7 +109,7 @@ function buildMovementsColumns(): DataTableColumn<MovementRow>[] {
       className: "text-right",
       cell: (row) => (
         <span
-          className={`text-[11px] font-mono tabular-nums font-semibold ${row.quantity >= 0 ? "text-green-700" : "text-red-700"}`}
+          className={`text-[11px] font-mono tabular-nums font-semibold ${row.quantity >= 0 ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}`}
         >
           {row.quantity >= 0 ? `+${row.quantity}` : row.quantity}
         </span>

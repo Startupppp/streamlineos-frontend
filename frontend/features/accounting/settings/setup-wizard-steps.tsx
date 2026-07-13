@@ -255,7 +255,7 @@ export function StepChartOfAccounts({ onComplete, onSkip }: StepProps) {
               onClick={() => handleSelectChange(t.key)}
               className={`rounded-lg border p-3 text-left transition-colors ${
                 selectedKey === t.key
-                  ? "border-blue-500 bg-blue-50 shadow-sm"
+                  ? "border-blue-500 bg-blue-50 dark:bg-blue-500/10 shadow-sm"
                   : "border-border hover:border-blue-300 hover:bg-muted/30"
               }`}
             >
@@ -265,7 +265,7 @@ export function StepChartOfAccounts({ onComplete, onSkip }: StepProps) {
           ))}
         </div>
         {appliedCount !== null && (
-          <div className="flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+          <div className="flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 rounded-lg px-3 py-2">
             <CheckCircle2 className="h-4 w-4 shrink-0" />
             {appliedCount} accounts created from template
           </div>
@@ -315,7 +315,7 @@ export function StepSystemAccounts({ onComplete, onSkip }: StepProps) {
                   {m.account ? (
                     <p className="text-xs text-muted-foreground font-mono">{m.account.code} — {m.account.name}</p>
                   ) : (
-                    <Badge variant="secondary" className="text-[10px] mt-0.5 text-amber-600 bg-amber-50 border-amber-200">Not mapped</Badge>
+                    <Badge variant="secondary" className="text-[10px] mt-0.5 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30">Not mapped</Badge>
                   )}
                 </div>
                 <Button variant="ghost" size="sm" className="h-6 text-xs shrink-0 ml-2" onClick={() => setEditMapping(m)}>

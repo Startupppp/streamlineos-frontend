@@ -81,8 +81,8 @@ export function BankImportStep2({
           cell: (row) => (
             <span className="truncate max-w-[120px] block">{row[String(i)]}</span>
           ),
-          className: isMapped ? "bg-blue-50/50 px-2 py-1" : "px-2 py-1",
-          headerClassName: isMapped ? "bg-blue-50 text-blue-700" : "",
+          className: isMapped ? "bg-blue-50/50 dark:bg-blue-500/10 px-2 py-1" : "px-2 py-1",
+          headerClassName: isMapped ? "bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300" : "",
         };
       }),
     [parsedCsv.headers, dateColIndex, descColIndex],
@@ -155,7 +155,7 @@ export function BankImportStep2({
             className={[
               "px-3 py-1 rounded-md text-xs font-medium border transition-colors",
               mapping.amountMode === "single"
-                ? "bg-blue-50 text-blue-700 border-blue-200"
+                ? "bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-500/30"
                 : "bg-transparent text-muted-foreground border-border",
             ].join(" ")}
           >
@@ -167,7 +167,7 @@ export function BankImportStep2({
             className={[
               "px-3 py-1 rounded-md text-xs font-medium border transition-colors",
               mapping.amountMode === "debit-credit"
-                ? "bg-blue-50 text-blue-700 border-blue-200"
+                ? "bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-500/30"
                 : "bg-transparent text-muted-foreground border-border",
             ].join(" ")}
           >

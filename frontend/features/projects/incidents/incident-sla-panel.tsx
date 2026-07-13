@@ -67,7 +67,7 @@ export function IncidentSlaPanel({ incident }: IncidentSlaPanelProps) {
   return (
     <div className={cn(
       "rounded-xl border bg-card px-4 py-3",
-      isBreached ? "border-red-200 bg-red-50/40" : "border-border",
+      isBreached ? "border-red-200 bg-red-50/40 dark:border-red-500/30 dark:bg-red-500/10" : "border-border",
     )}>
       <p className={cn(
         "text-[10px] font-semibold uppercase tracking-wider mb-2",

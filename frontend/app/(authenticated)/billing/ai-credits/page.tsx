@@ -29,10 +29,10 @@ const TXN_LABELS: Record<
   AiCreditTransaction["type"],
   { label: string; sign: string; color: string }
 > = {
-  PURCHASE: { label: "Purchase", sign: "+", color: "text-green-600" },
-  PLAN_GRANT: { label: "Plan Grant", sign: "+", color: "text-green-600" },
+  PURCHASE: { label: "Purchase", sign: "+", color: "text-green-600 dark:text-green-400" },
+  PLAN_GRANT: { label: "Plan Grant", sign: "+", color: "text-green-600 dark:text-green-400" },
   USAGE: { label: "Usage", sign: "-", color: "text-foreground" },
-  REFUND: { label: "Refund", sign: "+", color: "text-blue-600" },
+  REFUND: { label: "Refund", sign: "+", color: "text-blue-600 dark:text-blue-400" },
   EXPIRY: { label: "Expiry", sign: "-", color: "text-destructive" },
 };
 
@@ -202,7 +202,7 @@ export default function AiCreditsPage() {
                   className="rounded-lg border border-border bg-card p-4"
                 >
                   <div className="flex items-start gap-3">
-                    <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <div className="h-8 w-8 rounded-lg bg-brand-core/10 flex items-center justify-center shrink-0">
                       <Package className="h-4 w-4 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">

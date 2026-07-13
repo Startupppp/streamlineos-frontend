@@ -29,7 +29,7 @@ export function BurnoutFlagsList() {
           {data.map((flag) => (
             <div
               key={flag.userId}
-              className="flex items-center justify-between rounded-lg border bg-orange-50 border-orange-200 px-3 py-2"
+              className="flex items-center justify-between rounded-lg border bg-orange-50 border-orange-200 dark:bg-orange-500/10 dark:border-orange-500/30 px-3 py-2"
             >
               <div>
                 <p className="text-xs font-mono text-foreground">{flag.userId}</p>
@@ -37,7 +37,7 @@ export function BurnoutFlagsList() {
                   {flag.checkCount} check-in{flag.checkCount !== 1 ? "s" : ""}
                 </p>
               </div>
-              <Badge variant="outline" className="text-orange-700 border-orange-300 bg-orange-50 text-xs">
+              <Badge variant="outline" className="text-orange-700 border-orange-300 bg-orange-50 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-500/30 text-xs">
                 Avg {flag.avgScore.toFixed(1)} / 10
               </Badge>
             </div>

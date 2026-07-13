@@ -33,10 +33,10 @@ import {
 import { toast } from "sonner";
 
 const PRIORITY_BADGE: Record<string, string> = {
-  low: "bg-blue-50 text-blue-700 border-blue-200",
-  medium: "bg-amber-50 text-amber-700 border-amber-200",
-  high: "bg-orange-50 text-orange-700 border-orange-200",
-  urgent: "bg-red-50 text-red-700 border-red-200",
+  low: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  medium: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  high: "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-500/30",
+  urgent: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
 };
 
 interface PolicyRowActionsProps {
@@ -104,7 +104,7 @@ function buildBreachedColumns(): DataTableColumn<BreachedLead>[] {
       headerClassName: "text-right",
       className: "text-right",
       cell: (row): ReactNode => (
-        <span className="text-[11px] text-red-700 font-mono tabular-nums">
+        <span className="text-[11px] text-red-700 dark:text-red-400 font-mono tabular-nums">
           {row.slaDeadline ? new Date(row.slaDeadline).toLocaleDateString() : "N/A"}
         </span>
       ),

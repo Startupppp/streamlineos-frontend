@@ -76,7 +76,7 @@ export function ContactCardView({
           >
             <CardContent className="p-4">
               <div className="flex items-start gap-3">
-                <div className="h-8 w-8 rounded-full bg-blue-50 flex items-center justify-center text-xs font-semibold text-blue-700 shrink-0">
+                <div className="h-8 w-8 rounded-full bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-xs font-semibold text-blue-700 dark:text-blue-300 shrink-0">
                   {contact.name[0]?.toUpperCase() ?? "?"}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -187,7 +187,7 @@ export function ContactCardView({
                     <Link href={`/crm/leads/${contact.lead.id}`}>
                       <Badge
                         variant="secondary"
-                        className="text-[10px] text-blue-600 border-blue-200 hover:border-blue-400 gap-1 cursor-pointer"
+                        className="text-[10px] text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-500/30 hover:border-blue-400 gap-1 cursor-pointer"
                       >
                         <Link2 className="h-2.5 w-2.5" />
                         Lead: {contact.lead.name}
@@ -198,7 +198,7 @@ export function ContactCardView({
                     <Link href={`/crm/deals/${contact.deal.id}`}>
                       <Badge
                         variant="secondary"
-                        className="text-[10px] text-amber-700 border-amber-200 hover:border-amber-400 gap-1 cursor-pointer"
+                        className="text-[10px] text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/30 hover:border-amber-400 gap-1 cursor-pointer"
                       >
                         <Link2 className="h-2.5 w-2.5" />
                         Deal: {contact.deal.name}

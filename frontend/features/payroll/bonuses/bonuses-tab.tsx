@@ -400,7 +400,7 @@ export function BonusesTab() {
           <Button
             size="sm"
             variant="outline"
-            className="h-6 text-[10px] px-2 text-emerald-700 border-emerald-200 hover:bg-emerald-50"
+            className="h-6 text-[10px] px-2 text-emerald-700 border-emerald-200 hover:bg-emerald-50 dark:text-emerald-300 dark:border-emerald-500/30 dark:hover:bg-emerald-500/10"
             disabled={updateBonus.isPending}
             onClick={makeApproveHandler(row.id)}
           >
@@ -409,7 +409,7 @@ export function BonusesTab() {
           <Button
             size="sm"
             variant="outline"
-            className="h-6 text-[10px] px-2 text-red-600 border-red-200 hover:bg-red-50"
+            className="h-6 text-[10px] px-2 text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-500/30 dark:hover:bg-red-500/10"
             disabled={updateBonus.isPending}
             onClick={makeRejectHandler(row.id)}
           >

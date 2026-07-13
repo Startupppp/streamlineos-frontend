@@ -198,7 +198,7 @@ export function InterviewFeedbackForm({ interview, open, onOpenChange }: Intervi
             <span className="text-sm font-semibold text-foreground">Scoring Rubric</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800/60 dark:text-slate-300 dark:border-slate-700">
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-foreground border-border dark:bg-slate-800/60 dark:text-slate-300 dark:border-slate-700">
               Avg: {avgScore}/10
             </span>
             <Button

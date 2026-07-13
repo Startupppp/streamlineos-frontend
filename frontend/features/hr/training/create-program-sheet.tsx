@@ -290,7 +290,7 @@ export function CreateProgramSheet({ open, onOpenChange }: Props) {
             name="isMandatory"
             render={({ field }) => (
               <FormItem>
-                <div className="flex items-center justify-between rounded-lg border border-slate-200/80 px-3 py-2.5">
+                <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2.5">
                   <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider cursor-pointer">
                     Mandatory Attendance
                   </FormLabel>

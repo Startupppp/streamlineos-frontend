@@ -192,7 +192,7 @@ export function WebhooksSettingsCard() {
     {
       key: "status", header: "Active", headerClassName: "w-[70px] text-center", className: "text-center",
       cell: (wh) => (
-        <Badge variant="outline" className={wh.isActive ? "h-4 text-[9px] px-1.5 py-0 border border-emerald-200 text-emerald-700 bg-emerald-50" : "h-4 text-[9px] px-1.5 py-0 border"}>
+        <Badge variant="outline" className={wh.isActive ? "h-4 text-[9px] px-1.5 py-0 border border-emerald-200 text-emerald-700 bg-emerald-50 dark:border-emerald-500/30 dark:text-emerald-300 dark:bg-emerald-500/10" : "h-4 text-[9px] px-1.5 py-0 border"}>
           {wh.isActive ? "Active" : "Off"}
         </Badge>
       ),
@@ -215,7 +215,7 @@ export function WebhooksSettingsCard() {
     {
       key: "status", header: "Status", headerClassName: "w-[90px]",
       cell: (ev) => (
-        <Badge variant="outline" className={ev.status === "DELIVERED" ? "h-4 text-[9px] px-1.5 py-0 border border-emerald-200 text-emerald-700 bg-emerald-50" : ev.status === "FAILED" ? "h-4 text-[9px] px-1.5 py-0 border border-red-200 text-red-700 bg-red-50" : "h-4 text-[9px] px-1.5 py-0 border"}>
+        <Badge variant="outline" className={ev.status === "DELIVERED" ? "h-4 text-[9px] px-1.5 py-0 border border-emerald-200 text-emerald-700 bg-emerald-50 dark:border-emerald-500/30 dark:text-emerald-300 dark:bg-emerald-500/10" : ev.status === "FAILED" ? "h-4 text-[9px] px-1.5 py-0 border border-red-200 text-red-700 bg-red-50 dark:border-red-500/30 dark:text-red-300 dark:bg-red-500/10" : "h-4 text-[9px] px-1.5 py-0 border"}>
           {ev.status}
         </Badge>
       ),

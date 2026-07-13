@@ -70,7 +70,7 @@ const TYPE_CONFIG: Record<
   POLICY: {
     label: "Policy",
     badgeClass:
-      "bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-900/40 dark:text-violet-300 dark:border-violet-700",
+      "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-700",
     icon: FileKey,
   },
   WELCOME: {

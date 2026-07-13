@@ -96,7 +96,7 @@ export function AttendanceHeatmap({ userId }: { userId: string }) {
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
             <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center">
-              <Activity className="h-4 w-4 text-blue-600" />
+              <Activity className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             </div>
             Attendance Heatmap
           </CardTitle>

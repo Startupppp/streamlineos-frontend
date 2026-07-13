@@ -19,11 +19,11 @@ import {
 import { useKpis, useCreateKpi, useUpdateKpi, useDeleteKpi } from "@/hooks/api/hr";
 
 const CATEGORY_COLORS: Record<string, string> = {
-  Sales: "bg-emerald-100 text-emerald-700",
-  Finance: "bg-blue-100 text-blue-700",
-  Operations: "bg-amber-100 text-amber-700",
-  HR: "bg-violet-100 text-violet-700",
-  Customer: "bg-pink-100 text-pink-700",
+  Sales: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
+  Finance: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
+  Operations: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
+  HR: "bg-violet-100 text-violet-700 dark:bg-violet-500/10 dark:text-violet-300",
+  Customer: "bg-pink-100 text-pink-700 dark:bg-pink-500/10 dark:text-pink-300",
 };
 
 function getCategoryColor(category: string) {
@@ -141,7 +141,7 @@ export function KpiLibraryTab() {
                 className={`px-3 py-1 rounded-full text-xs font-medium border transition-all duration-150 ${
                   categoryFilter === cat
                     ? "bg-violet-600 text-white border-violet-600"
-                    : "border-border text-muted-foreground hover:border-violet-300 hover:text-violet-600"
+                    : "border-border text-muted-foreground hover:border-violet-300 hover:text-violet-600 dark:hover:border-violet-500/50 dark:hover:text-violet-400"
                 }`}
               >
                 {cat}
@@ -243,7 +243,7 @@ export function KpiLibraryTab() {
               <Button
                 size="sm"
                 variant="outline"
-                className={`w-full text-xs ${kpi.isActive ? "text-red-500 border-red-200 hover:bg-red-50" : "text-green-600 border-green-200 hover:bg-green-50"}`}
+                className={`w-full text-xs ${kpi.isActive ? "text-red-500 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-500/30 dark:hover:bg-red-500/10" : "text-green-600 border-green-200 hover:bg-green-50 dark:text-green-400 dark:border-green-500/30 dark:hover:bg-green-500/10"}`}
                 onClick={() => handleToggleActive(kpi.id, kpi.isActive)}
               >
                 {kpi.isActive ? "Deactivate" : "Activate"}

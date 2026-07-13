@@ -63,7 +63,7 @@ export const CandidateSheet = memo(function CandidateSheet({
         <SheetHeader className="shrink-0 px-5 pt-5 pb-4 border-b border-border/60">
           <div className="flex items-start gap-3">
             <Avatar className="h-12 w-12 shrink-0 rounded-xl">
-              <AvatarFallback className="text-sm font-bold bg-primary/10 text-primary rounded-xl">
+              <AvatarFallback className="text-sm font-bold bg-brand-core/10 text-primary rounded-xl">
                 {getInitials(candidate.name)}
               </AvatarFallback>
             </Avatar>
@@ -263,7 +263,7 @@ export const CandidateSheet = memo(function CandidateSheet({
                   href={candidate.resumeUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors duration-200"
+                  className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-200"
                 >
                   <Download className="h-3 w-3" />
                   Download

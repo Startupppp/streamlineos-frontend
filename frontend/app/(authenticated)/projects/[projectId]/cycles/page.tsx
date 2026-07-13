@@ -202,7 +202,7 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
                     <p className="text-xs text-destructive mt-1">{form.formState.errors.name.message}</p>
                   )}
                   {!form.formState.errors.name && showDuplicateWarning && (
-                    <p className="text-xs text-amber-600 flex items-center gap-1 mt-1">
+                    <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 mt-1">
                       <AlertTriangle className="h-3 w-3 shrink-0" />
                       A cycle with this name already exists in this project.
                     </p>

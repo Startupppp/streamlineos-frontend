@@ -160,8 +160,8 @@
   --popover-foreground: #f1f4fb;
   --muted: #161e36;
   --muted-foreground: #94a0c0;
-  --border: rgba(148, 178, 245, 0.22);     /* visible against dark surfaces */
-  --input: rgba(148, 178, 245, 0.14);
+  --border: rgba(148, 178, 245, 0.30);     /* visible against dark surfaces */
+  --input: rgba(148, 178, 245, 0.22);
   --ring: #60a5fa;
 
   /* â”€â”€â”€ CTA & Action â€” invert ink to white for dark â”€â”€â”€ */
@@ -188,7 +188,7 @@
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: color-mix(in srgb, var(--sidebar-primary) 14%, transparent);
   --sidebar-accent-foreground: #f4f7ff;
-  --sidebar-border: rgba(148, 178, 245, 0.10);
+  --sidebar-border: rgba(148, 178, 245, 0.18);
   --sidebar-ring: #60a5fa;
 
   --gold: #3b82f6;
@@ -630,14 +630,14 @@
 }
 
 .filter-chip:hover {
-  background: color-mix(in srgb, var(--primary) 8%, transparent);
-  border-color: color-mix(in srgb, var(--primary) 25%, transparent);
+  background: color-mix(in srgb, var(--brand-core) 8%, transparent);
+  border-color: color-mix(in srgb, var(--brand-core) 25%, transparent);
   color: var(--foreground);
 }
 
 .filter-chip.active {
-  background: color-mix(in srgb, var(--primary) 12%, transparent);
-  border-color: color-mix(in srgb, var(--primary) 30%, transparent);
+  background: color-mix(in srgb, var(--brand-core) 12%, transparent);
+  border-color: color-mix(in srgb, var(--brand-core) 30%, transparent);
   color: var(--foreground);
 }
 
@@ -800,13 +800,13 @@
 }
 
 .calendar-container .rbc-time-view .rbc-day-slot {
-  background: #ffffff;
+  background: var(--card);
 }
 
 .calendar-container .rbc-time-view .rbc-day-slot.rbc-today,
 .calendar-container .rbc-time-view .rbc-day-slot.rbc-now.rbc-today,
 .calendar-container .rbc-time-view .rbc-day-bg.rbc-today {
-  background: color-mix(in srgb, var(--brand-core) 6%, #ffffff);
+  background: color-mix(in srgb, var(--brand-core) 6%, var(--card));
 }
 
 .calendar-container .rbc-time-view .rbc-day-slot.rbc-today .rbc-events-container {

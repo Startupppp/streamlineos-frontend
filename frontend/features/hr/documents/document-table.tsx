@@ -101,8 +101,8 @@ const FILE_ICON_CONFIG: Record<
 };
 
 const DEFAULT_FILE_ICON = {
-  bg: "bg-slate-100 dark:bg-slate-800/40",
-  text: "text-slate-500 dark:text-slate-400",
+  bg: "bg-muted",
+  text: "text-muted-foreground",
   icon: File,
 };
 
@@ -120,9 +120,9 @@ const TYPE_BADGE_COLORS: Record<string, string> = {
   "Offer Letter":
     "bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-900/40 dark:text-violet-300 dark:border-violet-800",
   Resume:
-    "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800/40 dark:text-slate-300 dark:border-slate-700",
+    "bg-muted text-foreground border-border dark:bg-slate-800/40 dark:text-slate-300 dark:border-slate-700",
   General:
-    "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800/40 dark:text-slate-300 dark:border-slate-700",
+    "bg-muted text-foreground border-border dark:bg-slate-800/40 dark:text-slate-300 dark:border-slate-700",
 };
 
 const FOLDER_COLORS = [

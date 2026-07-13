@@ -393,7 +393,7 @@ export default function DealDetailPage({
                 className={cn(
                   "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap",
                   isActive
-                    ? "bg-blue-50 text-blue-700 ring-1 ring-blue-300"
+                    ? "bg-blue-50 text-blue-700 ring-1 ring-blue-300 dark:bg-blue-500/10 dark:text-blue-300 dark:ring-blue-500/30"
                     : isPast
                       ? "bg-muted/50 text-muted-foreground"
                       : "text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/30",

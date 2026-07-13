@@ -72,7 +72,7 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
           <div className="flex items-center gap-2">
             <Avatar className="h-6 w-6 shrink-0">
               <AvatarImage src={resolveImageUrl(user?.image)} />
-              <AvatarFallback className="text-[9px] bg-primary/10 text-primary font-medium">
+              <AvatarFallback className="text-[9px] bg-brand-core/10 text-primary font-medium">
                 {initials}
               </AvatarFallback>
             </Avatar>

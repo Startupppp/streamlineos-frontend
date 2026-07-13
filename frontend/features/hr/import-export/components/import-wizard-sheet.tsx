@@ -268,19 +268,19 @@ export function ImportWizardSheet({
           {step === 3 && job && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
-                  <div className="flex items-center gap-1.5 text-emerald-700 mb-0.5">
+                <div className="rounded-lg border border-emerald-200 bg-emerald-50 dark:bg-emerald-500/10 dark:border-emerald-500/30 p-3">
+                  <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300 mb-0.5">
                     <CheckCircle2 className="h-4 w-4" />
                     <span className="text-xs font-medium">Valid rows</span>
                   </div>
-                  <p className="text-2xl font-semibold text-emerald-800">{job.validRows}</p>
+                  <p className="text-2xl font-semibold text-emerald-800 dark:text-emerald-300">{job.validRows}</p>
                 </div>
-                <div className="rounded-lg border border-red-200 bg-red-50 p-3">
-                  <div className="flex items-center gap-1.5 text-red-700 mb-0.5">
+                <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-500/10 dark:border-red-500/30 p-3">
+                  <div className="flex items-center gap-1.5 text-red-700 dark:text-red-300 mb-0.5">
                     <AlertCircle className="h-4 w-4" />
                     <span className="text-xs font-medium">Error rows</span>
                   </div>
-                  <p className="text-2xl font-semibold text-red-800">{job.errorRows}</p>
+                  <p className="text-2xl font-semibold text-red-800 dark:text-red-300">{job.errorRows}</p>
                 </div>
               </div>
 
@@ -292,10 +292,10 @@ export function ImportWizardSheet({
                   {job.errors.slice(0, 5).map((err, idx) => (
                     <div
                       key={idx}
-                      className="rounded-md border border-red-200 bg-red-50/50 px-3 py-2 text-xs text-red-700"
+                      className="rounded-md border border-red-200 bg-red-50/50 dark:bg-red-500/10 dark:border-red-500/30 px-3 py-2 text-xs text-red-700 dark:text-red-300"
                     >
                       <span className="font-medium">Row {err.row}</span>
-                      {err.field && <span className="text-red-500"> · {err.field}</span>}
+                      {err.field && <span className="text-red-500 dark:text-red-400"> · {err.field}</span>}
                       {" — "}
                       {err.message}
                     </div>

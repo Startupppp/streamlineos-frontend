@@ -34,10 +34,10 @@ interface SubmissionSheetProps {
 
 function StatusBadge({ status }: { status: VendorSubmission["placementStatus"] }) {
   const map: Record<string, string> = {
-    SUBMITTED: "bg-blue-100 text-blue-700",
-    INTERVIEWING: "bg-yellow-100 text-yellow-700",
-    PLACED: "bg-green-100 text-green-700",
-    REJECTED: "bg-red-100 text-red-700",
+    SUBMITTED: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
+    INTERVIEWING: "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-300",
+    PLACED: "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-300",
+    REJECTED: "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-300",
   };
   return <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${map[status] ?? ""}`}>{status}</span>;
 }
@@ -45,8 +45,8 @@ function StatusBadge({ status }: { status: VendorSubmission["placementStatus"] }
 function InvoiceBadge({ status }: { status: VendorSubmission["invoiceStatus"] }) {
   const map: Record<string, string> = {
     NOT_INVOICED: "bg-muted text-muted-foreground",
-    INVOICED: "bg-orange-100 text-orange-700",
-    PAID: "bg-green-100 text-green-700",
+    INVOICED: "bg-orange-100 text-orange-700 dark:bg-orange-500/10 dark:text-orange-300",
+    PAID: "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-300",
   };
   const label: Record<string, string> = { NOT_INVOICED: "Not Invoiced", INVOICED: "Invoiced", PAID: "Paid" };
   return <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${map[status] ?? ""}`}>{label[status]}</span>;

@@ -23,13 +23,13 @@ export default function CompOffPage() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.22, ease: "easeOut" }}
-            className="bg-gradient-to-r from-violet-600 to-indigo-600 rounded-2xl p-6 text-white shadow-xl"
+            className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-6 text-white shadow-xl"
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-violet-200 text-sm font-medium">Available Comp-Off Balance</p>
+                <p className="text-blue-200 text-sm font-medium">Available Comp-Off Balance</p>
                 <p className="text-5xl font-bold mt-1">{earnedDays.toFixed(1)}</p>
-                <p className="text-violet-200 text-sm mt-1">days earned</p>
+                <p className="text-blue-200 text-sm mt-1">days earned</p>
               </div>
               <div className="bg-white/20 rounded-2xl p-4">
                 <Clock className="h-10 w-10 text-white" />
@@ -37,7 +37,7 @@ export default function CompOffPage() {
             </div>
             {earnedDays > 0 && (
               <div className="mt-4 pt-4 border-t border-white/20 flex justify-end">
-                <Button asChild variant="secondary" className="bg-white text-violet-700 hover:bg-violet-50 font-semibold">
+                <Button asChild variant="secondary" className="bg-white text-blue-700 hover:bg-blue-50 font-semibold">
                   <Link href="/hr/leaves">
                     Apply Leave <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>

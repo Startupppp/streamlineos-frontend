@@ -31,7 +31,7 @@ export function VariableChips({ variables }: { variables: string[] }) {
       {visible.map((v) => (
         <span
           key={v}
-          className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-mono bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-900/40 dark:text-slate-300 dark:border-slate-700"
+          className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-mono bg-muted text-foreground border border-border"
         >
           {`{{${v}}}`}
         </span>
@@ -74,7 +74,7 @@ export function PreviewDialog({ template }: { template: DocumentTemplate }) {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <div
-              className="max-h-[60vh] overflow-y-auto rounded-xl border bg-white dark:bg-neutral-950 p-4 text-sm prose prose-sm dark:prose-invert max-w-none"
+              className="max-h-[60vh] overflow-y-auto rounded-xl border bg-card p-4 text-sm prose prose-sm dark:prose-invert max-w-none"
               dangerouslySetInnerHTML={{
                 __html: DOMPurify.sanitize(template.htmlContent),
               }}

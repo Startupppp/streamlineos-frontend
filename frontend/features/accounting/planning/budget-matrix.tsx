@@ -33,7 +33,7 @@ function MatrixCell({ accountId, periodKey, value, readOnly, onChange }: MatrixC
       value={value}
       disabled={readOnly}
       onChange={handleChange}
-      className="w-full min-w-[90px] text-right font-mono text-xs tabular-nums bg-transparent border-0 outline-none focus:bg-blue-50/50 px-2 py-1.5 rounded disabled:opacity-60 disabled:cursor-not-allowed"
+      className="w-full min-w-[90px] text-right font-mono text-xs tabular-nums bg-transparent border-0 outline-none focus:bg-blue-50/50 dark:focus:bg-blue-500/10 px-2 py-1.5 rounded disabled:opacity-60 disabled:cursor-not-allowed"
     />
   );
 }

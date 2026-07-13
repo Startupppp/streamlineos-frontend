@@ -187,15 +187,15 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
           value={String(kpis?.headcount.active ?? 0)}
           subtitle={`${kpis?.headcount.probation ?? 0} probation · ${kpis?.headcount.notice ?? 0} notice`}
           icon={Users}
-          iconBg="bg-blue-50"
-          iconColor="text-blue-600"
+          iconBg="bg-blue-50 dark:bg-blue-500/10"
+          iconColor="text-blue-600 dark:text-blue-400"
         />
         <StatCard
           label="12-Mo Attrition"
           value={formatPct(kpis?.attritionRate12mo ?? 0)}
           icon={TrendingDown}
-          iconBg="bg-red-50"
-          iconColor="text-red-500"
+          iconBg="bg-red-50 dark:bg-red-500/10"
+          iconColor="text-red-500 dark:text-red-400"
           onClick={handleAttritionDrilldown}
         />
         <StatCard
@@ -209,23 +209,23 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
           label="Leave Utilization"
           value={formatPct(kpis?.leaveUtilizationPct ?? 0)}
           icon={Target}
-          iconBg="bg-cyan-50"
-          iconColor="text-cyan-600"
+          iconBg="bg-cyan-50 dark:bg-cyan-500/10"
+          iconColor="text-cyan-600 dark:text-cyan-400"
           onClick={handleLeaveDrilldown}
         />
         <StatCard
           label="Attendance Rate"
           value={formatPct(kpis?.attendanceRatePct ?? 0)}
           icon={CheckCircle}
-          iconBg="bg-emerald-50"
-          iconColor="text-emerald-600"
+          iconBg="bg-emerald-50 dark:bg-emerald-500/10"
+          iconColor="text-emerald-600 dark:text-emerald-400"
         />
         <StatCard
           label="Open Cases"
           value={String(kpis?.openCasesCount ?? 0)}
           icon={AlertTriangle}
-          iconBg="bg-amber-50"
-          iconColor="text-amber-600"
+          iconBg="bg-amber-50 dark:bg-amber-500/10"
+          iconColor="text-amber-600 dark:text-amber-400"
           onClick={handleComplianceDrilldown}
         />
         <StatCard
@@ -233,8 +233,8 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
           value={kpis?.avgMood !== null && kpis?.avgMood !== undefined ? kpis.avgMood.toFixed(1) : "—"}
           subtitle="out of 5"
           icon={Shield}
-          iconBg="bg-violet-50"
-          iconColor="text-violet-600"
+          iconBg="bg-violet-50 dark:bg-violet-500/10"
+          iconColor="text-violet-600 dark:text-violet-400"
           onClick={handleEngagementDrilldown}
         />
         {canViewPayroll && kpis?.payrollCostLastMonth !== null ? (
@@ -242,8 +242,8 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
             label="Payroll Last Month"
             value={kpis?.payrollCostLastMonth !== null && kpis?.payrollCostLastMonth !== undefined ? formatCurrency(kpis.payrollCostLastMonth) : "—"}
             icon={DollarSign}
-            iconBg="bg-blue-50"
-            iconColor="text-blue-600"
+            iconBg="bg-blue-50 dark:bg-blue-500/10"
+            iconColor="text-blue-600 dark:text-blue-400"
             onClick={handlePayrollDrilldown}
           />
         ) : null}

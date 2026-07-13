@@ -299,8 +299,8 @@ export function CalendarView() {
       />
 
       {externalData?.errors && externalData.errors.length > 0 && (
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-1.5 shrink-0">
-          <span className="text-[11px] text-amber-700 flex-1 min-w-0">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 rounded-md border border-amber-200 bg-amber-50 dark:bg-amber-500/10 dark:border-amber-500/30 px-3 py-1.5 shrink-0">
+          <span className="text-[11px] text-amber-700 dark:text-amber-300 flex-1 min-w-0">
             {externalData.errors
               .map((e) => `${e.accountEmail ?? "Account"}: ${e.message}`)
               .join(" · ")}
@@ -308,7 +308,7 @@ export function CalendarView() {
           <button
             type="button"
             onClick={handleOpenAccounts}
-            className="text-[11px] text-amber-800 font-medium underline underline-offset-2 shrink-0 self-start sm:self-auto"
+            className="text-[11px] text-amber-800 dark:text-amber-300 font-medium underline underline-offset-2 shrink-0 self-start sm:self-auto"
           >
             Manage accounts
           </button>

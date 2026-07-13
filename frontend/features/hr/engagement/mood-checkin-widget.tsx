@@ -55,7 +55,7 @@ export function MoodCheckinWidget() {
             disabled={checkin.isPending}
             className={`flex flex-col items-center gap-0.5 px-3 py-2 rounded-lg border transition-all duration-150 text-center
               ${currentMood === value
-                ? "border-blue-500 bg-blue-50 shadow-sm"
+                ? "border-blue-500 bg-blue-50 dark:bg-blue-500/10 shadow-sm"
                 : "border-border hover:border-blue-300 hover:bg-muted"
               }`}
           >

@@ -138,7 +138,7 @@ export default function ReferralsPage() {
       <div className="space-y-4">
         <div className="rounded-lg border border-blue-200 bg-blue-50/40 dark:border-blue-500/30 dark:bg-blue-500/10 p-4 space-y-2">
           <div className="flex items-center gap-2">
-            <Gift className="h-4 w-4 text-blue-600" />
+            <Gift className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             <p className="text-sm font-semibold text-foreground">
               Refer a friend, earn rewards
             </p>

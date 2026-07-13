@@ -280,8 +280,8 @@ export function EssReimbursementsSection() {
                 className="flex items-center justify-between py-3 px-4 border-b border-border last:border-0 hover:bg-muted/30 transition-colors"
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="h-8 w-8 rounded-md bg-emerald-50 flex items-center justify-center shrink-0">
-                    <Receipt className="h-4 w-4 text-emerald-600" />
+                  <div className="h-8 w-8 rounded-md bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center shrink-0">
+                    <Receipt className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">{r.category}</p>

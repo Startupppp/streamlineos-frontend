@@ -81,8 +81,8 @@ const QUIET_HOURS_OPTIONS = [
 ] as const;
 
 const priorityBadgeClass: Record<NotificationPriority, string> = {
-  CRITICAL: "bg-red-50 text-red-700 border-red-200",
-  HIGH: "bg-amber-50 text-amber-700 border-amber-200",
+  CRITICAL: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  HIGH: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
   NORMAL: "bg-muted text-muted-foreground border-border",
   LOW: "bg-muted text-muted-foreground border-border",
 };
@@ -250,7 +250,7 @@ function PolicySheet({
                             key={c.value}
                             className={cn(
                               "flex items-center gap-2 rounded-md border px-3 py-2 text-sm cursor-pointer transition-colors",
-                              checked ? "border-primary bg-primary/5" : "hover:bg-muted/40",
+                              checked ? "border-primary bg-brand-core/5" : "hover:bg-muted/40",
                               !canManage && "pointer-events-none opacity-60",
                             )}
                           >
@@ -411,12 +411,12 @@ function EventRow({
             {event.defaultPriority}
           </Badge>
           {event.mandatory && (
-            <Badge variant="outline" className="text-[10px] h-4 px-1.5 shrink-0 border-orange-200 text-orange-700 bg-orange-50">
+            <Badge variant="outline" className="text-[10px] h-4 px-1.5 shrink-0 border-orange-200 text-orange-700 bg-orange-50 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-500/30">
               Mandatory
             </Badge>
           )}
           {event.overridden && (
-            <Badge variant="outline" className="text-[10px] h-4 px-1.5 shrink-0 border-blue-200 text-blue-700 bg-blue-50">
+            <Badge variant="outline" className="text-[10px] h-4 px-1.5 shrink-0 border-blue-200 text-blue-700 bg-blue-50 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30">
               Overridden
             </Badge>
           )}

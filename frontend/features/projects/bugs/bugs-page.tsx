@@ -34,21 +34,21 @@ const BUG_SEVERITIES: readonly BugSeverity[] = ["blocker", "critical", "major", 
 
 const SEVERITY_STYLES: Record<BugSeverity, string> = {
   blocker: "text-red-700 border-red-300 bg-red-50 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
-  critical: "text-red-600 border-red-200",
-  major: "text-amber-600 border-amber-200",
+  critical: "text-red-600 border-red-200 dark:text-red-400 dark:border-red-500/30",
+  major: "text-amber-600 border-amber-200 dark:text-amber-400 dark:border-amber-500/30",
   minor: "text-muted-foreground border-border",
   trivial: "text-muted-foreground border-border",
 };
 
 const STATUS_STYLES: Record<BugStatus, string> = {
   new: "text-muted-foreground border-border",
-  triaged: "text-blue-600 border-blue-200",
-  assigned: "text-blue-600 border-blue-200",
-  in_progress: "text-amber-600 border-amber-200",
-  fixed: "text-green-600 border-green-200",
-  ready_for_qa: "text-blue-600 border-blue-200",
-  verified: "text-green-700 border-green-300",
-  reopened: "text-orange-600 border-orange-200",
+  triaged: "text-blue-600 border-blue-200 dark:text-blue-400 dark:border-blue-500/30",
+  assigned: "text-blue-600 border-blue-200 dark:text-blue-400 dark:border-blue-500/30",
+  in_progress: "text-amber-600 border-amber-200 dark:text-amber-400 dark:border-amber-500/30",
+  fixed: "text-green-600 border-green-200 dark:text-green-400 dark:border-green-500/30",
+  ready_for_qa: "text-blue-600 border-blue-200 dark:text-blue-400 dark:border-blue-500/30",
+  verified: "text-green-700 border-green-300 dark:text-green-400 dark:border-green-500/30",
+  reopened: "text-orange-600 border-orange-200 dark:text-orange-400 dark:border-orange-500/30",
   closed: "text-muted-foreground border-border",
 };
 
@@ -60,8 +60,8 @@ const STATUS_LABELS: Record<BugStatus, string> = {
 
 const PRIORITY_STYLES: Record<BugPriority, string> = {
   low: "text-muted-foreground border-border",
-  medium: "text-amber-600 border-amber-200",
-  high: "text-red-600 border-red-200",
+  medium: "text-amber-600 border-amber-200 dark:text-amber-400 dark:border-amber-500/30",
+  high: "text-red-600 border-red-200 dark:text-red-400 dark:border-red-500/30",
   urgent: "text-red-700 border-red-300 bg-red-50 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
 };
 

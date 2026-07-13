@@ -56,10 +56,10 @@ export function JournalEntryView({
   return (
     <div className="space-y-4">
       {isPendingApproval && canApproveJournal && (
-        <div className="flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+        <div className="flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-500/30 dark:bg-amber-500/10">
           <div className="flex items-center gap-2">
-            <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
-            <p className="text-sm text-amber-800 font-medium">
+            <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
+            <p className="text-sm text-amber-800 dark:text-amber-300 font-medium">
               This entry is pending approval
             </p>
           </div>

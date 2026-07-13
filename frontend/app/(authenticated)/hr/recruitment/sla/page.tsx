@@ -74,7 +74,7 @@ function buildSlaColumns(
       header: "Warning After",
       cell: (row) =>
         row.existing ? (
-          <span className="text-yellow-600 font-medium">{row.existing.warningHours}h</span>
+          <span className="text-yellow-600 dark:text-yellow-400 font-medium">{row.existing.warningHours}h</span>
         ) : (
           <span className="text-muted-foreground text-xs">Not set</span>
         ),

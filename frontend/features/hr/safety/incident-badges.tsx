@@ -3,9 +3,9 @@ import { cn } from "@/lib/utils";
 import type { IncidentType, IncidentSeverity, IncidentStatus } from "@/hooks/api/hr/safety";
 
 const STATUS_STYLES: Record<IncidentStatus, string> = {
-  open: "bg-blue-50 text-blue-700 border-blue-200",
-  investigating: "bg-amber-50 text-amber-700 border-amber-200",
-  mitigated: "bg-teal-50 text-teal-700 border-teal-200",
+  open: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  investigating: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  mitigated: "bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-500/10 dark:text-teal-300 dark:border-teal-500/30",
   closed: "bg-muted text-muted-foreground border-border dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700",
 };
 
@@ -18,9 +18,9 @@ const STATUS_LABELS: Record<IncidentStatus, string> = {
 
 const SEVERITY_STYLES: Record<IncidentSeverity, string> = {
   low: "bg-muted text-muted-foreground border-border dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700",
-  medium: "bg-yellow-50 text-yellow-700 border-yellow-200",
-  high: "bg-orange-50 text-orange-700 border-orange-200",
-  critical: "bg-red-50 text-red-700 border-red-200",
+  medium: "bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-500/10 dark:text-yellow-300 dark:border-yellow-500/30",
+  high: "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-500/30",
+  critical: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
 };
 
 const TYPE_LABELS: Record<IncidentType, string> = {

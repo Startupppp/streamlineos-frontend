@@ -49,7 +49,7 @@ export const CandidateCard = memo(function CandidateCard({
           className={cn(
             "group relative rounded-xl bg-card border border-border/70 shadow-sm cursor-pointer select-none transition-all duration-200",
             "hover:shadow-md hover:border-border hover:-translate-y-0.5",
-            snapshot.isDragging && "shadow-xl border-primary/40 ring-2 ring-primary/20 rotate-1 scale-[1.03]"
+            snapshot.isDragging && "shadow-xl border-brand-core/40 ring-2 ring-brand-core/20 rotate-1 scale-[1.03]"
           )}
         >
           <div
@@ -62,7 +62,7 @@ export const CandidateCard = memo(function CandidateCard({
 
           <div className="p-3 space-y-2.5">
             <div className="flex items-center gap-2.5 pr-5">
-              <div className="h-9 w-9 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 bg-gradient-to-br from-primary/20 to-primary/10 text-primary border border-primary/20 ring-2 ring-background">
+              <div className="h-9 w-9 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 bg-gradient-to-br from-brand-core/20 to-brand-core/10 text-primary border border-brand-core/20 ring-2 ring-background">
                 {initials}
               </div>
               <div className="min-w-0 flex-1">
@@ -110,7 +110,7 @@ export const CandidateCard = memo(function CandidateCard({
                         )}
                       />
                     ))}
-                    <span className="text-[10px] font-semibold text-amber-600 ml-0.5">{candidate.rating}</span>
+                    <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 ml-0.5">{candidate.rating}</span>
                   </div>
                 ) : <span />}
                 {candidate.appliedAt && (

@@ -180,8 +180,8 @@ export function BankImportClient() {
       >
         <div className="max-w-lg mx-auto mt-6 bg-card border border-border rounded-xl p-6 space-y-4">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-emerald-50 flex items-center justify-center">
-              <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+            <div className="h-10 w-10 rounded-full bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center">
+              <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
               <p className="text-sm font-semibold">Import successful</p>
@@ -209,16 +209,16 @@ export function BankImportClient() {
           </div>
 
           {importResult.errors.length > 0 && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3 space-y-1">
-              <div className="flex items-center gap-1.5 text-red-700 text-xs font-medium mb-1">
+            <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-lg p-3 space-y-1">
+              <div className="flex items-center gap-1.5 text-red-700 dark:text-red-300 text-xs font-medium mb-1">
                 <AlertTriangle className="h-3.5 w-3.5" />
                 Import errors
               </div>
               {importResult.errors.slice(0, 5).map((err, i) => (
-                <p key={i} className="text-[11px] text-red-600">{err}</p>
+                <p key={i} className="text-[11px] text-red-600 dark:text-red-400">{err}</p>
               ))}
               {importResult.errors.length > 5 && (
-                <p className="text-[11px] text-red-500">
+                <p className="text-[11px] text-red-500 dark:text-red-400">
                   +{importResult.errors.length - 5} more errors
                 </p>
               )}

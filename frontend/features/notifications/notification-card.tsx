@@ -154,8 +154,9 @@ export function NotificationCard({
       onClick={handleCardClick}
       className={cn(
         "group relative flex items-start gap-2.5 px-3 py-2.5 cursor-pointer transition-colors hover:bg-muted/40 hover:shadow-md",
-        isUnread && !isArchived && "bg-blue-50/30 hover:bg-blue-50/50 border-l-[3px] border-l-blue-500",
-        selected && "bg-blue-50/50",
+        isUnread && !isArchived &&
+          "bg-blue-50/30 hover:bg-blue-50/50 dark:bg-blue-500/10 dark:hover:bg-blue-500/15 border-l-[3px] border-l-blue-500",
+        selected && "bg-blue-50/50 dark:bg-blue-500/15",
       )}
     >
       {onSelect && (
@@ -217,7 +218,7 @@ export function NotificationCard({
               <LoadingButton
                 size="sm"
                 variant="outline"
-                className="h-6 text-xs px-2.5 border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300"
+                className="h-6 text-xs px-2.5 border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300 dark:border-emerald-500/30 dark:text-emerald-300 dark:hover:bg-emerald-500/10"
                 onClick={handleApprove}
                 isPending={isApproving}
               >
@@ -228,7 +229,7 @@ export function NotificationCard({
               <LoadingButton
                 size="sm"
                 variant="outline"
-                className="h-6 text-xs px-2.5 border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300"
+                className="h-6 text-xs px-2.5 border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10"
                 onClick={handleReject}
                 isPending={isRejecting}
               >

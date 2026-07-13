@@ -92,7 +92,7 @@ export default function MovePageDialog({
             <button
               className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
                 selectedParent === null
-                  ? "bg-blue-50 text-blue-700 font-medium"
+                  ? "bg-blue-50 text-blue-700 font-medium dark:bg-blue-500/10 dark:text-blue-300"
                   : "hover:bg-muted"
               }`}
               onClick={handleSelectRoot}
@@ -112,7 +112,7 @@ export default function MovePageDialog({
                       data-node-id={String(node.id)}
                       className={`w-full text-left py-2 pr-3 rounded-md text-sm transition-colors flex items-center gap-2 ${
                         selectedParent === node.id
-                          ? "bg-blue-50 text-blue-700 font-medium"
+                          ? "bg-blue-50 text-blue-700 font-medium dark:bg-blue-500/10 dark:text-blue-300"
                           : "hover:bg-muted"
                       }`}
                       style={{ paddingLeft: 12 + depth * 16 }}

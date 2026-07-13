@@ -89,10 +89,10 @@ const PIPELINE_COLUMNS: DataTableColumn<PipelineRow>[] = [
           variant="outline"
           className={
             row.slaStatus === "BREACHED"
-              ? "text-rose-600 border-rose-200"
+              ? "text-rose-600 border-rose-200 dark:text-rose-400 dark:border-rose-500/30"
               : row.slaStatus === "AT_RISK"
-                ? "text-amber-600 border-amber-200"
-                : "text-emerald-600 border-emerald-200"
+                ? "text-amber-600 border-amber-200 dark:text-amber-400 dark:border-amber-500/30"
+                : "text-emerald-600 border-emerald-200 dark:text-emerald-400 dark:border-emerald-500/30"
           }
         >
           {row.slaStatus.replace(/_/g, " ")}

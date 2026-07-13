@@ -250,7 +250,7 @@ export default function BundlesPage() {
                     className={cn(
                       "flex cursor-pointer items-center gap-2.5 rounded-md border p-3 transition-colors",
                       isSelected
-                        ? "border-primary bg-primary/5"
+                        ? "border-primary bg-brand-core/5"
                         : "border-border bg-background hover:bg-muted/50",
                     )}
                   >
@@ -297,7 +297,7 @@ export default function BundlesPage() {
                         <span className="text-sm text-muted-foreground line-through">
                           {fmt(individualTotal)}/mo
                         </span>
-                        <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-semibold text-green-700 dark:bg-green-950/50 dark:text-green-300">
+                        <span className="rounded-full bg-green-500/10 px-2 py-0.5 text-xs font-semibold text-green-700 dark:bg-green-500/10 dark:text-green-300 dark:border dark:border-green-500/30">
                           You save {fmt(savings)}/mo
                         </span>
                       </>

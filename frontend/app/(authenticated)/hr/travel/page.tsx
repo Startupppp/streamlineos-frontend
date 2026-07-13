@@ -49,25 +49,25 @@ function getStatusConfig(status: TravelRequest["status"]) {
     case "COMPLETED":
       return {
         label: status === "COMPLETED" ? "Completed" : "Finance Approved",
-        className: "bg-emerald-100 text-emerald-700 border-emerald-200",
+        className: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
         icon: <CheckCircle2 className="h-3 w-3" />,
       };
     case "MANAGER_APPROVED":
       return {
         label: "Manager Approved",
-        className: "bg-blue-100 text-blue-700 border-blue-200",
+        className: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
         icon: <CheckCircle2 className="h-3 w-3" />,
       };
     case "REJECTED":
       return {
         label: "Rejected",
-        className: "bg-rose-100 text-rose-700 border-rose-200",
+        className: "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/30",
         icon: <XCircle className="h-3 w-3" />,
       };
     default:
       return {
         label: "Pending",
-        className: "bg-amber-100 text-amber-700 border-amber-200",
+        className: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
         icon: <Clock className="h-3 w-3" />,
       };
   }
@@ -101,7 +101,7 @@ function StatusPipeline({ status }: { status: TravelRequest["status"] }) {
               className={cn(
                 "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all",
                 isActive
-                  ? "bg-blue-50 border-blue-200 text-blue-700"
+                  ? "bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-500/10 dark:border-blue-500/30 dark:text-blue-300"
                   : "bg-muted border-border text-muted-foreground",
               )}
             >
@@ -169,7 +169,7 @@ function TravelCard({ request }: { request: TravelRequest }) {
             )}
           </div>
           {request.status === "REJECTED" && request.rejectionReason && (
-            <p className="mt-2 text-xs text-rose-600 bg-rose-50 rounded-lg px-2 py-1 border border-rose-100">
+            <p className="mt-2 text-xs text-rose-600 bg-rose-50 rounded-lg px-2 py-1 border border-rose-100 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/30">
               {request.rejectionReason}
             </p>
           )}

@@ -35,8 +35,8 @@ import { LoadingButton } from "@/components/ui/loading-button";
 
 const STATUS_BADGE: Record<string, string> = {
   draft: "bg-muted text-muted-foreground border-border",
-  active: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  archived: "bg-amber-50 text-amber-600 border-amber-200",
+  active: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  archived: "bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
 };
 
 export default function HrPoliciesPage() {

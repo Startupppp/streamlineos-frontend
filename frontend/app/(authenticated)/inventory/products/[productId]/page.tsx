@@ -61,7 +61,7 @@ function ProductStatusBadge({
     return (
       <Badge
         variant="outline"
-        className="h-5 text-[10px] px-2 py-0 border-emerald-200 text-emerald-700 bg-emerald-50"
+        className="h-5 text-[10px] px-2 py-0 border-emerald-200 text-emerald-700 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
       >
         Active
       </Badge>
@@ -71,7 +71,7 @@ function ProductStatusBadge({
     return (
       <Badge
         variant="outline"
-        className="h-5 text-[10px] px-2 py-0 border-amber-200 text-amber-700 bg-amber-50"
+        className="h-5 text-[10px] px-2 py-0 border-amber-200 text-amber-700 bg-amber-50 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30"
       >
         Discontinued
       </Badge>

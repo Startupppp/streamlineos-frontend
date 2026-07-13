@@ -181,7 +181,7 @@ export function CreatePathSheet({ open, onOpenChange }: Props) {
                 className="rounded-xl border border-border bg-muted/30 p-3 space-y-3"
               >
                 <div className="flex items-center gap-2">
-                  <span className="h-5 w-5 rounded-full bg-violet-100 text-violet-700 text-[10px] font-bold flex items-center justify-center shrink-0">
+                  <span className="h-5 w-5 rounded-full bg-violet-100 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300 text-[10px] font-bold flex items-center justify-center shrink-0">
                     {idx + 1}
                   </span>
                   <div className="flex-1 min-w-0">

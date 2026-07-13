@@ -229,7 +229,7 @@ export function EssTaxSection() {
       >
         <div className={cn(
           "px-4 py-3 flex items-center gap-2 border-b border-border",
-          windowOpen ? "bg-emerald-50" : "bg-muted/30",
+          windowOpen ? "bg-emerald-50 dark:bg-emerald-500/10" : "bg-muted/30",
         )}>
           {windowOpen ? (
             <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
@@ -237,13 +237,13 @@ export function EssTaxSection() {
             <Lock className="h-4 w-4 text-muted-foreground shrink-0" />
           )}
           <div className="min-w-0 flex-1">
-            <p className={cn("text-sm font-medium", windowOpen ? "text-emerald-800" : "text-foreground")}>
+            <p className={cn("text-sm font-medium", windowOpen ? "text-emerald-800 dark:text-emerald-300" : "text-foreground")}>
               {windowOpen
                 ? `Declaration window open — FY ${data?.financialYear}`
                 : "Declaration window closed — contact HR to make changes"}
             </p>
             {windowOpen && data?.closesAt && (
-              <p className="text-xs text-emerald-700 mt-0.5">Closes {formatDate(data.closesAt)}</p>
+              <p className="text-xs text-emerald-700 dark:text-emerald-300 mt-0.5">Closes {formatDate(data.closesAt)}</p>
             )}
           </div>
           {!windowOpen && <AlertCircle className="h-4 w-4 text-muted-foreground shrink-0" />}
@@ -260,9 +260,9 @@ export function EssTaxSection() {
               <EssStatusBadge status={declaration.status} />
             </div>
             {declaration.status === "DRAFT" && declaration.reviewNote && (
-              <div className="px-4 py-3 bg-red-50 border-b border-border">
-                <p className="text-[11px] font-semibold text-red-700 mb-0.5">Rejection Reason</p>
-                <p className="text-xs text-red-600">{declaration.reviewNote}</p>
+              <div className="px-4 py-3 bg-red-50 dark:bg-red-500/10 border-b border-border">
+                <p className="text-[11px] font-semibold text-red-700 dark:text-red-300 mb-0.5">Rejection Reason</p>
+                <p className="text-xs text-red-600 dark:text-red-400">{declaration.reviewNote}</p>
               </div>
             )}
             {DECLARATION_FIELDS.map(({ key, label }) => {

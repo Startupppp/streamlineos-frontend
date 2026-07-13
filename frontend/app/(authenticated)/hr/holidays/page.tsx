@@ -134,7 +134,7 @@ function HolidayItem({
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-50"
+            className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
             onClick={handleDeleteClick}
           >
             <Trash2 className="h-3.5 w-3.5" />
@@ -207,7 +207,7 @@ function CalendarView({
               <div
                 key={day.toISOString()}
                 className={`relative flex flex-col items-center justify-start rounded-md p-1.5 min-h-[40px] text-sm ${
-                  isHoliday ? "bg-blue-50 border border-blue-200" : "hover:bg-muted"
+                  isHoliday ? "bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30" : "hover:bg-muted"
                 }`}
                 title={isHoliday ? dayHolidays.map((h) => h.name).join(", ") : undefined}
               >

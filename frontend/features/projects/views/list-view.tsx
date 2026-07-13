@@ -411,7 +411,7 @@ export const ListView = memo(function ListView({ tickets, onTicketClick, groupBy
         <Accordion
           type="multiple"
           defaultValue={visibleOuterKeys}
-          className="flex flex-col gap-4"
+          className="flex flex-col gap-1.5"
         >
           {visibleOuterKeys.map((outerKey) => {
             const innerGroups = nested[outerKey];
@@ -423,7 +423,7 @@ export const ListView = memo(function ListView({ tickets, onTicketClick, groupBy
 
             return (
               <AccordionItem key={outerKey} value={outerKey} className="border-b-0">
-                <AccordionTrigger className="flex items-center gap-2 px-0 py-2 mb-1 hover:no-underline font-normal [&>svg]:ml-auto">
+                <AccordionTrigger className="flex items-center gap-2 px-0 py-1 hover:no-underline font-normal [&>svg]:ml-auto">
                   <OuterGroupHeader
                     groupKey={outerKey}
                     rowBy={rowBy}
@@ -475,7 +475,7 @@ export const ListView = memo(function ListView({ tickets, onTicketClick, groupBy
         <Accordion
           type="multiple"
           defaultValue={flatGroupKeys}
-          className="flex flex-col gap-4"
+          className="flex flex-col gap-1.5"
         >
           {Object.entries(grouped).map(([group, items]) => (
             <AccordionItem key={group} value={group} className="border-b-0">

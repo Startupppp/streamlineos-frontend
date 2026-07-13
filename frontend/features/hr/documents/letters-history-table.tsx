@@ -23,7 +23,7 @@ const LETTER_TYPE_LABELS: Record<string, string> = {
 function LetterTypeBadge({ type }: { type: string | null }) {
   if (!type) return null;
   return (
-    <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-950/40 dark:border-blue-800 dark:text-blue-300">
+    <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-blue-100 border-blue-200 text-blue-700 dark:bg-blue-500/10 dark:border-blue-500/30 dark:text-blue-300">
       {LETTER_TYPE_LABELS[type] ?? type}
     </span>
   );
@@ -41,7 +41,7 @@ const columns: DataTableColumn<LetterRender>[] = [
     header: "Template",
     cell: (letter) => (
       <div className="flex items-center gap-2">
-        <div className="h-7 w-7 rounded-lg bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center shrink-0">
+        <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-500/10 flex items-center justify-center shrink-0">
           <FileText className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
         </div>
         <span className="text-sm font-medium text-foreground">{letter.templateName}</span>

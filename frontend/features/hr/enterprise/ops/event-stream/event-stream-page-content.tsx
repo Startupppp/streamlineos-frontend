@@ -35,7 +35,7 @@ export function EventStreamPageContent() {
       key: "eventType",
       header: "Event",
       cell: (r) => (
-        <Badge variant="outline" className="text-xs font-mono bg-blue-50 text-blue-700 border-blue-200">
+        <Badge variant="outline" className="text-xs font-mono bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30">
           {r.eventType}
         </Badge>
       ),
@@ -127,7 +127,7 @@ export function EventStreamPageContent() {
         </TabsList>
 
         <TabsContent value="events">
-          <div className="mb-3 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-700">
+          <div className="mb-3 rounded-lg border border-blue-200 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/10 px-3 py-2 text-xs text-blue-700 dark:text-blue-300">
             This log is <strong>append-only</strong>. Events cannot be edited or deleted.
           </div>
           <DataTable

@@ -101,7 +101,7 @@ function PreviewPanel() {
             <div className="font-semibold text-[11px] uppercase tracking-wide text-muted-foreground">Result</div>
             {preview.data.matchedTerritory ? (
               <div className="flex items-center gap-2">
-                <Badge variant="outline" className="text-[9px] h-4 px-1.5 bg-emerald-50 text-emerald-700 border-emerald-200">
+                <Badge variant="outline" className="text-[9px] h-4 px-1.5 bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
                   Match
                 </Badge>
                 <span className="font-medium">{preview.data.matchedTerritory.name}</span>

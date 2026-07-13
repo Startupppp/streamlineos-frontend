@@ -137,9 +137,9 @@ export function VaultUploadArea({ candidateId }: VaultUploadAreaProps) {
         className={cn(
           "border-2 border-dashed rounded-xl p-5 text-center transition-colors duration-200 cursor-pointer select-none",
           addDoc.isPending
-            ? "border-primary/30 bg-primary/5 cursor-not-allowed opacity-60"
+            ? "border-brand-core/30 bg-brand-core/5 cursor-not-allowed opacity-60"
             : dragging
-              ? "border-primary/60 bg-primary/5"
+              ? "border-brand-core/60 bg-brand-core/5"
               : "border-border hover:border-muted-foreground/40 hover:bg-muted/20",
         )}
         onDragOver={handleDragOver}

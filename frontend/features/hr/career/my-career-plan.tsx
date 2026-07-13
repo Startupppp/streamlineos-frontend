@@ -281,7 +281,7 @@ export function MyCareerPlan() {
             <Button
               type="submit"
               disabled={savePlan.isPending}
-              className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200 w-full sm:w-auto"
+              className="w-full sm:w-auto"
             >
               Save Plan
             </Button>
@@ -307,17 +307,17 @@ export function MyCareerPlan() {
                   <div
                     className={`rounded-xl border px-3 py-2 text-center min-w-[96px] transition-all ${
                       isCurrent
-                        ? "border-violet-500 bg-violet-50 shadow-sm shadow-violet-100 dark:bg-violet-950/20 dark:border-violet-400"
+                        ? "border-violet-500 dark:border-violet-400 bg-violet-50 dark:bg-violet-500/10 shadow-sm shadow-violet-100 dark:shadow-violet-500/10"
                         : "border-border bg-muted/30"
                     }`}
                   >
                     <div
-                      className={`text-[10px] font-bold mb-0.5 ${isCurrent ? "text-violet-600" : "text-muted-foreground"}`}
+                      className={`text-[10px] font-bold mb-0.5 ${isCurrent ? "text-violet-600 dark:text-violet-400" : "text-muted-foreground"}`}
                     >
                       Level {level.level}
                     </div>
                     <div
-                      className={`text-xs font-semibold ${isCurrent ? "text-violet-900" : "text-foreground"}`}
+                      className={`text-xs font-semibold ${isCurrent ? "text-violet-900 dark:text-violet-300" : "text-foreground"}`}
                     >
                       {level.title}
                     </div>

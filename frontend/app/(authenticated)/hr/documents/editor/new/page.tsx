@@ -87,7 +87,7 @@ function TemplateButton({
       onClick={handleClick}
       className={`text-left p-4 rounded-lg border transition-all ${
         isSelected
-          ? "border-primary bg-primary/5 ring-1 ring-primary/30"
+          ? "border-primary bg-brand-core/5 ring-1 ring-brand-core/30"
           : "border-border hover:border-primary/30 bg-card"
       }`}
     >

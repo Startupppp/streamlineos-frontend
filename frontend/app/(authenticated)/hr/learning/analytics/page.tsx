@@ -212,24 +212,24 @@ export default function LearningAnalyticsPage() {
         label: "Total Enrolled",
         value: totalEnrolled,
         icon: Users,
-        iconBg: "bg-blue-50",
-        iconColor: "text-blue-600",
+        iconBg: "bg-blue-50 dark:bg-blue-500/10",
+        iconColor: "text-blue-600 dark:text-blue-400",
         valueColor: "text-foreground",
       },
       {
         label: "Avg Completion",
         value: `${avgCompletion}%`,
         icon: TrendingUp,
-        iconBg: "bg-amber-50",
-        iconColor: "text-amber-600",
+        iconBg: "bg-amber-50 dark:bg-amber-500/10",
+        iconColor: "text-amber-600 dark:text-amber-400",
         valueColor: "text-foreground",
       },
       {
         label: "Completed",
         value: completedCount,
         icon: CheckCircle2,
-        iconBg: "bg-emerald-50",
-        iconColor: "text-emerald-600",
+        iconBg: "bg-emerald-50 dark:bg-emerald-500/10",
+        iconColor: "text-emerald-600 dark:text-emerald-400",
         valueColor: "text-foreground",
       },
     ],
@@ -328,13 +328,13 @@ export default function LearningAnalyticsPage() {
                         <BarChart data={statusBarData} margin={{ top: 4, right: 4, left: -16, bottom: 0 }}>
                           <XAxis
                             dataKey="status"
-                            tick={{ fontSize: 11, fill: "#94a3b8" }}
+                            tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
                             axisLine={false}
                             tickLine={false}
                           />
                           <YAxis
                             allowDecimals={false}
-                            tick={{ fontSize: 11, fill: "#94a3b8" }}
+                            tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
                             axisLine={false}
                             tickLine={false}
                           />
@@ -342,7 +342,7 @@ export default function LearningAnalyticsPage() {
                             contentStyle={{
                               fontSize: 12,
                               borderRadius: 8,
-                              border: "1px solid #e2e8f0",
+                              border: "1px solid var(--border)",
                               boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
                             }}
                           />
@@ -350,7 +350,7 @@ export default function LearningAnalyticsPage() {
                             dataKey="count"
                             name="Enrollments"
                             radius={[4, 4, 0, 0]}
-                            fill="#1d4ed8"
+                            fill="var(--primary)"
                           />
                         </BarChart>
                       </ResponsiveContainer>

@@ -85,7 +85,7 @@ export default function EquityPage() {
                     key: "board",
                     header: "Board Approved",
                     cell: (r) => r.boardApprovedAt ? (
-                      <span className="text-xs text-emerald-600">✓ {format(new Date(r.boardApprovedAt), "dd MMM yyyy")}</span>
+                      <span className="text-xs text-emerald-600 dark:text-emerald-400">✓ {format(new Date(r.boardApprovedAt), "dd MMM yyyy")}</span>
                     ) : (
                       <span className="text-xs text-muted-foreground">Pending</span>
                     ),
@@ -111,7 +111,7 @@ export default function EquityPage() {
                 </div>
 
                 {canManage && selectedGrant.status === "active" && (
-                  <Button onClick={() => setExerciseOpen(true)} variant="outline" size="sm" className="w-full border-blue-200 text-blue-700 hover:bg-blue-50">
+                  <Button onClick={() => setExerciseOpen(true)} variant="outline" size="sm" className="w-full border-blue-200 dark:border-blue-500/30 text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-500/10">
                     Record Exercise
                   </Button>
                 )}

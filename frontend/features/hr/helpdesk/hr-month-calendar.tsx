@@ -165,7 +165,7 @@ export function HrMonthCalendar() {
                   className={cn(
                     "border-r border-b border-border p-1.5 min-h-[80px]",
                     col === 6 && "border-r-0",
-                    isTodayDay && "bg-blue-50/60",
+                    isTodayDay && "bg-blue-50/60 dark:bg-blue-500/10",
                   )}
                 >
                   <span

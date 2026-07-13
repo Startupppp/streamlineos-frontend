@@ -86,7 +86,7 @@ function TypeBadge({ type, panelCount }: { type: string | null; panelCount?: num
 function CandidateAvatar({ firstName, lastName }: { firstName?: string; lastName?: string }) {
   const initials = `${firstName?.[0] ?? ""}${lastName?.[0] ?? ""}`.toUpperCase();
   return (
-    <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-[10px] font-bold text-primary border border-primary/20">
+    <div className="h-7 w-7 rounded-full bg-brand-core/10 flex items-center justify-center shrink-0 text-[10px] font-bold text-primary border border-brand-core/20">
       {initials}
     </div>
   );
@@ -214,12 +214,12 @@ export function InterviewList() {
   return (
     <>
       {selectedIds.size > 0 && (
-        <div className="flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 mb-3">
+        <div className="flex items-center gap-3 rounded-xl border border-brand-core/20 bg-brand-core/5 px-4 py-3 mb-3">
           <div className="flex items-center gap-2">
             <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
               <span className="text-[10px] font-bold text-primary-foreground">{selectedIds.size}</span>
             </div>
-            <span className="text-sm font-semibold text-primary">
+            <span className="text-sm font-semibold text-foreground">
               {selectedIds.size} interview{selectedIds.size !== 1 ? "s" : ""} selected
             </span>
           </div>

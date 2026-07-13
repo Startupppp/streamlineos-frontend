@@ -184,8 +184,8 @@ function DirectReportsSection({ employeeId }: { employeeId: string }) {
       <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-3">
-            <div className="h-7 w-7 rounded-lg bg-violet-100 dark:bg-violet-950/40 flex items-center justify-center">
-              <Users className="h-3.5 w-3.5 text-violet-600 dark:text-violet-400" />
+            <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center">
+              <Users className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
             </div>
             <h3 className="text-sm font-semibold text-foreground">
               Direct Reports
@@ -206,13 +206,13 @@ function DirectReportsSection({ employeeId }: { employeeId: string }) {
     <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
       <CardContent className="p-4">
         <div className="flex items-center gap-2 mb-3">
-          <div className="h-7 w-7 rounded-lg bg-violet-100 dark:bg-violet-950/40 flex items-center justify-center">
-            <Users className="h-3.5 w-3.5 text-violet-600 dark:text-violet-400" />
+          <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center">
+            <Users className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
           </div>
           <h3 className="text-sm font-semibold text-foreground">
             Direct Reports
           </h3>
-          <span className="ml-auto inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-900/40 dark:text-violet-300 dark:border-violet-800">
+          <span className="ml-auto inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border">
             {reports.length}
           </span>
         </div>
@@ -225,7 +225,7 @@ function DirectReportsSection({ employeeId }: { employeeId: string }) {
             >
               <Avatar className="h-7 w-7 shrink-0">
                 <AvatarImage src={resolveImageUrl(r.image)} />
-                <AvatarFallback className="text-xs bg-gradient-to-br from-primary/20 to-primary/40 text-primary font-bold">
+                <AvatarFallback className="text-xs bg-muted text-muted-foreground font-bold">
                   {(r.name ?? "?")[0]?.toUpperCase() ?? "?"}
                 </AvatarFallback>
               </Avatar>
@@ -277,7 +277,7 @@ function ManagerScorecardSection({ employeeId }: { employeeId: string }) {
                 ? `${scorecard.avgPerformanceRating}/5`
                 : "N/A"
             }
-            colorClass="text-violet-700 dark:text-violet-400"
+            colorClass="text-blue-700 dark:text-blue-400"
           />
           <StatBlock
             label="Attendance"
@@ -428,7 +428,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                         : null,
                     )}
                   />
-                  <AvatarFallback className="text-xl bg-gradient-to-br from-primary/20 to-primary/50 text-primary font-bold">
+                  <AvatarFallback className="text-xl bg-muted text-muted-foreground font-bold">
                     {getInitials(employee.firstName, employee.lastName)}
                   </AvatarFallback>
                 </Avatar>
@@ -678,8 +678,8 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                 <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-2 mb-3">
-                      <div className="h-7 w-7 rounded-lg bg-violet-100 dark:bg-violet-950/40 flex items-center justify-center">
-                        <FileCheck className="h-3.5 w-3.5 text-violet-600 dark:text-violet-400" />
+                      <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center">
+                        <FileCheck className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                       </div>
                       <h3 className="text-sm font-semibold text-foreground">
                         Assigned Tickets

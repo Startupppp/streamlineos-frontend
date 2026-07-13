@@ -39,7 +39,7 @@ export function KbArticleCard({ article, categoryName, onNavigate, onDelete }: K
     onDelete(article);
   }
   return (
-    <Card className="hover:border-primary/40 transition-colors">
+    <Card className="hover:border-brand-core/40 transition-colors">
       <CardContent className="py-3">
         <div className="flex items-start gap-3">
           <div className="flex-1 min-w-0">

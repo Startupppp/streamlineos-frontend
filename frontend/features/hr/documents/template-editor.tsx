@@ -390,8 +390,8 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
             <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
               <CardHeader className="pb-3 border-b px-5 pt-4">
                 <div className="flex items-center gap-2.5">
-                  <div className="h-7 w-7 rounded-lg bg-slate-100 dark:bg-slate-800/60 flex items-center justify-center shrink-0">
-                    <FileCode className="h-3.5 w-3.5 text-slate-600 dark:text-slate-400" />
+                  <div className="h-7 w-7 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                    <FileCode className="h-3.5 w-3.5 text-muted-foreground" />
                   </div>
                   <div>
                     <CardTitle className="text-sm font-semibold text-foreground">

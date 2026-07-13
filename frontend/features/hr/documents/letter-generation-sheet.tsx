@@ -195,7 +195,7 @@ export function LetterGenerationSheet({ open, onOpenChange, employees, onSaved }
               <iframe
                 srcDoc={previewHtml}
                 sandbox="allow-same-origin"
-                className="w-full h-64 bg-white"
+                className="w-full h-64 bg-card"
                 title="Letter preview"
               />
             </div>

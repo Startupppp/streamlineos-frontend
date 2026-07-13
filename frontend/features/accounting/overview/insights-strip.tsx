@@ -17,17 +17,17 @@ function drillHref(anomaly: Anomaly): string {
 
 function severityClasses(severity: AnomalySeverity): string {
   if (severity === "critical") {
-    return "bg-red-50 border-red-200";
+    return "bg-red-50 border-red-200 dark:bg-red-500/10 dark:border-red-500/30";
   }
   if (severity === "warning") {
-    return "bg-amber-50 border-amber-200";
+    return "bg-amber-50 border-amber-200 dark:bg-amber-500/10 dark:border-amber-500/30";
   }
   return "bg-muted border-border";
 }
 
 function severityTextClass(severity: AnomalySeverity): string {
-  if (severity === "critical") return "text-red-700";
-  if (severity === "warning") return "text-amber-700";
+  if (severity === "critical") return "text-red-700 dark:text-red-300";
+  if (severity === "warning") return "text-amber-700 dark:text-amber-300";
   return "text-muted-foreground";
 }
 
@@ -57,12 +57,12 @@ export function InsightsStrip({ from, to }: { from?: string; to?: string }) {
           {(digest.positives.length > 0 || digest.watchouts.length > 0) && (
             <div className="mt-2 flex flex-wrap gap-x-6 gap-y-1">
               {digest.positives.map((p) => (
-                <span key={p} className="text-xs text-emerald-700">
+                <span key={p} className="text-xs text-emerald-700 dark:text-emerald-400">
                   + {p}
                 </span>
               ))}
               {digest.watchouts.map((w) => (
-                <span key={w} className="text-xs text-amber-700">
+                <span key={w} className="text-xs text-amber-700 dark:text-amber-400">
                   ! {w}
                 </span>
               ))}

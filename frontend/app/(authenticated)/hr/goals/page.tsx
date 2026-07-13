@@ -20,11 +20,11 @@ import { useHrGoals, useCreateHrGoal, type HrGoal } from "@/hooks/api/hr";
 import { useUpdateGoal } from "@/hooks/api/hr";
 
 const STATUS_COLORS: Record<string, string> = {
-  IN_PROGRESS: "bg-blue-50 text-blue-700 border-blue-200",
-  COMPLETED: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  CANCELLED: "bg-red-50 text-red-700 border-red-200",
+  IN_PROGRESS: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  COMPLETED: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  CANCELLED: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
   DRAFT: "bg-muted text-muted-foreground border-border",
-  ON_HOLD: "bg-amber-50 text-amber-700 border-amber-200",
+  ON_HOLD: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
 };
 
 const TYPE_COLORS: Record<string, string> = {
@@ -39,7 +39,7 @@ function CircularProgress({ value }: { value: number }) {
   const offset = circ - (Math.min(value, 100) / 100) * circ;
   return (
     <svg width="72" height="72" viewBox="0 0 72 72" className="rotate-[-90deg]">
-      <circle cx="36" cy="36" r={r} fill="none" stroke="#e2e8f0" strokeWidth="6" />
+      <circle cx="36" cy="36" r={r} fill="none" stroke="var(--border)" strokeWidth="6" />
       <circle
         cx="36"
         cy="36"

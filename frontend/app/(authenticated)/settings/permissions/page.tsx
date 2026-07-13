@@ -172,7 +172,7 @@ function PermissionsContent() {
         <Card>
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <Lock className="h-4 w-4 text-blue-600" />
+              <Lock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
               Permission Matrix ({PERMISSIONS.length} permissions ·{" "}
               {roles.length} roles)
             </CardTitle>
@@ -181,7 +181,7 @@ function PermissionsContent() {
             <ScrollArea className="w-full" type="auto">
               <div className="min-w-[900px]">
                 <div
-                  className="grid bg-muted/50 border-b border-border/40 sticky top-0 z-10"
+                  className="grid bg-muted/50 border-b border-border/60 sticky top-0 z-10"
                   style={{
                     gridTemplateColumns: `260px repeat(${roles.length}, minmax(72px, 1fr))`,
                   }}
@@ -205,7 +205,7 @@ function PermissionsContent() {
                 {permissionGroups.map(([resource, perms]) => (
                   <div key={resource}>
                     <div
-                      className="grid bg-muted/20 border-b border-border/30"
+                      className="grid bg-muted/20 border-b border-border/60"
                       style={{
                         gridTemplateColumns: `260px repeat(${roles.length}, minmax(72px, 1fr))`,
                       }}
@@ -256,7 +256,7 @@ function PermissionRow({
 }: PermissionRowProps) {
   return (
     <div
-      className="grid border-b border-border/20 hover:bg-muted/10 transition-colors"
+      className="grid border-b border-border/60 hover:bg-muted/10 transition-colors"
       style={{
         gridTemplateColumns: `260px repeat(${roles.length}, minmax(72px, 1fr))`,
       }}
@@ -278,7 +278,7 @@ function PermissionRow({
             key={role.roleId}
             className={cn(
               "flex items-center justify-center py-2",
-              role.roleId === currentUserRoleId && "bg-primary/5",
+              role.roleId === currentUserRoleId && "bg-brand-core/5",
             )}
           >
             {hasPermission ? (
@@ -313,7 +313,7 @@ function MatrixSkeleton() {
           <Skeleton className="h-5 w-64" />
         </CardHeader>
         <CardContent className="p-0">
-          <div className="divide-y divide-border/20">
+          <div className="divide-y divide-border/60">
             {Array.from({ length: 12 }).map((_, i) => (
               <div key={i} className="flex items-center gap-4 px-4 py-2.5">
                 <Skeleton className="h-4 w-48" />

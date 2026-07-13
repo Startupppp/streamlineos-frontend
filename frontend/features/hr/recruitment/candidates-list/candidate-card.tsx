@@ -169,7 +169,7 @@ export function CandidateCard({
         "relative group rounded-lg border bg-card border-l-4 transition-shadow hover:shadow-md",
         cfg.accent,
         isSelected
-          ? "border-primary/30 ring-2 ring-primary/20 shadow-sm"
+          ? "border-brand-core/30 ring-2 ring-brand-core/20 shadow-sm"
           : "border-border/70",
       )}
     >
@@ -207,7 +207,7 @@ export function CandidateCard({
 
       <Link href={`/hr/recruitment/candidates/${candidate.id}`} className="block p-3 pr-14">
         <div className="flex items-start gap-3 mb-2">
-          <div className="h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 bg-gradient-to-br from-primary/20 to-primary/10 text-primary border border-primary/20">
+          <div className="h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 bg-gradient-to-br from-brand-core/20 to-brand-core/10 text-primary border border-brand-core/20">
             {getInitials(candidate.firstName, candidate.lastName)}
           </div>
           <div className="flex-1 min-w-0">

@@ -254,7 +254,7 @@ function LeaveCalendarWidget({
                       title={`${l.user?.firstName} ${l.user?.lastName}`}
                     >
                       <AvatarImage src={resolveImageUrl(l.user?.image)} />
-                      <AvatarFallback className="text-[8px] bg-amber-100 text-amber-700">
+                      <AvatarFallback className="text-[8px] bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
                         {l.user?.firstName?.[0]}
                         {l.user?.lastName?.[0]}
                       </AvatarFallback>

@@ -95,15 +95,15 @@ export function EmergencyEventDetail({ eventId, onBack }: Props) {
 
         {total > 0 && (
           <div className="grid grid-cols-3 gap-3">
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-center">
-              <CheckCircle className="h-5 w-5 text-emerald-600 mx-auto mb-1" />
-              <p className="text-2xl font-bold text-emerald-700">{safe}</p>
-              <p className="text-xs text-emerald-600">Safe</p>
+            <div className="rounded-xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 p-4 text-center">
+              <CheckCircle className="h-5 w-5 text-emerald-600 dark:text-emerald-400 mx-auto mb-1" />
+              <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">{safe}</p>
+              <p className="text-xs text-emerald-600 dark:text-emerald-400">Safe</p>
             </div>
-            <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-center">
-              <AlertCircle className="h-5 w-5 text-red-600 mx-auto mb-1" />
-              <p className="text-2xl font-bold text-red-700">{needHelp}</p>
-              <p className="text-xs text-red-600">Need Help</p>
+            <div className="rounded-xl border border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 p-4 text-center">
+              <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 mx-auto mb-1" />
+              <p className="text-2xl font-bold text-red-700 dark:text-red-300">{needHelp}</p>
+              <p className="text-xs text-red-600 dark:text-red-400">Need Help</p>
             </div>
             <div className="rounded-xl border border-border bg-muted p-4 text-center">
               <Clock className="h-5 w-5 text-muted-foreground mx-auto mb-1" />
@@ -126,7 +126,7 @@ export function EmergencyEventDetail({ eventId, onBack }: Props) {
                   variant={respondStatus === "safe" ? "default" : "outline"}
                 >
                   <CheckCircle className="h-4 w-4 mr-1.5" />
-                  I'm Safe
+                  I&apos;m Safe
                 </Button>
                 <Button
                   onClick={() => handleRespond("need_help")}

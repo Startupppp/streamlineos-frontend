@@ -30,9 +30,9 @@ const CHART_COLORS = ["#1d4ed8", "#06b6d4", "#60a5fa", "#8b5cf6"];
 
 const CYCLE_STATUS_STYLES: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground border-border",
-  ACTIVE: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  COMPLETED: "bg-blue-50 text-blue-700 border-blue-200",
-  CANCELLED: "bg-red-50 text-red-700 border-red-200",
+  ACTIVE: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  COMPLETED: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  CANCELLED: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
 };
 
 const REVIEW_CYCLE_COLUMNS: DataTableColumn<ReviewCycle>[] = [
@@ -173,15 +173,15 @@ export default function PerformanceAnalyticsPage() {
             <StatCard
               label="Active Cycles"
               value={activeCycles}
-              icon={<CheckCircle className="w-4 h-4 text-green-600" />}
-              color="bg-green-100"
+              icon={<CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />}
+              color="bg-green-100 dark:bg-green-500/10"
               delay={0.1}
             />
             <StatCard
               label="Avg Rating"
               value="—"
-              icon={<Star className="w-4 h-4 text-amber-500" />}
-              color="bg-amber-100"
+              icon={<Star className="w-4 h-4 text-amber-500 dark:text-amber-400" />}
+              color="bg-amber-100 dark:bg-amber-500/10"
               delay={0.15}
             />
             <StatCard
@@ -206,12 +206,12 @@ export default function PerformanceAnalyticsPage() {
               ) : (
                 <ResponsiveContainer width="100%" height={220}>
                   <BarChart data={typeData} barSize={32}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                    <XAxis dataKey="name" tick={{ fontSize: 12, fill: "#64748b" }} axisLine={false} tickLine={false} />
-                    <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: "#64748b" }} axisLine={false} tickLine={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--muted)" />
+                    <XAxis dataKey="name" tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} />
+                    <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} />
                     <Tooltip
-                      contentStyle={{ borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }}
-                      cursor={{ fill: "#f8f7ff" }}
+                      contentStyle={{ borderRadius: "12px", border: "1px solid var(--border)", boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }}
+                      cursor={{ fill: "var(--muted)" }}
                     />
                     <Bar dataKey="count" fill="#1d4ed8" radius={[6, 6, 0, 0]} />
                   </BarChart>
@@ -245,13 +245,13 @@ export default function PerformanceAnalyticsPage() {
                       ))}
                     </Pie>
                     <Tooltip
-                      contentStyle={{ borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }}
+                      contentStyle={{ borderRadius: "12px", border: "1px solid var(--border)", boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }}
                     />
                     <Legend
                       iconType="circle"
                       iconSize={8}
                       formatter={(value) => (
-                        <span style={{ color: "#64748b", fontSize: "12px" }}>{value}</span>
+                        <span style={{ color: "var(--muted-foreground)", fontSize: "12px" }}>{value}</span>
                       )}
                     />
                   </PieChart>
@@ -272,9 +272,9 @@ export default function PerformanceAnalyticsPage() {
             ) : (
               <ResponsiveContainer width="100%" height={180}>
                 <BarChart data={ratingDist} barSize={32}>
-                  <XAxis dataKey="rating" tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "#64748b" }} />
-                  <YAxis allowDecimals={false} tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "#64748b" }} />
-                  <Tooltip contentStyle={{ borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }} />
+                  <XAxis dataKey="rating" tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} />
+                  <YAxis allowDecimals={false} tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} />
+                  <Tooltip contentStyle={{ borderRadius: "12px", border: "1px solid var(--border)", boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }} />
                   <Bar dataKey="count" fill="#1d4ed8" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>

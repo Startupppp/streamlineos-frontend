@@ -60,7 +60,7 @@ function PollCard({
 
   const STATUS_COLORS: Record<HrPoll["status"], string> = {
     draft: "bg-muted text-muted-foreground border-border",
-    active: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    active: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
     closed: "bg-muted text-muted-foreground border-border",
   };
 
@@ -144,7 +144,7 @@ function PollCard({
                 type="button"
                 onClick={() => handleVote(idx)}
                 disabled={vote.isPending}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border hover:border-blue-400 hover:bg-blue-50 text-xs text-left transition-colors"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border hover:border-blue-400 hover:bg-blue-50 dark:hover:border-blue-500/50 dark:hover:bg-blue-500/10 text-xs text-left transition-colors"
               >
                 <Vote className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                 {option}

@@ -283,7 +283,7 @@ export default function OrgCostCentersPage() {
           {c.status === "ARCHIVED" ? (
             <>
               <Button variant="ghost" size="sm" onClick={makeRestoreHandler(c)} title="Restore">
-                <RotateCcw className="h-4 w-4 text-blue-600" />
+                <RotateCcw className="h-4 w-4 text-blue-600 dark:text-blue-400" />
               </Button>
               <Button variant="ghost" size="sm" onClick={makeSetDeletingHandler(c)} title="Delete permanently">
                 <Trash2 className="h-4 w-4 text-destructive" />

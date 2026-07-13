@@ -25,7 +25,7 @@ export function BonusesPageContent() {
       subtitle="Manage variable pay and sales commissions"
     >
       <div className="flex flex-col gap-3">
-        <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-[12px] text-blue-700">
+        <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-[12px] text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300">
           Approved bonuses are included in the payroll run for the selected month.
         </div>
         <Tabs value={activeTab} onValueChange={handleTabChange}>

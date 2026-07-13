@@ -31,7 +31,7 @@ function getTokenColorClasses(token: string): string {
     case "violet":
       return "bg-violet-50 hover:bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-900/20 dark:hover:bg-violet-900/40 dark:text-violet-300 dark:border-violet-700";
     default:
-      return "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-900/20 dark:hover:bg-slate-900/40 dark:text-slate-300 dark:border-slate-700";
+      return "bg-muted hover:bg-muted/80 text-foreground border-border dark:bg-slate-900/20 dark:hover:bg-slate-900/40 dark:text-slate-300 dark:border-slate-700";
   }
 }
 

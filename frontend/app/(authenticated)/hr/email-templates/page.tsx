@@ -87,7 +87,7 @@ function TemplateCard({ template, onCopy, onEdit, onDelete }: TemplateCardProps)
           <p className="line-clamp-2 text-xs text-muted-foreground mt-1">{template.body}</p>
         </div>
         <div>
-          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-500/10 dark:text-violet-300 dark:border-violet-500/30">
+          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30">
             {`{{${varCount}}} variables`}
           </span>
         </div>

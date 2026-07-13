@@ -90,7 +90,7 @@ export default function TrialsPage() {
       ) : data.subscription.status !== "TRIAL" ? (
         <div className="space-y-4">
           <div className="rounded-lg border border-green-200 bg-green-50/50 dark:border-green-500/30 dark:bg-green-500/10 p-6 flex flex-col items-center text-center gap-3">
-            <CheckCircle2 className="h-12 w-12 text-green-600" />
+            <CheckCircle2 className="h-12 w-12 text-green-600 dark:text-green-400" />
             <div>
               <p className="text-base font-semibold text-foreground">
                 You&apos;re on the {data.subscription.plan} Plan

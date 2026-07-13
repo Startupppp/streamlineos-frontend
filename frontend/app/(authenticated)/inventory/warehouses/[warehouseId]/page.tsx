@@ -208,7 +208,7 @@ export default function WarehouseDetailPage({
           {warehouse.isDefault && (
             <Badge
               variant="outline"
-              className="h-4 text-[9px] px-1.5 py-0 bg-blue-50 text-blue-700 border-blue-200"
+              className="h-4 text-[9px] px-1.5 py-0 bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30"
             >
               Default
             </Badge>
@@ -272,7 +272,7 @@ export default function WarehouseDetailPage({
                         </div>
                       </CardHeader>
                       <CardContent className="px-4 pb-4">
-                        <div className="divide-y divide-border/50">
+                        <div className="divide-y divide-border/60">
                           {items.map((loc) => (
                             <LocationRow key={loc.id} location={loc} />
                           ))}

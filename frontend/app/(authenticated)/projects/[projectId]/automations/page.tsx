@@ -97,8 +97,8 @@ function AutomationCard({ automation, onToggle, onDelete, onEdit }: AutomationCa
     <motion.div layout className="rounded-lg border border-border bg-card hover:shadow-md transition-shadow p-4">
       <div className="flex items-start gap-3">
         <div className={cn("relative h-9 w-9 rounded-lg flex items-center justify-center shrink-0",
-          automation.isActive ? "bg-blue-50 border border-blue-100" : "bg-muted border border-border")}>
-          <Zap className={cn("h-4 w-4", automation.isActive ? "text-blue-600" : "text-muted-foreground")} />
+          automation.isActive ? "bg-blue-50 border border-blue-100 dark:bg-blue-500/10 dark:border-blue-500/30" : "bg-muted border border-border")}>
+          <Zap className={cn("h-4 w-4", automation.isActive ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground")} />
           <span className={cn("absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white",
             automation.isActive ? "bg-emerald-500" : "bg-muted-foreground/40")} />
         </div>
@@ -132,7 +132,7 @@ function AutomationCard({ automation, onToggle, onDelete, onEdit }: AutomationCa
           </Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-7 w-7 text-red-400 hover:text-red-600 hover:bg-red-50">
+              <Button variant="ghost" size="icon" className="h-7 w-7 text-red-400 hover:text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-500/10">
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
             </AlertDialogTrigger>
@@ -447,7 +447,7 @@ export default function AutomationsPage({ params }: PageProps) {
                     </div>
                   ))}
                   {form.formState.errors.actions?.root && (
-                    <p className="text-xs text-red-500">{form.formState.errors.actions.root.message}</p>
+                    <p className="text-xs text-red-500 dark:text-red-400">{form.formState.errors.actions.root.message}</p>
                   )}
                 </div>
               </form>

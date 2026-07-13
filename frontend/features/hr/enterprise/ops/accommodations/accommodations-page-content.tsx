@@ -18,10 +18,10 @@ import { AccommodationDetailSheet } from "./accommodation-detail-sheet";
 import { format } from "date-fns";
 
 const STATUS_COLORS: Record<AccommodationStatus, string> = {
-  requested: "bg-blue-50 text-blue-700 border-blue-200",
-  under_review: "bg-yellow-50 text-yellow-700 border-yellow-200",
-  approved: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  denied: "bg-red-50 text-red-700 border-red-200",
+  requested: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  under_review: "bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-500/10 dark:text-yellow-300 dark:border-yellow-500/30",
+  approved: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  denied: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
   implemented: "bg-muted text-muted-foreground border-border",
 };
 

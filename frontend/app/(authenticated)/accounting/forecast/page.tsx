@@ -81,7 +81,7 @@ const forecastWeekColumns: DataTableColumn<ForecastWeek>[] = [
     header: "Net",
     cell: (row) => (
       <div className="text-right">
-        <Money value={parseFloat(row.net)} className={parseFloat(row.net) < 0 ? "text-red-600" : undefined} />
+        <Money value={parseFloat(row.net)} className={parseFloat(row.net) < 0 ? "text-red-600 dark:text-red-400" : undefined} />
       </div>
     ),
     className: "text-right",
@@ -101,7 +101,7 @@ const forecastWeekColumns: DataTableColumn<ForecastWeek>[] = [
     header: "Status",
     cell: (row) =>
       row.minimumBalanceWarning ? (
-        <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-[9px] px-1.5 py-0 h-4">
+        <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30 text-[9px] px-1.5 py-0 h-4">
           ⚠ Low
         </Badge>
       ) : null,
@@ -380,7 +380,7 @@ export default function ForecastPage() {
                 <Card className="bg-card border border-border rounded-xl shadow-sm">
                   <CardContent className="px-4 py-3">
                     <p className="text-xs text-muted-foreground mb-1">Total Inflows</p>
-                    <Money value={totalInflows} className="text-base font-semibold text-emerald-600" />
+                    <Money value={totalInflows} className="text-base font-semibold text-emerald-600 dark:text-emerald-400" />
                   </CardContent>
                 </Card>
                 <Card className="bg-card border border-border rounded-xl shadow-sm">

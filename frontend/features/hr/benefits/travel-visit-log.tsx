@@ -30,8 +30,8 @@ function VisitLogEntry({ log }: { log: TravelVisitLog }) {
   return (
     <div className="flex gap-3 pb-4 border-b border-border/40 last:border-0 last:pb-0">
       <div className="relative flex flex-col items-center">
-        <div className="h-7 w-7 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center shrink-0">
-          <MapPin className="h-3.5 w-3.5 text-blue-600" />
+        <div className="h-7 w-7 rounded-full bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 flex items-center justify-center shrink-0">
+          <MapPin className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
         </div>
       </div>
       <div className="flex-1 min-w-0 pt-0.5">

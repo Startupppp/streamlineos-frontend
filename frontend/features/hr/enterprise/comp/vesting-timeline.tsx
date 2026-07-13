@@ -29,10 +29,10 @@ export function VestingTimeline({ grantId }: Props) {
       {events.map((e) => {
         const vested = isPast(new Date(e.vestDate));
         return (
-          <div key={e.id} className={`flex items-center justify-between p-3 rounded-lg border ${vested ? "bg-blue-50/60 border-blue-200" : "bg-card"}`}>
+          <div key={e.id} className={`flex items-center justify-between p-3 rounded-lg border ${vested ? "bg-blue-50/60 border-blue-200 dark:bg-blue-500/10 dark:border-blue-500/30" : "bg-card"}`}>
             <div className="flex items-center gap-3">
               {vested ? (
-                <CheckCircle2 className="h-4 w-4 text-blue-600 shrink-0" />
+                <CheckCircle2 className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
               ) : (
                 <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
               )}
@@ -42,7 +42,7 @@ export function VestingTimeline({ grantId }: Props) {
               </div>
             </div>
             <div className="text-right">
-              <p className="text-sm font-semibold text-blue-700">{e.cumulativeVested.toLocaleString()}</p>
+              <p className="text-sm font-semibold text-blue-700 dark:text-blue-400">{e.cumulativeVested.toLocaleString()}</p>
               <p className="text-xs text-muted-foreground">cumulative</p>
             </div>
           </div>

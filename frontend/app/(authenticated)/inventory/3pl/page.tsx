@@ -120,7 +120,7 @@ function ThreePlContent() {
             className={cn(
               "text-[11px]",
               row.isActive
-                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
                 : "bg-muted text-muted-foreground border-border",
             )}
           >
@@ -140,7 +140,7 @@ function ThreePlContent() {
             return (
               <div className="flex items-center gap-1.5">
                 <Info className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-                <span className="text-xs text-amber-600">Not connected</span>
+                <span className="text-xs text-amber-600 dark:text-amber-400">Not connected</span>
               </div>
             );
           }
@@ -180,7 +180,7 @@ function ThreePlContent() {
 
           return row.lastSyncError ? (
             <span
-              className="text-xs text-red-600 truncate max-w-[180px] block"
+              className="text-xs text-red-600 dark:text-red-400 truncate max-w-[180px] block"
               title={row.lastSyncError}
             >
               {row.lastSyncError}

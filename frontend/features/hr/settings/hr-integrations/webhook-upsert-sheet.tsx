@@ -133,11 +133,11 @@ export function WebhookUpsertSheet({ open, onOpenChange, subscription }: Props) 
 
         {revealedSecret ? (
           <div className="flex-1 flex flex-col gap-4 px-6 py-6">
-            <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800 space-y-1">
+            <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800 space-y-1 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
               <p className="font-semibold">Copy your secret — it will not be shown again</p>
-              <p className="text-xs text-amber-700">
+              <p className="text-xs text-amber-700 dark:text-amber-300">
                 Use this to verify the{" "}
-                <code className="bg-amber-100 px-1 rounded">X-StreamlineOS-Signature</code> header
+                <code className="bg-amber-100 dark:bg-amber-500/10 px-1 rounded">X-StreamlineOS-Signature</code> header
                 on incoming requests.
               </p>
             </div>

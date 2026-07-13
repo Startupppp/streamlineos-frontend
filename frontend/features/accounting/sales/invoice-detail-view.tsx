@@ -114,7 +114,7 @@ const CREDIT_NOTE_COLUMNS: DataTableColumn<CreditNote>[] = [
     header: "Status",
     cell: (cn) =>
       cn.status === "APPLIED" ? (
-        <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 text-[10px] h-4 px-1.5">
+        <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30 text-[10px] h-4 px-1.5">
           Applied
         </Badge>
       ) : (
@@ -402,7 +402,7 @@ export function InvoiceDetailContent({ invoiceId }: InvoiceDetailContentProps) {
               <p className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground mb-0.5">
                 Amount Paid
               </p>
-              <p className="text-sm tabular-nums text-emerald-600 font-medium">
+              <p className="text-sm tabular-nums text-emerald-600 dark:text-emerald-400 font-medium">
                 <Money value={amountPaid} currency={invoice.currency} compact />
               </p>
             </div>
@@ -410,7 +410,7 @@ export function InvoiceDetailContent({ invoiceId }: InvoiceDetailContentProps) {
               <p className="text-[10px] uppercase font-semibold tracking-wider text-muted-foreground mb-0.5">
                 Balance Due
               </p>
-              <p className="text-sm font-semibold tabular-nums text-red-600">
+              <p className="text-sm font-semibold tabular-nums text-red-600 dark:text-red-400">
                 <Money value={balance} currency={invoice.currency} compact />
               </p>
             </div>

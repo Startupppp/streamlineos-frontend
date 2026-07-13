@@ -39,14 +39,14 @@ const RECOMMENDATION_OPTIONS: RecommendationOption[] = [
     Icon: CheckCircle2,
     badgeClass:
       "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-    activeClass: "border-green-500 bg-green-50 dark:bg-green-900/20",
+    activeClass: "border-green-500 bg-green-50 dark:bg-green-500/10",
   },
   {
     value: "NO_HIRE",
     label: "No Hire",
     Icon: XCircle,
     badgeClass: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
-    activeClass: "border-red-500 bg-red-50 dark:bg-red-900/20",
+    activeClass: "border-red-500 bg-red-50 dark:bg-red-500/10",
   },
   {
     value: "MAYBE",
@@ -54,7 +54,7 @@ const RECOMMENDATION_OPTIONS: RecommendationOption[] = [
     Icon: HelpCircle,
     badgeClass:
       "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
-    activeClass: "border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20",
+    activeClass: "border-yellow-500 bg-yellow-50 dark:bg-yellow-500/10",
   },
 ];
 

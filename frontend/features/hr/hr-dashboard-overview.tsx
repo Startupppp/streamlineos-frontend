@@ -48,7 +48,7 @@ function LeaveCalendarWidget() {
       <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/60 shrink-0">
         <div className="flex items-center gap-2.5">
           <div className="h-7 w-7 rounded-lg bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center shrink-0">
-            <CalendarOff className="h-3.5 w-3.5 text-amber-600" />
+            <CalendarOff className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
           </div>
           <div>
             <h3 className="text-sm font-semibold text-foreground leading-tight">
@@ -101,7 +101,7 @@ function LeaveCalendarWidget() {
                   {leave.userImage && (
                     <AvatarImage src={leave.userImage} alt={leave.userName} />
                   )}
-                  <AvatarFallback className="text-[10px] bg-amber-100 text-amber-700 font-semibold">
+                  <AvatarFallback className="text-[10px] bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300 font-semibold">
                     {leave.userName.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
@@ -138,7 +138,7 @@ function OnboardingStatusWidget() {
       <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/60 shrink-0">
         <div className="flex items-center gap-2.5">
           <div className="h-7 w-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/40 flex items-center justify-center shrink-0">
-            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div>
             <h3 className="text-sm font-semibold text-foreground leading-tight">
@@ -194,10 +194,10 @@ function OnboardingStatusWidget() {
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-3">
-                  <span className="flex items-center gap-1 text-amber-600 font-medium">
+                  <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400 font-medium">
                     <Clock className="h-3 w-3" /> {data.inProgress} in progress
                   </span>
-                  <span className="flex items-center gap-1 text-emerald-600 font-medium">
+                  <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
                     <CheckCircle2 className="h-3 w-3" /> {data.completed} done
                   </span>
                 </div>
@@ -220,7 +220,7 @@ function OnboardingStatusWidget() {
                     key={hire.userId}
                     className="flex items-center gap-3 group"
                   >
-                    <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-[10px] font-bold text-primary">
+                    <div className="h-7 w-7 rounded-full bg-brand-core/10 flex items-center justify-center shrink-0 text-[10px] font-bold text-primary">
                       {hire.name.slice(0, 2).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0 space-y-1">
@@ -257,7 +257,7 @@ const METRIC_CARDS = [
     icon: Users,
     accent: "border-l-blue-500",
     iconBg: "bg-blue-50 dark:bg-blue-950/40",
-    iconColor: "text-blue-600",
+    iconColor: "text-blue-600 dark:text-blue-400",
     valueColor: "text-blue-700 dark:text-blue-400",
     href: "/hr",
   },
@@ -267,7 +267,7 @@ const METRIC_CARDS = [
     icon: UserCheck,
     accent: "border-l-emerald-500",
     iconBg: "bg-emerald-50 dark:bg-emerald-950/40",
-    iconColor: "text-emerald-600",
+    iconColor: "text-emerald-600 dark:text-emerald-400",
     valueColor: "text-emerald-700 dark:text-emerald-400",
   },
   {
@@ -276,7 +276,7 @@ const METRIC_CARDS = [
     icon: CalendarOff,
     accent: "border-l-amber-500",
     iconBg: "bg-amber-50 dark:bg-amber-950/40",
-    iconColor: "text-amber-600",
+    iconColor: "text-amber-600 dark:text-amber-400",
     valueColor: "text-amber-700 dark:text-amber-400",
     href: "/hr/leaves",
   },
@@ -286,7 +286,7 @@ const METRIC_CARDS = [
     icon: ClipboardList,
     accent: "border-l-rose-500",
     iconBg: "bg-rose-50 dark:bg-rose-950/40",
-    iconColor: "text-rose-600",
+    iconColor: "text-rose-600 dark:text-rose-400",
     valueColor: "text-rose-700 dark:text-rose-400",
     href: "/hr/leaves",
   },
@@ -352,7 +352,7 @@ export function HrDashboardOverview() {
                     {key === "activeEmployees" && !isLoading && (
                       <div className="flex items-center gap-1 mt-1.5">
                         <TrendingUp className="h-3 w-3 text-emerald-500" />
-                        <span className="text-[11px] text-emerald-600 font-semibold">
+                        <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
                           {activeRate}% rate
                         </span>
                       </div>
@@ -363,7 +363,7 @@ export function HrDashboardOverview() {
                       value > 0 && (
                         <div className="flex items-center gap-1 mt-1.5">
                           <AlertCircle className="h-3 w-3 text-rose-500" />
-                          <span className="text-[11px] text-rose-600 font-semibold">
+                          <span className="text-[11px] text-rose-600 dark:text-rose-400 font-semibold">
                             Needs attention
                           </span>
                         </div>

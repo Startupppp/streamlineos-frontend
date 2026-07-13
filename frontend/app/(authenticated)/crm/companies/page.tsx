@@ -30,9 +30,9 @@ const PAGE_SIZE = 20;
 function getHealthBadgeClasses(score: number | null): string {
   if (score === null || score === undefined)
     return "bg-muted text-muted-foreground border-border";
-  if (score >= 70) return "bg-emerald-50 text-emerald-700 border-emerald-200";
-  if (score >= 40) return "bg-amber-50 text-amber-700 border-amber-200";
-  return "bg-red-50 text-red-700 border-red-200";
+  if (score >= 70) return "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30";
+  if (score >= 40) return "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30";
+  return "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30";
 }
 
 export default function CompaniesPage() {
@@ -143,12 +143,12 @@ export default function CompaniesPage() {
       sortValue: (o) => o.name,
       cell: (o) => (
         <div className="flex items-center gap-2">
-          <div className="h-6 w-6 rounded-md bg-blue-50 flex items-center justify-center text-[10px] font-semibold text-blue-600 shrink-0">
+          <div className="h-6 w-6 rounded-md bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-[10px] font-semibold text-blue-600 dark:text-blue-400 shrink-0">
             {o.name[0]?.toUpperCase() ?? "?"}
           </div>
           <Link
             href={`/crm/companies/${o.id}`}
-            className="font-medium truncate max-w-[140px] hover:text-blue-600 hover:underline transition-colors"
+            className="font-medium truncate max-w-[140px] hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors"
           >
             {o.name}
           </Link>
@@ -211,7 +211,7 @@ export default function CompaniesPage() {
             href={o.website}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-xs text-blue-600 hover:underline truncate max-w-[120px]"
+            className="flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 hover:underline truncate max-w-[120px]"
           >
             <Building2 className="h-3 w-3 shrink-0" />
             <span className="truncate">{o.website.replace(/^https?:\/\//, "")}</span>

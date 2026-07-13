@@ -9,8 +9,8 @@ import type { VersionEntity, VersionItem } from "@/hooks/api/hr/settings-hub";
 
 const STATUS_COLORS: Record<string, string> = {
   draft: "bg-muted text-muted-foreground border-border dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700",
-  active: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  archived: "bg-amber-50 text-amber-600 border-amber-200",
+  active: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  archived: "bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
 };
 
 interface Props {
@@ -44,7 +44,7 @@ function VersionRow({
   return (
     <div
       className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border border-border ${
-        isActive ? "bg-blue-50/50 border-l-2 border-l-blue-500" : "bg-card"
+        isActive ? "bg-blue-50/50 dark:bg-blue-500/10 border-l-2 border-l-blue-500" : "bg-card"
       }`}
     >
       <span className="text-xs font-mono text-muted-foreground w-8 shrink-0">v{item.version}</span>

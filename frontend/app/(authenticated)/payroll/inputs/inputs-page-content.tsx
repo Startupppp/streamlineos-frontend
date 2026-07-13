@@ -135,7 +135,7 @@ export function InputsPageContent() {
         <Button
           variant="outline"
           size="sm"
-          className="h-8 text-xs gap-1 text-amber-700 border-amber-300 hover:bg-amber-50"
+          className="h-8 text-xs gap-1 text-amber-700 border-amber-300 hover:bg-amber-50 dark:text-amber-300 dark:border-amber-500/30 dark:hover:bg-amber-500/10"
           onClick={() => setShowUnlockConfirm(true)}
         >
           <LockOpen className="h-3.5 w-3.5" />
@@ -197,7 +197,7 @@ export function InputsPageContent() {
               )}
 
               {isBuilding && (
-                <div className="border border-amber-200 bg-amber-50 rounded-lg p-4 text-sm text-amber-700">
+                <div className="border border-amber-200 bg-amber-50 rounded-lg p-4 text-sm text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
                   Building snapshots — this may take a moment...
                 </div>
               )}

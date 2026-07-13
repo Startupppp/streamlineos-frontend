@@ -86,7 +86,7 @@ function PolicyCard({
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-50"
+              className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
               onClick={handleDeleteClick}
             >
               <Trash2 className="h-3.5 w-3.5" />
@@ -111,12 +111,12 @@ function PolicyCard({
 
       <div className="flex flex-wrap gap-1.5 mt-1">
         {policy.encashable && (
-          <Badge variant="secondary" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200">
+          <Badge variant="secondary" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
             Encashable
           </Badge>
         )}
         {policy.probationRestricted && (
-          <Badge variant="secondary" className="text-xs bg-amber-50 text-amber-700 border-amber-200">
+          <Badge variant="secondary" className="text-xs bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
             Probation Restricted
           </Badge>
         )}
