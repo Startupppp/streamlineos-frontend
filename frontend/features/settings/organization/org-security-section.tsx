@@ -65,7 +65,7 @@ export function OrgSecuritySection({
       <Card className="rounded-lg border border-border">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-semibold flex items-center gap-2">
-            <Shield className="h-4 w-4 text-blue-600" />
+            <Shield className="h-4 w-4 text-primary" />
             Security Policies
           </CardTitle>
           <CardDescription>
@@ -197,7 +197,7 @@ export function OrgSecuritySection({
       <Card className="rounded-lg border border-border">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-semibold flex items-center gap-2">
-            <Network className="h-4 w-4 text-blue-600" />
+            <Network className="h-4 w-4 text-primary" />
             IP Allowlist
           </CardTitle>
           <CardDescription>

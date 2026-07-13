@@ -210,7 +210,7 @@ export default function LeadSourceReportPage() {
                               </div>
                               <div className="text-center hidden sm:block">
                                 <div className="font-semibold tabular-nums text-[11px]">
-                                  <IndianRupee className="h-3 w-3 inline mr-0.5 text-blue-600 dark:text-blue-400" />
+                                  <IndianRupee className="h-3 w-3 inline mr-0.5 text-primary" />
                                   {formatCurrency(s.totalValue)}
                                 </div>
                                 <div className="text-[10px] text-muted-foreground">value</div>

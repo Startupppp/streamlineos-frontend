@@ -329,7 +329,7 @@ export default function DiversityReportPage() {
                     count: s.count,
                   }))}
                   total={data.total}
-                  colorFn={() => "bg-blue-500"}
+                  colorFn={() => "bg-primary"}
                 />
               </CardContent>
             </Card>

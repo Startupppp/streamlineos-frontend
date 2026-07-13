@@ -96,7 +96,7 @@ export function HandbookVersionCard({
                 href={v.documentUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-0.5 text-blue-600 dark:text-blue-400 hover:underline transition-colors duration-200"
+                className="inline-flex items-center gap-0.5 text-primary hover:text-primary/80 hover:underline transition-colors duration-200"
                 onClick={handleDocLinkClick}
               >
                 <ExternalLink className="h-2.5 w-2.5" />

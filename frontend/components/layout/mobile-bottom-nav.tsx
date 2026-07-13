@@ -70,7 +70,7 @@ export function MobileBottomNav({ onOpenMobileMenu }: MobileBottomNavProps) {
           className={cn(
             "flex flex-col items-center gap-0.5 min-w-[44px] py-1 transition-colors",
             isNotificationsActive
-              ? "text-blue-600"
+              ? "text-primary"
               : "text-muted-foreground hover:text-foreground",
           )}
           aria-current={isNotificationsActive ? "page" : undefined}
@@ -78,7 +78,7 @@ export function MobileBottomNav({ onOpenMobileMenu }: MobileBottomNavProps) {
           <span className="relative">
             <BellIcon size={20} />
             {unreadNotifCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-blue-500 ring-1 ring-background" />
+              <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-primary ring-1 ring-background" />
             )}
           </span>
           <span className="text-[10px] leading-none">Alerts</span>

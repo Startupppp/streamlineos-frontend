@@ -90,7 +90,7 @@ export const BranchNodeCard = memo(function BranchNodeCard({ node, dragHandlePro
   const { hoverHandlers: removeHoverHandlers } = useAnimatedIcon();
 
   return (
-    <motion.div layout className="rounded-xl border-2 border-blue-200 dark:border-blue-500/30 bg-blue-50/40 dark:bg-blue-500/10 p-3 shadow-sm">
+    <motion.div layout className="rounded-xl border-2 border-primary/20 bg-primary/5 p-3 shadow-sm">
       <div className="flex items-start gap-2">
         <div {...(dragHandleProps ?? {})} className="mt-1 cursor-grab active:cursor-grabbing text-muted-foreground shrink-0">
           <GripVertical className="h-4 w-4" />
@@ -98,10 +98,10 @@ export const BranchNodeCard = memo(function BranchNodeCard({ node, dragHandlePro
         <div className="flex-1 space-y-2 min-w-0">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <div className="h-5 w-5 rounded bg-blue-100 dark:bg-blue-500/10 flex items-center justify-center text-[10px] font-bold text-blue-700 dark:text-blue-300">
+              <div className="h-5 w-5 rounded bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary">
                 <GitBranch className="h-3 w-3" />
               </div>
-              <span className="text-xs font-semibold text-blue-700 dark:text-blue-300">Branch</span>
+              <span className="text-xs font-semibold text-primary">Branch</span>
             </div>
             <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive shrink-0" onClick={handleRemoveNode} {...removeHoverHandlers}>
               <X className="h-3 w-3" />
@@ -124,7 +124,7 @@ export const BranchNodeCard = memo(function BranchNodeCard({ node, dragHandlePro
           <Button
             variant="outline"
             size="sm"
-            className="h-6 text-[10px] border-dashed border-blue-300 text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-500/10"
+            className="h-6 text-[10px] border-dashed border-primary/30 text-primary hover:bg-primary/5"
             onClick={handleAddBranch}
             {...addHoverHandlers}
           >

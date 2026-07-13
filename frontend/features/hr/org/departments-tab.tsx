@@ -121,8 +121,8 @@ export function DepartmentsTab({ canManage }: Props) {
                   key={dept.id}
                   className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/40 transition-colors"
                 >
-                  <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center shrink-0">
-                    <Building2 className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                  <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <Building2 className="h-3.5 w-3.5 text-primary" />
                   </div>
                   <p className="text-sm font-medium flex-1 truncate">
                     {dept.name}

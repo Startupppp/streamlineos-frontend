@@ -359,7 +359,7 @@ export default function JobPostingsPage() {
                         </span>
                       )}
                       {job.isInternal && (
-                        <span className="inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+                        <span className="inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full bg-primary/10 text-foreground">
                           Internal
                         </span>
                       )}

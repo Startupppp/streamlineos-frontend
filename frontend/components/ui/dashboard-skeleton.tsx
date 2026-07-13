@@ -8,7 +8,7 @@ export function DashboardStatsSkeleton() {
           key={i}
           className="relative rounded-xl border border-border bg-card p-3.5 overflow-hidden"
         >
-          <div className="absolute top-0 left-0 right-0 h-[2px] bg-blue-500/30" />
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-primary/30" />
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1 space-y-1.5">
               <Skeleton className="h-3 w-20" />

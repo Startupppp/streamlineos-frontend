@@ -135,7 +135,7 @@ export function AIEmailDialog({
       <DialogTrigger asChild>
         {trigger ?? (
           <Button variant="outline" size="sm">
-            <Sparkles className="h-4 w-4 mr-2 text-blue-600" />
+            <Sparkles className="h-4 w-4 mr-2 text-primary" />
             AI Email
           </Button>
         )}
@@ -143,7 +143,7 @@ export function AIEmailDialog({
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-blue-600" />
+            <Sparkles className="h-5 w-5 text-primary" />
             Generate Follow-up Email
           </DialogTitle>
         </DialogHeader>

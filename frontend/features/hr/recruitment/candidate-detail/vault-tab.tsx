@@ -65,9 +65,9 @@ export function VaultTab(props: VaultTabProps) {
       <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
         <CardHeader className="p-4 pb-3 flex flex-row items-center justify-between border-b border-border">
           <div className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center">
+            <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center">
               <FolderLock
-                className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400"
+                className="h-3.5 w-3.5 text-primary"
                 aria-hidden="true"
               />
             </div>
@@ -102,7 +102,7 @@ export function VaultTab(props: VaultTabProps) {
             {Object.entries(categoryCounts).map(([type, count]) => (
               <span
                 key={type}
-                className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800"
+                className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-primary/10 text-foreground border-primary/20"
               >
                 <FileText className="h-2.5 w-2.5" aria-hidden="true" />
                 {DOCUMENT_TYPE_LABELS[type] ?? type} · {count}

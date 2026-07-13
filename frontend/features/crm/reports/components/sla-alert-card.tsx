@@ -41,7 +41,7 @@ export function SlaAlertCard({ slaData }: SlaAlertCardProps) {
                       lead.priority === "WARM" &&
                         "border-amber-500/50 text-amber-500",
                       lead.priority === "COLD" &&
-                        "border-blue-400/50 text-blue-400",
+                        "border-primary/50 text-primary",
                     )}
                   >
                     {lead.priority}

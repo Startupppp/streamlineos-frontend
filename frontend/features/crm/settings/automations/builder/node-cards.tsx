@@ -26,11 +26,11 @@ export const TriggerCard = memo(function TriggerCard({ value, events, onChange }
   return (
     <motion.div
       layout
-      className="rounded-xl border-2 border-blue-200 dark:border-blue-500/30 bg-blue-50/60 dark:bg-blue-500/10 p-4 shadow-sm"
+      className="rounded-xl border-2 border-primary/20 bg-primary/5 p-4 shadow-sm"
     >
       <div className="flex items-center gap-2 mb-3">
-        <div className="h-6 w-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-[10px] font-bold">T</div>
-        <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">Trigger</span>
+        <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-[10px] font-bold">T</div>
+        <span className="text-sm font-semibold text-primary">Trigger</span>
       </div>
       <div className="space-y-1.5">
         <Label className="text-xs text-muted-foreground">Event</Label>

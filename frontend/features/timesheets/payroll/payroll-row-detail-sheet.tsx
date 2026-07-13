@@ -58,9 +58,9 @@ export function PayrollRowDetailSheet({
           {row && (
             <>
               <div className="grid grid-cols-3 gap-2">
-                <div className="rounded-lg border border-border bg-blue-50 dark:bg-blue-500/10 p-3 text-center">
+                <div className="rounded-lg border border-border bg-primary/5 p-3 text-center">
                   <p className="text-[11px] text-muted-foreground">Payable</p>
-                  <p className="text-lg font-semibold tabular-nums text-blue-700 dark:text-blue-300">{row.totalPayableHours.toFixed(1)}</p>
+                  <p className="text-lg font-semibold tabular-nums text-foreground">{row.totalPayableHours.toFixed(1)}</p>
                   <p className="text-[10px] text-muted-foreground">hours</p>
                 </div>
                 <div className="rounded-lg border border-border bg-amber-50 dark:bg-amber-500/10 p-3 text-center">

@@ -62,7 +62,7 @@ export function AIScoreCandidateButton({ candidateId, jobId, compact }: AIScoreC
             {scoreMutation.isPending ? (
               <Loader2 className="h-3 w-3 animate-spin" />
             ) : (
-              <Sparkles className="h-3 w-3 text-blue-600" />
+              <Sparkles className="h-3 w-3 text-primary" />
             )}
             {result ? <span className={cn("font-bold", fitColor(result.fitLevel))}>{result.score}</span> : "Score"}
           </Button>
@@ -82,7 +82,7 @@ export function AIScoreCandidateButton({ candidateId, jobId, compact }: AIScoreC
         {scoreMutation.isPending ? (
           <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Scoring...</>
         ) : (
-          <><Sparkles className="h-4 w-4 mr-2 text-blue-600" />AI Score Candidate</>
+          <><Sparkles className="h-4 w-4 mr-2 text-primary" />AI Score Candidate</>
         )}
       </Button>
       {result && <ScoreDetails result={result} fitColor={fitColor} fitBg={fitBg} />}

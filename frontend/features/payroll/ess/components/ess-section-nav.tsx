@@ -59,7 +59,7 @@ export function EssSectionNav({ items }: EssSectionNavProps) {
             className={cn(
               "shrink-0 px-3 py-1 text-xs font-medium rounded-md transition-colors whitespace-nowrap",
               activeId === item.id
-                ? "bg-foreground text-background"
+                ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted",
             )}
           >

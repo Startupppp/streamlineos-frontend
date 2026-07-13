@@ -23,7 +23,7 @@ interface RunHistoryDrawerProps {
 
 const statusConfig: Record<AutomationRunStatus, { label: string; icon: React.ComponentType<{ className?: string }>; color: string }> = {
   queued: { label: "Queued", icon: Clock, color: "text-muted-foreground" },
-  running: { label: "Running", icon: Clock, color: "text-blue-500" },
+  running: { label: "Running", icon: Clock, color: "text-primary" },
   success: { label: "Success", icon: CheckCircle, color: "text-emerald-500" },
   failed: { label: "Failed", icon: XCircle, color: "text-red-500" },
   skipped: { label: "Skipped", icon: SkipForward, color: "text-amber-500" },
@@ -85,7 +85,7 @@ export const RunHistoryDrawer = memo(function RunHistoryDrawer({ ruleId, open, o
                           <span className="text-[10px] text-muted-foreground">{step.type}</span>
                           {step.message && <span className="text-[10px] text-muted-foreground">— {step.message}</span>}
                           {step.branchTaken && (
-                            <span className="text-[10px] text-blue-500 font-medium">→ {step.branchTaken}</span>
+                            <span className="text-[10px] text-primary font-medium">→ {step.branchTaken}</span>
                           )}
                         </div>
                       ))}

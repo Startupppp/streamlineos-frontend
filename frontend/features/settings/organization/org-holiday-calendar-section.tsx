@@ -94,7 +94,7 @@ export function OrgHolidayCalendarSection({ canEdit }: OrgHolidayCalendarSection
       <CardHeader className="pb-2 flex flex-row items-start justify-between">
         <div>
           <CardTitle className="text-sm font-semibold flex items-center gap-2">
-            <CalendarDays className="h-4 w-4 text-blue-600" />
+            <CalendarDays className="h-4 w-4 text-primary" />
             Holiday Calendar
           </CardTitle>
           <CardDescription>Public holidays and non-working days for your organization.</CardDescription>

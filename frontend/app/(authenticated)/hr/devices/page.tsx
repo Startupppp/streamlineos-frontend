@@ -31,7 +31,7 @@ export default function DevicesPage() {
       subtitle="Manage biometric, RFID, and mobile time clock devices"
       actions={
         canManage ? (
-          <Button onClick={() => setAddOpen(true)} className="bg-blue-700 hover:bg-blue-800 text-white">
+          <Button onClick={() => setAddOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
             <Plus className="h-4 w-4 mr-2" />
             Add Device
           </Button>

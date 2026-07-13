@@ -271,8 +271,8 @@ export function KanbanCard({
               "cursor-pointer transition-all border-l-[3px]",
               priorityBorder || "border-l-transparent",
               dragSnapshot.isDragging
-                ? "shadow-xl ring-2 ring-blue-500/30 rotate-[2deg] scale-105"
-                : "hover:shadow-md hover:border-blue-500/30",
+                ? "shadow-xl ring-2 ring-primary/30 rotate-[2deg] scale-105"
+                : "hover:shadow-md hover:border-primary/30",
             )}
             onClick={handleOpen}
           >
@@ -307,7 +307,7 @@ export function KanbanCard({
                     ) : (
                       <button
                         onClick={handleSelfAssign}
-                        className="h-6 w-6 shrink-0 rounded-full border border-dashed border-muted-foreground/30 flex items-center justify-center hover:border-blue-500/50 transition-colors"
+                        className="h-6 w-6 shrink-0 rounded-full border border-dashed border-muted-foreground/30 flex items-center justify-center hover:border-primary/50 transition-colors"
                         aria-label="Self-assign this lead"
                       >
                         <Plus className="h-3 w-3 text-muted-foreground" />
@@ -344,7 +344,7 @@ export function KanbanCard({
                       </span>
                     )}
                     {lead.potentialValue && Number(lead.potentialValue) > 0 && (
-                      <span className="text-[10px] text-blue-600 font-semibold">
+                      <span className="text-[10px] text-primary font-semibold">
                         {formatINRCompact(lead.potentialValue)}
                       </span>
                     )}
@@ -388,11 +388,11 @@ export function KanbanCard({
                           </button>
                           <button
                             onClick={handleMoveNext}
-                            className="h-5 w-5 rounded flex items-center justify-center hover:bg-blue-500/20 transition-colors"
+                            className="h-5 w-5 rounded flex items-center justify-center hover:bg-primary/20 transition-colors"
                             aria-label="Move to next stage"
                             {...nextIconAnim.hoverHandlers}
                           >
-                            <MoveRightIcon ref={nextIconAnim.iconRef} className="h-3 w-3 text-blue-600" size={12} />
+                            <MoveRightIcon ref={nextIconAnim.iconRef} className="h-3 w-3 text-primary" size={12} />
                           </button>
                         </>
                       )}

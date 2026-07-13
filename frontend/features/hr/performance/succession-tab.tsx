@@ -95,7 +95,7 @@ export function SuccessionTab() {
         <p className="text-sm text-muted-foreground">
           {plans.length} succession plan{plans.length !== 1 ? "s" : ""}
         </p>
-        <Button size="sm" className="bg-blue-700 hover:bg-blue-800 text-white h-8" onClick={() => setOpen(true)}>
+        <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground h-8" onClick={() => setOpen(true)}>
           Add Plan
         </Button>
       </div>
@@ -200,7 +200,7 @@ export function SuccessionTab() {
               Cancel
             </Button>
             <LoadingButton
-              className="bg-blue-700 hover:bg-blue-800 text-white"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
               isPending={create.isPending}
               onClick={handleCreate}
             >

@@ -161,7 +161,7 @@ export function TimerPanel({ weekStart, weekEnd }: TimerPanelProps) {
     const isRunning = timer.status === "RUNNING";
     return (
       <div className="space-y-4">
-        <Card className="border-blue-500/30 bg-blue-50/50 dark:bg-blue-500/10">
+        <Card className="border-primary/30 bg-primary/5 dark:bg-primary/10">
           <CardContent className="p-4 space-y-3">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">

@@ -52,7 +52,7 @@ const components: Components = {
   a: ({ href, children }) => (
     <a
       href={href}
-      className="text-blue-500 hover:underline"
+      className="text-primary hover:text-primary/80 hover:underline"
       target="_blank"
       rel="noopener noreferrer"
     >

@@ -44,7 +44,7 @@ export function PublicFieldOverlay({ token, field, scale, isNextRequired }: Publ
   }
 
   const baseClass = `absolute flex items-center justify-center rounded border-2 text-xs font-medium transition-colors ${
-    isFilled ? "border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : isNextRequired ? "border-sky-500 bg-sky-500/10 animate-pulse" : "border-dashed border-muted-foreground/40 bg-muted/40 text-muted-foreground"
+    isFilled ? "border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : isNextRequired ? "border-primary bg-primary/10 animate-pulse" : "border-dashed border-muted-foreground/40 bg-muted/40 text-muted-foreground"
   }`;
 
   if (field.fieldType === "date_signed") {
@@ -130,7 +130,7 @@ export function PublicFieldOverlay({ token, field, scale, isNextRequired }: Publ
     <input
       style={style}
       className={`absolute rounded border-2 px-2 text-xs outline-none ${
-        isFilled ? "border-emerald-500 bg-emerald-500/10" : "border-sky-400 bg-white/90 dark:bg-black/40"
+        isFilled ? "border-emerald-500 bg-emerald-500/10" : "border-primary/50 bg-white/90 dark:bg-black/40"
       }`}
       value={localValue}
       placeholder={field.label ?? undefined}

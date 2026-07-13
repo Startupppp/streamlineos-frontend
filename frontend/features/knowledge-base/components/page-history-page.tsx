@@ -200,7 +200,7 @@ export default function PageHistoryPage({ pageId }: PageHistoryPageProps) {
                       onClick={handleVersionSelect}
                       className={`w-full text-left px-3 py-2.5 rounded-lg transition-colors mb-1 ${
                         selectedVersionNumber === v.versionNumber
-                          ? "bg-blue-50 border border-blue-200 dark:bg-blue-500/10 dark:border-blue-500/30"
+                          ? "bg-primary/10 border border-primary/20"
                           : "hover:bg-muted border border-transparent"
                       }`}
                     >
@@ -217,7 +217,7 @@ export default function PageHistoryPage({ pageId }: PageHistoryPageProps) {
                           )}
                         </div>
                         {selectedVersionNumber === v.versionNumber && (
-                          <KbArrowRightIcon className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+                          <KbArrowRightIcon className="h-3.5 w-3.5 text-primary shrink-0" />
                         )}
                       </div>
                     </button>

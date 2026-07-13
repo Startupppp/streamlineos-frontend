@@ -99,7 +99,7 @@ export const KanbanColumn = memo(function KanbanColumn({
             {...provided.droppableProps}
             className={cn(
               "space-y-2 min-h-[200px] p-2 rounded-lg border border-border/50 transition-colors",
-              snapshot.isDraggingOver ? "bg-muted/60 border-blue-500/40" : "bg-muted/30",
+              snapshot.isDraggingOver ? "bg-muted/60 border-primary/40" : "bg-muted/30",
             )}
           >
             {deals.map((deal, index) => (

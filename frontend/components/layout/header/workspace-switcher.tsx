@@ -76,7 +76,7 @@ function WorkspaceSwitcherPanel({
           </p>
         </div>
         <DropdownMenuItem className="gap-2 text-foreground data-[disabled]:opacity-100" disabled>
-          <Check className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+          <Check className="h-3.5 w-3.5 text-primary shrink-0" />
           <span className="font-medium truncate text-sm text-foreground">{activeOrg?.name}</span>
         </DropdownMenuItem>
         {otherOrgs.length > 0 && (

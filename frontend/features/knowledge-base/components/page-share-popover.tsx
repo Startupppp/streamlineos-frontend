@@ -98,7 +98,7 @@ export default function PageSharePopover({ page }: PageSharePopoverProps) {
                 <span className="block text-xs text-muted-foreground">{description}</span>
               </span>
               {currentVisibility === value && (
-                <KbCheckIcon className="h-4 w-4 shrink-0 text-blue-600" />
+                <KbCheckIcon className="h-4 w-4 shrink-0 text-primary" />
               )}
             </button>
           ))}

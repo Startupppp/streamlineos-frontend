@@ -37,8 +37,8 @@ export function AuthScreen({ token, authMethod, recipientName }: { token: string
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-6 p-6 bg-background">
-      <div className="rounded-full bg-sky-500/10 p-4">
-        <ShieldCheck className="size-8 text-sky-600 dark:text-sky-400" />
+      <div className="rounded-full bg-primary/10 p-4">
+        <ShieldCheck className="size-8 text-primary" />
       </div>
       <div className="w-full max-w-sm space-y-4 text-center">
         <div>

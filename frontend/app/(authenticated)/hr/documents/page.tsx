@@ -504,8 +504,8 @@ function RichDocumentsSection() {
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center">
-              <FileText className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+            <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center">
+              <FileText className="h-3.5 w-3.5 text-primary" />
             </div>
             <h3 className="text-sm font-semibold text-foreground">Created Documents</h3>
           </div>

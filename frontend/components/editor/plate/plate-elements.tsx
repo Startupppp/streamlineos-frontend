@@ -285,7 +285,7 @@ export function MentionElement({ element, children, ...props }: PlateElementProp
       {...props}
       element={element}
       as="span"
-      className="inline-flex items-center rounded bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 px-1.5 py-0.5 text-xs font-medium text-blue-700 dark:text-blue-300 select-none mx-0.5"
+      className="inline-flex items-center rounded bg-primary/10 border border-primary/30 px-1.5 py-0.5 text-xs font-medium text-foreground select-none mx-0.5"
     >
       @{value}
       {children}

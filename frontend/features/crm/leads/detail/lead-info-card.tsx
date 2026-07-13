@@ -132,12 +132,12 @@ function CopyChip({
   return href ? (
     <a
       href={href}
-      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30 border border-border/50 hover:border-blue-500/40 hover:bg-blue-500/5 transition-all group"
+      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30 border border-border/50 hover:border-primary/40 hover:bg-primary/5 transition-all group"
     >
       {content}
     </a>
   ) : (
-    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30 border border-border/50 hover:border-blue-500/40 hover:bg-blue-500/5 transition-all">
+    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30 border border-border/50 hover:border-primary/40 hover:bg-primary/5 transition-all">
       {content}
     </div>
   );
@@ -406,7 +406,7 @@ export function LeadInfoCard({
                 <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium">
                   Investment Interest
                 </p>
-                <p className="text-2xl font-bold text-blue-600 tabular-nums">
+                <p className="text-2xl font-bold text-primary tabular-nums">
                   ₹{Number(lead.investmentInterest).toLocaleString("en-IN")}
                 </p>
               </div>

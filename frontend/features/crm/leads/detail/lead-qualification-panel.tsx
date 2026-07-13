@@ -141,9 +141,9 @@ export function LeadQualificationPanel({ leadId, qualificationJson }: LeadQualif
                   ) : (
                     <Circle className="h-4 w-4 text-muted-foreground/40 shrink-0" />
                   )}
-                  <criterion.icon className={`h-4 w-4 shrink-0 ${checked ? "text-blue-500 dark:text-blue-400" : "text-muted-foreground"}`} />
+                  <criterion.icon className={`h-4 w-4 shrink-0 ${checked ? "text-primary" : "text-muted-foreground"}`} />
                   <div className="min-w-0">
-                    <p className={`text-xs font-semibold ${checked ? "text-blue-700 dark:text-blue-300" : "text-foreground"}`}>
+                    <p className={`text-xs font-semibold ${checked ? "text-foreground" : "text-foreground"}`}>
                       {criterion.label}
                     </p>
                     <p className="text-[10px] text-muted-foreground">{criterion.description}</p>

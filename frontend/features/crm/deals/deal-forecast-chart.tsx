@@ -130,7 +130,7 @@ export function DealForecastChart({ deals }: DealForecastChartProps) {
                 </div>
                 <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
                   <div
-                    className="h-full w-full rounded-full bg-blue-600 origin-left"
+                    className="h-full w-full rounded-full bg-primary origin-left"
                     style={{
                       transform: `scaleX(${row.weightedValue / maxWeighted})`,
                       transition: shouldReduceMotion

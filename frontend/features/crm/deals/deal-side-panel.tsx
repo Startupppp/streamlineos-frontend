@@ -96,7 +96,7 @@ export function DealSidePanel({ dealId, onClose }: DealSidePanelProps) {
                   </SheetTitle>
                   <div className="flex items-center gap-2">
                     {stage && <CrmStageBadge stage={stage} size="card" />}
-                    <span className="text-sm font-semibold text-blue-600">
+                    <span className="text-sm font-semibold text-primary">
                       {formatINRCompact(Number(deal.value ?? 0))}
                     </span>
                   </div>

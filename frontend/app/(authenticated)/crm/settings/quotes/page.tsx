@@ -189,7 +189,7 @@ export default function QuoteSettingsPage() {
       header: "Default",
       cell: (t) =>
         t.isDefault ? (
-          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30">
+          <Badge variant="outline" className="bg-primary/10 text-foreground border-primary/30">
             Default
           </Badge>
         ) : (

@@ -207,7 +207,7 @@ function CalendarView({
               <div
                 key={day.toISOString()}
                 className={`relative flex flex-col items-center justify-start rounded-md p-1.5 min-h-[40px] text-sm ${
-                  isHoliday ? "bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30" : "hover:bg-muted"
+                  isHoliday ? "bg-primary/5 border border-primary/20" : "hover:bg-muted"
                 }`}
                 title={isHoliday ? dayHolidays.map((h) => h.name).join(", ") : undefined}
               >
@@ -217,7 +217,7 @@ function CalendarView({
                 {isHoliday && (
                   <div className="flex gap-0.5 mt-0.5">
                     {dayHolidays.slice(0, 2).map((_, idx) => (
-                      <span key={idx} className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+                      <span key={idx} className="w-1.5 h-1.5 rounded-full bg-primary" />
                     ))}
                   </div>
                 )}

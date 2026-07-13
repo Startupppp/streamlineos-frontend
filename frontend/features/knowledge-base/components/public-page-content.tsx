@@ -54,7 +54,7 @@ function renderTipTapText(node: TipTapNode): React.ReactNode {
     else if (mark.type === "strike") el = <s>{el}</s>;
     else if (mark.type === "underline") el = <u>{el}</u>;
     else if (mark.type === "link")
-      el = <span className="text-blue-600 underline">{el}</span>;
+      el = <span className="text-primary underline">{el}</span>;
   }
   return el;
 }
@@ -273,7 +273,7 @@ function renderSlateNode(node: unknown, idx: number): React.ReactNode {
     case "mention":
     case "page_link":
       return (
-        <span key={idx} className="text-blue-600 font-medium">
+        <span key={idx} className="text-primary font-medium">
           {children}
         </span>
       );

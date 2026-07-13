@@ -190,7 +190,7 @@ export function OrgLocalizationSection({ org, canEdit }: OrgLocalizationSectionP
       <CardHeader className="pb-2 flex flex-row items-start justify-between">
         <div>
           <CardTitle className="text-sm font-semibold flex items-center gap-2">
-            <Globe className="h-4 w-4 text-blue-600" />
+            <Globe className="h-4 w-4 text-primary" />
             Localization
           </CardTitle>
           <CardDescription>Timezone, currency, language, and date/time format defaults.</CardDescription>

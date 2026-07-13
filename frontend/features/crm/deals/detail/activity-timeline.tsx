@@ -38,9 +38,9 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
             <div key={activity.id} className="flex gap-3">
               <div className={cn(
                 "h-8 w-8 rounded-full flex items-center justify-center shrink-0",
-                "bg-blue-500/10",
+                "bg-primary/10",
               )}>
-                <Icon className="h-3.5 w-3.5 text-blue-600" />
+                <Icon className="h-3.5 w-3.5 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium">

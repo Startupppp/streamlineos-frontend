@@ -303,7 +303,7 @@ export default function FinanceApprovalsPage() {
               className={cn(
                 "px-2.5 py-1 rounded-md text-xs font-medium transition-colors",
                 recordTypeFilter === rt
-                  ? "bg-foreground text-background"
+                  ? "bg-primary text-primary-foreground"
                   : "bg-muted text-muted-foreground hover:bg-muted/80",
               )}
             >

@@ -280,10 +280,10 @@ export function WeekGrid({ entries, isLoading, days, weekStart, weekEnd }: WeekG
                             onBlur={handleCellBlur}
                             onKeyDown={handleCellKeyDown}
                             className={cn(
-                              "w-14 h-7 rounded border text-center tabular-nums text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors",
+                              "w-14 h-7 rounded border text-center tabular-nums text-xs focus:outline-none focus:ring-1 focus:ring-primary transition-colors",
                               locked
                                 ? "bg-muted/50 border-border/30 text-muted-foreground cursor-not-allowed"
-                                : "bg-background border-border hover:border-blue-500/50 focus:border-blue-500",
+                                : "bg-background border-border hover:border-primary/50 focus:border-primary",
                               !displayValue && "border-dashed",
                             )}
                           />
@@ -316,7 +316,7 @@ export function WeekGrid({ entries, isLoading, days, weekStart, weekEnd }: WeekG
       </div>
 
       {addingRow ? (
-        <div className="flex items-end gap-2 p-3 rounded-lg border border-dashed border-blue-500/40 bg-blue-50/50 dark:bg-blue-500/10">
+        <div className="flex items-end gap-2 p-3 rounded-lg border border-dashed border-primary/40 bg-primary/5 dark:bg-primary/10">
           <div className="flex-1 min-w-0">
             <p className="text-[11px] text-muted-foreground mb-1.5">Select project &amp; ticket for new row</p>
             <ProjectTicketSelect

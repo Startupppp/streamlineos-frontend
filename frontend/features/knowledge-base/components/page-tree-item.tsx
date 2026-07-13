@@ -240,7 +240,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
             className={cn(
               "absolute left-0 top-1/2 -translate-y-1/2 h-4 w-[3px] rounded-r-full transition-opacity",
               isActive
-                ? "bg-blue-600 opacity-100 dark:bg-blue-500"
+                ? "bg-primary opacity-100"
                 : "bg-muted-foreground/50 opacity-0 group-hover:opacity-100",
             )}
           />

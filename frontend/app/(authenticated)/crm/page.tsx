@@ -245,7 +245,7 @@ export default function CrmHubPage() {
               </div>
               <div>
                 <span className="text-muted-foreground">Pipeline</span>{" "}
-                <span className="font-bold text-blue-600 ml-1">
+                <span className="font-bold text-primary ml-1">
                   {formatINRCompact(leadStats.totalPotentialValue)}
                 </span>
               </div>
@@ -279,7 +279,7 @@ export default function CrmHubPage() {
         >
           {NAV_CARDS.map((card) => (
             <Link key={card.href} href={card.href}>
-              <Card className="shadow-sm hover:shadow-md transition-all hover:border-blue-500/40 cursor-pointer group h-full">
+              <Card className="shadow-sm hover:shadow-md transition-all hover:border-primary/40 cursor-pointer group h-full">
                 <CardContent className="p-3 flex items-center gap-2.5">
                   <div className="h-8 w-8 rounded-md flex items-center justify-center shrink-0 bg-muted">
                     <card.icon className="h-4 w-4 text-muted-foreground" />
@@ -287,7 +287,7 @@ export default function CrmHubPage() {
                   <div className="min-w-0">
                     <p className="text-xs font-semibold flex items-center gap-1">
                       {card.title}
-                      <ArrowRight className="h-3 w-3 opacity-0 -translate-x-1 transition-all group-hover:opacity-100 group-hover:translate-x-0 text-blue-600" />
+                      <ArrowRight className="h-3 w-3 opacity-0 -translate-x-1 transition-all group-hover:opacity-100 group-hover:translate-x-0 text-primary" />
                     </p>
                     <CardDescription className="text-[10px] truncate">
                       {card.description}

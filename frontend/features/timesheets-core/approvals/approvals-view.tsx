@@ -153,7 +153,7 @@ export function ApprovalsView() {
             className={cn(
               "shrink-0 px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
               activeTab === tab
-                ? "bg-foreground text-background"
+                ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted",
             )}
           >

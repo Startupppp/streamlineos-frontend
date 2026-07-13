@@ -113,7 +113,7 @@ export function TraceabilityTimeline({
 
   return (
     <div className="space-y-0 pl-1">
-      <TimelineSection dotClass="bg-blue-500" label="Origin">
+      <TimelineSection dotClass="bg-primary" label="Origin">
         {result.origin ? (
           <div className="text-[11px]">
             <span className="font-medium text-foreground">
@@ -179,7 +179,7 @@ export function TraceabilityTimeline({
       )}
 
       {result.events.length > 0 && (
-        <TimelineSection dotClass="bg-blue-400" label="Other Events">
+        <TimelineSection dotClass="bg-primary/60" label="Other Events">
           <div className="space-y-0.5">
             {result.events.map((e) => (
               <EventRow key={e.id} event={e} />

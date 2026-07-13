@@ -89,7 +89,7 @@ export function AdminExpenseItem({
           className={cn(
             "relative w-[96px] h-[76px] rounded-xl bg-muted/60 flex items-center justify-center overflow-hidden border border-border",
             expense.receiptUrl &&
-              "cursor-pointer hover:ring-2 hover:ring-blue-500/40 transition-all duration-200",
+              "cursor-pointer hover:ring-2 hover:ring-primary/40 transition-all duration-200",
           )}
           onClick={handleViewReceiptArea}
         >

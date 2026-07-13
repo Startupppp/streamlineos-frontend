@@ -403,7 +403,7 @@ export default function ScoringRulesPage() {
             <Card className="bg-card rounded-lg border border-border shadow-sm">
               <CardHeader className="px-4 py-3">
                 <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <Zap className="h-4 w-4 text-blue-600" />
+                  <Zap className="h-4 w-4 text-primary" />
                   Live Preview — Sample Lead
                 </CardTitle>
               </CardHeader>

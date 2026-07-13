@@ -39,7 +39,7 @@ export default function EquityPage() {
       subtitle="Manage equity grants, vesting schedules, and exercises"
       actions={
         canManage ? (
-          <Button onClick={() => setGrantSheetOpen(true)} className="bg-blue-700 hover:bg-blue-800 text-white">
+          <Button onClick={() => setGrantSheetOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
             <Plus className="h-4 w-4 mr-2" />
             New Grant
           </Button>
@@ -111,7 +111,7 @@ export default function EquityPage() {
                 </div>
 
                 {canManage && selectedGrant.status === "active" && (
-                  <Button onClick={() => setExerciseOpen(true)} variant="outline" size="sm" className="w-full border-blue-200 dark:border-blue-500/30 text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-500/10">
+                  <Button onClick={() => setExerciseOpen(true)} variant="outline" size="sm" className="w-full border-primary/30 text-primary hover:bg-primary/5">
                     Record Exercise
                   </Button>
                 )}

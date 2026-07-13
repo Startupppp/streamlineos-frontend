@@ -287,9 +287,9 @@ export function DealsCsvImportDialog({ onSuccess }: { onSuccess?: () => void }) 
               <div
                 className={`h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-colors ${
                   step === s
-                    ? "bg-blue-500 text-white"
+                    ? "bg-primary text-primary-foreground"
                     : i < ["upload", "mapping", "preview"].indexOf(step)
-                      ? "bg-blue-500/30 text-blue-600"
+                      ? "bg-primary/30 text-primary"
                       : "bg-muted text-muted-foreground"
                 }`}
               >

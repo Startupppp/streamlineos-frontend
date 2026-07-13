@@ -88,7 +88,7 @@ export function AIPredictDealButton({
             {predictMutation.isPending ? (
               <Loader2 className="h-3 w-3 animate-spin" />
             ) : (
-              <Sparkles className="h-3 w-3 text-blue-600" />
+              <Sparkles className="h-3 w-3 text-primary" />
             )}
             {result ? (
               <span
@@ -131,7 +131,7 @@ export function AIPredictDealButton({
           </>
         ) : (
           <>
-            <Sparkles className="h-4 w-4 mr-2 text-blue-600" />
+            <Sparkles className="h-4 w-4 mr-2 text-primary" />
             AI Predict Win Probability
           </>
         )}
@@ -236,7 +236,7 @@ function PredictDetails({
           </p>
           {result.recommendedActions.map((a, i) => (
             <div key={i} className="flex items-start gap-1.5 text-[11px]">
-              <Lightbulb className="h-3 w-3 text-blue-400 mt-0.5 shrink-0" />
+              <Lightbulb className="h-3 w-3 text-primary mt-0.5 shrink-0" />
               <span>{a}</span>
             </div>
           ))}

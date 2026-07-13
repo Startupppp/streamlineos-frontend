@@ -244,7 +244,7 @@ export default function CandidatesPage() {
                 className={cn(
                   "px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer",
                   !statusFilter
-                    ? "bg-foreground text-background shadow-sm"
+                    ? "bg-primary text-primary-foreground shadow-sm"
                     : "bg-muted text-muted-foreground hover:bg-muted/80",
                 )}
               >

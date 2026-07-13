@@ -279,7 +279,7 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
             ) : (
               <div className="pl-8 min-h-[92px]">
                 <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-3">
-                  <FileText className="h-8 w-8 text-blue-600 dark:text-blue-400 shrink-0" />
+                  <FileText className="h-8 w-8 text-primary shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{file.name}</p>
                     <p className="text-xs text-muted-foreground">{(file.size / 1024).toFixed(1)} KB</p>

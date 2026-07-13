@@ -184,8 +184,8 @@ function DirectReportsSection({ employeeId }: { employeeId: string }) {
       <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-3">
-            <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center">
-              <Users className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+            <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Users className="h-3.5 w-3.5 text-primary" />
             </div>
             <h3 className="text-sm font-semibold text-foreground">
               Direct Reports
@@ -206,8 +206,8 @@ function DirectReportsSection({ employeeId }: { employeeId: string }) {
     <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
       <CardContent className="p-4">
         <div className="flex items-center gap-2 mb-3">
-          <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center">
-            <Users className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+          <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center">
+            <Users className="h-3.5 w-3.5 text-primary" />
           </div>
           <h3 className="text-sm font-semibold text-foreground">
             Direct Reports
@@ -257,8 +257,8 @@ function ManagerScorecardSection({ employeeId }: { employeeId: string }) {
     <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
       <CardContent className="p-4">
         <div className="flex items-center gap-2 mb-4">
-          <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center">
-            <BarChart2 className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+          <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center">
+            <BarChart2 className="h-3.5 w-3.5 text-primary" />
           </div>
           <h3 className="text-sm font-semibold text-foreground">
             Manager Scorecard
@@ -268,7 +268,7 @@ function ManagerScorecardSection({ employeeId }: { employeeId: string }) {
           <StatBlock
             label="Team Size"
             value={scorecard.teamSize}
-            colorClass="text-blue-700 dark:text-blue-400"
+            colorClass="text-primary"
           />
           <StatBlock
             label="Avg Rating"
@@ -277,7 +277,7 @@ function ManagerScorecardSection({ employeeId }: { employeeId: string }) {
                 ? `${scorecard.avgPerformanceRating}/5`
                 : "N/A"
             }
-            colorClass="text-blue-700 dark:text-blue-400"
+            colorClass="text-primary"
           />
           <StatBlock
             label="Attendance"
@@ -543,7 +543,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                   <StatBlock
                     label="Leaves"
                     value={stats.leaves.total}
-                    colorClass="text-blue-700 dark:text-blue-400"
+                    colorClass="text-primary"
                   />
                   <StatBlock
                     label="Pending"
@@ -659,8 +659,8 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                 <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-2 mb-3">
-                      <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center">
-                        <Briefcase className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                      <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Briefcase className="h-3.5 w-3.5 text-primary" />
                       </div>
                       <h3 className="text-sm font-semibold text-foreground">
                         Projects
@@ -678,8 +678,8 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                 <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-2 mb-3">
-                      <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center">
-                        <FileCheck className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                      <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <FileCheck className="h-3.5 w-3.5 text-primary" />
                       </div>
                       <h3 className="text-sm font-semibold text-foreground">
                         Assigned Tickets

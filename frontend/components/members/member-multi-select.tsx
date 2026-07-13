@@ -65,7 +65,7 @@ function MemberRow({ member, selected, onToggle }: RowProps) {
       aria-pressed={selected}
       className={cn(
         "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors",
-        selected ? "bg-blue-500/10 ring-1 ring-blue-500/30" : "hover:bg-muted",
+        selected ? "bg-primary/10 ring-1 ring-primary/30" : "hover:bg-muted",
       )}
     >
       <Avatar className="h-7 w-7 shrink-0">
@@ -79,7 +79,7 @@ function MemberRow({ member, selected, onToggle }: RowProps) {
       <span
         className={cn(
           "flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2",
-          selected ? "border-blue-500 bg-blue-500" : "border-muted-foreground/30",
+          selected ? "border-primary bg-primary" : "border-muted-foreground/30",
         )}
       >
         {selected && <Check className="h-2.5 w-2.5 text-white" />}

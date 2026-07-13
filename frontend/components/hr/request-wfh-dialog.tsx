@@ -122,7 +122,7 @@ export function RequestWfhDialog({ trigger }: RequestWfhDialogProps = {}) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="flex items-center gap-2">
-                    <Home className="h-3.5 w-3.5 text-blue-500" />
+                    <Home className="h-3.5 w-3.5 text-muted-foreground" />
                     Date
                   </FormLabel>
                   <FormControl>

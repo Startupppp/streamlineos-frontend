@@ -120,7 +120,7 @@ export function OrgCustomDomainsSection({ canEdit }: OrgCustomDomainsSectionProp
       <CardHeader className="pb-2 flex flex-row items-start justify-between">
         <div>
           <CardTitle className="text-sm font-semibold flex items-center gap-2">
-            <Globe className="h-4 w-4 text-blue-600" />
+            <Globe className="h-4 w-4 text-primary" />
             Custom Domains
           </CardTitle>
           <CardDescription>Verify a custom domain for your organization portal.</CardDescription>

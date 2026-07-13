@@ -65,8 +65,8 @@ export function SignDashboard() {
         <motion.div variants={fadeUp} className="grid gap-4 md:grid-cols-3">
           <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setCreateOpen(true)}>
             <CardContent className="pt-6 flex items-center gap-3">
-              <div className="rounded-lg bg-sky-500/10 p-2.5">
-                <UploadCloud className="size-5 text-sky-600 dark:text-sky-400" />
+              <div className="rounded-lg bg-primary/10 p-2.5">
+                <UploadCloud className="size-5 text-primary" />
               </div>
               <div>
                 <p className="font-medium text-sm">Upload &amp; send</p>
@@ -77,8 +77,8 @@ export function SignDashboard() {
           <Link href="/sign/templates">
             <Card className="cursor-pointer hover:shadow-md transition-shadow">
               <CardContent className="pt-6 flex items-center gap-3">
-                <div className="rounded-lg bg-sky-500/10 p-2.5">
-                  <FileStack className="size-5 text-sky-600 dark:text-sky-400" />
+                <div className="rounded-lg bg-primary/10 p-2.5">
+                  <FileStack className="size-5 text-primary" />
                 </div>
                 <div>
                   <p className="font-medium text-sm">Browse templates</p>
@@ -90,8 +90,8 @@ export function SignDashboard() {
           <Link href="/sign/bulk-send">
             <Card className="cursor-pointer hover:shadow-md transition-shadow">
               <CardContent className="pt-6 flex items-center gap-3">
-                <div className="rounded-lg bg-sky-500/10 p-2.5">
-                  <Send className="size-5 text-sky-600 dark:text-sky-400" />
+                <div className="rounded-lg bg-primary/10 p-2.5">
+                  <Send className="size-5 text-primary" />
                 </div>
                 <div>
                   <p className="font-medium text-sm">Bulk send</p>

@@ -216,7 +216,7 @@ export function AuditEntryRow({ entry, isLast }: AuditEntryRowProps) {
   return (
     <motion.div variants={variants} className="flex gap-3">
       <div className="flex flex-col items-center">
-        <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-500/10 flex items-center justify-center text-blue-700 dark:text-blue-300 text-xs font-semibold shrink-0">
+        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-semibold shrink-0">
           {initials}
         </div>
         {!isLast && <div className="w-px flex-1 bg-border mt-1" />}

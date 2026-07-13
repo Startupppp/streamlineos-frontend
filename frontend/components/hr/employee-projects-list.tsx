@@ -86,7 +86,7 @@ export function EmployeeProjectsList({ projects }: { projects: ProjectItem[] }) 
                                         <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
                                             In Progress
                                         </span>
-                                        <span className="font-bold text-sm text-blue-600 dark:text-blue-400">
+                                        <span className="font-bold text-sm text-primary">
                                             {item.stats?.inProgress || 0}
                                         </span>
                                     </div>

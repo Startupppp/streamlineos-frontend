@@ -231,7 +231,7 @@ export function useLeadCellRenderer({
         );
 
       case "investmentInterest":
-        return <span className="text-[11px] font-mono tabular-nums text-blue-600">{formatINR(lead.investmentInterest)}</span>;
+        return <span className="text-[11px] font-mono tabular-nums text-primary">{formatINR(lead.investmentInterest)}</span>;
 
       case "potentialValue":
         return <span className="text-[11px] font-mono tabular-nums">{formatINR(lead.potentialValue)}</span>;

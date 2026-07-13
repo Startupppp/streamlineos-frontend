@@ -85,7 +85,7 @@ export function LeadsFunnelView({ board }: LeadsFunnelViewProps) {
         </div>
         <div className="bg-card rounded-lg border border-border shadow-sm p-4 text-center">
           <p className="text-xs text-muted-foreground">Pipeline Value</p>
-          <p className="text-2xl font-bold tabular-nums text-blue-600 dark:text-blue-400">
+          <p className="text-2xl font-bold tabular-nums text-primary">
             ₹{(totalRevenue / 100000).toFixed(1)}L
           </p>
         </div>

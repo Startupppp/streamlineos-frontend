@@ -70,7 +70,7 @@ export function LeadsKanban({ filteredBoard, onDragEnd, onOpenLead, onMoveStatus
                         {...provided.droppableProps}
                         className={cn(
                           "flex-1 p-2 space-y-2 min-h-[200px] max-h-[calc(100vh-380px)] overflow-y-auto transition-colors duration-200",
-                          snapshot.isDraggingOver && "bg-blue-500/5 ring-1 ring-inset ring-blue-500/20 rounded-b-xl",
+                          snapshot.isDraggingOver && "bg-primary/5 ring-1 ring-inset ring-primary/20 rounded-b-xl",
                         )}
                       >
                         {columnLeads.map((lead: BoardLead, index: number) => (

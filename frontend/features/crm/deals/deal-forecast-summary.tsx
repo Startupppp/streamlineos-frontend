@@ -74,7 +74,7 @@ function SnapshotOverrideRow({ snapshotId, period, totalWeighted, overrideAmount
         <p className="text-xs text-muted-foreground">
           Weighted: {formatINRCompact(totalWeighted)}
           {overrideAmount && (
-            <span className="ml-2 text-blue-600">Override: {formatINRCompact(Number(overrideAmount))}</span>
+            <span className="ml-2 text-primary">Override: {formatINRCompact(Number(overrideAmount))}</span>
           )}
         </p>
       </div>

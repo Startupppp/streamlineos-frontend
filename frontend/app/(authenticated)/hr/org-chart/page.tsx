@@ -352,16 +352,16 @@ export default function OrgChartPage() {
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 items-start">
             {deptGroups.map(([name, members]) => (
-              <Card key={name} className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 border-l-blue-500">
+              <Card key={name} className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 border-l-primary">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center">
-                        <Building2 className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                      <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Building2 className="h-3.5 w-3.5 text-primary" />
                       </div>
                       <h3 className="text-sm font-semibold text-foreground">{name}</h3>
                     </div>
-                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-blue-100 border-blue-200 text-blue-700 dark:bg-blue-900/40 dark:border-blue-800 dark:text-blue-300">
+                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-primary/10 border-primary/20 text-foreground">
                       <Users className="h-3 w-3" />
                       {members.length}
                     </span>

@@ -56,7 +56,7 @@ export function ViewToggle<T extends string = string>({
               h,
               showLabel ? labelPad : pad,
               isActive
-                ? "bg-foreground text-background shadow-sm"
+                ? "bg-primary text-primary-foreground shadow-sm"
                 : "bg-card text-muted-foreground hover:text-foreground",
             )}
           >

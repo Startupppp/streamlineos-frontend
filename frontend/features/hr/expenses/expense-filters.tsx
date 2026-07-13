@@ -41,7 +41,7 @@ function StatusFilterButton({
       className={cn(
         "h-8 px-3 rounded-full text-xs font-medium transition-all duration-200 border inline-flex items-center gap-1.5",
         isActive
-          ? "bg-foreground text-background border-foreground"
+          ? "bg-primary text-primary-foreground border-primary"
           : "bg-card text-muted-foreground border-border hover:border-foreground/20 hover:bg-muted/50",
       )}
     >

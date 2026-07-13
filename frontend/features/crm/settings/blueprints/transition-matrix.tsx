@@ -30,14 +30,14 @@ function MatrixCell({ fromStage, toStage, transition, blueprintId }: MatrixCellP
         {transition ? (
           <button
             type="button"
-            className="inline-flex items-center bg-blue-500 text-white text-[9px] px-1.5 h-5 rounded cursor-pointer hover:bg-blue-600 transition-colors"
+            className="inline-flex items-center bg-primary text-primary-foreground text-[9px] px-1.5 h-5 rounded cursor-pointer hover:bg-primary/90 transition-colors"
           >
             {toStage.label.slice(0, 6)}
           </button>
         ) : (
           <button
             type="button"
-            className="inline-flex items-center border border-dashed border-border text-muted-foreground text-[9px] px-1.5 h-5 rounded cursor-pointer hover:border-blue-400 transition-colors"
+            className="inline-flex items-center border border-dashed border-border text-muted-foreground text-[9px] px-1.5 h-5 rounded cursor-pointer hover:border-primary transition-colors"
           >
             +
           </button>
@@ -78,7 +78,7 @@ export function TransitionMatrix({ blueprint, stages }: TransitionMatrixProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-start gap-2 rounded-lg border border-blue-200 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/10 px-3 py-2 text-xs text-blue-800 dark:text-blue-300">
+      <div className="flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-xs text-primary">
         <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
         <span>Unconfigured transitions are allowed by default (fail-open)</span>
       </div>

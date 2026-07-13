@@ -112,7 +112,7 @@ export function LeadSidebar({
                       className={cn(
                         "absolute left-0 h-3.5 w-3.5 rounded-full border-2 flex items-center justify-center",
                         idx === 0
-                          ? "border-blue-500 bg-blue-500/20"
+                          ? "border-primary bg-primary/20"
                           : "border-border bg-background"
                       )}
                     />

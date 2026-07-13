@@ -133,7 +133,7 @@ export function ContactMergeDialog({ pair, currentContactId, open, onOpenChange,
                         {c.phone && <p className="text-[10px] text-muted-foreground font-mono">{c.phone}</p>}
                       </div>
                       {isPrimary && (
-                        <Badge className="text-[9px] px-1.5 py-0 h-4 bg-blue-600 shrink-0">Primary</Badge>
+                        <Badge className="text-[9px] px-1.5 py-0 h-4 bg-primary shrink-0">Primary</Badge>
                       )}
                     </div>
                   </button>

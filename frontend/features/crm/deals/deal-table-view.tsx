@@ -150,7 +150,7 @@ export function DealTableView({
       sortable: true,
       sortValue: (row) => parseFloat(row.value ?? "0") || 0,
       cell: (row) => (
-        <span className="font-mono tabular-nums text-blue-600 font-semibold">
+        <span className="font-mono tabular-nums text-primary font-semibold">
           {formatINR(row.value)}
         </span>
       ),

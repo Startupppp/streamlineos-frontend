@@ -419,12 +419,12 @@ export default function ExitManagementPage() {
         }
         isPending={createResignation.isPending}
       >
-        <div className="rounded-lg border border-blue-200 bg-blue-50 dark:bg-blue-950/20 dark:border-blue-900 px-3 py-2.5 flex items-start gap-2.5 text-xs text-blue-800 dark:text-blue-300">
+        <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2.5 flex items-start gap-2.5 text-xs text-foreground">
           <FileText className="h-3.5 w-3.5 mt-0.5 shrink-0" />
           <span>
-            Notice period is <strong className="text-blue-900 dark:text-blue-200">60 days</strong> as per
+            Notice period is <strong>60 days</strong> as per
             company policy. Your last working date will be{" "}
-            <strong className="text-blue-900 dark:text-blue-200">
+            <strong>
               {format(addDays(new Date(), NOTICE_PERIOD_DAYS), "dd MMM yyyy")}
             </strong>
             .

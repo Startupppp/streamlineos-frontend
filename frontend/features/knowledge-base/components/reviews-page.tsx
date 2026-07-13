@@ -90,7 +90,7 @@ function TypeBadge({ type }: { type: KbReviewType }) {
   if (type === "approval") {
     return (
       <Badge
-        className="bg-blue-50 text-blue-700 border-blue-200/70 text-[11px] dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30"
+        className="bg-primary/10 text-foreground border-primary/20 text-[11px]"
         variant="outline"
       >
         Approval

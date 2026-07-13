@@ -102,9 +102,9 @@ function LeaveBalanceDonut({ balances, allowedNames }: { balances: LeaveBalance[
     <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-          <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center">
+          <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center">
             <TrendingUp
-              className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400"
+              className="h-3.5 w-3.5 text-primary"
               aria-hidden="true"
             />
           </div>
@@ -228,7 +228,7 @@ function LeaveCalendarWidget({
                 className={cn(
                   "rounded-lg p-1.5 min-h-[64px] flex flex-col transition-colors duration-200",
                   isToday
-                    ? "bg-blue-500/10 border border-blue-500/30"
+                    ? "bg-primary/10 border border-primary/30"
                     : "bg-muted/30 border border-transparent",
                 )}
               >
@@ -236,7 +236,7 @@ function LeaveCalendarWidget({
                   className={cn(
                     "text-[10px] font-medium text-center leading-tight mb-1",
                     isToday
-                      ? "text-blue-600 dark:text-blue-400"
+                      ? "text-primary"
                       : "text-muted-foreground",
                   )}
                 >
