@@ -44,12 +44,11 @@ function patchXhr(): void {
     private _url = "";
     private _startedAt = 0;
 
-    open(method: string, url: string | URL, ...rest: unknown[]): void {
-      this._method = method.toUpperCase();
-      this._url = truncateUrl(String(url));
+    open(...args: Parameters<XMLHttpRequest["open"]>): void {
+      this._method = args[0].toUpperCase();
+      this._url = truncateUrl(String(args[1]));
       this._startedAt = 0;
-      // @ts-ignore -- variadic passthrough to native
-      super.open(method, url, ...rest);
+      super.open(...args);
     }
 
     send(body?: Document | XMLHttpRequestBodyInit | null): void {
