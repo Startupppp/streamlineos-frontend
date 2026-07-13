@@ -32,7 +32,7 @@ export function ChatNotificationsProvider({
       `${data.senderName} mentioned you`,
       {
         description: data.content?.slice(0, 80),
-        icon: <AtSign className="h-4 w-4 text-blue-600" />,
+        icon: <AtSign className="h-4 w-4 text-primary" />,
         action: {
           label: "Jump",
           onClick: () => onSelectChannel(data.channelId),

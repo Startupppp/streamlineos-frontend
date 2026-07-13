@@ -416,7 +416,7 @@ function EventRow({
             </Badge>
           )}
           {event.overridden && (
-            <Badge variant="outline" className="text-[10px] h-4 px-1.5 shrink-0 border-blue-200 text-blue-700 bg-blue-50 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30">
+            <Badge variant="outline" className="text-[10px] h-4 px-1.5 shrink-0 border-primary/20 text-foreground bg-primary/10">
               Overridden
             </Badge>
           )}

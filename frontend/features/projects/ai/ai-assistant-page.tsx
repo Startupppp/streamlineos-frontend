@@ -37,7 +37,7 @@ export function AiAssistantPage({ projectId }: AiAssistantPageProps) {
     return (
       <PageWrapper title="AI Assistant" eyebrow="Project" subtitle={SUBTITLE}>
         <EmptyState
-          illustration={<Sparkles className="h-10 w-10 text-blue-400/60" />}
+          illustration={<Sparkles className="h-10 w-10 text-primary/40" />}
           title="Upgrade to unlock AI features"
           description={`AI Project Manager is available on the ${feature.requiredPlan ?? "PROFESSIONAL"} plan and above.`}
           action={{ label: "View plans", href: "/billing" }}

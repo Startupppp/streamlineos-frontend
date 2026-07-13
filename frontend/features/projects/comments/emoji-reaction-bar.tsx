@@ -54,8 +54,8 @@ export function EmojiReactionBar({ reactions, onReact, onUnreact }: EmojiReactio
           className={cn(
             "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border transition-all",
             r.hasReacted
-              ? "bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30"
-              : "bg-muted border-border text-muted-foreground hover:border-blue-200/60 hover:bg-blue-50/50 dark:hover:bg-blue-500/10"
+              ? "bg-primary/10 border-primary/20 text-foreground"
+              : "bg-muted border-border text-muted-foreground hover:border-primary/20 hover:bg-primary/5"
           )}
         >
           <span>{r.emoji}</span>

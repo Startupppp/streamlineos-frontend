@@ -29,7 +29,7 @@ export function ChatInviteJoinPage({ token }: { token: string }) {
 
   return (
     <div className="flex h-full flex-col items-center justify-center gap-4 bg-background px-4 text-center">
-      <div className="h-14 w-14 rounded-2xl bg-blue-500 flex items-center justify-center shadow-sm">
+      <div className="h-14 w-14 rounded-2xl bg-primary flex items-center justify-center shadow-sm">
         <MessageSquareText className="h-6 w-6 text-white" />
       </div>
 

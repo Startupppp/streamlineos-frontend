@@ -147,7 +147,7 @@ function CategoryRow({
       <span className="shrink-0 text-muted-foreground">{icon}</span>
       <span className="flex-1 truncate">{label}</span>
       {activeCount > 0 && (
-        <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-500 px-1 text-[10px] font-semibold text-white">
+        <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
           {activeCount}
         </span>
       )}
@@ -395,12 +395,12 @@ export function FilterCommandMenu({
         <Button
           variant="outline"
           size="sm"
-          className="relative h-8 shrink-0 gap-1.5 bg-card px-2.5 text-xs font-normal shadow-xs data-[state=open]:border-blue-400 data-[state=open]:focus-visible:border-blue-400"
+          className="relative h-8 shrink-0 gap-1.5 bg-card px-2.5 text-xs font-normal shadow-xs data-[state=open]:border-primary data-[state=open]:focus-visible:border-primary"
         >
           <ListFilter className="h-3.5 w-3.5 shrink-0" />
           <span>Add filter</span>
           {activeFilterCount > 0 && (
-            <span className="ml-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-500 px-1 text-[10px] font-semibold text-white">
+            <span className="ml-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
               {activeFilterCount}
             </span>
           )}

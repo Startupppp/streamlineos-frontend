@@ -39,7 +39,7 @@ export function ChannelAvatar({
         <AvatarImage src={resolveImageUrl(otherMember?.image)} />
         <AvatarFallback
           className={cn(
-            "text-[10px] font-semibold bg-gradient-to-br from-blue-500/20 to-blue-500/5 text-blue-600",
+            "text-[10px] font-semibold bg-primary/10 text-primary",
             round,
           )}
         >
@@ -72,12 +72,12 @@ export function ChannelAvatar({
   return (
     <div
       className={cn(
-        "bg-gradient-to-br from-blue/10 to-blue/5 flex items-center justify-center border-2 border-background shadow-sm",
+        "bg-primary/10 flex items-center justify-center border-2 border-background shadow-sm",
         round,
         className,
       )}
     >
-      <Hash className={cn("text-blue", iconClassName ?? "h-4 w-4")} />
+      <Hash className={cn("text-primary", iconClassName ?? "h-4 w-4")} />
     </div>
   );
 }

@@ -269,8 +269,8 @@ export function GoalFormSheet({
       <SheetContent className="flex flex-col p-0 sm:max-w-[520px]">
         <SheetHeader className="px-6 pt-5 pb-3 border-b shrink-0">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
-              <Target className="h-5 w-5 text-blue-600" />
+            <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <Target className="h-5 w-5 text-primary" />
             </div>
             <div>
               <SheetTitle className="text-lg font-semibold">

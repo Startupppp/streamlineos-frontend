@@ -34,7 +34,7 @@ function VariableToken({ variable, onInsert }: { variable: TemplateVariable; onI
         "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono border transition-colors cursor-pointer",
         variable.sensitive
           ? "bg-red-50 hover:bg-red-100 text-red-700 border-red-200 dark:bg-red-500/10 dark:hover:bg-red-500/20 dark:text-red-300 dark:border-red-500/30"
-          : "bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:hover:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/30",
+          : "bg-primary/5 hover:bg-primary/10 text-foreground border-primary/20",
       )}
     >
       {`{{${variable.token}}}`}

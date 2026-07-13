@@ -255,8 +255,8 @@ export function StepChartOfAccounts({ onComplete, onSkip }: StepProps) {
               onClick={() => handleSelectChange(t.key)}
               className={`rounded-lg border p-3 text-left transition-colors ${
                 selectedKey === t.key
-                  ? "border-blue-500 bg-blue-50 dark:bg-blue-500/10 shadow-sm"
-                  : "border-border hover:border-blue-300 hover:bg-muted/30"
+                  ? "border-primary bg-primary/10 shadow-sm"
+                  : "border-border hover:border-primary/40 hover:bg-muted/30"
               }`}
             >
               <p className="text-sm font-medium text-foreground">{t.label}</p>

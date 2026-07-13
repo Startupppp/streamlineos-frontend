@@ -64,8 +64,8 @@ function AccountTypeToggle({
       disabled={disabled}
       className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium border transition-colors ${
         selected
-          ? "bg-blue-500 text-white border-blue-500"
-          : "bg-background text-muted-foreground border-border hover:border-blue-400"
+          ? "bg-primary text-primary-foreground border-primary"
+          : "bg-background text-muted-foreground border-border hover:border-primary/40"
       } disabled:opacity-50 disabled:cursor-not-allowed`}
     >
       {name}

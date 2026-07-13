@@ -460,7 +460,7 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
                 value={inviteQuery}
                 onChange={(e) => setInviteQuery(e.target.value)}
                 placeholder="Enter user ID to invite..."
-                className="w-full text-[12px] bg-background border border-border/50 rounded-lg px-2 py-1.5 focus:outline-none focus:border-blue-500/40 mb-2"
+                className="w-full text-[12px] bg-background border border-border/50 rounded-lg px-2 py-1.5 focus:outline-none focus:border-primary/40 mb-2"
               />
               <Button
                 size="sm"

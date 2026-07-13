@@ -534,7 +534,7 @@ function ProviderRow({
           {provider.isDefault && (
             <Badge
               variant="outline"
-              className="text-[10px] h-4 px-1.5 shrink-0 border-blue-300 text-blue-600"
+              className="text-[10px] h-4 px-1.5 shrink-0 border-primary/30 text-primary"
             >
               Default
             </Badge>

@@ -62,7 +62,7 @@ export function NineBoxGrid() {
                 <p className="text-xs font-medium text-muted-foreground mb-2">{meta.label}</p>
                 <div className="flex flex-wrap gap-1">
                   {cellEntries.map((e) => (
-                    <Badge key={e.employeeId} variant="secondary" className="text-xs bg-card border border-blue-200 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30">
+                    <Badge key={e.employeeId} variant="secondary" className="text-xs bg-card border border-border text-foreground">
                       {e.employeeId.slice(0, 8)}…
                     </Badge>
                   ))}

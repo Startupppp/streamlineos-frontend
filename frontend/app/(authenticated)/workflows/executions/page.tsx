@@ -146,7 +146,7 @@ export default function ExecutionsPage() {
           className={cn(
             "px-3 py-1.5 text-xs font-medium rounded-md whitespace-nowrap transition-colors",
             activeStatus === tab.value
-              ? "bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30"
+              ? "bg-primary/10 text-foreground border border-primary/20"
               : "text-muted-foreground hover:text-foreground hover:bg-muted",
           )}
         >

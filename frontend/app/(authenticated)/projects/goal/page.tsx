@@ -71,7 +71,7 @@ function GoalCard({ goal }: { goal: GoalListItem }) {
           </div>
           <div className="h-1.5 rounded-full bg-muted overflow-hidden">
             <div
-              className="h-full rounded-full bg-blue-500 transition-all duration-300"
+              className="h-full rounded-full bg-primary transition-all duration-300"
               style={{ width: `${goal.progress}%` }}
             />
           </div>

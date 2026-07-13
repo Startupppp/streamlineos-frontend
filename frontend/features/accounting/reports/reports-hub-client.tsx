@@ -79,7 +79,7 @@ function ReportCard({ item, category }: ReportCardProps) {
   return (
     <Link
       href={reportHref(item)}
-      className="group flex items-start gap-3 rounded-xl border border-border bg-card p-4 transition-all duration-150 hover:border-blue-300/40 hover:shadow-sm hover:bg-muted/20"
+      className="group flex items-start gap-3 rounded-xl border border-border bg-card p-4 transition-all duration-150 hover:border-primary/30 hover:shadow-sm hover:bg-muted/20"
       {...hoverHandlers}
     >
       <div className={`h-9 w-9 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${tone.bg}`}>

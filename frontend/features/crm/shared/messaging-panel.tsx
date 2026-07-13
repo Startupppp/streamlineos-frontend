@@ -80,7 +80,7 @@ export function MessagingPanel({ phone, entityType, entityId }: MessagingPanelPr
           onClick={handleSms}
           className="gap-1.5 text-xs"
         >
-          <Smartphone className="h-3.5 w-3.5 text-blue-500" />
+          <Smartphone className="h-3.5 w-3.5 text-primary" />
           SMS
         </Button>
       </motion.div>

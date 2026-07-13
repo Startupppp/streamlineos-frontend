@@ -83,7 +83,7 @@ export function StageCard({
           {...provided.draggableProps}
           className={cn(
             "flex items-center gap-2 px-3 py-2 bg-card border border-border rounded-lg text-sm transition-shadow",
-            snapshot.isDragging && "shadow-lg ring-1 ring-blue-500/30"
+            snapshot.isDragging && "shadow-lg ring-1 ring-primary/30"
           )}
         >
           <div {...provided.dragHandleProps} className="shrink-0 cursor-grab text-muted-foreground hover:text-foreground">
@@ -98,7 +98,7 @@ export function StageCard({
             <Button variant="ghost" size="icon" className="h-5 w-5" onClick={handleDecrease} disabled={stage.probability <= 0} type="button">
               <span className="text-xs leading-none">−</span>
             </Button>
-            <span className="bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 text-xs px-1.5 rounded min-w-[3rem] text-center">
+            <span className="bg-primary/10 text-primary text-xs px-1.5 rounded min-w-[3rem] text-center">
               {stage.probability}%
             </span>
             <Button variant="ghost" size="icon" className="h-5 w-5" onClick={handleIncrease} disabled={stage.probability >= 100} type="button">

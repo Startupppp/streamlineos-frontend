@@ -545,7 +545,7 @@ export function UsersPage() {
           )}
 
           {allSelected && !selectAllMatching && pagination && pagination.total > users.length && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-blue-50 border border-blue-200 text-xs text-blue-700 dark:bg-blue-950/30 dark:border-blue-900 dark:text-blue-300 flex-wrap">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-primary/5 border border-primary/20 text-xs text-foreground flex-wrap">
               <span>All {users.length} users on this page are selected.</span>
               <button
                 type="button"
@@ -558,7 +558,7 @@ export function UsersPage() {
           )}
 
           {selectAllMatching && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 text-xs text-blue-700 dark:text-blue-300 flex-wrap">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-primary/5 border border-primary/20 text-xs text-foreground flex-wrap">
               <span>All {pagination?.total} matching users are selected.</span>
               <button
                 type="button"

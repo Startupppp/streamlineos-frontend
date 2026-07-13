@@ -23,7 +23,7 @@ export function CsvUploadStepUpload({
       <div
         onDragOver={onDragOver}
         onDrop={onDrop}
-        className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-blue-500/50 transition-colors"
+        className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors"
       >
         <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
         <p className="text-sm font-medium mb-1">Drop your file here</p>

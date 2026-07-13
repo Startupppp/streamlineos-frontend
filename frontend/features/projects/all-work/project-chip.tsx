@@ -18,7 +18,7 @@ export function ProjectChip({ projectId, projectKey, projectName, className }: P
       title={projectName}
       className={cn(
         "inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium tabular-nums",
-        "bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors shrink-0 dark:bg-blue-500/10 dark:text-blue-300 dark:hover:bg-blue-500/20",
+        "bg-primary/10 text-foreground hover:bg-primary/20 transition-colors shrink-0",
         className
       )}
     >

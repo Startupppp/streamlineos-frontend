@@ -121,18 +121,18 @@ function NextMeetingStrip({ meeting, projectId, members }: NextMeetingStripProps
   const scheduledDate = meeting.scheduledAt ? new Date(meeting.scheduledAt) : null;
 
   return (
-    <div className="flex items-center gap-4 px-4 py-3 mb-3 rounded-xl border border-blue-200 bg-blue-50/60 dark:border-blue-500/30 dark:bg-blue-500/10 text-sm">
-      <CalendarClock className="h-4 w-4 text-blue-500 shrink-0" />
-      <div className="flex items-center gap-1.5 font-medium text-blue-900 dark:text-blue-200 truncate">
-        <span className="text-xs text-blue-500 dark:text-blue-400 font-normal shrink-0">Next meeting</span>
+    <div className="flex items-center gap-4 px-4 py-3 mb-3 rounded-xl border border-primary/20 bg-primary/5 text-sm">
+      <CalendarClock className="h-4 w-4 text-primary shrink-0" />
+      <div className="flex items-center gap-1.5 font-medium text-foreground truncate">
+        <span className="text-xs text-muted-foreground font-normal shrink-0">Next meeting</span>
         <Link
           href={`/projects/${projectId}/meetings/${meeting.id}`}
-          className="truncate hover:underline font-semibold text-blue-800 dark:text-blue-300"
+          className="truncate hover:underline font-semibold text-foreground"
         >
           {meeting.title}
         </Link>
       </div>
-      <div className="flex items-center gap-3 ml-auto shrink-0 text-blue-700/80 dark:text-blue-400 text-xs">
+      <div className="flex items-center gap-3 ml-auto shrink-0 text-muted-foreground text-xs">
         {scheduledDate && (
           <span className="tabular-nums">
             {scheduledDate.toLocaleString(undefined, {
@@ -443,7 +443,7 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
         className: "w-16",
         cell: (row) =>
           row.notes ? (
-            <FileText className="h-3.5 w-3.5 text-blue-500" aria-label="Has notes" />
+            <FileText className="h-3.5 w-3.5 text-primary" aria-label="Has notes" />
           ) : (
             <span className="text-muted-foreground text-sm">—</span>
           ),

@@ -21,7 +21,7 @@ const KpiCard = memo(function KpiCard({ label, value, sub, accent }: KpiCardProp
       <span
         className={cn(
           "text-2xl font-bold tabular-nums leading-tight tracking-tight",
-          accent ? "text-blue-600" : "text-foreground",
+          accent ? "text-primary" : "text-foreground",
         )}
       >
         {value}

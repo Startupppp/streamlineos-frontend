@@ -68,7 +68,7 @@ export function AIEnrichLeadButton({
       <DialogContent className="max-w-lg flex flex-col p-0 gap-0 max-h-[80vh]">
         <DialogHeader className="shrink-0 px-5 pt-5 pb-3 border-b">
           <DialogTitle className="text-base flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-blue-600" />
+            <Sparkles className="h-4 w-4 text-primary" />
             AI Lead Enrichment
           </DialogTitle>
           <DialogDescription className="text-xs">
@@ -123,7 +123,7 @@ export function AIEnrichLeadButton({
                           key={i}
                           className="flex items-start gap-1.5 text-xs"
                         >
-                          <span className="text-blue-600 mt-0.5">•</span>
+                          <span className="text-primary mt-0.5">•</span>
                           <span>{p}</span>
                         </li>
                       ))}
@@ -143,7 +143,7 @@ export function AIEnrichLeadButton({
                           key={i}
                           className="flex items-start gap-1.5 text-xs"
                         >
-                          <span className="text-blue-400 mt-0.5">•</span>
+                          <span className="text-primary mt-0.5">•</span>
                           <span>{n}</span>
                         </li>
                       ))}

@@ -446,7 +446,7 @@ export function AgentTokensSection() {
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1 min-w-0">
           <div className="flex items-center gap-2">
-            <Bot className="h-4 w-4 text-blue-500 shrink-0" />
+            <Bot className="h-4 w-4 text-primary shrink-0" />
             <h3 className="text-sm font-semibold">AI Agent Access (MCP)</h3>
           </div>
           <p className="text-xs text-muted-foreground leading-relaxed max-w-lg">

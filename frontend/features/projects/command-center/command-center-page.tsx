@@ -97,7 +97,7 @@ const MyWorkRow = memo(function MyWorkRow({ item, index }: { item: MyWorkItem; i
       >
         <div className="flex-1 min-w-0">
           <p className="text-sm text-foreground truncate">{item.title}</p>
-          <span className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">{item.projectKey}</span>
+          <span className="text-[10px] text-primary font-medium">{item.projectKey}</span>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
           {isOverdue(item) && (
@@ -137,7 +137,7 @@ const ProjectCard = memo(function ProjectCard({ project, index }: { project: Pro
             <div className="flex items-center gap-1.5">
               <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
                 <div
-                  className="h-full bg-blue-500 rounded-full transition-[width] duration-300"
+                  className="h-full bg-primary rounded-full transition-[width] duration-300"
                   style={{ width: `${project.progress.percentage}%` }}
                 />
               </div>

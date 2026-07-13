@@ -58,7 +58,7 @@ function TrendBar({ count, max, successCount }: { count: number; max: number; su
     <div className="flex items-center gap-3">
       <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
         <div
-          className="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-full transition-all duration-500"
+          className="h-full bg-primary rounded-full transition-all duration-500"
           style={{ "--bar-pct": `${pct}%`, width: "var(--bar-pct)" } as React.CSSProperties}
         />
       </div>
@@ -169,7 +169,7 @@ export default function WorkflowAnalyticsPage() {
                 <CardTitle className="text-sm font-semibold">Execution Trend</CardTitle>
                 <div className="flex items-center gap-4 text-[11px] text-muted-foreground mt-1">
                   <span className="flex items-center gap-1.5">
-                    <span className="w-3 h-1.5 rounded-full bg-gradient-to-r from-blue-500 to-blue-400 inline-block" />
+                    <span className="w-3 h-1.5 rounded-full bg-primary inline-block" />
                     Total
                   </span>
                   <span className="flex items-center gap-1.5">

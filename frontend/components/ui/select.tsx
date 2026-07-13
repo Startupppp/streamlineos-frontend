@@ -46,8 +46,8 @@ function SelectTrigger({
       className={cn(
         "flex h-8 w-full min-w-0 items-center justify-between gap-2 rounded-md border border-input bg-card px-3 py-1 font-sans text-sm font-medium text-foreground shadow-xs transition-[color,box-shadow,border-color] outline-none whitespace-nowrap",
         "data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground",
-        "hover:border-blue-300",
-        "focus-visible:border-blue-500 focus-visible:ring-blue-200 focus-visible:ring-[3px]",
+        "hover:border-primary/40",
+        "focus-visible:border-primary focus-visible:ring-primary/20 focus-visible:ring-[3px]",
         "aria-invalid:border-destructive aria-invalid:ring-destructive/20",
         "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-muted",
         "data-[size=sm]:h-7",

@@ -185,7 +185,7 @@ export function BirthdaysWidget() {
                   </span>
                 )}
                 {b.type === "anniversary" && (
-                  <span className="text-[10px] text-blue-600 flex items-center gap-0.5">
+                  <span className="text-[10px] text-primary flex items-center gap-0.5">
                     <Award className="h-3 w-3" /> {b.yearsCompleted}yr
                     anniversary
                   </span>
@@ -237,7 +237,7 @@ export function TeamAttendanceWidget() {
   return (
     <WidgetCard
       icon={Users}
-      iconClassName="text-indigo-500"
+      iconClassName="text-primary"
       title="Team Attendance"
       isLoading={isLoading}
       loadingRows={2}

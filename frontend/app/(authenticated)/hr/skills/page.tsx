@@ -208,8 +208,8 @@ export default function SkillsPage() {
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center shrink-0">
-                        <BookOpen className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                      <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                        <BookOpen className="h-3.5 w-3.5 text-primary" />
                       </div>
                       <h3 className="text-sm font-semibold text-foreground leading-tight">{name}</h3>
                     </div>

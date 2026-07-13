@@ -111,7 +111,7 @@ export function CsvUploadPreview({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <FileText className="h-4 w-4 text-blue-600" />
+          <FileText className="h-4 w-4 text-primary" />
           <span className="text-sm font-medium">{fileName}</span>
           <Badge variant="secondary">{parsed.length} leads</Badge>
         </div>
@@ -168,7 +168,7 @@ export function CsvUploadPreview({
               {importResult.updated} updated
             </p>
             {importResult.distributed && importResult.distributed > 0 && (
-              <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+              <p className="text-xs text-primary font-medium">
                 {importResult.distributed} leads distributed to{" "}
                 {importResult.salesPeopleCount} sales rep
                 {(importResult.salesPeopleCount ?? 0) > 1 ? "s" : ""} (

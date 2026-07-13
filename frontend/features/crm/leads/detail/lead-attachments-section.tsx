@@ -133,7 +133,7 @@ export function LeadAttachmentsSection({ leadId }: LeadAttachmentsSectionProps) 
               transition={{ delay: idx * 0.04 }}
               className="flex items-center gap-2.5 p-2.5 bg-card rounded-lg border border-border shadow-sm group"
             >
-              <File className="h-4 w-4 text-blue-600 shrink-0" />
+              <File className="h-4 w-4 text-primary shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium text-foreground truncate">{att.fileName}</p>
                 <p className="text-[10px] text-muted-foreground">{formatFileSize(att.fileSize)}</p>

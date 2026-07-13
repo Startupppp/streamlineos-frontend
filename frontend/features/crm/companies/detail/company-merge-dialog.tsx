@@ -77,12 +77,12 @@ export function CompanyMergeDialog({ pair, currentOrgId, open, onOpenChange, onM
                     onClick={() => setPrimaryId(org.id)}
                     className={`rounded-lg border p-3 text-left transition-all ${
                       isPrimary
-                        ? "border-blue-500 bg-blue-50 dark:bg-blue-500/10 ring-1 ring-blue-500"
-                        : "border-border hover:border-blue-300"
+                        ? "border-primary bg-primary/10 ring-1 ring-primary"
+                        : "border-border hover:border-primary/40"
                     }`}
                   >
                     <div className="flex items-start gap-2">
-                      <div className="h-7 w-7 rounded-md bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-[11px] font-semibold text-blue-600 dark:text-blue-400 shrink-0">
+                      <div className="h-7 w-7 rounded-md bg-primary/10 flex items-center justify-center text-[11px] font-semibold text-primary shrink-0">
                         {org.name[0]?.toUpperCase() ?? "?"}
                       </div>
                       <div className="min-w-0 flex-1">
@@ -90,7 +90,7 @@ export function CompanyMergeDialog({ pair, currentOrgId, open, onOpenChange, onM
                         {org.domain && <p className="text-[10px] text-muted-foreground truncate">{org.domain}</p>}
                       </div>
                       {isPrimary && (
-                        <Badge className="text-[9px] px-1.5 py-0 h-4 bg-blue-600 shrink-0">Primary</Badge>
+                        <Badge className="text-[9px] px-1.5 py-0 h-4 bg-primary shrink-0">Primary</Badge>
                       )}
                     </div>
                   </button>

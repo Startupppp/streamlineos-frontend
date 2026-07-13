@@ -72,7 +72,7 @@ export function DeviceSelector({ show, onClose }: { show: boolean; onClose: () =
             value={selectedAudioInput}
             onChange={(e) => setSelectedAudioInput(e.target.value)}
             className={cn(
-              "w-full text-[12px] border border-border/50 rounded-lg px-2 py-1.5 bg-background focus:outline-none focus:border-blue-500/40",
+              "w-full text-[12px] border border-border/50 rounded-lg px-2 py-1.5 bg-background focus:outline-none focus:border-primary/40",
             )}
           >
             {audioInputs.map((d) => (
@@ -94,7 +94,7 @@ export function DeviceSelector({ show, onClose }: { show: boolean; onClose: () =
             value={selectedAudioOutput}
             onChange={(e) => setSelectedAudioOutput(e.target.value)}
             className={cn(
-              "w-full text-[12px] border border-border/50 rounded-lg px-2 py-1.5 bg-background focus:outline-none focus:border-blue-500/40",
+              "w-full text-[12px] border border-border/50 rounded-lg px-2 py-1.5 bg-background focus:outline-none focus:border-primary/40",
             )}
           >
             {audioOutputs.map((d) => (
@@ -108,7 +108,7 @@ export function DeviceSelector({ show, onClose }: { show: boolean; onClose: () =
 
       <button
         onClick={onClose}
-        className="w-full mt-1 h-8 rounded-lg bg-blue-600 text-white text-[12px] font-semibold hover:bg-blue-700 transition-colors"
+        className="w-full mt-1 h-8 rounded-lg bg-primary text-primary-foreground text-[12px] font-semibold hover:bg-primary/90 transition-colors"
       >
         Done
       </button>

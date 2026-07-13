@@ -76,7 +76,7 @@ function buildColumns(
               <Badge
                 key={t}
                 variant="outline"
-                className="text-[9px] px-1.5 py-0 h-4 text-blue-700 border-blue-200 bg-blue-50 dark:text-blue-300 dark:border-blue-500/30 dark:bg-blue-500/10"
+                className="text-[9px] px-1.5 py-0 h-4 text-foreground border-border bg-muted"
               >
                 {t}
               </Badge>

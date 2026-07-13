@@ -380,7 +380,7 @@ export function TicketFilterBar({
                   onClick={handleHideDoneClick}
                   className={cn(
                     "h-8 w-8 shrink-0 bg-card shadow-xs",
-                    hideCompleted && "border-blue-400 bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/40",
+                    hideCompleted && "border-primary bg-primary/10 text-primary",
                   )}
                   aria-label={doneCount > 0 ? `Hide done (${doneCount})` : "Hide done"}
                   aria-pressed={hideCompleted}

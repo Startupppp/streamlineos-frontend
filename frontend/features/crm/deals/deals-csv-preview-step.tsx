@@ -72,7 +72,7 @@ export function DealsPreviewStep({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <FileText className="h-4 w-4 text-blue-600" />
+          <FileText className="h-4 w-4 text-primary" />
           <span className="text-sm font-medium">{fileName}</span>
           <Badge variant="secondary">{parsed.length} deals</Badge>
         </div>

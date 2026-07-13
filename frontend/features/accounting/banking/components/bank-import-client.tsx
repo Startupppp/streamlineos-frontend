@@ -59,9 +59,9 @@ function StepDot({ step, current }: { step: number; current: number }) {
       className={[
         "h-7 w-7 rounded-full flex items-center justify-center text-xs font-semibold border-2 transition-colors",
         done
-          ? "bg-blue-600 border-blue-600 text-white"
+          ? "bg-primary border-primary text-primary-foreground"
           : active
-            ? "bg-background border-blue-600 text-blue-600"
+            ? "bg-background border-primary text-primary"
             : "bg-background border-border text-muted-foreground",
       ].join(" ")}
     >

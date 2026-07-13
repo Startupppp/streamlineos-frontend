@@ -55,7 +55,7 @@ export function ChannelMemberRow({
         <p className="text-[11px] text-muted-foreground truncate">{member.user?.email}</p>
       </div>
       {member.role === "ADMIN" && (
-        <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 border-blue-500/30 text-blue-600">
+        <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 border-primary/30 text-primary">
           Admin
         </Badge>
       )}

@@ -200,7 +200,7 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
             </div>
             <Progress
               value={Math.min(budget?.utilizationPct ?? 0, 100)}
-              className={overBudget ? "h-2 [&>div]:bg-red-500" : "h-2 [&>div]:bg-blue-500"}
+              className={overBudget ? "h-2 [&>div]:bg-red-500" : "h-2 [&>div]:bg-primary"}
             />
           </CardContent>
         </Card>

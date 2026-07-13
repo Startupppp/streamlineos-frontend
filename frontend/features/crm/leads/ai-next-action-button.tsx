@@ -67,7 +67,7 @@ export function AINextActionButton({
             {actionMutation.isPending ? (
               <Loader2 className="h-3 w-3 animate-spin" />
             ) : (
-              <Zap className="h-3 w-3 text-blue-600" />
+              <Zap className="h-3 w-3 text-primary" />
             )}
             Next Action
           </Button>
@@ -97,7 +97,7 @@ export function AINextActionButton({
           </>
         ) : (
           <>
-            <Sparkles className="h-4 w-4 mr-2 text-blue-600" />
+            <Sparkles className="h-4 w-4 mr-2 text-primary" />
             Suggest Next Action
           </>
         )}

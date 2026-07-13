@@ -32,7 +32,7 @@ export function CustomFieldsSection({ entityType, values, className }: CustomFie
         <button
           type="button"
           onClick={() => void refetch()}
-          className="text-xs text-blue-500 hover:underline"
+          className="text-xs text-primary hover:underline"
         >
           Retry
         </button>

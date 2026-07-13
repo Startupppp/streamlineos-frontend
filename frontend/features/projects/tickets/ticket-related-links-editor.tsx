@@ -115,12 +115,12 @@ export function TicketRelatedLinksEditor({ links, onChange }: TicketRelatedLinks
               key={idx}
               className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-2.5 py-1.5"
             >
-              <LinkIcon className="h-3 w-3 text-blue-500 shrink-0" />
+              <LinkIcon className="h-3 w-3 text-primary shrink-0" />
               <a
                 href={link.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-blue-500 hover:underline truncate flex-1 min-w-0"
+                className="text-xs text-primary hover:underline truncate flex-1 min-w-0"
               >
                 {link.label || link.url}
               </a>

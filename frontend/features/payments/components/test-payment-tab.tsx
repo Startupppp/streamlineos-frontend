@@ -123,13 +123,13 @@ export function TestPaymentTab({ providerKey }: { providerKey: string }) {
                 <span
                   className={cn(
                     "h-4 w-4 rounded-full flex items-center justify-center shrink-0",
-                    done ? "bg-emerald-500" : active ? "bg-blue-100 dark:bg-blue-500/20" : "bg-muted",
+                    done ? "bg-emerald-500" : active ? "bg-primary/10" : "bg-muted",
                   )}
                 >
                   {done ? (
                     <Check className="h-2.5 w-2.5 text-white" />
                   ) : active ? (
-                    <Loader2 className="h-2.5 w-2.5 animate-spin text-blue-600" />
+                    <Loader2 className="h-2.5 w-2.5 animate-spin text-primary" />
                   ) : null}
                 </span>
                 <span className={cn(done ? "text-foreground font-medium" : "text-muted-foreground")}>{label}</span>

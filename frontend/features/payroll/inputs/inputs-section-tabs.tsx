@@ -222,7 +222,7 @@ const reimbursementColumns: DataTableColumn<PayrollInputSnapshot>[] = [
 const ADJ_STATUS_STYLES: Record<string, string> = {
   pending: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
   approved: "bg-green-50 text-green-700 border-green-200 dark:bg-green-500/10 dark:text-green-300 dark:border-green-500/30",
-  applied: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  applied: "bg-primary/10 text-foreground border-primary/20",
 };
 
 function buildAdjustmentColumns(

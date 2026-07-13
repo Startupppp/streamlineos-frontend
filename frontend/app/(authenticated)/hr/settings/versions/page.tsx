@@ -132,7 +132,7 @@ export default function VersionHistoryPage() {
               return (
                 <div
                   key={item.id}
-                  className={`flex items-center gap-3 rounded-xl border px-4 py-3 bg-card shadow-sm ${isActiveVersion ? "border-l-2 border-l-blue-500 bg-blue-50/50 dark:bg-blue-500/10" : "border-border"}`}
+                  className={`flex items-center gap-3 rounded-xl border px-4 py-3 bg-card shadow-sm ${isActiveVersion ? "border-l-2 border-l-primary bg-primary/5" : "border-border"}`}
                 >
                   <span className="text-sm font-mono font-semibold w-8">v{item.version}</span>
                   <Badge variant="outline" className={`text-xs px-2 py-0.5 ${STATUS_COLORS[item.status] ?? ""}`}>

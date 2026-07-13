@@ -39,7 +39,7 @@ export function ChatSearchDialog({ open, onOpenChange, onSelectChannel }: ChatSe
       <DialogContent className="sm:max-w-[580px] p-0 gap-0">
         <DialogHeader className="px-4 pt-4 pb-0">
           <DialogTitle className="sr-only">Search</DialogTitle>
-          <div className="flex items-center gap-2 rounded-xl border border-border/50 bg-muted/30 px-3 py-2 focus-within:border-blue-500/50 transition-colors">
+          <div className="flex items-center gap-2 rounded-xl border border-border/50 bg-muted/30 px-3 py-2 focus-within:border-primary/50 transition-colors">
             <Search className="h-4 w-4 text-muted-foreground shrink-0" />
             <input
               value={query}
@@ -59,7 +59,7 @@ export function ChatSearchDialog({ open, onOpenChange, onSelectChannel }: ChatSe
               onClick={() => setTab(t)}
               className={cn(
                 "px-3 py-2 text-[12px] font-semibold capitalize border-b-2 transition-colors -mb-px",
-                tab === t ? "border-blue-600 text-blue-600" : "border-transparent text-muted-foreground hover:text-foreground",
+                tab === t ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
               )}
             >
               {t}
@@ -83,8 +83,8 @@ export function ChatSearchDialog({ open, onOpenChange, onSelectChannel }: ChatSe
                   onClick={() => msg.channel?.id && handleSelectChannel(msg.channel.id)}
                   className="w-full flex items-start gap-3 px-4 py-3 hover:bg-muted/40 text-left transition-colors"
                 >
-                  <div className="h-8 w-8 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0 mt-0.5">
-                    <MessageSquare className="h-4 w-4 text-blue-600" />
+                  <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                    <MessageSquare className="h-4 w-4 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">

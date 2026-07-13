@@ -97,8 +97,8 @@ function AutomationCard({ automation, onToggle, onDelete, onEdit }: AutomationCa
     <motion.div layout className="rounded-lg border border-border bg-card hover:shadow-md transition-shadow p-4">
       <div className="flex items-start gap-3">
         <div className={cn("relative h-9 w-9 rounded-lg flex items-center justify-center shrink-0",
-          automation.isActive ? "bg-blue-50 border border-blue-100 dark:bg-blue-500/10 dark:border-blue-500/30" : "bg-muted border border-border")}>
-          <Zap className={cn("h-4 w-4", automation.isActive ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground")} />
+          automation.isActive ? "bg-primary/10 border border-primary/20" : "bg-muted border border-border")}>
+          <Zap className={cn("h-4 w-4", automation.isActive ? "text-primary" : "text-muted-foreground")} />
           <span className={cn("absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white",
             automation.isActive ? "bg-emerald-500" : "bg-muted-foreground/40")} />
         </div>

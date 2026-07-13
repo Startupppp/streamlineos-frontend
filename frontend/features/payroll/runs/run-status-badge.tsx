@@ -14,11 +14,11 @@ const STATUS_CONFIG: Record<
   },
   DRAFT: {
     label: "Draft",
-    className: "bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+    className: "bg-primary/10 text-foreground border border-primary/20",
   },
   PREVIEW_READY: {
     label: "Preview Ready",
-    className: "bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+    className: "bg-primary/10 text-foreground border border-primary/20",
   },
   EXCEPTIONS_FOUND: {
     label: "Exceptions",

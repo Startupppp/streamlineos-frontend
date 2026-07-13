@@ -93,11 +93,11 @@ function PipelineStep({
             "flex items-center justify-center rounded-full transition-all duration-200",
             isActive
               ? cn(
-                  "h-5 w-5 border-2 border-blue-500 bg-blue-500/20",
+                  "h-5 w-5 border-2 border-primary bg-primary/20",
                   isLost && "border-red-400 bg-red-500/20"
                 )
               : isPast
-                ? cn("h-3 w-3", isLost ? "bg-red-400" : "bg-blue-500")
+                ? cn("h-3 w-3", isLost ? "bg-red-400" : "bg-primary")
                 : "h-3 w-3 rounded-full border border-border bg-background group-hover:border-muted-foreground"
           )}
         >
@@ -105,7 +105,7 @@ function PipelineStep({
             <div
               className={cn(
                 "h-2 w-2 rounded-full",
-                isLost ? "bg-red-400" : "bg-blue-500"
+                isLost ? "bg-red-400" : "bg-primary"
               )}
             />
           )}
@@ -116,7 +116,7 @@ function PipelineStep({
             isActive
               ? isLost
                 ? "text-red-400"
-                : "text-blue-600"
+                : "text-primary"
               : isPast
                 ? "text-muted-foreground"
                 : "text-muted-foreground/40 group-hover:text-muted-foreground/70"
@@ -130,7 +130,7 @@ function PipelineStep({
         <div
           className={cn(
             "flex-1 h-px mx-2 mb-3.5",
-            isPast ? "bg-blue-500/50" : "bg-border/50"
+            isPast ? "bg-primary/50" : "bg-border/50"
           )}
         />
       )}
@@ -169,7 +169,7 @@ export function LeadDetailHeader({
       <CardContent className="p-0">
         <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4 p-4 pb-3">
           <div className="flex items-start gap-3 sm:contents">
-          <div className="shrink-0 h-12 w-12 rounded-full ring-2 ring-blue-500/50 bg-blue-500/10 flex items-center justify-center text-blue-600 font-bold text-lg select-none">
+          <div className="shrink-0 h-12 w-12 rounded-full ring-2 ring-primary/50 bg-primary/10 flex items-center justify-center text-primary font-bold text-lg select-none">
             {initials || "?"}
           </div>
 

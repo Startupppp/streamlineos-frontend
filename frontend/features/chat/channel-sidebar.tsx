@@ -251,7 +251,7 @@ export function ChannelSidebar({
         <div className={cn("px-4 pt-3 pb-2", isCollapsed && "md:hidden")}>
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2.5">
-              <div className="h-9 w-9 rounded-xl bg-blue-500 flex items-center justify-center shadow-sm">
+              <div className="h-9 w-9 rounded-xl bg-primary flex items-center justify-center shadow-sm">
                 <MessageSquareText className="h-4 w-4 text-white" />
               </div>
               <div>
@@ -434,7 +434,7 @@ export function ChannelSidebar({
                     </div>
                     <span className="flex-1 text-[13px] font-medium text-foreground">Archived</span>
                     {archivedUnreadCount > 0 && (
-                      <span className="h-[18px] min-w-[18px] flex items-center justify-center bg-blue-500 text-white text-[10px] font-bold rounded-full px-1 shrink-0">
+                      <span className="h-[18px] min-w-[18px] flex items-center justify-center bg-primary text-primary-foreground text-[10px] font-bold rounded-full px-1 shrink-0">
                         {archivedUnreadCount > 99 ? "99+" : archivedUnreadCount}
                       </span>
                     )}
@@ -537,7 +537,7 @@ export function ChannelSidebar({
               <div className="relative shrink-0">
                 <Avatar className="h-7 w-7 border border-border/30">
                   <AvatarImage src={resolveImageUrl(session?.user?.image)} />
-                  <AvatarFallback className="text-[9px] font-semibold bg-gradient-to-br from-blue-500/20 to-blue-500/5 text-blue-600">
+                  <AvatarFallback className="text-[9px] font-semibold bg-primary/10 text-primary">
                     {session?.user?.name?.charAt(0)?.toUpperCase() ?? "U"}
                   </AvatarFallback>
                 </Avatar>

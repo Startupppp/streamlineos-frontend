@@ -142,7 +142,7 @@ export function LabelsSettings() {
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="h-7 text-xs text-blue-600 dark:text-blue-400"
+                  className="h-7 text-xs text-primary"
                   onClick={() => handleUpdate(label)}
                 >
                   Save

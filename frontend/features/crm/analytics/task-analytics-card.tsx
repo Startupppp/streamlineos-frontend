@@ -34,7 +34,7 @@ export function TaskAnalyticsCard({ taskAnalytics }: TaskAnalyticsCardProps) {
       <Card className="shadow-sm">
         <CardHeader className="px-4 py-3 border-b">
           <div className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-blue-600" />
+            <TrendingUp className="h-4 w-4 text-primary" />
             <h3 className="text-sm font-semibold">Task Analytics (Last 30 Days)</h3>
           </div>
         </CardHeader>
@@ -68,7 +68,7 @@ export function TaskAnalyticsCard({ taskAnalytics }: TaskAnalyticsCardProps) {
                   </p>
                   <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
                     <div
-                      className="h-full w-full rounded-full bg-blue-600 origin-left transition-transform duration-300"
+                      className="h-full w-full rounded-full bg-primary origin-left transition-transform duration-300"
                       style={{ transform: `scaleX(${rep.completionRate / 100})` }}
                     />
                   </div>

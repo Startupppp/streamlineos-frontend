@@ -164,7 +164,7 @@ export function ForwardMessageDialog({ message, open, onOpenChange }: ForwardMes
           value={comment}
           onChange={handleCommentChange}
           placeholder="Add a comment (optional)"
-          className="w-full rounded-lg border border-border/50 bg-background px-3 py-2 text-[13px] focus:outline-none focus:border-blue-500/40 transition-colors placeholder:text-muted-foreground"
+          className="w-full rounded-lg border border-border/50 bg-background px-3 py-2 text-[13px] focus:outline-none focus:border-primary/40 transition-colors placeholder:text-muted-foreground"
         />
 
         <DialogFooter>

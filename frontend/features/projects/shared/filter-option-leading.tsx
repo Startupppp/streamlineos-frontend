@@ -58,7 +58,7 @@ export function FilterAssigneeLeading({
   member?: FilterMember | null;
 }) {
   if (assigneeId === "@me") {
-    return <User className="h-4 w-4 shrink-0 text-blue-500" />;
+    return <User className="h-4 w-4 shrink-0 text-primary" />;
   }
   if (assigneeId === "__unassigned__") {
     return <User className="h-4 w-4 shrink-0 text-muted-foreground" />;

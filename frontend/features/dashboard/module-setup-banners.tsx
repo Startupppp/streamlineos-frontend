@@ -58,13 +58,13 @@ const MODULE_ICONS: Record<string, LucideIcon> = {
 };
 
 const MODULE_TONE: Record<string, { bg: string; text: string }> = {
-  CRM: { bg: "bg-blue-50 dark:bg-blue-500/10", text: "text-blue-600 dark:text-blue-400" },
-  HR: { bg: "bg-blue-50 dark:bg-blue-500/10", text: "text-blue-600 dark:text-blue-400" },
-  INVENTORY: { bg: "bg-blue-50 dark:bg-blue-500/10", text: "text-blue-600 dark:text-blue-400" },
+  CRM: { bg: "bg-primary/10", text: "text-primary" },
+  HR: { bg: "bg-primary/10", text: "text-primary" },
+  INVENTORY: { bg: "bg-primary/10", text: "text-primary" },
   FINANCE: { bg: "bg-amber-50 dark:bg-amber-500/10", text: "text-amber-600 dark:text-amber-400" },
-  PROJECTS: { bg: "bg-blue-50 dark:bg-blue-500/10", text: "text-blue-600 dark:text-blue-400" },
-  HELPDESK: { bg: "bg-blue-50 dark:bg-blue-500/10", text: "text-blue-600 dark:text-blue-400" },
-  KNOWLEDGE: { bg: "bg-blue-50 dark:bg-blue-500/10", text: "text-blue-600 dark:text-blue-400" },
+  PROJECTS: { bg: "bg-primary/10", text: "text-primary" },
+  HELPDESK: { bg: "bg-primary/10", text: "text-primary" },
+  KNOWLEDGE: { bg: "bg-primary/10", text: "text-primary" },
   CHAT: { bg: "bg-emerald-50 dark:bg-emerald-500/10", text: "text-emerald-600 dark:text-emerald-400" },
   PAYMENTS: { bg: "bg-amber-50 dark:bg-amber-500/10", text: "text-amber-600 dark:text-amber-400" },
 };

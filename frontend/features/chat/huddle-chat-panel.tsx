@@ -93,7 +93,7 @@ export function HuddleChatPanel({
               className={cn(
                 "max-w-[220px] px-3 py-1.5 rounded-xl text-[12px] leading-[1.5]",
                 msg.userId === currentUserId
-                  ? "bg-blue-600 text-white rounded-br-md"
+                  ? "bg-primary text-primary-foreground rounded-br-md"
                   : "bg-white/10 text-white rounded-bl-md",
               )}
             >
@@ -116,7 +116,7 @@ export function HuddleChatPanel({
           <button
             onClick={handleSend}
             disabled={!input.trim()}
-            className="h-6 w-6 rounded-lg bg-blue-600 flex items-center justify-center disabled:opacity-40 hover:bg-blue-700 transition-colors"
+            className="h-6 w-6 rounded-lg bg-primary flex items-center justify-center disabled:opacity-40 hover:bg-primary/90 transition-colors"
             aria-label="Send"
           >
             <Send className="h-3 w-3 text-white" />

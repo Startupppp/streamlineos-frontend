@@ -83,7 +83,7 @@ export function AIScoreButton({
             {scoreMutation.isPending ? (
               <Loader2 className="h-3 w-3 animate-spin" />
             ) : (
-              <Sparkles className="h-3 w-3 text-blue-600" />
+              <Sparkles className="h-3 w-3 text-primary" />
             )}
             {result ? (
               <span className={cn("font-bold", scoreColor(result.score))}>
@@ -130,7 +130,7 @@ export function AIScoreButton({
           </>
         ) : (
           <>
-            <Sparkles className="h-4 w-4 mr-2 text-blue-600" />
+            <Sparkles className="h-4 w-4 mr-2 text-primary" />
             AI Score Lead
           </>
         )}
@@ -237,7 +237,7 @@ function AIScoreDetails({
           </p>
           {result.suggestedActions.map((a, i) => (
             <div key={i} className="flex items-start gap-1.5 text-[11px]">
-              <AlertCircle className="h-3 w-3 text-blue-400 mt-0.5 shrink-0" />
+              <AlertCircle className="h-3 w-3 text-primary mt-0.5 shrink-0" />
               <span>{a}</span>
             </div>
           ))}

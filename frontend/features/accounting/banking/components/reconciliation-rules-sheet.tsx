@@ -269,7 +269,7 @@ export function ReconciliationRulesSheet({ bankAccountId, open, onOpenChange }: 
         )}
 
         {addingRule && (
-          <div className="border border-blue-200 dark:border-blue-500/30 bg-blue-50/30 dark:bg-blue-500/10 rounded-lg p-4 space-y-3">
+          <div className="border border-primary/20 bg-primary/5 rounded-lg p-4 space-y-3">
             <p className="text-xs font-semibold">New Rule</p>
 
             <div className="grid grid-cols-2 gap-3">

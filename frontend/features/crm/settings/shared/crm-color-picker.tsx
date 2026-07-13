@@ -64,7 +64,7 @@ export function CrmColorPicker({ value, onChange, className }: CrmColorPickerPro
                 className={cn(
                   "h-7 w-7 rounded-md border-2 flex items-center justify-center transition-colors",
                   isSelected
-                    ? "border-blue-500 ring-2 ring-blue-500/20"
+                    ? "border-primary ring-2 ring-primary/20"
                     : "border-border",
                 )}
               >

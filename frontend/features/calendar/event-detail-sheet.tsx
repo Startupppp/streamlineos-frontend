@@ -167,7 +167,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                           href={event.location}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-blue-500 hover:underline break-all"
+                          className="text-primary hover:text-primary/80 hover:underline break-all"
                         >
                           {event.location}
                         </a>
@@ -183,7 +183,7 @@ export function EventDetailSheet({ event, onClose }: EventDetailSheetProps) {
                         href={event.meetingUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 rounded-md bg-blue-500 px-2.5 py-1 text-xs font-medium text-white transition-colors hover:bg-blue-600"
+                        className="inline-flex items-center gap-1.5 rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
                       >
                         Join meeting
                       </a>

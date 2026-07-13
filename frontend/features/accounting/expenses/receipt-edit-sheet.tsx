@@ -127,7 +127,7 @@ export function ReceiptEditSheet({ expense, open, onOpenChange }: ReceiptEditShe
             <button
               type="button"
               onClick={handleApplySuggestion}
-              className="mt-1 inline-flex items-center gap-1 rounded-full bg-blue-50 border border-blue-200 px-2.5 py-0.5 text-xs text-blue-700 hover:bg-blue-100 transition-colors dark:bg-blue-500/10 dark:border-blue-500/30 dark:text-blue-300 dark:hover:bg-blue-500/10"
+              className="mt-1 inline-flex items-center gap-1 rounded-full bg-primary/10 border border-primary/30 px-2.5 py-0.5 text-xs text-foreground hover:bg-primary/15 transition-colors"
             >
               Suggested: {suggestion.categoryName} ({suggestion.confidence}%)
             </button>

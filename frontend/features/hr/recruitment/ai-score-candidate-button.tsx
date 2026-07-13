@@ -155,7 +155,7 @@ function ScoreDetails({
           <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">Suggested Questions</p>
           {result.suggestedQuestions.map((q, i) => (
             <div key={i} className="flex items-start gap-1.5 text-[11px]">
-              <MessageSquare className="h-3 w-3 text-blue-400 mt-0.5 shrink-0" />
+              <MessageSquare className="h-3 w-3 text-muted-foreground mt-0.5 shrink-0" />
               <span>{q}</span>
             </div>
           ))}

@@ -22,7 +22,7 @@ const STATUS_BADGE: Record<TaxDeclarationStatus, string> = {
 };
 
 const REGIME_BADGE: Record<string, string> = {
-  NEW: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  NEW: "bg-primary/10 text-foreground border-primary/20",
   OLD: "bg-muted text-muted-foreground border-border",
 };
 

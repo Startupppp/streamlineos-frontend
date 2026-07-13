@@ -87,7 +87,7 @@ const WorkItemRow = memo(function WorkItemRow({ item, index }: { item: WorkRowSh
         <div className="flex-1 min-w-0">
           <p className="text-sm text-foreground truncate font-medium">{item.title}</p>
           <div className="flex items-center gap-2 mt-0.5">
-            <span className="text-[10px] text-blue-600 font-medium">
+            <span className="text-[10px] text-primary font-medium">
               {item.projectKey}
             </span>
             <span className="text-[10px] text-muted-foreground truncate">

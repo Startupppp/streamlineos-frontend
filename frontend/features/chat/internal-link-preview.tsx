@@ -152,11 +152,11 @@ function CommentPreviewCard({
   return (
     <CardShell isOwn={isOwn} onClick={handleOpen}>
       <div className="flex items-center gap-1.5">
-        <Ticket className={cn("h-3 w-3 shrink-0", isOwn ? "text-white/60" : "text-blue-500")} />
+        <Ticket className={cn("h-3 w-3 shrink-0", isOwn ? "text-white/60" : "text-primary")} />
         <span
           className={cn(
             "text-[11px] font-mono font-semibold",
-            isOwn ? "text-white/80" : "text-blue-600",
+            isOwn ? "text-white/80" : "text-primary",
           )}
         >
           {formatTicketKey(data.ticket.projectKey, data.ticket.ticketNumber)}
@@ -251,13 +251,13 @@ function TicketPreviewCard({
     <CardShell isOwn={isOwn} onClick={handleOpen}>
       <div className="flex items-start gap-2">
         <Ticket
-          className={cn("h-3.5 w-3.5 shrink-0 mt-0.5", isOwn ? "text-white/60" : "text-blue-500")}
+          className={cn("h-3.5 w-3.5 shrink-0 mt-0.5", isOwn ? "text-white/60" : "text-primary")}
         />
         <div className="min-w-0 flex-1">
           <p
             className={cn(
               "text-[11px] font-mono font-semibold",
-              isOwn ? "text-white/80" : "text-blue-600",
+              isOwn ? "text-white/80" : "text-primary",
             )}
           >
             {ticketKey}

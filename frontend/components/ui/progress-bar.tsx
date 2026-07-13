@@ -22,7 +22,7 @@ export function ProgressBar({ value, ariaLabel, stepText }: ProgressBarProps) {
         aria-valuetext={stepText ? `${stepText} — ${clamped}% completed` : `${clamped}% completed`}
       >
         <div
-          className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full transition-all duration-500"
+          className="h-full bg-primary rounded-full transition-all duration-500"
           style={{ width: `${clamped}%` }}
         />
       </div>

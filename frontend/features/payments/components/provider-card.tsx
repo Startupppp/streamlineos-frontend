@@ -34,7 +34,7 @@ export function ProviderCard({ catalogEntry, provider, selected, onSelect, onCon
       onClick={canSelect ? onSelect : undefined}
       className={cn(
         "flex flex-col gap-2 rounded-xl border bg-card p-4 text-left transition-colors",
-        selected ? "border-blue-500 shadow-sm" : "border-border hover:border-blue-300",
+        selected ? "border-primary shadow-sm" : "border-border hover:border-primary/40",
         !canSelect && "cursor-default",
       )}
     >

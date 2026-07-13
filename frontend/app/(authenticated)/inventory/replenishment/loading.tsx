@@ -16,7 +16,7 @@ export default function ReplenishmentLoading() {
             <Skeleton className="h-3 w-20" />
             <Skeleton className="h-3 w-12" />
             <Skeleton className="h-3 w-12" />
-            <Skeleton className="h-3 w-12 text-blue-600" />
+            <Skeleton className="h-3 w-12" />
             <Skeleton className="h-3 w-20" />
             <Skeleton className="h-3 w-20" />
             <Skeleton className="h-3 w-32" />

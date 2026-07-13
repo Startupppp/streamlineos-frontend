@@ -42,7 +42,7 @@ const ThreadEntry = memo(function ThreadEntry({ entry }: { entry: QnAEntry }) {
         <p className="text-[13px] text-foreground font-medium leading-snug">{entry.question}</p>
       </div>
       <div className="flex items-start gap-2">
-        <span className="shrink-0 mt-0.5 h-5 w-5 rounded-full bg-blue-500 flex items-center justify-center text-[10px] font-semibold text-white select-none">
+        <span className="shrink-0 mt-0.5 h-5 w-5 rounded-full bg-primary flex items-center justify-center text-[10px] font-semibold text-primary-foreground select-none">
           AI
         </span>
         <div className="flex-1 min-w-0 space-y-1.5">
@@ -130,8 +130,8 @@ export function AskCard({ projectId, featureEnabled }: AskCardProps) {
     <div className="bg-card border border-border rounded-xl shadow-sm p-4 flex flex-col gap-3">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3">
-          <div className="shrink-0 flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 border border-blue-100 dark:bg-blue-500/10 dark:border-blue-500/30">
-            <MessageSquare className="h-4 w-4 text-blue-500" />
+          <div className="shrink-0 flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 border border-primary/20">
+            <MessageSquare className="h-4 w-4 text-primary" />
           </div>
           <div className="min-w-0">
             <h3 className="text-sm font-semibold text-foreground">Ask the AI</h3>

@@ -23,7 +23,7 @@ function SummaryCard({ label, value, sub }: { label: string; value: string; sub?
   return (
     <div className="p-4 rounded-xl border bg-card">
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="text-xl font-bold text-blue-700 mt-1">{value}</p>
+      <p className="text-xl font-bold text-primary mt-1">{value}</p>
       {sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}
     </div>
   );
@@ -99,7 +99,7 @@ export default function WorkforceCostPage() {
                         <p className="text-sm font-medium">{String(row["department_name"] ?? "—")}</p>
                         <p className="text-xs text-muted-foreground">{String(row["headcount"] ?? 0)} employees</p>
                       </div>
-                      <p className="text-sm font-bold text-blue-700">{formatCents(row["monthly_cost_cents"])}/mo</p>
+                      <p className="text-sm font-bold text-primary">{formatCents(row["monthly_cost_cents"])}/mo</p>
                     </div>
                   ))}
                 </div>
@@ -121,7 +121,7 @@ export default function WorkforceCostPage() {
                         <p className="text-sm font-medium">{String(row["location_id"] === "unassigned" ? "Unassigned" : `Location ${row["location_id"]}`)}</p>
                         <p className="text-xs text-muted-foreground">{String(row["headcount"] ?? 0)} employees</p>
                       </div>
-                      <p className="text-sm font-bold text-blue-700">{formatCents(row["monthly_cost_cents"])}/mo</p>
+                      <p className="text-sm font-bold text-primary">{formatCents(row["monthly_cost_cents"])}/mo</p>
                     </div>
                   ))}
                 </div>

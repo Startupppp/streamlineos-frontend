@@ -83,7 +83,7 @@ export function WinRateTrendChart({ kpis }: WinRateTrendChartProps) {
         </ResponsiveContainer>
         <div className="flex justify-center gap-8 pb-2">
           <div className="text-center">
-            <p className="text-2xl font-bold text-blue-600">
+            <p className="text-2xl font-bold text-primary">
               {kpis.closeRate.toFixed(1)}%
             </p>
             <p className="text-xs text-muted-foreground">Current win rate</p>

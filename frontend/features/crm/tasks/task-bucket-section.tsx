@@ -18,8 +18,8 @@ const BUCKET_CONFIG: Record<
   },
   TODAY: {
     label: "Today",
-    badgeClass: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-    borderClass: "border-l-blue-400",
+    badgeClass: "bg-primary/10 text-primary border-primary/20",
+    borderClass: "border-l-primary",
   },
   THIS_WEEK: {
     label: "This Week",
@@ -28,8 +28,8 @@ const BUCKET_CONFIG: Record<
   },
   UPCOMING: {
     label: "Upcoming",
-    badgeClass: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-    borderClass: "border-l-blue-400",
+    badgeClass: "bg-primary/10 text-primary border-primary/20",
+    borderClass: "border-l-primary",
   },
   NO_DATE: {
     label: "No Date",

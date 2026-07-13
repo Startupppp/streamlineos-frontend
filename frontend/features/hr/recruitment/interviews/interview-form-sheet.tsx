@@ -454,7 +454,7 @@ export function InterviewFormSheet({
                   {selectedInterviewers.map((m) => (
                     <span
                       key={m.id}
-                      className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800"
+                      className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-primary/10 text-foreground border-primary/20"
                     >
                       {m.name ?? m.email}
                       <button

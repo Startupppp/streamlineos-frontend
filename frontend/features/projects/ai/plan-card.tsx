@@ -46,8 +46,8 @@ export function PlanCard({ projectId, featureEnabled, requiredPlan }: PlanCardPr
   return (
     <div className="bg-card border border-border rounded-xl shadow-sm p-4 flex flex-col gap-3 h-full">
       <div className="flex items-start gap-3">
-        <div className="shrink-0 flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 border border-blue-100 dark:bg-blue-500/10 dark:border-blue-500/30">
-          <ListChecks className="h-4 w-4 text-blue-500" />
+        <div className="shrink-0 flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 border border-primary/20">
+          <ListChecks className="h-4 w-4 text-primary" />
         </div>
         <div className="min-w-0 flex-1">
           <h3 className="text-sm font-semibold text-foreground">Plan from Prompt</h3>

@@ -34,8 +34,8 @@ const TEAM_COLUMNS: DataTableColumn<SupportTeamMember>[] = [
     header: "Name",
     cell: (member) => (
       <div className="flex items-center gap-2.5">
-        <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center shrink-0">
-          <span className="text-xs font-semibold text-blue-600">{member.avatar}</span>
+        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+          <span className="text-xs font-semibold text-primary">{member.avatar}</span>
         </div>
         <span className="font-medium text-foreground">{member.name}</span>
       </div>
@@ -186,7 +186,7 @@ export default function SupportDashboardPage() {
           <Card className="h-full shadow-noir">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Shield className="h-4 w-4 text-blue-600" />
+                <Shield className="h-4 w-4 text-primary" />
                 Ticket Status Breakdown
               </CardTitle>
             </CardHeader>
@@ -204,7 +204,7 @@ export default function SupportDashboardPage() {
           <Card className="h-full shadow-noir">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Ticket className="h-4 w-4 text-blue-600" />
+                <Ticket className="h-4 w-4 text-primary" />
                 Ticket Volume Trend
               </CardTitle>
             </CardHeader>
@@ -255,7 +255,7 @@ export default function SupportDashboardPage() {
         <Card className="shadow-noir">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <Shield className="h-4 w-4 text-blue-600" />
+              <Shield className="h-4 w-4 text-primary" />
               Tickets by Priority
             </CardTitle>
           </CardHeader>

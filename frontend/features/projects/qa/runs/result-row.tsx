@@ -74,7 +74,7 @@ export const ResultRow = memo(function ResultRow({ result, projectId, canExecute
         {result.linkedBugId && (
           <Link
             href={`/projects/${projectId}/bugs`}
-            className="text-[10px] text-blue-600 dark:text-blue-400 font-mono hover:underline shrink-0"
+            className="text-[10px] text-primary font-mono hover:underline shrink-0"
           >
             BUG-{result.linkedBugId}
           </Link>

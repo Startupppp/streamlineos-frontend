@@ -32,7 +32,7 @@ export function SprintFormFields({
         render={({ field }) => (
           <FormItem>
             <FormLabel className="flex items-center gap-2">
-              <Calendar className="h-3.5 w-3.5 text-blue-500" />
+              <Calendar className="h-3.5 w-3.5 text-primary" />
               Sprint name
             </FormLabel>
             <FormControl>

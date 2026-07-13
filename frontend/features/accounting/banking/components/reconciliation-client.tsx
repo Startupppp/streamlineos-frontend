@@ -164,7 +164,7 @@ export function ReconciliationClient() {
                   className={[
                     "flex-1 py-2 px-3 text-xs font-medium transition-colors",
                     tab === "unmatched"
-                      ? "bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 border-b-2 border-blue-600 dark:border-blue-500"
+                      ? "bg-primary/10 text-foreground border-b-2 border-primary"
                       : "text-muted-foreground hover:bg-muted/30",
                   ].join(" ")}
                 >
@@ -176,7 +176,7 @@ export function ReconciliationClient() {
                   className={[
                     "flex-1 py-2 px-3 text-xs font-medium transition-colors",
                     tab === "suggested"
-                      ? "bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 border-b-2 border-blue-600 dark:border-blue-500"
+                      ? "bg-primary/10 text-foreground border-b-2 border-primary"
                       : "text-muted-foreground hover:bg-muted/30",
                   ].join(" ")}
                 >
@@ -201,7 +201,7 @@ export function ReconciliationClient() {
                         className={[
                           "w-full text-left px-3 py-2.5 border-b border-border/50 transition-colors",
                           isSelected
-                            ? "bg-blue-50 dark:bg-blue-500/10 border-l-2 border-l-blue-500"
+                            ? "bg-primary/5 border-l-2 border-l-primary"
                             : "hover:bg-muted/30",
                         ].join(" ")}
                       >
@@ -226,7 +226,7 @@ export function ReconciliationClient() {
                           </div>
                         </div>
                         {txn.suggestedMatches && txn.suggestedMatches.length > 0 && (
-                          <p className="text-[10px] text-blue-600 dark:text-blue-400 mt-1">
+                          <p className="text-[10px] text-primary mt-1">
                             {txn.suggestedMatches.length} suggestion
                             {txn.suggestedMatches.length > 1 ? "s" : ""}
                           </p>
