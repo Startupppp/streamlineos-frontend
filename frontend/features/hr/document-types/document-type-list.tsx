@@ -219,6 +219,7 @@ export function DocumentTypeList({
       getRowKey={(dt) => dt.id}
       emptyState={emptyState}
       minWidth="640px"
+      className="flex-1 min-h-0"
     />
   );
 }

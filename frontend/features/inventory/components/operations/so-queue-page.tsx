@@ -155,7 +155,7 @@ export function SoQueuePage({ status, title, actionNoun, emptyTitle, emptyDescri
           )
         }
         minWidth="640px"
-        className="min-h-[320px]"
+        className="flex-1 min-h-0"
       />
     </PageWrapper>
   );

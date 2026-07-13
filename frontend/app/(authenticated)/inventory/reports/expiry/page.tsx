@@ -284,7 +284,6 @@ function ExpiryReportContent() {
           illustration={<EmptyReportIllustration />}
           title="No expiring lots"
           description="Lots with tracked expiry dates will appear here as they approach their expiry window."
-          className="min-h-[40vh]"
         />
       )}
 
@@ -307,7 +306,6 @@ function ExpiryReportContent() {
                   illustration={<EmptySearchIllustration />}
                   title="No results"
                   description="No lots match the current filters."
-                  className="min-h-[40vh]"
                 />
               }
             />

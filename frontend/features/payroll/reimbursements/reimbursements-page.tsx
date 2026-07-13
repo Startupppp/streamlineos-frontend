@@ -290,9 +290,8 @@ export function ReimbursementsPageContent() {
         eyebrow="Payroll"
         subtitle="Review and approve employee expense claims"
         filters={filterBar}
-        noInternalScroll
       >
-        <div className="flex flex-col gap-3 h-full min-h-0">
+        <div className="flex flex-1 min-h-0 flex-col gap-3">
           <div className="shrink-0 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-[12px] text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300">
             Approved claims flow into the{" "}
             <span className="font-medium">{formatMonth(month)}</span> payroll run automatically.

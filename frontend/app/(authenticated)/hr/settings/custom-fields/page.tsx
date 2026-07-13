@@ -72,7 +72,7 @@ export default function HrCustomFieldsPage() {
             ))}
           </div>
         ) : (
-          <div className="pt-2">
+          <div className="flex flex-1 min-h-0 flex-col pt-2">
             <CustomFieldsDataTable entityType={entityType} fields={fields ?? []} />
           </div>
         )}

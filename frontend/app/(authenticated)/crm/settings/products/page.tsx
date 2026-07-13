@@ -276,16 +276,17 @@ export default function ProductCatalogPage() {
         }
       >
         {isError ? (
-          <ErrorState title="Failed to load products" onRetry={handleRetry} />
+          <ErrorState title="Failed to load products" onRetry={handleRetry} className="flex-1" />
         ) : (
           <DataTable
             data={allProducts}
             columns={columns}
             getRowKey={(p) => p.id}
             isLoading={isLoading}
+            className="flex-1 min-h-0"
             emptyState={
               <EmptyState
-                className="flex-1 min-h-[50vh] border-0 bg-transparent"
+                className="flex-1 border-0 bg-transparent"
                 illustration={<EmptyProductsIllustration />}
                 title={debouncedSearch ? "No products match your search" : "No products yet"}
                 description={

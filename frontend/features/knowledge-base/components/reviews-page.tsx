@@ -436,6 +436,7 @@ export default function ReviewsPage() {
             columns={columns}
             getRowKey={(review) => review.id}
             isLoading={isLoading}
+            className="flex-1 min-h-0"
             emptyState={
               <EmptyState
                 illustration={

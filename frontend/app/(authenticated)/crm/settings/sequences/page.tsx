@@ -199,18 +199,19 @@ export default function SequencesPage() {
         }
       >
         {isError ? (
-          <ErrorState title="Failed to load sequences" onRetry={handleRetry} />
+          <ErrorState title="Failed to load sequences" onRetry={handleRetry} className="flex-1" />
         ) : isLoading ? (
-          <DataTableSkeleton rows={5} columns={5} />
+          <DataTableSkeleton rows={5} columns={5} className="flex-1" />
         ) : (
           <DataTable
             data={sequences}
             columns={columns}
             getRowKey={(seq) => seq.id}
             isLoading={false}
+            className="flex-1 min-h-0"
             emptyState={
               <EmptyState
-                className="min-h-[50vh] border-0 bg-transparent"
+                className="flex-1 border-0 bg-transparent"
                 illustration={<AutomationsIllustration />}
                 title="No sequences yet"
                 description="Create your first sequence to automate multi-step outreach across leads, deals, and contacts."

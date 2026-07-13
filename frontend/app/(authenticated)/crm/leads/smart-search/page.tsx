@@ -233,7 +233,7 @@ export default function SmartLeadSearchPage() {
         </Badge>
       }
     >
-      <div className="space-y-6">
+      <div className="flex flex-1 min-h-0 flex-col space-y-6">
         <div className="space-y-3 rounded-lg bg-muted/40 p-3">
           <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative flex-1">
@@ -311,9 +311,10 @@ export default function SmartLeadSearchPage() {
             getRowKey={(lead) => lead.id}
             isLoading={true}
             minWidth="700px"
+            className="flex-1 min-h-0"
           />
         ) : hasResult ? (
-          <div className="space-y-4">
+          <div className="flex flex-1 min-h-0 flex-col space-y-4">
             <FilterBadges filters={data.parsedFilters} />
             <p className="text-[11px] text-muted-foreground">
               <span className="font-semibold text-foreground tabular-nums">{data.total}</span>{" "}
@@ -324,12 +325,13 @@ export default function SmartLeadSearchPage() {
               columns={COLUMNS}
               getRowKey={(lead) => lead.id}
               minWidth="700px"
+              className="flex-1 min-h-0"
               emptyState={
                 <EmptyState
                   illustration={<EmptyLeadsIllustration />}
                   title="No leads match your search"
                   description="Try adjusting your query or use different keywords."
-                  className="min-h-[40vh] border-0 bg-transparent"
+                  className="border-0 bg-transparent"
                 />
               }
             />

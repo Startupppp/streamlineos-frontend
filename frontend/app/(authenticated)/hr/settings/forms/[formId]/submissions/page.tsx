@@ -32,7 +32,7 @@ export default function HrFormSubmissionsPage({ params }: PageProps) {
           ))}
         </div>
       ) : (
-        <div className="pt-2">
+        <div className="flex flex-1 min-h-0 flex-col pt-2">
           <SubmissionsDataTable
             formId={formId}
             submissions={subs?.data ?? []}

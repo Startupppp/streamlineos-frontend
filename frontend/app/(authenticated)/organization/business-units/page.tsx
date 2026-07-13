@@ -323,7 +323,6 @@ export default function BusinessUnitsPage() {
       title="No business units yet"
       description="Create your first business unit to get started."
       action={{ label: "Add Business Unit", onClick: handleOpenCreate }}
-      className="min-h-[40vh]"
     />
   );
 
@@ -361,6 +360,7 @@ export default function BusinessUnitsPage() {
         emptyState={emptyState}
         rowClassName={(u) => cn(u.status === "ARCHIVED" && "opacity-60")}
         minWidth="580px"
+        className="flex-1 min-h-0"
       />
 
       <Sheet open={showCreate} onOpenChange={setShowCreate}>

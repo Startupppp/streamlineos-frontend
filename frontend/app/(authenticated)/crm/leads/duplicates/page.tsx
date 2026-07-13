@@ -300,7 +300,7 @@ export default function DuplicateLeadsPage() {
               illustration={<EmptyLeadsIllustration />}
               title="No Duplicates Found"
               description="Great news — no potential duplicate leads were detected across your pipeline."
-              className="flex-1 min-h-[40vh]"
+              className="flex-1"
             />
           ) : (
             <div className="space-y-4">

@@ -158,10 +158,10 @@ export default function DevicesPage() {
               illustrationPreset="devices"
               title="No devices found"
               description="No devices have been registered to your account."
-              className="min-h-[40vh]"
             />
           }
           minWidth="500px"
+          className="flex-1 min-h-0"
         />
       )}
     </PageWrapper>

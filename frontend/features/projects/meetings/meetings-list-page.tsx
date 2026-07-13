@@ -590,6 +590,7 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
         <ErrorState className="flex-1" onRetry={() => void refetch()} />
       ) : (
         <DataTable
+          className="flex-1 min-h-0"
           data={displayed}
           columns={columns}
           getRowKey={(row) => row.id}

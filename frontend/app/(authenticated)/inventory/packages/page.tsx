@@ -205,10 +205,10 @@ function PackagesPageInner() {
             title="Failed to load packages"
             description={packagesQuery.error.message}
             onRetry={handleRetry}
-            className="min-h-[40vh]"
           />
         ) : (
           <DataTable
+            className="flex-1 min-h-0"
             data={items}
             columns={columns}
             getRowKey={(pkg) => pkg.id}
@@ -220,7 +220,7 @@ function PackagesPageInner() {
                 title="No packages yet"
                 description="Create a package to start organising shipments."
                 action={{ label: "New Package", onClick: handleNewPackage }}
-                className="border-0 bg-transparent min-h-[40vh]"
+                className="border-0 bg-transparent"
               />
             }
             pagination={{

@@ -212,10 +212,10 @@ function HoldsPageInner() {
             title="Failed to load holds"
             description={holdsQuery.error.message}
             onRetry={handleRetry}
-            className="min-h-[40vh]"
           />
         ) : (
           <DataTable
+            className="flex-1 min-h-0"
             data={items}
             columns={columns}
             getRowKey={(r) => r.id}
@@ -231,7 +231,7 @@ function HoldsPageInner() {
                     ? { label: "Clear filters", onClick: handleClearFilters }
                     : { label: "Create Hold", onClick: handleOpenCreate }
                 }
-                className="border-0 bg-transparent min-h-[40vh]"
+                className="border-0 bg-transparent"
               />
             }
             pagination={{

@@ -268,7 +268,7 @@ export default function HrPoliciesPage() {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.22, ease: "easeOut" }}
-        className="px-4 sm:px-6 py-4"
+        className="flex flex-1 min-h-0 flex-col py-4"
       >
         {isLoading ? (
           <div className="space-y-2">
@@ -303,6 +303,7 @@ export default function HrPoliciesPage() {
           </div>
         ) : (
           <DataTable
+            className="flex-1 min-h-0"
             data={data?.data ?? []}
             columns={columns}
             getRowKey={(row) => String(row.id)}

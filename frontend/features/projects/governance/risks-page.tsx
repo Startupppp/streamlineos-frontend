@@ -208,7 +208,7 @@ export function RisksPage({ projectId }: RisksPageProps) {
         ) : undefined
       }
     >
-      <div className="px-4 pb-4 space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col space-y-4">
         <StatCardGrid cols={3}>
           <StatCard label="Open" value={openCount} icon={ShieldAlert} tone="blue" isLoading={isLoading} />
           <StatCard label="High / Critical" value={highCritCount} icon={AlertTriangle} tone="red" isLoading={isLoading} />
@@ -241,7 +241,7 @@ export function RisksPage({ projectId }: RisksPageProps) {
         </div>
 
         {isLoading ? (
-          <DataTableSkeleton rows={5} columns={8} />
+          <DataTableSkeleton rows={5} columns={8} className="flex-1" />
         ) : isError ? (
           <ErrorState className="flex-1" onRetry={() => void refetch()} />
         ) : displayed.length === 0 ? (
@@ -260,7 +260,7 @@ export function RisksPage({ projectId }: RisksPageProps) {
             }
           />
         ) : (
-          <DataTable data={displayed} columns={columns} getRowKey={(row) => row.id} minWidth="780px" />
+          <DataTable data={displayed} columns={columns} getRowKey={(row) => row.id} minWidth="780px" className="flex-1 min-h-0" />
         )}
       </div>
 

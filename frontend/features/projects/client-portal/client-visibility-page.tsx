@@ -82,7 +82,7 @@ export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
       title="Client Portal"
       subtitle="Control what clients see in their portal"
     >
-      <div className="px-4 pb-4 space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col space-y-4">
         <div className="flex items-start gap-2.5 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/40 px-4 py-3">
           <Info className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
           <p className="text-[11px] text-blue-700 dark:text-blue-300 leading-relaxed">

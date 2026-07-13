@@ -316,9 +316,9 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
         ) : undefined
       }
     >
-      <div className="px-4 pb-4">
+      <div className="flex flex-1 min-h-0 flex-col">
         {isLoading ? (
-          <DataTableSkeleton rows={6} columns={7} />
+          <DataTableSkeleton rows={6} columns={7} className="flex-1" />
         ) : isError ? (
           <ErrorState className="flex-1" onRetry={() => void refetch()} />
         ) : items.length === 0 ? (
@@ -344,7 +344,7 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
             }
           />
         ) : (
-          <DataTable data={items} columns={columns} getRowKey={(row) => row.id} minWidth="720px" />
+          <DataTable data={items} columns={columns} getRowKey={(row) => row.id} minWidth="720px" className="flex-1 min-h-0" />
         )}
         {!isFiltered && items.length === 0 && canRequest && (
           <div className="flex justify-center mt-3">

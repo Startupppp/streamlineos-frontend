@@ -29,24 +29,26 @@ export default function ApiTokensPage() {
         </Button>
       }
     >
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-3 h-8">
-          <TabsTrigger value="personal" className="text-xs h-7">Personal</TabsTrigger>
-          <TabsTrigger value="organization" className="text-xs h-7">Organization</TabsTrigger>
-        </TabsList>
-        <TabsContent value="personal" className="mt-0">
-          <PersonalTokensTab
-            showCreate={createPersonalOpen}
-            onShowCreateChange={setCreatePersonalOpen}
-          />
-        </TabsContent>
-        <TabsContent value="organization" className="mt-0">
-          <OrgTokensTab
-            showCreate={createOrgOpen}
-            onShowCreateChange={setCreateOrgOpen}
-          />
-        </TabsContent>
-      </Tabs>
+      <div className="flex flex-1 min-h-0 flex-col">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-1 min-h-0 flex-col">
+          <TabsList className="mb-3 h-8 shrink-0">
+            <TabsTrigger value="personal" className="text-xs h-7">Personal</TabsTrigger>
+            <TabsTrigger value="organization" className="text-xs h-7">Organization</TabsTrigger>
+          </TabsList>
+          <TabsContent value="personal" className="mt-0 flex flex-1 min-h-0 flex-col">
+            <PersonalTokensTab
+              showCreate={createPersonalOpen}
+              onShowCreateChange={setCreatePersonalOpen}
+            />
+          </TabsContent>
+          <TabsContent value="organization" className="mt-0 flex flex-1 min-h-0 flex-col">
+            <OrgTokensTab
+              showCreate={createOrgOpen}
+              onShowCreateChange={setCreateOrgOpen}
+            />
+          </TabsContent>
+        </Tabs>
+      </div>
     </PageWrapper>
   );
 }

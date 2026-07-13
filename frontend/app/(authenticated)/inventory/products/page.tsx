@@ -463,7 +463,6 @@ function ProductsPageInner() {
           title="Failed to load products"
           description={productsQuery.error.message}
           onRetry={handleRetry}
-          className="min-h-[40vh]"
         />
       ) : isFirstLoad ? (
         <InventoryEmptyState
@@ -472,7 +471,6 @@ function ProductsPageInner() {
           description="Start building your product catalogue. Define SKUs, set pricing, configure stock tracking, and manage variants all in one place."
           action={{ label: "Add Product", href: "/inventory/products/new" }}
           secondaryAction={{ label: "Import Products", href: "/inventory/import" }}
-          className="min-h-[50vh]"
         />
       ) : (
         <DataTable
@@ -486,7 +484,7 @@ function ProductsPageInner() {
               title="No products found"
               description="Try adjusting your search or filters."
               action={{ label: "Clear filters", onClick: handleClearFilters }}
-              className="border-0 bg-transparent min-h-[40vh]"
+              className="border-0 bg-transparent"
             />
           }
           pagination={{
@@ -497,6 +495,7 @@ function ProductsPageInner() {
             onPageChange: handlePageChange,
           }}
           minWidth="640px"
+          className="flex-1 min-h-0"
         />
       )}
     </PageWrapper>

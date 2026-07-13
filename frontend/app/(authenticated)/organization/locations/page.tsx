@@ -345,7 +345,6 @@ export default function OrgLocationsPage() {
       title="No locations yet"
       description="Create your first location to get started."
       action={{ label: "Add Location", onClick: handleOpenCreate }}
-      className="min-h-[40vh]"
     />
   );
 
@@ -383,6 +382,7 @@ export default function OrgLocationsPage() {
         emptyState={emptyState}
         rowClassName={(l) => cn(l.status === "ARCHIVED" && "opacity-60")}
         minWidth="620px"
+        className="flex-1 min-h-0"
       />
 
       <Sheet open={showCreate} onOpenChange={setShowCreate}>

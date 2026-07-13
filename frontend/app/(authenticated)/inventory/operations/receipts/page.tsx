@@ -151,7 +151,7 @@ export default function ReceiptsPage() {
             : undefined
         }
         minWidth="640px"
-        className="min-h-[320px]"
+        className="flex-1 min-h-0"
       />
       <GrnDetailSheet
         grnId={selectedGrnId ?? 0}

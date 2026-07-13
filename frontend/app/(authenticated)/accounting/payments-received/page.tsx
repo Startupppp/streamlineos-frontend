@@ -302,6 +302,7 @@ export default function PaymentsReceivedPage() {
           getRowKey={(row) => String(row.id)}
           isLoading={isLoading}
           onRowClick={handleViewPayment}
+          className="flex-1 min-h-0"
           pagination={{
             pageSize: 50,
             page,

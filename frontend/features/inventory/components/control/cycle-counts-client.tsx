@@ -303,22 +303,22 @@ export function CycleCountsClient() {
             title="Failed to load cycle counts"
             description={getErrorMessage(error)}
             onRetry={handleRetry}
-            className="min-h-[40vh]"
           />
         ) : isLoading ? (
-          <DataTableSkeleton rows={6} columns={8} />
+          <DataTableSkeleton rows={6} columns={8} className="flex-1" />
         ) : (
           <DataTable
             data={items}
             columns={columns}
             getRowKey={(row) => row.id}
+            className="flex-1 min-h-0"
             emptyState={
               <InventoryEmptyState
                 illustration={<EmptyWarehouseIllustration />}
                 title="No cycle counts yet"
                 description="Create a cycle count to verify stock accuracy."
                 action={{ label: "New Cycle Count", onClick: handleOpenSheet }}
-                className="border-0 bg-transparent min-h-[40vh]"
+                className="border-0 bg-transparent"
               />
             }
             pagination={{

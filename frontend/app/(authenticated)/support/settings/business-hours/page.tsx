@@ -210,7 +210,7 @@ export default function BusinessHoursPage() {
             title="Failed to load business hours"
             description="Something went wrong. Please try again."
             action={{ label: "Retry", onClick: handleRetry }}
-            className="flex-1 min-h-[40vh] border-0 bg-transparent"
+            className="flex-1 border-0 bg-transparent"
           />
         ) : (
           <Card className="bg-card rounded-lg border border-border shadow-sm overflow-hidden">

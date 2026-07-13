@@ -296,13 +296,14 @@ export default function ClientsPage() {
           title="Failed to load clients"
           description="An error occurred while loading client accounts. Please try again."
           onRetry={handleRetry}
-          className="min-h-[50vh]"
+          className="flex-1"
         />
       ) : (
         <motion.div
           variants={contentVariants}
           initial="hidden"
           animate="visible"
+          className="flex flex-col flex-1 min-h-0"
         >
           <DataTable
             data={data?.accounts ?? []}
@@ -319,6 +320,7 @@ export default function ClientsPage() {
               onPageChange: handlePageChange,
             }}
             minWidth="700px"
+            className="flex-1 min-h-0"
           />
         </motion.div>
       )}

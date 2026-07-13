@@ -106,7 +106,7 @@ export function TemplateList() {
       ) : isError ? (
         <ErrorState title="Failed to load templates" onRetry={() => void refetch()} />
       ) : !templates || templates.length === 0 ? (
-        <div className="flex flex-1 h-full min-h-[50vh] flex-col items-center justify-center gap-4 text-center">
+        <div className="flex flex-1 h-full flex-col items-center justify-center gap-4 text-center">
           <IllustrationImage name="empty-documents" className="h-40 w-40" />
           <div>
             <p className="font-medium text-foreground">No templates yet</p>

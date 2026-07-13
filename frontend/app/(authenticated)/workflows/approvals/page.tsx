@@ -181,7 +181,7 @@ export default function ApprovalsPage() {
           className="flex-1"
         />
       ) : pendingApprovals.length === 0 ? (
-        <div className="flex flex-1 min-h-[60vh]">
+        <div className="flex flex-1 min-h-0">
           <EmptyState
             illustration={<EmptyApprovalIllustration />}
             title="No pending approvals"

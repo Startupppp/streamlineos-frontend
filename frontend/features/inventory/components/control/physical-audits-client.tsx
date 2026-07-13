@@ -233,22 +233,22 @@ export function PhysicalAuditsClient() {
             title="Failed to load physical audits"
             description={getErrorMessage(error)}
             onRetry={handleRetry}
-            className="min-h-[40vh]"
           />
         ) : isLoading ? (
-          <DataTableSkeleton rows={6} columns={6} />
+          <DataTableSkeleton rows={6} columns={6} className="flex-1" />
         ) : (
           <DataTable
             data={items}
             columns={columns}
             getRowKey={(row) => row.id}
+            className="flex-1 min-h-0"
             emptyState={
               <InventoryEmptyState
                 illustration={<EmptyWarehouseIllustration />}
                 title="No physical audits yet"
                 description="Create a physical audit to count all stock in a warehouse."
                 action={{ label: "New Physical Audit", onClick: handleOpenSheet }}
-                className="border-0 bg-transparent min-h-[40vh]"
+                className="border-0 bg-transparent"
               />
             }
             pagination={{

@@ -289,7 +289,7 @@ export default function SecretsManagerPage() {
       ) : isError ? (
         <ErrorState title="Failed to load secrets" onRetry={handleRetry} className="flex-1" />
       ) : list.length === 0 ? (
-        <div className="flex flex-1 min-h-[60vh]">
+        <div className="flex flex-1 min-h-0">
           <EmptyState
             illustrationPreset="security"
             title="No secrets yet"

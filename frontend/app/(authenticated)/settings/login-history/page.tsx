@@ -145,6 +145,7 @@ export default function LoginHistoryPage() {
           columns={COLUMNS}
           getRowKey={(e) => e.id}
           isLoading={isLoading}
+          className="flex-1 min-h-0"
           pagination={{
             mode: "server",
             page,
@@ -157,7 +158,7 @@ export default function LoginHistoryPage() {
               illustrationPreset="activity"
               title="No login history found"
               description="No sign-in events have been recorded for your account."
-              className="min-h-[200px]"
+              compact
             />
           }
           minWidth="600px"

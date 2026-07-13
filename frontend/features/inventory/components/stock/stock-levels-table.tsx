@@ -40,9 +40,10 @@ const StockStatusIcon = memo(function StockStatusIcon({ status }: { status: Stoc
 interface StockLevelsTableProps {
   rows: StockLevelRow[];
   onShowAvailability?: (variantId: number, variantName: string) => void;
+  className?: string;
 }
 
-export const StockLevelsTable = memo(function StockLevelsTable({ rows, onShowAvailability }: StockLevelsTableProps) {
+export const StockLevelsTable = memo(function StockLevelsTable({ rows, onShowAvailability, className }: StockLevelsTableProps) {
   const router = useRouter();
 
   const handleAdjust = useCallback((row: StockLevelRow) => {
@@ -213,6 +214,7 @@ export const StockLevelsTable = memo(function StockLevelsTable({ rows, onShowAva
       columns={columns}
       getRowKey={(row) => row.id}
       rowClassName={getRowClassName}
+      className={className}
     />
   );
 });

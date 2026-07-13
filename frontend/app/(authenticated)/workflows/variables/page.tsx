@@ -144,7 +144,7 @@ export default function VariablesManagerPage() {
       ) : isError ? (
         <ErrorState title="Failed to load variables" onRetry={handleRetry} className="flex-1" />
       ) : list.length === 0 ? (
-        <div className="flex flex-1 min-h-[60vh]">
+        <div className="flex flex-1 min-h-0">
           <EmptyState
             illustrationPreset="settings"
             title="No variables defined"

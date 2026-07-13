@@ -167,16 +167,18 @@ export default function QuestionBankPage() {
         </div>
       }
     >
-      {isError ? (
-        <ErrorState description="Failed to load questions" onRetry={refetch} />
-      ) : (
-        <QuestionList
-          questions={questions}
-          isLoading={isLoading}
-          roleOptions={roleOptions}
-          onDeleteRequest={handleDeleteRequest}
-        />
-      )}
+      <div className="flex flex-1 min-h-0 flex-col">
+        {isError ? (
+          <ErrorState description="Failed to load questions" onRetry={refetch} />
+        ) : (
+          <QuestionList
+            questions={questions}
+            isLoading={isLoading}
+            roleOptions={roleOptions}
+            onDeleteRequest={handleDeleteRequest}
+          />
+        )}
+      </div>
 
       <ConfirmDialog
         open={deleteTargetId !== null}

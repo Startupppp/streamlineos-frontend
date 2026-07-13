@@ -316,7 +316,7 @@ export default function FixedAssetsPage() {
           </div>
         }
       >
-        <Tabs defaultValue="assets">
+        <Tabs defaultValue="assets" className="flex flex-1 min-h-0 flex-col">
           <TabsList className="mb-4">
             <TabsTrigger value="assets">Assets</TabsTrigger>
             <TabsTrigger value="categories">Categories</TabsTrigger>
@@ -360,6 +360,7 @@ export default function FixedAssetsPage() {
             )}
             {!assetsQuery.error && (
               <DataTable<AssetListItem>
+                className="flex-1 min-h-0"
                 data={assetItems}
                 columns={ASSET_COLUMNS}
                 getRowKey={getAssetRowKey}
@@ -396,6 +397,7 @@ export default function FixedAssetsPage() {
             )}
             {!categoriesQuery.error && (
               <DataTable<AssetCategory>
+                className="flex-1 min-h-0"
                 data={categories}
                 columns={categoryColumns}
                 getRowKey={getCategoryRowKey}

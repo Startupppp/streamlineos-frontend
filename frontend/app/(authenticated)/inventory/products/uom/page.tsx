@@ -378,7 +378,7 @@ function UomPageInner() {
                         ? "Try adjusting your search or filters."
                         : "Use the form above to add your first unit."
                     }
-                    className="border-0 bg-transparent min-h-[20vh]"
+                    className="border-0 bg-transparent"
                   />
                 }
                 columns={uomColumns}

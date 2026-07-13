@@ -162,9 +162,9 @@ export function ComponentsPageContent() {
             Add Component
           </Button>
         }
-        noInternalScroll
       >
         <DataTable
+          className="flex-1 min-h-0"
           data={data?.items ?? []}
           columns={columns}
           getRowKey={(row) => row.id}

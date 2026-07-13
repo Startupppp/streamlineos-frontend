@@ -119,7 +119,8 @@ function RolesContent() {
         </div>
       }
     >
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {metricsLoading ? (
           [...Array(4)].map((_, i) => <Skeleton key={i} className="h-14 rounded-lg" />)
         ) : (
@@ -134,7 +135,7 @@ function RolesContent() {
         )}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[320px_1fr] lg:h-full lg:min-h-0">
+      <div className="grid flex-1 min-h-0 gap-6 lg:grid-cols-[320px_1fr]">
         <Card className="flex flex-col lg:min-h-0">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
@@ -208,6 +209,7 @@ function RolesContent() {
             </div>
           </Card>
         )}
+      </div>
       </div>
 
       <CreateRoleDialog open={createOpen} onOpenChange={setCreateOpen} />

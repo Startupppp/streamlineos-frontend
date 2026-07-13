@@ -94,6 +94,7 @@ export default function ChannelPerformanceReportPage() {
         <ErrorState title="Could not load channel performance" onRetry={handleRetry} />
       ) : (
         <DataTable
+          className="flex-1 min-h-0"
           data={rows}
           columns={columns}
           getRowKey={(row) => row.channel}

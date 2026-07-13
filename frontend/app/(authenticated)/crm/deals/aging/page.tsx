@@ -181,10 +181,10 @@ export default function DealAgingPage() {
           title="Failed to load aging data"
           description="An error occurred while loading the deal aging report."
           onRetry={handleRetry}
-          className="flex-1 min-h-[40vh]"
+          className="flex-1"
         />
       ) : (
-        <div className="space-y-4">
+        <div className="flex flex-1 min-h-0 flex-col space-y-4">
           <StatCardGrid cols={4}>
             <StatCard
               label="Total Stale Deals"
@@ -230,6 +230,7 @@ export default function DealAgingPage() {
               />
             }
             minWidth="780px"
+            className="flex-1 min-h-0"
           />
         </div>
       )}

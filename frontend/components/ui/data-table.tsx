@@ -264,7 +264,7 @@ export function DataTable<T>({
           {toolbar}
         </div>
       )}
-      <div className="flex-1 min-h-0 overflow-auto">
+      <div className="flex-1 min-h-0 overflow-auto flex flex-col">
         {isLoading ? (
           <div
             style={minWidth ? { minWidth } : undefined}
@@ -320,7 +320,7 @@ export function DataTable<T>({
             </Table>
           </div>
         ) : rows.length === 0 ? (
-          <div className="p-2">
+          <div className="flex flex-1 flex-col justify-center p-2">
             {emptyState ?? (
               <ChartEmptyState message="No results found." height={260} />
             )}

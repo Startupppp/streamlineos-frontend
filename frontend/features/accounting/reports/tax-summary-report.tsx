@@ -180,6 +180,7 @@ export function TaxSummaryReport() {
           )}
 
           <DataTable
+            className="flex-1 min-h-0"
             data={data ?? []}
             columns={TAX_COLUMNS}
             getRowKey={getTaxRowKey}

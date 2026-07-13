@@ -52,7 +52,7 @@ export function EnvelopeList() {
   }
 
   const emptyState = (
-    <div className="flex flex-1 h-full min-h-[50vh] flex-col items-center justify-center gap-4 text-center">
+    <div className="flex flex-1 h-full flex-col items-center justify-center gap-4 text-center">
       <IllustrationImage name="empty-upload" className="h-40 w-40" />
       <div>
         <p className="font-medium text-foreground">No envelopes yet</p>
@@ -146,6 +146,7 @@ export function EnvelopeList() {
         <ErrorState title="Failed to load envelopes" onRetry={handleRetry} />
       ) : (
         <DataTable
+          className="flex-1 min-h-0"
           data={envelopes ?? []}
           columns={columns}
           getRowKey={(envelope) => envelope.id}

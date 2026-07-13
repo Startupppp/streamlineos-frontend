@@ -41,7 +41,7 @@ function SectionTitle({ icon: Icon, title }: { icon: ComponentType<{ className?:
 
 function DashboardSkeleton() {
   return (
-    <div className="px-4 pb-6 space-y-8">
+    <div className="flex flex-1 min-h-0 flex-col space-y-8">
       {Array.from({ length: 4 }).map((_, i) => (
         <div key={i} className="space-y-3">
           <Skeleton className="h-5 w-32" />
@@ -81,9 +81,7 @@ export function PortalDashboardPage({ projectId }: PortalDashboardPageProps) {
   if (isError || !overview) {
     return (
       <PageWrapper title="Project Dashboard" backHref="/projects/portal">
-        <div className="px-4 pb-4">
-          <ErrorState onRetry={() => { refetchOverview(); refetchCrs(); }} />
-        </div>
+        <ErrorState onRetry={() => { refetchOverview(); refetchCrs(); }} />
       </PageWrapper>
     );
   }
@@ -97,7 +95,7 @@ export function PortalDashboardPage({ projectId }: PortalDashboardPageProps) {
       backHref="/projects/portal"
       badge={<Badge variant="outline" className="text-[10px] capitalize">{project.status}</Badge>}
     >
-      <div className="px-4 pb-8 space-y-8">
+      <div className="flex flex-1 min-h-0 flex-col space-y-8">
         <section>
           <SectionTitle icon={Diamond} title="Milestones & Deliverables" />
           {milestones.length === 0 ? (

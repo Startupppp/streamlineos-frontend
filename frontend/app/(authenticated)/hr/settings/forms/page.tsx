@@ -79,7 +79,7 @@ export default function HrFormsSettingsPage() {
             </Button>
           </div>
         ) : (
-          <div className="pt-2">
+          <div className="flex flex-1 min-h-0 flex-col pt-2">
             <FormsDataTable forms={data?.data ?? []} />
           </div>
         )}

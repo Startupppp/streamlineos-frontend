@@ -134,6 +134,7 @@ export function PositionsTable() {
         <p className="text-sm text-muted-foreground">{data?.total ?? 0} positions</p>
       </div>
       <DataTable
+        className="flex-1 min-h-0"
         columns={columns}
         data={data?.data ?? []}
         getRowKey={(row) => row.id}

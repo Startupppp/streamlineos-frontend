@@ -243,7 +243,7 @@ export default function CompaniesPage() {
   if (isLoading) {
     return (
       <PageWrapper title="Companies" subtitle="Your company directory">
-        <DataTableSkeleton rows={8} columns={6} className="h-[calc(100dvh-16rem)]" />
+        <DataTableSkeleton rows={8} columns={6} className="flex-1" />
       </PageWrapper>
     );
   }
@@ -290,7 +290,7 @@ export default function CompaniesPage() {
         }
       >
         <motion.div
-          className="space-y-4"
+          className="flex flex-1 min-h-0 flex-col space-y-4"
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
@@ -321,7 +321,7 @@ export default function CompaniesPage() {
               </div>
             </div>
           )}
-          <motion.div variants={fadeUp}>
+          <motion.div variants={fadeUp} className="flex flex-col flex-1 min-h-0">
             <DataTable
               data={data?.organizations ?? []}
               columns={columns}
@@ -352,7 +352,7 @@ export default function CompaniesPage() {
                 />
               }
               minWidth="640px"
-              className="h-[calc(100dvh-16rem)] min-h-[320px]"
+              className="flex-1 min-h-0"
             />
           </motion.div>
         </motion.div>

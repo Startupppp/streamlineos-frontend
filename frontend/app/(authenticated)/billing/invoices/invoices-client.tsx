@@ -265,7 +265,7 @@ export function InvoicesClient() {
       }
       filters={filtersBar}
     >
-      <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col space-y-4">
         <StatCardGrid cols={4}>
           <StatCard
             label="Outstanding"
@@ -321,7 +321,7 @@ export function InvoicesClient() {
             )
           }
           minWidth="700px"
-          className="min-h-[320px]"
+          className="flex-1 min-h-0"
         />
 
         <CreateInvoiceDialog open={createOpen} onOpenChange={setCreateOpen} />

@@ -120,6 +120,7 @@ export function SalesByCustomerReport() {
         />
       ) : (
         <DataTable
+          className="flex-1 min-h-0"
           data={data ?? []}
           columns={SALES_BY_CUSTOMER_COLUMNS}
           getRowKey={getSalesByCustomerRowKey}

@@ -482,7 +482,7 @@ function CategoriesPageInner() {
                         ? "Try adjusting your search or filters."
                         : "Use the form above to add your first product category."
                     }
-                    className="border-0 bg-transparent min-h-[20vh]"
+                    className="border-0 bg-transparent"
                   />
                 }
                 columns={categoriesColumns(

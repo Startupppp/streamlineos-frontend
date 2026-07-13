@@ -231,7 +231,7 @@ export default function LeadDistributionPage() {
         </>
       }
     >
-      <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col space-y-4">
         <StatCardGrid cols={3}>
           <StatCard
             label="Total Leads"
@@ -267,6 +267,7 @@ export default function LeadDistributionPage() {
             columns={LEAD_COLUMNS}
             getRowKey={(lead) => lead.id}
             isLoading={isLoading}
+            className="flex-1 min-h-0"
             selection={{
               selected: new Set<string | number>([...selectedIds]),
               onChange: handleSelectionChange,
@@ -283,7 +284,7 @@ export default function LeadDistributionPage() {
                     : "Upload leads or adjust your search to get started."
                 }
                 action={emptyAction}
-                className="min-h-[40vh] border-0 bg-transparent"
+                className="border-0 bg-transparent"
               />
             }
           />

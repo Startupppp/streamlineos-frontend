@@ -195,9 +195,9 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
         </div>
       }
     >
-      <div className="px-4 pb-4">
+      <div className="flex flex-1 min-h-0 flex-col">
         {isLoading ? (
-          <DataTableSkeleton rows={5} columns={7} />
+          <DataTableSkeleton rows={5} columns={7} className="flex-1" />
         ) : isError ? (
           <ErrorState className="flex-1" onRetry={() => void refetch()} />
         ) : displayed.length === 0 ? (
@@ -216,7 +216,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
             }
           />
         ) : (
-          <DataTable data={displayed} columns={columns} getRowKey={(row) => row.id} minWidth="720px" />
+          <DataTable data={displayed} columns={columns} getRowKey={(row) => row.id} minWidth="720px" className="flex-1 min-h-0" />
         )}
       </div>
 

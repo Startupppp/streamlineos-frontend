@@ -94,7 +94,7 @@ function InboxContent() {
 
   return (
     <PageWrapper title="Sales Inbox" subtitle="Your daily command center">
-      <div className="space-y-3">
+      <div className="flex flex-1 min-h-0 flex-col space-y-3">
         <InboxStatCards counts={counts} isLoading={countsLoading} />
 
         {!inboxError && aiActions.length > 0 && (

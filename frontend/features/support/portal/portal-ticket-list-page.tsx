@@ -62,7 +62,7 @@ export function PortalTicketListPage() {
           title="No support tickets yet"
           description="Raise a ticket if you need help and our support team will get back to you."
           action={{ label: "New Ticket", onClick: handleOpenNewTicket }}
-          className="min-h-[50vh]"
+          className="flex-1"
         />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

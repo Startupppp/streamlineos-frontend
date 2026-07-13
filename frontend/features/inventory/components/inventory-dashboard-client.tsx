@@ -246,7 +246,7 @@ export function InventoryDashboardClient() {
           description="Add products, configure warehouses, and start tracking stock levels, movements, and reorder alerts — all in one place."
           action={{ label: "Add Your First Product", href: "/inventory/products/new" }}
           secondaryAction={{ label: "Import Products", href: "/inventory/import" }}
-          className="min-h-[50vh]"
+          className="flex-1"
         />
       </PageWrapper>
     );

@@ -337,6 +337,7 @@ export default function PurchaseBillsListPage() {
           getRowKey={(row) => row.id}
           isLoading={query.isLoading}
           minWidth="680px"
+          className="flex-1 min-h-0"
           emptyState={
             <EmptyState
               illustration={<EmptyExpensesIllustration />}

@@ -543,9 +543,9 @@ export default function EnterpriseQuotesPage() {
         </Select>
       }
     >
-      <div className="space-y-3">
+      <div className="flex flex-1 min-h-0 flex-col space-y-3">
         {isError ? (
-          <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
+          <div className="flex flex-col items-center justify-center flex-1 gap-3 text-center">
             <AlertCircle className="h-10 w-10 text-destructive" />
             <p className="text-sm text-muted-foreground">
               Failed to load enterprise quotes.
@@ -557,6 +557,7 @@ export default function EnterpriseQuotesPage() {
           </div>
         ) : (
           <DataTable
+            className="flex-1 min-h-0"
             data={data?.items ?? []}
             columns={columns}
             getRowKey={getQuoteRowKey}

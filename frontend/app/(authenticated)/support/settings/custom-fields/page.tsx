@@ -421,7 +421,7 @@ export default function SupportCustomFieldsPage() {
       ) : isError ? (
         <ErrorState onRetry={handleRetry} />
       ) : fields && fields.length > 0 ? (
-        <div className="space-y-3">
+        <div className="flex flex-1 min-h-0 flex-col space-y-3">
           {fields.map((field) => (
             <FieldRow
               key={field.id}

@@ -58,33 +58,35 @@ export default function ResourceAllocationPage() {
           />
         </StatCardGrid>
 
-        {isLoading ? (
-          <div className="space-y-2">
-            {[1, 2, 3, 4].map((index) => (
-              <Skeleton key={index} className="h-[4.25rem] rounded-xl" />
-            ))}
-          </div>
-        ) : isError ? (
-          <ErrorState onRetry={handleRetry} className="flex-1" />
-        ) : !entries || entries.length === 0 ? (
-          <EmptyState
-            title="No assignments yet"
-            description="Assign tickets to team members to see workload distribution here."
-            action={{ label: "View Projects", href: "/projects/all" }}
-            className="flex-1 min-h-[40vh]"
-          />
-        ) : (
-          <div className="space-y-2">
-            {entries.map((entry, index) => (
-              <ResourceAllocationMemberCard
-                key={entry.user.id}
-                entry={entry}
-                utilPct={Math.round((entry.totalOpen / maxTickets) * 100)}
-                memberIndex={index}
-              />
-            ))}
-          </div>
-        )}
+        <div className="flex flex-1 min-h-0 flex-col">
+          {isLoading ? (
+            <div className="space-y-2">
+              {[1, 2, 3, 4].map((index) => (
+                <Skeleton key={index} className="h-[4.25rem] rounded-xl" />
+              ))}
+            </div>
+          ) : isError ? (
+            <ErrorState onRetry={handleRetry} className="flex-1" />
+          ) : !entries || entries.length === 0 ? (
+            <EmptyState
+              title="No assignments yet"
+              description="Assign tickets to team members to see workload distribution here."
+              action={{ label: "View Projects", href: "/projects/all" }}
+              className="flex-1"
+            />
+          ) : (
+            <div className="space-y-2">
+              {entries.map((entry, index) => (
+                <ResourceAllocationMemberCard
+                  key={entry.user.id}
+                  entry={entry}
+                  utilPct={Math.round((entry.totalOpen / maxTickets) * 100)}
+                  memberIndex={index}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </PageWrapper>
     </RequireModule>
   );

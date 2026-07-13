@@ -280,7 +280,7 @@ export default function GeneralLedgerPage() {
         </div>
       }
     >
-      <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col space-y-4">
         {glData && (
           <StatCardGrid cols={4}>
             <StatCard label="Opening Balance" value={formatMoney(glData.openingBalance)} tone="default" />
@@ -304,6 +304,7 @@ export default function GeneralLedgerPage() {
           <ErrorState title="Failed to load ledger" description={getErrorMessage(glQuery.error)} onRetry={handleRetry} />
         ) : (
           <DataTable
+            className="flex-1 min-h-0"
             data={rows}
             columns={glColumns}
             getRowKey={(row) => row.entryId ?? row.entryNumber}

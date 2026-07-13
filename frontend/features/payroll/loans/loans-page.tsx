@@ -9,7 +9,6 @@ export function LoansPageContent() {
       title="Loans & Advances"
       eyebrow="Payroll"
       subtitle="Manage employee salary advances and loan EMI recovery"
-      noInternalScroll
     >
       <LoansTable />
     </PageWrapper>

@@ -223,7 +223,6 @@ function ReorderReportContent() {
           illustration={<EmptyReportIllustration />}
           title="No products need reordering"
           description="All products are above their reorder points."
-          className="min-h-[40vh]"
         />
       )}
 
@@ -243,7 +242,6 @@ function ReorderReportContent() {
               title="No results"
               description="No products match your search."
               action={{ label: "Clear search", onClick: handleClearSearch }}
-              className="min-h-[40vh]"
             />
           ) : (
             <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">

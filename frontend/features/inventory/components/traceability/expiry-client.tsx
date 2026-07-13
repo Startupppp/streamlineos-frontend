@@ -148,7 +148,7 @@ export function ExpiryClient() {
         illustration={<EmptyReportIllustration />}
         title={`No stock expiring within ${days} days`}
         description="All tracked lots are within acceptable expiry windows for this period."
-        className="flex-1 min-h-[40vh]"
+        className="flex-1"
       />
     </motion.div>
   );
@@ -181,12 +181,13 @@ export function ExpiryClient() {
           title="Failed to load expiry data"
           description="An error occurred while fetching expiry information. Please try again."
           onRetry={handleRetry}
-          className="flex-1 min-h-[40vh]"
+          className="flex-1"
         />
       ) : (
         <DataTable
           data={items}
           columns={EXPIRY_COLUMNS}
+          className="flex-1 min-h-0"
           getRowKey={(row) => row.lotId}
           isLoading={isLoading}
           emptyState={emptyState}

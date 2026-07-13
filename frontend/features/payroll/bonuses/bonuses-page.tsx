@@ -24,11 +24,11 @@ export function BonusesPageContent() {
       eyebrow="Payroll"
       subtitle="Manage variable pay and sales commissions"
     >
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-1 min-h-0 flex-col gap-3">
         <div className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-[12px] text-muted-foreground">
           Approved bonuses are included in the payroll run for the selected month.
         </div>
-        <Tabs value={activeTab} onValueChange={handleTabChange}>
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-1 min-h-0 flex-col">
           <TabsList className="h-8">
             <TabsTrigger value="bonuses" className="text-xs h-7">
               Bonuses
@@ -37,10 +37,10 @@ export function BonusesPageContent() {
               Incentives
             </TabsTrigger>
           </TabsList>
-          <TabsContent value="bonuses">
+          <TabsContent value="bonuses" className="flex flex-1 min-h-0 flex-col mt-0">
             <BonusesTab />
           </TabsContent>
-          <TabsContent value="incentives">
+          <TabsContent value="incentives" className="flex flex-1 min-h-0 flex-col mt-0">
             <IncentivesTab />
           </TabsContent>
         </Tabs>

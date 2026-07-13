@@ -167,11 +167,14 @@ export default function ExecutionsPage() {
       ) : isError ? (
         <ErrorState title="Failed to load executions" onRetry={handleRetry} className="flex-1" />
       ) : !data || data.data.length === 0 ? (
-        <EmptyState
-          illustration={<EmptyActivityIllustration />}
-          title="No executions found"
-          description="Workflow executions will appear here once workflows are triggered."
-        />
+        <div className="flex flex-1 min-h-0">
+          <EmptyState
+            illustration={<EmptyActivityIllustration />}
+            title="No executions found"
+            description="Workflow executions will appear here once workflows are triggered."
+            className="w-full"
+          />
+        </div>
       ) : (
         <div className="space-y-1">
           <div className="grid grid-cols-[2fr,1fr,1fr,1.5fr,1fr,auto] gap-3 px-4 py-2 text-xs font-medium text-muted-foreground border-b border-border/60">

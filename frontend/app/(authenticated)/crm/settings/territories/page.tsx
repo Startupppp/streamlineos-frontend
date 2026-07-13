@@ -329,7 +329,7 @@ export default function TerritoriesPage() {
             title="Failed to load territories"
             description="Something went wrong. Please try again."
             action={{ label: "Retry", onClick: handleRetry }}
-            className="flex-1 min-h-[40vh] border-0 bg-transparent"
+            className="flex-1 border-0 bg-transparent"
           />
         ) : (
           <div className="space-y-6">

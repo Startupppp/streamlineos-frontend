@@ -184,6 +184,7 @@ export function ReviewTable({ list, canReview, onOpenReview }: ReviewTableProps)
       getRowKey={(emp) => emp.userId}
       emptyState={emptyState}
       minWidth="640px"
+      className="flex-1 min-h-0"
     />
   );
 }

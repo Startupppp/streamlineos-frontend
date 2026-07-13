@@ -450,7 +450,7 @@ export default function AuditLogPage() {
       }
       filters={filtersBar}
     >
-      <div className="flex flex-col gap-4 h-full min-h-0">
+      <div className="flex flex-1 min-h-0 flex-col gap-4">
         {isError ? (
           <ErrorState
             title="Failed to load audit events"
@@ -459,11 +459,12 @@ export default function AuditLogPage() {
             compact
           />
         ) : isLoading ? (
-          <DataTableSkeleton rows={pageSize} columns={6} />
+          <DataTableSkeleton rows={pageSize} columns={6} className="flex-1" />
         ) : (
           <DataTable
             data={filteredLogs}
             columns={AUDIT_LOG_COLUMNS}
+            className="flex-1 min-h-0"
             getRowKey={(log) => log.id}
             onRowClick={handleRowClick}
             minWidth="700px"

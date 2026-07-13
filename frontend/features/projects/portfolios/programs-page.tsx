@@ -171,23 +171,25 @@ export function ProgramsPage() {
         </Button>
       ) : undefined}
     >
-      {isLoading ? (
-        <DataTableSkeleton rows={5} columns={7} />
-      ) : isError ? (
-        <ErrorState className="flex-1" onRetry={() => void refetch()} />
-      ) : displayed.length === 0 ? (
-        <EmptyState
-          illustrationPreset="projects"
-          title={isFiltered ? "No matching programs" : "No programs yet"}
-          description={isFiltered ? "Try adjusting your filters." : "Create a program to group related projects under a portfolio."}
-          action={isFiltered
-            ? { label: "Clear filters", onClick: () => { setStatusFilter("all"); setPortfolioFilter("all"); setSearch(""); } }
-            : canManage ? { label: "New Program", onClick: () => setSheetOpen(true) } : undefined}
-          className="flex-1 min-h-[40vh]"
-        />
-      ) : (
-        <DataTable data={displayed} columns={columns} getRowKey={(row) => row.id} minWidth="820px" />
-      )}
+      <div className="flex flex-1 min-h-0 flex-col">
+        {isLoading ? (
+          <DataTableSkeleton rows={5} columns={7} className="flex-1" />
+        ) : isError ? (
+          <ErrorState className="flex-1" onRetry={() => void refetch()} />
+        ) : displayed.length === 0 ? (
+          <EmptyState
+            illustrationPreset="projects"
+            title={isFiltered ? "No matching programs" : "No programs yet"}
+            description={isFiltered ? "Try adjusting your filters." : "Create a program to group related projects under a portfolio."}
+            action={isFiltered
+              ? { label: "Clear filters", onClick: () => { setStatusFilter("all"); setPortfolioFilter("all"); setSearch(""); } }
+              : canManage ? { label: "New Program", onClick: () => setSheetOpen(true) } : undefined}
+            className="flex-1"
+          />
+        ) : (
+          <DataTable data={displayed} columns={columns} getRowKey={(row) => row.id} minWidth="820px" className="flex-1 min-h-0" />
+        )}
+      </div>
 
       <ProgramFormSheet
         open={sheetOpen || !!editTarget}

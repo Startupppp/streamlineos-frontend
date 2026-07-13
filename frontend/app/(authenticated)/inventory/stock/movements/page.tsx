@@ -419,7 +419,7 @@ export default function MovementsPage() {
           title="Failed to load movements"
           description="An error occurred while fetching stock transactions."
           onRetry={handleRetry}
-          className="flex-1 min-h-[40vh]"
+          className="flex-1"
         />
       ) : transactions.length === 0 && !isLoading ? (
         <motion.div variants={fadeUp} initial="hidden" animate="visible">
@@ -429,14 +429,14 @@ export default function MovementsPage() {
               title="No movements match your filters"
               description="Try adjusting or clearing your filters to see stock movements."
               action={{ label: "Clear Filters", onClick: handleResetFilters }}
-              className="flex-1 min-h-[40vh]"
+              className="flex-1"
             />
           ) : (
             <InventoryEmptyState
               illustration={<EmptyActivityIllustration />}
               title="No stock movements yet"
               description="Stock movements are created when you receive purchase orders, process sales, make adjustments, record opening stock, or transfer inventory between locations."
-              className="flex-1 min-h-[40vh]"
+              className="flex-1"
               action={
                 canAdjust
                   ? { label: "Record Opening Stock", href: "/inventory/stock?opening=1" }
@@ -465,9 +465,10 @@ export default function MovementsPage() {
           )}
         </motion.div>
       ) : (
-        <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-3">
-          <motion.div variants={fadeUp}>
+        <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="flex flex-1 min-h-0 flex-col">
+          <motion.div variants={fadeUp} className="flex flex-1 min-h-0 flex-col">
             <DataTable
+              className="flex-1 min-h-0"
               data={transactions}
               columns={MOVEMENTS_COLUMNS}
               getRowKey={(row) => row.id}

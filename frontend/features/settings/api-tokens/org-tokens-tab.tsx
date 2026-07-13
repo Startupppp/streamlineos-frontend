@@ -214,7 +214,6 @@ export function OrgTokensTab({ showCreate, onShowCreateChange }: OrgTokensTabPro
           title="No organization tokens yet"
           description="Organization tokens provide access to shared resources and are visible to administrators."
           action={{ label: "New Token", onClick: handleOpenCreate }}
-          className="min-h-[40vh]"
         />
       ) : (
         <DataTable
@@ -222,6 +221,7 @@ export function OrgTokensTab({ showCreate, onShowCreateChange }: OrgTokensTabPro
           columns={columns}
           getRowKey={(t) => t.id}
           rowClassName={(t) => t.isRevoked ? "opacity-60" : ""}
+          className="flex-1 min-h-0"
         />
       )}
 

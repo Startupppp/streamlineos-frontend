@@ -285,6 +285,7 @@ export default function CreditNotesPage() {
         columns={columns}
         getRowKey={(row) => row.id}
         isLoading={query.isLoading}
+        className="flex-1 min-h-0"
         pagination={{
           mode: "server",
           page,

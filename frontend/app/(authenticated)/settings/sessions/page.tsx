@@ -152,14 +152,12 @@ export default function SessionsPage() {
       title={`No sessions matching "${search}"`}
       description="Try a different search term."
       compact
-      className="min-h-[200px]"
     />
   ) : (
     <EmptyState
       illustrationPreset="devices"
       title="No active sessions"
       description="No other sessions are currently active."
-      className="min-h-[40vh]"
     />
   );
 
@@ -204,6 +202,7 @@ export default function SessionsPage() {
           isLoading={isLoading}
           emptyState={emptyState}
           minWidth="600px"
+          className="flex-1 min-h-0"
         />
       )}
 

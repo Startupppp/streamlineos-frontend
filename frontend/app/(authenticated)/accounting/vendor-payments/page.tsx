@@ -152,6 +152,7 @@ export default function VendorPaymentsPage() {
         columns={columns}
         getRowKey={(row) => row.id}
         isLoading={isLoading}
+        className="flex-1 min-h-0"
         emptyState={
           <EmptyState
             illustrationPreset="tasks"

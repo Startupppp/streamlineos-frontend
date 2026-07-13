@@ -155,7 +155,7 @@ export function ReportsView() {
       subtitle={subtitle}
       filters={pageFilters}
     >
-      <motion.div {...motionProps} className="space-y-4">
+      <motion.div {...motionProps} className="flex flex-1 min-h-0 flex-col space-y-4">
         <Tabs value={activeTab} onValueChange={handleTabChange}>
           <TabsList className="h-8 flex-wrap">
             {REPORT_TABS.map((tab) => (

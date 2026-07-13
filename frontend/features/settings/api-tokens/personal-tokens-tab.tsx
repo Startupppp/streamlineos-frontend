@@ -163,13 +163,13 @@ export function PersonalTokensTab({ showCreate, onShowCreateChange }: PersonalTo
           title="No personal access tokens yet"
           description="Personal tokens act on your behalf and are only visible to you."
           action={{ label: "New Token", onClick: handleOpenCreate }}
-          className="min-h-[40vh]"
         />
       ) : (
         <DataTable
           data={tokens}
           columns={columns}
           getRowKey={(t) => t.id}
+          className="flex-1 min-h-0"
         />
       )}
 

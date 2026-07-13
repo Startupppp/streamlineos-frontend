@@ -179,6 +179,7 @@ export default function PoliciesPage() {
           onDelete={handleDelete}
           onToggleActive={handleToggleActive}
           togglingId={togglingId}
+          className="flex-1 min-h-0"
         />
       )}
 

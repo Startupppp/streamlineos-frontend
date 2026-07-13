@@ -105,6 +105,7 @@ export default function TeamExpensesPage() {
           pageSize={pagination?.pageSize ?? 25}
           total={pagination?.total ?? 0}
           onPageChange={setPage}
+          className="flex-1 min-h-0"
           emptyState={
             <EmptyState
               illustration={<EmptyExpensesIllustration />}

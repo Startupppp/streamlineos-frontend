@@ -19,7 +19,7 @@ export function QaPage({ projectId }: QaPageProps) {
       title="QA / Tests"
       subtitle="Test cases and runs"
     >
-      <div className="px-4 pb-4">
+      <div className="flex flex-1 min-h-0 flex-col">
         <Tabs value={tab} onValueChange={(v) => setTab(v as "cases" | "runs")}>
           <TabsList className="mb-3">
             <TabsTrigger value="cases">Test Cases</TabsTrigger>

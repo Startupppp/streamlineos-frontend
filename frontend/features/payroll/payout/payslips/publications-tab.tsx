@@ -211,7 +211,7 @@ export function PublicationsTab({ canManage }: PublicationsTabProps) {
   const canPublish = canManage && selectedRun?.status === "PAID";
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-1 min-h-0 flex-col space-y-4">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <Select
           value={String(activeRunId || "")}
@@ -239,6 +239,7 @@ export function PublicationsTab({ canManage }: PublicationsTabProps) {
 
       {activeRunId > 0 && (
         <DataTable
+          className="flex-1 min-h-0"
           data={publications ?? []}
           columns={columns}
           getRowKey={(row) => row.id}

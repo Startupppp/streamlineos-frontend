@@ -333,7 +333,7 @@ export default function VendorsListPage() {
           )
         }
         minWidth="640px"
-        className="min-h-[320px]"
+        className="flex-1 min-h-0"
       />
 
       <VendorFormSheet open={sheetOpen} onOpenChange={setSheetOpen} />

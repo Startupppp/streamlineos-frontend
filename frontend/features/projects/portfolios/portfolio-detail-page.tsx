@@ -99,7 +99,7 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
   if (isLoading) {
     return (
       <PageWrapper title="Portfolio" eyebrow="Portfolio" backHref="/projects/portfolios">
-        <div className="px-4 pb-4"><DataTableSkeleton rows={4} columns={3} /></div>
+        <DataTableSkeleton rows={4} columns={3} className="flex-1" />
       </PageWrapper>
     );
   }
@@ -131,7 +131,7 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
         </DropdownMenu>
       ) : undefined}
     >
-      <div className="px-4 pb-4 space-y-6">
+      <div className="flex flex-1 min-h-0 flex-col space-y-6">
         <div className="flex flex-wrap items-center gap-2 pb-4 border-b border-border">
           <PortfolioStatusBadge status={data.status} />
           <PortfolioHealthBadge health={data.health} />

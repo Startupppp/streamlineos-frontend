@@ -376,7 +376,7 @@ export default function AssignmentRulesPage() {
             title="Failed to load assignment rules"
             description="Something went wrong. Please try again."
             action={{ label: "Retry", onClick: handleRetry }}
-            className="flex-1 min-h-[40vh] border-0 bg-transparent"
+            className="flex-1 border-0 bg-transparent"
           />
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
@@ -412,7 +412,7 @@ export default function AssignmentRulesPage() {
                   title="No assignment rules"
                   description="Create rules to automatically assign incoming leads to the right people."
                   action={{ label: "New Rule", onClick: handleOpenCreate }}
-                  className="flex-1 min-h-[40vh] border-0 bg-transparent"
+                  className="flex-1 border-0 bg-transparent"
                 />
               )}
             </div>

@@ -473,7 +473,7 @@ export default function CouponsPage() {
           </Button>
         }
       >
-        <div className="space-y-4">
+        <div className="flex flex-1 min-h-0 flex-col space-y-4">
           <StatCardGrid cols={4}>
             <StatCard label="Total Coupons" value={totalCoupons} icon={Tag} tone="default" />
             <StatCard label="Active" value={activeCoupons} icon={CheckCircle2} tone="emerald" />
@@ -488,7 +488,7 @@ export default function CouponsPage() {
           </StatCardGrid>
 
           {isError ? (
-            <div className="flex flex-col items-center justify-center py-12 gap-3">
+            <div className="flex flex-1 flex-col items-center justify-center gap-3">
               <p className="text-sm text-muted-foreground">Failed to load coupons</p>
               <Button variant="outline" size="sm" onClick={handleRetry}>
                 <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
@@ -501,6 +501,7 @@ export default function CouponsPage() {
               columns={columns}
               getRowKey={getCouponRowKey}
               isLoading={isLoading}
+              className="flex-1 min-h-0"
               emptyState={
                 <EmptyState
                   illustration={<EmptyDocumentsIllustration />}

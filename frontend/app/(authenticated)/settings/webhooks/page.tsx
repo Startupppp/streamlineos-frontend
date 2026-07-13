@@ -208,13 +208,12 @@ export default function WebhooksPage() {
       ) : (
         <motion.div className="space-y-4" variants={staggerContainer} initial="hidden" animate="visible">
           {(!webhooks || webhooks.length === 0) ? (
-            <motion.div variants={fadeUp} className="flex flex-1 min-h-[60vh]">
+            <motion.div variants={fadeUp} className="flex flex-1">
               <EmptyState
                 illustration={<EmptyDevicesIllustration />}
                 title="No webhooks configured"
                 description="Webhooks let external services receive real-time notifications when events happen in your workspace."
                 action={{ label: "Add Webhook", onClick: handleOpenCreate }}
-                className="w-full"
               />
             </motion.div>
           ) : (

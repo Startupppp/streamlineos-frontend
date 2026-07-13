@@ -194,13 +194,13 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
       }
     >
       <motion.div
-        className="px-4 pb-4"
+        className="flex flex-1 min-h-0 flex-col"
         initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: shouldReduceMotion ? 0 : 0.22, ease: "easeOut" }}
       >
         {isLoading ? (
-          <DataTableSkeleton rows={5} columns={6} />
+          <DataTableSkeleton rows={5} columns={6} className="flex-1" />
         ) : isError ? (
           <ErrorState onRetry={() => void refetch()} />
         ) : filtered.length === 0 ? (
@@ -221,7 +221,7 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
             }
           />
         ) : (
-          <DataTable data={filtered} columns={columns} getRowKey={(row) => row.id} minWidth="680px" />
+          <DataTable data={filtered} columns={columns} getRowKey={(row) => row.id} minWidth="680px" className="flex-1 min-h-0" />
         )}
       </motion.div>
     </PageWrapper>

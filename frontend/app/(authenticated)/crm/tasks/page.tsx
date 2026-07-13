@@ -265,7 +265,7 @@ function CrmTasksContent() {
         />
       }
     >
-      <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col space-y-4">
         <StatCardGrid cols={5}>
           <StatCard label="Total" value={stats.total} icon={CheckSquare} tone="default" />
           <StatCard label="Overdue" value={stats.overdue} icon={AlertCircle} tone="red" />

@@ -180,7 +180,7 @@ export default function RecurringInvoicesPage() {
       ) : query.error ? (
         <ErrorState description={query.error.message} onRetry={handleRetry} />
       ) : recurring.length === 0 ? (
-        <div className="flex-1 min-h-[60vh] flex">
+        <div className="flex flex-1">
           <EmptyState
             className="flex-1"
             illustration={<EmptyTimeIllustration />}
@@ -190,7 +190,7 @@ export default function RecurringInvoicesPage() {
           />
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="flex flex-1 min-h-0 flex-col space-y-4">
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -238,12 +238,12 @@ export default function RecurringInvoicesPage() {
             </Card>
           </div>
 
-          <div className="rounded-lg border border-border overflow-hidden">
+          <div className="flex flex-1 min-h-0 flex-col rounded-lg border border-border overflow-hidden">
             <DataTable
               data={recurring}
               columns={RECURRING_COLUMNS}
               getRowKey={getRecurringRowKey}
-              className="border-0 rounded-none"
+              className="flex-1 min-h-0 border-0 rounded-none"
             />
           </div>
         </div>

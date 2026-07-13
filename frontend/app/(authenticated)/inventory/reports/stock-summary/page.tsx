@@ -327,7 +327,6 @@ function StockSummaryContent() {
           illustration={<EmptyReportIllustration />}
           title="No stock data"
           description="No products have stock levels recorded yet."
-          className="min-h-[40vh]"
         />
       )}
 
@@ -337,7 +336,6 @@ function StockSummaryContent() {
           title="No results"
           description="No stock records match your search."
           action={{ label: "Clear search", onClick: handleClearSearch }}
-          className="min-h-[40vh]"
         />
       )}
 

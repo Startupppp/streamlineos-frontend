@@ -235,23 +235,21 @@ export function DealTableView({
   );
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-18rem)] min-h-[320px]">
+    <div className="flex flex-col flex-1 min-h-0">
       <div className="shrink-0 flex items-center px-1 pb-1.5">
         <span className="text-[11px] text-muted-foreground tabular-nums">{deals.length} deals</span>
       </div>
-      <div className="flex-1 min-h-0">
-        <DataTable
-          data={deals}
-          columns={columns}
-          getRowKey={(row) => row.id}
-          onRowClick={handleRowClick}
-          sortState={{ field: sortColumn, direction: sortDirection, onChange: (field) => onSort(field) }}
-          isLoading={isLoading}
-          emptyState={emptyState}
-          minWidth="max-content"
-          className="h-full"
-        />
-      </div>
+      <DataTable
+        data={deals}
+        columns={columns}
+        getRowKey={(row) => row.id}
+        onRowClick={handleRowClick}
+        sortState={{ field: sortColumn, direction: sortDirection, onChange: (field) => onSort(field) }}
+        isLoading={isLoading}
+        emptyState={emptyState}
+        minWidth="max-content"
+        className="flex-1 min-h-0"
+      />
     </div>
   );
 }

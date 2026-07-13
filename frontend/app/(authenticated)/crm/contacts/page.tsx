@@ -193,7 +193,7 @@ export default function ContactsPage() {
   if (isLoading) {
     return (
       <PageWrapper title="Contacts" subtitle="Loading...">
-        <DataTableSkeleton rows={8} columns={7} className="h-[calc(100dvh-16rem)]" />
+        <DataTableSkeleton rows={8} columns={7} className="flex-1" />
       </PageWrapper>
     );
   }
@@ -296,7 +296,7 @@ export default function ContactsPage() {
         }
       >
         <motion.div
-          className="space-y-4"
+          className="flex flex-1 min-h-0 flex-col space-y-4"
           variants={staggerContainer}
           initial="hidden"
           animate="visible"

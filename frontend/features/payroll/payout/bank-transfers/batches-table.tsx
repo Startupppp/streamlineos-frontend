@@ -162,7 +162,7 @@ export function BatchesTable({
 
   return (
     <>
-      <div className="space-y-3">
+      <div className="flex flex-1 min-h-0 flex-col space-y-3">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-sm font-semibold text-foreground">Payment Batches</h2>
           {canManage && (
@@ -174,6 +174,7 @@ export function BatchesTable({
         </div>
 
         <DataTable
+          className="flex-1 min-h-0"
           data={batches ?? []}
           columns={columns}
           getRowKey={(row) => row.id}

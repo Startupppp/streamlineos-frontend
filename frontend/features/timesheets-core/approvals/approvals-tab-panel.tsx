@@ -179,6 +179,7 @@ function ApprovalsTable({
 
   return (
     <DataTable
+      className="flex-1 min-h-0"
       data={periods}
       columns={columns}
       getRowKey={(row) => row.id}

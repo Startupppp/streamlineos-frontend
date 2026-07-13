@@ -458,6 +458,7 @@ function BGVContent() {
 
         <TabsContent value="employee-bgv">
           <DataTable<BackgroundVerification>
+            className="flex-1 min-h-0"
             data={items ?? []}
             columns={buildBgvColumns(handleUpdateStatus, handleOpenEdit, update.isPending)}
             getRowKey={(bgv) => bgv.id}

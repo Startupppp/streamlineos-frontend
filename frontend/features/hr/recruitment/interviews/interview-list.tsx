@@ -248,14 +248,15 @@ export function InterviewList() {
         </div>
       )}
 
-      <Card className="overflow-hidden">
-        <CardContent className="p-0">
+      <Card className="flex flex-1 min-h-0 flex-col overflow-hidden">
+        <CardContent className="flex flex-1 min-h-0 p-0">
           <DataTable
             data={interviews ?? []}
             columns={columns}
             getRowKey={getRowKey}
             selection={{ selected: selectedIds, onChange: handleSelectionChange }}
             minWidth="820px"
+            className="flex-1 min-h-0"
             emptyState={
               <RecruitmentEmptyState
                 illustration={<EmptyCalendarIllustration />}

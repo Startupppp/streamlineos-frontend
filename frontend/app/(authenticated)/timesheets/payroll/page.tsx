@@ -198,7 +198,7 @@ export default function TimesheetPayrollPage() {
       actions={pageActions}
       filters={pageFilters}
     >
-      <motion.div {...motionProps} className="space-y-4">
+      <motion.div {...motionProps} className="flex flex-1 min-h-0 flex-col space-y-4">
         {rangeError && (
           <p className="text-xs text-destructive px-1">{rangeError}</p>
         )}

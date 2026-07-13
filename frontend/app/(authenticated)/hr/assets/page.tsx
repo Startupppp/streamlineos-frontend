@@ -829,7 +829,7 @@ export default function HrAssetsPage() {
         </Select>
       }
     >
-      <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col space-y-4">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
             label="Total Assets"
@@ -865,6 +865,7 @@ export default function HrAssetsPage() {
           </div>
         ) : (
           <DataTable<Asset>
+            className="flex-1 min-h-0"
             data={filteredItems}
             columns={ASSET_COLUMNS(employees, handleOpenAssign, handleOpenEdit, handleSetDeleteId, canManageAssets)}
             getRowKey={(row) => row.id}

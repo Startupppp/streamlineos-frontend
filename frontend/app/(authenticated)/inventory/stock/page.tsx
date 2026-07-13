@@ -314,13 +314,13 @@ export default function StockLevelsPage() {
         {viewParam === "reservations" ? (
           <ReservationsPanel />
         ) : stockLoading ? (
-          <DataTableSkeleton rows={8} columns={8} />
+          <DataTableSkeleton rows={8} columns={8} className="flex-1" />
         ) : stockError ? (
           <ErrorState
             title="Failed to load stock levels"
             description="An error occurred while fetching stock data. Please try again."
             onRetry={handleRetry}
-            className="flex-1 min-h-[40vh]"
+            className="flex-1"
           />
         ) : rows.length === 0 ? (
           <motion.div variants={fadeUp} initial="hidden" animate="visible">
@@ -341,13 +341,13 @@ export default function StockLevelsPage() {
                     ? { label: "Record Opening Stock", onClick: handleOpenOpeningStock }
                     : undefined
               }
-              className="flex-1 min-h-[40vh]"
+              className="flex-1"
             />
           </motion.div>
         ) : (
-          <motion.div variants={staggerContainer} initial="hidden" animate="visible">
-            <motion.div variants={fadeUp}>
-              <StockLevelsTable rows={rows} onShowAvailability={handleShowAvailability} />
+          <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="flex flex-1 min-h-0 flex-col">
+            <motion.div variants={fadeUp} className="flex flex-1 min-h-0 flex-col">
+              <StockLevelsTable rows={rows} onShowAvailability={handleShowAvailability} className="flex-1 min-h-0" />
             </motion.div>
             {totalPages > 1 && (
               <div className="mt-3 shrink-0 flex items-center justify-between px-1 py-2">

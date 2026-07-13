@@ -180,7 +180,7 @@ export function LotsClient() {
             ? "Try adjusting your search or filters."
             : "Lots will appear here once items are received with lot tracking enabled."
         }
-        className="flex-1 min-h-[40vh]"
+        className="flex-1"
       />
     </motion.div>
   );
@@ -237,12 +237,13 @@ export function LotsClient() {
           title="Failed to load lots"
           description="An error occurred while fetching lot data. Please try again."
           onRetry={handleRetry}
-          className="flex-1 min-h-[40vh]"
+          className="flex-1"
         />
       ) : (
         <DataTable
           data={items}
           columns={LOTS_COLUMNS}
+          className="flex-1 min-h-0"
           getRowKey={(row) => row.id}
           isLoading={isLoading}
           emptyState={emptyState}

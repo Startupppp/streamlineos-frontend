@@ -118,7 +118,6 @@ export default function WikiHomePage() {
           action={
             canCreate ? { label: "New page", onClick: handleNewPage } : undefined
           }
-          className="min-h-[50vh]"
         />
       </PageWrapper>
     );

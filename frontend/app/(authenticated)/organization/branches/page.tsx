@@ -406,7 +406,6 @@ export default function OrgBranchesPage() {
       title="No branches yet"
       description="Create your first branch to get started."
       action={{ label: "Add Branch", onClick: handleOpenCreate }}
-      className="min-h-[40vh]"
     />
   );
 
@@ -517,6 +516,7 @@ export default function OrgBranchesPage() {
         emptyState={emptyState}
         rowClassName={(b) => cn(b.status === "ARCHIVED" && "opacity-60")}
         minWidth="580px"
+        className="flex-1 min-h-0"
       />
 
       <Sheet open={showCreate} onOpenChange={setShowCreate}>

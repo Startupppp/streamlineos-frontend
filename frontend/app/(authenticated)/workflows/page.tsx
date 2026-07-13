@@ -464,7 +464,7 @@ export default function WorkflowsPage() {
         </div>
       }
     >
-      <div className="space-y-5">
+      <div className="flex flex-1 min-h-0 flex-col space-y-5">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <StatCard
             label="Total Workflows"
@@ -506,7 +506,7 @@ export default function WorkflowsPage() {
             className="flex-1"
           />
         ) : workflows.length === 0 ? (
-          <div className="flex flex-1 min-h-[50vh]">
+          <div className="flex flex-1 min-h-0">
             <EmptyState
               illustration={<EmptyProjectsIllustration />}
               title={

@@ -125,10 +125,10 @@ export const SprintCard = memo(function SprintCard({ sprint, projectId, onStart,
       <div className="flex items-start gap-1.5 min-w-0">
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-1.5 min-w-0">
-            <div className="min-w-0 flex-1">
+            <div className="flex min-w-0 flex-1">
               <Link
                 href={`/projects/${projectId}?sprint=${sprint.id}`}
-                className="block min-w-0 text-sm font-semibold leading-tight text-foreground line-clamp-1 break-all transition-colors hover:text-primary"
+                className="min-w-0 flex-1 text-sm font-semibold leading-tight text-foreground line-clamp-1 break-all break-words transition-colors hover:text-primary"
               >
                 {sprint.name}
               </Link>

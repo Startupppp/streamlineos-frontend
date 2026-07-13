@@ -73,6 +73,7 @@ class FeedbucketWidget {
   private recording: Blob | null = null;
   private capturing = false;
   private pendingCapture: Promise<Blob | null> | null = null;
+  private hoverTimer: number | null = null;
   private submitting = false;
   private aiAssisting = false;
   private busy = false;
@@ -107,6 +108,22 @@ class FeedbucketWidget {
 
   private readonly handleScreenshotLauncher = (): void => {
     void this.runScreenshotFlow();
+  };
+  private readonly handleLauncherHover = (): void => {
+    if (this.hoverTimer !== null || this.pendingCapture || this.screenshot || this.busy || this.capturing || this.aiAssisting) return;
+    this.hoverTimer = window.setTimeout(() => {
+      this.hoverTimer = null;
+      if (!this.pendingCapture && !this.screenshot && !this.busy && !this.capturing) {
+        this.pendingCapture = captureScreenshot(this.hostEl);
+      }
+    }, 180);
+  };
+  private readonly handleLauncherLeave = (): void => {
+    if (this.hoverTimer !== null) {
+      clearTimeout(this.hoverTimer);
+      this.hoverTimer = null;
+    }
+    this.pendingCapture = null;
   };
   private readonly handleRecordLauncher = (): void => {
     void this.runRecordFlow();
@@ -290,6 +307,8 @@ class FeedbucketWidget {
       }),
     );
     this.container.appendChild(launcher);
+    launcher.addEventListener("pointerenter", this.handleLauncherHover);
+    launcher.addEventListener("pointerleave", this.handleLauncherLeave);
 
     this.panel = document.createElement("div");
     this.panel.className = "panel";
@@ -589,7 +608,8 @@ class FeedbucketWidget {
     if (this.busy) return;
     this.busy = true;
     try {
-      const shot = await captureScreenshot(this.hostEl);
+      const shot = this.pendingCapture ? await this.pendingCapture : await captureScreenshot(this.hostEl);
+      this.pendingCapture = null;
       if (!shot) {
         this.openPanel("bug");
         return;

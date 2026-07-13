@@ -283,7 +283,7 @@ export default function TransfersPage() {
           title="Failed to load transfers"
           description="An error occurred while fetching transfer records."
           onRetry={handleRetry}
-          className="flex-1 min-h-[40vh]"
+          className="flex-1"
         />
       ) : transfers.length === 0 && !isLoading ? (
         <motion.div variants={fadeUp} initial="hidden" animate="visible">
@@ -300,13 +300,14 @@ export default function TransfersPage() {
                 ? { label: "Clear Filters", onClick: handleClearFilters }
                 : { label: "New Transfer", onClick: handleOpenSheet }
             }
-            className="flex-1 min-h-[40vh]"
+            className="flex-1"
           />
         </motion.div>
       ) : (
-        <motion.div variants={staggerContainer} initial="hidden" animate="visible">
-          <motion.div variants={fadeUp}>
+        <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="flex flex-1 min-h-0 flex-col">
+          <motion.div variants={fadeUp} className="flex flex-1 min-h-0 flex-col">
             <DataTable
+              className="flex-1 min-h-0"
               data={transfers}
               columns={columns}
               getRowKey={(row) => row.id}

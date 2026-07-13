@@ -111,6 +111,7 @@ export default function AgedPayablesPage() {
         <ErrorState description={getErrorMessage(query.error)} onRetry={handleRetry} />
       ) : (
         <DataTable
+          className="flex-1 min-h-0"
           data={report?.rows ?? []}
           columns={agedPayablesColumns}
           getRowKey={(row) => row.vendorId}

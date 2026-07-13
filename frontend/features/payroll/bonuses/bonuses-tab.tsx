@@ -518,9 +518,9 @@ export function BonusesTab() {
   );
 
   return (
-    <div className="flex flex-col gap-0 pt-3">
+    <div className="flex flex-1 min-h-0 flex-col gap-0 pt-3">
       {filterBar}
-      <Card className="flex min-h-0 min-w-0 flex-col gap-0 overflow-hidden py-0">
+      <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
         <CardContent className="flex min-h-0 min-w-0 flex-col overflow-hidden p-0">
           <DataTable
             data={filtered}

@@ -226,7 +226,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
         ) : undefined
       }
     >
-      <div className="px-4 pb-4 space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col space-y-4">
         <StatCardGrid cols={3}>
           <StatCard label="Open" value={openCount} icon={Siren} tone="amber" isLoading={isLoading} />
           <StatCard label="SLA Breached" value={slaBreachedCount} tone="red" isLoading={isLoading} />
@@ -234,7 +234,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
         </StatCardGrid>
 
         {isLoading ? (
-          <DataTableSkeleton rows={8} columns={7} />
+          <DataTableSkeleton rows={8} columns={7} className="flex-1" />
         ) : isError ? (
           <ErrorState onRetry={refetch} />
         ) : filtered.length === 0 ? (
@@ -249,8 +249,9 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
             initial={prefersReduced ? false : { opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.22, ease: "easeOut" }}
+            className="flex flex-1 min-h-0 flex-col"
           >
-            <DataTable<Incident> data={filtered} columns={columns} getRowKey={(row) => row.id} />
+            <DataTable<Incident> data={filtered} columns={columns} getRowKey={(row) => row.id} className="flex-1 min-h-0" />
           </motion.div>
         )}
       </div>

@@ -89,14 +89,14 @@ export default function BlueprintsPage() {
             title="Failed to load blueprints"
             description="Something went wrong. Please try again."
             action={{ label: "Retry", onClick: handleRetry }}
-            className="flex-1 min-h-[40vh] border-0 bg-transparent"
+            className="flex-1 border-0 bg-transparent"
           />
         ) : !blueprints || blueprints.length === 0 ? (
           <EmptyState
             title="No blueprints"
             description="Blueprints define which stage transitions are allowed and what requirements must be met."
             action={{ label: "New Blueprint", onClick: handleOpenDialog }}
-            className="flex-1 min-h-[40vh] border-0 bg-transparent"
+            className="flex-1 border-0 bg-transparent"
           />
         ) : (
           <div className="flex gap-4 items-start">
@@ -182,7 +182,7 @@ export default function BlueprintsPage() {
                 <EmptyState
                   title="Select a blueprint"
                   description="Choose a blueprint from the list to configure its transition rules."
-                  className="flex-1 min-h-[40vh] border-0 bg-transparent"
+                  className="flex-1 border-0 bg-transparent"
                 />
               )}
             </div>

@@ -219,6 +219,7 @@ function PoliciesTab({
   return (
     <>
       <DataTable
+        className="flex-1 min-h-0"
         data={items}
         columns={columns}
         getRowKey={(row) => row.id}
@@ -316,6 +317,7 @@ function LogTab() {
 
   return (
     <DataTable
+      className="flex-1 min-h-0"
       data={items}
       columns={columns}
       getRowKey={(row) => row.id}
@@ -363,7 +365,7 @@ export default function PaymentRemindersPage() {
         ) : undefined
       }
     >
-      <Tabs value={activeTab} onValueChange={handleTabChange}>
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-1 min-h-0 flex-col">
         <TabsList className="mb-4">
           <TabsTrigger value="policies">Policies</TabsTrigger>
           <TabsTrigger value="log">Log</TabsTrigger>

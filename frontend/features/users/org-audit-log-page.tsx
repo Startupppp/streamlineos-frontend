@@ -161,6 +161,7 @@ export function OrgAuditLogPage() {
       }
     >
       <DataTable
+        className="flex-1 min-h-0"
         data={entries}
         columns={columns}
         getRowKey={(row) => row.id}

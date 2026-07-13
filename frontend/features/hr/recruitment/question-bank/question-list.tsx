@@ -148,13 +148,14 @@ export function QuestionList({
   }
 
   return (
-    <Card>
-      <CardContent className="p-0">
+    <Card className="flex flex-1 min-h-0 flex-col overflow-hidden">
+      <CardContent className="flex flex-1 min-h-0 p-0">
         <DataTable
           data={questions ?? []}
           columns={columns}
           getRowKey={getRowKey}
           isLoading={isLoading}
+          className="flex-1 min-h-0"
           emptyState={
             <RecruitmentEmptyState
               illustration={<EmptyDocumentsIllustration />}

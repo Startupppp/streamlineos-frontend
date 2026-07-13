@@ -190,7 +190,7 @@ export default function SchedulerPage() {
       ) : isError ? (
         <ErrorState title="Failed to load schedules" onRetry={handleRetry} className="flex-1" />
       ) : list.length === 0 ? (
-        <div className="flex flex-1 min-h-[60vh]">
+        <div className="flex flex-1 min-h-0">
           <EmptyState
             title="No schedules configured"
             description="Add cron schedules to your workflows to run them automatically. Open a workflow and add a schedule from the builder."

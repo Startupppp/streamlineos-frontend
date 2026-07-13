@@ -420,7 +420,7 @@ export default function CustomFieldsPage() {
             ) : (
               <EmptyState
                 illustration={<EmptyDocumentsIllustration />}
-                className="flex-1 min-h-[50vh] border-0 bg-transparent"
+                className="flex-1 border-0 bg-transparent"
                 title={`No custom fields for ${entityLabel} yet`}
                 description="Add your first field to capture additional data for this entity type."
                 action={{ label: "Add Field", onClick: handleOpenCreate }}

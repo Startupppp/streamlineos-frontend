@@ -118,7 +118,7 @@ export function OverviewClient() {
       }
     >
       {isLoading ? (
-        <OverviewSkeleton />
+        <div className="flex flex-1 min-h-0 flex-col"><OverviewSkeleton /></div>
       ) : error ? (
         <ErrorState
           title="Failed to load finance overview"
@@ -135,7 +135,7 @@ export function OverviewClient() {
         />
       ) : (
         <motion.div
-          className="space-y-4"
+          className="flex flex-1 min-h-0 flex-col space-y-4"
           variants={STAGGER.container}
           initial="initial"
           animate="animate"

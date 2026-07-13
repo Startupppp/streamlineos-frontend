@@ -343,6 +343,7 @@ export default function AssetReturnsPage() {
       }
     >
       <DataTable<AssetReturn>
+        className="flex-1 min-h-0"
         data={items ?? []}
         columns={buildAssetReturnColumns(isAdmin, handleSetReturnId)}
         getRowKey={(row) => row.id}

@@ -207,7 +207,7 @@ export function ApprovalsView() {
       subtitle={subtitle}
       filters={pageFilters}
     >
-      <motion.div {...motionProps}>
+      <motion.div {...motionProps} className="flex flex-1 min-h-0 flex-col">
         {activeTab === "SUBMITTED" && (
           <ApprovalsTabPanel status="SUBMITTED" {...tabPanelProps} />
         )}

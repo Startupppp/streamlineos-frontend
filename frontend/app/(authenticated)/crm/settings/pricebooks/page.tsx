@@ -330,16 +330,17 @@ export default function PricebooksPage() {
         }
       >
         {isError ? (
-          <ErrorState title="Failed to load pricebooks" onRetry={handleRetry} />
+          <ErrorState title="Failed to load pricebooks" onRetry={handleRetry} className="flex-1" />
         ) : (
           <DataTable
             data={filtered}
             columns={columns}
             getRowKey={(pb) => pb.id}
             isLoading={isLoading}
+            className="flex-1 min-h-0"
             emptyState={
               <EmptyState
-                className="flex-1 min-h-[50vh] border-0 bg-transparent"
+                className="flex-1 border-0 bg-transparent"
                 illustration={<EmptyProductsIllustration />}
                 title={debouncedSearch ? "No pricebooks match your search" : "No pricebooks yet"}
                 description={

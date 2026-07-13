@@ -271,7 +271,7 @@ function ChannelsContent() {
       >
         {channels.length > 0 ? (
           <motion.div
-            className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+            className="flex-1 grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
             variants={shouldReduceMotion ? undefined : staggerContainer}
             initial={shouldReduceMotion ? undefined : "hidden"}
             animate={shouldReduceMotion ? undefined : "visible"}

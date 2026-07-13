@@ -186,7 +186,7 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
         </Button>
       }
     >
-      <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col space-y-4">
         <StatCardGrid cols={4}>
           <StatCard label="Total" value={stats.total} icon={Tag} tone="default" index={0} />
           <StatCard label="Released" value={stats.released} icon={CheckCircle2} tone="emerald" index={1} />
@@ -202,6 +202,7 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
           />
         ) : (
           <DataTable
+            className="flex-1 min-h-0"
             data={releases ?? []}
             columns={columns}
             getRowKey={(r) => r.id}

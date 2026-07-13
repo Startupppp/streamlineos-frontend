@@ -392,7 +392,7 @@ export default function ChartOfAccountsPage() {
         </div>
       }
     >
-      <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col space-y-4">
         {hasIncompleteSetup && setupSteps.length > 0 && (
           <SetupProgressBanner steps={setupSteps} />
         )}
@@ -412,6 +412,7 @@ export default function ChartOfAccountsPage() {
             emptyState={emptyState}
             minWidth="560px"
             rowClassName={({ node }) => cn(!node.isActive && "opacity-60")}
+            className="flex-1 min-h-0"
           />
         )}
       </div>

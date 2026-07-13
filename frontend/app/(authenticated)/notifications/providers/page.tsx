@@ -704,7 +704,7 @@ export default function NotificationProvidersPage() {
       }
     >
       {isLoading ? (
-        <div className="rounded-lg border border-border overflow-hidden divide-y divide-border">
+        <div className="flex-1 rounded-lg border border-border overflow-hidden divide-y divide-border">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="flex items-start gap-3 px-3 py-2.5">
               <div className="flex-1 space-y-1.5">
@@ -731,6 +731,7 @@ export default function NotificationProvidersPage() {
               ? { label: "New Provider", onClick: handleCreate }
               : undefined
           }
+          className="flex-1"
         />
       ) : (
         <div className="rounded-lg border border-border overflow-hidden divide-y divide-border">

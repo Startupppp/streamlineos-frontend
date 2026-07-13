@@ -293,7 +293,7 @@ export default function DealApprovalsPage() {
           title="Failed to load approvals"
           description="An error occurred while loading deal approvals."
           onRetry={handleRetry}
-          className="flex-1 min-h-[40vh]"
+          className="flex-1"
         />
       ) : (
         <DataTable
@@ -311,6 +311,7 @@ export default function DealApprovalsPage() {
             />
           }
           minWidth="720px"
+          className="flex-1 min-h-0"
         />
       )}
 

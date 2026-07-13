@@ -168,7 +168,7 @@ export default function WorkflowTemplatesPage() {
       ) : isError ? (
         <ErrorState title="Failed to load templates" onRetry={handleRetry} className="flex-1" />
       ) : filtered.length === 0 ? (
-        <div className="flex flex-1 min-h-[60vh]">
+        <div className="flex flex-1 min-h-0">
           <EmptyState
             illustration={<EmptySearchIllustration />}
             title={search ? "No templates match your search" : "No templates available"}

@@ -288,7 +288,6 @@ export default function ReturnsPage() {
               )
             }
             minWidth="580px"
-            className="min-h-[280px]"
           />
         </TabsContent>
 
@@ -311,7 +310,6 @@ export default function ReturnsPage() {
               )
             }
             minWidth="580px"
-            className="min-h-[280px]"
           />
         </TabsContent>
       </Tabs>

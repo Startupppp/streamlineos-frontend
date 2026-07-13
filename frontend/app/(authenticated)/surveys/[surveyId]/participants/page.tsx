@@ -112,6 +112,7 @@ export default function SurveyParticipantsPage() {
         >
           {hasParticipants ? (
             <DataTable
+              className="flex-1 min-h-0"
               data={participants ?? []}
               columns={columns}
               getRowKey={(row) => row.id}

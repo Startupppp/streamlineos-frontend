@@ -169,7 +169,7 @@ export function ApprovalsInboxPage() {
   if (isLoading) {
     return (
       <PageWrapper title="Approvals" eyebrow="Projects" subtitle="Approvals waiting for your decision across all projects">
-        <div className="space-y-4">
+        <div className="flex flex-1 min-h-0 flex-col space-y-4">
           <div className="grid grid-cols-2 gap-2">
             <Skeleton className="h-14 rounded-lg" />
             <Skeleton className="h-14 rounded-lg" />
@@ -196,7 +196,7 @@ export function ApprovalsInboxPage() {
       eyebrow="Projects"
       subtitle="Approvals waiting for your decision across all projects"
     >
-      <motion.div className="space-y-4" {...fadeVariant}>
+      <motion.div className="flex flex-1 min-h-0 flex-col space-y-4" {...fadeVariant}>
         <StatCardGrid cols={2}>
           <StatCard label="Pending" value={pending} icon={ListChecks} tone="amber" />
           <StatCard label="Overdue" value={overdue} icon={Clock} tone="red" />
@@ -215,6 +215,7 @@ export function ApprovalsInboxPage() {
             getRowKey={(row) => `${row.projectId}-${row.id}`}
             pagination={{ pageSize: 25 }}
             minWidth="680px"
+            className="flex-1 min-h-0"
           />
         )}
       </motion.div>

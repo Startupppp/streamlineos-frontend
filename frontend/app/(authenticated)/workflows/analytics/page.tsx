@@ -151,7 +151,7 @@ export default function WorkflowAnalyticsPage() {
       title="Workflow Analytics"
       subtitle="Execution trends and workflow performance metrics"
     >
-      <div className="space-y-6">
+      <div className="flex flex-1 min-h-0 flex-col space-y-6">
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {stats.map((s) => (
             <StatCard key={s.label} {...s} />

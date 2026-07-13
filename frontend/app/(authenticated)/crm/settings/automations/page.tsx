@@ -261,7 +261,7 @@ export default function AutomationsPage() {
           />
         ) : rules.length === 0 && !isLoading ? (
           <EmptyState
-            className="min-h-[50vh] border-0 bg-transparent"
+            className="flex-1 border-0 bg-transparent"
             illustration={<AutomationsIllustration />}
             title="No automations yet"
             description="Create your first automation to trigger actions on CRM events automatically."
@@ -275,6 +275,7 @@ export default function AutomationsPage() {
             onRowClick={handleRowClick}
             isLoading={isLoading}
             rowClassName={() => "cursor-pointer"}
+            className="flex-1 min-h-0"
           />
         )}
       </PageWrapper>

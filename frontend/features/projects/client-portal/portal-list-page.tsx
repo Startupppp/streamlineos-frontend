@@ -43,13 +43,13 @@ export function PortalListPage() {
           {Array.from({ length: 3 }).map((_, i) => <ProjectCardSkeleton key={i} />)}
         </div>
       ) : isError ? (
-        <ErrorState onRetry={refetch} className="flex-1 min-h-[40vh]" />
+        <ErrorState onRetry={refetch} className="flex-1" />
       ) : (data ?? []).length === 0 ? (
         <EmptyState
           illustrationPreset="projects"
           title="No projects"
           description="You don't have access to any projects yet. Contact your project manager."
-          className="flex-1 min-h-[40vh]"
+          className="flex-1"
         />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

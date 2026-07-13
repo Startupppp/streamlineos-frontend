@@ -103,7 +103,7 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
   if (isLoading) {
     return (
       <PageWrapper title="Loading..." backHref={`/projects/${projectId}/qa`}>
-        <div className="px-4 space-y-2">
+        <div className="flex flex-1 min-h-0 flex-col space-y-2">
           {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-20 rounded-lg" />
           ))}
@@ -115,9 +115,7 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
   if (isError || !run) {
     return (
       <PageWrapper title="Run" backHref={`/projects/${projectId}/qa`}>
-        <div className="px-4">
-          <ErrorState onRetry={refetch} />
-        </div>
+        <ErrorState onRetry={refetch} />
       </PageWrapper>
     );
   }
@@ -143,7 +141,7 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
         ) : undefined
       }
     >
-      <div className="px-4 pb-4 space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col space-y-4">
         <div className="flex items-center gap-3 flex-wrap">
           <Badge variant="outline" className={`text-[10px] ${STATUS_STYLES[run.status]}`}>
             {STATUS_LABELS[run.status]}

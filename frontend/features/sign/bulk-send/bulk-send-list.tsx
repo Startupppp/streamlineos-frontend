@@ -85,7 +85,7 @@ export function BulkSendList() {
       ) : isError ? (
         <ErrorState title="Failed to load bulk send jobs" onRetry={() => void refetch()} />
       ) : !jobs || jobs.length === 0 ? (
-        <div className="flex flex-1 h-full min-h-[50vh] flex-col items-center justify-center gap-4 text-center">
+        <div className="flex flex-1 h-full flex-col items-center justify-center gap-4 text-center">
           <IllustrationImage name="empty-upload" className="h-40 w-40" />
           <div>
             <p className="font-medium text-foreground">{hasPublished ? "No bulk send jobs yet" : "Publish a template first"}</p>

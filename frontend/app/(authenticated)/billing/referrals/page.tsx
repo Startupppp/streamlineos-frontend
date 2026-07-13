@@ -135,7 +135,7 @@ export default function ReferralsPage() {
       title="Referral Program"
       subtitle="Invite others and earn rewards"
     >
-      <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col space-y-4">
         <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-2">
           <div className="flex items-center gap-2">
             <Gift className="h-4 w-4 text-primary" />
@@ -214,6 +214,7 @@ export default function ReferralsPage() {
             columns={columns}
             getRowKey={getReferralRowKey}
             isLoading={isLoading}
+            className="flex-1 min-h-0"
             emptyState={
               <EmptyState
                 illustration={<EmptyDocumentsIllustration />}

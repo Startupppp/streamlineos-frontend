@@ -98,7 +98,7 @@ export default function ProjectTemplatesPage() {
             ))}
           </div>
         ) : isError ? (
-          <ErrorState onRetry={handleRetry} className="flex-1 min-h-[40vh]" />
+          <ErrorState onRetry={handleRetry} className="flex-1" />
         ) : templates && templates.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {templates.map((t) => (
@@ -116,7 +116,7 @@ export default function ProjectTemplatesPage() {
             title="No templates yet"
             description="Create a reusable project structure to bootstrap new projects quickly."
             action={{ label: "Create your first template", onClick: handleOpenCreate }}
-            className="flex-1 min-h-[40vh]"
+            className="flex-1"
           />
         )}
 

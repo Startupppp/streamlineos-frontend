@@ -269,11 +269,7 @@ export default function DocumentTypesPage() {
         title="Document Types"
         subtitle="Configure required onboarding documents"
       >
-        <div className="space-y-2">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-10" />
-          ))}
-        </div>
+        <Skeleton className="flex-1 rounded-lg" />
       </PageWrapper>
     );
   }
@@ -281,7 +277,7 @@ export default function DocumentTypesPage() {
   if (isError) {
     return (
       <PageWrapper title="Document Types" subtitle="Configure required onboarding documents">
-        <div className="flex flex-col items-center justify-center py-14 text-center gap-3">
+        <div className="flex flex-1 flex-col items-center justify-center text-center gap-3">
           <AlertCircle className="h-8 w-8 text-destructive" />
           <div>
             <p className="text-sm font-medium text-foreground">Failed to load document types</p>
@@ -307,14 +303,16 @@ export default function DocumentTypesPage() {
         ) : undefined
       }
     >
-      <DocumentTypeList
-        items={list}
-        isHROrCEO={isHROrCEO}
-        onEdit={openEdit}
-        onDeactivate={setDeactivateTarget}
-        onReactivate={setReactivateTarget}
-        onCreateClick={openCreate}
-      />
+      <div className="flex flex-1 min-h-0 flex-col">
+        <DocumentTypeList
+          items={list}
+          isHROrCEO={isHROrCEO}
+          onEdit={openEdit}
+          onDeactivate={setDeactivateTarget}
+          onReactivate={setReactivateTarget}
+          onCreateClick={openCreate}
+        />
+      </div>
 
       <DocumentTypeFormDialog
         open={sheetOpen}

@@ -374,7 +374,6 @@ export function KbManagerContent() {
               title="No articles match your filters"
               description="Try adjusting your search or filters."
               action={{ label: "Clear filters", onClick: handleClearFilters }}
-              className="min-h-[40vh]"
             />
           ) : articles.length === 0 ? (
             <EmptyState
@@ -382,7 +381,6 @@ export function KbManagerContent() {
               title="No articles yet"
               description="Create your first help center article to get started."
               action={{ label: "New Article", onClick: handleOpenNewArticle }}
-              className="min-h-[40vh]"
             />
           ) : (
             <div className="space-y-2">
@@ -415,7 +413,6 @@ export function KbManagerContent() {
               title="No categories yet"
               description="Group your articles into categories for the help center."
               action={{ label: "New Category", onClick: handleOpenCategoryDialog }}
-              className="min-h-[40vh]"
             />
           ) : (
             <div className="space-y-2">

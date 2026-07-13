@@ -336,7 +336,7 @@ export default function EmailTemplatesPage() {
             title="Failed to load email templates"
             description="Something went wrong. Please try again."
             action={{ label: "Retry", onClick: handleRetry }}
-            className="flex-1 min-h-[40vh] border-0 bg-transparent"
+            className="flex-1 border-0 bg-transparent"
           />
         ) : (
           <div className="space-y-6">
@@ -358,7 +358,7 @@ export default function EmailTemplatesPage() {
                     title="No email templates"
                     description="Create reusable templates with dynamic variables to speed up outreach."
                     action={{ label: "New Template", onClick: handleOpenCreate }}
-                    className="flex-1 min-h-[40vh] border-0 bg-transparent"
+                    className="flex-1 border-0 bg-transparent"
                   />
                 </div>
               )}

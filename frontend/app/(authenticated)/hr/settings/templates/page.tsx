@@ -234,6 +234,7 @@ export default function HrTemplatesPage() {
         }
       >
         <DataTable<HrTemplate>
+          className="flex-1 min-h-0"
           data={templates}
           columns={buildTemplateColumns(handleOpenEdit)}
           getRowKey={(t) => t.id}

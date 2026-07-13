@@ -221,7 +221,7 @@ export default function AdjustmentsPage() {
           title="Failed to load adjustments"
           description="An error occurred while fetching adjustment records."
           onRetry={handleRetry}
-          className="flex-1 min-h-[40vh]"
+          className="flex-1"
         />
       ) : adjustments.length === 0 && !isLoading ? (
         <motion.div variants={fadeUp} initial="hidden" animate="visible">
@@ -238,13 +238,14 @@ export default function AdjustmentsPage() {
                 ? { label: "Clear Filters", href: "?" }
                 : { label: "New Adjustment", onClick: handleOpenSheet }
             }
-            className="flex-1 min-h-[40vh]"
+            className="flex-1"
           />
         </motion.div>
       ) : (
-        <motion.div variants={staggerContainer} initial="hidden" animate="visible">
-          <motion.div variants={fadeUp}>
+        <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="flex flex-1 min-h-0 flex-col">
+          <motion.div variants={fadeUp} className="flex flex-1 min-h-0 flex-col">
             <DataTable
+              className="flex-1 min-h-0"
               data={adjustments}
               columns={ADJUSTMENT_COLUMNS}
               getRowKey={(row) => row.id}

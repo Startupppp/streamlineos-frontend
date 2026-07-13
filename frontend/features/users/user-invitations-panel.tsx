@@ -242,7 +242,7 @@ export function UserInvitationsPanel() {
           ? { label: "Clear filters", onClick: handleClearFilters }
           : { label: "Invite User", onClick: handleOpenInvite }
       }
-      className="border-0 bg-transparent min-h-[40vh]"
+      className="border-0 bg-transparent"
     />
   );
 
@@ -279,10 +279,11 @@ export function UserInvitationsPanel() {
             title="Failed to load invitations"
             description="An error occurred while loading invitations."
             onRetry={handleRetry}
-            className="flex-1 min-h-[40vh]"
+            className="flex-1"
           />
         ) : (
           <DataTable
+            className="flex-1 min-h-0"
             data={filtered}
             columns={columns}
             getRowKey={(inv) => inv.id}

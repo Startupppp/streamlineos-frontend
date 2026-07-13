@@ -41,11 +41,11 @@ export function WorkflowPage({ projectId }: WorkflowPageProps) {
       eyebrow="Project"
       subtitle="Configure allowed status transitions and WIP limits."
     >
-      <div className="px-4 pb-6 space-y-6">
+      <div className="flex flex-1 min-h-0 flex-col space-y-6">
         {isLoading ? (
           <>
-            <DataTableSkeleton rows={4} columns={2} />
-            <DataTableSkeleton rows={5} columns={6} />
+            <DataTableSkeleton rows={4} columns={2} className="flex-1" />
+            <DataTableSkeleton rows={5} columns={6} className="flex-1" />
           </>
         ) : isError ? (
           <ErrorState className="flex-1" onRetry={() => void refetch()} />

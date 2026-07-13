@@ -146,7 +146,7 @@ export function ContactTableView({
   };
 
   return (
-    <motion.div variants={fadeUp}>
+    <motion.div variants={fadeUp} className="flex flex-col flex-1 min-h-0">
       <DataTable
         data={items}
         columns={columns}
@@ -177,7 +177,7 @@ export function ContactTableView({
           />
         }
         minWidth="580px"
-        className="h-[calc(100dvh-16rem)] min-h-[320px]"
+        className="flex-1 min-h-0"
       />
     </motion.div>
   );

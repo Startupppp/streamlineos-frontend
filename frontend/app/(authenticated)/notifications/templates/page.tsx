@@ -528,7 +528,7 @@ export default function NotificationTemplatesPage() {
       }
     >
       {isLoading ? (
-        <div className="rounded-lg border border-border overflow-hidden divide-y divide-border">
+        <div className="rounded-lg border border-border overflow-hidden divide-y divide-border flex-1">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="flex items-start gap-3 px-3 py-2.5">
               <div className="flex-1 space-y-1.5">

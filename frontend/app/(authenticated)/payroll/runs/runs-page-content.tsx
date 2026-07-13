@@ -127,6 +127,7 @@ export function RunsPageContent() {
       }
     >
       <DataTable
+        className="flex-1 min-h-0"
         data={data?.data ?? []}
         columns={columns}
         getRowKey={(row) => row.id}

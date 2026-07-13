@@ -484,46 +484,48 @@ export default function SupportMacrosPage() {
         </Button>
       }
     >
-      <div className="relative mb-4 max-w-sm">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          className="pl-8"
-          placeholder="Search responses…"
-          value={search}
-          onChange={handleSearchChange}
-        />
-      </div>
-
-      {isLoading ? (
-        <LoadingState variant="cards" rows={6} />
-      ) : isError ? (
-        <ErrorState onRetry={handleRetry} />
-      ) : macros && macros.length > 0 ? (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {macros.map((macro) => (
-            <MacroCard
-              key={macro.id}
-              macro={macro}
-              usageCount={usageById.get(macro.id) ?? macro.usageCount ?? 0}
-              onCopy={handleCopy}
-              onEdit={handleEditMacro}
-              onDelete={handleDeleteMacro}
-            />
-          ))}
+      <div className="flex flex-1 min-h-0 flex-col space-y-4">
+        <div className="relative max-w-sm">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            className="pl-8"
+            placeholder="Search responses…"
+            value={search}
+            onChange={handleSearchChange}
+          />
         </div>
-      ) : (
-        <EmptyState
-          illustration={<EmptyMailIllustration />}
-          title={search.trim() ? "No matching responses" : "No canned responses yet"}
-          description={
-            search.trim()
-              ? "Try a different search term."
-              : "Create reusable reply templates to speed up support."
-          }
-          action={search.trim() ? undefined : { label: "New Response", onClick: handleNewResponseAction }}
-          className="flex-1"
-        />
-      )}
+
+        {isLoading ? (
+          <LoadingState variant="cards" rows={6} />
+        ) : isError ? (
+          <ErrorState onRetry={handleRetry} />
+        ) : macros && macros.length > 0 ? (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {macros.map((macro) => (
+              <MacroCard
+                key={macro.id}
+                macro={macro}
+                usageCount={usageById.get(macro.id) ?? macro.usageCount ?? 0}
+                onCopy={handleCopy}
+                onEdit={handleEditMacro}
+                onDelete={handleDeleteMacro}
+              />
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            illustration={<EmptyMailIllustration />}
+            title={search.trim() ? "No matching responses" : "No canned responses yet"}
+            description={
+              search.trim()
+                ? "Try a different search term."
+                : "Create reusable reply templates to speed up support."
+            }
+            action={search.trim() ? undefined : { label: "New Response", onClick: handleNewResponseAction }}
+            className="flex-1"
+          />
+        )}
+      </div>
 
       {createOpen && (
         <MacroDialog categoryOptions={categoryOptions} onClose={handleCloseCreate} />

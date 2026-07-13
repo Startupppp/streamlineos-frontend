@@ -270,7 +270,7 @@ export default function FinanceApprovalsPage() {
 
   return (
     <PageWrapper title="Finance Approvals" subtitle="Review and approve financial transactions">
-      <div className="space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col space-y-4">
         <StatCardGrid cols={3}>
           <StatCard
             label="Pending"
@@ -342,6 +342,7 @@ export default function FinanceApprovalsPage() {
 
         {!approvalsQuery.error && (
           <DataTable
+            className="flex-1 min-h-0"
             data={items}
             columns={approvalColumns}
             getRowKey={(row) => row.id}

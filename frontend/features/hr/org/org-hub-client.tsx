@@ -60,7 +60,7 @@ export function OrgHubClient() {
       title="Organisation Structure"
       subtitle="Manage departments, teams, locations, and job catalog"
       noInternalScroll
-      contentClassName="flex flex-col gap-4 px-4 sm:px-6 pb-4"
+      contentClassName="flex flex-col gap-4 pb-4"
     >
       <HeadcountStats groupBy="department" />
       <Tabs defaultValue="departments" className="flex flex-col flex-1 min-h-0">

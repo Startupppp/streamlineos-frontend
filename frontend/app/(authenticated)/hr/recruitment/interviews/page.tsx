@@ -168,7 +168,8 @@ export default function InterviewsPage() {
         </div>
       }
     >
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+      <div className="flex flex-1 min-h-0 flex-col space-y-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="bg-muted/40 rounded-lg p-3 text-center">
           <p className="text-xl font-bold tabular-nums text-foreground">{interviewStats.total}</p>
           <p className="text-xs font-medium text-muted-foreground mt-0.5">Total</p>
@@ -187,7 +188,7 @@ export default function InterviewsPage() {
         </div>
       </div>
 
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-1 rounded-lg border p-1">
           <button
             className={cn(
@@ -296,6 +297,7 @@ export default function InterviewsPage() {
           onOpenChange={handleFeedbackClose}
         />
       )}
+      </div>
     </PageWrapper>
   );
 }

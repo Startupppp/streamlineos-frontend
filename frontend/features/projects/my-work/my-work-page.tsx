@@ -172,7 +172,6 @@ function AllWorkList({ items, isLoading, isError, onRetry, emptyTitle, emptyDesc
         illustrationPreset="projects"
         title={emptyTitle}
         description={emptyDescription}
-        className="min-h-[40vh]"
       />
     );
   }
@@ -319,7 +318,6 @@ export function MyWorkPage() {
               illustrationPreset="projects"
               title="Nothing assigned to you"
               description="Tickets assigned to you across all projects will appear here."
-              className="min-h-[40vh]"
             />
           ) : (
             <div className="space-y-5">

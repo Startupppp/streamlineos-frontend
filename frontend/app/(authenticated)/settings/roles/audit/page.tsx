@@ -182,7 +182,7 @@ function AuditContent() {
             title="Failed to load audit log"
             description="Something went wrong while fetching audit events"
             onRetry={handleRetry}
-            className="flex-1 min-h-[320px]"
+            className="flex-1"
           />
         )}
 
@@ -193,6 +193,7 @@ function AuditContent() {
             getRowKey={(log) => log.id}
             isLoading={query.isLoading}
             emptyState={<AuditEmptyState />}
+            className="flex-1 min-h-0"
             pagination={{
               mode: "server",
               page,

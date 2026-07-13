@@ -198,7 +198,8 @@ export default function InterviewerPerformancePage() {
         </div>
       }
     >
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+      <div className="flex flex-1 min-h-0 flex-col space-y-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <StatCard
           label="Avg Submit Time"
           value={isLoading ? "—" : avgSubmitTime !== null ? `${Math.round(avgSubmitTime)}h` : "—"}
@@ -241,6 +242,7 @@ export default function InterviewerPerformancePage() {
           columns={INTERVIEWER_PERF_COLUMNS}
           getRowKey={(s) => s.interviewerId}
           isLoading={isLoading}
+          className="flex-1 min-h-0"
           emptyState={
             <RecruitmentEmptyState
               illustration={<EmptyLeaderboardIllustration />}
@@ -252,6 +254,7 @@ export default function InterviewerPerformancePage() {
           }
         />
       )}
+      </div>
     </PageWrapper>
   );
 }

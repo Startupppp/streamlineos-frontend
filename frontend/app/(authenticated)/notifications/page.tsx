@@ -279,7 +279,7 @@ export default function NotificationsPage() {
         />
       }
     >
-      <div className="space-y-2">
+      <div className="flex flex-1 min-h-0 flex-col space-y-2">
         {selectedIds.size > 0 && (
           <div className="flex items-center gap-1.5 px-3 py-2 border rounded-lg bg-muted/40 flex-wrap">
             <span className="text-xs text-muted-foreground mr-1">

@@ -157,23 +157,25 @@ export function PortfoliosPage() {
         </Button>
       ) : undefined}
     >
-      {isLoading ? (
-        <DataTableSkeleton rows={5} columns={7} />
-      ) : isError ? (
-        <ErrorState className="flex-1" onRetry={() => void refetch()} />
-      ) : displayed.length === 0 ? (
-        <EmptyState
-          illustrationPreset="projects"
-          title={isFiltered ? "No matching portfolios" : "No portfolios yet"}
-          description={isFiltered ? "Try adjusting your filters." : "Create a portfolio to group and govern your projects."}
-          action={isFiltered
-            ? { label: "Clear filters", onClick: () => { setStatusFilter("all"); setSearch(""); } }
-            : canManage ? { label: "New Portfolio", onClick: () => setSheetOpen(true) } : undefined}
-          className="flex-1 min-h-[40vh]"
-        />
-      ) : (
-        <DataTable data={displayed} columns={columns} getRowKey={(row) => row.id} minWidth="780px" />
-      )}
+      <div className="flex flex-1 min-h-0 flex-col">
+        {isLoading ? (
+          <DataTableSkeleton rows={5} columns={7} className="flex-1" />
+        ) : isError ? (
+          <ErrorState className="flex-1" onRetry={() => void refetch()} />
+        ) : displayed.length === 0 ? (
+          <EmptyState
+            illustrationPreset="projects"
+            title={isFiltered ? "No matching portfolios" : "No portfolios yet"}
+            description={isFiltered ? "Try adjusting your filters." : "Create a portfolio to group and govern your projects."}
+            action={isFiltered
+              ? { label: "Clear filters", onClick: () => { setStatusFilter("all"); setSearch(""); } }
+              : canManage ? { label: "New Portfolio", onClick: () => setSheetOpen(true) } : undefined}
+            className="flex-1"
+          />
+        ) : (
+          <DataTable data={displayed} columns={columns} getRowKey={(row) => row.id} minWidth="780px" className="flex-1 min-h-0" />
+        )}
+      </div>
 
       <PortfolioFormSheet
         open={sheetOpen || !!editTarget}

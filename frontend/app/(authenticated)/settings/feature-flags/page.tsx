@@ -275,6 +275,7 @@ function FeatureFlagsContent() {
         getRowKey={(flag) => flag.id}
         isLoading={isLoading}
         emptyState={emptyState}
+        className="flex-1 min-h-0"
       />
 
       <Sheet open={createOpen} onOpenChange={setCreateOpen}>

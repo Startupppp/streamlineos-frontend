@@ -325,10 +325,10 @@ function LoadsPageInner() {
             title="Failed to load loads"
             description={loadsQuery.error.message}
             onRetry={handleRetry}
-            className="min-h-[40vh]"
           />
         ) : (
           <DataTable
+            className="flex-1 min-h-0"
             data={items}
             columns={columns}
             getRowKey={(l) => l.id}
@@ -340,7 +340,7 @@ function LoadsPageInner() {
                 title="No loads yet"
                 description="Create a load to group shipments for transport."
                 action={{ label: "New Load", onClick: handleNewLoad }}
-                className="border-0 bg-transparent min-h-[40vh]"
+                className="border-0 bg-transparent"
               />
             }
             pagination={{

@@ -251,9 +251,9 @@ export function BugsPage({ projectId }: BugsPageProps) {
         ) : undefined
       }
     >
-      <div className="px-4 pb-4">
+      <div className="flex flex-1 min-h-0 flex-col">
         {isLoading ? (
-          <DataTableSkeleton rows={8} columns={6} />
+          <DataTableSkeleton rows={8} columns={6} className="flex-1" />
         ) : isError ? (
           <ErrorState onRetry={refetch} />
         ) : (bugs ?? []).length === 0 ? (
@@ -268,6 +268,7 @@ export function BugsPage({ projectId }: BugsPageProps) {
             data={bugs ?? []}
             columns={columns}
             getRowKey={(row) => row.id}
+            className="flex-1 min-h-0"
           />
         )}
       </div>

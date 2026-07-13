@@ -422,7 +422,6 @@ export default function OrgTeamsPage() {
       title="No teams yet"
       description="Create your first team to get started."
       action={{ label: "Add Team", onClick: handleOpenCreate }}
-      className="min-h-[40vh]"
     />
   );
 
@@ -460,6 +459,7 @@ export default function OrgTeamsPage() {
         emptyState={emptyState}
         rowClassName={(t) => cn(t.status === "ARCHIVED" && "opacity-60")}
         minWidth="620px"
+        className="flex-1 min-h-0"
       />
 
       <Sheet open={showCreate} onOpenChange={setShowCreate}>

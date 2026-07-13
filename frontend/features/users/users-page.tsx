@@ -483,7 +483,7 @@ export function UsersPage() {
           </div>
         }
       >
-        <div className="space-y-3">
+        <div className="flex flex-1 min-h-0 flex-col space-y-3">
           <UserStatsCards />
 
           {someSelected && (
@@ -578,6 +578,7 @@ export function UsersPage() {
             />
           ) : (
             <DataTable
+              className="flex-1 min-h-0"
               data={users}
               columns={columns}
               getRowKey={(user) => user.id}

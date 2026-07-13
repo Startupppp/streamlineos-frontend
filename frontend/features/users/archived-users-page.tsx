@@ -242,40 +242,42 @@ export function ArchivedUsersPage() {
           </div>
         }
       >
-        {someSelected && (
-          <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-md bg-muted/60 border text-xs flex-wrap">
-            <span className="font-medium text-muted-foreground">{selectedIds.size} selected</span>
-            <div className="flex items-center gap-1.5 ml-auto flex-wrap">
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 text-xs"
-                onClick={handleBulkRestore}
-                disabled={isRestoring}
-              >
-                <RefreshCw className="h-3 w-3 mr-1" />
-                Restore
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 text-xs"
-                onClick={handleClearSelection}
-              >
-                Clear
-              </Button>
+        <div className="flex flex-1 min-h-0 flex-col space-y-3">
+          {someSelected && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-muted/60 border text-xs flex-wrap">
+              <span className="font-medium text-muted-foreground">{selectedIds.size} selected</span>
+              <div className="flex items-center gap-1.5 ml-auto flex-wrap">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={handleBulkRestore}
+                  disabled={isRestoring}
+                >
+                  <RefreshCw className="h-3 w-3 mr-1" />
+                  Restore
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={handleClearSelection}
+                >
+                  Clear
+                </Button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {isError ? (
-          <ErrorState
-            title="Failed to load archived users"
-            description="An error occurred while loading archived users."
-            onRetry={handleRetry}
-          />
-        ) : (
-          <DataTable
+          {isError ? (
+            <ErrorState
+              title="Failed to load archived users"
+              description="An error occurred while loading archived users."
+              onRetry={handleRetry}
+            />
+          ) : (
+            <DataTable
+              className="flex-1 min-h-0"
             data={users}
             columns={columns}
             getRowKey={(u) => u.id}
@@ -304,7 +306,8 @@ export function ArchivedUsersPage() {
               />
             }
           />
-        )}
+          )}
+        </div>
       </PageWrapper>
 
       <UserDetailSheet userId={selectedUserId} open={sheetOpen} onOpenChange={handleSheetChange} />

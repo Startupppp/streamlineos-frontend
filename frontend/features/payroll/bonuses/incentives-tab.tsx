@@ -237,7 +237,7 @@ export function IncentivesTab() {
 
   return (
     <>
-      <div className="flex flex-col gap-0 pt-3">
+      <div className="flex flex-1 min-h-0 flex-col gap-0 pt-3">
         <div className="flex items-center gap-2 flex-wrap mb-3">
           <Select value={istatus} onValueChange={handleStatusChange}>
             <SelectTrigger className="h-8 text-sm w-40">
@@ -252,7 +252,7 @@ export function IncentivesTab() {
             </SelectContent>
           </Select>
         </div>
-        <Card className="flex min-h-0 min-w-0 flex-col gap-0 overflow-hidden py-0">
+        <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden py-0">
           <CardContent className="flex min-h-0 min-w-0 flex-col overflow-hidden p-0">
             <DataTable
               data={data?.incentives ?? []}

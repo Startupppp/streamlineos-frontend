@@ -62,7 +62,7 @@ export function MeetingDetailPage({ projectId, meetingId }: MeetingDetailPagePro
   if (isLoading) {
     return (
       <PageWrapper title="Meeting" eyebrow="Project" backHref={`/projects/${projectId}/meetings`}>
-        <div className="px-4 pb-4 space-y-6">
+        <div className="flex flex-1 min-h-0 flex-col space-y-6">
           <div className="flex gap-2">
             <Skeleton className="h-5 w-20 rounded-full" />
             <Skeleton className="h-5 w-20 rounded-full" />
@@ -77,9 +77,7 @@ export function MeetingDetailPage({ projectId, meetingId }: MeetingDetailPagePro
   if (isError || !meeting) {
     return (
       <PageWrapper title="Meeting" eyebrow="Project" backHref={`/projects/${projectId}/meetings`}>
-        <div className="px-4 pb-4">
-          <ErrorState onRetry={() => void refetch()} />
-        </div>
+        <ErrorState onRetry={() => void refetch()} />
       </PageWrapper>
     );
   }
@@ -113,7 +111,7 @@ export function MeetingDetailPage({ projectId, meetingId }: MeetingDetailPagePro
         ) : undefined
       }
     >
-      <div className="px-4 pb-8 space-y-8">
+      <div className="space-y-8">
         <MeetingNotesSection meeting={meeting} projectId={projectId} canManage={canManage} />
 
         <div className="border-t pt-6">

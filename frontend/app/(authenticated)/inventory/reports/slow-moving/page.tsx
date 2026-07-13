@@ -201,7 +201,6 @@ function SlowMovingReportContent() {
           illustration={<EmptyReportIllustration />}
           title="No slow-moving inventory"
           description="Products appear here when they have stock on hand but no sales or outbound transfers within the selected window."
-          className="min-h-[40vh]"
         />
       )}
 
@@ -224,7 +223,6 @@ function SlowMovingReportContent() {
                   illustration={<EmptySearchIllustration />}
                   title="No results"
                   description="No products match the current filter."
-                  className="min-h-[40vh]"
                 />
               }
             />

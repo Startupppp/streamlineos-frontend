@@ -325,7 +325,6 @@ export default function OrgCostCentersPage() {
       title="No cost centers yet"
       description="Create your first cost center to get started."
       action={{ label: "Add Cost Center", onClick: handleOpenCreate }}
-      className="min-h-[40vh]"
     />
   );
 
@@ -363,6 +362,7 @@ export default function OrgCostCentersPage() {
         emptyState={emptyState}
         rowClassName={(c) => cn(c.status === "ARCHIVED" && "opacity-60")}
         minWidth="580px"
+        className="flex-1 min-h-0"
       />
 
       <Sheet open={showCreate} onOpenChange={setShowCreate}>

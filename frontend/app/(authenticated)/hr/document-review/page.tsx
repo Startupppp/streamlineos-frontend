@@ -76,11 +76,7 @@ export default function DocumentReviewPage() {
   if (isLoading) {
     return (
       <PageWrapper title="Document Review" subtitle="Review employee onboarding documents">
-        <div className="space-y-2">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-12" />
-          ))}
-        </div>
+        <Skeleton className="flex-1 rounded-lg" />
       </PageWrapper>
     );
   }
@@ -118,7 +114,9 @@ export default function DocumentReviewPage() {
         </div>
       }
     >
-      <ReviewTable list={filteredList} canReview={canReview} onOpenReview={handleOpenReview} />
+      <div className="flex flex-1 min-h-0 flex-col">
+        <ReviewTable list={filteredList} canReview={canReview} onOpenReview={handleOpenReview} />
+      </div>
 
       <ReviewSheet
         userId={reviewUserId}

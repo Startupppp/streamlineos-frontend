@@ -393,7 +393,6 @@ export default function OrgDepartmentsPage() {
       title="No departments yet"
       description="Create your first department to get started."
       action={{ label: "Add Department", onClick: handleOpenCreate }}
-      className="min-h-[40vh]"
     />
   );
 
@@ -431,6 +430,7 @@ export default function OrgDepartmentsPage() {
         emptyState={emptyState}
         rowClassName={(d) => cn(d.status === "ARCHIVED" && "opacity-60")}
         minWidth="580px"
+        className="flex-1 min-h-0"
       />
 
       <Sheet open={showCreate} onOpenChange={setShowCreate}>

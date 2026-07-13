@@ -165,7 +165,7 @@ export function FeedbucketSubmissionDetail({ submissionId }: FeedbucketSubmissio
 
   if (isLoading) {
     return (
-      <div className="p-6 space-y-4">
+      <div className="flex flex-1 min-h-0 flex-col space-y-4">
         <Skeleton className="h-64 w-full rounded-xl" />
         <Skeleton className="h-24 w-full rounded-xl" />
         <Skeleton className="h-32 w-full rounded-xl" />
@@ -174,7 +174,7 @@ export function FeedbucketSubmissionDetail({ submissionId }: FeedbucketSubmissio
   }
 
   if (isError || !submission) {
-    return <ErrorState description="Failed to load submission." onRetry={refetch} className="m-6" />;
+    return <ErrorState description="Failed to load submission." onRetry={refetch} />;
   }
 
   const linkedTicketId = convertedTicketId ?? submission.linkedTicketId;
@@ -203,7 +203,7 @@ export function FeedbucketSubmissionDetail({ submissionId }: FeedbucketSubmissio
   }
 
   return (
-    <div className="flex flex-col gap-6 p-4 sm:p-6">
+    <div className="flex flex-col gap-6">
       {submission.screenshotUrl && (
         <div className="rounded-xl border border-border overflow-hidden bg-muted/20">
           <img

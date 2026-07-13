@@ -28,7 +28,7 @@ export default function EffectiveRulePreviewPage() {
       title="Effective Rule Preview"
       subtitle="See which HR policy applies to an employee on a given date"
     >
-      <div className="px-4 sm:px-6 py-4">
+      <div className="py-4">
         <EffectiveRulesPreview />
       </div>
     </PageWrapper>

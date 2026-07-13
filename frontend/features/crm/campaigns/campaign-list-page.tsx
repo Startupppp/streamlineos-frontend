@@ -206,7 +206,7 @@ export function CampaignListPage() {
         variants={staggerContainer}
         initial="hidden"
         animate="visible"
-        className="space-y-4"
+        className="flex flex-1 min-h-0 flex-col space-y-4"
       >
         {campaigns.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-4 py-20">
@@ -221,7 +221,7 @@ export function CampaignListPage() {
             </LoadingButton>
           </div>
         ) : (
-          <DataTable columns={columns} data={campaigns} getRowKey={(row) => row.id} />
+          <DataTable columns={columns} data={campaigns} getRowKey={(row) => row.id} className="flex-1 min-h-0" />
         )}
       </motion.div>
 

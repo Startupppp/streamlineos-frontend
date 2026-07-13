@@ -108,10 +108,10 @@ function CarriersPageInner() {
             title="Failed to load carriers"
             description={getErrorMessage(carriersQuery.error)}
             onRetry={handleRetry}
-            className="min-h-[40vh]"
           />
         ) : (
           <DataTable
+            className="flex-1 min-h-0"
             data={items}
             columns={columns}
             getRowKey={(c) => c.id}
@@ -123,7 +123,7 @@ function CarriersPageInner() {
                 title="No carriers yet"
                 description="Add a carrier to assign tracking numbers to shipments."
                 action={{ label: "Add Carrier", onClick: handleAddCarrier }}
-                className="border-0 bg-transparent min-h-[40vh]"
+                className="border-0 bg-transparent"
               />
             }
             minWidth="480px"

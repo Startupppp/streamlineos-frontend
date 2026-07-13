@@ -178,7 +178,7 @@ export default function CrmAuditLogPage() {
         ) : entries.length === 0 ? (
           <motion.div key="empty" variants={itemVariants} initial="hidden" animate="visible" exit={{ opacity: 0 }}>
             <EmptyState
-              className="flex-1 min-h-[50vh] border-0 bg-transparent"
+              className="flex-1 border-0 bg-transparent"
               illustration={<EmptyActivityIllustration />}
               title="No audit entries found"
               description={

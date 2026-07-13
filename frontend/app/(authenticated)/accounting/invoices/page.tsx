@@ -381,7 +381,7 @@ export default function AccountingInvoicesPage() {
         </div>
       }
     >
-      <Tabs defaultValue="invoices" className="space-y-4">
+      <Tabs defaultValue="invoices" className="flex flex-1 min-h-0 flex-col space-y-4">
         <TabsList className="h-8">
           <TabsTrigger value="invoices" className="text-xs">
             Invoices
@@ -452,6 +452,7 @@ export default function AccountingInvoicesPage() {
                   compact
                 />
               }
+              className="flex-1 min-h-0"
             />
           )}
         </TabsContent>

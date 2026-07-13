@@ -397,21 +397,21 @@ export default function DealsPage() {
         }
       >
         <motion.div
-          className="space-y-4"
+          className="flex flex-1 min-h-0 flex-col space-y-4"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
         >
-          <motion.div variants={itemVariants} className="sticky top-0 z-10 bg-background pb-2">
+          <motion.div variants={itemVariants} className="sticky top-0 z-10 bg-background pb-2 shrink-0">
             <DealsStatsBar {...stats} />
           </motion.div>
 
-          <motion.div variants={itemVariants}>
+          <motion.div variants={itemVariants} className="shrink-0">
             <DealForecastWidget deals={filteredDeals} />
           </motion.div>
 
           {view === "table" && (
-            <motion.div variants={itemVariants}>
+            <motion.div variants={itemVariants} className="flex flex-1 min-h-0 flex-col">
               <DealTableView
                 deals={filteredDeals}
                 sortColumn={dealSortCol}
