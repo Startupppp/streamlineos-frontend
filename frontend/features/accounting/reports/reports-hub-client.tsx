@@ -38,14 +38,14 @@ const CATEGORY_ICONS: Record<string, AnimatedNavIconComponent> = {
 };
 
 const CATEGORY_TONES: Record<string, { bg: string; text: string }> = {
-  Core: { bg: "bg-blue-50", text: "text-blue-600" },
-  Receivables: { bg: "bg-emerald-50", text: "text-emerald-600" },
-  Payables: { bg: "bg-orange-50", text: "text-orange-600" },
-  Sales: { bg: "bg-cyan-50", text: "text-cyan-600" },
-  Expenses: { bg: "bg-amber-50", text: "text-amber-600" },
-  Tax: { bg: "bg-violet-50", text: "text-violet-600" },
-  Analytics: { bg: "bg-indigo-50", text: "text-indigo-600" },
-  Budgeting: { bg: "bg-pink-50", text: "text-pink-600" },
+  Core: { bg: "bg-blue-50 dark:bg-blue-500/10", text: "text-blue-600 dark:text-blue-400" },
+  Receivables: { bg: "bg-emerald-50 dark:bg-emerald-500/10", text: "text-emerald-600 dark:text-emerald-400" },
+  Payables: { bg: "bg-orange-50 dark:bg-orange-500/10", text: "text-orange-600 dark:text-orange-400" },
+  Sales: { bg: "bg-cyan-50 dark:bg-cyan-500/10", text: "text-cyan-600 dark:text-cyan-400" },
+  Expenses: { bg: "bg-amber-50 dark:bg-amber-500/10", text: "text-amber-600 dark:text-amber-400" },
+  Tax: { bg: "bg-violet-50 dark:bg-violet-500/10", text: "text-violet-600 dark:text-violet-400" },
+  Analytics: { bg: "bg-indigo-50 dark:bg-indigo-500/10", text: "text-indigo-600 dark:text-indigo-400" },
+  Budgeting: { bg: "bg-pink-50 dark:bg-pink-500/10", text: "text-pink-600 dark:text-pink-400" },
   Overview: { bg: "bg-muted", text: "text-muted-foreground" },
 };
 

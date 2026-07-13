@@ -162,7 +162,7 @@ export function OrgCustomDomainsSection({ canEdit }: OrgCustomDomainsSectionProp
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium flex-1 font-mono">{d.domain}</span>
                   {d.verifiedAt ? (
-                    <Badge className="gap-1 h-5 text-[10px] bg-green-100 text-green-700 border-green-200">
+                    <Badge className="gap-1 h-5 text-[10px] bg-green-100 text-green-700 border-green-200 dark:bg-green-500/10 dark:text-green-300 dark:border-green-500/30">
                       <CheckCircle2 className="h-3 w-3" /> Verified
                     </Badge>
                   ) : (

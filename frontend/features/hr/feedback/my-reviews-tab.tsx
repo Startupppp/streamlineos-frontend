@@ -23,9 +23,9 @@ import {
 } from "@/hooks/api/hr";
 
 const RELATIONSHIP_COLORS: Record<string, string> = {
-  PEER: "bg-blue-100 text-blue-700",
-  MANAGER: "bg-violet-100 text-violet-700",
-  DIRECT_REPORT: "bg-amber-100 text-amber-700",
+  PEER: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
+  MANAGER: "bg-violet-100 text-violet-700 dark:bg-violet-500/10 dark:text-violet-300",
+  DIRECT_REPORT: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
   SELF: "bg-muted text-muted-foreground",
 };
 
@@ -111,13 +111,13 @@ export function MyReviewsTab() {
           >
             <div className="space-y-2">
               <p className="font-medium text-foreground">
-                Review for <span className="text-blue-600">{req.subjectId}</span>
+                Review for <span className="text-blue-600 dark:text-blue-400">{req.subjectId}</span>
               </p>
               <div className="flex gap-2 flex-wrap">
                 <Badge className={`text-xs ${RELATIONSHIP_COLORS[req.relationship] ?? "bg-muted text-muted-foreground"}`}>
                   {req.relationship}
                 </Badge>
-                <Badge className={`text-xs ${req.status === "PENDING" ? "bg-amber-100 text-amber-700" : "bg-green-100 text-green-700"}`}>
+                <Badge className={`text-xs ${req.status === "PENDING" ? "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300" : "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-300"}`}>
                   {req.status}
                 </Badge>
               </div>
@@ -193,7 +193,7 @@ export function MyReviewsTab() {
                     <button key={star} onClick={() => setOverallRating(star)}>
                       <Star
                         className={`w-6 h-6 ${
-                          overallRating >= star ? "fill-amber-400 text-amber-400" : "text-slate-300"
+                          overallRating >= star ? "fill-amber-400 text-amber-400" : "text-muted-foreground"
                         }`}
                       />
                     </button>

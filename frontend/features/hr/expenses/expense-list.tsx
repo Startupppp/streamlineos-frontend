@@ -351,7 +351,7 @@ export function MemberExpenseList({
             <Button
               variant="outline"
               size="sm"
-              className="h-7 text-xs gap-1.5 text-blue-600 border-blue-200 hover:bg-blue-50 dark:border-blue-800 dark:hover:bg-blue-950/30"
+              className="h-7 text-xs gap-1.5 text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-950/30"
               onClick={handleResubmit}
             >
               Resubmit
@@ -363,7 +363,7 @@ export function MemberExpenseList({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-blue-600 hover:text-blue-600/80 hover:bg-blue-50 dark:hover:bg-blue-950/30"
+              className="h-8 w-8 text-blue-600 dark:text-blue-400 hover:text-blue-600/80 hover:bg-blue-50 dark:hover:bg-blue-950/30"
               onClick={handleEdit}
               aria-label="Edit"
             >

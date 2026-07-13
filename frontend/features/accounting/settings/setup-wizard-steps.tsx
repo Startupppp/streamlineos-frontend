@@ -397,7 +397,7 @@ export function StepPeriods({ onComplete, onSkip }: StepProps) {
           </LoadingButton>
         </div>
         {result !== null && (
-          <div className="flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+          <div className="flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 rounded-lg px-3 py-2">
             <CheckCircle2 className="h-4 w-4 shrink-0" />
             {result.created} periods created for {year}
           </div>

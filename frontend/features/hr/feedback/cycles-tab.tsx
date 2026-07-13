@@ -33,9 +33,9 @@ import {
 
 const CYCLE_STATUS_STYLES: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground",
-  ACTIVE: "bg-green-100 text-green-700",
-  CLOSED: "bg-blue-100 text-blue-700",
-  ARCHIVED: "bg-violet-100 text-violet-700",
+  ACTIVE: "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-300",
+  CLOSED: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
+  ARCHIVED: "bg-violet-100 text-violet-700 dark:bg-violet-500/10 dark:text-violet-300",
 };
 
 interface QuestionBuilder {
@@ -216,7 +216,7 @@ export function CyclesTab() {
                   }`}
                 >
                   <span
-                    className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${
+                    className={`absolute top-0.5 w-4 h-4 bg-card rounded-full shadow transition-all ${
                       form.isAnonymous ? "left-5" : "left-0.5"
                     }`}
                   />

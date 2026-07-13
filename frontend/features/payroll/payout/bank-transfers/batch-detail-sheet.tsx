@@ -107,7 +107,7 @@ function buildColumns(
             <Button
               size="sm"
               variant="outline"
-              className="h-6 text-[10px] px-2 text-red-600 border-red-200 hover:bg-red-50"
+              className="h-6 text-[10px] px-2 text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-500/30 dark:hover:bg-red-500/10"
               onClick={() => onAction("failed", row)}
             >
               Mark Failed

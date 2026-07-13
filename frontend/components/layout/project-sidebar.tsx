@@ -460,7 +460,7 @@ function ProjectSwitcher({
                         : "hover:bg-muted text-foreground/80 hover:text-foreground",
                     )}
                   >
-                    <div className="h-5 w-5 rounded bg-primary/10 flex items-center justify-center text-primary text-[9px] font-bold shrink-0">
+                    <div className="h-5 w-5 rounded bg-brand-core/10 flex items-center justify-center text-primary text-[9px] font-bold shrink-0">
                       {p.key.substring(0, 2).toUpperCase()}
                     </div>
                     <span className="text-xs truncate flex-1 min-w-0">{p.name}</span>
@@ -540,7 +540,7 @@ function DesktopSidebar({
             isCollapsed ? "flex-col gap-1.5" : "gap-2",
           )}
         >
-          <div className="h-7 w-7 rounded bg-primary/10 flex items-center justify-center text-primary text-[11px] font-bold shrink-0">
+          <div className="h-7 w-7 rounded bg-brand-core/10 flex items-center justify-center text-primary text-[11px] font-bold shrink-0">
             {getProjectInitials(projectKey, projectName)}
           </div>
           {!isCollapsed && (
@@ -648,7 +648,7 @@ function MobileProjectNav({
           <div className="flex flex-col h-full">
             <div className="px-3 py-3 border-b">
               <div className="flex items-center gap-2">
-                <div className="h-7 w-7 rounded bg-primary/10 flex items-center justify-center text-primary text-[11px] font-bold shrink-0">
+                <div className="h-7 w-7 rounded bg-brand-core/10 flex items-center justify-center text-primary text-[11px] font-bold shrink-0">
                   {getProjectInitials(projectKey, projectName)}
                 </div>
                 <span className="text-sm font-semibold truncate">

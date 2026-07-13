@@ -315,7 +315,7 @@ export function BillDetailView({
             </div>
             <div className="flex justify-between font-medium">
               <span>Outstanding</span>
-              <span className={outstanding > 0.005 ? "text-amber-600" : "text-emerald-600"}>
+              <span className={outstanding > 0.005 ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400"}>
                 {formatNum(outstanding)}
               </span>
             </div>

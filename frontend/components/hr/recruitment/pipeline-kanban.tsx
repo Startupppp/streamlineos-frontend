@@ -68,7 +68,7 @@ const KanbanColumn = memo(function KanbanColumn({
               "flex-1 rounded-b-xl rounded-tr-xl border-2 p-2 transition-colors min-h-[60px]",
               col.bg,
               col.border,
-              snapshot.isDraggingOver && "ring-2 ring-primary/20 border-primary/30 bg-primary/5"
+              snapshot.isDraggingOver && "ring-2 ring-brand-core/20 border-brand-core/30 bg-brand-core/5"
             )}
           >
             <div className="overflow-y-auto space-y-2" style={{ maxHeight: "calc(100vh - 300px)" }}>

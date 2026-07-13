@@ -320,7 +320,7 @@ export default function DealApprovalsPage() {
             <AlertDialogTitle>
               {confirmAction?.action === "approve" ? (
                 <span className="flex items-center gap-2">
-                  <ClipboardCheck className="h-4 w-4 text-emerald-600" />
+                  <ClipboardCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                   Approve Deal?
                 </span>
               ) : (

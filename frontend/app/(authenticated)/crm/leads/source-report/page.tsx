@@ -144,7 +144,7 @@ export default function LeadSourceReportPage() {
             <Card className="shadow-noir">
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <BarChart3 className="h-4 w-4 text-blue-600" />
+                  <BarChart3 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   Source Attribution
                 </CardTitle>
               </CardHeader>
@@ -188,7 +188,7 @@ export default function LeadSourceReportPage() {
                                 <div className="text-[10px] text-muted-foreground">leads</div>
                               </div>
                               <div className="text-center">
-                                <div className="font-semibold tabular-nums text-emerald-700">
+                                <div className="font-semibold tabular-nums text-emerald-700 dark:text-emerald-400">
                                   {s.converted}
                                 </div>
                                 <div className="text-[10px] text-muted-foreground">converted</div>
@@ -198,9 +198,9 @@ export default function LeadSourceReportPage() {
                                   className={cn(
                                     "font-semibold tabular-nums",
                                     s.conversionRate >= 30
-                                      ? "text-emerald-700"
+                                      ? "text-emerald-700 dark:text-emerald-400"
                                       : s.conversionRate >= 15
-                                        ? "text-amber-700"
+                                        ? "text-amber-700 dark:text-amber-400"
                                         : "text-muted-foreground",
                                   )}
                                 >

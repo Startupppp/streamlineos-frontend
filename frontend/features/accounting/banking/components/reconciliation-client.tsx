@@ -226,7 +226,7 @@ export function ReconciliationClient() {
                           </div>
                         </div>
                         {txn.suggestedMatches && txn.suggestedMatches.length > 0 && (
-                          <p className="text-[10px] text-blue-600 mt-1">
+                          <p className="text-[10px] text-blue-600 dark:text-blue-400 mt-1">
                             {txn.suggestedMatches.length} suggestion
                             {txn.suggestedMatches.length > 1 ? "s" : ""}
                           </p>

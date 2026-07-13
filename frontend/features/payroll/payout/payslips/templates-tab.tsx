@@ -43,7 +43,7 @@ function TemplateCard({
           {template.layout}
         </span>
         {template.isDefault && (
-          <span className="inline-flex items-center gap-0.5 text-emerald-600 text-[10px] font-medium">
+          <span className="inline-flex items-center gap-0.5 text-emerald-600 dark:text-emerald-400 text-[10px] font-medium">
             <Star className="h-3 w-3" />
             Default
           </span>

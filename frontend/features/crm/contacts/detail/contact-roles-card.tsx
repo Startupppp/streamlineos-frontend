@@ -177,7 +177,7 @@ export function ContactRolesCard({ contactId }: ContactRolesCardProps) {
           <div className="flex flex-wrap gap-2">
             {roles.map((role) => (
               <div key={role.id} className="flex items-center gap-1">
-                <Badge variant="outline" className="text-[10px] px-2 py-0 h-5 bg-blue-50 text-blue-700 border-blue-200">
+                <Badge variant="outline" className="text-[10px] px-2 py-0 h-5 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-500/30">
                   {formatRoleKey(role.roleKey)}
                   {role.isPrimary && <span className="ml-1 text-[9px] text-blue-500">★</span>}
                 </Badge>

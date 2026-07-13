@@ -34,7 +34,7 @@ function TimerRow({
       <div className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
         <span className="text-[11px] font-medium text-muted-foreground">{label}</span>
         <div className="text-right">
-          <p className="text-[11px] text-emerald-600 font-medium">Met — {metLabel}</p>
+          <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">Met — {metLabel}</p>
           <p className="text-[10px] text-muted-foreground">Due {dueLabel}</p>
         </div>
       </div>
@@ -43,11 +43,11 @@ function TimerRow({
 
   return (
     <div className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
-      <span className={cn("text-[11px] font-medium", breached ? "text-red-600" : "text-muted-foreground")}>
+      <span className={cn("text-[11px] font-medium", breached ? "text-red-600 dark:text-red-400" : "text-muted-foreground")}>
         {label}
       </span>
       <div className="text-right">
-        <p className={cn("text-[11px] font-medium", breached ? "text-red-600" : "text-foreground")}>
+        <p className={cn("text-[11px] font-medium", breached ? "text-red-600 dark:text-red-400" : "text-foreground")}>
           {breached ? "Breached" : "Pending"} — due {dueLabel}
         </p>
       </div>

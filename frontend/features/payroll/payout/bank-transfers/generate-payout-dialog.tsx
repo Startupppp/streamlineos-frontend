@@ -87,7 +87,7 @@ export function GeneratePayoutDialog({
         </DialogHeader>
         <div className="space-y-4 py-2">
           {fileUrl ? (
-            <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
+            <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
               <Download className="h-4 w-4 shrink-0" />
               <span>Batch generated successfully.</span>
               <a

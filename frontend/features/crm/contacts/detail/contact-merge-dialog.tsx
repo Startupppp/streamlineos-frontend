@@ -38,7 +38,7 @@ export function ContactDuplicateBanner({ contactId, onMergeComplete }: ContactDu
 
   return (
     <>
-      <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+      <div className="flex items-center gap-2 rounded-lg border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-300">
         <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-600" />
         <span>
           {relevantDuplicates.length} potential duplicate{relevantDuplicates.length > 1 ? "s" : ""} detected.
@@ -46,7 +46,7 @@ export function ContactDuplicateBanner({ contactId, onMergeComplete }: ContactDu
         <Button
           variant="link"
           size="sm"
-          className="h-auto p-0 text-xs text-amber-700 underline"
+          className="h-auto p-0 text-xs text-amber-700 dark:text-amber-300 underline"
           onClick={() => setMergeTarget(relevantDuplicates[0] ?? null)}
         >
           Review
@@ -119,12 +119,12 @@ export function ContactMergeDialog({ pair, currentContactId, open, onOpenChange,
                     onClick={() => setPrimaryId(c.id)}
                     className={`rounded-lg border p-3 text-left transition-all ${
                       isPrimary
-                        ? "border-blue-500 bg-blue-50 ring-1 ring-blue-500"
+                        ? "border-blue-500 bg-blue-50 dark:bg-blue-500/10 ring-1 ring-blue-500"
                         : "border-border hover:border-blue-300"
                     }`}
                   >
                     <div className="flex items-start gap-2">
-                      <div className="h-7 w-7 rounded-full bg-blue-100 flex items-center justify-center text-[11px] font-semibold text-blue-700 shrink-0">
+                      <div className="h-7 w-7 rounded-full bg-blue-100 dark:bg-blue-500/10 flex items-center justify-center text-[11px] font-semibold text-blue-700 dark:text-blue-300 shrink-0">
                         {c.name[0]?.toUpperCase() ?? "?"}
                       </div>
                       <div className="min-w-0 flex-1">

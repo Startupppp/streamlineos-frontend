@@ -78,7 +78,7 @@ export function SubmitApprovalAction({ runId, status, onChanged }: Props) {
           </DialogHeader>
 
           {status === "EXCEPTIONS_FOUND" && (
-            <div className="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+            <div className="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-300">
               ⚠ This run has open exceptions. Blockers will prevent submission — the server will
               error if any remain.
             </div>

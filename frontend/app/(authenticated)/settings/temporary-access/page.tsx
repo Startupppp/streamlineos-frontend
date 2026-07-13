@@ -150,7 +150,7 @@ function TemporaryAccessContent() {
           </CardHeader>
           <CardContent className="p-0">
             {isLoading ? (
-              <div className="divide-y divide-border/30">
+              <div className="divide-y divide-border/60">
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div
                     key={i}
@@ -173,7 +173,7 @@ function TemporaryAccessContent() {
                 </p>
               </div>
             ) : (
-              <div className="divide-y divide-border/30">
+              <div className="divide-y divide-border/60">
                 {active.map((a) => (
                   <AssignmentRow
                     key={a.id}
@@ -195,7 +195,7 @@ function TemporaryAccessContent() {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="divide-y divide-border/30">
+              <div className="divide-y divide-border/60">
                 {expired.map((a) => (
                   <AssignmentRow key={a.id} assignment={a} isExpired />
                 ))}

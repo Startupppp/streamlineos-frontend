@@ -217,7 +217,7 @@ export function ContactInfoCard({ contact, onEdit, onSendEmail, onLogCall, entit
                 <Badge
                   key={tag}
                   variant="outline"
-                  className="text-[10px] px-1.5 py-0 h-4 border-blue-200 text-blue-700"
+                  className="text-[10px] px-1.5 py-0 h-4 border-blue-200 dark:border-blue-500/30 text-blue-700 dark:text-blue-300"
                 >
                   {tag}
                 </Badge>

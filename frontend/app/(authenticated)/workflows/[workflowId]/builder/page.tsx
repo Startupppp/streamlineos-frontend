@@ -76,45 +76,45 @@ const NODE_PALETTE: Array<{
     label: "Trigger",
     description: "Start the workflow",
     icon: <Zap className="h-4 w-4" />,
-    color: "text-amber-600",
-    border: "border-amber-300",
-    bg: "bg-amber-50",
+    color: "text-amber-600 dark:text-amber-400",
+    border: "border-amber-300 dark:border-amber-500/30",
+    bg: "bg-amber-50 dark:bg-amber-500/10",
   },
   {
     nodeType: "condition",
     label: "Condition",
     description: "Branch on a rule",
     icon: <GitBranch className="h-4 w-4" />,
-    color: "text-blue-600",
-    border: "border-blue-300",
-    bg: "bg-blue-50",
+    color: "text-blue-600 dark:text-blue-400",
+    border: "border-blue-300 dark:border-blue-500/30",
+    bg: "bg-blue-50 dark:bg-blue-500/10",
   },
   {
     nodeType: "approval",
     label: "Approval",
     description: "Wait for human sign-off",
     icon: <CheckSquare className="h-4 w-4" />,
-    color: "text-emerald-600",
-    border: "border-emerald-300",
-    bg: "bg-emerald-50",
+    color: "text-emerald-600 dark:text-emerald-400",
+    border: "border-emerald-300 dark:border-emerald-500/30",
+    bg: "bg-emerald-50 dark:bg-emerald-500/10",
   },
   {
     nodeType: "action",
     label: "Action",
     description: "Execute an operation",
     icon: <Play className="h-4 w-4" />,
-    color: "text-violet-600",
-    border: "border-violet-300",
-    bg: "bg-violet-50",
+    color: "text-violet-600 dark:text-violet-400",
+    border: "border-violet-300 dark:border-violet-500/30",
+    bg: "bg-violet-50 dark:bg-violet-500/10",
   },
   {
     nodeType: "delay",
     label: "Delay",
     description: "Wait before continuing",
     icon: <Clock className="h-4 w-4" />,
-    color: "text-orange-600",
-    border: "border-orange-300",
-    bg: "bg-orange-50",
+    color: "text-orange-600 dark:text-orange-400",
+    border: "border-orange-300 dark:border-orange-500/30",
+    bg: "bg-orange-50 dark:bg-orange-500/10",
   },
   {
     nodeType: "loop",
@@ -130,18 +130,18 @@ const NODE_PALETTE: Array<{
     label: "AI Action",
     description: "Use AI to process data",
     icon: <Sparkles className="h-4 w-4" />,
-    color: "text-purple-600",
-    border: "border-purple-300",
-    bg: "bg-purple-50",
+    color: "text-purple-600 dark:text-purple-400",
+    border: "border-purple-300 dark:border-purple-500/30",
+    bg: "bg-purple-50 dark:bg-purple-500/10",
   },
   {
     nodeType: "integration",
     label: "Integration",
     description: "Call external service",
     icon: <Share2 className="h-4 w-4" />,
-    color: "text-teal-600",
-    border: "border-teal-300",
-    bg: "bg-teal-50",
+    color: "text-teal-600 dark:text-teal-400",
+    border: "border-teal-300 dark:border-teal-500/30",
+    bg: "bg-teal-50 dark:bg-teal-500/10",
   },
   {
     nodeType: "script",
@@ -157,9 +157,9 @@ const NODE_PALETTE: Array<{
     label: "End",
     description: "Terminate the workflow",
     icon: <XCircle className="h-4 w-4" />,
-    color: "text-red-600",
-    border: "border-red-300",
-    bg: "bg-red-50",
+    color: "text-red-600 dark:text-red-400",
+    border: "border-red-300 dark:border-red-500/30",
+    bg: "bg-red-50 dark:bg-red-500/10",
   },
 ];
 
@@ -170,9 +170,9 @@ const NODE_PALETTE_MAP = Object.fromEntries(NODE_PALETTE.map((n) => [n.nodeType,
 
 const STATUS_BADGE: Record<WorkflowStatus, { label: string; cls: string }> = {
   draft: { label: "Draft", cls: "bg-muted text-muted-foreground border-border" },
-  published: { label: "Published", cls: "bg-green-50 text-green-700 border-green-200" },
-  disabled: { label: "Disabled", cls: "bg-yellow-50 text-yellow-700 border-yellow-200" },
-  archived: { label: "Archived", cls: "bg-red-50 text-red-700 border-red-200" },
+  published: { label: "Published", cls: "bg-green-50 text-green-700 border-green-200 dark:bg-green-500/10 dark:text-green-300 dark:border-green-500/30" },
+  disabled: { label: "Disabled", cls: "bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-500/10 dark:text-yellow-300 dark:border-yellow-500/30" },
+  archived: { label: "Archived", cls: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30" },
 };
 
 const DEFAULT_NODES: WorkflowNode[] = [
@@ -190,7 +190,7 @@ const DEFAULT_NODES: WorkflowNode[] = [
 ];
 
 const DEFAULT_EDGE_OPTIONS = {
-  style: { stroke: "#94a3b8", strokeWidth: 1.5 },
+  style: { stroke: "var(--muted-foreground)", strokeWidth: 1.5 },
 };
 
 function WorkflowNodeComponent({
@@ -207,7 +207,7 @@ function WorkflowNodeComponent({
       className={cn(
         "rounded-xl border-2 bg-card shadow-md min-w-[160px] max-w-[220px] transition-all duration-150",
         selected
-          ? "border-violet-500 shadow-violet-200/60 shadow-lg ring-2 ring-violet-200"
+          ? "border-violet-500 shadow-violet-200/60 shadow-lg ring-2 ring-violet-200 dark:shadow-violet-500/20 dark:ring-violet-500/30"
           : palette.border,
       )}
     >
@@ -216,7 +216,7 @@ function WorkflowNodeComponent({
         <span className="text-xs font-semibold text-foreground truncate">{data.label}</span>
       </div>
       {data.description && (
-        <div className="px-3 py-1.5 border-t border-border/30">
+        <div className="px-3 py-1.5 border-t border-border/60">
           <p className="text-[11px] text-muted-foreground leading-snug truncate">{data.description}</p>
         </div>
       )}

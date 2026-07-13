@@ -70,7 +70,7 @@ function InstanceRow({ instance, onOpen, showActions }: { instance: HrWorkflowIn
           {instance.dueAt && !isOverdue && (
             <>
               <span>·</span>
-              <span className="flex items-center gap-0.5 text-amber-600">
+              <span className="flex items-center gap-0.5 text-amber-600 dark:text-amber-400">
                 <Clock className="h-2.5 w-2.5" />
                 Due {new Date(instance.dueAt).toLocaleDateString()}
               </span>

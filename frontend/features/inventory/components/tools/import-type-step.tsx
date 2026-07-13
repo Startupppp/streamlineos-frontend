@@ -34,8 +34,8 @@ export function ImportTypeStep({ selected, onSelect }: ImportTypeStepProps) {
               className={cn(
                 "text-left rounded-xl border px-4 py-3 transition-colors",
                 isSelected
-                  ? "border-primary bg-primary/5 ring-1 ring-primary"
-                  : "border-border bg-card hover:border-primary/40 hover:bg-accent/30",
+                  ? "border-primary bg-brand-core/5 ring-1 ring-primary"
+                  : "border-border bg-card hover:border-brand-core/40 hover:bg-accent/30",
               )}
             >
               <p className="font-medium text-sm text-foreground">{item.label}</p>

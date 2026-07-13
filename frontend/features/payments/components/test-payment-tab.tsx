@@ -123,7 +123,7 @@ export function TestPaymentTab({ providerKey }: { providerKey: string }) {
                 <span
                   className={cn(
                     "h-4 w-4 rounded-full flex items-center justify-center shrink-0",
-                    done ? "bg-emerald-500" : active ? "bg-blue-100" : "bg-muted",
+                    done ? "bg-emerald-500" : active ? "bg-blue-100 dark:bg-blue-500/20" : "bg-muted",
                   )}
                 >
                   {done ? (
@@ -150,7 +150,7 @@ export function TestPaymentTab({ providerKey }: { providerKey: string }) {
                 <span>
                   {t.currency} {t.amount}
                 </span>
-                <span className={t.status === "succeeded" ? "text-emerald-600" : t.status === "failed" ? "text-rose-600" : ""}>
+                <span className={t.status === "succeeded" ? "text-emerald-600 dark:text-emerald-400" : t.status === "failed" ? "text-rose-600 dark:text-rose-400" : ""}>
                   {t.status}
                 </span>
               </li>

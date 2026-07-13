@@ -13,16 +13,16 @@ import type { TestRunResult, TestResultStatus, TestCasePriority } from "@/types/
 
 const STATUS_OPTIONS: { value: TestResultStatus; label: string; activeClass: string }[] = [
   { value: "not_run", label: "Not Run", activeClass: "bg-muted text-foreground border-border dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/30" },
-  { value: "passed", label: "Pass", activeClass: "bg-green-50 text-green-700 border-green-300" },
-  { value: "failed", label: "Fail", activeClass: "bg-red-50 text-red-700 border-red-300" },
-  { value: "blocked", label: "Blocked", activeClass: "bg-amber-50 text-amber-700 border-amber-300" },
+  { value: "passed", label: "Pass", activeClass: "bg-green-50 text-green-700 border-green-300 dark:bg-green-500/10 dark:text-green-300 dark:border-green-500/30" },
+  { value: "failed", label: "Fail", activeClass: "bg-red-50 text-red-700 border-red-300 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30" },
+  { value: "blocked", label: "Blocked", activeClass: "bg-amber-50 text-amber-700 border-amber-300 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30" },
   { value: "skipped", label: "Skip", activeClass: "bg-muted text-muted-foreground border-border dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/30" },
 ];
 
 const PRIORITY_STYLES: Record<TestCasePriority, string> = {
   low: "text-muted-foreground border-border",
-  medium: "text-amber-600 border-amber-200",
-  high: "text-red-600 border-red-200",
+  medium: "text-amber-600 border-amber-200 dark:text-amber-400 dark:border-amber-500/30",
+  high: "text-red-600 border-red-200 dark:text-red-400 dark:border-red-500/30",
 };
 
 interface ResultRowProps {
@@ -74,7 +74,7 @@ export const ResultRow = memo(function ResultRow({ result, projectId, canExecute
         {result.linkedBugId && (
           <Link
             href={`/projects/${projectId}/bugs`}
-            className="text-[10px] text-blue-600 font-mono hover:underline shrink-0"
+            className="text-[10px] text-blue-600 dark:text-blue-400 font-mono hover:underline shrink-0"
           >
             BUG-{result.linkedBugId}
           </Link>
@@ -114,7 +114,7 @@ export const ResultRow = memo(function ResultRow({ result, projectId, canExecute
           <Button
             variant="outline"
             size="sm"
-            className="h-6 text-[10px] ml-auto border-red-200 text-red-600 hover:bg-red-50"
+            className="h-6 text-[10px] ml-auto border-red-200 text-red-600 hover:bg-red-50 dark:border-red-500/30 dark:text-red-400 dark:hover:bg-red-500/10"
             onClick={() => onCreateBug(result.id)}
           >
             <BugIcon className="h-3 w-3 mr-1" />

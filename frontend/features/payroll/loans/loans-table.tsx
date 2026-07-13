@@ -117,7 +117,7 @@ export function LoansTable() {
   return (
     <>
       {activeRunId === null && !isLoading && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-amber-50 border border-amber-200 text-amber-700 text-xs mb-3">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-amber-50 border border-amber-200 text-amber-700 text-xs mb-3 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-300">
           <AlertTriangle className="h-4 w-4 shrink-0" />
           No active payroll run for this period. Loan adjustments are unavailable.
         </div>

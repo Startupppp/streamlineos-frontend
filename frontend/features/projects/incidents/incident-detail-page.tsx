@@ -22,16 +22,16 @@ import type { IncidentSeverity, IncidentStatus } from "@/types/projects";
 
 const SEVERITY_STYLES: Record<IncidentSeverity, string> = {
   critical: "text-red-700 border-red-300 bg-red-50 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
-  high: "text-orange-600 border-orange-200",
-  medium: "text-amber-600 border-amber-200",
+  high: "text-orange-600 border-orange-200 dark:text-orange-400 dark:border-orange-500/30",
+  medium: "text-amber-600 border-amber-200 dark:text-amber-400 dark:border-amber-500/30",
   low: "text-muted-foreground border-border",
 };
 const STATUS_STYLES: Record<IncidentStatus, string> = {
-  detected: "text-red-600 border-red-200",
-  investigating: "text-orange-600 border-orange-200",
-  mitigating: "text-amber-600 border-amber-200",
-  resolved: "text-emerald-600 border-emerald-200",
-  postmortem: "text-blue-600 border-blue-200",
+  detected: "text-red-600 border-red-200 dark:text-red-400 dark:border-red-500/30",
+  investigating: "text-orange-600 border-orange-200 dark:text-orange-400 dark:border-orange-500/30",
+  mitigating: "text-amber-600 border-amber-200 dark:text-amber-400 dark:border-amber-500/30",
+  resolved: "text-emerald-600 border-emerald-200 dark:text-emerald-400 dark:border-emerald-500/30",
+  postmortem: "text-blue-600 border-blue-200 dark:text-blue-400 dark:border-blue-500/30",
   closed: "text-muted-foreground border-border",
 };
 const STATUS_LABELS: Record<IncidentStatus, string> = {

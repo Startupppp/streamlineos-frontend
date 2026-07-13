@@ -142,9 +142,9 @@ export function ExpenseDetailSheet({ expense, open, onOpenChange }: ExpenseDetai
     >
       <div className="space-y-4">
         {policyFlag && (
-          <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2">
-            <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
-            <p className="text-xs text-amber-700">
+          <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 dark:border-amber-500/30 dark:bg-amber-500/10">
+            <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+            <p className="text-xs text-amber-700 dark:text-amber-300">
               {policyFlag === "OVER_LIMIT" ? "Exceeds policy limit" : "Receipt required per policy"}
             </p>
           </div>

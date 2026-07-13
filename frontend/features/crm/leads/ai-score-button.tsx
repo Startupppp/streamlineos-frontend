@@ -188,8 +188,8 @@ function AIScoreDetails({
             {result.confidence && (
               <span className={cn(
                 "text-[10px] px-1.5 py-0.5 rounded font-medium capitalize",
-                result.confidence === "high" ? "bg-emerald-50 text-emerald-700" :
-                result.confidence === "medium" ? "bg-amber-50 text-amber-700" :
+                result.confidence === "high" ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" :
+                result.confidence === "medium" ? "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300" :
                 "bg-muted text-muted-foreground",
               )}>
                 {result.confidence} confidence

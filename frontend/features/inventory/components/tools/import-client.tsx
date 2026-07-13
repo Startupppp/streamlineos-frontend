@@ -270,7 +270,7 @@ function ExportTab() {
           </div>
 
           {selectedExportType !== null && (
-            <div className="flex items-center justify-between rounded-lg border border-primary/30 bg-primary/5 px-4 py-3">
+            <div className="flex items-center justify-between rounded-lg border border-brand-core/30 bg-brand-core/5 px-4 py-3">
               <div>
                 <p className="text-xs font-semibold text-foreground">
                   Ready to export: {EXPORT_TYPE_META[selectedExportType].label}
@@ -464,7 +464,7 @@ export function ImportClient() {
                           key={s}
                           className={`text-xs px-2 py-0.5 rounded-full border ${
                             s === step
-                              ? "border-primary bg-primary/10 text-primary font-medium"
+                              ? "border-primary bg-brand-core/10 text-primary font-medium"
                               : "border-border text-muted-foreground"
                           }`}
                         >

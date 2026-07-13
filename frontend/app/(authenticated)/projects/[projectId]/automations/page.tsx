@@ -417,7 +417,7 @@ export default function AutomationsPage({ params }: PageProps) {
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-medium text-foreground">
-                      Actions <span className="text-red-500">*</span>
+                      Actions <span className="text-red-500 dark:text-red-400">*</span>
                     </label>
                     <Button type="button" variant="ghost" size="sm" className="h-7 text-xs gap-1 text-foreground hover:text-foreground" onClick={handleAppendAction}>
                       <Plus className="h-3 w-3" />Add Action

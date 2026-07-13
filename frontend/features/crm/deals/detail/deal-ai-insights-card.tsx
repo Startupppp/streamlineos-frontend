@@ -129,7 +129,7 @@ export function DealAiInsightsCard({ dealId, dealName }: DealAiInsightsCardProps
         {flags?.aiLeadScoring !== false && !isPending && result && (
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-xs border-blue-200 text-blue-700 bg-blue-50">
+              <Badge variant="outline" className="text-xs border-blue-200 dark:border-blue-500/30 text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-500/10">
                 {result.stage}
               </Badge>
             </div>
@@ -173,7 +173,7 @@ export function DealAiInsightsCard({ dealId, dealName }: DealAiInsightsCardProps
             )}
 
             {result.stakeholdersGap && (
-              <p className="text-xs text-muted-foreground italic border-l-2 border-blue-200 pl-2">
+              <p className="text-xs text-muted-foreground italic border-l-2 border-blue-200 dark:border-blue-500/30 pl-2">
                 {result.stakeholdersGap}
               </p>
             )}

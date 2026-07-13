@@ -108,7 +108,7 @@ const CustomFieldRow = memo(function CustomFieldRow({
       {field.required && (
         <Badge
           variant="outline"
-          className="text-[10px] shrink-0 border-red-200 text-red-600"
+          className="text-[10px] shrink-0 border-red-200 text-red-600 dark:border-red-500/30 dark:text-red-400"
         >
           required
         </Badge>
@@ -117,7 +117,7 @@ const CustomFieldRow = memo(function CustomFieldRow({
         <AlertDialogTrigger asChild>
           <button
             type="button"
-            className="h-7 w-7 flex items-center justify-center rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors shrink-0"
+            className="h-7 w-7 flex items-center justify-center rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors shrink-0"
             aria-label="Delete field"
           >
             <Trash2 className="h-3.5 w-3.5" />

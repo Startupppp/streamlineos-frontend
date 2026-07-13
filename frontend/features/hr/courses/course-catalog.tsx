@@ -34,8 +34,8 @@ const FORMAT_LABELS: Record<Course["format"], string> = {
 
 const STATUS_COLORS: Record<Course["status"], string> = {
   DRAFT: "bg-muted text-muted-foreground",
-  PUBLISHED: "bg-emerald-50 text-emerald-700",
-  ARCHIVED: "bg-amber-50 text-amber-700",
+  PUBLISHED: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
+  ARCHIVED: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
 };
 
 const GRADIENT_COLORS = [
@@ -224,7 +224,7 @@ export function CourseCatalog({ canManage }: Props) {
                 <motion.div whileTap={{ scale: 0.97 }}>
                   <Button
                     size="sm"
-                    className="w-full h-8 text-xs bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
+                    className="w-full h-8 text-xs"
                     onClick={() => handleEnroll(course.id)}
                     disabled={enroll.isPending || course.status !== "PUBLISHED"}
                   >

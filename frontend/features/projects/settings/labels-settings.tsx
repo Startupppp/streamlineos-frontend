@@ -124,7 +124,7 @@ export function LabelsSettings() {
             {editingId === label.id ? (
               <>
                 <div
-                  className="h-5 w-5 rounded-full shrink-0 border-2 border-white shadow-sm"
+                  className="h-5 w-5 rounded-full shrink-0 border-2 border-card shadow-sm"
                   style={{ background: editColor }}
                 />
                 <Input
@@ -142,7 +142,7 @@ export function LabelsSettings() {
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="h-7 text-xs text-blue-600"
+                  className="h-7 text-xs text-blue-600 dark:text-blue-400"
                   onClick={() => handleUpdate(label)}
                 >
                   Save
@@ -159,7 +159,7 @@ export function LabelsSettings() {
             ) : (
               <>
                 <div
-                  className="h-5 w-5 rounded-full shrink-0 border-2 border-white shadow-sm"
+                  className="h-5 w-5 rounded-full shrink-0 border-2 border-card shadow-sm"
                   style={{ background: label.color }}
                 />
                 <span
@@ -175,7 +175,7 @@ export function LabelsSettings() {
                   <AlertDialogTrigger asChild>
                     <button
                       type="button"
-                      className="opacity-0 group-hover:opacity-100 h-6 w-6 flex items-center justify-center rounded text-red-400 hover:text-red-600 hover:bg-red-50 transition-all"
+                      className="opacity-0 group-hover:opacity-100 h-6 w-6 flex items-center justify-center rounded text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>

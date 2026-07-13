@@ -151,20 +151,20 @@ export default function WinLossAnalysisPage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-blue-600" />
+                <TrendingUp className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 Outcome Split
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-center gap-8 py-4">
                 <div className="text-center">
-                  <div className="text-4xl font-bold text-emerald-600">{s.won}</div>
+                  <div className="text-4xl font-bold text-emerald-600 dark:text-emerald-400">{s.won}</div>
                   <div className="text-sm text-muted-foreground mt-1">Won</div>
                   <div className="text-xs text-muted-foreground">{formatCurrency(s.wonValue)}</div>
                 </div>
                 <div className="h-16 w-px bg-border" />
                 <div className="text-center">
-                  <div className="text-4xl font-bold text-red-600">{s.lost}</div>
+                  <div className="text-4xl font-bold text-red-600 dark:text-red-400">{s.lost}</div>
                   <div className="text-sm text-muted-foreground mt-1">Lost</div>
                   <div className="text-xs text-muted-foreground">{formatCurrency(s.lostValue)}</div>
                 </div>
@@ -192,7 +192,7 @@ export default function WinLossAnalysisPage() {
                 </div>
                 <div className="flex justify-between text-sm mt-1">
                   <span className="text-muted-foreground">Revenue captured</span>
-                  <span className="font-semibold text-emerald-600">
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">
                     {totalRevenue > 0
                       ? `${Math.round((s.wonValue / totalRevenue) * 100)}%`
                       : "—"}
@@ -205,7 +205,7 @@ export default function WinLossAnalysisPage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <BarChart3 className="h-4 w-4 text-red-600" />
+                <BarChart3 className="h-4 w-4 text-red-600 dark:text-red-400" />
                 Lost Reason Breakdown
               </CardTitle>
             </CardHeader>

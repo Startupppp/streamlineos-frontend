@@ -202,8 +202,8 @@ export const StockLevelsTable = memo(function StockLevelsTable({ rows, onShowAva
 
   function getRowClassName(row: StockLevelRow): string {
     const s = getStockStatus(row);
-    if (s === "critical") return "bg-red-50/50";
-    if (s === "low") return "bg-amber-50/50";
+    if (s === "critical") return "bg-red-50/50 dark:bg-red-500/5";
+    if (s === "low") return "bg-amber-50/50 dark:bg-amber-500/5";
     return "";
   }
 

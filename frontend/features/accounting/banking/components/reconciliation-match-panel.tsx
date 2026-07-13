@@ -176,8 +176,8 @@ export function ReconciliationMatchPanel({ txn, bankAccountId, onClose }: Props)
                 className={[
                   "border rounded-lg p-3 cursor-pointer transition-colors",
                   i === selectedSuggestionIndex
-                    ? "border-blue-300 bg-blue-50"
-                    : "border-border hover:border-blue-200 hover:bg-muted/30",
+                    ? "border-blue-300 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/10"
+                    : "border-border hover:border-blue-200 dark:hover:border-blue-500/30 hover:bg-muted/30",
                 ].join(" ")}
                 onClick={() => setSelectedSuggestionIndex(i)}
               >
@@ -263,7 +263,7 @@ export function ReconciliationMatchPanel({ txn, bankAccountId, onClose }: Props)
             <LoadingButton
               variant="outline"
               size="sm"
-              className="text-xs h-8 text-amber-600 border-amber-200 hover:bg-amber-50"
+              className="text-xs h-8 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-500/30 hover:bg-amber-50 dark:hover:bg-amber-500/10"
               isPending={unmatch.isPending}
               loadingText="Unmatching…"
               onClick={handleUnmatch}

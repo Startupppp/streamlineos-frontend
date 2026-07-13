@@ -22,18 +22,18 @@ const EXAMPLE_QUERIES = [
 ];
 
 const STATUS_BADGE: Record<string, string> = {
-  NEW: "bg-blue-50 text-blue-700 border-blue-200",
-  CONTACTED: "bg-amber-50 text-amber-700 border-amber-200",
-  INTERESTED: "bg-blue-50 text-blue-700 border-blue-200",
-  QUALIFIED: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  CONVERTED: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  LOST: "bg-red-50 text-red-700 border-red-200",
+  NEW: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  CONTACTED: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  INTERESTED: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  QUALIFIED: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  CONVERTED: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  LOST: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
 };
 
 const PRIORITY_BADGE: Record<string, string> = {
-  HOT: "bg-red-50 text-red-700 border-red-200",
-  WARM: "bg-amber-50 text-amber-700 border-amber-200",
-  COLD: "bg-blue-50 text-blue-700 border-blue-200",
+  HOT: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  WARM: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  COLD: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
 };
 
 function formatValue(val: number | null) {
@@ -96,7 +96,7 @@ const COLUMNS: DataTableColumn<NLSearchLead>[] = [
       <div>
         <Link
           href={`/crm/leads/${lead.id}`}
-          className="font-medium text-blue-600 hover:underline transition-colors"
+          className="font-medium text-blue-600 dark:text-blue-400 hover:underline transition-colors"
         >
           {lead.name}
         </Link>
@@ -352,7 +352,7 @@ export default function SmartLeadSearchPage() {
                   type="button"
                   data-query={q}
                   onClick={handleChipButtonClick}
-                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-blue-600 transition-colors group"
+                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400 transition-colors group"
                 >
                   <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
                   {q}

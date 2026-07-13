@@ -32,10 +32,10 @@ interface ScoreConfig {
 }
 
 function getScoreConfig(score: number): ScoreConfig {
-  if (score === 4) return { label: "Fully Qualified", badgeClass: "bg-emerald-50 text-emerald-700 border border-emerald-200", dotColor: "bg-emerald-500" };
-  if (score === 3) return { label: "Mostly Qualified", badgeClass: "bg-orange-50 text-orange-700 border border-orange-200", dotColor: "bg-orange-500" };
-  if (score === 2) return { label: "Partially Qualified", badgeClass: "bg-amber-50 text-amber-700 border border-amber-200", dotColor: "bg-amber-500" };
-  if (score === 1) return { label: "Weakly Qualified", badgeClass: "bg-red-50 text-red-700 border border-red-200", dotColor: "bg-red-500" };
+  if (score === 4) return { label: "Fully Qualified", badgeClass: "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30", dotColor: "bg-emerald-500" };
+  if (score === 3) return { label: "Mostly Qualified", badgeClass: "bg-orange-50 text-orange-700 border border-orange-200 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-500/30", dotColor: "bg-orange-500" };
+  if (score === 2) return { label: "Partially Qualified", badgeClass: "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30", dotColor: "bg-amber-500" };
+  if (score === 1) return { label: "Weakly Qualified", badgeClass: "bg-red-50 text-red-700 border border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30", dotColor: "bg-red-500" };
   return { label: "Unqualified", badgeClass: "bg-muted text-muted-foreground border border-border", dotColor: "bg-muted-foreground/40" };
 }
 
@@ -132,7 +132,7 @@ export function LeadQualificationPanel({ leadId, qualificationJson }: LeadQualif
                   onClick={handleCriterionClick}
                   className={`w-full flex items-center gap-3 p-2.5 rounded-md border transition-colors duration-150 text-left ${
                     checked
-                      ? "bg-blue-50 border-blue-200 hover:bg-blue-100"
+                      ? "bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/30 hover:bg-blue-100 dark:hover:bg-blue-500/20"
                       : "bg-card border-border hover:bg-muted"
                   }`}
                 >
@@ -143,7 +143,7 @@ export function LeadQualificationPanel({ leadId, qualificationJson }: LeadQualif
                   )}
                   <criterion.icon className={`h-4 w-4 shrink-0 ${checked ? "text-blue-500" : "text-muted-foreground"}`} />
                   <div className="min-w-0">
-                    <p className={`text-xs font-semibold ${checked ? "text-blue-700" : "text-foreground"}`}>
+                    <p className={`text-xs font-semibold ${checked ? "text-blue-700 dark:text-blue-300" : "text-foreground"}`}>
                       {criterion.label}
                     </p>
                     <p className="text-[10px] text-muted-foreground">{criterion.description}</p>

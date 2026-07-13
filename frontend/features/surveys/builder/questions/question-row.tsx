@@ -29,7 +29,7 @@ export function QuestionRow({
   const Icon = meta.icon;
 
   return (
-    <div className="group flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 hover:border-primary/30">
+    <div className="group flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 hover:border-brand-core/30">
       <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
       <button type="button" onClick={() => onEdit(question)} className="min-w-0 flex-1 text-left">
         <p className="truncate text-sm font-medium">{question.title || "Untitled question"}</p>

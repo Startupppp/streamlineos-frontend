@@ -70,7 +70,7 @@ export function PortalTicketListPage() {
             <Link
               key={ticket.id}
               href={`/support/portal/${ticket.id}`}
-              className="group rounded-xl border border-border bg-card p-4 shadow-sm hover:shadow-md hover:border-primary/30 transition-all"
+              className="group rounded-xl border border-border bg-card p-4 shadow-sm hover:shadow-md hover:border-brand-core/30 transition-all"
             >
               <div className="flex items-start justify-between gap-2">
                 <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2 min-w-0">

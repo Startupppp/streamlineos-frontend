@@ -155,8 +155,8 @@ export function NotificationCard({
       className={cn(
         "group relative flex items-start gap-2.5 px-3 py-2.5 cursor-pointer transition-colors hover:bg-muted/40 hover:shadow-md",
         isUnread && !isArchived &&
-          "bg-blue-50/30 hover:bg-blue-50/50 dark:bg-blue-500/10 dark:hover:bg-blue-500/15 border-l-[3px] border-l-blue-500",
-        selected && "bg-blue-50/50 dark:bg-blue-500/15",
+          "bg-primary/5 hover:bg-primary/10 border-l-[3px] border-l-primary",
+        selected && "bg-primary/10",
       )}
     >
       {onSelect && (
@@ -283,7 +283,7 @@ export function NotificationCard({
           {formatRelativeTime(createdAt)}
         </span>
         {isUnread && !isArchived && (
-          <span className="h-2 w-2 rounded-full bg-blue-500 shrink-0" />
+          <span className="h-2 w-2 rounded-full bg-primary shrink-0" />
         )}
       </div>
     </div>

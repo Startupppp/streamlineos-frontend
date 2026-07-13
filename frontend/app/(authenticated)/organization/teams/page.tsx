@@ -380,7 +380,7 @@ export default function OrgTeamsPage() {
           {t.status === "ARCHIVED" ? (
             <>
               <Button variant="ghost" size="sm" onClick={makeRestoreHandler(t)} title="Restore">
-                <RotateCcw className="h-4 w-4 text-blue-600" />
+                <RotateCcw className="h-4 w-4 text-blue-600 dark:text-blue-400" />
               </Button>
               <Button variant="ghost" size="sm" onClick={makeSetDeletingHandler(t)} title="Delete permanently">
                 <Trash2 className="h-4 w-4 text-destructive" />

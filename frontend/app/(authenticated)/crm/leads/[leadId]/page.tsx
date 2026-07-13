@@ -334,17 +334,17 @@ export default function LeadDetailPage({
               timeline={timeline}
               timelineLoading={timelineLoading}
             />
-            <Card className="bg-amber-50/80 border-amber-200/60 shadow-sm">
+            <Card className="bg-amber-50/80 dark:bg-amber-500/10 border-amber-200/60 dark:border-amber-500/30 shadow-sm">
               <CardContent className="flex items-start gap-3 p-4">
-                <Mail className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                <Mail className="h-4 w-4 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-amber-800">Connect your email</p>
-                  <p className="text-[11px] text-amber-600 mt-0.5">
+                  <p className="text-xs font-medium text-amber-800 dark:text-amber-300">Connect your email</p>
+                  <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-0.5">
                     Connect your email to view email threads with this lead.
                   </p>
                   <Link
                     href="/settings/connected-accounts"
-                    className="text-[11px] font-medium text-amber-700 underline underline-offset-2 hover:text-amber-900 mt-1 inline-block"
+                    className="text-[11px] font-medium text-amber-700 dark:text-amber-300 underline underline-offset-2 hover:text-amber-900 dark:hover:text-amber-200 mt-1 inline-block"
                   >
                     Go to Settings →
                   </Link>

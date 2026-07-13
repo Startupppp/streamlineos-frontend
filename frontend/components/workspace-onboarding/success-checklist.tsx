@@ -192,7 +192,7 @@ function FabProgressRing({ progressFraction }: FabProgressRingProps) {
         fill="none"
         stroke="currentColor"
         strokeWidth="2"
-        className="text-primary/20"
+        className="text-brand-core/20"
       />
       <motion.circle
         cx="28"

@@ -129,7 +129,7 @@ export default function BusinessHoursPage() {
       key: "isDefault",
       header: "Default",
       cell: (bh) => bh.isDefault ? (
-        <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-blue-50 text-blue-700 border-blue-200">
+        <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30">
           Default
         </Badge>
       ) : null,

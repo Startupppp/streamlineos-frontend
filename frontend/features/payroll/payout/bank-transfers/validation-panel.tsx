@@ -50,7 +50,7 @@ export function ValidationPanel({ runId }: ValidationPanelProps) {
       {isExpanded && (
         <div className="border border-border rounded-lg overflow-hidden">
           {!data || (!hasBlockers && warnings.length === 0) ? (
-            <div className="flex items-center gap-2 px-4 py-3 text-sm text-emerald-700 bg-emerald-50">
+            <div className="flex items-center gap-2 px-4 py-3 text-sm text-emerald-700 bg-emerald-50 dark:text-emerald-300 dark:bg-emerald-500/10">
               <CheckCircle2 className="h-4 w-4 shrink-0" />
               All employees ready for payout
             </div>
@@ -58,9 +58,9 @@ export function ValidationPanel({ runId }: ValidationPanelProps) {
             <>
               {hasBlockers && (
                 <div>
-                  <div className="flex items-center gap-2 px-4 py-2 bg-red-50 border-b border-border">
-                    <AlertCircle className="h-4 w-4 text-red-600 shrink-0" />
-                    <span className="text-xs font-semibold text-red-700">
+                  <div className="flex items-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-500/10 border-b border-border">
+                    <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400 shrink-0" />
+                    <span className="text-xs font-semibold text-red-700 dark:text-red-300">
                       {blockers.length} employee(s) with errors
                     </span>
                   </div>
@@ -81,7 +81,7 @@ export function ValidationPanel({ runId }: ValidationPanelProps) {
                         {item.errors.map((err, i) => (
                           <span
                             key={i}
-                            className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium bg-red-100 text-red-700"
+                            className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-300"
                           >
                             {err}
                           </span>
@@ -94,9 +94,9 @@ export function ValidationPanel({ runId }: ValidationPanelProps) {
 
               {warnings.length > 0 && (
                 <div>
-                  <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 border-b border-border">
-                    <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
-                    <span className="text-xs font-semibold text-amber-700">
+                  <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 dark:bg-amber-500/10 border-b border-border">
+                    <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                    <span className="text-xs font-semibold text-amber-700 dark:text-amber-300">
                       {warnings.length} employee(s) with warnings
                     </span>
                   </div>
@@ -112,7 +112,7 @@ export function ValidationPanel({ runId }: ValidationPanelProps) {
                         {item.warnings.map((w, i) => (
                           <span
                             key={i}
-                            className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium bg-amber-100 text-amber-700"
+                            className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300"
                           >
                             {w}
                           </span>

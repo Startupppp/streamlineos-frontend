@@ -22,12 +22,12 @@ const STATUS_BADGE: Record<
   HrImportStatus,
   { label: string; className: string }
 > = {
-  validating: { label: "Validating", className: "bg-blue-100 text-blue-700 border-blue-200" },
-  previewed: { label: "Previewed", className: "bg-amber-100 text-amber-700 border-amber-200" },
-  committing: { label: "Committing", className: "bg-blue-100 text-blue-700 border-blue-200" },
-  committed: { label: "Committed", className: "bg-emerald-100 text-emerald-700 border-emerald-200" },
-  rolled_back: { label: "Rolled Back", className: "bg-red-100 text-red-700 border-red-200" },
-  failed: { label: "Failed", className: "bg-red-100 text-red-700 border-red-200" },
+  validating: { label: "Validating", className: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30" },
+  previewed: { label: "Previewed", className: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30" },
+  committing: { label: "Committing", className: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30" },
+  committed: { label: "Committed", className: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30" },
+  rolled_back: { label: "Rolled Back", className: "bg-red-100 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30" },
+  failed: { label: "Failed", className: "bg-red-100 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30" },
 };
 
 const ENTITY_LABELS: Record<HrImportEntity, string> = {
@@ -84,14 +84,14 @@ const COLUMNS: DataTableColumn<HrImportJob>[] = [
     key: "validRows",
     header: "Valid",
     headerClassName: "text-right",
-    className: "text-right tabular-nums text-emerald-700",
+    className: "text-right tabular-nums text-emerald-700 dark:text-emerald-400",
     cell: (row) => <span className="text-xs">{row.validRows}</span>,
   },
   {
     key: "errorRows",
     header: "Errors",
     headerClassName: "text-right",
-    className: "text-right tabular-nums text-red-600",
+    className: "text-right tabular-nums text-red-600 dark:text-red-400",
     cell: (row) => <span className="text-xs">{row.errorRows}</span>,
   },
   {

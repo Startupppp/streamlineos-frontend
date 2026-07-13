@@ -39,11 +39,11 @@ interface RecognitionFeedProps {
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  KUDOS: "bg-blue-50 text-blue-700 border-blue-200",
-  TEAMWORK: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  INNOVATION: "bg-violet-50 text-violet-700 border-violet-200",
-  LEADERSHIP: "bg-amber-50 text-amber-700 border-amber-200",
-  ABOVE_AND_BEYOND: "bg-rose-50 text-rose-700 border-rose-200",
+  KUDOS: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  TEAMWORK: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  INNOVATION: "bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-500/10 dark:text-violet-300 dark:border-violet-500/30",
+  LEADERSHIP: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  ABOVE_AND_BEYOND: "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/30",
 };
 
 function displayName(user?: { name?: string; email: string } | null): string {
@@ -88,7 +88,7 @@ export function RecognitionFeed({ recognitions, isLoading, onGiveKudos }: Recogn
       {recognitions.map((r) => (
         <div key={r.id} className="bg-card border border-border rounded-lg p-4">
           <div className="flex items-start gap-3">
-            <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-xs font-bold shrink-0">
+            <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-xs font-bold shrink-0 dark:bg-blue-500/10 dark:text-blue-300">
               {displayName(r.fromUser).slice(0, 2).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
@@ -265,13 +265,13 @@ export function PointsLeaderboard() {
           <span className="text-sm w-6 text-center shrink-0">
             {idx < 3 ? medals[idx] : `${idx + 1}`}
           </span>
-          <div className="h-7 w-7 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-[10px] font-bold shrink-0">
+          <div className="h-7 w-7 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-[10px] font-bold shrink-0 dark:bg-blue-500/10 dark:text-blue-300">
             {entry.userId.slice(0, 2).toUpperCase()}
           </div>
           <span className="text-xs font-medium text-foreground flex-1 min-w-0 truncate">
             {entry.userId}
           </span>
-          <span className="text-xs font-semibold text-blue-600 tabular-nums shrink-0">
+          <span className="text-xs font-semibold text-blue-600 tabular-nums shrink-0 dark:text-blue-400">
             {entry.total} pts
           </span>
         </div>

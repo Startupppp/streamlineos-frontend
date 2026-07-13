@@ -70,7 +70,7 @@ function DiffSummary({ versionTitle, versionContent, currentTitle, currentConten
       {diff.wordCountDelta !== 0 && (
         <p className="text-xs text-muted-foreground">
           Word count:{" "}
-          <span className={diff.wordCountDelta > 0 ? "text-emerald-600 font-medium" : "text-red-600 font-medium"}>
+          <span className={diff.wordCountDelta > 0 ? "text-emerald-600 dark:text-emerald-400 font-medium" : "text-red-600 dark:text-red-400 font-medium"}>
             {diff.wordCountDelta > 0 ? `+${diff.wordCountDelta}` : diff.wordCountDelta} vs current
           </span>{" "}
           ({diff.versionWordCount} in this version, {diff.currentWordCount} now)
@@ -200,7 +200,7 @@ export default function PageHistoryPage({ pageId }: PageHistoryPageProps) {
                       onClick={handleVersionSelect}
                       className={`w-full text-left px-3 py-2.5 rounded-lg transition-colors mb-1 ${
                         selectedVersionNumber === v.versionNumber
-                          ? "bg-blue-50 border border-blue-200"
+                          ? "bg-blue-50 border border-blue-200 dark:bg-blue-500/10 dark:border-blue-500/30"
                           : "hover:bg-muted border border-transparent"
                       }`}
                     >

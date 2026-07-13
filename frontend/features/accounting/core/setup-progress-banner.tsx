@@ -65,7 +65,7 @@ export function SetupProgressBanner({ steps }: SetupProgressBannerProps) {
       <Button
         variant="ghost"
         size="icon"
-        className="h-6 w-6 shrink-0 text-amber-600 hover:bg-amber-100"
+        className="h-6 w-6 shrink-0 text-amber-600 hover:bg-amber-100 dark:text-amber-400 dark:hover:bg-amber-500/10"
         onClick={handleDismiss}
       >
         <X className="h-3.5 w-3.5" />

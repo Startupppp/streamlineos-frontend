@@ -63,7 +63,7 @@ function FilterMenuItem({
       </span>
       <span className="flex-1">{label}</span>
       {badge !== undefined && badge > 0 && (
-        <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-500 px-1 text-[10px] font-semibold text-white">
+        <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
           {badge}
         </span>
       )}
@@ -206,7 +206,7 @@ export function NotificationFilterBar({
               <span className="flex items-center gap-1.5">
                 {tab.label}
                 {tab.value === "UNREAD" && unreadCount > 0 && (
-                  <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-500 px-1 text-[10px] font-semibold text-white">
+                  <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
                     {unreadCount}
                   </span>
                 )}

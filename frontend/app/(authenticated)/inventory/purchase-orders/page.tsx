@@ -58,7 +58,7 @@ const STATUS_BADGE: Record<PurchaseOrderStatus, string> = {
   PARTIAL: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
   RECEIVED: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
   CLOSED: "bg-muted text-muted-foreground border-border",
-  CANCELLED: "bg-red-50 text-red-700 border-red-200",
+  CANCELLED: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
 };
 
 const VALID_STATUSES = new Set<string>([
@@ -386,11 +386,11 @@ export default function PurchaseOrdersListPage() {
       filters={filterBar}
     >
       {hasNoVendors && (
-        <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          <Store className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+        <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+          <Store className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
           <div>
             <p className="font-medium">No vendors configured</p>
-            <p className="text-amber-700">
+            <p className="text-amber-700 dark:text-amber-400">
               You need at least one vendor before creating a purchase order.{" "}
               <Link href="/inventory/vendors/new" className="underline underline-offset-2 font-medium">
                 Create a vendor

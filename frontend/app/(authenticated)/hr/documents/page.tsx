@@ -415,7 +415,7 @@ function RichDocumentRow({ doc, onDelete, isDeletePending }: RichDocumentRowProp
   const handleDelete = useCallback(() => onDelete(doc.id), [onDelete, doc.id]);
 
   return (
-    <div className="flex items-center justify-between p-2.5 rounded-xl border border-border/60 bg-background hover:bg-muted/30 transition-colors duration-200">
+    <div className="flex items-center justify-between p-2.5 rounded-xl border border-border bg-background hover:bg-muted/30 transition-colors duration-200">
       <div className="flex items-center gap-2.5 min-w-0">
         <div className="h-7 w-7 rounded-lg bg-muted flex items-center justify-center shrink-0">
           <FileText className="h-3.5 w-3.5 text-muted-foreground" />

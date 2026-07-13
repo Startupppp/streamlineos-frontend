@@ -29,8 +29,8 @@ export function StatusTimeline({ status }: { status: TransferStatus }) {
                 className={cn(
                   "h-7 w-7 rounded-full border-2 flex items-center justify-center shrink-0",
                   done && "bg-blue-600 border-blue-600 text-white",
-                  active && !cancelled && "border-blue-500 bg-blue-50 text-blue-700",
-                  cancelled && "border-red-400 bg-red-50 text-red-600",
+                  active && !cancelled && "border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
+                  cancelled && "border-red-400 bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400",
                   !done && !active && "border-border bg-background text-muted-foreground",
                 )}
               >
@@ -46,9 +46,9 @@ export function StatusTimeline({ status }: { status: TransferStatus }) {
                   done
                     ? "text-foreground"
                     : active && !cancelled
-                    ? "text-blue-600"
+                    ? "text-blue-600 dark:text-blue-400"
                     : cancelled
-                    ? "text-red-600"
+                    ? "text-red-600 dark:text-red-400"
                     : "text-muted-foreground",
                 )}
               >

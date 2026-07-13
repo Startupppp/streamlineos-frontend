@@ -11,11 +11,11 @@ export type StatColor = StatTone | "cyan" | "green" | "gold" | "purple";
 
 const TONE_MAP: Record<StatTone, { bg: string; text: string }> = {
   default: { bg: "bg-muted",  text: "text-muted-foreground" },
-  blue:    { bg: "bg-blue-50",    text: "text-blue-600" },
-  emerald: { bg: "bg-emerald-50", text: "text-emerald-600" },
-  amber:   { bg: "bg-amber-50",   text: "text-amber-600" },
-  red:     { bg: "bg-red-50",     text: "text-red-600" },
-  violet:  { bg: "bg-violet-50",  text: "text-violet-600" },
+  blue:    { bg: "bg-blue-50 dark:bg-blue-500/10",       text: "text-blue-600 dark:text-blue-400" },
+  emerald: { bg: "bg-emerald-50 dark:bg-emerald-500/10", text: "text-emerald-600 dark:text-emerald-400" },
+  amber:   { bg: "bg-amber-50 dark:bg-amber-500/10",     text: "text-amber-600 dark:text-amber-400" },
+  red:     { bg: "bg-red-50 dark:bg-red-500/10",         text: "text-red-600 dark:text-red-400" },
+  violet:  { bg: "bg-violet-50 dark:bg-violet-500/10",   text: "text-violet-600 dark:text-violet-400" },
 };
 
 const COLOR_TONE: Partial<Record<StatColor, StatTone>> = {
@@ -131,7 +131,7 @@ export function StatCard({
           <p
             className={cn(
               "text-[10px] font-medium",
-              effectiveDelta.direction === "up" ? "text-emerald-600" : "text-red-600",
+              effectiveDelta.direction === "up" ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400",
             )}
           >
             {effectiveDelta.direction === "up" ? "↑" : "↓"} {effectiveDelta.value}

@@ -78,7 +78,7 @@ export function PageWrapper({
                   {title}
                 </h1>
                 {badge && (
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-700 text-[11px] font-medium tabular-nums border border-blue-200/70">
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 text-[11px] font-medium tabular-nums border border-blue-200/70 dark:border-blue-500/30">
                     {badge}
                   </span>
                 )}

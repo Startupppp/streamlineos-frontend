@@ -62,7 +62,7 @@ function PopoverNotificationItem({
       onClick={handleClick}
       className={cn(
         "w-full flex items-start gap-2.5 px-3 py-2 text-left transition-colors hover:bg-muted/50 rounded-md",
-        !notification.isRead && "bg-blue-50/40",
+        !notification.isRead && "bg-blue-50/40 dark:bg-blue-500/10",
       )}
     >
       <div

@@ -162,7 +162,7 @@ export function PermissionMatrix({
               </Badge>
             )}
             {dirty && (
-              <Badge className="text-[10px] shrink-0 bg-amber-100 text-amber-800 border-amber-200">
+              <Badge className="text-[10px] shrink-0 bg-amber-100 dark:bg-amber-500/10 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-500/30">
                 Unsaved
               </Badge>
             )}

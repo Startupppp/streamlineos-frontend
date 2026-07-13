@@ -295,7 +295,7 @@ function EmailBrandingPreview({
   return (
     <div className="rounded-xl border overflow-hidden">
       <p className="text-[11px] font-medium text-muted-foreground px-3 py-2 bg-muted border-b">Email template preview</p>
-      <div className="bg-[#f4f4f5] p-4">
+      <div className="p-4" style={{ backgroundColor: "var(--muted)" }}>
         <div className="max-w-sm mx-auto bg-card rounded-lg overflow-hidden shadow-sm border border-border">
           <div className="px-6 py-4" style={{ backgroundColor: primaryColor }}>
             {logo ? (

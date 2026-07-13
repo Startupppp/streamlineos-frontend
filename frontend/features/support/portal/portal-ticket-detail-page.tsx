@@ -110,7 +110,7 @@ export function PortalTicketDetailPage({ portalTicketId }: PortalTicketDetailPag
                 <div
                   className={cn(
                     "max-w-[85%] rounded-lg p-3",
-                    isMine ? "bg-primary/10 border border-primary/20" : "bg-muted/40 border border-border/60",
+                    isMine ? "bg-brand-core/10 border border-brand-core/20" : "bg-muted/40 border border-border/60",
                   )}
                 >
                   <div className="flex items-center gap-2 mb-1">

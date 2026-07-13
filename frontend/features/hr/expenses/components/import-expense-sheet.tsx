@@ -348,7 +348,7 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
                 </div>
               </div>
               {importResult.skipped > 0 && (importResult.skippedReasons?.length ?? 0) > 0 && (
-                <details className="mt-3 border-t border-emerald-200/60 pt-3 text-xs">
+                <details className="mt-3 border-t border-emerald-200/60 dark:border-emerald-500/30 pt-3 text-xs">
                   <summary className="cursor-pointer font-medium text-foreground">
                     View skipped row reasons
                   </summary>

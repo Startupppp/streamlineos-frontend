@@ -193,7 +193,7 @@ export function SelfEditProfileForm({
           <div className="flex items-center gap-4">
             <Avatar className="h-16 w-16 shrink-0">
               <AvatarImage src={resolveImageUrl(imageValue ?? null)} />
-              <AvatarFallback className="text-lg bg-primary/10 text-primary font-bold">
+              <AvatarFallback className="text-lg bg-brand-core/10 text-primary font-bold">
                 {initials}
               </AvatarFallback>
             </Avatar>
@@ -315,14 +315,14 @@ export function SelfEditProfileForm({
           <div className="space-y-2">
             <SocialField
               id="linkedinUrl"
-              icon={<Linkedin className="h-3.5 w-3.5 text-blue-600" />}
+              icon={<Linkedin className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />}
               placeholder="https://linkedin.com/in/yourhandle"
               error={errors.linkedinUrl?.message}
               {...register("linkedinUrl")}
             />
             <SocialField
               id="twitterUrl"
-              icon={<Twitter className="h-3.5 w-3.5 text-sky-500" />}
+              icon={<Twitter className="h-3.5 w-3.5 text-sky-500 dark:text-sky-400" />}
               placeholder="https://twitter.com/yourhandle"
               error={errors.twitterUrl?.message}
               {...register("twitterUrl")}
@@ -336,7 +336,7 @@ export function SelfEditProfileForm({
             />
             <SocialField
               id="websiteUrl"
-              icon={<Globe className="h-3.5 w-3.5 text-green-600" />}
+              icon={<Globe className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />}
               placeholder="https://yourwebsite.com"
               error={errors.websiteUrl?.message}
               {...register("websiteUrl")}

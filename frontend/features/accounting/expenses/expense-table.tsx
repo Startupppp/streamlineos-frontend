@@ -50,7 +50,7 @@ const COLUMNS: DataTableColumn<ExpenseWithExtras>[] = [
       return (
         <div className="flex items-center gap-2 min-w-0">
           <Avatar className="h-6 w-6 shrink-0">
-            <AvatarFallback className="text-[10px] bg-blue-100 text-blue-700">{initials}</AvatarFallback>
+            <AvatarFallback className="text-[10px] bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300">{initials}</AvatarFallback>
           </Avatar>
           <span className="text-sm truncate">{displayName}</span>
         </div>

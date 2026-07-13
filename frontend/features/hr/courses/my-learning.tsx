@@ -9,9 +9,9 @@ import { useMyEnrollments } from "@/hooks/api/hr/courses";
 import type { CourseEnrollment } from "@/hooks/api/hr/courses";
 
 const STATUS_CONFIG: Record<CourseEnrollment["status"], { label: string; className: string }> = {
-  ENROLLED: { label: "Enrolled", className: "bg-blue-50 text-blue-700 border-blue-200" },
-  IN_PROGRESS: { label: "In Progress", className: "bg-violet-50 text-violet-700 border-violet-200" },
-  COMPLETED: { label: "Completed", className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  ENROLLED: { label: "Enrolled", className: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30" },
+  IN_PROGRESS: { label: "In Progress", className: "bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-500/10 dark:text-violet-300 dark:border-violet-500/30" },
+  COMPLETED: { label: "Completed", className: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30" },
   DROPPED: { label: "Dropped", className: "bg-muted text-muted-foreground border-border" },
 };
 
@@ -71,11 +71,11 @@ export function MyLearning() {
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="p-2 rounded-lg bg-violet-50 shrink-0">
+                  <div className="p-2 rounded-lg bg-violet-50 shrink-0 dark:bg-violet-500/10">
                     {enrollment.status === "COMPLETED" ? (
                       <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                     ) : (
-                      <BookOpen className="h-4 w-4 text-violet-600" />
+                      <BookOpen className="h-4 w-4 text-violet-600 dark:text-violet-400" />
                     )}
                   </div>
                   <div className="min-w-0">
