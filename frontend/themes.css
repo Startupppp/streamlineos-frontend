@@ -305,16 +305,16 @@
 
 /* Whole-surface tinting — dark mode */
 :root.dark[class*="theme-"] {
-  --background: color-mix(in srgb, var(--brand-core) 10%, #07091a);
-  --card: color-mix(in srgb, var(--brand-core) 10%, #101428);
-  --popover: color-mix(in srgb, var(--brand-core) 10%, #141a32);
-  --muted: color-mix(in srgb, var(--brand-core) 10%, #161e36);
-  --secondary: color-mix(in srgb, var(--brand-core) 12%, #1a2238);
-  --accent: color-mix(in srgb, var(--brand-core) 12%, #1a2238);
-  --border: color-mix(in srgb, var(--brand-bright) 30%, transparent);
-  --input: color-mix(in srgb, var(--brand-bright) 22%, transparent);
-  --sidebar: color-mix(in srgb, var(--brand-core) 8%, #0b1024);
-  --sidebar-border: color-mix(in srgb, var(--brand-bright) 18%, transparent);
+  --background: color-mix(in srgb, var(--brand-core) 10%, #0a0a0b);
+  --card: color-mix(in srgb, var(--brand-core) 10%, #131316);
+  --popover: color-mix(in srgb, var(--brand-core) 10%, #18181b);
+  --muted: color-mix(in srgb, var(--brand-core) 10%, #1c1c1f);
+  --secondary: color-mix(in srgb, var(--brand-core) 12%, #202023);
+  --accent: color-mix(in srgb, var(--brand-core) 12%, #202023);
+  --border: color-mix(in srgb, var(--brand-bright) 40%, transparent);
+  --input: color-mix(in srgb, var(--brand-bright) 30%, transparent);
+  --sidebar: color-mix(in srgb, var(--brand-core) 8%, #0e0e10);
+  --sidebar-border: color-mix(in srgb, var(--brand-bright) 26%, transparent);
 }
 
 /* Dark-mode reconciliation — accent foregrounds lifted for contrast on dark surfaces */

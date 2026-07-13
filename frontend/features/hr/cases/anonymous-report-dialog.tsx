@@ -99,7 +99,7 @@ export function AnonymousReportDialog({ open, onOpenChange }: Props) {
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <ShieldAlert className="h-4 w-4 text-blue-600" />
+            <ShieldAlert className="h-4 w-4 text-primary" />
             Anonymous Report
           </DialogTitle>
           <DialogDescription className="text-xs">

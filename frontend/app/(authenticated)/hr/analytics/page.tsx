@@ -167,9 +167,9 @@ function ExecutiveKPIs({
       label: "Total Employees",
       value: totalEmployees,
       icon: Users,
-      iconBg: "bg-blue-100 dark:bg-blue-950/40",
-      iconColor: "text-blue-600 dark:text-blue-400",
-      valueColor: "text-blue-700 dark:text-blue-400",
+      iconBg: "bg-primary/10",
+      iconColor: "text-primary",
+      valueColor: "text-primary",
     },
     {
       label: "Attrition Rate",
@@ -270,9 +270,9 @@ function AnalyticsContent() {
 
         <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
           <div className="flex items-center gap-2 px-4 pt-4 pb-3 border-b border-border">
-            <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center">
+            <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center">
               <BarChart3
-                className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400"
+                className="h-3.5 w-3.5 text-primary"
                 aria-hidden="true"
               />
             </div>

@@ -39,7 +39,7 @@ function BudgetBar({ allocated, used }: { allocated: number; used: number }) {
       </div>
       <div className="h-2 rounded-full bg-muted overflow-hidden">
         <motion.div
-          className="h-full rounded-full bg-blue-600"
+          className="h-full rounded-full bg-primary"
           initial={{ width: 0 }}
           animate={{ width: `${pct}%` }}
           transition={{ duration: 0.6, ease: "easeOut" }}

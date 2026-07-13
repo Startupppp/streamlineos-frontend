@@ -66,7 +66,7 @@ export function ExitChecklistSection({ resignationId }: ExitChecklistSectionProp
         </div>
         <div className="h-2 rounded-full bg-muted overflow-hidden">
           <div
-            className="h-full bg-blue-500 rounded-full transition-[width] duration-[400ms] ease-out"
+            className="h-full bg-primary rounded-full transition-[width] duration-[400ms] ease-out"
             style={{ width: `${percent}%` }}
           />
         </div>

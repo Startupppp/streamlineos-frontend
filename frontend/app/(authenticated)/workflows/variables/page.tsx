@@ -30,7 +30,7 @@ import {
 } from "@/hooks/api/workflows";
 
 const VALUE_TYPE_CLASS: Record<string, string> = {
-  string: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  string: "bg-primary/10 text-foreground border-primary/30",
   number: "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-500/10 dark:text-purple-300 dark:border-purple-500/30",
   boolean: "bg-green-50 text-green-700 border-green-200 dark:bg-green-500/10 dark:text-green-300 dark:border-green-500/30",
   object: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
@@ -60,8 +60,8 @@ function VariableCard({ variable, index, onDelete }: VariableCardProps) {
       <Card className="bg-card rounded-xl border border-border shadow-sm hover:shadow-md transition-shadow duration-200">
         <CardContent className="p-4">
           <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center shrink-0">
-              <Variable className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+            <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+              <Variable className="h-4 w-4 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">

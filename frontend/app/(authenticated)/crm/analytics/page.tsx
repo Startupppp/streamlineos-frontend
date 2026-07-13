@@ -115,7 +115,7 @@ export default function CrmAnalyticsPage() {
                 onClick={() => handleSourceChange("all")}
                 className={`h-8 rounded-md px-3 text-xs font-medium transition-colors ${
                   selectedSource === "all"
-                    ? "bg-blue-500 text-white"
+                    ? "bg-primary text-primary-foreground"
                     : "bg-muted text-muted-foreground hover:bg-muted/80"
                 }`}
               >
@@ -127,7 +127,7 @@ export default function CrmAnalyticsPage() {
                   onClick={() => handleSourceChange(opt.key)}
                   className={`h-8 rounded-md px-3 text-xs font-medium transition-colors ${
                     selectedSource === opt.key
-                      ? "bg-blue-500 text-white"
+                      ? "bg-primary text-primary-foreground"
                       : "bg-muted text-muted-foreground hover:bg-muted/80"
                   }`}
                 >

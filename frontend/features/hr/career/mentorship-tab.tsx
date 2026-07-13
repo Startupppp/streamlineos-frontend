@@ -59,7 +59,7 @@ export function MentorshipTab() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">{mentorships.length} mentorship{mentorships.length !== 1 ? "s" : ""}</p>
-        <Button size="sm" className="bg-blue-700 hover:bg-blue-800 text-white" onClick={() => setOpen(true)}>New Mentorship</Button>
+        <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground" onClick={() => setOpen(true)}>New Mentorship</Button>
       </div>
 
       {mentorships.length === 0 ? (

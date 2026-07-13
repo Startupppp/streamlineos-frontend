@@ -876,7 +876,7 @@ export default function CheckoutPage() {
                   PCI DSS Compliant
                 </span>
                 <span className="flex items-center gap-1">
-                  <RefreshCcw className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                  <RefreshCcw className="h-3.5 w-3.5 text-primary" />
                   Cancel Anytime
                 </span>
               </div>

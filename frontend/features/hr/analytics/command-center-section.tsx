@@ -187,8 +187,8 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
           value={String(kpis?.headcount.active ?? 0)}
           subtitle={`${kpis?.headcount.probation ?? 0} probation · ${kpis?.headcount.notice ?? 0} notice`}
           icon={Users}
-          iconBg="bg-blue-50 dark:bg-blue-500/10"
-          iconColor="text-blue-600 dark:text-blue-400"
+          iconBg="bg-primary/10"
+          iconColor="text-primary"
         />
         <StatCard
           label="12-Mo Attrition"
@@ -242,8 +242,8 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
             label="Payroll Last Month"
             value={kpis?.payrollCostLastMonth !== null && kpis?.payrollCostLastMonth !== undefined ? formatCurrency(kpis.payrollCostLastMonth) : "—"}
             icon={DollarSign}
-            iconBg="bg-blue-50 dark:bg-blue-500/10"
-            iconColor="text-blue-600 dark:text-blue-400"
+            iconBg="bg-primary/10"
+            iconColor="text-primary"
             onClick={handlePayrollDrilldown}
           />
         ) : null}

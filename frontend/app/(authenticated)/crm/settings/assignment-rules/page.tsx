@@ -77,7 +77,7 @@ function RuleRow({ rule, dragHandleProps, onToggle, onEdit, onDeleteRequest }: R
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-sm font-medium truncate">{rule.name}</span>
-              <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30">
+              <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-primary/10 text-foreground border-primary/30">
                 {ASSIGNMENT_TYPE_LABELS[rule.assignmentType] ?? rule.assignmentType}
               </Badge>
               <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-muted text-muted-foreground border-border">
@@ -143,7 +143,7 @@ function PreviewPanel() {
     <Card className="bg-card rounded-lg border border-border shadow-sm sticky top-4">
       <CardHeader className="px-4 py-3 border-b border-border">
         <CardTitle className="text-sm font-semibold flex items-center gap-2">
-          <Eye className="h-4 w-4 text-blue-500" />
+          <Eye className="h-4 w-4 text-primary" />
           Assignment Preview
         </CardTitle>
       </CardHeader>

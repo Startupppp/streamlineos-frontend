@@ -128,8 +128,8 @@ export const AttendanceCalendar = memo(function AttendanceCalendar({
       <CardHeader className="pb-3 pt-5 px-5">
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center shrink-0">
-              <CalendarDays className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+            <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+              <CalendarDays className="h-3.5 w-3.5 text-primary" />
             </div>
             Attendance Calendar
           </CardTitle>
@@ -207,7 +207,7 @@ export const AttendanceCalendar = memo(function AttendanceCalendar({
                               "hover:opacity-90 cursor-default",
                             ),
                         isTodayDate &&
-                          "ring-2 ring-blue-500 ring-offset-1 ring-offset-background",
+                          "ring-2 ring-primary ring-offset-1 ring-offset-background",
                       )}
                       title={title}
                     >

@@ -212,7 +212,7 @@ export function CyclesTab() {
                   type="button"
                   onClick={() => handleFormChange("isAnonymous", !form.isAnonymous)}
                   className={`w-10 h-5 rounded-full transition-colors relative ${
-                    form.isAnonymous ? "bg-blue-600" : "bg-border"
+                    form.isAnonymous ? "bg-primary" : "bg-border"
                   }`}
                 >
                   <span

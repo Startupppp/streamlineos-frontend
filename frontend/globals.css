@@ -97,7 +97,7 @@
   --muted-foreground: #64748b;    /* slate-500 */
   --border: #e2e8f0;              /* slate-200 */
   --input: #e2e8f0;
-  --ring: #3b82f6;                /* blue-500 focus ring */
+  --ring: #94a3b8;                /* slate-400 focus ring â€” accent themes override */
 
   /* â”€â”€â”€ CTA & Action (Ink-style â€” Linear/Stripe feel) â”€â”€â”€ */
   --primary: #0b1220;             /* slate-900 â€” primary CTAs */
@@ -151,28 +151,28 @@
 }
 
 .dark {
-  /* â”€â”€â”€ Surface (deeper blacks for true OLED-feel) â”€â”€â”€ */
-  --background: #07091a;          /* page canvas */
-  --foreground: #f1f4fb;
-  --card: #101428;                /* elevated panel â€” clearly lifted from bg */
-  --card-foreground: #f1f4fb;
-  --popover: #141a32;
-  --popover-foreground: #f1f4fb;
-  --muted: #161e36;
-  --muted-foreground: #94a0c0;
-  --border: rgba(148, 178, 245, 0.30);     /* visible against dark surfaces */
-  --input: rgba(148, 178, 245, 0.22);
-  --ring: #60a5fa;
+  /* â”€â”€â”€ Surface (neutral zinc blacks â€” Ink stays monochrome in dark) â”€â”€â”€ */
+  --background: #0a0a0b;          /* page canvas */
+  --foreground: #f4f4f5;
+  --card: #131316;                /* elevated panel â€” clearly lifted from bg */
+  --card-foreground: #f4f4f5;
+  --popover: #18181b;
+  --popover-foreground: #f4f4f5;
+  --muted: #1c1c1f;
+  --muted-foreground: #a1a1aa;
+  --border: rgba(255, 255, 255, 0.22);     /* clearly visible against dark surfaces */
+  --input: rgba(255, 255, 255, 0.16);
+  --ring: #d4d4d8;
 
   /* â”€â”€â”€ CTA & Action â€” invert ink to white for dark â”€â”€â”€ */
-  --primary: #f1f4fb;
-  --primary-foreground: #07091a;
-  --secondary: #1a2238;
-  --secondary-foreground: #f1f4fb;
-  --accent: #1a2238;              /* dark surface wash â€” neutral for dark mode hover */
-  --accent-foreground: #f1f4fb;
+  --primary: #f4f4f5;
+  --primary-foreground: #0a0a0b;
+  --secondary: #202023;
+  --secondary-foreground: #f4f4f5;
+  --accent: #202023;              /* dark surface wash â€” neutral for dark mode hover */
+  --accent-foreground: #f4f4f5;
   --destructive: #ef4444;
-  --destructive-foreground: #f1f4fb;
+  --destructive-foreground: #f4f4f5;
 
   /* â”€â”€â”€ Charts (slightly punchier in dark for legibility) â”€â”€â”€ */
   --chart-1: #3b82f6;
@@ -182,14 +182,14 @@
   --chart-5: #ec4899;
 
   /* â”€â”€â”€ Sidebar (deepest layer â€” same dark-on-dark Linear/Vercel pattern) â”€â”€â”€ */
-  --sidebar: #0b1024;
-  --sidebar-foreground: #c4cbe0;
-  --sidebar-primary: #f1f4fb;
-  --sidebar-primary-foreground: #07091a;
+  --sidebar: #0e0e10;
+  --sidebar-foreground: #c9c9ce;
+  --sidebar-primary: #f4f4f5;
+  --sidebar-primary-foreground: #0a0a0b;
   --sidebar-accent: color-mix(in srgb, var(--sidebar-primary) 12%, transparent);
-  --sidebar-accent-foreground: #f4f7ff;
-  --sidebar-border: rgba(148, 178, 245, 0.18);
-  --sidebar-ring: #60a5fa;
+  --sidebar-accent-foreground: #fafafa;
+  --sidebar-border: rgba(255, 255, 255, 0.16);
+  --sidebar-ring: #d4d4d8;
 
   --gold: #3b82f6;
   --blue: #1d4ed8;
@@ -200,7 +200,7 @@
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.04) inset,
     0 8px 24px -12px rgba(0, 0, 0, 0.6),
-    0 0 0 1px rgba(148, 178, 245, 0.04);
+    0 0 0 1px rgba(255, 255, 255, 0.04);
 }
 
 /* â”€â”€â”€ Hide scrollbar utility (top-level, outside @layer so it always wins) â”€â”€â”€ */
