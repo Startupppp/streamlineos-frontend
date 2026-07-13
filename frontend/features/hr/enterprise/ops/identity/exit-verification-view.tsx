@@ -18,7 +18,7 @@ export function ExitVerificationView() {
   }
 
   return (
-    <div className="max-w-xl space-y-4">
+    <div className="space-y-4">
       <div>
         <p className="text-sm text-muted-foreground mb-3">
           Verify that all system access has been revoked before completing an employee exit.

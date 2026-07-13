@@ -259,7 +259,7 @@ export function CreateJobForm({ job }: CreateJobFormProps) {
 
         <div className="flex-1 min-h-0 flex">
           <ScrollArea className="flex-1 min-w-0">
-            <div className="px-6 py-6 max-w-2xl">
+            <div className="px-6 py-6">
               <ActiveSection form={form} departments={departments} />
             </div>
           </ScrollArea>

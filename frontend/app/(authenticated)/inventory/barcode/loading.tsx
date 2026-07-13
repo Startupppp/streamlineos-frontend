@@ -8,7 +8,7 @@ export default function BarcodeLoading() {
       title="Barcode Lookup"
       subtitle="Scan or enter a barcode to look up inventory items."
     >
-      <div className="max-w-xl mx-auto space-y-4">
+      <div className="space-y-4">
         <div className="flex gap-2">
           <Skeleton className="h-10 flex-1" />
           <Skeleton className="h-10 w-24" />

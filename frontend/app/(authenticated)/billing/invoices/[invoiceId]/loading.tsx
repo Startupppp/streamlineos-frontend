@@ -15,7 +15,7 @@ export default function InvoiceDetailLoading() {
         </div>
       }
     >
-      <div className="space-y-6 max-w-3xl">
+      <div className="space-y-6">
         <div className="rounded-lg border border-border bg-card p-5 grid grid-cols-2 sm:grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="space-y-2">

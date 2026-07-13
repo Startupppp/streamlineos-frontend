@@ -47,6 +47,18 @@ export interface FeedbucketConsoleEntry {
   ts?: number;
 }
 
+export interface FeedbucketNetworkEntry {
+  method: string;
+  url: string;
+  status: number;
+  statusText: string;
+  durationMs: number;
+  startedAt: string;
+  type: "xhr" | "fetch";
+  ok: boolean;
+  error?: string;
+}
+
 export interface FeedbucketWidget {
   id: number;
   orgId: string;
@@ -89,6 +101,7 @@ export interface FeedbucketSubmission {
   recordingUrl: string | null;
   metadata: FeedbucketMetadata | null;
   consoleLogs: FeedbucketConsoleEntry[] | null;
+  networkLogs: FeedbucketNetworkEntry[] | null;
   reporterName: string | null;
   reporterEmail: string | null;
   assigneeId: string | null;

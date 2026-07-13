@@ -93,7 +93,7 @@ export default function SecurityPage() {
         title="Security Policy"
         subtitle="Configure authentication and access controls for your organisation."
       >
-        <div className="max-w-xl space-y-4 pt-2">
+        <div className="space-y-4 pt-2">
           <Skeleton className="h-[120px] w-full rounded-xl" />
           <Skeleton className="h-[120px] w-full rounded-xl" />
           <Skeleton className="h-[140px] w-full rounded-xl" />
@@ -109,7 +109,7 @@ export default function SecurityPage() {
         title="Security Policy"
         subtitle="Configure authentication and access controls for your organisation."
       >
-        <div className="max-w-xl pt-2">
+        <div className="pt-2">
           <ErrorState
             title="Failed to load security settings"
             description="Could not retrieve your organisation's security policy. Please try again."
@@ -125,7 +125,7 @@ export default function SecurityPage() {
       title="Security Policy"
       subtitle="Configure authentication and access controls for your organisation."
     >
-      <div className="max-w-xl space-y-4 pt-2">
+      <div className="space-y-4 pt-2">
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">

@@ -78,7 +78,7 @@ export function LeaveAnalyticsClient() {
                       initial={{ width: 0 }}
                       animate={{ width: `${totalLeaves > 0 ? (item.count / totalLeaves) * 100 : 0}%` }}
                       transition={{ duration: 0.4, ease: "easeOut", delay: i * 0.06 }}
-                      className="h-2 rounded-full bg-gradient-to-r from-violet-500 to-indigo-500"
+                      className="h-2 rounded-full bg-primary"
                     />
                   </div>
                   <span className="text-sm font-semibold text-foreground w-8 text-right">{item.count}</span>
@@ -105,7 +105,7 @@ export function LeaveAnalyticsClient() {
                       initial={{ height: 0 }}
                       animate={{ height: `${(item.count / max) * 100}%` }}
                       transition={{ duration: 0.4, ease: "easeOut", delay: i * 0.04 }}
-                      className="w-full bg-gradient-to-t from-violet-600 to-indigo-400 rounded-t-md min-h-[4px]"
+                      className="w-full bg-primary rounded-t-md min-h-[4px]"
                     />
                     <span className="text-xs text-muted-foreground truncate w-full text-center">
                       {item.month?.slice(0, 3)}

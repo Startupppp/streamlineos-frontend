@@ -309,7 +309,7 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
       >
         <div
           className={`grid gap-6 ${
-            showPreview ? "lg:grid-cols-2" : "lg:grid-cols-1 max-w-3xl mx-auto"
+            showPreview ? "lg:grid-cols-2" : "lg:grid-cols-1"
           }`}
         >
           <div className="space-y-5">

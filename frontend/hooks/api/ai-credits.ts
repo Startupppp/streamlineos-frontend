@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 export interface AiCreditPack {
   id: number;
@@ -60,5 +61,53 @@ export function useConfigureAutoTopUp() {
     },
     onError: (e: Error) =>
       toast.error(e.message ?? "Failed to update settings"),
+  });
+}
+
+export interface PurchaseAiPackOrder {
+  orderId: string;
+  amount: number;
+  currency: string;
+  keyId: string;
+  pack: AiCreditPack;
+}
+
+export interface PurchaseAiPackResult {
+  balance: number;
+  creditsAdded: number;
+  pack: AiCreditPack;
+}
+
+export function usePurchaseAiCredits() {
+  const qc = useQueryClient();
+  return useMutation<PurchaseAiPackOrder | PurchaseAiPackResult, Error, { packId: number }>({
+    mutationKey: ["billing", "ai-credits", "purchase"],
+    mutationFn: (data) =>
+      apiClient.post<PurchaseAiPackOrder | PurchaseAiPackResult>("/billing/ai-credits/purchase", data),
+    onSuccess: (result) => {
+      if ("balance" in result) {
+        void qc.invalidateQueries({ queryKey: ["billing", "ai-credits"] });
+        toast.success(`${result.creditsAdded.toLocaleString()} credits added to your account`);
+      }
+    },
+    onError: (e) => toast.error(getErrorMessage(e)),
+  });
+}
+
+export function useVerifyAiCreditPurchase() {
+  const qc = useQueryClient();
+  return useMutation<
+    PurchaseAiPackResult,
+    Error,
+    { packId: number; orderId: string; paymentId: string; signature: string }
+  >({
+    mutationKey: ["billing", "ai-credits", "verify"],
+    mutationFn: (data) =>
+      apiClient.patch<PurchaseAiPackResult>("/billing/ai-credits/purchase", data),
+    onSuccess: (result) => {
+      void qc.invalidateQueries({ queryKey: ["billing", "ai-credits"] });
+      toast.success(`${result.creditsAdded.toLocaleString()} credits added to your account`);
+    },
+    onError: (e) => toast.error(getErrorMessage(e)),
   });
 }

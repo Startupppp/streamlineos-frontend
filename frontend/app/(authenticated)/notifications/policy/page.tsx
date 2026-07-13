@@ -192,7 +192,7 @@ export default function NotificationPolicyPage() {
         ) : undefined
       }
     >
-      <div className="space-y-4 max-w-3xl">
+      <div className="space-y-4">
         <Card className="bg-card border border-border rounded-xl shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold">Default channels</CardTitle>

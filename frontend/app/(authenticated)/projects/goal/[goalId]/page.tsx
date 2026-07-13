@@ -430,7 +430,7 @@ export default function GoalDetailPage({ params }: { params: Promise<{ goalId: s
         </div>
       }
     >
-      <div className="space-y-6 max-w-4xl">
+      <div className="space-y-6">
         <Card>
           <CardContent className="p-4 space-y-3">
             <div className="flex items-center justify-between gap-2">

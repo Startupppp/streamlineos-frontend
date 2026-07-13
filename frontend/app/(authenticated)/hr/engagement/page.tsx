@@ -303,7 +303,7 @@ function MoodTab() {
   const MOODS = ["", "😞", "😕", "😐", "🙂", "😄"];
 
   return (
-    <div className="space-y-6 max-w-lg">
+    <div className="space-y-6">
       <MoodCheckinWidget />
 
       <div className="bg-card border border-border rounded-xl p-4 space-y-3">

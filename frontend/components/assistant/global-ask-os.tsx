@@ -350,7 +350,7 @@ export function GlobalAskOs() {
   const btnCls =
     "rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted";
   const anchorClassName = cn(
-    "fixed right-0 bottom-[env(safe-area-inset-bottom,0px)] z-50 flex flex-col items-stretch",
+    "fixed right-0 bottom-16 md:bottom-[env(safe-area-inset-bottom,0px)] z-50 flex flex-col items-stretch",
     open ? "w-[min(100vw,400px)]" : "w-[min(100vw,130px)]",
   );
 

@@ -4,23 +4,23 @@
 }
 
 .wb-canvas .excalidraw:not(.theme--dark) {
-  --island-bg-color: #ffffff;
-  --color-primary: #7c3aed;
-  --color-primary-darker: #6d28d9;
-  --color-primary-darkest: #5b21b6;
-  --color-primary-light: #ede9fe;
-  --color-primary-light-darker: #ddd6fe;
-  --color-primary-hover: #6d28d9;
-  --color-surface-primary-container: #ede9fe;
-  --color-on-primary-container: #7c3aed;
-  --color-brand-hover: #6d28d9;
-  --color-brand-active: #7c3aed;
-  --color-surface-high: #f1f5f9;
-  --color-surface-low: #f1f5f9;
-  --color-surface-mid: #f8fafc;
-  --button-hover-bg: #f1f5f9;
-  --button-active-bg: #f1f5f9;
-  --button-active-border: #7c3aed;
+  --island-bg-color: var(--card);
+  --color-primary: var(--primary);
+  --color-primary-darker: color-mix(in srgb, var(--primary) 85%, black);
+  --color-primary-darkest: color-mix(in srgb, var(--primary) 72%, black);
+  --color-primary-light: color-mix(in srgb, var(--primary) 12%, white);
+  --color-primary-light-darker: color-mix(in srgb, var(--primary) 20%, white);
+  --color-primary-hover: color-mix(in srgb, var(--primary) 85%, black);
+  --color-surface-primary-container: color-mix(in srgb, var(--primary) 12%, white);
+  --color-on-primary-container: var(--primary);
+  --color-brand-hover: color-mix(in srgb, var(--primary) 85%, black);
+  --color-brand-active: var(--primary);
+  --color-surface-high: var(--muted);
+  --color-surface-low: var(--muted);
+  --color-surface-mid: var(--background);
+  --button-hover-bg: var(--muted);
+  --button-active-bg: var(--muted);
+  --button-active-border: var(--primary);
 }
 
 .wb-canvas .excalidraw.theme--dark {

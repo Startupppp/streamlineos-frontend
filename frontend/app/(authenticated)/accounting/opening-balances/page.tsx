@@ -73,7 +73,7 @@ export default function OpeningBalancesPage() {
       title="Opening Balances"
       subtitle="Set starting account balances."
     >
-      <div className="space-y-4 max-w-3xl">
+      <div className="space-y-4">
         {entry && (
           <>
             <Card className="bg-card border border-border rounded-xl shadow-sm">

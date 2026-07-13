@@ -134,7 +134,7 @@ export default function NotificationPreferencesPage() {
   if (isLoading) {
     return (
       <PageWrapper title="Notification Preferences" subtitle="Control how and when you receive notifications">
-        <div className="space-y-6 max-w-2xl">
+        <div className="space-y-6">
           <Skeleton className="h-5 w-20" />
           <div className="rounded-lg border border-border overflow-hidden">
             {Array.from({ length: 4 }).map((_, i) => (
@@ -166,7 +166,7 @@ export default function NotificationPreferencesPage() {
       title="Notification Preferences"
       subtitle="Control how and when you receive notifications"
     >
-      <div className="space-y-6 max-w-2xl">
+      <div className="space-y-6">
         <section>
           <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Channels</h2>
           <div className="rounded-lg border border-border overflow-hidden divide-y divide-border">

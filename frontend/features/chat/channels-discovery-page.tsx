@@ -117,7 +117,7 @@ export function ChannelsDiscoveryPage() {
 
       <div className="flex-1 overflow-y-auto px-6 py-4">
         {isLoading ? (
-          <div className="space-y-2 max-w-2xl">
+          <div className="space-y-2">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="flex items-center gap-3 py-3">
                 <Skeleton className="h-10 w-10 rounded-full" />
@@ -144,7 +144,7 @@ export function ChannelsDiscoveryPage() {
             className="flex-1 h-full border-0 bg-transparent py-16"
           />
         ) : (
-          <div className="max-w-2xl">
+          <div>
             <div className="grid gap-2 sm:grid-cols-2">
               {paged.map((ch) => (
                 <div key={ch.id} className="border border-border/40 rounded-xl">

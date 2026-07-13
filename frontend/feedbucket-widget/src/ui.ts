@@ -1,7 +1,8 @@
-import { captureScreenshot } from "./screenshot";
+import { captureScreenshot, warmScreenshotCache } from "./screenshot";
 import { collectMetadata, getPageUrl } from "./metadata";
 import { getConsoleBuffer } from "./console-capture";
-import { submitFeedback, aiAssistFeedback, type AiFeedbackType } from "./api";
+import { getNetworkLogs } from "./network-capture";
+import { submitFeedback, aiAssistFeedback, unwrapEnvelope, type AiFeedbackType } from "./api";
 import { getStyles } from "./styles";
 import { Annotator, type AnnotationResult } from "./annotator";
 import { ScreenRecorder } from "./recorder";
@@ -71,6 +72,7 @@ class FeedbucketWidget {
   private screenshotUrl: string | null = null;
   private recording: Blob | null = null;
   private capturing = false;
+  private pendingCapture: Promise<Blob | null> | null = null;
   private submitting = false;
   private aiAssisting = false;
   private busy = false;
@@ -169,6 +171,7 @@ class FeedbucketWidget {
         reporterEmail: this.emailInput.value,
         metadata: collectMetadata(),
         consoleLogs: getConsoleBuffer(),
+        networkLogs: getNetworkLogs(),
         screenshot: this.screenshot,
         recording: this.recording,
       });
@@ -471,7 +474,9 @@ class FeedbucketWidget {
 
     let screenshot = this.screenshot;
     if (!screenshot) {
-      const captured = await captureScreenshot(this.hostEl);
+      const captured = this.pendingCapture
+        ? await this.pendingCapture
+        : await captureScreenshot(this.hostEl);
       if (captured) {
         this.setScreenshot(captured);
         screenshot = captured;
@@ -491,6 +496,7 @@ class FeedbucketWidget {
       message,
       pageUrl: getPageUrl(),
       screenshot,
+      networkLogs: getNetworkLogs(),
     });
 
     this.aiAssisting = false;
@@ -609,6 +615,7 @@ class FeedbucketWidget {
         reporterEmail: "",
         metadata: collectMetadata(),
         consoleLogs: getConsoleBuffer(),
+        networkLogs: getNetworkLogs(),
         screenshot: result.image,
         recording: null,
       });
@@ -655,9 +662,13 @@ class FeedbucketWidget {
   }
 
   private openPanel(type: FeedbackType): void {
+    const wasOpen = this.isOpen;
     this.setSelectedType(type);
     if (this.viewState !== "form") this.showView("form");
     this.isOpen = true;
+    if (!wasOpen && !this.screenshot) {
+      this.pendingCapture = captureScreenshot(this.hostEl);
+    }
     this.syncPanel();
   }
 
@@ -763,6 +774,7 @@ class FeedbucketWidget {
 
 export function mountWidget(hostEl: HTMLElement, apiBase: string, embedKey: string): void {
   void bootstrapWidget(hostEl, apiBase, embedKey);
+  setTimeout(warmScreenshotCache, 2000);
 }
 
 async function bootstrapWidget(hostEl: HTMLElement, apiBase: string, embedKey: string): Promise<void> {
@@ -770,7 +782,7 @@ async function bootstrapWidget(hostEl: HTMLElement, apiBase: string, embedKey: s
   try {
     const res = await fetch(`${apiBase}/public/feedbucket/${embedKey}/config`);
     if (res.ok) {
-      const data: unknown = await res.json();
+      const data: unknown = unwrapEnvelope(await res.json());
       if (
         typeof data === "object" &&
         data !== null &&

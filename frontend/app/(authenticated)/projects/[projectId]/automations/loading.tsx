@@ -9,7 +9,7 @@ export default function AutomationsLoading() {
       subtitle="Automate repetitive actions with if-then rules"
       actions={<Skeleton className="h-8 w-36 rounded-md" />}
     >
-      <div className="max-w-2xl mx-auto space-y-3 pb-8">
+      <div className="space-y-3 pb-8">
         <div className="grid grid-cols-2 gap-3 mb-4">
           <Skeleton className="h-16 rounded-lg" />
           <Skeleton className="h-16 rounded-lg" />

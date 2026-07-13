@@ -274,7 +274,7 @@ export default function AutomationsPage({ params }: PageProps) {
         </Button>
       }
     >
-      <div className="max-w-2xl mx-auto space-y-3 pb-8">
+      <div className="space-y-3 pb-8">
         {isLoading ? (
           <div className="space-y-3">
             {Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} className="h-28 w-full rounded-lg" />)}

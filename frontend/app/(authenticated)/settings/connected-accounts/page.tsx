@@ -86,7 +86,7 @@ export default function ConnectedAccountsPage() {
 
   return (
     <PageWrapper title="Connected Accounts" subtitle="Manage your linked sign-in providers">
-      <div className="max-w-2xl space-y-4">
+      <div className="space-y-4">
         {isLoading ? (
           <Card>
             <CardContent className="p-6 space-y-4">

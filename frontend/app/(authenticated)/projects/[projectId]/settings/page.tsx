@@ -189,13 +189,13 @@ export default function ProjectSettingsPage({ params }: PageProps) {
   if (isLoading) {
     return (
       <PageWrapper title="Settings" eyebrow="Project">
-        <div className="flex flex-col md:flex-row md:items-stretch gap-0 pb-8 md:min-h-full">
-          <div className="flex md:flex-col gap-1 md:w-44 shrink-0 p-2 mb-4 md:mb-0 md:self-stretch border-b border-border md:border-b-0 md:border-r md:pr-4 bg-card/50 md:rounded-l-lg">
+        <div className="flex flex-col md:flex-row gap-4 pb-8">
+          <div className="flex md:flex-col gap-0.5 md:w-48 shrink-0 pb-2 md:pb-0 border-b md:border-b-0 md:border-r border-border md:pr-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-8 w-24 md:w-full" />
+              <Skeleton key={i} className="h-8 w-24 md:w-full rounded-md" />
             ))}
           </div>
-          <div className="flex-1 min-w-0 md:pl-6 space-y-3">
+          <div className="flex-1 min-w-0 space-y-3">
             <Skeleton className="h-10 w-full" />
             <Skeleton className="h-24 w-full" />
             <Skeleton className="h-10 w-full" />
@@ -228,10 +228,10 @@ export default function ProjectSettingsPage({ params }: PageProps) {
       title="Settings"
       subtitle={project.name}
     >
-      <div className="flex flex-col md:flex-row md:items-stretch gap-0 pb-8 md:min-h-full">
+      <div className="flex flex-col md:flex-row gap-4 pb-8">
         <nav
           aria-label="Project settings"
-          className="flex md:flex-col gap-1 overflow-x-auto md:overflow-x-visible md:w-44 shrink-0 p-2 mb-4 md:mb-0 md:self-stretch border-b border-border md:border-b-0 md:border-r md:pr-4 bg-card/50 md:rounded-l-lg"
+          className="flex md:flex-col gap-0.5 overflow-x-auto md:overflow-visible w-full md:w-48 shrink-0 pb-2 md:pb-0 border-b md:border-b-0 md:border-r border-border md:pr-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
         >
           {navSections.map((section) => (
             <button
@@ -240,14 +240,16 @@ export default function ProjectSettingsPage({ params }: PageProps) {
               data-section={section.id}
               onClick={handleSectionClick}
               className={cn(
-                "whitespace-nowrap rounded-md px-3 py-2 text-sm text-left transition-colors",
+                "whitespace-nowrap rounded-md px-3 py-2 text-xs text-left transition-colors shrink-0",
+                section.id === "danger" &&
+                  "md:mt-2 md:pt-2 md:border-t md:border-border max-md:ml-1 max-md:pl-2 max-md:border-l max-md:border-border",
                 activeSection === section.id
                   ? section.id === "danger"
-                    ? "bg-destructive/10 text-destructive font-medium border border-destructive/20"
-                    : "bg-background text-foreground font-medium border border-border shadow-sm"
+                    ? "bg-destructive/10 text-destructive font-medium"
+                    : "bg-primary/10 text-foreground font-medium"
                   : section.id === "danger"
-                    ? "text-destructive/70 hover:bg-destructive/5 hover:text-destructive"
-                    : "text-muted-foreground hover:bg-background/80 hover:text-foreground"
+                    ? "text-destructive hover:bg-destructive/5 hover:text-destructive"
+                    : "text-foreground/80 hover:bg-muted hover:text-foreground"
               )}
             >
               {section.label}
@@ -255,7 +257,7 @@ export default function ProjectSettingsPage({ params }: PageProps) {
           ))}
         </nav>
 
-        <div className="flex-1 min-w-0 md:pl-6">
+        <div className="flex-1 min-w-0">
           {activeSection === "general" && (
             <div className="bg-card border border-border rounded-lg p-4">
               <div className="pb-3 mb-3 border-b border-border">

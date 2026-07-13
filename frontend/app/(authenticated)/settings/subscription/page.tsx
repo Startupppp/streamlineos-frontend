@@ -192,7 +192,7 @@ export default function SubscriptionPage() {
   if (isLoading) {
     return (
       <PageWrapper title="Subscription" subtitle="Manage your plan and billing.">
-        <div className="max-w-4xl space-y-4">
+        <div className="space-y-4">
           <Skeleton className="h-14 w-full rounded-lg" />
           <Skeleton className="h-9 w-56 rounded-lg" />
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -220,7 +220,7 @@ export default function SubscriptionPage() {
 
   return (
     <PageWrapper title="Subscription" subtitle="Manage your plan and billing.">
-      <div className="max-w-4xl space-y-6">
+      <div className="space-y-6">
         <div className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3">
           <CreditCard className="h-5 w-5 text-muted-foreground shrink-0" />
           <div className="flex-1 min-w-0">

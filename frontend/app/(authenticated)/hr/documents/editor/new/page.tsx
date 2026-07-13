@@ -363,7 +363,7 @@ export default function NewDocumentPage() {
         </Button>
       }
     >
-      <div className="mx-auto w-full max-w-6xl">
+      <div className="w-full">
         <div className="grid gap-4 lg:grid-cols-3 xl:gap-5">
           <Card className="lg:col-span-2">
             <CardHeader>

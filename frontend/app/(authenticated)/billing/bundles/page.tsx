@@ -87,28 +87,28 @@ const BUNDLE_COLOR_STYLES: Record<
   { topBorder: string; saveBadge: string; button: string }
 > = {
   blue: {
-    topBorder: "border-t-blue-500",
+    topBorder: "border-t-primary",
     saveBadge:
-      "bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300",
-    button: "bg-blue-600 hover:bg-blue-700 text-white border-0",
+      "bg-primary/10 text-foreground",
+    button: "bg-primary hover:bg-primary/90 text-primary-foreground border-0",
   },
   emerald: {
-    topBorder: "border-t-emerald-500",
+    topBorder: "border-t-primary",
     saveBadge:
-      "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300",
-    button: "bg-emerald-600 hover:bg-emerald-700 text-white border-0",
+      "bg-primary/10 text-foreground",
+    button: "bg-primary hover:bg-primary/90 text-primary-foreground border-0",
   },
   amber: {
-    topBorder: "border-t-amber-500",
+    topBorder: "border-t-primary",
     saveBadge:
-      "bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300",
-    button: "bg-amber-600 hover:bg-amber-700 text-white border-0",
+      "bg-primary/10 text-foreground",
+    button: "bg-primary hover:bg-primary/90 text-primary-foreground border-0",
   },
   purple: {
-    topBorder: "border-t-purple-500",
+    topBorder: "border-t-primary",
     saveBadge:
-      "bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300",
-    button: "bg-purple-600 hover:bg-purple-700 text-white border-0",
+      "bg-primary/10 text-foreground",
+    button: "bg-primary hover:bg-primary/90 text-primary-foreground border-0",
   },
 };
 

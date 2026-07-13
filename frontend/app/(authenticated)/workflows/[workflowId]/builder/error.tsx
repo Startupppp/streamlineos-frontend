@@ -11,5 +11,5 @@ export default function BuilderError({ reset }: { reset: () => void }) {
     router.back();
   }
 
-  return <ErrorState title="Failed to load builder" onRetry={handleRetry} className="flex-1 h-screen" />;
+  return <ErrorState title="Failed to load builder" onRetry={handleRetry} className="flex-1 h-full" />;
 }

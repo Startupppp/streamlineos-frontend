@@ -19,6 +19,7 @@ import type {
   FeedbucketSubmissionPriority,
   FeedbucketConsoleEntry,
   FeedbucketMetadata,
+  FeedbucketNetworkEntry,
 } from "@/types/feedbucket";
 
 const STATUS_LABELS: Record<FeedbucketSubmissionStatus, string> = {
@@ -89,6 +90,70 @@ function ConsoleLogsPanel({ logs }: { logs: FeedbucketConsoleEntry[] }) {
   );
 }
 
+function statusColor(entry: FeedbucketNetworkEntry): string {
+  if (!entry.ok || entry.status === 0) return "text-red-500";
+  if (entry.status >= 500) return "text-red-500";
+  if (entry.status >= 400) return "text-amber-500";
+  return "text-green-600";
+}
+
+function NetworkLogsPanel({ logs }: { logs: FeedbucketNetworkEntry[] }) {
+  const [open, setOpen] = useState(false);
+
+  function handleToggle() {
+    setOpen((prev) => !prev);
+  }
+
+  return (
+    <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <button
+        type="button"
+        onClick={handleToggle}
+        className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium hover:bg-muted/50 transition-colors"
+      >
+        <span>Network ({logs.length})</span>
+        {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+      </button>
+      {open && (
+        <div className="border-t border-border bg-muted/30 p-3 max-h-72 overflow-y-auto">
+          <table className="w-full text-xs border-separate border-spacing-y-0.5">
+            <thead>
+              <tr className="text-muted-foreground">
+                <th className="text-left font-medium w-12 py-1">Method</th>
+                <th className="text-left font-medium w-14 py-1">Status</th>
+                <th className="text-left font-medium py-1">URL</th>
+                <th className="text-right font-medium w-16 py-1">Duration</th>
+              </tr>
+            </thead>
+            <tbody>
+              {logs.map((entry, i) => (
+                <tr key={i} className="font-mono">
+                  <td className="py-0.5 pr-2">
+                    <span className="inline-block rounded px-1 bg-muted text-muted-foreground uppercase text-[10px]">
+                      {entry.method}
+                    </span>
+                  </td>
+                  <td className={`py-0.5 pr-2 font-semibold ${statusColor(entry)}`}>
+                    {entry.status === 0 ? "FAIL" : entry.status}
+                  </td>
+                  <td className="py-0.5 pr-2 max-w-0 truncate">
+                    <span className="block truncate text-foreground" title={entry.url}>
+                      {entry.url}
+                    </span>
+                  </td>
+                  <td className="py-0.5 text-right text-muted-foreground">
+                    {entry.durationMs}ms
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface FeedbucketSubmissionDetailProps {
   submissionId: number;
 }
@@ -100,7 +165,7 @@ export function FeedbucketSubmissionDetail({ submissionId }: FeedbucketSubmissio
 
   if (isLoading) {
     return (
-      <div className="p-6 space-y-4 max-w-4xl mx-auto">
+      <div className="p-6 space-y-4">
         <Skeleton className="h-64 w-full rounded-xl" />
         <Skeleton className="h-24 w-full rounded-xl" />
         <Skeleton className="h-32 w-full rounded-xl" />
@@ -138,7 +203,7 @@ export function FeedbucketSubmissionDetail({ submissionId }: FeedbucketSubmissio
   }
 
   return (
-    <div className="flex flex-col gap-6 p-4 sm:p-6 max-w-4xl mx-auto">
+    <div className="flex flex-col gap-6 p-4 sm:p-6">
       {submission.screenshotUrl && (
         <div className="rounded-xl border border-border overflow-hidden bg-muted/20">
           <img
@@ -235,6 +300,10 @@ export function FeedbucketSubmissionDetail({ submissionId }: FeedbucketSubmissio
 
       {submission.consoleLogs && submission.consoleLogs.length > 0 && (
         <ConsoleLogsPanel logs={submission.consoleLogs} />
+      )}
+
+      {submission.networkLogs && submission.networkLogs.length > 0 && (
+        <NetworkLogsPanel logs={submission.networkLogs} />
       )}
 
       <FeedbucketAiPanel

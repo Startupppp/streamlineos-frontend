@@ -92,21 +92,23 @@ function StepRail({ currentStep, doneKeys, onStepClick }: StepRailProps) {
 
 function FinishedScreen() {
   return (
-    <div className="flex flex-col items-center justify-center py-16 px-6 text-center max-w-md mx-auto">
-      <div className="rounded-full bg-emerald-50 border border-emerald-200 p-4 mb-5 dark:bg-emerald-500/10 dark:border-emerald-500/30">
-        <CheckCircle2 className="h-10 w-10 text-emerald-600 dark:text-emerald-400" />
-      </div>
-      <h2 className="text-lg font-semibold text-foreground mb-2">Setup complete!</h2>
-      <p className="text-sm text-muted-foreground mb-6">
-        Your accounting module is ready to use. You can always adjust settings later.
-      </p>
-      <div className="flex gap-3">
-        <Button asChild>
-          <Link href="/accounting">Go to Accounting Overview</Link>
-        </Button>
-        <Button asChild variant="outline">
-          <Link href="/accounting/settings">Review Settings</Link>
-        </Button>
+    <div className="flex flex-col flex-1 min-h-0 items-center justify-center py-16">
+      <div className="flex flex-col items-center text-center px-6 max-w-md mx-auto">
+        <div className="rounded-full bg-emerald-50 border border-emerald-200 p-4 mb-5 dark:bg-emerald-500/10 dark:border-emerald-500/30">
+          <CheckCircle2 className="h-10 w-10 text-emerald-600 dark:text-emerald-400" />
+        </div>
+        <h2 className="text-lg font-semibold text-foreground mb-2">Setup complete!</h2>
+        <p className="text-sm text-muted-foreground mb-6">
+          Your accounting module is ready to use. You can always adjust settings later.
+        </p>
+        <div className="flex gap-3">
+          <Button asChild>
+            <Link href="/accounting">Go to Accounting Overview</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/accounting/settings">Review Settings</Link>
+          </Button>
+        </div>
       </div>
     </div>
   );
@@ -170,7 +172,7 @@ export default function AccountingSetupPage() {
       subtitle="Complete these steps to get your accounting module ready"
       backHref="/accounting/settings"
     >
-      <div className="max-w-3xl">
+      <div>
         <StepRail
           currentStep={currentStep}
           doneKeys={doneKeys}

@@ -200,7 +200,7 @@ export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
   if (isPageLoading) {
     return (
       <PageWrapper title="Loading..." backHref="/crm/settings/automations">
-        <div className="space-y-3 max-w-2xl">
+        <div className="space-y-3">
           {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}
         </div>
       </PageWrapper>
@@ -250,7 +250,7 @@ export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
         }
       >
         <div className="flex gap-6 min-h-0">
-          <div className="flex-1 min-w-0 space-y-2 max-w-2xl pb-8">
+          <div className="flex-1 min-w-0 space-y-2 pb-8">
             <div className="mb-4 space-y-3">
               <div className="space-y-1">
                 <Label className="text-xs">Automation Name</Label>

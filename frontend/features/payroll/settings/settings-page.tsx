@@ -16,7 +16,7 @@ export function SettingsPageContent() {
   if (isLoading) {
     return (
       <PageWrapper title="Payroll Settings">
-        <div className="space-y-4 max-w-3xl">
+        <div className="space-y-4">
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />
           ))}
@@ -54,7 +54,7 @@ export function SettingsPageContent() {
       title="Payroll Settings"
       subtitle={`Policy #${data.policy.id} · ${data.policy.status}`}
     >
-      <div className="space-y-8 max-w-3xl">
+      <div className="space-y-8">
         <PolicyProfileSection policy={data.policy} />
         <ToggleSettingsSection policy={data.policy} activeVersion={data.activeVersion} />
         {data.activeVersion?.toggles.multiCurrency && (

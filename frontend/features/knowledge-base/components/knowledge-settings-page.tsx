@@ -454,7 +454,7 @@ export default function KnowledgeSettingsPage() {
       title="Settings"
       subtitle="Knowledge module configuration and defaults"
     >
-      <div className="space-y-4 max-w-2xl">
+      <div className="space-y-4">
         <ModuleStatusSection />
         <ReviewIntervalsSection />
         <TrashRetentionSection />

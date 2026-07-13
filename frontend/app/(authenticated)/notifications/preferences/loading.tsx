@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function NotificationPreferencesLoading() {
   return (
     <PageWrapper title="Notification Preferences" subtitle="Control how and when you receive notifications">
-      <div className="space-y-6 max-w-2xl">
+      <div className="space-y-6">
         <div className="space-y-2">
           <Skeleton className="h-3 w-16 rounded" />
           <div className="border border-border rounded-lg divide-y divide-border">

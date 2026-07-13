@@ -154,7 +154,7 @@ export default function ServiceAccountsPage() {
         </Button>
       }
     >
-      <div className="max-w-3xl space-y-4">
+      <div className="space-y-4">
         {isLoading ? (
           <Card>
             <CardContent className="p-6 space-y-4">

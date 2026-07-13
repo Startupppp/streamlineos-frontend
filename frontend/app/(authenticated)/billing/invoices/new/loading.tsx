@@ -8,7 +8,7 @@ export default function NewInvoiceLoading() {
       subtitle="Create a new invoice for a client"
       actions={<Skeleton className="h-8 w-20 rounded-md" />}
     >
-      <div className="max-w-3xl space-y-6">
+      <div className="space-y-6">
         <div className="rounded-lg border border-border bg-card overflow-hidden">
           <div className="px-4 py-3 border-b border-border">
             <Skeleton className="h-4 w-24" />

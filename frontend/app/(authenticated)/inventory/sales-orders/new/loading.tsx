@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function NewSalesOrderLoading() {
   return (
     <PageWrapper eyebrow="Inventory · Sales Orders" title="New Sales Order">
-      <div className="max-w-3xl space-y-4">
+      <div className="space-y-4">
         <div className="rounded-lg border border-border bg-card p-4 space-y-4">
           <Skeleton className="h-4 w-32" />
           <div className="grid gap-4 sm:grid-cols-2">

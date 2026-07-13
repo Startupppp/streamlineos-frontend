@@ -1,4 +1,5 @@
 import type { LogEntry } from "./console-capture";
+import type { NetworkLogEntry } from "./network-capture";
 import type { Metadata } from "./metadata";
 
 export interface SubmitOptions {
@@ -11,6 +12,7 @@ export interface SubmitOptions {
   reporterEmail: string;
   metadata: Metadata;
   consoleLogs: LogEntry[];
+  networkLogs: NetworkLogEntry[];
   screenshot: Blob | null;
   recording?: Blob | null;
 }
@@ -36,6 +38,15 @@ export interface AiAssistOptions {
   message: string;
   pageUrl: string;
   screenshot: Blob | null;
+  networkLogs: NetworkLogEntry[];
+}
+
+export function unwrapEnvelope(raw: unknown): unknown {
+  if (raw && typeof raw === "object" && (raw as Record<string, unknown>)["success"] === true) {
+    const inner = (raw as Record<string, unknown>)["data"];
+    if (inner && typeof inner === "object") return inner;
+  }
+  return raw;
 }
 
 export async function aiAssistFeedback(
@@ -48,6 +59,9 @@ export async function aiAssistFeedback(
   if (opts.screenshot) {
     const mime = opts.screenshot.type || "image/jpeg";
     form.append("screenshot", new Blob([opts.screenshot], { type: mime }), "screenshot.jpg");
+  }
+  if (opts.networkLogs.length > 0) {
+    form.append("networkLogs", JSON.stringify(opts.networkLogs.slice(-30)));
   }
 
   let res: Response;
@@ -66,7 +80,7 @@ export async function aiAssistFeedback(
   if (!res.ok) return { kind: "unavailable" };
 
   try {
-    const data: unknown = await res.json();
+    const data: unknown = unwrapEnvelope(await res.json());
     if (
       typeof data === "object" &&
       data !== null &&
@@ -104,6 +118,9 @@ export async function submitFeedback(opts: SubmitOptions): Promise<void> {
 
   form.append("metadata", JSON.stringify(opts.metadata));
   form.append("consoleLogs", JSON.stringify(opts.consoleLogs));
+  if (opts.networkLogs.length > 0) {
+    form.append("networkLogs", JSON.stringify(opts.networkLogs.slice(-50)));
+  }
 
   if (opts.screenshot) {
     const screenshotMime = opts.screenshot.type || "image/jpeg";

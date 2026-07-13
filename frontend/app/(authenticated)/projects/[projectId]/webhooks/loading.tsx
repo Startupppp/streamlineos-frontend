@@ -9,7 +9,7 @@ export default function WebhooksLoading() {
       subtitle="Receive HTTP POST notifications when project events occur"
       actions={<Skeleton className="h-8 w-32 rounded-md" />}
     >
-      <div className="max-w-2xl mx-auto space-y-3 pb-8">
+      <div className="space-y-3 pb-8">
         {Array.from({ length: 3 }).map((_, i) => (
           <Skeleton key={i} className="h-20 w-full rounded-lg" />
         ))}

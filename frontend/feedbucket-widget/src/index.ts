@@ -1,9 +1,11 @@
 import { initConsoleCapture } from "./console-capture";
+import { initNetworkCapture } from "./network-capture";
 import { mountWidget } from "./ui";
 
 declare const __WIDGET_API_BASE__: string;
 
 initConsoleCapture();
+initNetworkCapture(__WIDGET_API_BASE__);
 
 function getScriptElement(): HTMLScriptElement | null {
   const current = document.currentScript;

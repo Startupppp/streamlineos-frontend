@@ -224,7 +224,7 @@ export function TrainingList({ canManage, onSelectProgram, selectedProgramId }: 
               {program.status !== "COMPLETED" && program.status !== "CANCELLED" && (
                 <Button
                   size="sm"
-                  className="w-full h-7 text-xs bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
+                  className="w-full h-7 text-xs bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all duration-200"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleEnroll(program.id);

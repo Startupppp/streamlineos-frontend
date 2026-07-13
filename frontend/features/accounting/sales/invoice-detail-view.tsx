@@ -227,7 +227,7 @@ function CollectionPanel({ invoice }: CollectionPanelProps) {
 export function InvoiceDetailSkeleton() {
   return (
     <PageWrapper title="Invoice" backHref="/accounting/invoices">
-      <div className="space-y-4 max-w-4xl">
+      <div className="space-y-4">
         <div className="rounded-xl border border-border bg-card p-5 grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="space-y-1.5">
@@ -369,7 +369,7 @@ export function InvoiceDetailContent({ invoiceId }: InvoiceDetailContentProps) {
         </div>
       }
     >
-      <div className="space-y-4 max-w-4xl">
+      <div className="space-y-4">
         <div className="rounded-xl border border-border bg-card p-5">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div>

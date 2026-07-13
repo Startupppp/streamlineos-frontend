@@ -305,7 +305,7 @@ export default function NewInvoicePage() {
     >
       <form
         onSubmit={handleSubmit(onSubmit, onInvalid)}
-        className="max-w-3xl space-y-6"
+        className="space-y-6"
       >
         <div className="rounded-lg border border-border bg-card overflow-hidden">
           <div className="px-4 py-3 border-b border-border">

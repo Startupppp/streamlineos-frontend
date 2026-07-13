@@ -448,7 +448,7 @@ function BuilderCanvas({ workflow, workflowId }: BuilderCanvasProps) {
   const statusBadge = STATUS_BADGE[workflow.status];
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-background">
+    <div className="flex h-full w-full overflow-hidden bg-background">
       <div className="w-56 shrink-0 border-r border-border bg-card flex flex-col shadow-sm">
         <div className="px-3 py-3 border-b border-border">
           <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
@@ -515,7 +515,7 @@ function BuilderCanvas({ workflow, workflowId }: BuilderCanvasProps) {
             </Button>
             <Button
               size="sm"
-              className="h-7 text-xs bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
+              className="h-7 text-xs bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all duration-200"
               onClick={handlePublish}
               disabled={publishWorkflow.isPending}
             >
@@ -580,7 +580,7 @@ function BuilderGate({ workflowId }: { workflowId: string }) {
 
   if (isLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-background h-screen">
+      <div className="flex-1 flex items-center justify-center bg-background h-full">
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           <p className="text-sm text-muted-foreground">Loading workflow builder…</p>
@@ -591,7 +591,7 @@ function BuilderGate({ workflowId }: { workflowId: string }) {
 
   if (isError || !workflow) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-background h-screen">
+      <div className="flex-1 flex items-center justify-center bg-background h-full">
         <div className="text-center space-y-3">
           <p className="text-sm font-medium text-foreground">Workflow not found</p>
           <Button variant="outline" size="sm" onClick={() => router.push("/workflows")}>

@@ -9,7 +9,7 @@ export default function NewDocumentLoading() {
       subtitle="Choose a template to get started"
       actions={<Skeleton className="h-8 w-20 rounded-md" />}
     >
-      <div className="max-w-3xl mx-auto space-y-6">
+      <div className="space-y-6">
         <Card>
           <CardHeader>
             <Skeleton className="h-5 w-40" />

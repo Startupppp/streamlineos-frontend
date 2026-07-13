@@ -258,8 +258,8 @@ export default function InboxPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Candidate Inbox" subtitle="Messages with candidates">
-        <div className="flex gap-4 h-[calc(100vh-12rem)]">
+      <PageWrapper title="Candidate Inbox" subtitle="Messages with candidates" noInternalScroll>
+        <div className="flex gap-4 h-full">
           <div className="w-72 space-y-2">
             {Array.from({ length: 6 }).map((_, i) => (
               <Skeleton key={i} className="h-16 rounded-lg" />
@@ -275,6 +275,7 @@ export default function InboxPage() {
     <PageWrapper
       title="Candidate Inbox"
       subtitle="Manage candidate conversations across channels"
+      noInternalScroll
     >
       {threads.length === 0 ? (
         <RecruitmentEmptyState
@@ -283,10 +284,7 @@ export default function InboxPage() {
           description="Send the first message to a candidate from their profile page."
         />
       ) : (
-        <div
-          className="flex gap-0 border rounded-xl overflow-hidden"
-          style={{ height: "calc(100vh - 13rem)" }}
-        >
+        <div className="flex gap-0 border rounded-xl overflow-hidden h-full">
           <div className="w-72 border-r flex flex-col shrink-0">
             <div className="px-3 py-2 border-b">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">

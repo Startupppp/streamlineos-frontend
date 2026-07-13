@@ -370,7 +370,7 @@ export default function CheckoutPage() {
         title="Upgrade Plan"
         subtitle="Set up your StreamlineOS subscription"
       >
-        <div className="max-w-2xl mx-auto space-y-6">
+        <div className="space-y-6">
           {step < 7 && (
             <div className="flex items-center gap-1.5 flex-wrap">
               {STEPS.slice(0, 7).map((s, i) => (

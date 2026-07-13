@@ -12,7 +12,7 @@ export default function SettingsPage() {
       title="Account Settings"
       subtitle="Manage your profile and security."
     >
-      <div className="max-w-2xl space-y-6">
+      <div className="space-y-6">
 
         <section>
           <div className="mb-3">

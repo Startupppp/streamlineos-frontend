@@ -12,9 +12,9 @@ interface PlanConfig {
 }
 
 const PLAN_TONE: Record<SubscriptionPlan, { bg: string; text: string }> = {
-  STARTER: { bg: "bg-blue-50", text: "text-blue-600" },
-  PROFESSIONAL: { bg: "bg-violet-50", text: "text-violet-600" },
-  ENTERPRISE: { bg: "bg-amber-50", text: "text-amber-600" },
+  STARTER: { bg: "bg-primary/10", text: "text-primary" },
+  PROFESSIONAL: { bg: "bg-primary/10", text: "text-primary" },
+  ENTERPRISE: { bg: "bg-primary/10", text: "text-primary" },
 };
 
 interface PlanCardProps {
@@ -65,7 +65,7 @@ export function PlanCard({
         isCurrentPlan
           ? "border-primary ring-1 ring-primary/20"
           : isEnterprise
-            ? "border-amber-200 hover:shadow-sm"
+            ? "border-primary/30 hover:shadow-sm"
             : "border-border hover:shadow-sm",
       )}
     >

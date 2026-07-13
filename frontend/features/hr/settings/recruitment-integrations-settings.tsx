@@ -190,7 +190,7 @@ export function HrRecruitmentIntegrationsSettings({ embedded = false }: HrRecrui
           <Button variant="outline" size="sm" onClick={handleRetry}>Retry</Button>
         </div>
       ) : (
-        <div className="space-y-6 max-w-3xl">
+        <div className="space-y-6">
           <div className="rounded-lg border border-blue-200 bg-blue-500/5 p-4 text-sm text-blue-700 dark:border-blue-500/30 dark:text-blue-300">
             <strong>How it works:</strong> Each platform sends a webhook to the URL shown below
             whenever a candidate applies. The ATS automatically creates a candidate record and

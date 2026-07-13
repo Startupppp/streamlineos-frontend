@@ -8,7 +8,7 @@ export default function SettingsLoading() {
       title="Account Settings"
       subtitle="Manage your profile and security."
     >
-      <div className="max-w-2xl space-y-8">
+      <div className="space-y-8">
         <section>
           <div className="mb-4 space-y-1">
             <Skeleton className="h-4 w-20" />

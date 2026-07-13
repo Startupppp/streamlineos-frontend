@@ -83,7 +83,7 @@ export function EmergencyEventDetail({ eventId, onBack }: Props) {
         ) : null
       }
     >
-      <div className="max-w-2xl space-y-6">
+      <div className="space-y-6">
         <div className="rounded-xl border border-border bg-card p-4 space-y-3">
           <p className="text-sm font-medium text-foreground">Message</p>
           <p className="text-sm text-muted-foreground">{event.message}</p>
