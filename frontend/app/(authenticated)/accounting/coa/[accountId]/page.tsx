@@ -41,7 +41,7 @@ interface AccountDetailPageProps {
 }
 
 const TYPE_BADGE_CLASSES: Record<AccountType, string> = {
-  ASSET: "border-blue-500/30 text-blue-700 bg-blue-500/5",
+  ASSET: "border-primary/30 text-foreground bg-primary/5",
   LIABILITY: "border-amber-500/30 text-amber-700 bg-amber-500/5",
   EQUITY: "border-purple-500/30 text-purple-700 bg-purple-500/5",
   INCOME: "border-emerald-500/30 text-emerald-700 bg-emerald-500/5",

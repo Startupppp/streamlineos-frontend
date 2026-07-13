@@ -301,7 +301,7 @@ export function FormBuilder({ form, onSave, isPending }: FormBuilderProps) {
                 key={`${field.key}-${idx}`}
                 className={`cursor-pointer rounded-lg border ${
                   selectedFieldIdx === idx
-                    ? "border-blue-500 ring-1 ring-blue-500"
+                    ? "border-primary ring-1 ring-primary"
                     : "border-border"
                 }`}
                 onClick={() => setSelectedFieldIdx(selectedFieldIdx === idx ? null : idx)}
@@ -369,7 +369,7 @@ export function FormBuilder({ form, onSave, isPending }: FormBuilderProps) {
                 key={`${field.key}-${idx}`}
                 className={`cursor-pointer rounded-lg border ${
                   selectedFieldIdx === idx
-                    ? "border-blue-500 ring-1 ring-blue-500"
+                    ? "border-primary ring-1 ring-primary"
                     : "border-border"
                 }`}
                 onClick={() => setSelectedFieldIdx(selectedFieldIdx === idx ? null : idx)}

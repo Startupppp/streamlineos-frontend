@@ -68,7 +68,7 @@ export function AIBulkScoreButton({
           </>
         ) : (
           <>
-            <Sparkles className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
+            <Sparkles className="h-3.5 w-3.5 mr-1.5 text-primary" />
             AI Score {leadIds.length}
           </>
         )}

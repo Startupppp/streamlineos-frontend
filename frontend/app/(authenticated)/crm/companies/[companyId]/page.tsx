@@ -286,7 +286,7 @@ export default function CompanyDetailPage({
                     icon={Link2}
                     label="Website"
                     value={
-                      <a href={org.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline truncate block max-w-[180px]">
+                      <a href={org.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 hover:underline truncate block max-w-[180px]">
                         {org.website}
                       </a>
                     }
@@ -297,7 +297,7 @@ export default function CompanyDetailPage({
                     icon={UserCircle}
                     label="LinkedIn"
                     value={
-                      <a href={org.linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">
+                      <a href={org.linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 hover:underline">
                         View profile
                       </a>
                     }
@@ -308,7 +308,7 @@ export default function CompanyDetailPage({
                     icon={GitBranch}
                     label="Parent Account"
                     value={
-                      <Link href={`/crm/companies/${org.parentId}`} className="text-blue-600 dark:text-blue-400 hover:underline">
+                      <Link href={`/crm/companies/${org.parentId}`} className="text-primary hover:text-primary/80 hover:underline">
                         View parent
                       </Link>
                     }

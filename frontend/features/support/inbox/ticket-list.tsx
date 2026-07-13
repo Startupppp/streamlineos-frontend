@@ -47,7 +47,7 @@ function TicketListItem({ ticket, isSelected, onSelect }: TicketListItemProps) {
       onClick={handleClick}
       className={cn(
         "w-full text-left px-4 py-3 hover:bg-muted/30 transition-colors",
-        isSelected && "bg-muted/50 border-l-2 border-blue-500"
+        isSelected && "bg-muted/50 border-l-2 border-primary"
       )}
     >
       <div className="flex items-start justify-between gap-2">

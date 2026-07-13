@@ -158,7 +158,7 @@ export function MentionInputElement({ element, children, ...props }: PlateElemen
 
   return (
     <PlateElement {...props} element={element} as="span">
-      <span ref={spanRef} className="text-blue-600">@{children}</span>
+      <span ref={spanRef} className="text-primary">@{children}</span>
       {rect && ReactDOM.createPortal(
         <div
           style={{ position: 'fixed', top: rect.bottom + 4, left: rect.left, zIndex: 9999 }}

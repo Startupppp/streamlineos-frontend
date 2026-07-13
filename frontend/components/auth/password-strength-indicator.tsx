@@ -28,7 +28,7 @@ export function PasswordStrengthIndicator({
             strength.level === "strong"
               ? "text-green-600"
               : strength.level === "good"
-                ? "text-blue-600"
+                ? "text-foreground"
                 : strength.level === "fair"
                   ? "text-yellow-600"
                   : "text-red-600"

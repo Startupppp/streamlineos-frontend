@@ -43,7 +43,7 @@ function buildColumns(
           type="checkbox"
           checked={selectedIds.has(row.id)}
           onChange={() => handleToggle(row.id)}
-          className="h-4 w-4 rounded border-border accent-blue-500 cursor-pointer"
+          className="h-4 w-4 rounded border-border accent-primary cursor-pointer"
           aria-label={`Select ${row.productName}`}
         />
       ),
@@ -78,7 +78,7 @@ function buildColumns(
     {
       key: "suggestedQty",
       header: "Suggested Qty",
-      className: "tabular-nums text-[11px] font-semibold text-blue-600",
+      className: "tabular-nums text-[11px] font-semibold text-primary",
       cell: (row) => row.suggestedQty,
     },
     {

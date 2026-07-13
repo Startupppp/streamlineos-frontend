@@ -182,7 +182,7 @@ export default function Gstr3BPage() {
           </div>
 
           <div className="rounded-lg border border-border overflow-hidden">
-            <div className="px-4 py-3 font-medium bg-blue-50 border-b border-blue-200/60 dark:bg-blue-500/10 dark:border-blue-500/30">
+            <div className="px-4 py-3 font-medium bg-primary/5 border-b border-primary/20">
               4. Input Tax Credit (ITC)
             </div>
             <Table>

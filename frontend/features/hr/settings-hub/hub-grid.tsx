@@ -73,7 +73,7 @@ function CardItem({ card }: { card: CardDef }) {
 
   return (
     <Link href={card.href}>
-      <div className="bg-card border border-border rounded-xl shadow-sm p-4 hover:border-blue-500/50 hover:shadow-md transition-all group cursor-pointer h-full">
+      <div className="bg-card border border-border rounded-xl shadow-sm p-4 hover:border-primary/30 hover:shadow-md transition-all group cursor-pointer h-full">
         <p className="text-sm font-semibold text-foreground">{card.title}</p>
         <p className="text-xs text-muted-foreground mt-1">{card.description}</p>
       </div>

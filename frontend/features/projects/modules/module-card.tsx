@@ -223,7 +223,7 @@ export const ModuleCard = memo(function ModuleCard({
 
           {status === "in-progress" ? (
             <div
-              className="pointer-events-none absolute -right-6 -top-6 h-16 w-16 rounded-full bg-blue-500/[0.04] blur-xl"
+              className="pointer-events-none absolute -right-6 -top-6 h-16 w-16 rounded-full bg-primary/[0.04] blur-xl"
               aria-hidden="true"
             />
           ) : null}

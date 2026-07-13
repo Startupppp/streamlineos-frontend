@@ -16,6 +16,9 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -42,8 +45,10 @@ import {
   Settings,
   ExternalLink,
 } from "lucide-react";
+import { useCan } from "@/hooks/api/access";
 import { useProjects } from "@/hooks/api/projects/projects";
 import { useMyWork } from "@/hooks/api/projects/my-work";
+import { useCommandPalette } from "@/features/command-palette/hooks/use-command-palette";
 import { ProjectCreateWizard } from "@/features/projects/project-create/project-create-wizard";
 import type { MyWorkItem } from "@/types/projects/my-work";
 import type { ProjectListItem } from "@/types/projects";
@@ -219,7 +224,85 @@ const ProjectCard = memo(function ProjectCard({ project, index }: { project: Pro
   );
 });
 
-function QuickCreateMenu({ onCreateProject }: { onCreateProject: () => void }) {
+function resolveDefaultCreateProjectId(
+  projects: ProjectListItem[],
+  work: MyWorkItem[],
+): number | null {
+  const recentWork = work.find((item) => item.status !== "DONE" && item.status !== "CANCELLED");
+  if (recentWork) return recentWork.projectId;
+  const firstProject = projects[0];
+  return firstProject ? firstProject.id : null;
+}
+
+interface CreateTaskButtonProps {
+  projects: ProjectListItem[];
+  onCreateForProject: (projectId: number) => void;
+  className?: string;
+}
+
+function CreateTaskButton({ projects, onCreateForProject, className }: CreateTaskButtonProps) {
+  const canCreate = useCan("projects:tickets:create");
+  if (!canCreate || projects.length === 0) return null;
+
+  if (projects.length === 1) {
+    const project = projects[0];
+    if (!project) return null;
+    const handleClick = () => onCreateForProject(project.id);
+    return (
+      <Button
+        variant="ghost"
+        size="sm"
+        className={cn("h-7 text-xs gap-1 text-muted-foreground", className)}
+        onClick={handleClick}
+      >
+        Create Task
+      </Button>
+    );
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="sm"
+          className={cn("h-7 text-xs gap-1 text-muted-foreground", className)}
+        >
+          Create Task
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        {projects.map((project) => {
+          const handleSelect = () => onCreateForProject(project.id);
+          return (
+            <DropdownMenuItem key={project.id} onClick={handleSelect} className="cursor-pointer">
+              <span className="truncate">{project.name}</span>
+              <span className="ml-auto text-[10px] text-muted-foreground font-mono shrink-0">
+                {project.key}
+              </span>
+            </DropdownMenuItem>
+          );
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+interface QuickCreateMenuProps {
+  projects: ProjectListItem[];
+  onCreateProject: () => void;
+  onCreateForProject: (projectId: number) => void;
+}
+
+function QuickCreateMenu({ projects, onCreateProject, onCreateForProject }: QuickCreateMenuProps) {
+  const canCreate = useCan("projects:tickets:create");
+  const hasProjects = projects.length > 0;
+
+  const handleCreateTaskForSingleProject = useCallback(() => {
+    const project = projects[0];
+    if (project) onCreateForProject(project.id);
+  }, [projects, onCreateForProject]);
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -234,14 +317,40 @@ function QuickCreateMenu({ onCreateProject }: { onCreateProject: () => void }) {
           <span>Create Project</span>
           <span className="ml-auto text-[10px] text-muted-foreground font-mono">C P</span>
         </DropdownMenuItem>
+        {canCreate && hasProjects ? (
+          <>
+            <DropdownMenuSeparator />
+            {projects.length === 1 ? (
+              <DropdownMenuItem onClick={handleCreateTaskForSingleProject} className="gap-2 cursor-pointer">
+                <ListPlus className="h-4 w-4 text-muted-foreground" />
+                <span>Create Task</span>
+                <span className="ml-auto text-[10px] text-muted-foreground font-mono">C T</span>
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger className="gap-2 cursor-pointer">
+                  <ListPlus className="h-4 w-4 text-muted-foreground" />
+                  <span>Create Task</span>
+                  <span className="ml-auto text-[10px] text-muted-foreground font-mono">C T</span>
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="w-56">
+                  {projects.map((project) => {
+                    const handleSelect = () => onCreateForProject(project.id);
+                    return (
+                      <DropdownMenuItem key={project.id} onClick={handleSelect} className="cursor-pointer">
+                        <span className="truncate">{project.name}</span>
+                        <span className="ml-auto text-[10px] text-muted-foreground font-mono shrink-0">
+                          {project.key}
+                        </span>
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+            )}
+          </>
+        ) : null}
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild className="gap-2 cursor-pointer">
-          <Link href="/projects/my-work">
-            <ListPlus className="h-4 w-4 text-muted-foreground" />
-            <span>Create Task</span>
-            <span className="ml-auto text-[10px] text-muted-foreground font-mono">C T</span>
-          </Link>
-        </DropdownMenuItem>
         <DropdownMenuItem asChild className="gap-2 cursor-pointer">
           <Link href="/projects/approvals">
             <CircleCheck className="h-4 w-4 text-muted-foreground" />
@@ -271,7 +380,10 @@ function PinnedNav() {
   );
 }
 
-function useKeyboardShortcuts(onCreateProject: () => void) {
+function useKeyboardShortcuts(
+  onCreateProject: () => void,
+  onCreateTask: () => void,
+) {
   const router = useRouter();
   const [pendingKey, setPendingKey] = useState<string | null>(null);
 
@@ -322,7 +434,7 @@ function useKeyboardShortcuts(onCreateProject: () => void) {
 
       if (pendingKey === "c" && e.key === "t") {
         setPendingKey(null);
-        router.push("/projects/my-work");
+        onCreateTask();
         return;
       }
 
@@ -334,11 +446,13 @@ function useKeyboardShortcuts(onCreateProject: () => void) {
       window.removeEventListener("keydown", handleKeyDown);
       clearTimeout(timer);
     };
-  }, [pendingKey, onCreateProject, router]);
+  }, [pendingKey, onCreateProject, onCreateTask, router]);
 }
 
 export function CommandCenterPage() {
   const [wizardOpen, setWizardOpen] = useState(false);
+  const { openCreateTicket } = useCommandPalette();
+  const canCreateTask = useCan("projects:tickets:create");
 
   const {
     data: projectsData,
@@ -356,7 +470,23 @@ export function CommandCenterPage() {
 
   const handleOpenWizard = useCallback(() => setWizardOpen(true), []);
 
-  useKeyboardShortcuts(handleOpenWizard);
+  const projects = useMemo(() => projectsData?.data ?? [], [projectsData]);
+  const workItems = useMemo(() => myWork ?? [], [myWork]);
+
+  const handleCreateForProject = useCallback(
+    (projectId: number) => {
+      openCreateTicket(projectId);
+    },
+    [openCreateTicket],
+  );
+
+  const handleCreateTaskShortcut = useCallback(() => {
+    if (!canCreateTask) return;
+    const projectId = resolveDefaultCreateProjectId(projects, workItems);
+    if (projectId !== null) openCreateTicket(projectId);
+  }, [canCreateTask, projects, workItems, openCreateTicket]);
+
+  useKeyboardShortcuts(handleOpenWizard, handleCreateTaskShortcut);
 
   const handleRetry = useCallback(() => {
     void refetchProjects();
@@ -380,7 +510,6 @@ export function CommandCenterPage() {
     [myWork],
   );
 
-  const projects = projectsData?.data ?? [];
   const isLoading = projectsLoading || workLoading;
   const isError = projectsError || workError;
 
@@ -418,7 +547,13 @@ export function CommandCenterPage() {
         title="Command Center"
         eyebrow="Projects"
         subtitle="Overview of your projects and active work"
-        actions={<QuickCreateMenu onCreateProject={handleOpenWizard} />}
+        actions={
+          <QuickCreateMenu
+            projects={projects}
+            onCreateProject={handleOpenWizard}
+            onCreateForProject={handleCreateForProject}
+          />
+        }
       >
         <div className="space-y-6">
           <StatCardGrid cols={3}>
@@ -454,16 +589,10 @@ export function CommandCenterPage() {
             title="My Work"
             actions={
               <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 text-xs gap-1 text-muted-foreground"
-                  asChild
-                >
-                  <Link href="/projects/my-work">
-                    Create Task
-                  </Link>
-                </Button>
+                <CreateTaskButton
+                  projects={projects}
+                  onCreateForProject={handleCreateForProject}
+                />
                 <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" asChild>
                   <Link href="/projects/my-work">
                     View all <ArrowRight className="h-3 w-3" />

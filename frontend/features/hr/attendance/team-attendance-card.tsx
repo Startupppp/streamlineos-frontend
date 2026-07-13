@@ -70,8 +70,8 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
       <CardHeader className="pb-3 pt-5">
         <div className="flex items-center justify-between gap-3">
           <CardTitle className="text-sm font-semibold flex items-center gap-2 text-foreground">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/10 shrink-0">
-              <Users className="h-4 w-4 text-blue-600" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 shrink-0">
+              <Users className="h-4 w-4 text-primary" />
             </div>
             Team Attendance — Today
           </CardTitle>

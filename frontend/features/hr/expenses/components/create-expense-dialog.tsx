@@ -443,7 +443,7 @@ export function CreateExpenseDialog({
           <div className="space-y-1.5">
             <label className="text-xs font-medium">Receipt</label>
             {!receiptFile && !receiptPreview ? (
-              <label className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg p-6 cursor-pointer hover:border-blue-500/50 hover:bg-blue-500/5 transition-colors">
+              <label className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg p-6 cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors">
                 <Upload className="h-7 w-7 text-muted-foreground/50 mb-1.5" />
                 <span className="text-sm font-medium text-foreground/70">
                   Upload receipt
@@ -471,8 +471,8 @@ export function CreateExpenseDialog({
                     className="h-14 w-14 object-cover rounded"
                   />
                 ) : (
-                  <div className="h-14 w-14 flex items-center justify-center bg-blue-500/10 rounded">
-                    <Receipt className="h-5 w-5 text-blue-600" />
+                  <div className="h-14 w-14 flex items-center justify-center bg-primary/10 rounded">
+                    <Receipt className="h-5 w-5 text-primary" />
                   </div>
                 )}
                 <div className="flex-1 min-w-0">

@@ -144,7 +144,7 @@ export default function LeadSourceReportPage() {
             <Card className="shadow-noir">
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <BarChart3 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  <BarChart3 className="h-4 w-4 text-primary" />
                   Source Attribution
                 </CardTitle>
               </CardHeader>

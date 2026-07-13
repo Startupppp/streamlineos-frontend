@@ -53,7 +53,7 @@ export function HrEmployeeTable({
           <Link href={`/hr/employees/${user.id}`} className="flex items-center gap-3">
             <Avatar className="h-8 w-8 shrink-0">
               <AvatarImage src={resolveImageUrl(user.image)} alt="" />
-              <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-xs font-bold">
+              <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
                 {initials}
               </AvatarFallback>
             </Avatar>

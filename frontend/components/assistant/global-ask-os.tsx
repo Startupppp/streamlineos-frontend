@@ -622,7 +622,7 @@ export function GlobalAskOs() {
           ASK OS
         </span>
         <ChevronDown
-          className={`h-2.5 w-2.5 shrink-0 text-blue-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          className={`h-2.5 w-2.5 shrink-0 text-primary-foreground/70 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
           aria-hidden
         />
       </motion.button>

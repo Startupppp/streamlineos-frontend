@@ -151,7 +151,7 @@ export default function WinLossAnalysisPage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <TrendingUp className="h-4 w-4 text-primary" />
                 Outcome Split
               </CardTitle>
             </CardHeader>

@@ -141,7 +141,7 @@ export default function BalanceSheetPage() {
             title="Assets"
             rows={report.assets}
             total={report.totalAssets}
-            accentClass="bg-blue-50 border-blue-200/60 dark:bg-blue-500/10 dark:border-blue-500/30"
+            accentClass="bg-primary/5 border-primary/20"
           />
           <Section
             title="Liabilities"

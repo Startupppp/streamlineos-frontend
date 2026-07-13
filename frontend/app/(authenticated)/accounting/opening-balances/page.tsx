@@ -116,9 +116,9 @@ export default function OpeningBalancesPage() {
         )}
 
         {!entry && (
-          <div className="flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2.5 dark:bg-blue-500/10 dark:border-blue-500/30">
-            <BookOpen className="h-4 w-4 text-blue-600 shrink-0 mt-0.5 dark:text-blue-400" />
-            <p className="text-xs text-blue-800 dark:text-blue-300">
+          <div className="flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2.5">
+            <BookOpen className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+            <p className="text-xs text-foreground">
               Enter your starting account balances as of the date you began using StreamlineOS.
             </p>
           </div>

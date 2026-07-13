@@ -188,7 +188,7 @@ export default function PipelinesPage() {
                         onClick={() => handleSelectPipeline(pipeline.id)}
                         className={cn(
                           "w-full text-left flex items-center gap-2 px-3 py-2.5 border-b border-border/50 transition-colors hover:bg-muted/40",
-                          isSelected && "border-l-2 border-l-blue-500 bg-blue-50/50 dark:bg-blue-500/10 pl-[10px]"
+                          isSelected && "border-l-2 border-l-primary bg-primary/5 pl-[10px]"
                         )}
                       >
                         <Badge

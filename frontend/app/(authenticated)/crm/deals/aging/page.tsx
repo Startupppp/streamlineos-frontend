@@ -67,7 +67,7 @@ const COLUMNS: DataTableColumn<AgingDealRow>[] = [
     cell: (r) => (
       <Link
         href={`/crm/deals/${r.id}`}
-        className="text-blue-600 dark:text-blue-400 hover:underline transition-colors truncate block max-w-[200px]"
+        className="text-primary hover:text-primary/80 hover:underline transition-colors truncate block max-w-[200px]"
       >
         {r.name}
       </Link>

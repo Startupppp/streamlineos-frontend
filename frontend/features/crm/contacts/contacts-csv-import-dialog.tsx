@@ -336,9 +336,9 @@ export function ContactsCsvImportDialog({
               <div
                 className={`h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-colors ${
                   step === s
-                    ? "bg-blue-500 text-white"
+                    ? "bg-primary text-primary-foreground"
                     : i < ["upload", "mapping", "preview"].indexOf(step)
-                      ? "bg-blue-500/30 text-blue-600"
+                      ? "bg-primary/30 text-primary"
                       : "bg-muted text-muted-foreground"
                 }`}
               >
@@ -354,7 +354,7 @@ export function ContactsCsvImportDialog({
             <div
               onDragOver={(e) => e.preventDefault()}
               onDrop={handleDrop}
-              className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-blue-500/50 transition-colors"
+              className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors"
             >
               <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
               <p className="text-sm font-medium mb-1">Drop your file here</p>
@@ -390,7 +390,7 @@ export function ContactsCsvImportDialog({
 
         {isParsing && (
           <div className="flex flex-col items-center justify-center py-12">
-            <div className="h-8 w-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-3" />
+            <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-3" />
             <p className="text-sm text-muted-foreground">
               Parsing {fileName}...
             </p>

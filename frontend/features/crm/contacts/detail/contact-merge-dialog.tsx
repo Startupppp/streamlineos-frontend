@@ -119,12 +119,12 @@ export function ContactMergeDialog({ pair, currentContactId, open, onOpenChange,
                     onClick={() => setPrimaryId(c.id)}
                     className={`rounded-lg border p-3 text-left transition-all ${
                       isPrimary
-                        ? "border-blue-500 bg-blue-50 dark:bg-blue-500/10 ring-1 ring-blue-500"
-                        : "border-border hover:border-blue-300"
+                        ? "border-primary bg-primary/5 ring-1 ring-primary"
+                        : "border-border hover:border-primary/50"
                     }`}
                   >
                     <div className="flex items-start gap-2">
-                      <div className="h-7 w-7 rounded-full bg-blue-100 dark:bg-blue-500/10 flex items-center justify-center text-[11px] font-semibold text-blue-700 dark:text-blue-300 shrink-0">
+                      <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-[11px] font-semibold text-primary shrink-0">
                         {c.name[0]?.toUpperCase() ?? "?"}
                       </div>
                       <div className="min-w-0 flex-1">

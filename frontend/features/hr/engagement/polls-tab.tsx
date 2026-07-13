@@ -127,7 +127,7 @@ function PollCard({
               </div>
               <div className="h-1.5 rounded-full bg-muted overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-blue-500 transition-all duration-500"
+                  className="h-full rounded-full bg-primary transition-all duration-500"
                   style={{ width: `${(c.count / maxCount) * 100}%` }}
                 />
               </div>
@@ -144,7 +144,7 @@ function PollCard({
                 type="button"
                 onClick={() => handleVote(idx)}
                 disabled={vote.isPending}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border hover:border-blue-400 hover:bg-blue-50 dark:hover:border-blue-500/50 dark:hover:bg-blue-500/10 text-xs text-left transition-colors"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border hover:border-primary/40 hover:bg-primary/5 text-xs text-left transition-colors"
               >
                 <Vote className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                 {option}

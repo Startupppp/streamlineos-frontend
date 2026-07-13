@@ -49,7 +49,7 @@ export default function CompensationPlanningPage() {
             All Cycles
           </Button>
         ) : canManage ? (
-          <Button onClick={() => setCreateOpen(true)} className="bg-blue-700 hover:bg-blue-800 text-white">
+          <Button onClick={() => setCreateOpen(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
             <Plus className="h-4 w-4 mr-2" />
             New Cycle
           </Button>
@@ -90,7 +90,7 @@ export default function CompensationPlanningPage() {
             </div>
           </div>
           <DialogFooter>
-            <LoadingButton isPending={createMut.isPending} onClick={handleCreate} className="bg-blue-700 hover:bg-blue-800 text-white w-full">
+            <LoadingButton isPending={createMut.isPending} onClick={handleCreate} className="bg-primary hover:bg-primary/90 text-primary-foreground w-full">
               Create Cycle
             </LoadingButton>
           </DialogFooter>

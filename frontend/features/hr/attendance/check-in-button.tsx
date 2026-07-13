@@ -204,7 +204,7 @@ export const TimerCard = memo(function TimerCard() {
 
   if (isLoading) {
     return (
-      <Card className="rounded-2xl border border-border border-l-4 border-l-blue-500 bg-card shadow-sm overflow-hidden">
+      <Card className="rounded-2xl border border-border border-l-4 border-l-primary bg-card shadow-sm overflow-hidden">
         <CardContent className="p-6 space-y-6">
           <div className="flex flex-col items-center gap-4">
             <div className="flex items-center gap-2">
@@ -223,11 +223,11 @@ export const TimerCard = memo(function TimerCard() {
   }
 
   return (
-    <Card className="rounded-2xl border border-border border-l-4 border-l-blue-500 bg-card shadow-sm overflow-hidden">
+    <Card className="rounded-2xl border border-border border-l-4 border-l-primary bg-card shadow-sm overflow-hidden">
       <CardHeader className="pb-3 pt-5">
         <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-          <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center">
-            <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+          <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center">
+            <Clock className="h-4 w-4 text-primary" />
           </div>
           Time Tracker
         </CardTitle>
@@ -248,7 +248,7 @@ export const TimerCard = memo(function TimerCard() {
             </span>
           </div>
 
-          <span className="text-2xl font-bold text-blue-500 animate-pulse mb-5">
+          <span className="text-2xl font-bold text-primary animate-pulse mb-5">
             :
           </span>
 
@@ -263,7 +263,7 @@ export const TimerCard = memo(function TimerCard() {
             </span>
           </div>
 
-          <span className="text-2xl font-bold text-blue-500 animate-pulse mb-5">
+          <span className="text-2xl font-bold text-primary animate-pulse mb-5">
             :
           </span>
 

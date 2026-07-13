@@ -25,7 +25,7 @@ export function EmployeeRow({ employee: emp, department }: EmployeeRowProps) {
         >
           <Avatar className="h-8 w-8 shrink-0">
             <AvatarImage src={resolveImageUrl(emp.image)} />
-            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-xs font-bold">
+            <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
               {displayName[0]?.toUpperCase()}
             </AvatarFallback>
           </Avatar>
@@ -49,7 +49,7 @@ export function EmployeeRow({ employee: emp, department }: EmployeeRowProps) {
       </TableCell>
       <TableCell>
         {department ? (
-          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800">
+          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-primary/10 text-foreground border-primary/30">
             {department}
           </span>
         ) : (

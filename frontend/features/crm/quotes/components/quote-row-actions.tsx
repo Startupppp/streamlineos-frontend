@@ -69,7 +69,7 @@ export function QuoteRowActions({
         </DropdownMenuItem>
         {canSend && (
           <DropdownMenuItem onClick={handleSend}>
-            <Send className="h-3.5 w-3.5 mr-2 text-blue-600" />
+            <Send className="h-3.5 w-3.5 mr-2 text-primary" />
             Send Quote
           </DropdownMenuItem>
         )}

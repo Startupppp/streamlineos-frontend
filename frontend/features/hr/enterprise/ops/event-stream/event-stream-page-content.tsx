@@ -127,7 +127,7 @@ export function EventStreamPageContent() {
         </TabsList>
 
         <TabsContent value="events">
-          <div className="mb-3 rounded-lg border border-blue-200 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/10 px-3 py-2 text-xs text-blue-700 dark:text-blue-300">
+          <div className="mb-3 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-xs text-foreground">
             This log is <strong>append-only</strong>. Events cannot be edited or deleted.
           </div>
           <DataTable

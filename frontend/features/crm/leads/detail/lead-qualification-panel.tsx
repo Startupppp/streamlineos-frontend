@@ -110,7 +110,7 @@ export function LeadQualificationPanel({ leadId, qualificationJson }: LeadQualif
           </div>
           <div className="mt-2 w-full h-1.5 rounded-full bg-muted overflow-hidden">
             <motion.div
-              className="h-full rounded-full bg-blue-500"
+              className="h-full rounded-full bg-primary"
               initial={{ width: 0 }}
               animate={{ width: `${(score / 4) * 100}%` }}
               transition={{ duration: 0.4, ease: "easeOut" }}
@@ -132,12 +132,12 @@ export function LeadQualificationPanel({ leadId, qualificationJson }: LeadQualif
                   onClick={handleCriterionClick}
                   className={`w-full flex items-center gap-3 p-2.5 rounded-md border transition-colors duration-150 text-left ${
                     checked
-                      ? "bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/30 hover:bg-blue-100 dark:hover:bg-blue-500/20"
+                      ? "bg-primary/5 border-primary/20 hover:bg-primary/10"
                       : "bg-card border-border hover:bg-muted"
                   }`}
                 >
                   {checked ? (
-                    <CheckCircle2 className="h-4 w-4 text-blue-600 shrink-0" />
+                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
                   ) : (
                     <Circle className="h-4 w-4 text-muted-foreground/40 shrink-0" />
                   )}

@@ -39,11 +39,11 @@ export function UpcomingEventsWidget() {
             key={ev.id}
             className="flex items-start gap-3 rounded-lg border border-border/60 px-3 py-2 hover:bg-muted/50 transition-colors"
           >
-            <div className="flex flex-col items-center text-center rounded-md bg-blue-500/10 px-2 py-1 min-w-[42px] shrink-0">
-              <span className="text-[10px] font-medium text-blue-600 uppercase">
+            <div className="flex flex-col items-center text-center rounded-md bg-primary/10 px-2 py-1 min-w-[42px] shrink-0">
+              <span className="text-[10px] font-medium text-primary uppercase">
                 {format(new Date(ev.startTime), "MMM")}
               </span>
-              <span className="text-lg font-bold leading-none text-blue-600">
+              <span className="text-lg font-bold leading-none text-primary">
                 {format(new Date(ev.startTime), "d")}
               </span>
             </div>

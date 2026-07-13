@@ -108,7 +108,7 @@ function CopyChip({
 
   const content = (
     <>
-      <Icon className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+      <Icon className="h-3.5 w-3.5 text-primary shrink-0" />
       <div className="min-w-0 flex-1">
         <p className="text-[10px] text-muted-foreground leading-none mb-0.5">
           {label}

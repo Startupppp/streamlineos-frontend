@@ -185,7 +185,7 @@ function buildBgvColumns(
       header: "Vendor",
       cell: (bgv) =>
         bgv.provider ? (
-          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border-blue-200 dark:border-blue-800">
+          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-primary/10 text-foreground border-primary/20">
             <Building2 className="h-2.5 w-2.5" />
             {bgv.provider}
           </span>

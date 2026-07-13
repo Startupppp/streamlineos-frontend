@@ -248,7 +248,7 @@ export function LinkElement({ element, children, ...props }: PlateElementProps) 
     <PlateElement {...props} element={element}>
       <a
         href={element['url'] as string}
-        className="text-blue-600 dark:text-blue-400 underline underline-offset-2 cursor-pointer"
+        className="text-primary hover:text-primary/80 underline underline-offset-2 cursor-pointer"
       >
         {children}
       </a>

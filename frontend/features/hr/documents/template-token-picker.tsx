@@ -133,7 +133,7 @@ export function TemplateTokenPicker({
                 {detectedVariables.map((v) => (
                   <span
                     key={v}
-                    className="inline-flex items-center gap-1 text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full border bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-700"
+                    className="inline-flex items-center gap-1 text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full border bg-primary/10 text-foreground border-primary/30"
                   >
                     {`{{${v}}}`}
                   </span>

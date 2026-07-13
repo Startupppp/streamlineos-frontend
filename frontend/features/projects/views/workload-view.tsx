@@ -80,7 +80,7 @@ function isTicketOverdue(ticket: KanbanTicket): boolean {
 }
 
 const STATS = [
-  { id: "all" as StatFilter, label: "Total Tickets", icon: TrendingUp, color: "text-blue-600 dark:text-blue-400" },
+  { id: "all" as StatFilter, label: "Total Tickets", icon: TrendingUp, color: "text-primary" },
   { id: "assigned" as StatFilter, label: "Assigned", icon: CheckCircle2, color: "text-emerald-600 dark:text-emerald-400" },
   { id: "unassigned" as StatFilter, label: "Unassigned", icon: Users, color: "text-amber-600 dark:text-amber-400" },
   { id: "over-capacity" as StatFilter, label: "Over Capacity", icon: AlertTriangle, color: "text-red-600 dark:text-red-400" },
@@ -237,7 +237,7 @@ export const WorkloadView = memo(function WorkloadView({
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                     {format(day, "EEE")}
                   </p>
-                  <p className={cn("text-[11px]", isSameDay(day, new Date()) ? "text-blue-600 dark:text-blue-400 font-bold" : "text-muted-foreground")}>
+                  <p className={cn("text-[11px]", isSameDay(day, new Date()) ? "text-primary font-bold" : "text-muted-foreground")}>
                     {format(day, "d")}
                   </p>
                 </div>

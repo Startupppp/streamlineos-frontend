@@ -138,7 +138,7 @@ function CategoryRow({
       onFocus={onFocus}
       onKeyDown={onKeyDown}
       className={cn(
-        "flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-xs outline-none transition-colors motion-reduce:transition-none",
+        "flex cursor-default select-none items-center gap-1.5 rounded-sm px-1.5 py-1 text-xs outline-none transition-colors motion-reduce:transition-none",
         hovered
           ? "bg-accent text-accent-foreground"
           : "hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent",
@@ -410,7 +410,7 @@ export function FilterCommandMenu({
         align="start"
         className={cn(
           "w-auto max-w-[min(520px,var(--radix-popover-content-available-width))] overflow-hidden p-0",
-          datesExpanded ? "min-w-[280px]" : "min-w-[200px]",
+          datesExpanded ? "min-w-[240px]" : "min-w-0",
         )}
         onInteractOutside={handleInteractOutside}
       >
@@ -430,14 +430,17 @@ export function FilterCommandMenu({
           >
             <div
               className={cn(
-                "flex min-w-0 flex-col",
-                datesExpanded ? "min-w-[280px]" : "min-w-[200px]",
+                "flex w-fit shrink-0 flex-col",
+                datesExpanded ? "min-w-[240px]" : "min-w-[148px]",
               )}
             >
-              <Command shouldFilter={false} className="h-auto shrink-0">
+              <Command
+                shouldFilter={false}
+                className="h-auto shrink-0 [&_[cmdk-input-wrapper]]:h-8 [&_[cmdk-input-wrapper]]:px-2"
+              >
                 <CommandInput
                   placeholder="Filter by..."
-                  className="h-9 text-xs"
+                  className="h-8 text-xs"
                   value={search}
                   onValueChange={handleSearchChange}
                 />
@@ -446,7 +449,7 @@ export function FilterCommandMenu({
                 ref={categoryListRef}
                 role="menu"
                 aria-label="Filter categories"
-                className="overflow-y-auto p-1"
+                className="overflow-y-auto px-0.5 py-0.5"
               >
                 {visibleCategories.map((cat) => {
                   const isHovered = hoveredCategory === cat.key;

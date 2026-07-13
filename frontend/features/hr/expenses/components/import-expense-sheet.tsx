@@ -234,7 +234,7 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
       <div className="space-y-4">
         <div className="rounded-lg border border-dashed border-border p-4 space-y-3">
             <div className="flex items-center gap-2">
-              <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-blue-600 dark:text-blue-400">1</div>
+              <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">1</div>
               <Label className="text-sm font-semibold">Download Template</Label>
             </div>
             <p className="text-xs text-muted-foreground pl-8">
@@ -264,13 +264,13 @@ export function ImportExpenseSheet({ open, onOpenChange, onSuccess }: ImportExpe
 
           <div className="rounded-lg border border-dashed border-border p-4 space-y-3">
             <div className="flex items-center gap-2">
-              <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-blue-600 dark:text-blue-400">2</div>
+              <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">2</div>
               <Label className="text-sm font-semibold">Upload File</Label>
             </div>
 
             {!file ? (
               <div className="pl-8 cursor-pointer min-h-[92px]" onClick={handleClickUploadArea}>
-                <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 p-6 transition-colors hover:border-blue-500/50 hover:bg-primary/5">
+                <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 p-6 transition-colors hover:border-primary/50 hover:bg-primary/5">
                   <FileSpreadsheet className="h-8 w-8 text-muted-foreground/50 mb-2" />
                   <p className="text-sm font-medium text-foreground">Click to upload</p>
                   <p className="text-xs text-muted-foreground mt-1">CSV — Max 5MB</p>

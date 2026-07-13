@@ -74,7 +74,7 @@ export function GeneratePODialog({ suggestions, open, onClose }: GeneratePODialo
                 PO #{result.purchaseOrderNumber} created for {group.vendorName}.{" "}
                 <Link
                   href="/inventory/purchase-orders"
-                  className="underline text-blue-600"
+                  className="underline text-primary"
                 >
                   View POs
                 </Link>

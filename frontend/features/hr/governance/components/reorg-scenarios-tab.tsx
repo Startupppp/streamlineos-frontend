@@ -91,21 +91,21 @@ export function ReorgScenariosTab() {
   return (
     <>
       {selectedScenarioId && (
-        <div className="mb-4 border border-blue-200 bg-blue-50 rounded-lg p-4 dark:bg-blue-500/10 dark:border-blue-500/30">
+        <div className="mb-4 border border-primary/20 bg-primary/5 rounded-lg p-4">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-sm text-blue-900 dark:text-blue-300">Simulation Preview</h3>
-            <Button variant="ghost" size="sm" onClick={handleCloseSimulation} className="text-blue-700 dark:text-blue-300 h-6 px-2">
+            <h3 className="font-semibold text-sm text-foreground">Simulation Preview</h3>
+            <Button variant="ghost" size="sm" onClick={handleCloseSimulation} className="text-muted-foreground h-6 px-2">
               Close
             </Button>
           </div>
           {simLoading ? (
             <Skeleton className="h-16 w-full rounded" />
           ) : simulation ? (
-            <div className="space-y-2 text-sm text-blue-800 dark:text-blue-300">
+            <div className="space-y-2 text-sm text-foreground">
               <p className="font-medium">{simulation.scenarioName}</p>
               <p>Affected positions: <strong>{simulation.projectedEffect.affectedPositions}</strong></p>
               <p>Affected reporting lines: <strong>{simulation.projectedEffect.affectedReportingLines}</strong></p>
-              <p className="text-xs text-blue-600 dark:text-blue-400 mt-2 italic">{simulation.warning}</p>
+              <p className="text-xs text-muted-foreground mt-2 italic">{simulation.warning}</p>
             </div>
           ) : null}
         </div>

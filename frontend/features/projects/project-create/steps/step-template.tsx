@@ -47,7 +47,7 @@ export function StepTemplate({ draft, updateDraft }: StepSharedProps) {
       </p>
 
       {draft.templateId !== null && (
-        <div className="flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 p-3 text-xs text-blue-700 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-300">
+        <div className="flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs text-foreground">
           <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
           <span>Key and client fields from Basics are not applied when using a template.</span>
         </div>

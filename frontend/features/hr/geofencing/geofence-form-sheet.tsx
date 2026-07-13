@@ -152,7 +152,7 @@ export function GeofenceFormSheet({ open, onOpenChange, fence }: Props) {
                   <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
                     Radius
                   </FormLabel>
-                  <span className="text-sm font-semibold text-blue-600">{radiusValue}m</span>
+                  <span className="text-sm font-semibold text-primary">{radiusValue}m</span>
                 </div>
                 <FormControl>
                   <Slider

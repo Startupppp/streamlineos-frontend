@@ -47,9 +47,9 @@ function isTypeFilter(value: string): value is TypeFilter {
 }
 
 const TYPE_BADGE_CLASSES: Record<string, string> = {
-  ASSET: "border-blue-500/30 text-blue-700 bg-blue-500/5 dark:text-blue-300",
+  ASSET: "border-primary/30 text-foreground bg-primary/5",
   LIABILITY: "border-orange-500/30 text-orange-700 bg-orange-500/5 dark:text-orange-300",
-  EQUITY: "border-blue-500/30 text-blue-700 bg-blue-500/5 dark:text-blue-300",
+  EQUITY: "border-primary/30 text-foreground bg-primary/5",
   INCOME: "border-emerald-500/30 text-emerald-700 bg-emerald-500/5 dark:text-emerald-300",
   EXPENSE: "border-amber-500/30 text-amber-700 bg-amber-500/5 dark:text-amber-300",
 };

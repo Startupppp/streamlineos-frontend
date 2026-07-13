@@ -25,7 +25,7 @@ function buildTimeline(quote: Quote): TimelineEvent[] {
       label: "Sent",
       date: quote.sentAt,
       icon: <Send className="h-3.5 w-3.5" />,
-      className: "text-blue-600",
+      className: "text-primary",
     });
   }
 
@@ -79,7 +79,7 @@ function buildTimeline(quote: Quote): TimelineEvent[] {
       label: "Converted to Invoice",
       date: null,
       icon: <FileText className="h-3.5 w-3.5" />,
-      className: "text-blue-600",
+      className: "text-primary",
     });
   }
 

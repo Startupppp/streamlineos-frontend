@@ -85,7 +85,7 @@ export function CasesPageContent() {
       key: "caseNumber",
       header: "Case #",
       cell: (row) => (
-        <span className="font-mono text-xs font-medium text-blue-700">{row.caseNumber}</span>
+        <span className="font-mono text-xs font-medium text-primary">{row.caseNumber}</span>
       ),
     },
     {
@@ -200,7 +200,7 @@ export function CasesPageContent() {
               onClick={() => { setActiveTab(tab); setPage(1); }}
               className={`px-3 py-2 text-xs font-medium capitalize border-b-2 transition-colors ${
                 activeTab === tab
-                  ? "border-blue-600 text-blue-600"
+                  ? "border-primary text-primary"
                   : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >

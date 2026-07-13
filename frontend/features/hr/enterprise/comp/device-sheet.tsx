@@ -128,7 +128,7 @@ export function DeviceSheet({ open, onOpenChange, device }: Props) {
             </div>
 
             <SheetFooter className="px-6 py-4 border-t">
-              <LoadingButton type="submit" isPending={isPending} className="bg-blue-700 hover:bg-blue-800 text-white w-full">
+              <LoadingButton type="submit" isPending={isPending} className="bg-primary hover:bg-primary/90 text-primary-foreground w-full">
                 {isEdit ? "Save Changes" : "Add Device"}
               </LoadingButton>
             </SheetFooter>

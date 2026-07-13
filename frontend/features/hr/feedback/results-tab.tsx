@@ -83,13 +83,13 @@ export function ResultsTab() {
               <p className="text-xs text-muted-foreground mt-1">Completed</p>
             </div>
             <div className="bg-muted rounded-xl p-4 text-center">
-              <p className="text-2xl font-bold text-blue-600">
+              <p className="text-2xl font-bold text-primary">
                 {results.avgRating !== undefined ? results.avgRating.toFixed(1) : "—"}
               </p>
               <p className="text-xs text-muted-foreground mt-1">Avg Rating</p>
             </div>
             <div className="bg-muted rounded-xl p-4 text-center">
-              <p className="text-2xl font-bold text-blue-600">{completionPct}%</p>
+              <p className="text-2xl font-bold text-primary">{completionPct}%</p>
               <p className="text-xs text-muted-foreground mt-1">Completion</p>
             </div>
           </div>
@@ -100,7 +100,7 @@ export function ResultsTab() {
             </div>
             <div className="h-2 bg-muted rounded-full overflow-hidden">
               <div
-                className="h-full bg-blue-600 rounded-full transition-all duration-700"
+                className="h-full bg-primary rounded-full transition-all duration-700"
                 style={{ width: `${completionPct}%` }}
               />
             </div>

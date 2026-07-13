@@ -44,7 +44,7 @@ function VersionRow({
   return (
     <div
       className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border border-border ${
-        isActive ? "bg-blue-50/50 dark:bg-blue-500/10 border-l-2 border-l-blue-500" : "bg-card"
+        isActive ? "bg-primary/5 border-l-2 border-l-primary" : "bg-card"
       }`}
     >
       <span className="text-xs font-mono text-muted-foreground w-8 shrink-0">v{item.version}</span>

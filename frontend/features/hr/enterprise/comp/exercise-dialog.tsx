@@ -78,7 +78,7 @@ export function ExerciseDialog({ open, onOpenChange, grantId }: Props) {
             </div>
 
             <DialogFooter>
-              <LoadingButton type="submit" isPending={exerciseMut.isPending} className="bg-blue-700 hover:bg-blue-800 text-white w-full">
+              <LoadingButton type="submit" isPending={exerciseMut.isPending} className="bg-primary hover:bg-primary/90 text-primary-foreground w-full">
                 Record Exercise
               </LoadingButton>
             </DialogFooter>
