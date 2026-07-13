@@ -165,7 +165,7 @@ export function QuoteDetailContent({ quote, subtotal }: QuoteDetailContentProps)
             <CardContent className="px-4 py-3 space-y-2">
               {quote.sentAt && (
                 <div className="flex items-center gap-2">
-                  <Send className="h-3 w-3 text-blue-500 shrink-0" />
+                  <Send className="h-3 w-3 text-primary shrink-0" />
                   <div>
                     <p className="text-[10px] text-muted-foreground">Sent</p>
                     <p className="text-xs">{formatDate(quote.sentAt)}</p>

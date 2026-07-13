@@ -111,7 +111,7 @@ export function MyReviewsTab() {
           >
             <div className="space-y-2">
               <p className="font-medium text-foreground">
-                Review for <span className="text-blue-600 dark:text-blue-400">{req.subjectId}</span>
+                Review for <span className="text-primary">{req.subjectId}</span>
               </p>
               <div className="flex gap-2 flex-wrap">
                 <Badge className={`text-xs ${RELATIONSHIP_COLORS[req.relationship] ?? "bg-muted text-muted-foreground"}`}>

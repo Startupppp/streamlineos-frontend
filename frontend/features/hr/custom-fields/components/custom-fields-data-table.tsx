@@ -88,7 +88,7 @@ export function CustomFieldsDataTable({ entityType, fields }: CustomFieldsDataTa
       cell: (row) => (
         <div className="flex gap-1.5 flex-wrap">
           {row.isRequired && (
-            <Badge variant="outline" className="text-[11px] text-blue-700 border-blue-200">required</Badge>
+            <Badge variant="outline" className="text-[11px] text-primary border-primary/30">required</Badge>
           )}
           {row.isSensitive && (
             <Badge variant="outline" className="text-[11px] text-amber-700 border-amber-200 gap-0.5">

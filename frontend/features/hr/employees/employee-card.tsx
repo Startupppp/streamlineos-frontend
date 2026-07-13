@@ -29,7 +29,7 @@ export function EmployeeCard({ employee: emp, department }: EmployeeCardProps) {
         <CardContent className="p-4 flex flex-col items-center text-center gap-3">
           <Avatar className="h-16 w-16 mt-1 ring-2 ring-border transition-transform duration-200 group-hover:scale-105">
             <AvatarImage src={resolveImageUrl(emp.image)} />
-            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-lg font-bold">
+            <AvatarFallback className="bg-primary/10 text-primary text-lg font-bold">
               {initial}
             </AvatarFallback>
           </Avatar>
@@ -44,7 +44,7 @@ export function EmployeeCard({ employee: emp, department }: EmployeeCardProps) {
             )}
           </div>
           {department && (
-            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800 max-w-full">
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-primary/10 text-foreground border-primary/30 max-w-full">
               <Building2 className="h-3 w-3 shrink-0" />
               <span className="truncate">{department}</span>
             </span>

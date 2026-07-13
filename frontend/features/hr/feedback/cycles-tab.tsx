@@ -297,7 +297,7 @@ export function CyclesTab() {
                     <Badge className={`text-xs ${CYCLE_STATUS_STYLES[cycle.status] ?? "bg-muted text-muted-foreground"}`}>
                       {cycle.status}
                     </Badge>
-                    <Badge className="text-xs bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">{cycle.type}</Badge>
+                    <Badge className="text-xs bg-primary/10 text-foreground border-primary/30">{cycle.type}</Badge>
                     {cycle.isAnonymous && (
                       <Badge className="text-xs bg-muted text-muted-foreground">Anonymous</Badge>
                     )}

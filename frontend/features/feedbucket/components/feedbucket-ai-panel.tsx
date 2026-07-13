@@ -113,7 +113,7 @@ function AiAnalysisResult({ analysis }: AiAnalysisResultProps) {
         >
           {analysis.priority.charAt(0) + analysis.priority.slice(1).toLowerCase()}
         </Badge>
-        <Badge variant="outline" className="text-xs font-medium bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30">
+        <Badge variant="outline" className="text-xs font-medium bg-primary/10 text-foreground border-primary/30">
           {TICKET_TYPE_LABELS[analysis.suggestedTicketType] ?? analysis.suggestedTicketType}
         </Badge>
         <span className="text-xs text-muted-foreground ml-auto">{confidencePct}% confidence</span>
@@ -369,7 +369,7 @@ export function FeedbucketAiPanel({
         {projectId && (
           <Link
             href={`/projects/${projectId}/tickets/${ticketId}`}
-            className="flex items-center gap-1 text-sm text-blue-600 hover:underline"
+            className="flex items-center gap-1 text-sm text-primary hover:text-primary/80 hover:underline"
           >
             View ticket
             <ExternalLink className="h-3.5 w-3.5" aria-hidden />

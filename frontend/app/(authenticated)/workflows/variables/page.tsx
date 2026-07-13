@@ -73,7 +73,7 @@ function VariableCard({ variable, index, onDelete }: VariableCardProps) {
               <div className="flex items-center gap-3 mt-1 flex-wrap">
                 <Link
                   href={`/workflows/${variable.workflowId}`}
-                  className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-violet-600 transition-colors"
+                  className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <Link2 className="h-3 w-3" />
                   {variable.workflowName}

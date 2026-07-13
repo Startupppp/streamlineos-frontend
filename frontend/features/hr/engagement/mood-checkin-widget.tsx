@@ -42,7 +42,7 @@ export function MoodCheckinWidget() {
   return (
     <div className="bg-card border border-border rounded-xl p-4 space-y-3">
       <div className="flex items-center gap-2">
-        <Sparkles className="h-4 w-4 text-blue-500" />
+        <Sparkles className="h-4 w-4 text-primary" />
         <p className="text-sm font-medium text-foreground">How are you feeling today?</p>
       </div>
       <div className="flex items-center gap-2 justify-center">
@@ -55,8 +55,8 @@ export function MoodCheckinWidget() {
             disabled={checkin.isPending}
             className={`flex flex-col items-center gap-0.5 px-3 py-2 rounded-lg border transition-all duration-150 text-center
               ${currentMood === value
-                ? "border-blue-500 bg-blue-50 dark:bg-blue-500/10 shadow-sm"
-                : "border-border hover:border-blue-300 hover:bg-muted"
+                ? "border-primary bg-primary/10 shadow-sm"
+                : "border-border hover:border-primary/40 hover:bg-muted"
               }`}
           >
             <span className="text-xl leading-none">{emoji}</span>

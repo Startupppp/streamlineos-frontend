@@ -116,7 +116,7 @@ function DocumentsList({ caseId }: { caseId: number }) {
           rel="noreferrer"
           className="flex items-center gap-2 rounded-md border p-2.5 text-sm hover:bg-muted/50 transition-colors"
         >
-          <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
+          <FileText className="h-4 w-4 text-primary shrink-0" />
           <span className="flex-1 truncate">{doc.name}</span>
           {doc.restricted && (
             <Lock className="h-3 w-3 text-amber-600 dark:text-amber-400 shrink-0" />
@@ -175,7 +175,7 @@ export function CaseDetailSheet({ caseId, open, onOpenChange }: Props) {
                   className={cn(
                     "px-3 py-2 text-xs font-medium capitalize border-b-2 transition-colors",
                     activeTab === tab
-                      ? "border-blue-600 text-blue-600"
+                      ? "border-primary text-primary"
                       : "border-transparent text-muted-foreground hover:text-foreground",
                   )}
                 >

@@ -114,7 +114,7 @@ export function MentorshipTab() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-            <LoadingButton className="bg-blue-700 hover:bg-blue-800 text-white" isPending={create.isPending} onClick={handleCreate}>Create</LoadingButton>
+            <LoadingButton className="bg-primary hover:bg-primary/90 text-primary-foreground" isPending={create.isPending} onClick={handleCreate}>Create</LoadingButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>

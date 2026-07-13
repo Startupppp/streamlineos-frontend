@@ -132,7 +132,7 @@ export function ResignationCard({
             {r.noticePeriodDays && (
               <Badge
                 variant="outline"
-                className="text-[9px] font-semibold hidden sm:inline-flex bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-800"
+                className="text-[9px] font-semibold hidden sm:inline-flex bg-primary/10 text-primary border-primary/20"
               >
                 {r.noticePeriodDays}d notice
               </Badge>

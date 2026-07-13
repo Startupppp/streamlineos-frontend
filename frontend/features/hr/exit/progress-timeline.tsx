@@ -46,7 +46,7 @@ export function ProgressTimeline({ id }: { id: number }) {
                   step.status === "completed"
                     ? "bg-emerald-500 border-emerald-500"
                     : step.status === "current"
-                    ? "bg-background border-blue-500 ring-2 ring-blue-500/30"
+                    ? "bg-background border-primary ring-2 ring-primary/30"
                     : "bg-background border-input"
                 )}
               />

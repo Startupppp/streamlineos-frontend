@@ -69,7 +69,7 @@ function buildColumns(
       cell: (row): ReactNode => (
         <span className={cn(
           "inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium",
-          "bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+          "bg-primary/10 text-foreground border border-primary/30",
         )}>
           {eventMap[row.trigger] ?? row.trigger}
         </span>

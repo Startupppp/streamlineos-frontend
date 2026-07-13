@@ -615,7 +615,7 @@ export function GlobalAskOs() {
         aria-label={
           open ? "Minimize Ask OS assistant" : "Open Ask OS assistant"
         }
-        className={`flex h-6 w-full items-center gap-1 bg-primary px-1.5 py-0 text-primary-foreground shadow-lg ring-1 ring-inset ring-blue-500/20 transition-colors hover:bg-primary/90 ${open ? "" : "rounded-tl-lg"}`}
+        className={`flex h-6 w-full items-center gap-1 bg-primary px-1.5 py-0 text-primary-foreground shadow-lg ring-1 ring-inset ring-primary/20 transition-colors hover:bg-primary/90 ${open ? "" : "rounded-tl-lg"}`}
       >
         <AnimatedLogo size={13} gradient />
         <span className="flex-1 text-left text-[9px] font-semibold leading-none tracking-wide">

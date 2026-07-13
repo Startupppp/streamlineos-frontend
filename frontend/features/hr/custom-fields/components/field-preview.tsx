@@ -27,7 +27,7 @@ export function FieldPreview({
       <div className="flex items-center gap-1.5 flex-wrap">
         <span className="text-sm font-medium">{name || "Untitled"}</span>
         {isRequired && (
-          <Badge variant="outline" className="text-[10px] h-4 px-1 text-blue-700 border-blue-200">
+          <Badge variant="outline" className="text-[10px] h-4 px-1 text-primary border-primary/30">
             required
           </Badge>
         )}

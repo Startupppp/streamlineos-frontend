@@ -103,7 +103,7 @@ export function ContactActionsMenu({
           Edit
         </DropdownMenuItem>
         <DropdownMenuItem disabled={isEnrichPending} onClick={handleEnrich}>
-          <Sparkles className="h-3.5 w-3.5 mr-2 text-blue-600" />
+          <Sparkles className="h-3.5 w-3.5 mr-2 text-primary" />
           Enrich with AI
         </DropdownMenuItem>
         {onMerge && (

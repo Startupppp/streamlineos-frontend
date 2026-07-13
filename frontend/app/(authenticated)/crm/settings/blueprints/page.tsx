@@ -116,7 +116,7 @@ export default function BlueprintsPage() {
                       className={cn(
                         "w-full text-left px-3 py-2.5 flex items-center gap-2 hover:bg-muted/40 transition-colors border-l-2",
                         selectedId === bp.id
-                          ? "border-l-blue-500 bg-blue-50/50 dark:bg-blue-500/10"
+                          ? "border-l-primary bg-primary/5"
                           : "border-l-transparent"
                       )}
                     >

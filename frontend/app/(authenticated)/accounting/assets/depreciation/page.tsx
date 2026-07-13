@@ -306,7 +306,7 @@ export default function DepreciationRunsPage() {
                 <p className="text-xs text-destructive">{form.formState.errors.periodKey.message}</p>
               )}
             </div>
-            <div className="rounded-md bg-blue-50/70 border border-blue-100 px-3 py-2.5 text-xs text-blue-700 dark:bg-blue-500/10 dark:border-blue-500/30 dark:text-blue-300">
+            <div className="rounded-md bg-primary/5 border border-primary/20 px-3 py-2.5 text-xs text-foreground">
               This will create depreciation journal entries for all active assets in the specified period.
               Ensure the period has not been run previously.
             </div>

@@ -94,9 +94,9 @@ export function CompCycleDetail({ cycleId, canManage }: Props) {
           <p className="text-sm font-semibold mb-3">Merit Matrix</p>
           <div className="grid grid-cols-3 gap-2">
             {Object.entries(cycle.meritMatrix).map(([rating, pct]) => (
-              <div key={rating} className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/30 text-center">
+              <div key={rating} className="p-2 rounded-lg bg-primary/5 text-center">
                 <p className="text-xs text-muted-foreground">{rating}</p>
-                <p className="text-sm font-bold text-blue-700 dark:text-blue-400">{pct}%</p>
+                <p className="text-sm font-bold text-primary">{pct}%</p>
               </div>
             ))}
           </div>
@@ -116,7 +116,7 @@ export function CompCycleDetail({ cycleId, canManage }: Props) {
             columns={[
               { key: "user", header: "Employee", cell: (r) => <span className="font-medium text-sm">{r.userId}</span> },
               { key: "current", header: "Current Salary", cell: (r) => formatCents(r.currentSalaryCents) },
-              { key: "increase", header: "Increase", cell: (r) => <span className="text-blue-700 dark:text-blue-400 font-medium">{formatCents(r.recommendedIncreaseCents)}</span> },
+              { key: "increase", header: "Increase", cell: (r) => <span className="text-primary font-medium">{formatCents(r.recommendedIncreaseCents)}</span> },
               { key: "calibrated", header: "Calibrated", cell: (r) => formatCents(r.hrCalibratedCents) },
               {
                 key: "status",

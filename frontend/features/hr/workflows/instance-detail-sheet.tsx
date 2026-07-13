@@ -48,7 +48,7 @@ const STATUS_CONFIG: Record<HrWorkflowInstanceStatus, { label: string; variant: 
 const ACTION_ICONS: Record<HrWorkflowAction, ReactNode> = {
   approved: <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />,
   rejected: <XCircle className="h-3.5 w-3.5 text-destructive" />,
-  commented: <MessageSquare className="h-3.5 w-3.5 text-blue-500" />,
+  commented: <MessageSquare className="h-3.5 w-3.5 text-primary" />,
   escalated: <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />,
   reassigned: <User className="h-3.5 w-3.5 text-purple-500" />,
   cancelled: <XCircle className="h-3.5 w-3.5 text-muted-foreground" />,

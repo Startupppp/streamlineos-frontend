@@ -41,8 +41,8 @@ const columns: DataTableColumn<LetterRender>[] = [
     header: "Template",
     cell: (letter) => (
       <div className="flex items-center gap-2">
-        <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-500/10 flex items-center justify-center shrink-0">
-          <FileText className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+        <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+          <FileText className="h-3.5 w-3.5 text-primary" />
         </div>
         <span className="text-sm font-medium text-foreground">{letter.templateName}</span>
       </div>
