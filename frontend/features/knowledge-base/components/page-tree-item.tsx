@@ -241,7 +241,7 @@ const PageTreeItem = memo(function PageTreeItemInner({
               "absolute left-0 top-1/2 -translate-y-1/2 h-4 w-[3px] rounded-r-full transition-opacity",
               isActive
                 ? "bg-blue-600 opacity-100 dark:bg-blue-500"
-                : "bg-slate-400 opacity-0 group-hover:opacity-100 dark:bg-slate-500",
+                : "bg-muted-foreground/50 opacity-0 group-hover:opacity-100",
             )}
           />
           <button

@@ -82,8 +82,8 @@ function buildAssetReturnColumns(
       header: "Asset",
       cell: (ar) => (
         <div className="flex items-center gap-2.5">
-          <div className="h-7 w-7 rounded-lg bg-slate-100 dark:bg-slate-950/40 flex items-center justify-center shrink-0">
-            <Laptop className="h-3.5 w-3.5 text-slate-600 dark:text-slate-400" />
+          <div className="h-7 w-7 rounded-lg bg-muted flex items-center justify-center shrink-0">
+            <Laptop className="h-3.5 w-3.5 text-muted-foreground" />
           </div>
           <div className="min-w-0">
             <p className="text-sm font-semibold text-foreground truncate">{ar.assetName}</p>

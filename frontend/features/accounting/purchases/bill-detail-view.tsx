@@ -12,7 +12,7 @@ const STATUS_CLASS: Record<PurchaseBillStatus, string> = {
   POSTED: "bg-blue-50 text-blue-700 border-blue-200/70",
   PARTIALLY_PAID: "bg-sky-50 text-sky-700 border-sky-200/70",
   PAID: "bg-emerald-50 text-emerald-700 border-emerald-200/70",
-  CANCELLED: "bg-slate-100 text-slate-500 border-slate-200/70",
+  CANCELLED: "bg-muted text-muted-foreground border-border",
 };
 
 const STATUS_LABEL: Record<PurchaseBillStatus, string> = {

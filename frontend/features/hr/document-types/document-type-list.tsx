@@ -123,7 +123,7 @@ export function DocumentTypeList({
                     ? dt.isMandatory
                       ? "bg-amber-500"
                       : "bg-emerald-500"
-                    : "bg-slate-300 dark:bg-slate-600",
+                    : "bg-muted-foreground/30",
                 )}
               />
               <div>
@@ -147,7 +147,7 @@ export function DocumentTypeList({
               Required
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-700">
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-700">
               Optional
             </span>
           ),
@@ -162,7 +162,7 @@ export function DocumentTypeList({
               Active
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-700">
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-700">
               Inactive
             </span>
           );
@@ -186,7 +186,7 @@ export function DocumentTypeList({
               (dt.applicableRoles ?? []).map((r) => (
                 <span
                   key={r}
-                  className="inline-flex items-center text-[9px] font-semibold px-1.5 py-0.5 rounded-full border bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-700"
+                  className="inline-flex items-center text-[9px] font-semibold px-1.5 py-0.5 rounded-full border bg-muted text-muted-foreground border-border dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-700"
                 >
                   {r}
                 </span>

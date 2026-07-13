@@ -40,7 +40,7 @@ const STATUS_LABELS: Record<TicketStatus, string> = {
 };
 
 const STATUS_COLORS: Record<TicketStatus, string> = {
-  TODO: "bg-slate-100 text-slate-600",
+  TODO: "bg-muted text-muted-foreground dark:bg-slate-800/40 dark:text-slate-400",
   IN_PROGRESS: "bg-blue-100 text-blue-600",
   IN_REVIEW: "bg-amber-100 text-amber-700",
   DONE: "bg-green-100 text-green-700",

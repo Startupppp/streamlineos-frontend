@@ -85,7 +85,7 @@ export const CandidateSheet = memo(function CandidateSheet({
                   </span>
                 )}
                 {candidate.source && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800/60 dark:text-slate-400 dark:border-slate-700">
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border dark:bg-slate-800/60 dark:text-slate-400 dark:border-slate-700">
                     {candidate.source}
                   </span>
                 )}
@@ -234,10 +234,10 @@ export const CandidateSheet = memo(function CandidateSheet({
             )}
 
             {candidate.notes && (
-              <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 border-l-slate-300">
+              <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 border-l-border">
                 <div className="px-4 py-3">
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="h-7 w-7 rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800/60 dark:text-slate-400 flex items-center justify-center shrink-0">
+                    <div className="h-7 w-7 rounded-lg bg-muted text-muted-foreground dark:bg-slate-800/60 dark:text-slate-400 flex items-center justify-center shrink-0">
                       <StickyNote className="h-3.5 w-3.5" />
                     </div>
                     <span className="text-sm font-semibold text-foreground">Notes</span>

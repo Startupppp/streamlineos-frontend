@@ -18,7 +18,7 @@ const STATUS_LEFT_COLOR: Record<string, string> = {
   pending: "bg-amber-400",
   accepted: "bg-emerald-500",
   declined: "bg-red-500",
-  duplicate: "bg-slate-300",
+  duplicate: "bg-border",
 };
 
 const REQUEST_TYPE_LABEL: Record<string, string> = {
@@ -58,7 +58,7 @@ export const IntakeItemCard = memo(function IntakeItemCard({ item, onAccept, onD
 
   return (
     <div className="flex overflow-hidden rounded-lg border border-border bg-card hover:shadow-md transition-shadow">
-      <div className={cn("w-1 shrink-0", STATUS_LEFT_COLOR[item.status] ?? "bg-slate-300")} />
+      <div className={cn("w-1 shrink-0", STATUS_LEFT_COLOR[item.status] ?? "bg-border")} />
       <div className="flex-1 py-3 px-4 min-w-0">
         <div className="flex items-center gap-2 mb-1 flex-wrap">
           <p className="font-semibold truncate text-sm">{item.title}</p>

@@ -290,7 +290,7 @@ export default function DiversityReportPage() {
                       count: g.count,
                     }))}
                     total={data.total}
-                    colorFn={(label) => GENDER_COLORS[label] ?? "bg-slate-400"}
+                    colorFn={(label) => GENDER_COLORS[label] ?? "bg-muted-foreground"}
                   />
                 )}
               </CardContent>

@@ -19,9 +19,9 @@ const AUDIENCE_LABELS: Record<KbAudience, string> = {
 };
 
 const AUDIENCE_BADGE_CLASS: Record<KbAudience, string> = {
-  internal: "bg-slate-100 text-slate-600 border-slate-200",
-  public: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  mixed: "bg-blue-50 text-blue-700 border-blue-200",
+  internal: "bg-muted text-muted-foreground border-border",
+  public: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  mixed: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
 };
 
 interface SpaceDetailPageProps {

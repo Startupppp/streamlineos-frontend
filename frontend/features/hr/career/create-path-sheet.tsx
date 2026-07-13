@@ -178,7 +178,7 @@ export function CreatePathSheet({ open, onOpenChange }: Props) {
             {fields.map((field, idx) => (
               <div
                 key={field.id}
-                className="rounded-xl border border-slate-200 bg-slate-50/50 p-3 space-y-3"
+                className="rounded-xl border border-border bg-muted/30 p-3 space-y-3"
               >
                 <div className="flex items-center gap-2">
                   <span className="h-5 w-5 rounded-full bg-violet-100 text-violet-700 text-[10px] font-bold flex items-center justify-center shrink-0">

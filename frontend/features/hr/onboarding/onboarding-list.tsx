@@ -89,7 +89,7 @@ export function OnboardingList() {
                   "rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4",
                   rowStatus === "completed" && "border-l-emerald-500",
                   (rowStatus === "stalled" || rowStatus === "in_progress") && "border-l-amber-500",
-                  rowStatus === "not_started" && "border-l-slate-300 dark:border-l-slate-600"
+                  rowStatus === "not_started" && "border-l-border"
                 )}
               >
                 <CardContent className="p-3">
@@ -101,7 +101,7 @@ export function OnboardingList() {
                           ? "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400"
                           : rowStatus === "stalled" || rowStatus === "in_progress"
                           ? "bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400"
-                          : "bg-slate-100 dark:bg-slate-800/40 text-slate-600 dark:text-slate-400"
+                          : "bg-muted text-muted-foreground"
                       )}
                     >
                       {getInitials(row.userName)}
@@ -137,7 +137,7 @@ export function OnboardingList() {
                         {rowStatus === "not_started" && (
                           <Badge
                             variant="outline"
-                            className="text-[10px] font-semibold shrink-0 px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700"
+                            className="text-[10px] font-semibold shrink-0 px-2 py-0.5 rounded-full bg-muted text-muted-foreground border-border dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700"
                           >
                             Not Started
                           </Badge>

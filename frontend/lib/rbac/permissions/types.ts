@@ -337,6 +337,7 @@ export type PermissionKey =
   | "feedbucket:submissions:delete"
   | "feedbucket:submissions:manage"
   | "feedbucket:submissions:assign"
+  | "feedbucket:submissions:ai"
   | "notifications:events:view"
   | "notifications:events:manage"
   | "notifications:providers:view"

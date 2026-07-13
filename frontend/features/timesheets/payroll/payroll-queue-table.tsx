@@ -20,21 +20,21 @@ interface PayrollQueueTableProps {
 function RowStatus({ row }: { row: PayrollSummaryRow }) {
   if (row.hasPendingEntries) {
     return (
-      <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700 text-[10px]">
+      <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700 text-[10px] dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
         Pending entries
       </Badge>
     );
   }
   if (row.totalPayableHours > 0) {
     return (
-      <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700 text-[10px]">
+      <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700 text-[10px] dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
         Ready
       </Badge>
     );
   }
   if (row.exportedHours > 0) {
     return (
-      <Badge variant="outline" className="border-slate-200 bg-slate-50 text-slate-600 text-[10px]">
+      <Badge variant="outline" className="border-border bg-muted text-muted-foreground text-[10px]">
         Exported
       </Badge>
     );

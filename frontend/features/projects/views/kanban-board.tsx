@@ -18,6 +18,12 @@ import { KanbanTicketCard } from "./kanban-ticket-card";
 import { QuickAddInput } from "./kanban-quick-add";
 import { AddColumn } from "./kanban-add-column";
 import { KanbanColumnHeader } from "./kanban-column-header";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { SwimlaneRowHeader, getTicketRowKey } from "./kanban-swimlane";
 import type { KanbanTicket, KanbanColumn, DisplayOptions } from "../shared/types";
 import { AnimatePresence, motion } from "framer-motion";
@@ -320,7 +326,7 @@ export function KanbanBoard({
             ref={provided.innerRef}
             {...provided.droppableProps}
             className={cn(
-              "flex-1 overflow-y-auto scrollbar-hide px-2 pb-2 space-y-1.5 transition-colors",
+              "flex-1 overflow-y-auto scrollbar-thin px-2 pb-2 space-y-1.5 transition-colors",
               minHeight,
               snapshot.isDraggingOver && "bg-primary/5",
             )}
@@ -384,58 +390,73 @@ export function KanbanBoard({
   if (!isMounted) return null;
 
   if (rowBy !== "none") {
+    const visibleSwimlaneRows = swimlaneRows.filter((rowKey) => {
+      if (showEmptyRows) return true;
+      return optimisticTickets.some((t) => getTicketRowKey(t, rowBy) === rowKey);
+    });
+
     return (
       <DragDropContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
-        <div className="flex flex-col gap-6 h-full min-w-0 overflow-auto pb-1 px-1">
-          {swimlaneRows.map((rowKey) => {
+        <Accordion
+          type="multiple"
+          defaultValue={visibleSwimlaneRows}
+          className="flex flex-col gap-6 h-full min-w-0 overflow-auto pb-1 px-1"
+        >
+          {visibleSwimlaneRows.map((rowKey) => {
             const rowTickets = optimisticTickets.filter(
               (t) => getTicketRowKey(t, rowBy) === rowKey,
             );
-            if (!showEmptyRows && rowTickets.length === 0) return null;
-            return (
-              <div key={rowKey} className="min-w-0">
-                <SwimlaneRowHeader
-                  rowKey={rowKey}
-                  rowBy={rowBy}
-                  tickets={rowTickets}
-                  count={rowTickets.length}
-                />
-                <div className="flex gap-3 overflow-x-auto pb-1">
-                  {visibleColumns.map((col) => {
-                    const droppableId = `${encodeRowKey(rowKey)}||${col.id}`;
-                    const columnTickets = rowTickets
-                      .filter((t) => t.status === col.id)
-                      .sort((a, b) => (a.order || 0) - (b.order || 0));
-                    const wip = wipLimits?.[col.id];
-                    const overWip = wip != null && columnTickets.length > wip;
 
-                    return (
-                      <div
-                        key={col.id}
-                        className={cn(
-                          "w-72 min-w-[280px] shrink-0 rounded-lg border bg-muted/20 flex flex-col min-h-0",
-                          overWip && "border-destructive/60",
-                        )}
-                      >
-                        <KanbanColumnHeader
-                          column={col}
-                          projectId={projectId}
-                          ticketCount={columnTickets.length}
-                          wipLimit={wip}
-                          canManage={canManage}
-                          existingNames={(optimisticStatuses ?? []).map((s) => s.name)}
-                          onRename={handleColumnRename}
-                          onColorChange={handleColumnColorChange}
-                        />
-                        {renderColumnTickets(col, columnTickets, droppableId, "min-h-[60px]")}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+            return (
+              <AccordionItem key={rowKey} value={rowKey} className="min-w-0 border-b-0">
+                <AccordionTrigger className="flex items-center gap-2 px-1 py-2 mb-1 hover:no-underline font-normal [&>svg]:ml-auto">
+                  <div className="flex items-center gap-2">
+                    <SwimlaneRowHeader
+                      rowKey={rowKey}
+                      rowBy={rowBy}
+                      tickets={rowTickets}
+                      count={rowTickets.length}
+                    />
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pb-0">
+                  <div className="flex gap-3 overflow-x-auto pb-1">
+                    {visibleColumns.map((col) => {
+                      const droppableId = `${encodeRowKey(rowKey)}||${col.id}`;
+                      const columnTickets = rowTickets
+                        .filter((t) => t.status === col.id)
+                        .sort((a, b) => (a.order || 0) - (b.order || 0));
+                      const wip = wipLimits?.[col.id];
+                      const overWip = wip != null && columnTickets.length > wip;
+
+                      return (
+                        <div
+                          key={col.id}
+                          className={cn(
+                            "w-72 min-w-[280px] shrink-0 rounded-lg border bg-muted/20 flex flex-col min-h-0",
+                            overWip && "border-destructive/60",
+                          )}
+                        >
+                          <KanbanColumnHeader
+                            column={col}
+                            projectId={projectId}
+                            ticketCount={columnTickets.length}
+                            wipLimit={wip}
+                            canManage={canManage}
+                            existingNames={(optimisticStatuses ?? []).map((s) => s.name)}
+                            onRename={handleColumnRename}
+                            onColorChange={handleColumnColorChange}
+                          />
+                          {renderColumnTickets(col, columnTickets, droppableId, "min-h-[60px]")}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
             );
           })}
-        </div>
+        </Accordion>
       </DragDropContext>
     );
   }

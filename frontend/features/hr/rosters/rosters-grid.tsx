@@ -43,7 +43,7 @@ function RosterCard({ roster, canManage }: RosterCardProps) {
   }
 
   return (
-    <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 overflow-hidden">
+    <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
       <div className="p-4 flex items-center justify-between gap-3">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-foreground truncate">{roster.name}</p>

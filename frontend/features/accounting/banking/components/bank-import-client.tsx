@@ -61,8 +61,8 @@ function StepDot({ step, current }: { step: number; current: number }) {
         done
           ? "bg-blue-600 border-blue-600 text-white"
           : active
-            ? "bg-white border-blue-600 text-blue-600"
-            : "bg-white border-border text-muted-foreground",
+            ? "bg-background border-blue-600 text-blue-600"
+            : "bg-background border-border text-muted-foreground",
       ].join(" ")}
     >
       {done ? <CheckCircle2 className="h-4 w-4" /> : step}

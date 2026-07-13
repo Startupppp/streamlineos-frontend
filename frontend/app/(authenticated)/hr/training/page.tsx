@@ -56,7 +56,7 @@ export default function TrainingPage() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.22, ease: "easeOut" }}
-            className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 p-4"
+            className="bg-card/90 backdrop-blur-sm rounded-2xl border border-border/80 shadow-sm p-4"
           >
             <h2 className="text-sm font-semibold text-foreground mb-3">Attendance</h2>
             <AttendancePanel programId={selectedProgramId} canManage={canManage} />

@@ -4,9 +4,16 @@ import { useCallback, useEffect, useMemo, useRef, useState, useTransition, type 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Search, X, CheckCircle2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { CircleCheckIcon } from "@animateicons/react/lucide";
+import { Search, X } from "lucide-react";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { cn } from "@/lib/utils";
 import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
 import { useCycles } from "@/hooks/api/projects/advanced";
@@ -79,6 +86,7 @@ export function TicketFilterBar({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
+  const { iconRef: hideDoneIconRef, hoverHandlers: hideDoneHoverHandlers } = useAnimatedIcon();
 
   const { data: cycles = [] } = useCycles(projectId ?? 0);
   const { data: labels = [] } = useProjectLabels(projectId);
@@ -185,8 +193,8 @@ export function TicketFilterBar({
     setLocalSearch(e.target.value);
   }
 
-  function handleHideCompletedChange(checked: boolean) {
-    onHideCompletedChange?.(checked);
+  function handleHideDoneClick() {
+    onHideCompletedChange?.(!hideCompleted);
   }
 
   function handleToggleStatus(status: string) {
@@ -362,24 +370,30 @@ export function TicketFilterBar({
         />
 
         {showDoneToggle && onHideCompletedChange !== undefined && hideCompleted !== undefined && (
-          <div className="flex h-8 shrink-0 items-center gap-2 rounded-md border border-border bg-card px-2.5 shadow-xs">
-            <Label
-              htmlFor="hide-done-filter"
-              className="flex cursor-pointer items-center gap-1.5 whitespace-nowrap text-xs font-normal"
-            >
-              <CheckCircle2 className="h-3 w-3 shrink-0 text-muted-foreground" />
-              Hide done
-              {hideCompleted && doneCount > 0 && (
-                <span className="text-muted-foreground">({doneCount})</span>
-              )}
-            </Label>
-            <Switch
-              id="hide-done-filter"
-              checked={hideCompleted}
-              onCheckedChange={handleHideCompletedChange}
-              className="scale-[0.85]"
-            />
-          </div>
+          <TooltipProvider delayDuration={200}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={handleHideDoneClick}
+                  className={cn(
+                    "h-8 w-8 shrink-0 bg-card shadow-xs",
+                    hideCompleted && "border-blue-400 bg-blue-50 text-blue-600",
+                  )}
+                  aria-label={doneCount > 0 ? `Hide done (${doneCount})` : "Hide done"}
+                  aria-pressed={hideCompleted}
+                  {...hideDoneHoverHandlers}
+                >
+                  <CircleCheckIcon ref={hideDoneIconRef} size={14} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-xs">
+                {doneCount > 0 ? `Hide done (${doneCount})` : "Hide done"}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         )}
 
         {activeFilterCount > 0 && (

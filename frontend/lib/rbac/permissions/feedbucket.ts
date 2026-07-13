@@ -61,4 +61,10 @@ export const FEEDBUCKET_PERMISSIONS: Permission[] = [
     action: "assign",
     description: "Assign feedback submissions to team members",
   },
+  {
+    name: "feedbucket:submissions:ai",
+    resource: "feedbucket:submissions",
+    action: "ai",
+    description: "Run AI analysis on feedback submissions",
+  },
 ];

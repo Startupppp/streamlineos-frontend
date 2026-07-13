@@ -40,7 +40,7 @@ import { toast } from "sonner";
 import { TestRunSheet } from "./test-run-sheet";
 
 const RUN_STATUS_STYLES: Record<TestRunStatus, string> = {
-  not_started: "text-slate-500 border-slate-200",
+  not_started: "text-muted-foreground border-border",
   in_progress: "text-blue-600 border-blue-200",
   completed: "text-green-600 border-green-200",
   aborted: "text-red-600 border-red-200",

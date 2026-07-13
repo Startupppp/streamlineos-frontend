@@ -71,7 +71,7 @@ function getStatusConfig(s: string | null) {
     };
   }
   return {
-    badge: "bg-slate-100 text-slate-700 dark:bg-slate-900/40 dark:text-slate-300 border-slate-200 dark:border-slate-800",
+    badge: "bg-muted text-muted-foreground dark:bg-slate-900/40 dark:text-slate-300 border-border dark:border-slate-800",
     icon: <ShieldCheck className="h-2.5 w-2.5" />,
     label: "Pending",
   };
@@ -175,7 +175,7 @@ function buildBgvColumns(
       key: "type",
       header: "Type",
       cell: (bgv) => (
-        <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-slate-100 text-slate-700 dark:bg-slate-900/40 dark:text-slate-300 border-slate-200 dark:border-slate-800">
+        <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-foreground dark:bg-slate-900/40 dark:text-slate-300 border-border dark:border-slate-800">
           {bgv.type}
         </span>
       ),
@@ -432,7 +432,7 @@ function BGVContent() {
     >
       {items && items.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-3">
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full border bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full border bg-muted text-muted-foreground border-border dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
             <ShieldCheck className="h-3 w-3" />
             {pendingCount} Pending
           </span>

@@ -132,7 +132,7 @@ export function MfaSettings() {
                 <p className="text-xs text-muted-foreground mb-3">
                   1. Scan this QR code with Google Authenticator or any TOTP app.
                 </p>
-                <div className="inline-block p-2 bg-white rounded-lg border border-border">
+                <div className="inline-block p-2 bg-background rounded-lg border border-border">
                   <Image src={qrData.qrDataUrl} alt="MFA QR Code" width={160} height={160} />
                 </div>
               </div>

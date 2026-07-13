@@ -24,7 +24,7 @@ const columns: DataTableColumn<RankedEntry>[] = [
         className={cn(
           "inline-flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold",
           row.rank === 1 && "bg-amber-100 text-amber-700",
-          row.rank === 2 && "bg-slate-100 text-slate-600",
+          row.rank === 2 && "bg-muted text-muted-foreground",
           row.rank === 3 && "bg-orange-100 text-orange-700",
           row.rank > 3 && "text-muted-foreground",
         )}

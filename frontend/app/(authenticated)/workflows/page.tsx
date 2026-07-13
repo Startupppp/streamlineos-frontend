@@ -77,14 +77,14 @@ import {
 type StatusFilter = WorkflowStatus | "all";
 
 const STATUS_BADGE_CLASS: Record<WorkflowStatus, string> = {
-  draft: "bg-slate-100 text-slate-600",
+  draft: "bg-muted text-muted-foreground",
   published: "bg-green-100 text-green-700",
   disabled: "bg-yellow-100 text-yellow-700",
   archived: "bg-red-100 text-red-700",
 };
 
 const STATUS_LEFT_BORDER: Record<WorkflowStatus, string> = {
-  draft: "border-l-slate-300",
+  draft: "border-l-border",
   published: "border-l-green-400",
   disabled: "border-l-yellow-400",
   archived: "border-l-red-400",
@@ -112,17 +112,17 @@ function StatCard({ label, value, icon, loading, index }: StatCardProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.22, ease: "easeOut", delay: index * 0.06 }}
     >
-      <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60">
+      <Card className="bg-card rounded-xl border border-border shadow-sm">
         <CardContent className="p-4">
           <div className="flex items-start justify-between gap-2">
             <p className="text-xs font-medium text-muted-foreground">{label}</p>
-            <div className="h-8 w-8 rounded-lg bg-violet-50 flex items-center justify-center shrink-0">
+            <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
               {icon}
             </div>
           </div>
           <div className="mt-2">
             {loading ? (
-              <div className="h-7 w-14 rounded bg-slate-100 animate-pulse" />
+              <div className="h-7 w-14 rounded bg-muted animate-pulse" />
             ) : (
               <p className="text-2xl font-bold text-foreground tabular-nums">
                 {value ?? 0}
@@ -145,7 +145,7 @@ function WorkflowCard({ workflow, onDuplicate, onDelete }: WorkflowCardProps) {
   return (
     <Card
       className={cn(
-        "bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 border-l-4 transition-all duration-200 hover:shadow-2xl hover:shadow-slate-200/70 h-full",
+        "bg-card rounded-xl border border-border shadow-sm border-l-4 transition-all duration-200 hover:shadow-md h-full",
         STATUS_LEFT_BORDER[workflow.status]
       )}
     >
@@ -164,7 +164,7 @@ function WorkflowCard({ workflow, onDuplicate, onDelete }: WorkflowCardProps) {
               >
                 {workflow.status}
               </span>
-              <span className="text-[10px] text-muted-foreground bg-slate-50 border border-slate-200 px-1.5 py-0.5 rounded">
+              <span className="text-[10px] text-muted-foreground bg-muted border border-border px-1.5 py-0.5 rounded">
                 v{workflow.version}
               </span>
             </div>
@@ -340,7 +340,7 @@ function CreateWorkflowDialog({ open, onClose }: CreateWorkflowDialogProps) {
               <Button
                 type="submit"
                 disabled={create.isPending}
-                className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm transition-all duration-200"
               >
                 {create.isPending ? "Creating…" : "Create & Open Builder"}
               </Button>
@@ -433,7 +433,7 @@ export default function WorkflowsPage() {
         <Button
           size="sm"
           onClick={handleOpenCreate}
-          className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
+          className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm transition-all duration-200"
         >
           <Plus className="h-4 w-4 mr-1" /> New Workflow
         </Button>

@@ -76,7 +76,7 @@ function SecretCard({ secret, index, onDelete }: SecretCardProps) {
       exit={{ opacity: 0, scale: 0.96 }}
       transition={{ duration: 0.22, ease: "easeOut", delay: index * 0.04 }}
     >
-      <Card className="bg-white/90 backdrop-blur-sm rounded-xl border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow duration-200">
+      <Card className="bg-card rounded-xl border border-border shadow-sm hover:shadow-md transition-shadow duration-200">
         <CardContent className="p-4">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-lg bg-violet-50 flex items-center justify-center shrink-0">
@@ -85,7 +85,7 @@ function SecretCard({ secret, index, onDelete }: SecretCardProps) {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <code className="text-sm font-semibold font-mono text-foreground">{secret.name}</code>
-                <Badge variant="secondary" className="text-[10px] bg-slate-100 text-slate-600">encrypted</Badge>
+                <Badge variant="secondary" className="text-[10px] bg-muted text-muted-foreground">encrypted</Badge>
               </div>
               {secret.description && (
                 <p className="text-xs text-muted-foreground mt-0.5 truncate">{secret.description}</p>
@@ -219,7 +219,7 @@ function CreateSecretSheet({ open, onClose }: CreateSecretSheetProps) {
               <Button
                 type="submit"
                 disabled={createSecret.isPending}
-                className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm transition-all duration-200"
               >
                 {createSecret.isPending ? "Saving…" : "Save Secret"}
               </Button>
@@ -278,7 +278,7 @@ export default function SecretsManagerPage() {
         <Button
           size="sm"
           onClick={handleOpenSheet}
-          className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
+          className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm transition-all duration-200"
         >
           <Plus className="h-4 w-4 mr-1" /> New Secret
         </Button>

@@ -14,7 +14,7 @@ import { useMentorships, useCreateMentorship, useUpdateMentorship } from "@/hook
 
 const STATUS_CONFIG = {
   active: { label: "Active", className: "bg-emerald-100 text-emerald-700" },
-  completed: { label: "Completed", className: "bg-slate-100 text-slate-600" },
+  completed: { label: "Completed", className: "bg-muted text-muted-foreground" },
   paused: { label: "Paused", className: "bg-amber-100 text-amber-700" },
 };
 

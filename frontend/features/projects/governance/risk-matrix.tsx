@@ -8,7 +8,7 @@ const PROBABILITIES: RiskProbability[] = ["low", "medium", "high"];
 const IMPACTS: RiskImpact[] = ["high", "medium", "low"];
 
 const LEGEND = [
-  { label: "Low", bg: "bg-slate-100" },
+  { label: "Low", bg: "bg-muted" },
   { label: "Medium", bg: "bg-amber-100" },
   { label: "High", bg: "bg-orange-100" },
   { label: "Critical", bg: "bg-red-100" },

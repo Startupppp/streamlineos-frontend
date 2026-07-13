@@ -376,8 +376,8 @@ export function LeaveApprovalsContent({
         <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <div className="h-7 w-7 rounded-lg bg-slate-100 dark:bg-slate-950/40 flex items-center justify-center">
-                <Home className="h-3.5 w-3.5 text-slate-600 dark:text-slate-400" aria-hidden="true" />
+              <div className="h-7 w-7 rounded-lg bg-muted flex items-center justify-center">
+                <Home className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
               </div>
               Pending WFH Requests
               {pendingWfhRequests && pendingWfhRequests.length > 0 && (

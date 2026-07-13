@@ -21,12 +21,12 @@ import {
 const PAGE_SIZE = 20;
 
 const STATUS_BADGE_CLASS: Record<ExecutionStatus, string> = {
-  pending: "bg-slate-100 text-slate-600",
+  pending: "bg-muted text-muted-foreground",
   running: "bg-blue-100 text-blue-700 animate-pulse",
   waiting: "bg-yellow-100 text-yellow-700",
   completed: "bg-green-100 text-green-700",
   failed: "bg-red-100 text-red-700",
-  cancelled: "bg-slate-100 text-slate-500",
+  cancelled: "bg-muted text-muted-foreground",
   timed_out: "bg-orange-100 text-orange-700",
 };
 
@@ -62,7 +62,7 @@ function ExecutionRow({
   const canCancel = execution.status === "running" || execution.status === "waiting";
 
   return (
-    <div className="grid grid-cols-[2fr,1fr,1fr,1.5fr,1fr,auto] gap-3 items-center px-4 py-3 rounded-lg hover:bg-slate-50 transition-colors">
+    <div className="grid grid-cols-[2fr,1fr,1fr,1.5fr,1fr,auto] gap-3 items-center px-4 py-3 rounded-lg hover:bg-muted transition-colors">
       <span className="text-sm font-mono text-foreground truncate">
         {execution.workflowId.slice(0, 8)}...
       </span>
@@ -146,8 +146,8 @@ export default function ExecutionsPage() {
           className={cn(
             "px-3 py-1.5 text-xs font-medium rounded-md whitespace-nowrap transition-colors",
             activeStatus === tab.value
-              ? "bg-violet-100 text-violet-700 border border-violet-200"
-              : "text-muted-foreground hover:text-foreground hover:bg-slate-100",
+              ? "bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted",
           )}
         >
           {tab.label}

@@ -15,7 +15,7 @@ interface ActionCardProps {
 }
 
 const TONE_STYLES: Record<string, { bg: string; text: string; border: string }> = {
-  default: { bg: "bg-slate-100", text: "text-slate-600", border: "border-border" },
+  default: { bg: "bg-muted", text: "text-muted-foreground", border: "border-border" },
   amber: { bg: "bg-amber-50", text: "text-amber-600", border: "border-amber-200/60" },
   red: { bg: "bg-red-50", text: "text-red-600", border: "border-red-200/60" },
 };

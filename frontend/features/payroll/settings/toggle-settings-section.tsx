@@ -136,8 +136,8 @@ export function ToggleSettingsSection({ policy, activeVersion }: ToggleSettingsS
                     <span
                       className={
                         item.enabled
-                          ? "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border bg-emerald-50 text-emerald-700 border-emerald-200"
-                          : "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border bg-slate-100 text-slate-500 border-slate-200"
+                          ? "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
+                          : "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border bg-muted text-muted-foreground border-border"
                       }
                     >
                       {item.enabled ? "Enabled" : "Disabled"}
@@ -146,13 +146,13 @@ export function ToggleSettingsSection({ policy, activeVersion }: ToggleSettingsS
                 ))}
               </div>
               {statutoryPack.complianceChecklist.length > 0 && (
-                <div className="mt-3 rounded-lg border border-blue-200 bg-blue-50 p-3">
-                  <p className="text-xs font-semibold text-blue-700 mb-1.5">Compliance Checklist</p>
+                <div className="mt-3 rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-500/30 dark:bg-blue-500/10">
+                  <p className="text-xs font-semibold text-blue-700 mb-1.5 dark:text-blue-300">Compliance Checklist</p>
                   <div className="space-y-1">
                     {statutoryPack.complianceChecklist.map((cl) => (
                       <div key={cl.key}>
-                        <p className="text-xs font-medium text-blue-800">{cl.label}</p>
-                        <p className="text-[11px] text-blue-600">{cl.detail}</p>
+                        <p className="text-xs font-medium text-blue-800 dark:text-blue-200">{cl.label}</p>
+                        <p className="text-[11px] text-blue-600 dark:text-blue-400">{cl.detail}</p>
                       </div>
                     ))}
                   </div>

@@ -76,7 +76,7 @@ function DealRow({ deal, delay, onNavigate, shouldReduceMotion }: DealRowProps) 
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium truncate">{deal.name}</p>
         <div className="flex items-center gap-1.5 mt-0.5">
-          <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${STAGE_DOT[deal.stage] ?? "bg-slate-400"}`} />
+          <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${STAGE_DOT[deal.stage] ?? "bg-muted-foreground"}`} />
           <span className="text-[11px] text-muted-foreground">
             {STAGE_LABEL[deal.stage] ?? deal.stage}
           </span>

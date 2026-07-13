@@ -235,7 +235,7 @@ export function CreateCourseSheet({ open, onOpenChange }: Props) {
             control={form.control}
             name="isMandatory"
             render={({ field }) => (
-              <FormItem className="flex items-center justify-between rounded-lg border border-slate-200 p-3">
+              <FormItem className="flex items-center justify-between rounded-lg border border-border p-3">
                 <div>
                   <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
                     Mandatory

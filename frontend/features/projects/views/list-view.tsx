@@ -4,6 +4,12 @@ import { useMemo, memo, useCallback, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { ChevronRight, Plus, X, User } from "lucide-react";
 import { TicketTypeIcon } from "../shared/ticket-type-icon";
@@ -76,8 +82,8 @@ const ListViewItem = memo(function ListViewItem({ ticket, projectKey, projectId,
   const hasProjectId = projectId != null;
 
   return (
-    <div className="group flex items-center hover:bg-muted/30 transition-colors">
-      <div className="flex flex-1 min-w-0 items-center gap-2 px-3 py-2">
+    <div className="group flex items-center bg-card transition-colors hover:bg-muted/40">
+      <div className="flex flex-1 min-w-0 items-center gap-2 px-3 py-1.5">
         {hasProjectId ? (
           <InlineStatus
             ticketId={ticket.id}
@@ -255,6 +261,10 @@ function getGroupStatus(groupBy: string, groupKey: string, tickets: Ticket[]): s
   return tickets[0]?.status ?? "TODO";
 }
 
+function encodeNestedAccordionValue(outerKey: string, innerKey: string): string {
+  return `${outerKey}||${innerKey}`;
+}
+
 interface OuterGroupHeaderProps {
   groupKey: string;
   rowBy: string;
@@ -267,7 +277,7 @@ function OuterGroupHeader({ groupKey, rowBy, tickets, count }: OuterGroupHeaderP
     const assigneeTicket = tickets.find((t) => t.assignee != null);
     const assignee = assigneeTicket?.assignee ?? null;
     return (
-      <div className="flex items-center gap-2 mb-3 py-1">
+      <div className="flex items-center gap-2">
         {assignee ? (
           <Avatar className="h-6 w-6 flex-shrink-0">
             <AvatarImage src={resolveImageUrl(assignee.image)} />
@@ -279,20 +289,21 @@ function OuterGroupHeader({ groupKey, rowBy, tickets, count }: OuterGroupHeaderP
           </div>
         )}
         <span className="text-sm font-semibold text-foreground">{groupKey}</span>
-        <Badge variant="secondary" className="text-xs">{count}</Badge>
+        <span className="text-xs text-muted-foreground tabular-nums">({count})</span>
       </div>
     );
   }
 
   return (
-    <div className="flex items-center gap-2 mb-3 py-1">
+    <div className="flex items-center gap-2">
       <span className="text-sm font-semibold text-foreground">{groupKey}</span>
-      <Badge variant="secondary" className="text-xs">{count}</Badge>
+      <span className="text-xs text-muted-foreground tabular-nums">({count})</span>
     </div>
   );
 }
 
 interface NestedGroupProps {
+  accordionValue: string;
   groupKey: string;
   outerGroupKey: string;
   items: Ticket[];
@@ -304,13 +315,26 @@ interface NestedGroupProps {
   onTicketClick: (id: number) => void;
 }
 
-function NestedGroup({ groupKey, outerGroupKey, items, groupBy, projectKey, projectId, projectStatuses, displayOptions, onTicketClick }: NestedGroupProps) {
+function NestedGroup({
+  accordionValue,
+  groupKey,
+  outerGroupKey,
+  items,
+  groupBy,
+  projectKey,
+  projectId,
+  projectStatuses,
+  displayOptions,
+  onTicketClick,
+}: NestedGroupProps) {
   const status = getGroupStatus(groupBy, groupKey, items);
   return (
-    <div className="mb-3">
-      <div className="flex items-center gap-2 mb-1.5 pl-1">
-        <span className="text-xs font-medium text-muted-foreground">{groupKey}</span>
-        <Badge variant="outline" className="text-xs h-4 px-1">{items.length}</Badge>
+    <AccordionItem value={accordionValue} className="mb-3 border-b-0">
+      <div className="mb-1.5 flex items-center gap-2 pl-1">
+        <AccordionTrigger className="flex flex-1 items-center gap-2 py-0 hover:no-underline font-normal [&>svg]:ml-auto [&>svg]:size-3.5">
+          <span className="text-xs font-medium text-muted-foreground">{groupKey}</span>
+          <span className="text-xs text-muted-foreground tabular-nums">({items.length})</span>
+        </AccordionTrigger>
         {projectId && (
           <InlineGroupCreate
             groupKey={`${outerGroupKey}/${groupKey}`}
@@ -319,20 +343,22 @@ function NestedGroup({ groupKey, outerGroupKey, items, groupBy, projectKey, proj
           />
         )}
       </div>
-      <div className="border border-border rounded-lg divide-y divide-border overflow-hidden">
-        {items.map((ticket) => (
-          <ListViewItem
-            key={ticket.id}
-            ticket={ticket}
-            projectKey={projectKey}
-            projectId={projectId}
-            projectStatuses={projectStatuses}
-            onClick={onTicketClick}
-            displayOptions={displayOptions}
-          />
-        ))}
-      </div>
-    </div>
+      <AccordionContent className="pb-0">
+        <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm divide-y divide-border">
+          {items.map((ticket) => (
+            <ListViewItem
+              key={ticket.id}
+              ticket={ticket}
+              projectKey={projectKey}
+              projectId={projectId}
+              projectStatuses={projectStatuses}
+              onClick={onTicketClick}
+              displayOptions={displayOptions}
+            />
+          ))}
+        </div>
+      </AccordionContent>
+    </AccordionItem>
   );
 }
 
@@ -370,39 +396,70 @@ export const ListView = memo(function ListView({ tickets, onTicketClick, groupBy
     return result;
   }, [tickets, groupBy, rowBy, hasRowBy]);
 
+  const visibleOuterKeys = useMemo(() => {
+    if (!nested) return [];
+    return Object.entries(nested)
+      .filter(([, innerGroups]) => showEmptyRows || Object.values(innerGroups).flat().length > 0)
+      .map(([outerKey]) => outerKey);
+  }, [nested, showEmptyRows]);
+
+  const flatGroupKeys = useMemo(() => Object.keys(grouped), [grouped]);
+
   if (hasRowBy && nested) {
     return (
-      <div className="flex flex-col gap-6 p-4">
-        {Object.entries(nested).map(([outerKey, innerGroups]) => {
-          const outerTickets = Object.values(innerGroups).flat();
-          if (!showEmptyRows && outerTickets.length === 0) return null;
-          return (
-            <div key={outerKey}>
-              <OuterGroupHeader
-                groupKey={outerKey}
-                rowBy={rowBy}
-                tickets={outerTickets}
-                count={outerTickets.length}
-              />
-              <div className="pl-4 border-l border-border space-y-0">
-                {Object.entries(innerGroups).map(([innerKey, items]) => (
-                  <NestedGroup
-                    key={innerKey}
-                    groupKey={innerKey}
-                    outerGroupKey={outerKey}
-                    items={items}
-                    groupBy={groupBy ?? "none"}
-                    projectKey={projectKey}
-                    projectId={projectId}
-                    projectStatuses={projectStatuses}
-                    displayOptions={displayOptions}
-                    onTicketClick={onTicketClick}
+      <div className="flex flex-col gap-6">
+        <Accordion
+          type="multiple"
+          defaultValue={visibleOuterKeys}
+          className="flex flex-col gap-6"
+        >
+          {visibleOuterKeys.map((outerKey) => {
+            const innerGroups = nested[outerKey];
+            if (!innerGroups) return null;
+            const outerTickets = Object.values(innerGroups).flat();
+            const innerAccordionValues = Object.keys(innerGroups).map((innerKey) =>
+              encodeNestedAccordionValue(outerKey, innerKey),
+            );
+
+            return (
+              <AccordionItem key={outerKey} value={outerKey} className="border-b-0">
+                <AccordionTrigger className="flex items-center gap-2 px-0 py-2 mb-1 hover:no-underline font-normal [&>svg]:ml-auto">
+                  <OuterGroupHeader
+                    groupKey={outerKey}
+                    rowBy={rowBy}
+                    tickets={outerTickets}
+                    count={outerTickets.length}
                   />
-                ))}
-              </div>
-            </div>
-          );
-        })}
+                </AccordionTrigger>
+                <AccordionContent className="pb-0">
+                  <div className="space-y-0 border-l border-border pl-3">
+                    <Accordion
+                      type="multiple"
+                      defaultValue={innerAccordionValues}
+                      className="flex flex-col"
+                    >
+                      {Object.entries(innerGroups).map(([innerKey, items]) => (
+                        <NestedGroup
+                          key={innerKey}
+                          accordionValue={encodeNestedAccordionValue(outerKey, innerKey)}
+                          groupKey={innerKey}
+                          outerGroupKey={outerKey}
+                          items={items}
+                          groupBy={groupBy ?? "none"}
+                          projectKey={projectKey}
+                          projectId={projectId}
+                          projectStatuses={projectStatuses}
+                          displayOptions={displayOptions}
+                          onTicketClick={onTicketClick}
+                        />
+                      ))}
+                    </Accordion>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            );
+          })}
+        </Accordion>
         {tickets.length === 0 && (
           <div className="text-center py-12 text-muted-foreground text-sm">No work items found</div>
         )}
@@ -410,38 +467,64 @@ export const ListView = memo(function ListView({ tickets, onTicketClick, groupBy
     );
   }
 
+  const hasFlatGrouping = !!groupBy && groupBy !== "none";
+
   return (
-    <div className="flex flex-col gap-4 p-4">
-      {Object.entries(grouped).map(([group, items]) => (
-        <div key={group}>
-          {groupBy && groupBy !== "none" && (
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-sm font-semibold text-foreground">{group}</span>
-              <Badge variant="secondary" className="text-xs">{items.length}</Badge>
-              {projectId && (
-                <InlineGroupCreate
-                  groupKey={group}
-                  projectId={projectId}
-                  status={getGroupStatus(groupBy ?? "status", group, items)}
-                />
-              )}
-            </div>
-          )}
-          <div className="border border-border rounded-lg divide-y divide-border overflow-hidden">
-            {items.map((ticket) => (
-              <ListViewItem
-                key={ticket.id}
-                ticket={ticket}
-                projectKey={projectKey}
-                projectId={projectId}
-                projectStatuses={projectStatuses}
-                onClick={onTicketClick}
-                displayOptions={displayOptions}
-              />
-            ))}
-          </div>
+    <div className="flex flex-col gap-4">
+      {hasFlatGrouping ? (
+        <Accordion
+          type="multiple"
+          defaultValue={flatGroupKeys}
+          className="flex flex-col gap-4"
+        >
+          {Object.entries(grouped).map(([group, items]) => (
+            <AccordionItem key={group} value={group} className="border-b-0">
+              <div className="mb-1.5 flex items-center gap-2">
+                <AccordionTrigger className="flex flex-1 items-center gap-2 py-0 hover:no-underline font-normal [&>svg]:ml-auto">
+                  <span className="text-sm font-semibold text-foreground">{group}</span>
+                  <span className="text-xs text-muted-foreground tabular-nums">({items.length})</span>
+                </AccordionTrigger>
+                {projectId && (
+                  <InlineGroupCreate
+                    groupKey={group}
+                    projectId={projectId}
+                    status={getGroupStatus(groupBy ?? "status", group, items)}
+                  />
+                )}
+              </div>
+              <AccordionContent className="pb-0">
+                <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm divide-y divide-border">
+                  {items.map((ticket) => (
+                    <ListViewItem
+                      key={ticket.id}
+                      ticket={ticket}
+                      projectKey={projectKey}
+                      projectId={projectId}
+                      projectStatuses={projectStatuses}
+                      onClick={onTicketClick}
+                      displayOptions={displayOptions}
+                    />
+                  ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      ) : (
+        <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm divide-y divide-border">
+          {tickets.map((ticket) => (
+            <ListViewItem
+              key={ticket.id}
+              ticket={ticket}
+              projectKey={projectKey}
+              projectId={projectId}
+              projectStatuses={projectStatuses}
+              onClick={onTicketClick}
+              displayOptions={displayOptions}
+            />
+          ))}
         </div>
-      ))}
+      )}
       {tickets.length === 0 && (
         <div className="text-center py-12 text-muted-foreground text-sm">No work items found</div>
       )}

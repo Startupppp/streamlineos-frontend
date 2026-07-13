@@ -39,10 +39,10 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import type { DepreciationScheduleRow } from "@/types/accounting/assets";
 
 const ASSET_STATUS_CLASSES: Record<string, string> = {
-  DRAFT: "bg-blue-50 text-blue-700 border-blue-200",
-  ACTIVE: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  FULLY_DEPRECIATED: "bg-slate-100 text-slate-700 border-slate-200",
-  DISPOSED: "bg-red-50 text-red-700 border-red-200",
+  DRAFT: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  ACTIVE: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  FULLY_DEPRECIATED: "bg-muted text-foreground border-border",
+  DISPOSED: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
 };
 
 const ASSET_STATUS_LABELS: Record<string, string> = {
@@ -67,8 +67,8 @@ function formatDate(value: string | null | undefined): string {
 
 function ScheduleStatusBadge({ status }: { status: DepreciationScheduleRow["status"] }) {
   const cls = status === "POSTED"
-    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-    : "bg-blue-50 text-blue-700 border-blue-200";
+    ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
+    : "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30";
   return (
     <Badge variant="outline" className={`text-[9px] px-1.5 py-0 h-4 ${cls}`}>
       {status === "POSTED" ? "Posted" : "Scheduled"}

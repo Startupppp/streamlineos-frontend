@@ -54,8 +54,8 @@ export function EmojiReactionBar({ reactions, onReact, onUnreact }: EmojiReactio
           className={cn(
             "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border transition-all",
             r.hasReacted
-              ? "bg-blue-50 border-blue-200 text-blue-800"
-              : "bg-slate-50 border-slate-200 text-slate-600 hover:border-blue-200/60 hover:bg-blue-50/50"
+              ? "bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30"
+              : "bg-muted border-border text-muted-foreground hover:border-blue-200/60 hover:bg-blue-50/50 dark:hover:bg-blue-500/10"
           )}
         >
           <span>{r.emoji}</span>
@@ -68,9 +68,9 @@ export function EmojiReactionBar({ reactions, onReact, onUnreact }: EmojiReactio
           type="button"
           onClick={handleToggle}
           aria-label="Add reaction"
-          className="h-6 w-6 flex items-center justify-center rounded-full border border-slate-200 bg-slate-50 hover:border-border hover:bg-muted transition-all opacity-0 group-hover:opacity-100"
+          className="h-6 w-6 flex items-center justify-center rounded-full border border-border bg-muted hover:border-border/80 hover:bg-accent transition-all opacity-0 group-hover:opacity-100"
         >
-          <SmilePlus className="h-3 w-3 text-slate-400" />
+          <SmilePlus className="h-3 w-3 text-muted-foreground" />
         </button>
 
         <AnimatePresence>
@@ -80,7 +80,7 @@ export function EmojiReactionBar({ reactions, onReact, onUnreact }: EmojiReactio
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.12 }}
-              className="absolute bottom-8 left-0 z-50 flex gap-1 p-2 bg-white/95 backdrop-blur-sm rounded-xl border border-slate-200/80 shadow-xl"
+              className="absolute bottom-8 left-0 z-50 flex gap-1 p-2 bg-card/95 backdrop-blur-sm rounded-xl border border-border shadow-xl"
             >
               {QUICK_EMOJIS.map((e) => (
                 <button

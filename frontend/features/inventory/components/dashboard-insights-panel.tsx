@@ -12,9 +12,9 @@ import { useInventoryInsights, useGenerateInsights, useUpdateInsight } from "@/h
 import type { AiInsight } from "@/hooks/api/inventory/reports";
 
 const SEVERITY_CLASS: Record<string, string> = {
-  high: "bg-red-50 text-red-700 border-red-200",
-  medium: "bg-amber-50 text-amber-700 border-amber-200",
-  low: "bg-blue-50 text-blue-700 border-blue-200",
+  high: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  medium: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  low: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
 };
 
 const SEVERITY_LABEL: Record<string, string> = {
@@ -24,7 +24,7 @@ const SEVERITY_LABEL: Record<string, string> = {
 };
 
 function getSeverityClass(severity: string): string {
-  return SEVERITY_CLASS[severity.toLowerCase()] ?? "bg-slate-50 text-slate-700 border-slate-200";
+  return SEVERITY_CLASS[severity.toLowerCase()] ?? "bg-muted text-muted-foreground border-border";
 }
 
 function getSeverityLabel(severity: string): string {

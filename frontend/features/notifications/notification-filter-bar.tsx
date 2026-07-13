@@ -248,7 +248,7 @@ export function NotificationFilterBar({
         <Button
           variant="ghost"
           size="sm"
-          className="hidden sm:inline-flex h-9 shrink-0 gap-1.5 px-2 text-xs text-muted-foreground hover:text-foreground focus-visible:border-transparent focus-visible:ring-slate-200 focus-visible:ring-[3px] transition-colors"
+          className="hidden sm:inline-flex h-9 shrink-0 gap-1.5 px-2 text-xs text-muted-foreground hover:text-foreground focus-visible:border-transparent focus-visible:ring-border focus-visible:ring-[3px] transition-colors"
           onClick={onClearFilters}
           aria-label="Clear filters"
         >

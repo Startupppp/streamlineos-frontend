@@ -82,7 +82,7 @@ const TYPE_CONFIG: Record<
   OTHER: {
     label: "Other",
     badgeClass:
-      "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-900/40 dark:text-slate-300 dark:border-slate-700",
+      "bg-muted text-muted-foreground border-border",
     icon: FileText,
   },
 };
@@ -216,7 +216,7 @@ function buildTemplateColumns(
       headerClassName: "w-[90px] text-center",
       className: "text-center",
       cell: (template) => (
-        <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-900/40 dark:text-slate-300 dark:border-slate-700">
+        <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border">
           v{template.version}
         </span>
       ),
@@ -231,7 +231,7 @@ function buildTemplateColumns(
             "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
             template.isActive
               ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-700"
-              : "bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-700",
+              : "bg-muted text-muted-foreground border-border",
           )}
         >
           {template.isActive ? "Active" : "Inactive"}

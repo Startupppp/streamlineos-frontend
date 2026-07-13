@@ -81,7 +81,7 @@ export function AdminExpenseItem({
         status === "PENDING" && "border-l-amber-400",
         status === "APPROVED" && "border-l-emerald-400",
         status === "REJECTED" && "border-l-rose-400",
-        status === "PAID" && "border-l-slate-400",
+        status === "PAID" && "border-l-border",
       )}
     >
       <div className="flex-shrink-0 flex flex-col items-center gap-1.5">
@@ -141,7 +141,7 @@ export function AdminExpenseItem({
               status === "REJECTED" &&
                 "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800",
               status === "PAID" &&
-                "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700",
+                "bg-muted text-muted-foreground border-border",
             )}
           >
             {status === "PENDING"

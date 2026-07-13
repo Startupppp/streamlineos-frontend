@@ -80,7 +80,7 @@ function ProductStatusBadge({
   return (
     <Badge
       variant="outline"
-      className="h-5 text-[10px] px-2 py-0 border-slate-200 text-slate-600 bg-slate-100"
+      className="h-5 text-[10px] px-2 py-0 border-border text-muted-foreground bg-muted"
     >
       Inactive
     </Badge>
@@ -226,7 +226,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
       cell: (v) => (
         <Badge
           variant="outline"
-          className={`h-4 text-[9px] px-1.5 py-0 ${v.isActive ? "border-emerald-200 text-emerald-700 bg-emerald-50" : "border-slate-200 text-slate-600 bg-slate-100"}`}
+          className={`h-4 text-[9px] px-1.5 py-0 ${v.isActive ? "border-emerald-200 text-emerald-700 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30" : "border-border text-muted-foreground bg-muted"}`}
         >
           {v.isActive ? "Active" : "Inactive"}
         </Badge>

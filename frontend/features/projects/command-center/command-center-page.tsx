@@ -51,20 +51,20 @@ import { isPast, isToday, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 
 const STATUS_COLOR: Record<string, string> = {
-  ACTIVE: "text-emerald-700 border-emerald-300 bg-emerald-50",
-  PLANNING: "text-blue-700 border-blue-300 bg-blue-50",
-  ON_HOLD: "text-amber-700 border-amber-300 bg-amber-50",
-  COMPLETED: "text-slate-600 border-slate-300 bg-slate-100",
-  ARCHIVED: "text-slate-500 border-slate-200 bg-slate-50",
+  ACTIVE: "text-emerald-700 border-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  PLANNING: "text-blue-700 border-blue-300 bg-blue-50 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  ON_HOLD: "text-amber-700 border-amber-300 bg-amber-50 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  COMPLETED: "text-muted-foreground border-border bg-muted dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/30",
+  ARCHIVED: "text-muted-foreground border-border bg-muted dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/30",
 };
 
 const PINNED_LINKS = [
-  { label: "Backlog", href: "/projects/backlog", icon: LayoutList },
-  { label: "Board", href: "/projects/board", icon: LayoutGrid },
-  { label: "Sprints", href: "/projects/sprints", icon: GitBranch },
-  { label: "Timeline", href: "/projects/timeline", icon: GanttChart },
-  { label: "Reports", href: "/projects/reports", icon: BarChart2 },
-  { label: "Settings", href: "/projects/settings", icon: Settings },
+  { label: "My Work", href: "/projects/my-work", icon: LayoutList },
+  { label: "All Work", href: "/projects/all-work", icon: LayoutGrid },
+  { label: "Approvals", href: "/projects/approvals", icon: CircleCheck },
+  { label: "Roadmap", href: "/projects/roadmap", icon: GanttChart },
+  { label: "Portfolios", href: "/projects/portfolios", icon: Briefcase },
+  { label: "Resources", href: "/projects/resource-allocation", icon: BarChart2 },
 ];
 
 function isOverdue(item: MyWorkItem): boolean {
@@ -178,7 +178,7 @@ const ProjectCard = memo(function ProjectCard({ project, index }: { project: Pro
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Link
-                    href={`${base}/tickets/new`}
+                    href={`${base}?create=1`}
                     className="h-6 w-6 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                     aria-label="New Task"
                   >
@@ -240,12 +240,6 @@ function QuickCreateMenu({ onCreateProject }: { onCreateProject: () => void }) {
             <ListPlus className="h-4 w-4 text-muted-foreground" />
             <span>Create Task</span>
             <span className="ml-auto text-[10px] text-muted-foreground font-mono">C T</span>
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild className="gap-2 cursor-pointer">
-          <Link href="/projects/sprints">
-            <GitBranch className="h-4 w-4 text-muted-foreground" />
-            <span>Create Sprint</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild className="gap-2 cursor-pointer">

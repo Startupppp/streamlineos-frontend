@@ -17,7 +17,7 @@ const CATEGORY_META: Record<
   retirement: { label: "Retirement", icon: <PiggyBank className="h-4 w-4" />, className: "text-emerald-600 bg-emerald-50 border-emerald-100" },
   wellness: { label: "Wellness", icon: <Smile className="h-4 w-4" />, className: "text-purple-600 bg-purple-50 border-purple-100" },
   perk: { label: "Perk", icon: <Star className="h-4 w-4" />, className: "text-amber-600 bg-amber-50 border-amber-100" },
-  other: { label: "Other", icon: <Package className="h-4 w-4" />, className: "text-slate-600 bg-slate-50 border-slate-100" },
+  other: { label: "Other", icon: <Package className="h-4 w-4" />, className: "text-muted-foreground bg-muted border-border" },
 };
 
 interface Props {

@@ -9,11 +9,11 @@ import { BreakdownSheet } from "./breakdown-sheet";
 import type { RunEmployee } from "@/types/payroll/runs";
 
 const WORKER_TYPE_COLORS: Record<string, string> = {
-  EMPLOYEE: "bg-blue-50 text-blue-700 border-blue-200",
-  CONTRACTOR: "bg-violet-50 text-violet-700 border-violet-200",
-  CONSULTANT: "bg-cyan-50 text-cyan-700 border-cyan-200",
-  INTERN: "bg-amber-50 text-amber-700 border-amber-200",
-  EOR: "bg-slate-100 text-slate-600 border-slate-200",
+  EMPLOYEE: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  CONTRACTOR: "bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-500/10 dark:text-violet-300 dark:border-violet-500/30",
+  CONSULTANT: "bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-500/10 dark:text-cyan-300 dark:border-cyan-500/30",
+  INTERN: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  EOR: "bg-muted text-muted-foreground border-border",
 };
 
 interface EmployeesTabProps {
@@ -38,7 +38,7 @@ const COLUMNS: DataTableColumn<RunEmployee>[] = [
     cell: (row) => (
       <span
         className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${
-          WORKER_TYPE_COLORS[row.workerType] ?? "bg-slate-100 text-slate-600 border-slate-200"
+          WORKER_TYPE_COLORS[row.workerType] ?? "bg-muted text-muted-foreground border-border"
         }`}
       >
         {row.workerType}

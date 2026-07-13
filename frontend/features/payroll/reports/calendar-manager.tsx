@@ -52,9 +52,9 @@ const EVENT_TYPES = [
 ];
 
 const EVENT_STATUS_CLASS: Record<string, string> = {
-  upcoming: "bg-blue-50 text-blue-700 border-blue-200",
-  due: "bg-amber-50 text-amber-700 border-amber-200",
-  overdue: "bg-red-50 text-red-700 border-red-200",
+  upcoming: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  due: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  overdue: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
 };
 
 const eventSchema = z.object({
@@ -345,7 +345,7 @@ export function CalendarManager({ month }: CalendarManagerProps) {
                   <span
                     className={cn(
                       "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border",
-                      EVENT_STATUS_CLASS[event.status] ?? "bg-slate-100 text-slate-600 border-slate-200",
+                      EVENT_STATUS_CLASS[event.status] ?? "bg-muted text-muted-foreground border-border",
                     )}
                   >
                     {event.status}

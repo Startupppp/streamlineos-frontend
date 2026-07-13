@@ -29,7 +29,7 @@ const STATUS_STYLE: Record<MeetingStatus, string> = {
   scheduled: "text-blue-600 border-blue-200",
   in_progress: "text-amber-600 border-amber-200",
   completed: "text-emerald-600 border-emerald-200",
-  cancelled: "text-slate-500 border-slate-200",
+  cancelled: "text-muted-foreground border-border",
 };
 
 const AI_STATUS_LABEL: Record<ActionItemStatus, string> = {
@@ -45,7 +45,7 @@ const AI_STATUS_STYLE: Record<ActionItemStatus, string> = {
   in_progress: "text-amber-600 border-amber-200",
   done: "text-emerald-600 border-emerald-200",
   converted: "text-blue-600 border-blue-200",
-  cancelled: "text-slate-500 border-slate-200",
+  cancelled: "text-muted-foreground border-border",
 };
 
 export const MeetingTypeBadge = memo(function MeetingTypeBadge({ type }: { type: MeetingType }) {

@@ -37,7 +37,7 @@ const STATUS_CONFIG: Record<
     label: "Generated",
     icon: FileText,
     badgeClass: "bg-muted text-muted-foreground border-border",
-    accentClass: "border-l-slate-400",
+    accentClass: "border-l-border",
   },
   SENT: {
     label: "Sent",
@@ -217,8 +217,8 @@ export function DocumentsTab({
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <div className="h-7 w-7 rounded-lg bg-slate-100 dark:bg-slate-900/40 flex items-center justify-center shrink-0">
-                          <FileText className="h-3.5 w-3.5 text-slate-600 dark:text-slate-400" />
+                        <div className="h-7 w-7 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                          <FileText className="h-3.5 w-3.5 text-muted-foreground" />
                         </div>
                         <span className="text-sm font-semibold text-foreground truncate">{doc.title}</span>
                       </div>

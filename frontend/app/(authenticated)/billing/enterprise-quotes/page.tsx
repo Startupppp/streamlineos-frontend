@@ -53,27 +53,27 @@ const STATUS_CONFIG: Record<
 > = {
   DRAFT: {
     label: "Draft",
-    className: "bg-slate-500/10 text-slate-600 border-slate-500/20",
+    className: "bg-muted text-muted-foreground border-border",
   },
   PENDING_APPROVAL: {
     label: "Pending Approval",
-    className: "bg-amber-500/10 text-amber-600 border-amber-200/70",
+    className: "bg-amber-500/10 text-amber-600 border-amber-200/70 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
   },
   APPROVED: {
     label: "Approved",
-    className: "bg-green-500/10 text-green-600 border-green-500/20",
+    className: "bg-green-500/10 text-green-600 border-green-500/20 dark:bg-green-500/10 dark:text-green-300 dark:border-green-500/30",
   },
   SENT: {
     label: "Sent",
-    className: "bg-blue-500/10 text-blue-600 border-blue-500/20",
+    className: "bg-blue-500/10 text-blue-600 border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
   },
   ACCEPTED: {
     label: "Accepted",
-    className: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+    className: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
   },
   REJECTED: {
     label: "Rejected",
-    className: "bg-red-500/10 text-red-600 border-red-500/20",
+    className: "bg-red-500/10 text-red-600 border-red-500/20 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
   },
   EXPIRED: {
     label: "Expired",

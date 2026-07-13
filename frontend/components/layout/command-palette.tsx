@@ -77,7 +77,7 @@ function ItemIcon({
     <span
       className={cn(
         "flex h-7 w-7 shrink-0 items-center justify-center rounded-md",
-        "bg-gray-100 text-gray-400 dark:bg-muted dark:text-muted-foreground",
+        "bg-muted text-muted-foreground",
         "transition-colors duration-150",
         "group-data-[selected=true]:bg-blue-100 group-data-[selected=true]:text-blue-600",
         "dark:group-data-[selected=true]:bg-blue-900/50 dark:group-data-[selected=true]:text-blue-400",
@@ -91,16 +91,16 @@ function ItemIcon({
 }
 
 const COMMAND_ITEM_CLASS =
-  "group flex items-center gap-2.5 rounded-md px-2 py-1.5 text-gray-800 dark:text-gray-100 data-[selected=true]:bg-blue-50 data-[selected=true]:text-gray-800 dark:data-[selected=true]:bg-blue-950/40 dark:data-[selected=true]:text-gray-100";
+  "group flex items-center gap-2.5 rounded-md px-2 py-1.5 text-foreground data-[selected=true]:bg-blue-50 data-[selected=true]:text-foreground dark:data-[selected=true]:bg-blue-950/40";
 
 const COMMAND_ARROW_CLASS =
-  "h-3.5 w-3.5 text-gray-400 shrink-0 group-data-[selected=true]:text-blue-600 dark:group-data-[selected=true]:text-blue-400 transition-colors";
+  "h-3.5 w-3.5 text-muted-foreground shrink-0 group-data-[selected=true]:text-blue-600 dark:group-data-[selected=true]:text-blue-400 transition-colors";
 
 const COMMAND_SHORTCUT_CLASS =
-  "text-gray-400 group-data-[selected=true]:text-blue-600 dark:group-data-[selected=true]:text-blue-400";
+  "text-muted-foreground group-data-[selected=true]:text-blue-600 dark:group-data-[selected=true]:text-blue-400";
 
 const COMMAND_GROUP_CLASS =
-  "[&_[cmdk-group-heading]]:text-gray-500 dark:[&_[cmdk-group-heading]]:text-muted-foreground";
+  "[&_[cmdk-group-heading]]:text-muted-foreground";
 
 function extractProjectId(pathname: string): number | null {
   const match = /\/projects\/(\d+)/.exec(pathname);
@@ -319,10 +319,10 @@ export function CommandPalette() {
                 >
                   <ItemIcon icon={Icon} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate leading-tight text-gray-800 dark:text-gray-100">
+                    <p className="text-sm font-medium truncate leading-tight text-foreground">
                       {item.title}
                     </p>
-                    <p className="text-[11px] text-gray-500 truncate leading-tight mt-0.5">
+                    <p className="text-[11px] text-muted-foreground truncate leading-tight mt-0.5">
                       {item.subtitle}
                     </p>
                   </div>
@@ -360,10 +360,10 @@ export function CommandPalette() {
                   className={COMMAND_ITEM_CLASS}
                 >
                   <ItemIcon icon={page.icon} />
-                  <span className="flex-1 text-sm truncate text-gray-800 dark:text-gray-100">
+                  <span className="flex-1 text-sm truncate text-foreground">
                     {page.name}
                   </span>
-                  <span className="text-[11px] text-gray-400 shrink-0 hidden sm:block transition-colors">
+                  <span className="text-[11px] text-muted-foreground shrink-0 hidden sm:block transition-colors">
                     {page.href}
                   </span>
                   <ArrowRight className={COMMAND_ARROW_CLASS} />
@@ -386,7 +386,7 @@ export function CommandPalette() {
                     className={COMMAND_ITEM_CLASS}
                   >
                     <ItemIcon icon={Plus} />
-                    <span className="flex-1 text-sm text-gray-800 dark:text-gray-100">
+                    <span className="flex-1 text-sm text-foreground">
                       Create ticket
                     </span>
                     <CommandShortcut className={COMMAND_SHORTCUT_CLASS}>
@@ -403,7 +403,7 @@ export function CommandPalette() {
                       className={COMMAND_ITEM_CLASS}
                     >
                       <ItemIcon icon={item.icon} />
-                      <span className="flex-1 text-sm text-gray-800 dark:text-gray-100">
+                      <span className="flex-1 text-sm text-foreground">
                         {item.label}
                       </span>
                       {item.shortcut && (
@@ -425,7 +425,7 @@ export function CommandPalette() {
                 className={COMMAND_ITEM_CLASS}
               >
                 <ItemIcon icon={LayoutDashboard} />
-                <span className="flex-1 text-sm text-gray-800 dark:text-gray-100">
+                <span className="flex-1 text-sm text-foreground">
                   All Projects
                 </span>
               </CommandItem>
@@ -435,7 +435,7 @@ export function CommandPalette() {
                 className={COMMAND_ITEM_CLASS}
               >
                 <ItemIcon icon={Star} />
-                <span className="flex-1 text-sm text-gray-800 dark:text-gray-100">
+                <span className="flex-1 text-sm text-foreground">
                   My Work
                 </span>
               </CommandItem>
@@ -443,7 +443,7 @@ export function CommandPalette() {
             <CommandSeparator className="my-1" />
 
             <div className="px-2 pb-1 pt-2">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-500">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
                 Quick navigation
               </p>
             </div>
@@ -462,7 +462,7 @@ export function CommandPalette() {
                       className={COMMAND_ITEM_CLASS}
                     >
                       <ItemIcon icon={route.icon} />
-                      <span className="flex-1 text-sm text-gray-800 dark:text-gray-100">
+                      <span className="flex-1 text-sm text-foreground">
                         {route.label}
                       </span>
                       <ArrowRight className={COMMAND_ARROW_CLASS} />
@@ -475,32 +475,32 @@ export function CommandPalette() {
         )}
       </CommandList>
 
-      <div className="flex items-center justify-between border-t border-gray-200 px-3 py-1.5 text-[11px] text-gray-500 bg-gray-50/80 dark:border-border dark:bg-muted/20 dark:text-muted-foreground">
+      <div className="flex items-center justify-between border-t border-border px-3 py-1.5 text-[11px] text-muted-foreground bg-muted/30 dark:bg-muted/20">
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1">
-            <Hash className="h-3 w-3 text-gray-400" />
+            <Hash className="h-3 w-3 text-muted-foreground" />
             {pages.length} pages
           </span>
           {query.length >= 2 && (
             <span className="flex items-center gap-1">
-              <Search className="h-3 w-3 text-gray-400" />
+              <Search className="h-3 w-3 text-muted-foreground" />
               {isSearching ? "Searching…" : `${entityResults.length} records`}
             </span>
           )}
         </div>
         <div className="hidden sm:flex items-center gap-1.5">
-          <kbd className="inline-flex h-4 items-center rounded border border-gray-200 bg-background px-1 font-mono text-[10px] text-gray-500">
+          <kbd className="inline-flex h-4 items-center rounded border border-border bg-background px-1 font-mono text-[10px] text-muted-foreground">
             ↑↓
           </kbd>
-          <kbd className="inline-flex h-4 items-center rounded border border-gray-200 bg-background px-1 font-mono text-[10px] text-gray-500">
+          <kbd className="inline-flex h-4 items-center rounded border border-border bg-background px-1 font-mono text-[10px] text-muted-foreground">
             ↵
           </kbd>
           <span>open</span>
-          <kbd className="inline-flex h-4 items-center rounded border border-gray-200 bg-background px-1 font-mono text-[10px] text-gray-500">
+          <kbd className="inline-flex h-4 items-center rounded border border-border bg-background px-1 font-mono text-[10px] text-muted-foreground">
             esc
           </kbd>
           <span className="ml-2">
-            <kbd className="inline-flex h-4 items-center rounded border border-gray-200 bg-background px-1 font-mono text-[10px] text-gray-500">
+            <kbd className="inline-flex h-4 items-center rounded border border-border bg-background px-1 font-mono text-[10px] text-muted-foreground">
               ?
             </kbd>
             <span className="ml-1">shortcuts</span>

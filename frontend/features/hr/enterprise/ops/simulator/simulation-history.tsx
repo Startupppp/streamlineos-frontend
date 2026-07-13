@@ -13,7 +13,7 @@ const TYPE_COLORS: Record<SimulationType, string> = {
   leave: "bg-emerald-50 text-emerald-700",
   attendance: "bg-yellow-50 text-yellow-700",
   approval: "bg-purple-50 text-purple-700",
-  payroll: "bg-slate-100 text-slate-700",
+  payroll: "bg-muted text-muted-foreground",
 };
 
 export function SimulationHistory() {

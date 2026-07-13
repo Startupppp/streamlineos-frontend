@@ -1,4 +1,23 @@
 export type FeedbucketSubmissionType = "bug" | "idea" | "feature" | "question" | "praise" | "other";
+
+export type FeedbucketAiType = "bug" | "feature" | "improvement" | "question" | "praise" | "other";
+export type FeedbucketAiTicketType = "EPIC" | "BUG" | "STORY" | "TASK";
+export type FeedbucketAiPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+
+export interface FeedbucketAiAnalysis {
+  type: FeedbucketAiType;
+  confidence: number;
+  suggestedTicketType: FeedbucketAiTicketType;
+  title: string;
+  summary: string;
+  description: string;
+  reproductionSteps: string[];
+  suggestions: string[];
+  acceptanceCriteria: string[];
+  priority: FeedbucketAiPriority;
+  model: string;
+  processedAt: string;
+}
 export type FeedbucketSubmissionStatus = "open" | "in_progress" | "resolved" | "archived";
 export type FeedbucketSubmissionPriority = "low" | "medium" | "high" | "urgent";
 
@@ -73,6 +92,11 @@ export interface FeedbucketSubmission {
   reporterEmail: string | null;
   assigneeId: string | null;
   linkedTicketId: number | null;
+  aiType: FeedbucketAiType | null;
+  aiConfidence: number | null;
+  aiAnalysis: FeedbucketAiAnalysis | null;
+  aiModel: string | null;
+  aiProcessedAt: string | null;
   createdAt: string;
   updatedAt: string;
   widget?: { id: number; name: string; projectId: number | null } | null;

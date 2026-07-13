@@ -189,7 +189,7 @@ export function ReconciliationMatchPanel({ txn, bankAccountId, onClose }: Props)
                   <Money value={parseFloat(s.amount)} />
                 </div>
                 <div className="flex items-center justify-end gap-2">
-                  <div className="h-1.5 w-16 rounded-full bg-slate-200 overflow-hidden">
+                  <div className="h-1.5 w-16 rounded-full bg-muted overflow-hidden">
                     <div
                       className="h-full rounded-full bg-blue-500"
                       style={{ width: `${confidencePct}%`, transition: "width 0.4s ease" }}

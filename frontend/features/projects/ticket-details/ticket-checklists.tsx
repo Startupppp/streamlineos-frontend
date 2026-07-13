@@ -90,7 +90,7 @@ const ChecklistItemRow = memo(function ChecklistItemRow({
       initial={{ opacity: 0, y: -4 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, height: 0 }}
-      className="group flex items-center gap-2 py-1 px-1 rounded-md hover:bg-slate-50 transition-colors"
+      className="group flex items-center gap-2 py-1 px-1 rounded-md hover:bg-muted/50 transition-colors"
     >
       <button
         type="button"
@@ -99,7 +99,7 @@ const ChecklistItemRow = memo(function ChecklistItemRow({
           "h-4 w-4 shrink-0 rounded border-2 flex items-center justify-center transition-all duration-150",
           item.isCompleted
             ? "bg-emerald-500 border-emerald-500"
-            : "border-slate-300 hover:border-primary/40",
+            : "border-input hover:border-primary/40",
         )}
         aria-label={item.isCompleted ? "Mark incomplete" : "Mark complete"}
       >
@@ -139,7 +139,7 @@ const ChecklistItemRow = memo(function ChecklistItemRow({
             "flex-1 text-sm cursor-pointer",
             item.isCompleted
               ? "line-through text-muted-foreground"
-              : "text-slate-700",
+              : "text-foreground",
           )}
           onClick={() => setEditing(true)}
           onKeyDown={handleSpanKeyDown}
@@ -268,7 +268,7 @@ function ChecklistSection({
           />
         ) : (
           <span
-            className="flex-1 text-sm font-semibold text-slate-800 cursor-pointer hover:text-foreground"
+            className="flex-1 text-sm font-semibold text-foreground cursor-pointer hover:text-foreground/80"
             onClick={() => setEditingTitle(true)}
             onKeyDown={handleTitleSpanKeyDown}
             role="button"
@@ -291,7 +291,7 @@ function ChecklistSection({
       </div>
 
       {total > 0 && (
-        <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden ml-6">
+        <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden ml-6">
           <motion.div
             className="h-full bg-emerald-500 rounded-full"
             initial={{ width: 0 }}
@@ -322,7 +322,7 @@ function ChecklistSection({
               exit={{ opacity: 0, height: 0 }}
               className="flex items-center gap-2 pt-1"
             >
-              <div className="h-4 w-4 shrink-0 rounded border-2 border-slate-200" />
+              <div className="h-4 w-4 shrink-0 rounded border-2 border-input" />
               <input
                 value={newItemText}
                 onChange={(e) => setNewItemText(e.target.value)}
@@ -373,9 +373,9 @@ export function TicketChecklists({ projectId, ticketId }: TicketChecklistsProps)
   if (isLoading) {
     return (
       <div className="space-y-2 animate-pulse">
-        <div className="h-4 bg-slate-100 rounded w-24" />
-        <div className="h-3 bg-slate-100 rounded w-full ml-6" />
-        <div className="h-3 bg-slate-100 rounded w-3/4 ml-6" />
+        <div className="h-4 bg-muted rounded w-24" />
+        <div className="h-3 bg-muted rounded w-full ml-6" />
+        <div className="h-3 bg-muted rounded w-3/4 ml-6" />
       </div>
     );
   }

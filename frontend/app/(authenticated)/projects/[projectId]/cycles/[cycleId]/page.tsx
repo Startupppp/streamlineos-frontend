@@ -154,7 +154,7 @@ export default function CycleDetailPage({ params }: PageProps) {
       filters={
         <div className="flex min-h-8 w-full flex-wrap items-center gap-2 sm:gap-3">
           <ViewSwitcher activeView={view} onViewChange={handleViewChange} />
-          <DisplayOptionsPanel options={displayOptions} onChange={setDisplayOptions} />
+          <DisplayOptionsPanel viewType={view} options={displayOptions} onChange={setDisplayOptions} />
           {cycle?.status && (
             <Badge variant="secondary" className="h-6 text-xs capitalize">
               <Calendar className="h-3 w-3 mr-1" />

@@ -74,9 +74,9 @@ function getCouponStatus(coupon: Coupon): "Active" | "Inactive" | "Expired" {
 }
 
 const STATUS_CLASSES: Record<"Active" | "Inactive" | "Expired", string> = {
-  Active: "bg-green-500/10 text-green-600 border-green-500/20",
-  Inactive: "bg-slate-500/10 text-slate-600 border-slate-500/20",
-  Expired: "bg-red-500/10 text-red-600 border-red-500/20",
+  Active: "bg-green-500/10 text-green-600 border-green-500/20 dark:bg-green-500/10 dark:text-green-300 dark:border-green-500/30",
+  Inactive: "bg-muted text-muted-foreground border-border",
+  Expired: "bg-red-500/10 text-red-600 border-red-500/20 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
 };
 
 interface CreateCouponSheetProps {

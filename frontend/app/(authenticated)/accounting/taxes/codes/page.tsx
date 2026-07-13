@@ -51,7 +51,7 @@ const TAX_TYPE_BADGE: Record<TaxType, string> = {
   VAT: "border-amber-500/30 text-amber-700 bg-amber-500/5",
   TDS: "border-orange-500/30 text-orange-700 bg-orange-500/5",
   TCS: "border-rose-500/30 text-rose-700 bg-rose-500/5",
-  EXEMPT: "border-slate-400/30 text-slate-600 bg-slate-400/5",
+  EXEMPT: "border-border text-muted-foreground bg-muted/30",
   ZERO_RATED: "border-emerald-500/30 text-emerald-700 bg-emerald-500/5",
 };
 

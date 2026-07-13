@@ -146,7 +146,7 @@ export function MyCareerPlan() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.22, ease: "easeOut" }}
-        className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 p-5"
+        className="bg-card rounded-2xl border border-border shadow-sm p-5"
       >
         <h3 className="text-sm font-semibold text-foreground mb-4">Career Plan</h3>
         <Form {...form}>
@@ -294,7 +294,7 @@ export function MyCareerPlan() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.22, ease: "easeOut", delay: 0.05 }}
-          className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 p-5"
+          className="bg-card rounded-2xl border border-border shadow-sm p-5"
         >
           <h3 className="text-sm font-semibold text-foreground mb-4">
             Career Ladder — {selectedPath.name}
@@ -307,8 +307,8 @@ export function MyCareerPlan() {
                   <div
                     className={`rounded-xl border px-3 py-2 text-center min-w-[96px] transition-all ${
                       isCurrent
-                        ? "border-violet-500 bg-violet-50 shadow-sm shadow-violet-100"
-                        : "border-slate-200 bg-slate-50/60"
+                        ? "border-violet-500 bg-violet-50 shadow-sm shadow-violet-100 dark:bg-violet-950/20 dark:border-violet-400"
+                        : "border-border bg-muted/30"
                     }`}
                   >
                     <div
@@ -336,7 +336,7 @@ export function MyCareerPlan() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.22, ease: "easeOut", delay: 0.1 }}
-        className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 p-5"
+        className="bg-card rounded-2xl border border-border shadow-sm p-5"
       >
         <h3 className="text-sm font-semibold text-foreground mb-4">Milestones</h3>
 
@@ -348,7 +348,7 @@ export function MyCareerPlan() {
           {milestones.map((milestone, idx) => (
             <div
               key={idx}
-              className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/50 px-3 py-2.5"
+              className="flex items-center gap-3 rounded-xl border border-border bg-muted/30 px-3 py-2.5"
             >
               <Checkbox
                 id={`milestone-${idx}`}
@@ -374,7 +374,7 @@ export function MyCareerPlan() {
           ))}
         </div>
 
-        <div className="flex items-center gap-2 border-t border-slate-100 pt-4">
+        <div className="flex items-center gap-2 border-t border-border pt-4">
           <Input
             placeholder="Milestone title"
             className="h-8 text-sm flex-1"

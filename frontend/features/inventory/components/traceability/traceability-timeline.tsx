@@ -145,7 +145,7 @@ export function TraceabilityTimeline({
         </TimelineSection>
       )}
 
-      <TimelineSection dotClass="bg-slate-400" label="Current Stock">
+      <TimelineSection dotClass="bg-muted-foreground/40" label="Current Stock">
         {result.currentStock.length > 0 ? (
           <div className="space-y-0.5">
             {result.currentStock.map((loc) => (

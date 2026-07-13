@@ -35,10 +35,10 @@ interface WorkRowShape {
 }
 
 const PRIORITY_CLASS: Record<string, string> = {
-  URGENT: "text-red-600 border-red-300 bg-red-50",
-  HIGH: "text-orange-600 border-orange-300 bg-orange-50",
-  MEDIUM: "text-amber-600 border-amber-300 bg-amber-50",
-  LOW: "text-slate-600 border-slate-300 bg-slate-100",
+  URGENT: "text-red-600 border-red-300 bg-red-50 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
+  HIGH: "text-orange-600 border-orange-300 bg-orange-50 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-500/30",
+  MEDIUM: "text-amber-600 border-amber-300 bg-amber-50 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  LOW: "text-muted-foreground border-border bg-muted dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/30",
 };
 
 const BUCKET_ORDER: DueBucket[] = ["overdue", "today", "upcoming", "none"];

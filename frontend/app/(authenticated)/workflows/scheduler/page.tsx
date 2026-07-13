@@ -31,7 +31,7 @@ import {
 
 function CronBadge({ cron }: { cron: string }) {
   return (
-    <code className="inline-flex items-center px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-[11px] font-mono border border-slate-200">
+    <code className="inline-flex items-center px-2 py-0.5 bg-muted text-muted-foreground rounded text-[11px] font-mono border border-border">
       {cron}
     </code>
   );
@@ -54,12 +54,12 @@ function ScheduleRow({ schedule, onToggle, onDelete, isToggling }: ScheduleRowPr
   }
 
   return (
-    <Card className="bg-white/90 backdrop-blur-sm rounded-xl border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow duration-200">
+    <Card className="bg-card rounded-xl border border-border shadow-sm hover:shadow-md transition-shadow duration-200">
       <CardContent className="p-4">
         <div className="flex items-start gap-4">
           <div className={cn(
             "h-8 w-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5",
-            schedule.isEnabled ? "bg-violet-50" : "bg-slate-50",
+            schedule.isEnabled ? "bg-violet-50 dark:bg-violet-500/10" : "bg-muted",
           )}>
             <Clock className={cn("h-4 w-4", schedule.isEnabled ? "text-violet-600" : "text-slate-400")} />
           </div>
@@ -76,7 +76,7 @@ function ScheduleRow({ schedule, onToggle, onDelete, isToggling }: ScheduleRowPr
               <CronBadge cron={schedule.cronExpression} />
               <span className={cn(
                 "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium",
-                schedule.isEnabled ? "bg-green-50 text-green-700" : "bg-slate-100 text-slate-500",
+                schedule.isEnabled ? "bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-300" : "bg-muted text-muted-foreground",
               )}>
                 {schedule.isEnabled ? "Active" : "Paused"}
               </span>

@@ -12,12 +12,12 @@ const STATUS_CONFIG: Record<CourseEnrollment["status"], { label: string; classNa
   ENROLLED: { label: "Enrolled", className: "bg-blue-50 text-blue-700 border-blue-200" },
   IN_PROGRESS: { label: "In Progress", className: "bg-violet-50 text-violet-700 border-violet-200" },
   COMPLETED: { label: "Completed", className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-  DROPPED: { label: "Dropped", className: "bg-slate-100 text-slate-600 border-slate-200" },
+  DROPPED: { label: "Dropped", className: "bg-muted text-muted-foreground border-border" },
 };
 
 function EnrollmentSkeleton() {
   return (
-    <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 p-4 space-y-3">
+    <div className="bg-card rounded-2xl border border-border p-4 space-y-3">
       <div className="flex items-center justify-between">
         <Skeleton className="h-4 w-48" />
         <Skeleton className="h-5 w-20 rounded-full" />
@@ -44,8 +44,8 @@ export function MyLearning() {
   if (enrollments.length === 0) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center h-64 text-center">
-        <div className="p-4 rounded-2xl bg-slate-100 mb-4">
-          <BookOpen className="h-10 w-10 text-slate-400" />
+        <div className="p-4 rounded-2xl bg-muted mb-4">
+          <BookOpen className="h-10 w-10 text-muted-foreground" />
         </div>
         <p className="text-sm font-medium text-foreground">No courses yet</p>
         <p className="text-xs text-muted-foreground mt-1">Enroll in a course from the catalog to get started</p>
@@ -67,7 +67,7 @@ export function MyLearning() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.22, ease: "easeOut", delay: idx * 0.06 }}
-              className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 p-4 space-y-3"
+              className="bg-card rounded-2xl border border-border shadow-sm p-4 space-y-3"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2.5 min-w-0">

@@ -23,7 +23,7 @@ import { useActivatePolicy } from "@/hooks/api/hr/policies";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 const STATUS_COLORS: Record<string, string> = {
-  draft: "bg-slate-100 text-slate-700 border-slate-200",
+  draft: "bg-muted text-muted-foreground border-border",
   active: "bg-emerald-50 text-emerald-700 border-emerald-200",
   archived: "bg-amber-50 text-amber-600 border-amber-200",
 };
@@ -132,7 +132,7 @@ export default function VersionHistoryPage() {
               return (
                 <div
                   key={item.id}
-                  className={`flex items-center gap-3 rounded-xl border px-4 py-3 bg-card shadow-sm ${isActiveVersion ? "border-l-2 border-l-blue-500 bg-blue-50/50" : "border-border"}`}
+                  className={`flex items-center gap-3 rounded-xl border px-4 py-3 bg-card shadow-sm ${isActiveVersion ? "border-l-2 border-l-blue-500 bg-blue-50/50 dark:bg-blue-500/10" : "border-border"}`}
                 >
                   <span className="text-sm font-mono font-semibold w-8">v{item.version}</span>
                   <Badge variant="outline" className={`text-xs px-2 py-0.5 ${STATUS_COLORS[item.status] ?? ""}`}>

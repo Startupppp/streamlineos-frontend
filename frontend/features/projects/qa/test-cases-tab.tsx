@@ -41,13 +41,13 @@ import { toast } from "sonner";
 import { TestCaseSheet } from "./test-case-sheet";
 
 const PRIORITY_STYLES: Record<TestCasePriority, string> = {
-  low: "text-slate-500 border-slate-200",
+  low: "text-muted-foreground border-border",
   medium: "text-amber-600 border-amber-200",
   high: "text-red-600 border-red-200",
 };
 
 const AUTOMATION_STYLES: Record<TestCaseAutomationStatus, string> = {
-  manual: "text-slate-500 border-slate-200",
+  manual: "text-muted-foreground border-border",
   automated: "text-green-600 border-green-200",
   planned: "text-blue-600 border-blue-200",
 };

@@ -54,9 +54,9 @@ const runDepreciationSchema = z.object({
 type RunFormValues = z.infer<typeof runDepreciationSchema>;
 
 const RUN_STATUS_CLASSES: Record<DepreciationRun["status"], string> = {
-  PENDING: "bg-amber-50 text-amber-700 border-amber-200",
-  COMPLETED: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  REVERSED: "bg-slate-100 text-slate-700 border-slate-200",
+  PENDING: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  COMPLETED: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  REVERSED: "bg-muted text-foreground border-border",
 };
 
 const RUN_STATUS_LABELS: Record<DepreciationRun["status"], string> = {
@@ -306,7 +306,7 @@ export default function DepreciationRunsPage() {
                 <p className="text-xs text-destructive">{form.formState.errors.periodKey.message}</p>
               )}
             </div>
-            <div className="rounded-md bg-blue-50/70 border border-blue-100 px-3 py-2.5 text-xs text-blue-700">
+            <div className="rounded-md bg-blue-50/70 border border-blue-100 px-3 py-2.5 text-xs text-blue-700 dark:bg-blue-500/10 dark:border-blue-500/30 dark:text-blue-300">
               This will create depreciation journal entries for all active assets in the specified period.
               Ensure the period has not been run previously.
             </div>

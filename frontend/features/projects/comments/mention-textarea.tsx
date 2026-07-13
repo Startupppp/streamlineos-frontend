@@ -149,7 +149,7 @@ export function MentionTextarea({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 4 }}
             transition={{ duration: 0.12 }}
-            className="absolute z-50 left-0 mt-1 w-64 bg-white/95 backdrop-blur-sm rounded-xl border border-slate-200/80 shadow-xl shadow-slate-200/60 overflow-hidden"
+            className="absolute z-50 left-0 mt-1 w-64 bg-card/95 backdrop-blur-sm rounded-xl border border-border shadow-xl overflow-hidden"
             role="listbox"
             aria-label="Mention suggestions"
           >

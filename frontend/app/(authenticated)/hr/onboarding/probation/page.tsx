@@ -47,7 +47,7 @@ const STATUS_CONFIG: Record<string, StatusConfig> = {
 function getStatusConfig(status: string): StatusConfig {
   return STATUS_CONFIG[status] ?? {
     label: status,
-    className: "bg-slate-100 text-slate-600 border-slate-200",
+    className: "bg-muted text-muted-foreground border-border",
   };
 }
 
@@ -107,7 +107,7 @@ function ProbationRow({ review, onExtend, onConfirm }: ProbationRowProps) {
             {review.extensionCount > 0 && (
               <Badge
                 variant="outline"
-                className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800/40 dark:text-slate-400"
+                className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground border-border"
               >
                 {review.extensionCount}x extended
               </Badge>

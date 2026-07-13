@@ -29,7 +29,7 @@ interface Props {
 }
 
 const TASK_STATUS_COLORS: Record<AccommodationTaskStatus, string> = {
-  pending: "bg-slate-100 text-slate-600",
+  pending: "bg-muted text-muted-foreground",
   in_progress: "bg-blue-50 text-blue-600",
   completed: "bg-emerald-50 text-emerald-600",
 };

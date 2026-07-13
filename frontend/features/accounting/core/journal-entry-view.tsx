@@ -90,46 +90,46 @@ export function JournalEntryView({
         <CardContent className="p-5">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             <div className="min-w-0">
-              <p className="text-[11px] font-medium text-slate-500 leading-none">Date</p>
+              <p className="text-[11px] font-medium text-muted-foreground leading-none">Date</p>
               <p className="mt-1 text-sm font-medium text-foreground tabular-nums">
                 {formatDate(entry.entryDate)}
               </p>
             </div>
             <div className="min-w-0">
-              <p className="text-[11px] font-medium text-slate-500 leading-none">Status</p>
+              <p className="text-[11px] font-medium text-muted-foreground leading-none">Status</p>
               <div className="mt-1">
                 <FinanceStatusBadge status={entry.status} size="chip" />
               </div>
             </div>
             <div className="min-w-0">
-              <p className="text-[11px] font-medium text-slate-500 leading-none">Source type</p>
+              <p className="text-[11px] font-medium text-muted-foreground leading-none">Source type</p>
               <p className="mt-1 text-sm text-foreground">{entry.sourceType}</p>
             </div>
             {entry.sourceId && (
               <div className="min-w-0">
-                <p className="text-[11px] font-medium text-slate-500 leading-none">Source ID</p>
+                <p className="text-[11px] font-medium text-muted-foreground leading-none">Source ID</p>
                 <p className="mt-1 text-sm font-mono text-foreground truncate">{entry.sourceId}</p>
               </div>
             )}
             {entry.sourceEvent && (
               <div className="min-w-0">
-                <p className="text-[11px] font-medium text-slate-500 leading-none">Source event</p>
+                <p className="text-[11px] font-medium text-muted-foreground leading-none">Source event</p>
                 <p className="mt-1 text-sm text-foreground">{entry.sourceEvent}</p>
               </div>
             )}
             <div className="min-w-0">
-              <p className="text-[11px] font-medium text-slate-500 leading-none">Created by</p>
+              <p className="text-[11px] font-medium text-muted-foreground leading-none">Created by</p>
               <p className="mt-1 text-sm text-foreground truncate">{entry.createdBy}</p>
             </div>
             <div className="min-w-0">
-              <p className="text-[11px] font-medium text-slate-500 leading-none">Created at</p>
+              <p className="text-[11px] font-medium text-muted-foreground leading-none">Created at</p>
               <p className="mt-1 text-sm text-foreground tabular-nums">
                 {formatDateTime(entry.createdAt)}
               </p>
             </div>
             {entry.description && (
               <div className="min-w-0 col-span-2 sm:col-span-3 lg:col-span-4">
-                <p className="text-[11px] font-medium text-slate-500 leading-none">Description</p>
+                <p className="text-[11px] font-medium text-muted-foreground leading-none">Description</p>
                 <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
                   {entry.description}
                 </p>

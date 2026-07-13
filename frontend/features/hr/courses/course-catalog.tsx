@@ -33,7 +33,7 @@ const FORMAT_LABELS: Record<Course["format"], string> = {
 };
 
 const STATUS_COLORS: Record<Course["status"], string> = {
-  DRAFT: "bg-slate-100 text-slate-600",
+  DRAFT: "bg-muted text-muted-foreground",
   PUBLISHED: "bg-emerald-50 text-emerald-700",
   ARCHIVED: "bg-amber-50 text-amber-700",
 };
@@ -49,7 +49,7 @@ const GRADIENT_COLORS = [
 
 function CourseCardSkeleton() {
   return (
-    <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 overflow-hidden">
+    <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
       <Skeleton className="h-36 w-full" />
       <div className="p-4 space-y-3">
         <Skeleton className="h-4 w-3/4" />
@@ -163,8 +163,8 @@ export function CourseCatalog({ canManage }: Props) {
         </div>
       ) : filtered.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center h-64 text-center">
-          <div className="p-4 rounded-2xl bg-slate-100 mb-4">
-            <BookOpen className="h-10 w-10 text-slate-400" />
+          <div className="p-4 rounded-2xl bg-muted mb-4">
+            <BookOpen className="h-10 w-10 text-muted-foreground" />
           </div>
           <p className="text-sm font-medium text-foreground">No courses found</p>
           <p className="text-xs text-muted-foreground mt-1">Try adjusting your filters</p>
@@ -177,7 +177,7 @@ export function CourseCatalog({ canManage }: Props) {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.22, ease: "easeOut", delay: idx * 0.06 }}
-              className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 overflow-hidden hover:shadow-2xl hover:shadow-slate-200/70 transition-shadow duration-200"
+              className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200"
             >
               <div className={`h-36 bg-gradient-to-br ${GRADIENT_COLORS[idx % GRADIENT_COLORS.length]} flex items-center justify-center relative overflow-hidden`}>
                 {course.thumbnailUrl ? (

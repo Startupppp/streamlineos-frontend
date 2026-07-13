@@ -77,7 +77,7 @@ function RuleRow({ rule, dragHandleProps, onToggle, onEdit, onDeleteRequest }: R
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-sm font-medium truncate">{rule.name}</span>
-              <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-blue-50 text-blue-700 border-blue-200">
+              <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30">
                 {ASSIGNMENT_TYPE_LABELS[rule.assignmentType] ?? rule.assignmentType}
               </Badge>
               <Badge variant="outline" className="text-[9px] h-4 px-1.5 py-0 bg-muted text-muted-foreground border-border">
@@ -206,7 +206,7 @@ function PreviewPanel() {
               <div key={step.ruleId} className="flex items-start gap-2">
                 {step.matched
                   ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                  : <XCircle className="h-3.5 w-3.5 text-slate-400 shrink-0 mt-0.5" />}
+                  : <XCircle className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />}
                 <div>
                   <span className="font-medium">{step.ruleName}</span>
                   <span className="text-muted-foreground ml-1">— {step.reason}</span>

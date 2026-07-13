@@ -352,7 +352,7 @@ function RequestActionCell({
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={handleCancelRequest}
-                className="text-slate-600"
+                className="text-muted-foreground"
               >
                 <X className="mr-2 h-4 w-4" />
                 Cancel Request
@@ -649,7 +649,7 @@ export function LeavesTabContent({
               : status === "APPROVED"
                 ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800"
                 : status === "CANCELLED"
-                  ? "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700"
+                  ? "bg-muted text-muted-foreground border-border dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700"
                   : "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800";
           return (
             <div className="flex flex-col gap-0.5">
@@ -740,9 +740,9 @@ export function LeavesTabContent({
         <CardHeader className="pb-3">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <div className="h-7 w-7 rounded-lg bg-slate-100 dark:bg-slate-950/40 flex items-center justify-center">
+              <div className="h-7 w-7 rounded-lg bg-muted flex items-center justify-center">
                 <History
-                  className="h-3.5 w-3.5 text-slate-600 dark:text-slate-400"
+                  className="h-3.5 w-3.5 text-muted-foreground"
                   aria-hidden="true"
                 />
               </div>

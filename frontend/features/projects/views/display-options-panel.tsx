@@ -9,7 +9,15 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import type { DisplayOptions, ColumnByOption, SwimlaneBy, OrderByOption, CompletedIssuesFilter } from "../shared/types";
+import type { ViewType } from "./view-switcher";
+import type {
+  DisplayOptions,
+  ColumnByOption,
+  GroupByOption,
+  SwimlaneBy,
+  OrderByOption,
+  CompletedIssuesFilter,
+} from "../shared/types";
 
 export const DEFAULT_DISPLAY_OPTIONS: DisplayOptions = {
   columnBy: "status",
@@ -47,6 +55,98 @@ const COLUMN_OPTIONS: { value: ColumnByOption; label: string }[] = [
   { value: "cycle", label: "Cycle" },
   { value: "project", label: "Project" },
 ];
+
+const GROUP_OPTIONS: { value: GroupByOption; label: string }[] = [
+  { value: "none", label: "None" },
+  { value: "status", label: "Status" },
+  { value: "assignee", label: "Assignee" },
+  { value: "priority", label: "Priority" },
+  { value: "label", label: "Label" },
+  { value: "cycle", label: "Cycle" },
+  { value: "project", label: "Project" },
+];
+
+type PropertyKey = keyof Pick<
+  DisplayOptions,
+  | "showId"
+  | "showStatus"
+  | "showAssignee"
+  | "showPriority"
+  | "showEstimate"
+  | "showCycle"
+  | "showLabels"
+  | "showDueDate"
+  | "showProject"
+  | "showMilestone"
+  | "showLinks"
+  | "showTimeInStatus"
+  | "showCreated"
+  | "showUpdated"
+  | "showPRs"
+>;
+
+const PROPERTY_CHIPS: { key: PropertyKey; label: string }[] = [
+  { key: "showId", label: "ID" },
+  { key: "showStatus", label: "Status" },
+  { key: "showAssignee", label: "Assignee" },
+  { key: "showPriority", label: "Priority" },
+  { key: "showProject", label: "Project" },
+  { key: "showDueDate", label: "Due date" },
+  { key: "showMilestone", label: "Milestone" },
+  { key: "showCycle", label: "Cycle" },
+  { key: "showEstimate", label: "Estimate" },
+  { key: "showLabels", label: "Labels" },
+  { key: "showLinks", label: "Links" },
+  { key: "showTimeInStatus", label: "Time in status" },
+  { key: "showCreated", label: "Created" },
+  { key: "showUpdated", label: "Updated" },
+  { key: "showPRs", label: "PRs" },
+];
+
+const BOARD_PROPERTIES: PropertyKey[] = [
+  "showId",
+  "showPriority",
+  "showAssignee",
+  "showEstimate",
+  "showCycle",
+  "showLabels",
+  "showDueDate",
+  "showLinks",
+  "showTimeInStatus",
+  "showPRs",
+];
+
+const LIST_PROPERTIES: PropertyKey[] = [
+  "showId",
+  "showPriority",
+  "showAssignee",
+  "showEstimate",
+  "showLabels",
+];
+
+const TABLE_PROPERTIES: PropertyKey[] = [
+  "showId",
+  "showStatus",
+  "showPriority",
+  "showAssignee",
+  "showEstimate",
+  "showLabels",
+  "showDueDate",
+  "showCycle",
+];
+
+function propertyChipsForView(viewType: ViewType): { key: PropertyKey; label: string }[] {
+  const keys =
+    viewType === "board"
+      ? BOARD_PROPERTIES
+      : viewType === "list"
+        ? LIST_PROPERTIES
+        : viewType === "table"
+          ? TABLE_PROPERTIES
+          : [];
+  const keySet = new Set<PropertyKey>(keys);
+  return PROPERTY_CHIPS.filter((chip) => keySet.has(chip.key));
+}
 
 const ROW_OPTIONS: { value: SwimlaneBy; label: string }[] = [
   { value: "none", label: "None" },
@@ -115,12 +215,14 @@ function ToggleRow({ id, label, checked, onCheckedChange }: ToggleRowProps) {
 export type { DisplayOptions };
 
 interface DisplayOptionsPanelProps {
+  viewType: ViewType;
   options: DisplayOptions;
   onChange: (opts: DisplayOptions) => void;
   onOptionsChange?: (opts: DisplayOptions) => void;
 }
 
 export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
+  viewType,
   options,
   onChange,
   onOptionsChange,
@@ -138,6 +240,12 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
     const valid: readonly ColumnByOption[] = ["status", "assignee", "priority", "label", "cycle", "project"];
     const match = valid.find((option) => option === v);
     if (match) set("columnBy", match);
+  }
+
+  function handleGroupByChange(v: string) {
+    const valid: readonly GroupByOption[] = ["status", "assignee", "priority", "label", "cycle", "project", "none"];
+    const match = valid.find((option) => option === v);
+    if (match) set("groupBy", match);
   }
 
   function handleRowByChange(v: string) {
@@ -162,27 +270,24 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
   function handleShowSubIssues(checked: boolean) { set("showSubIssues", checked); }
   function handleShowEmptyColumns(checked: boolean) { set("showEmptyColumns", checked); }
   function handleShowEmptyRows(checked: boolean) { set("showEmptyRows", checked); }
+  function handleShowEmptyGroups(checked: boolean) { set("showEmptyGroups", checked); }
 
-  function handleToggleId() { set("showId", !options.showId); }
-  function handleToggleStatus() { set("showStatus", !options.showStatus); }
-  function handleToggleAssignee() { set("showAssignee", !options.showAssignee); }
-  function handleTogglePriority() { set("showPriority", !options.showPriority); }
-  function handleToggleProject() { set("showProject", !options.showProject); }
-  function handleToggleDueDate() { set("showDueDate", !options.showDueDate); }
-  function handleToggleMilestone() { set("showMilestone", !options.showMilestone); }
-  function handleToggleCycle() { set("showCycle", !options.showCycle); }
-  function handleToggleEstimate() { set("showEstimate", !options.showEstimate); }
-  function handleToggleLabels() { set("showLabels", !options.showLabels); }
-  function handleToggleLinks() { set("showLinks", !options.showLinks); }
-  function handleToggleTimeInStatus() { set("showTimeInStatus", !options.showTimeInStatus); }
-  function handleToggleCreated() { set("showCreated", !options.showCreated); }
-  function handleToggleUpdated() { set("showUpdated", !options.showUpdated); }
-  function handleTogglePRs() { set("showPRs", !options.showPRs); }
+  function handleToggleProperty(key: PropertyKey) {
+    set(key, !options[key]);
+  }
 
   function handleReset() {
     onChange(DEFAULT_DISPLAY_OPTIONS);
     onOptionsChange?.(DEFAULT_DISPLAY_OPTIONS);
   }
+
+  const isBoard = viewType === "board";
+  const isList = viewType === "list";
+  const isTable = viewType === "table";
+  const showLayout = isBoard || isList;
+  const showOrdering = isBoard || isList || isTable;
+  const showShowSection = isBoard || isList || isTable;
+  const propertyChips = propertyChipsForView(viewType);
 
   return (
     <Popover>
@@ -198,58 +303,96 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
         </Button>
       </PopoverTrigger>
       <PopoverContent align="start" collisionPadding={16} className="w-72 p-3 space-y-3">
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Columns</p>
-            <Select value={options.columnBy} onValueChange={handleColumnByChange}>
-              <SelectTrigger className="h-7 w-full bg-card text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {COLUMN_OPTIONS.map((o) => (
-                  <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Rows</p>
-            <Select value={options.rowBy} onValueChange={handleRowByChange}>
-              <SelectTrigger className="h-7 w-full bg-card text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {ROW_OPTIONS.map((o) => (
-                  <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+        {showLayout && (
+          <>
+            {isBoard && (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Columns</p>
+                  <Select value={options.columnBy} onValueChange={handleColumnByChange}>
+                    <SelectTrigger className="h-7 w-full bg-card text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {COLUMN_OPTIONS.map((o) => (
+                        <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Rows</p>
+                  <Select value={options.rowBy} onValueChange={handleRowByChange}>
+                    <SelectTrigger className="h-7 w-full bg-card text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ROW_OPTIONS.map((o) => (
+                        <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+            {isList && (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Group by</p>
+                  <Select value={options.groupBy} onValueChange={handleGroupByChange}>
+                    <SelectTrigger className="h-7 w-full bg-card text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {GROUP_OPTIONS.map((o) => (
+                        <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Sub-group</p>
+                  <Select value={options.rowBy} onValueChange={handleRowByChange}>
+                    <SelectTrigger className="h-7 w-full bg-card text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ROW_OPTIONS.map((o) => (
+                        <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+            <Separator />
+          </>
+        )}
 
-        <Separator />
-
-        <div className="space-y-1.5">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Ordering</p>
-          <Select value={options.orderBy} onValueChange={handleOrderByChange}>
-            <SelectTrigger className="h-7 w-full bg-card text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {ORDER_OPTIONS.map((o) => (
-                <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <ToggleRow
-            id="disp-order-complete"
-            label="Order completed by recency"
-            checked={options.orderCompleteByRecency}
-            onCheckedChange={handleOrderCompleteByRecency}
-          />
-        </div>
-
-        <Separator />
+        {showOrdering && (
+          <>
+            <div className="space-y-1.5">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Ordering</p>
+              <Select value={options.orderBy} onValueChange={handleOrderByChange}>
+                <SelectTrigger className="h-7 w-full bg-card text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ORDER_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <ToggleRow
+                id="disp-order-complete"
+                label="Order completed by recency"
+                checked={options.orderCompleteByRecency}
+                onCheckedChange={handleOrderCompleteByRecency}
+              />
+            </div>
+            <Separator />
+          </>
+        )}
 
         <div className="space-y-1.5">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Completed issues</p>
@@ -265,37 +408,43 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
           </Select>
         </div>
 
-        <Separator />
+        {showShowSection && (
+          <>
+            <Separator />
+            <div className="space-y-0.5">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Show</p>
+              <ToggleRow id="disp-sub-issues" label="Sub-issues" checked={options.showSubIssues} onCheckedChange={handleShowSubIssues} />
+              {isBoard && (
+                <>
+                  <ToggleRow id="disp-empty-columns" label="Empty columns" checked={options.showEmptyColumns} onCheckedChange={handleShowEmptyColumns} />
+                  <ToggleRow id="disp-empty-rows" label="Empty rows" checked={options.showEmptyRows} onCheckedChange={handleShowEmptyRows} />
+                </>
+              )}
+              {isList && (
+                <ToggleRow id="disp-empty-groups" label="Empty groups" checked={options.showEmptyGroups} onCheckedChange={handleShowEmptyGroups} />
+              )}
+            </div>
+          </>
+        )}
 
-        <div className="space-y-0.5">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Show</p>
-          <ToggleRow id="disp-sub-issues" label="Sub-issues" checked={options.showSubIssues} onCheckedChange={handleShowSubIssues} />
-          <ToggleRow id="disp-empty-columns" label="Empty columns" checked={options.showEmptyColumns} onCheckedChange={handleShowEmptyColumns} />
-          <ToggleRow id="disp-empty-rows" label="Empty rows" checked={options.showEmptyRows} onCheckedChange={handleShowEmptyRows} />
-        </div>
-
-        <Separator />
-
-        <div className="space-y-2">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Properties</p>
-          <div className="grid grid-cols-2 gap-1.5">
-            <PropertyChip label="ID" active={options.showId} onToggle={handleToggleId} />
-            <PropertyChip label="Status" active={options.showStatus} onToggle={handleToggleStatus} />
-            <PropertyChip label="Assignee" active={options.showAssignee} onToggle={handleToggleAssignee} />
-            <PropertyChip label="Priority" active={options.showPriority} onToggle={handleTogglePriority} />
-            <PropertyChip label="Project" active={options.showProject} onToggle={handleToggleProject} />
-            <PropertyChip label="Due date" active={options.showDueDate} onToggle={handleToggleDueDate} />
-            <PropertyChip label="Milestone" active={options.showMilestone} onToggle={handleToggleMilestone} />
-            <PropertyChip label="Cycle" active={options.showCycle} onToggle={handleToggleCycle} />
-            <PropertyChip label="Estimate" active={options.showEstimate} onToggle={handleToggleEstimate} />
-            <PropertyChip label="Labels" active={options.showLabels} onToggle={handleToggleLabels} />
-            <PropertyChip label="Links" active={options.showLinks} onToggle={handleToggleLinks} />
-            <PropertyChip label="Time in status" active={options.showTimeInStatus} onToggle={handleToggleTimeInStatus} />
-            <PropertyChip label="Created" active={options.showCreated} onToggle={handleToggleCreated} />
-            <PropertyChip label="Updated" active={options.showUpdated} onToggle={handleToggleUpdated} />
-            <PropertyChip label="PRs" active={options.showPRs} onToggle={handleTogglePRs} />
-          </div>
-        </div>
+        {propertyChips.length > 0 && (
+          <>
+            <Separator />
+            <div className="space-y-2">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Properties</p>
+              <div className="grid grid-cols-2 gap-1.5">
+                {propertyChips.map((chip) => (
+                  <PropertyChip
+                    key={chip.key}
+                    label={chip.label}
+                    active={options[chip.key]}
+                    onToggle={() => handleToggleProperty(chip.key)}
+                  />
+                ))}
+              </div>
+            </div>
+          </>
+        )}
 
         <Separator />
 

@@ -36,7 +36,7 @@ const SOURCE_COLORS: Record<string, string> = {
   website: "bg-blue-500/15 text-blue-400 border-blue-500/20",
   social_media: "bg-pink-500/15 text-pink-400 border-pink-500/20",
   walk_in: "bg-cyan-500/15 text-cyan-400 border-cyan-500/20",
-  other: "bg-slate-500/15 text-slate-400 border-slate-500/20",
+  other: "bg-muted text-muted-foreground border-border",
 };
 
 const PRIORITY_CONFIG: Record<string, string> = {

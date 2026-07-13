@@ -6,8 +6,8 @@ const STATUS_STYLES: Record<CaseStatus, string> = {
   open: "bg-blue-50 text-blue-700 border-blue-200",
   under_investigation: "bg-amber-50 text-amber-700 border-amber-200",
   resolved: "bg-green-50 text-green-700 border-green-200",
-  closed: "bg-slate-100 text-slate-600 border-slate-200",
-  dismissed: "bg-slate-100 text-slate-500 border-slate-200",
+  closed: "bg-muted text-muted-foreground border-border dark:bg-muted/50 dark:text-muted-foreground dark:border-border",
+  dismissed: "bg-muted text-muted-foreground border-border dark:bg-muted/50 dark:text-muted-foreground dark:border-border",
 };
 
 const STATUS_LABELS: Record<CaseStatus, string> = {
@@ -19,7 +19,7 @@ const STATUS_LABELS: Record<CaseStatus, string> = {
 };
 
 const SEVERITY_STYLES: Record<CaseSeverity, string> = {
-  low: "bg-slate-50 text-slate-600 border-slate-200",
+  low: "bg-muted text-muted-foreground border-border",
   medium: "bg-yellow-50 text-yellow-700 border-yellow-200",
   high: "bg-orange-50 text-orange-700 border-orange-200",
   critical: "bg-red-50 text-red-700 border-red-200",

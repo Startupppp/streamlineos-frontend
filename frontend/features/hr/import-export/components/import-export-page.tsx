@@ -50,7 +50,7 @@ const IMPORT_ENTITIES: ImportEntityConfig[] = [
     label: "Assets",
     description: "Import asset inventory and assignments",
     columns: ["name", "type", "brand", "model", "serialNumber", "assignedToEmail"],
-    accent: "bg-slate-500/10 text-slate-600",
+    accent: "bg-slate-500/10 text-muted-foreground",
     Icon: Package,
   },
   {

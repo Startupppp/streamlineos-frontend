@@ -84,15 +84,15 @@ const STATUS_OPTIONS = [
 ];
 
 const TYPE_COLORS: Record<string, string> = {
-  PERFORMANCE: "bg-blue-50 text-blue-700 border-blue-200",
-  FESTIVAL: "bg-violet-50 text-violet-700 border-violet-200",
-  REFERRAL: "bg-cyan-50 text-cyan-700 border-cyan-200",
-  SPOT: "bg-amber-50 text-amber-700 border-amber-200",
-  ANNUAL: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  JOINING: "bg-teal-50 text-teal-700 border-teal-200",
-  RETENTION: "bg-indigo-50 text-indigo-700 border-indigo-200",
-  COMMISSION: "bg-orange-50 text-orange-700 border-orange-200",
-  ADJUSTMENT: "bg-slate-50 text-slate-700 border-slate-200",
+  PERFORMANCE: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  FESTIVAL: "bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-500/10 dark:text-violet-300 dark:border-violet-500/30",
+  REFERRAL: "bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-500/10 dark:text-cyan-300 dark:border-cyan-500/30",
+  SPOT: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  ANNUAL: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  JOINING: "bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-500/10 dark:text-teal-300 dark:border-teal-500/30",
+  RETENTION: "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-300 dark:border-indigo-500/30",
+  COMMISSION: "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-500/30",
+  ADJUSTMENT: "bg-muted text-muted-foreground border-border",
 };
 
 const createBonusSchema = z.object({
@@ -442,7 +442,7 @@ export function BonusesTab() {
       cell: (row) => (
         <span
           className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${
-            TYPE_COLORS[row.type] ?? "bg-slate-50 text-slate-700 border-slate-200"
+            TYPE_COLORS[row.type] ?? "bg-muted text-muted-foreground border-border"
           }`}
         >
           {row.type.charAt(0) + row.type.slice(1).toLowerCase()}

@@ -45,7 +45,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 function getCategoryColor(category: string) {
-  return CATEGORY_COLORS[category] ?? "bg-slate-100 text-slate-600";
+  return CATEGORY_COLORS[category] ?? "bg-muted text-muted-foreground dark:bg-slate-800/40 dark:text-slate-400";
 }
 
 interface FrameworkLevel {
@@ -164,9 +164,9 @@ export function CompetencyFrameworksTab() {
     return (
       <div className="space-y-3">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="bg-white/90 rounded-2xl border border-slate-200/80 p-5 animate-pulse space-y-2">
-            <div className="h-5 w-1/3 bg-slate-200 rounded" />
-            <div className="h-4 w-1/4 bg-slate-100 rounded" />
+          <div key={i} className="bg-card rounded-2xl border border-border p-5 animate-pulse space-y-2">
+            <div className="h-5 w-1/3 bg-muted rounded" />
+            <div className="h-4 w-1/4 bg-muted rounded" />
           </div>
         ))}
       </div>
@@ -210,11 +210,11 @@ export function CompetencyFrameworksTab() {
                   </Button>
                 </div>
                 {frameworkForm.levels.map((level, idx) => (
-                  <div key={idx} className="bg-slate-50 rounded-xl p-3 space-y-2 border border-slate-200">
+                  <div key={idx} className="bg-muted rounded-xl p-3 space-y-2 border border-border">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-slate-500">Level {idx + 1}</span>
+                      <span className="text-xs font-medium text-muted-foreground">Level {idx + 1}</span>
                       {frameworkForm.levels.length > 1 && (
-                        <button onClick={() => removeLevel(idx)} className="text-slate-400 hover:text-red-500">
+                        <button onClick={() => removeLevel(idx)} className="text-muted-foreground hover:text-destructive">
                           <X className="w-3.5 h-3.5" />
                         </button>
                       )}
@@ -259,20 +259,20 @@ export function CompetencyFrameworksTab() {
             >
               <AccordionItem
                 value={String(framework.id)}
-                className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 px-5 overflow-hidden"
+                className="bg-card rounded-2xl border border-border shadow-sm px-5 overflow-hidden"
               >
                 <AccordionTrigger className="hover:no-underline py-4">
                   <div className="flex items-center gap-3 text-left">
                     <div>
-                      <h3 className="font-semibold text-slate-800">{framework.name}</h3>
+                      <h3 className="font-semibold text-foreground">{framework.name}</h3>
                       <div className="flex gap-2 mt-1">
                         <Badge className="text-xs bg-violet-100 text-violet-700">
                           {framework.ratingScale}-point scale
                         </Badge>
-                        <Badge className="text-xs bg-slate-100 text-slate-600">
+                        <Badge className="text-xs bg-muted text-muted-foreground dark:bg-slate-800/40 dark:text-slate-400">
                           {framework.levels.length} levels
                         </Badge>
-                        <Badge className={`text-xs ${framework.isActive ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-500"}`}>
+                        <Badge className={`text-xs ${framework.isActive ? "bg-green-100 text-green-700" : "bg-muted text-muted-foreground dark:bg-slate-800/40 dark:text-slate-400"}`}>
                           {framework.isActive ? "Active" : "Inactive"}
                         </Badge>
                       </div>
@@ -284,22 +284,22 @@ export function CompetencyFrameworksTab() {
                     {framework.competencies && framework.competencies.length > 0 ? (
                       <div className="space-y-2">
                         {framework.competencies.map((comp) => (
-                          <div key={comp.id} className="flex items-center justify-between bg-slate-50 rounded-xl px-4 py-2.5 border border-slate-100">
+                          <div key={comp.id} className="flex items-center justify-between bg-muted rounded-xl px-4 py-2.5 border border-border">
                             <div>
-                              <span className="text-sm font-medium text-slate-700">{comp.name}</span>
+                              <span className="text-sm font-medium text-foreground">{comp.name}</span>
                               {comp.description && (
-                                <p className="text-xs text-slate-500 mt-0.5">{comp.description}</p>
+                                <p className="text-xs text-muted-foreground mt-0.5">{comp.description}</p>
                               )}
                             </div>
                             <div className="flex gap-2 items-center">
                               <Badge className={`text-xs ${getCategoryColor(comp.category)}`}>{comp.category}</Badge>
-                              <span className="text-xs text-slate-400">w:{comp.weight}</span>
+                              <span className="text-xs text-muted-foreground">w:{comp.weight}</span>
                             </div>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-sm text-slate-400 py-2">No competencies yet</p>
+                      <p className="text-sm text-muted-foreground py-2">No competencies yet</p>
                     )}
                     <Dialog
                       open={competencyDialogFrameworkId === framework.id}

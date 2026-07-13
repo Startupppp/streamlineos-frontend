@@ -446,7 +446,7 @@ export function InterviewFormSheet({
           <FieldGroup
             icon={User}
             label="Interviewers"
-            colorClass="bg-slate-100 text-slate-600 dark:bg-slate-800/60 dark:text-slate-400"
+            colorClass="bg-muted text-muted-foreground dark:bg-slate-800/60 dark:text-slate-400"
           >
             <div className="space-y-2">
               {selectedInterviewers.length > 0 && (

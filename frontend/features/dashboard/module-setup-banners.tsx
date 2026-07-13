@@ -69,7 +69,7 @@ const MODULE_TONE: Record<string, { bg: string; text: string }> = {
   PAYMENTS: { bg: "bg-amber-50", text: "text-amber-600" },
 };
 
-const DEFAULT_TONE = { bg: "bg-slate-100", text: "text-slate-600" };
+const DEFAULT_TONE = { bg: "bg-muted", text: "text-muted-foreground" };
 
 function ModuleSetupBanner({ checklist }: { checklist: ModuleChecklist }) {
   const [isOpen, setIsOpen] = useState(false);

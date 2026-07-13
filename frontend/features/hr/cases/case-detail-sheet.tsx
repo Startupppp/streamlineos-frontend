@@ -150,7 +150,7 @@ export function CaseDetailSheet({ caseId, open, onOpenChange }: Props) {
                 <CaseStatusBadge status={hrCase.status} />
                 <CaseSeverityBadge severity={hrCase.severity} />
                 {hrCase.anonymous && (
-                  <Badge variant="outline" className="text-xs text-slate-500">Anonymous</Badge>
+                  <Badge variant="outline" className="text-xs text-muted-foreground">Anonymous</Badge>
                 )}
               </div>
               <SheetDescription className="text-sm text-foreground mt-1 font-medium">

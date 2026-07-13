@@ -32,7 +32,7 @@ export function BurnoutFlagsList() {
               className="flex items-center justify-between rounded-lg border bg-orange-50 border-orange-200 px-3 py-2"
             >
               <div>
-                <p className="text-xs font-mono text-slate-700">{flag.userId}</p>
+                <p className="text-xs font-mono text-foreground">{flag.userId}</p>
                 <p className="text-xs text-muted-foreground">
                   {flag.checkCount} check-in{flag.checkCount !== 1 ? "s" : ""}
                 </p>

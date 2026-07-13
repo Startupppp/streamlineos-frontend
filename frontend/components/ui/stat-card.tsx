@@ -10,7 +10,7 @@ export type StatTone = "default" | "blue" | "emerald" | "amber" | "red" | "viole
 export type StatColor = StatTone | "cyan" | "green" | "gold" | "purple";
 
 const TONE_MAP: Record<StatTone, { bg: string; text: string }> = {
-  default: { bg: "bg-slate-100",  text: "text-slate-600" },
+  default: { bg: "bg-muted",  text: "text-muted-foreground" },
   blue:    { bg: "bg-blue-50",    text: "text-blue-600" },
   emerald: { bg: "bg-emerald-50", text: "text-emerald-600" },
   amber:   { bg: "bg-amber-50",   text: "text-amber-600" },

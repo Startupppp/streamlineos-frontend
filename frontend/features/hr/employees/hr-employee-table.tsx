@@ -78,7 +78,7 @@ export function HrEmployeeTable({
       header: "Role",
       cell: (user) =>
         user.designation ? (
-          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-700 whitespace-nowrap">
+          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border whitespace-nowrap">
             {user.designation}
           </span>
         ) : (
@@ -105,13 +105,13 @@ export function HrEmployeeTable({
               "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
               isActive
                 ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800"
-                : "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-700",
+                : "bg-muted text-muted-foreground border-border",
             )}
           >
             <span
               className={cn(
                 "h-1.5 w-1.5 rounded-full",
-                isActive ? "bg-emerald-500" : "bg-slate-400",
+                isActive ? "bg-emerald-500" : "bg-muted-foreground/50",
               )}
             />
             {isActive ? "Active" : "Inactive"}

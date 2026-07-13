@@ -27,7 +27,7 @@ export function SimulationResult({ result, label }: Props) {
       {Boolean(result.simulation) && (
         <p className="text-xs text-blue-600 font-medium">{String(result.simulation)}</p>
       )}
-      <div className="rounded-md bg-white/70 border border-blue-100 p-3">
+      <div className="rounded-md bg-card/70 border border-blue-200/50 p-3">
         <pre className="text-xs text-foreground overflow-auto whitespace-pre-wrap max-h-64">
           {JSON.stringify(result, null, 2)}
         </pre>

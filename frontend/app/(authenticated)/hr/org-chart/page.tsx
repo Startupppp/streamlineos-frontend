@@ -94,7 +94,7 @@ const MAX_TREE_DEPTH = 20;
 
 function PersonCard({ emp, size = "md" }: { emp: OrgChartNode; size?: "sm" | "md" }) {
   const isSm = size === "sm";
-  const accent = ROLE_ACCENT[emp.role] ?? "border-l-slate-300";
+  const accent = ROLE_ACCENT[emp.role] ?? "border-l-border";
   return (
     <div className={cn(
       "flex items-center gap-2.5 rounded-xl border border-border bg-card shadow-sm overflow-hidden",
@@ -135,7 +135,7 @@ function TreeBranch({ node, depth = 0, isLast = false }: { node: TreeNode; depth
         <div className="flex items-center gap-2">
           <PersonCard emp={node.employee} size={depth > 1 ? "sm" : "md"} />
           {hasChildren && (
-            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-slate-100 border-slate-200 text-slate-600 dark:bg-slate-900/40 dark:border-slate-700 dark:text-slate-400">
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted border-border text-muted-foreground">
               {node.children.length} report{node.children.length > 1 ? "s" : ""}
             </span>
           )}

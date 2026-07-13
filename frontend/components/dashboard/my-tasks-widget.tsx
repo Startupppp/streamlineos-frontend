@@ -13,7 +13,7 @@ const priorityColors: Record<string, string> = {
   URGENT: "bg-red-100 text-red-700 border-red-200",
   HIGH: "bg-orange-100 text-orange-700 border-orange-200",
   MEDIUM: "bg-yellow-100 text-yellow-700 border-yellow-200",
-  LOW: "bg-slate-100 text-slate-600 border-slate-200",
+  LOW: "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/30",
 };
 
 export function MyTasksWidget() {

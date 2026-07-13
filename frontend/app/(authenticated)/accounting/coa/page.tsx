@@ -47,11 +47,11 @@ function isTypeFilter(value: string): value is TypeFilter {
 }
 
 const TYPE_BADGE_CLASSES: Record<string, string> = {
-  ASSET: "border-blue-500/30 text-blue-700 bg-blue-500/5",
-  LIABILITY: "border-orange-500/30 text-orange-700 bg-orange-500/5",
-  EQUITY: "border-blue-500/30 text-blue-700 bg-blue-500/5",
-  INCOME: "border-emerald-500/30 text-emerald-700 bg-emerald-500/5",
-  EXPENSE: "border-amber-500/30 text-amber-700 bg-amber-500/5",
+  ASSET: "border-blue-500/30 text-blue-700 bg-blue-500/5 dark:text-blue-300",
+  LIABILITY: "border-orange-500/30 text-orange-700 bg-orange-500/5 dark:text-orange-300",
+  EQUITY: "border-blue-500/30 text-blue-700 bg-blue-500/5 dark:text-blue-300",
+  INCOME: "border-emerald-500/30 text-emerald-700 bg-emerald-500/5 dark:text-emerald-300",
+  EXPENSE: "border-amber-500/30 text-amber-700 bg-amber-500/5 dark:text-amber-300",
 };
 
 interface FlatNode {
@@ -225,7 +225,7 @@ function buildColumns(
       header: "Type",
       className: "w-[140px]",
       cell: ({ node }: FlatNode): ReactNode => {
-        const typeClass = TYPE_BADGE_CLASSES[node.accountType] ?? "border-slate-200 text-slate-600 bg-slate-50";
+        const typeClass = TYPE_BADGE_CLASSES[node.accountType] ?? "border-border text-muted-foreground bg-muted";
         return (
           <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", typeClass)}>
             {node.accountType}

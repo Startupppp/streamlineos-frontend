@@ -51,7 +51,7 @@ export function LabelColorPicker({
                 swatchClass,
                 "border-2 border-white shadow-sm transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                 isSelected
-                  ? "ring-2 ring-slate-700 ring-offset-2 scale-105"
+                  ? "ring-2 ring-foreground ring-offset-2 scale-105"
                   : "ring-0",
               )}
               style={{ backgroundColor: color }}

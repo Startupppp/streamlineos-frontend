@@ -218,7 +218,7 @@ export function MemberExpenseList({
               ? "border-l-emerald-400"
               : status === "REJECTED"
                 ? "border-l-rose-400"
-                : "border-l-slate-400";
+                : "border-l-border";
         return (
           <span
             className={cn(

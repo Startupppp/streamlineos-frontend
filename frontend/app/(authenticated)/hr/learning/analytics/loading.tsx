@@ -14,7 +14,7 @@ export default function LearningAnalyticsLoading() {
           {Array.from({ length: 4 }).map((_, i) => (
             <Card
               key={i}
-              className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 overflow-hidden"
+              className="bg-card/90 backdrop-blur-sm rounded-2xl border border-border shadow-xl overflow-hidden"
             >
               <CardContent className="p-4">
                 <div className="flex items-start justify-between gap-3">
@@ -30,7 +30,7 @@ export default function LearningAnalyticsLoading() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60">
+          <Card className="bg-card/90 backdrop-blur-sm rounded-2xl border border-border shadow-xl">
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-4">
                 <Skeleton className="h-7 w-7 rounded-lg" />
@@ -40,7 +40,7 @@ export default function LearningAnalyticsLoading() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60">
+          <Card className="bg-card/90 backdrop-blur-sm rounded-2xl border border-border shadow-xl">
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-4">
                 <Skeleton className="h-7 w-7 rounded-lg" />

@@ -71,7 +71,7 @@ function AccountCard({ account, index }: { account: BankAccount; index: number }
               <Money value={balance} currency={account.currency} />
             </div>
             {!account.isActive && (
-              <div className="flex items-center gap-1 text-slate-500">
+              <div className="flex items-center gap-1 text-muted-foreground">
                 <AlertCircle className="h-3.5 w-3.5" />
                 <span className="text-[11px] font-medium">Inactive</span>
               </div>

@@ -35,7 +35,7 @@ const DayCell = memo(function DayCell({ hours }: { hours: number }) {
     <span
       className={cn(
         "tabular-nums font-medium",
-        hours >= 7 ? "text-emerald-600" : hours >= 4 ? "text-amber-600" : "text-slate-600",
+        hours >= 7 ? "text-emerald-600" : hours >= 4 ? "text-amber-600" : "text-muted-foreground",
       )}
     >
       {hours.toFixed(1)}
@@ -94,7 +94,7 @@ export function TeamTable({ rows, weekStart, isLoading, onRowClick, onRemindAll 
         cell: (row) => {
           if (row.status === "MISSING")
             return (
-              <Badge className="text-[10px] border px-1.5 py-0 bg-slate-100 text-slate-600 border-slate-200">
+              <Badge className="text-[10px] border px-1.5 py-0 bg-muted text-muted-foreground border-border">
                 Missing
               </Badge>
             );

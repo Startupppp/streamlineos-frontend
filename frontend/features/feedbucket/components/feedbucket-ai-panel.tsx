@@ -1,0 +1,303 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { Sparkles, ExternalLink, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
+import DOMPurify from "isomorphic-dompurify";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { useCan } from "@/hooks/api/access";
+import {
+  useAnalyzeFeedbucketSubmission,
+  useCreateTicketFromFeedbucketAi,
+} from "@/hooks/api/feedbucket/use-feedbucket-ai";
+import type { FeedbucketAiAnalysis, FeedbucketAiPriority, FeedbucketAiType } from "@/types/feedbucket";
+
+const AI_TYPE_LABELS: Record<FeedbucketAiType, string> = {
+  bug: "Bug",
+  feature: "Feature",
+  improvement: "Improvement",
+  question: "Question",
+  praise: "Praise",
+  other: "Other",
+};
+
+const AI_TYPE_COLORS: Record<FeedbucketAiType, string> = {
+  bug: "bg-red-50 text-red-700 border-red-200",
+  feature: "bg-blue-50 text-blue-700 border-blue-200",
+  improvement: "bg-blue-50 text-blue-600 border-blue-200",
+  question: "bg-amber-50 text-amber-700 border-amber-200",
+  praise: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  other: "bg-slate-50 text-slate-600 border-slate-200",
+};
+
+const PRIORITY_COLORS: Record<FeedbucketAiPriority, string> = {
+  LOW: "bg-slate-50 text-slate-600 border-slate-200",
+  MEDIUM: "bg-amber-50 text-amber-700 border-amber-200",
+  HIGH: "bg-orange-50 text-orange-700 border-orange-200",
+  URGENT: "bg-red-50 text-red-700 border-red-200",
+};
+
+const TICKET_TYPE_LABELS: Record<string, string> = {
+  EPIC: "Epic",
+  BUG: "Bug",
+  STORY: "Story",
+  TASK: "Task",
+};
+
+function AiAnalysisSkeleton() {
+  return (
+    <div className="space-y-3 animate-pulse" aria-label="Analyzing…">
+      <div className="flex gap-2">
+        <Skeleton className="h-5 w-20 rounded-full" />
+        <Skeleton className="h-5 w-16 rounded-full" />
+        <Skeleton className="h-5 w-12 rounded-full" />
+      </div>
+      <Skeleton className="h-5 w-3/4 rounded" />
+      <Skeleton className="h-20 w-full rounded" />
+      <Skeleton className="h-16 w-full rounded" />
+    </div>
+  );
+}
+
+interface StringListProps {
+  items: string[];
+  label: string;
+}
+
+function StringList({ items, label }: StringListProps) {
+  if (items.length === 0) return null;
+  return (
+    <div className="space-y-1">
+      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{label}</p>
+      <ol className="space-y-1 pl-4 list-decimal">
+        {items.map((item, i) => (
+          <li key={i} className="text-sm text-foreground leading-relaxed">
+            {item}
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
+interface AiAnalysisResultProps {
+  analysis: FeedbucketAiAnalysis;
+}
+
+function AiAnalysisResult({ analysis }: AiAnalysisResultProps) {
+  const confidencePct = Math.round(analysis.confidence * 100);
+  const sanitizedDescription = DOMPurify.sanitize(analysis.description);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge
+          variant="outline"
+          className={`text-xs font-medium ${AI_TYPE_COLORS[analysis.type]}`}
+        >
+          {AI_TYPE_LABELS[analysis.type]}
+        </Badge>
+        <Badge
+          variant="outline"
+          className={`text-xs font-medium ${PRIORITY_COLORS[analysis.priority]}`}
+        >
+          {analysis.priority.charAt(0) + analysis.priority.slice(1).toLowerCase()}
+        </Badge>
+        <Badge variant="outline" className="text-xs font-medium bg-blue-50 text-blue-700 border-blue-200">
+          {TICKET_TYPE_LABELS[analysis.suggestedTicketType] ?? analysis.suggestedTicketType}
+        </Badge>
+        <span className="text-xs text-muted-foreground ml-auto">{confidencePct}% confidence</span>
+      </div>
+
+      <div className="space-y-1">
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Suggested Title</p>
+        <p className="text-sm font-medium text-foreground">{analysis.title}</p>
+      </div>
+
+      {analysis.summary && (
+        <div className="space-y-1">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Summary</p>
+          <p className="text-sm text-foreground leading-relaxed">{analysis.summary}</p>
+        </div>
+      )}
+
+      {sanitizedDescription && (
+        <div className="space-y-1">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Description</p>
+          <div
+            className="prose prose-slate max-w-none prose-sm prose-p:my-1 prose-headings:font-semibold prose-a:text-blue-600 prose-code:bg-muted prose-code:px-1 prose-code:rounded prose-code:text-xs rounded-lg border border-border bg-muted/30 p-3 text-sm"
+            dangerouslySetInnerHTML={{ __html: sanitizedDescription }}
+          />
+        </div>
+      )}
+
+      <StringList items={analysis.reproductionSteps} label="Reproduction Steps" />
+      <StringList items={analysis.suggestions} label="Suggestions" />
+      <StringList items={analysis.acceptanceCriteria} label="Acceptance Criteria" />
+
+      <p className="text-xs text-muted-foreground">
+        Analyzed by {analysis.model} ·{" "}
+        {new Date(analysis.processedAt).toLocaleString(undefined, {
+          dateStyle: "medium",
+          timeStyle: "short",
+        })}
+      </p>
+    </div>
+  );
+}
+
+interface FeedbucketAiPanelProps {
+  submissionId: number;
+  hasScreenshot: boolean;
+  existingAnalysis: FeedbucketAiAnalysis | null;
+  linkedTicketId: number | null;
+  projectId: number | null | undefined;
+  onTicketCreated: (ticketId: number) => void;
+}
+
+export function FeedbucketAiPanel({
+  submissionId,
+  hasScreenshot,
+  existingAnalysis,
+  linkedTicketId,
+  projectId,
+  onTicketCreated,
+}: FeedbucketAiPanelProps) {
+  const canAi = useCan("feedbucket:submissions:ai");
+  const canManage = useCan("feedbucket:submissions:manage");
+
+  const analyzeMutation = useAnalyzeFeedbucketSubmission();
+  const createTicketMutation = useCreateTicketFromFeedbucketAi();
+
+  const [localAnalysis, setLocalAnalysis] = useState<FeedbucketAiAnalysis | null>(existingAnalysis);
+  const [localTicketId, setLocalTicketId] = useState<number | null>(linkedTicketId);
+
+  const analysis = localAnalysis ?? existingAnalysis;
+  const ticketId = localTicketId ?? linkedTicketId;
+  const isAnalyzing = analyzeMutation.isPending;
+  const isCreatingTicket = createTicketMutation.isPending;
+
+  if (!canAi) return null;
+
+  async function handleAnalyze(force = false) {
+    try {
+      const result = await analyzeMutation.mutateAsync({ submissionId, force });
+      setLocalAnalysis(result);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  }
+
+  async function handleCreateTicket() {
+    try {
+      const result = await createTicketMutation.mutateAsync(submissionId);
+      setLocalTicketId(result.ticketId);
+      onTicketCreated(result.ticketId);
+      toast.success("Ticket created from AI analysis");
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  }
+
+  function handleAnalyzeClick() {
+    void handleAnalyze(false);
+  }
+
+  function handleReAnalyzeClick() {
+    void handleAnalyze(true);
+  }
+
+  function handleCreateTicketClick() {
+    void handleCreateTicket();
+  }
+
+  return (
+    <div className="rounded-xl border border-border bg-card p-4 space-y-4">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-blue-500" aria-hidden />
+          <p className="text-sm font-semibold text-foreground">AI Triage</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {analysis && (
+            <LoadingButton
+              size="sm"
+              variant="ghost"
+              isPending={isAnalyzing}
+              loadingText="Re-analyzing…"
+              onClick={handleReAnalyzeClick}
+              aria-label="Re-analyze with AI"
+              className="h-7 px-2 text-xs gap-1"
+            >
+              <RefreshCw className="h-3 w-3" aria-hidden />
+              Re-analyze
+            </LoadingButton>
+          )}
+          {!analysis && (
+            <LoadingButton
+              size="sm"
+              isPending={isAnalyzing}
+              loadingText="Analyzing…"
+              onClick={handleAnalyzeClick}
+              className="h-8 gap-1.5"
+            >
+              <Sparkles className="h-3.5 w-3.5" aria-hidden />
+              Analyze with AI
+            </LoadingButton>
+          )}
+        </div>
+      </div>
+
+      {!hasScreenshot && !analysis && !isAnalyzing && (
+        <p className="text-xs text-muted-foreground">
+          AI works best with a screenshot; analysis will use the text only.
+        </p>
+      )}
+
+      {isAnalyzing && !analysis && (
+        <AiAnalysisSkeleton />
+      )}
+
+      {analysis && (
+        <>
+          <Separator />
+          <AiAnalysisResult analysis={analysis} />
+
+          {canManage && !ticketId && (
+            <LoadingButton
+              size="sm"
+              isPending={isCreatingTicket}
+              loadingText="Creating ticket…"
+              onClick={handleCreateTicketClick}
+              className="w-full sm:w-auto"
+            >
+              Create Ticket from AI
+            </LoadingButton>
+          )}
+
+          {ticketId && (
+            <div className="flex items-center gap-3">
+              <Badge variant="secondary" className="text-xs">
+                AI Ticket #{ticketId}
+              </Badge>
+              {projectId && (
+                <Link
+                  href={`/projects/${projectId}/tickets/${ticketId}`}
+                  className="flex items-center gap-1 text-sm text-blue-600 hover:underline"
+                >
+                  View ticket
+                  <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+                </Link>
+              )}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}

@@ -61,7 +61,7 @@ export function CareerPathsList({ canManage: _canManage }: Props) {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.22, ease: "easeOut", delay: idx * 0.05 }}
-            className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 p-4 flex flex-col gap-3"
+            className="bg-card rounded-2xl border border-border shadow-sm p-4 flex flex-col gap-3"
           >
             <div className="flex items-start justify-between gap-2">
               <span className="font-semibold text-sm text-foreground leading-snug">{path.name}</span>
@@ -106,12 +106,12 @@ export function CareerPathsList({ canManage: _canManage }: Props) {
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.18, ease: "easeOut" }}
-                className="flex flex-col gap-2 border-t border-slate-100 pt-3"
+                className="flex flex-col gap-2 border-t border-border pt-3"
               >
                 {path.levels.map((level) => (
                   <div
                     key={level.level}
-                    className="rounded-xl border border-slate-100 bg-slate-50/60 p-3 flex flex-col gap-1.5"
+                    className="rounded-xl border border-border bg-muted/30 p-3 flex flex-col gap-1.5"
                   >
                     <div className="flex items-center gap-2">
                       <span className="h-5 w-5 rounded-full bg-violet-100 text-violet-700 text-[10px] font-bold flex items-center justify-center shrink-0">

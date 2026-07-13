@@ -18,7 +18,7 @@ const STATUS_COLORS: Record<TrainingAttendance["status"], string> = {
   ENROLLED: "bg-blue-50 text-blue-700 border-blue-200/70",
   ATTENDED: "bg-emerald-50 text-emerald-700 border-emerald-200/70",
   ABSENT: "bg-red-50 text-red-700 border-red-200/70",
-  CANCELLED: "bg-slate-50 text-slate-500 border-slate-200/70",
+  CANCELLED: "bg-muted text-muted-foreground border-border dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700",
 };
 
 function StarRating({ rating }: { rating: number }) {
@@ -27,7 +27,7 @@ function StarRating({ rating }: { rating: number }) {
       {Array.from({ length: 5 }).map((_, i) => (
         <Star
           key={i}
-          className={`h-3 w-3 ${i < rating ? "fill-amber-400 text-amber-400" : "text-slate-200"}`}
+          className={`h-3 w-3 ${i < rating ? "fill-amber-400 text-amber-400" : "text-border"}`}
         />
       ))}
     </div>
@@ -85,7 +85,7 @@ export function AttendancePanel({ programId, canManage }: Props) {
       {attendees.map((attendee) => (
         <div
           key={attendee.id}
-          className="bg-white/90 backdrop-blur-sm rounded-xl border border-slate-200/80 shadow-sm p-3 flex items-center justify-between gap-3"
+          className="bg-card rounded-xl border border-border shadow-sm p-3 flex items-center justify-between gap-3"
         >
           <div className="min-w-0 flex-1 space-y-1">
             <div className="flex items-center gap-2 flex-wrap">

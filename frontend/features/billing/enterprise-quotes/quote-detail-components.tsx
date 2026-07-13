@@ -24,7 +24,7 @@ export type { EnterpriseQuoteStatus };
 export const STATUS_CONFIG: Record<EnterpriseQuoteStatus, { label: string; className: string }> = {
   DRAFT: {
     label: "Draft",
-    className: "bg-slate-500/10 text-slate-600 border-slate-500/20",
+    className: "bg-muted text-muted-foreground border-border",
   },
   PENDING_APPROVAL: {
     label: "Pending Approval",

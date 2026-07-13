@@ -105,10 +105,10 @@ export function EmergencyEventDetail({ eventId, onBack }: Props) {
               <p className="text-2xl font-bold text-red-700">{needHelp}</p>
               <p className="text-xs text-red-600">Need Help</p>
             </div>
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-center">
-              <Clock className="h-5 w-5 text-slate-500 mx-auto mb-1" />
-              <p className="text-2xl font-bold text-slate-700">{noResponse}</p>
-              <p className="text-xs text-slate-500">No Response</p>
+            <div className="rounded-xl border border-border bg-muted p-4 text-center">
+              <Clock className="h-5 w-5 text-muted-foreground mx-auto mb-1" />
+              <p className="text-2xl font-bold text-foreground">{noResponse}</p>
+              <p className="text-xs text-muted-foreground">No Response</p>
             </div>
           </div>
         )}

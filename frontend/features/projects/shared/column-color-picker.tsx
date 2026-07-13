@@ -100,7 +100,7 @@ export function ColumnColorPicker({
                 swatchClass,
                 "border-2 transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                 isSelected
-                  ? "border-slate-700 scale-110"
+                  ? "border-foreground scale-110"
                   : "border-transparent",
               )}
               style={{ backgroundColor: color }}

@@ -21,9 +21,9 @@ import type { EmployeeSalaryProfile, SalaryProfileStatus } from "@/types/payroll
 import { useState } from "react";
 
 const STATUS_CONFIG: Record<SalaryProfileStatus, { className: string; label: string }> = {
-  ACTIVE: { className: "bg-emerald-50 text-emerald-700 border-emerald-200", label: "Active" },
-  UPCOMING: { className: "bg-blue-50 text-blue-700 border-blue-200", label: "Upcoming" },
-  SUPERSEDED: { className: "bg-slate-100 text-slate-500 border-slate-200", label: "Superseded" },
+  ACTIVE: { className: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30", label: "Active" },
+  UPCOMING: { className: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30", label: "Upcoming" },
+  SUPERSEDED: { className: "bg-muted text-muted-foreground border-border", label: "Superseded" },
 };
 
 export function EmployeesListPage() {

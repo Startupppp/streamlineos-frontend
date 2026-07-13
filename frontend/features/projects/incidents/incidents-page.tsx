@@ -29,10 +29,10 @@ import { getSlaState } from "./sla";
 import type { Incident, IncidentSeverity, IncidentStatus } from "@/types/projects";
 
 const SEVERITY_STYLES: Record<IncidentSeverity, string> = {
-  critical: "text-red-700 border-red-300 bg-red-50",
+  critical: "text-red-700 border-red-300 bg-red-50 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
   high: "text-orange-600 border-orange-200",
   medium: "text-amber-600 border-amber-200",
-  low: "text-slate-500 border-slate-200",
+  low: "text-muted-foreground border-border",
 };
 
 const STATUS_STYLES: Record<IncidentStatus, string> = {
@@ -41,7 +41,7 @@ const STATUS_STYLES: Record<IncidentStatus, string> = {
   mitigating: "text-amber-600 border-amber-200",
   resolved: "text-emerald-600 border-emerald-200",
   postmortem: "text-blue-600 border-blue-200",
-  closed: "text-slate-400 border-slate-200",
+  closed: "text-muted-foreground border-border",
 };
 
 const STATUS_LABELS: Record<IncidentStatus, string> = {
@@ -140,9 +140,9 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
       cell: (row) => {
         const state = getSlaState(row);
         if (state.label === "Met")
-          return <Badge variant="outline" className="text-[10px] text-slate-500 border-slate-200">Met</Badge>;
+          return <Badge variant="outline" className="text-[10px] text-muted-foreground border-border">Met</Badge>;
         if (state.responseBreached || state.resolutionBreached)
-          return <Badge variant="outline" className="text-[10px] text-red-600 border-red-200 bg-red-50">Breached</Badge>;
+          return <Badge variant="outline" className="text-[10px] text-red-600 border-red-200 bg-red-50 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30">Breached</Badge>;
         return <Badge variant="outline" className="text-[10px] text-emerald-600 border-emerald-200">On track</Badge>;
       },
       className: "w-[90px]",

@@ -54,11 +54,11 @@ export default function CompOffPage() {
             transition={{ duration: 0.22, ease: "easeOut", delay: 0.08 }}
             className="flex flex-col items-center justify-center py-20 text-center"
           >
-            <div className="bg-slate-100 rounded-2xl p-5 mb-4">
-              <Clock className="h-10 w-10 text-slate-400" />
+            <div className="bg-muted rounded-2xl p-5 mb-4">
+              <Clock className="h-10 w-10 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-semibold text-slate-900">No comp-off balance</h3>
-            <p className="text-slate-500 text-sm mt-1 max-w-xs">
+            <h3 className="text-lg font-semibold text-foreground">No comp-off balance</h3>
+            <p className="text-muted-foreground text-sm mt-1 max-w-xs">
               Work overtime on a holiday or weekend to earn compensatory off days.
             </p>
           </motion.div>

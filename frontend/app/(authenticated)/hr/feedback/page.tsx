@@ -11,7 +11,7 @@ export default function FeedbackPage() {
   return (
     <PageWrapper title="360° Feedback" subtitle="Manage feedback cycles and review submissions">
       <Tabs defaultValue="cycles">
-        <TabsList className="bg-white/80 border border-slate-200/80">
+        <TabsList className="bg-card/80 border border-border/80">
           <TabsTrigger value="cycles">Cycles</TabsTrigger>
           <TabsTrigger value="reviews">My Reviews</TabsTrigger>
           <TabsTrigger value="results">Results</TabsTrigger>

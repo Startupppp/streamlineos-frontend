@@ -30,7 +30,7 @@ import { getInitials } from "@/lib/format-utils";
 
 const ACTION_COLORS: Record<string, string> = {
   "user.login": "bg-emerald-500/10 text-emerald-600 border-emerald-200",
-  "user.logout": "bg-slate-500/10 text-slate-600 border-slate-200",
+  "user.logout": "bg-muted text-muted-foreground border-border",
   "user.password_reset": "bg-amber-500/10 text-amber-700 border-amber-200",
   "user.deactivated": "bg-red-500/10 text-red-600 border-red-200",
   "org.member_invited": "bg-blue-500/10 text-blue-600 border-blue-200",

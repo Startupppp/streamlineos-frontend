@@ -44,7 +44,7 @@ export function CustomFieldsSection({ entityType, values, className }: CustomFie
 
   return (
     <div className={className}>
-      <h3 className="text-sm font-semibold text-slate-700 mb-3">Custom Fields</h3>
+      <h3 className="text-sm font-semibold text-foreground mb-3">Custom Fields</h3>
       <div className="space-y-1.5">
         {activeFields.map((field) => (
           <div key={field.id} className="flex items-center justify-between py-1 border-b border-border/30 last:border-0">

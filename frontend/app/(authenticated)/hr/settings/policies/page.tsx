@@ -34,7 +34,7 @@ import { PolicyVersionHistory } from "@/features/hr/policies/policy-version-hist
 import { LoadingButton } from "@/components/ui/loading-button";
 
 const STATUS_BADGE: Record<string, string> = {
-  draft: "bg-slate-100 text-slate-700 border-slate-200",
+  draft: "bg-muted text-muted-foreground border-border",
   active: "bg-emerald-50 text-emerald-700 border-emerald-200",
   archived: "bg-amber-50 text-amber-600 border-amber-200",
 };

@@ -89,7 +89,7 @@ export default function TrialsPage() {
         </div>
       ) : data.subscription.status !== "TRIAL" ? (
         <div className="space-y-4">
-          <div className="rounded-lg border border-green-200 bg-green-50/50 p-6 flex flex-col items-center text-center gap-3">
+          <div className="rounded-lg border border-green-200 bg-green-50/50 dark:border-green-500/30 dark:bg-green-500/10 p-6 flex flex-col items-center text-center gap-3">
             <CheckCircle2 className="h-12 w-12 text-green-600" />
             <div>
               <p className="text-base font-semibold text-foreground">
@@ -139,9 +139,9 @@ export default function TrialsPage() {
 
             return (
               <>
-                <div className="rounded-lg border border-amber-200 bg-amber-50/40 p-5 space-y-4">
+                <div className="rounded-lg border border-amber-200 bg-amber-50/40 dark:border-amber-500/30 dark:bg-amber-500/10 p-5 space-y-4">
                   <div className="flex items-center gap-2">
-                    <Badge className="bg-amber-500/15 text-amber-700 border-amber-300/60 text-[11px]">
+                    <Badge className="bg-amber-500/15 text-amber-700 border-amber-300/60 text-[11px] dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
                       Trial Active
                     </Badge>
                   </div>
@@ -205,7 +205,7 @@ export default function TrialsPage() {
                           "Full access to all StreamlineOS modules — currently active.",
                         badge: "Active",
                         badgeClass:
-                          "bg-green-500/10 text-green-600 border-green-500/20",
+                          "bg-green-500/10 text-green-600 border-green-500/20 dark:bg-green-500/10 dark:text-green-300 dark:border-green-500/30",
                       },
                       {
                         title: "App Trial",
@@ -213,7 +213,7 @@ export default function TrialsPage() {
                           "Try individual apps from the Marketplace before adding them.",
                         badge: "Available",
                         badgeClass:
-                          "bg-blue-500/10 text-blue-600 border-blue-500/20",
+                          "bg-blue-500/10 text-blue-600 border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
                       },
                       {
                         title: "Enterprise POC",
@@ -221,7 +221,7 @@ export default function TrialsPage() {
                           "Proof of concept engagement for large-scale deployments.",
                         badge: "Contact Sales",
                         badgeClass:
-                          "bg-slate-500/10 text-slate-600 border-slate-500/20",
+                          "bg-muted text-muted-foreground border-border",
                       },
                     ].map(({ title, description, badge, badgeClass }) => (
                       <div

@@ -40,7 +40,7 @@ function ContractTypeBadge({ type }: { type: HrContract["contractType"] }) {
 
 function ContractStatusBadge({ status }: { status: HrContract["status"] }) {
   if (status === "expiring") return <Badge className="bg-amber-50 text-amber-700 border-amber-200">Expiring</Badge>;
-  if (status === "ended") return <Badge className="bg-slate-50 text-slate-600 border-slate-200">Ended</Badge>;
+  if (status === "ended") return <Badge className="bg-muted text-muted-foreground border-border dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700">Ended</Badge>;
   if (status === "converted") return <Badge className="bg-indigo-50 text-indigo-700 border-indigo-200">Converted</Badge>;
   if (status === "renewed") return <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200">Renewed</Badge>;
   return <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200">Active</Badge>;
@@ -68,7 +68,7 @@ function CertificateViewer({ contractId }: { contractId: number }) {
               <AlertDialogTitle>Internship Certificate</AlertDialogTitle>
             </AlertDialogHeader>
             <div
-              className="prose prose-sm max-h-96 overflow-y-auto rounded-lg border border-border p-4 bg-white"
+              className="prose prose-sm max-h-96 overflow-y-auto rounded-lg border border-border p-4 bg-card"
               dangerouslySetInnerHTML={{ __html: data.html }}
             />
             <AlertDialogFooter>

@@ -28,7 +28,7 @@ const RESULT_CONFIG: Record<InterviewResult, { label: string; colorClass: string
   PENDING: { label: "Pending", colorClass: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/40 dark:text-amber-300" },
   PASSED: { label: "Passed", colorClass: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300" },
   FAILED: { label: "Failed", colorClass: "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/40 dark:text-rose-300" },
-  NO_SHOW: { label: "No Show", colorClass: "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800/60 dark:text-slate-400" },
+  NO_SHOW: { label: "No Show", colorClass: "bg-muted text-muted-foreground border-border dark:bg-slate-800/60 dark:text-slate-400" },
 };
 
 interface InterviewFeedbackFormProps {

@@ -44,7 +44,7 @@ function getStatusConfig(activity: CrmActivity): StatusConfig {
     return { label: "Completed", color: "text-emerald-600", bg: "bg-emerald-500/10", icon: CheckCircle2 };
   }
   if (activity.status === "cancelled") {
-    return { label: "Cancelled", color: "text-slate-500", bg: "bg-slate-500/10", icon: XCircle };
+    return { label: "Cancelled", color: "text-muted-foreground", bg: "bg-muted", icon: XCircle };
   }
   if (
     activity.dueDate &&

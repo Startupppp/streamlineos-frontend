@@ -30,7 +30,7 @@ export function SourceRefsPopover({ refs }: SourceRefsPopoverProps) {
           {refs.map((ref, i) => (
             <div key={i} className="flex items-center justify-between text-xs">
               <span className="font-mono text-muted-foreground">{ref.table}</span>
-              <span className="font-mono text-slate-700">#{String(ref.id)}</span>
+              <span className="font-mono text-foreground">#{String(ref.id)}</span>
             </div>
           ))}
         </div>

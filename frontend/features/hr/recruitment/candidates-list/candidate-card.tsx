@@ -35,10 +35,10 @@ export const STAGE_CONFIG: {
   {
     value: "NEW",
     label: "New",
-    accent: "border-l-slate-400",
-    pill: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200",
-    dot: "bg-slate-400",
-    activePill: "bg-slate-800 text-white dark:bg-slate-100 dark:text-slate-800",
+    accent: "border-l-border",
+    pill: "bg-muted text-muted-foreground dark:bg-slate-800 dark:text-slate-200",
+    dot: "bg-muted-foreground/50",
+    activePill: "bg-primary text-primary-foreground dark:bg-slate-100 dark:text-slate-800",
   },
   {
     value: "SCREENING",

@@ -22,7 +22,7 @@ const statusBadgeClasses: Record<string, string> = {
   HALF_DAY: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800",
   WFH: "bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-950/40 dark:text-violet-400 dark:border-violet-800",
   ON_BREAK: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800",
-  CHECKED_OUT: "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-950/40 dark:text-slate-400 dark:border-slate-800",
+  CHECKED_OUT: "bg-muted text-muted-foreground border-border dark:bg-slate-950/40 dark:text-slate-400 dark:border-slate-800",
 };
 
 function getStatusLabel(statusKey: string): string {
@@ -152,8 +152,8 @@ export const DailyHistoryTable = memo(function DailyHistoryTable() {
       <CardHeader className="pb-3 pt-5 px-5">
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <div className="h-7 w-7 rounded-lg bg-slate-100 dark:bg-slate-800/60 flex items-center justify-center shrink-0">
-              <ClipboardList className="h-3.5 w-3.5 text-slate-600 dark:text-slate-400" />
+            <div className="h-7 w-7 rounded-lg bg-muted flex items-center justify-center shrink-0">
+              <ClipboardList className="h-3.5 w-3.5 text-muted-foreground" />
             </div>
             Daily History
           </CardTitle>

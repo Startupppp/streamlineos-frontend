@@ -56,14 +56,14 @@ const STATUS_TABS = [
 ];
 
 const PRIORITY_STYLES: Record<string, string> = {
-  LOW: "bg-slate-100 text-slate-600 border-slate-200",
+  LOW: "bg-muted text-muted-foreground border-border",
   MEDIUM: "bg-blue-50 text-blue-700 border-blue-200",
   HIGH: "bg-amber-50 text-amber-700 border-amber-200",
   URGENT: "bg-red-50 text-red-700 border-red-200",
 };
 
 const STATUS_STYLES: Record<string, { badge: string; label: string; dot: string }> = {
-  DRAFT: { badge: "bg-slate-100 text-slate-600 border-slate-200", label: "Draft", dot: "bg-slate-400" },
+  DRAFT: { badge: "bg-muted text-muted-foreground border-border", label: "Draft", dot: "bg-muted-foreground/50" },
   PENDING_APPROVAL: { badge: "bg-amber-50 text-amber-700 border-amber-200", label: "Pending Approval", dot: "bg-amber-500" },
   APPROVED: { badge: "bg-emerald-50 text-emerald-700 border-emerald-200", label: "Approved", dot: "bg-emerald-500" },
   PUBLISHED: { badge: "bg-blue-50 text-blue-700 border-blue-200", label: "Published", dot: "bg-blue-500" },
@@ -491,7 +491,7 @@ function RequisitionCard({
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.22, ease: "easeOut" }}
-      className="group relative rounded-2xl border border-border bg-white/90 backdrop-blur-sm shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden"
+      className="group relative rounded-2xl border border-border bg-card/90 backdrop-blur-sm shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden"
     >
       <div className="p-5">
         <div className="flex items-start justify-between gap-3 mb-3">

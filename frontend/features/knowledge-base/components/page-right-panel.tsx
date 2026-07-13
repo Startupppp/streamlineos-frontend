@@ -33,10 +33,10 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_CLASS: Record<string, string> = {
-  draft: "bg-slate-100 text-slate-600 border-slate-200",
-  in_review: "bg-amber-50 text-amber-700 border-amber-200",
-  published: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  archived: "bg-slate-100 text-slate-500 border-slate-200 opacity-60",
+  draft: "bg-muted text-muted-foreground border-border",
+  in_review: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  published: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  archived: "bg-muted text-muted-foreground border-border opacity-60",
 };
 
 interface PageRightPanelProps {
@@ -113,8 +113,8 @@ export default function PageRightPanel({
                     variant="outline"
                     className={`text-[10px] h-4 px-1.5 ${
                       page.trustState === "verified"
-                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                        : "bg-amber-50 text-amber-700 border-amber-200"
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
+                        : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30"
                     }`}
                   >
                     {page.trustState === "verified" ? "Verified" : "Stale"}

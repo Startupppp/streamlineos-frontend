@@ -34,9 +34,9 @@ import { formatMonth } from "@/features/payroll/shared";
 const PUBLISHABLE_STATUSES: PayrollRunStatus[] = ["LOCKED", "PAID", "PAYSLIPS_PUBLISHED", "CLOSED"];
 
 const STATUS_CLASSES: Record<PublicationStatus, string> = {
-  PENDING: "bg-slate-100 text-slate-700 border border-slate-200/70",
-  PUBLISHED: "bg-emerald-50 text-emerald-700 border border-emerald-200/70",
-  FAILED: "bg-red-50 text-red-700 border border-red-200/70",
+  PENDING: "bg-muted text-muted-foreground border border-border",
+  PUBLISHED: "bg-emerald-50 text-emerald-700 border border-emerald-200/70 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  FAILED: "bg-red-50 text-red-700 border border-red-200/70 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
 };
 
 function PublishDialog({

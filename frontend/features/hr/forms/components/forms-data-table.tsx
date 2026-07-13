@@ -12,7 +12,7 @@ import { useActivateHrForm, useArchiveHrForm, useDeleteHrForm } from "../hooks/u
 import type { HrForm } from "../lib/types";
 
 const STATUS_COLORS: Record<string, string> = {
-  draft: "bg-slate-50 text-slate-600 border-slate-200",
+  draft: "bg-muted text-muted-foreground border-border dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700",
   active: "bg-emerald-50 text-emerald-700 border-emerald-200",
   archived: "bg-red-50 text-red-600 border-red-200",
 };

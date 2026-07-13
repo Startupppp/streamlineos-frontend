@@ -143,7 +143,7 @@ export default function Gstr3BPage() {
           </div>
 
           <div className="rounded-lg border border-border overflow-hidden">
-            <div className="px-4 py-3 font-medium bg-emerald-50 border-b border-emerald-200/60">
+            <div className="px-4 py-3 font-medium bg-emerald-50 border-b border-emerald-200/60 dark:bg-emerald-500/10 dark:border-emerald-500/30">
               3.1 Outward supplies
             </div>
             <Table>
@@ -175,14 +175,14 @@ export default function Gstr3BPage() {
                 />
               </TableBody>
             </Table>
-            <div className="px-4 py-2 text-xs text-muted-foreground border-t border-slate-200/60">
+            <div className="px-4 py-2 text-xs text-muted-foreground border-t border-border">
               {report.invoiceCount} invoice
               {report.invoiceCount === 1 ? "" : "s"} in period
             </div>
           </div>
 
           <div className="rounded-lg border border-border overflow-hidden">
-            <div className="px-4 py-3 font-medium bg-blue-50 border-b border-blue-200/60">
+            <div className="px-4 py-3 font-medium bg-blue-50 border-b border-blue-200/60 dark:bg-blue-500/10 dark:border-blue-500/30">
               4. Input Tax Credit (ITC)
             </div>
             <Table>
@@ -210,7 +210,7 @@ export default function Gstr3BPage() {
                 />
               </TableBody>
             </Table>
-            <div className="px-4 py-2 text-xs text-muted-foreground border-t border-slate-200/60">
+            <div className="px-4 py-2 text-xs text-muted-foreground border-t border-border">
               {report.billCount} purchase bill
               {report.billCount === 1 ? "" : "s"} in period
             </div>

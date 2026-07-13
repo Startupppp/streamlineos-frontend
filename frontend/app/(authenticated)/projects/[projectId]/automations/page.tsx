@@ -100,12 +100,12 @@ function AutomationCard({ automation, onToggle, onDelete, onEdit }: AutomationCa
           automation.isActive ? "bg-blue-50 border border-blue-100" : "bg-muted border border-border")}>
           <Zap className={cn("h-4 w-4", automation.isActive ? "text-blue-600" : "text-muted-foreground")} />
           <span className={cn("absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white",
-            automation.isActive ? "bg-emerald-500" : "bg-slate-300")} />
+            automation.isActive ? "bg-emerald-500" : "bg-muted-foreground/40")} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-sm font-semibold text-slate-800 truncate">{automation.name}</p>
-            <Badge variant="secondary" className="text-[10px] bg-slate-100 text-slate-700 border-slate-200 shrink-0">
+            <p className="text-sm font-semibold text-foreground truncate">{automation.name}</p>
+            <Badge variant="secondary" className="text-[10px] bg-muted text-muted-foreground border-border shrink-0">
               {getTriggerLabel(automation.triggerEvent)}
             </Badge>
           </div>
@@ -376,7 +376,7 @@ export default function AutomationsPage({ params }: PageProps) {
 
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-medium text-slate-700">Conditions (optional)</label>
+                    <label className="text-xs font-medium text-foreground">Conditions (optional)</label>
                     <Button type="button" variant="ghost" size="sm" className="h-7 text-xs gap-1 text-foreground hover:text-foreground" onClick={handleAppendCondition}>
                       <Plus className="h-3 w-3" />Add Condition
                     </Button>
@@ -416,7 +416,7 @@ export default function AutomationsPage({ params }: PageProps) {
 
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-medium text-slate-700">
+                    <label className="text-xs font-medium text-foreground">
                       Actions <span className="text-red-500">*</span>
                     </label>
                     <Button type="button" variant="ghost" size="sm" className="h-7 text-xs gap-1 text-foreground hover:text-foreground" onClick={handleAppendAction}>

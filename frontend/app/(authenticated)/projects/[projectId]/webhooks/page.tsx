@@ -152,13 +152,13 @@ function WebhookCard({
           <Zap className="h-4 w-4 text-muted-foreground" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium truncate text-slate-800">{webhook.url}</p>
+          <p className="text-sm font-medium truncate text-foreground">{webhook.url}</p>
           <div className="flex flex-wrap gap-1 mt-1">
             {webhook.events.slice(0, 3).map((e) => (
               <Badge
                 key={e}
                 variant="secondary"
-                className="text-[10px] py-0 px-1.5 bg-slate-100 text-slate-700 border-slate-200 font-mono"
+                className="text-[10px] py-0 px-1.5 bg-muted text-muted-foreground border-border font-mono"
               >
                 {e}
               </Badge>
@@ -175,7 +175,7 @@ function WebhookCard({
           onClick={handleSendTest}
           disabled={sendTest.isPending}
           aria-label="Send test webhook"
-          className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors disabled:opacity-50"
+          className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
         >
           <Send className="h-3.5 w-3.5 text-muted-foreground" />
         </button>
@@ -183,7 +183,7 @@ function WebhookCard({
           type="button"
           onClick={handleToggle}
           aria-label={expanded ? "Hide deliveries" : "Show deliveries"}
-          className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors"
+          className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-muted transition-colors"
         >
           <motion.div animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
             <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -377,7 +377,7 @@ export default function WebhooksPage({ params }: PageProps) {
                   name="url"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs text-slate-600">Payload URL</FormLabel>
+                      <FormLabel className="text-xs text-muted-foreground">Payload URL</FormLabel>
                       <FormControl>
                         <Input
                           placeholder="https://example.com/webhook"
@@ -395,7 +395,7 @@ export default function WebhooksPage({ params }: PageProps) {
                   name="events"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs text-slate-600">
+                      <FormLabel className="text-xs text-muted-foreground">
                         Events to subscribe
                       </FormLabel>
                       <div className="grid grid-cols-2 gap-1.5">
@@ -433,7 +433,7 @@ export default function WebhooksPage({ params }: PageProps) {
                   name="secret"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs text-slate-600">
+                      <FormLabel className="text-xs text-muted-foreground">
                         Signing Secret{" "}
                         <span className="text-muted-foreground font-normal">(optional)</span>
                       </FormLabel>

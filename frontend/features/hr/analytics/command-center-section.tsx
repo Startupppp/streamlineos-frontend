@@ -202,8 +202,8 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
           label="Avg Tenure"
           value={formatTenure(kpis?.avgTenureMonths ?? 0)}
           icon={Clock}
-          iconBg="bg-slate-100"
-          iconColor="text-slate-600"
+          iconBg="bg-muted"
+          iconColor="text-muted-foreground"
         />
         <StatCard
           label="Leave Utilization"

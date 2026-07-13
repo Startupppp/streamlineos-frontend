@@ -358,7 +358,7 @@ export function AddCandidateSheet({ open, onOpenChange }: AddCandidateSheetProps
             <SectionHeader
               icon={FileText}
               label="Notes"
-              colorClass="bg-slate-100 text-slate-600 dark:bg-slate-800/60 dark:text-slate-400"
+              colorClass="bg-muted text-muted-foreground dark:bg-slate-800/60 dark:text-slate-400"
             />
             <FormField
               control={form.control}

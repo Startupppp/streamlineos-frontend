@@ -33,7 +33,7 @@ function StatCard({ label, value, icon, iconBg, index, sub }: StatCardProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.22, ease: "easeOut", delay: index * 0.06 }}
     >
-      <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow duration-200">
+      <Card className="bg-card rounded-xl border border-border shadow-sm hover:shadow-md transition-shadow duration-200">
         <CardContent className="p-5">
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -56,13 +56,13 @@ function TrendBar({ count, max, successCount }: { count: number; max: number; su
   const successPct = count > 0 ? (successCount / count) * 100 : 0;
   return (
     <div className="flex items-center gap-3">
-      <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+      <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
         <div
-          className="h-full bg-gradient-to-r from-violet-400 to-indigo-400 rounded-full transition-all duration-500"
+          className="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-full transition-all duration-500"
           style={{ "--bar-pct": `${pct}%`, width: "var(--bar-pct)" } as React.CSSProperties}
         />
       </div>
-      <div className="h-2 w-16 bg-slate-100 rounded-full overflow-hidden">
+      <div className="h-2 w-16 bg-muted rounded-full overflow-hidden">
         <div
           className="h-full bg-green-400 rounded-full transition-all duration-500"
           style={{ "--success-pct": `${successPct}%`, width: "var(--success-pct)" } as React.CSSProperties}
@@ -164,12 +164,12 @@ export default function WorkflowAnalyticsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25, ease: "easeOut", delay: 0.36 }}
           >
-            <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm">
+            <Card className="bg-card rounded-xl border border-border shadow-sm">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-semibold">Execution Trend</CardTitle>
                 <div className="flex items-center gap-4 text-[11px] text-muted-foreground mt-1">
                   <span className="flex items-center gap-1.5">
-                    <span className="w-3 h-1.5 rounded-full bg-gradient-to-r from-violet-400 to-indigo-400 inline-block" />
+                    <span className="w-3 h-1.5 rounded-full bg-gradient-to-r from-blue-500 to-blue-400 inline-block" />
                     Total
                   </span>
                   <span className="flex items-center gap-1.5">

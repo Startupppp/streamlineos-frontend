@@ -33,7 +33,7 @@ function TemplateCard({
   }
 
   return (
-    <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 flex flex-col">
+    <Card className="bg-card rounded-xl border border-border shadow-sm flex flex-col">
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-2">
           <CardTitle className="text-sm font-semibold">{template.name}</CardTitle>
@@ -50,7 +50,7 @@ function TemplateCard({
       <CardContent className="pt-0 mt-auto">
         <Button
           size="sm"
-          className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
+          className="w-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm transition-all duration-200"
           onClick={handleUse}
           disabled={isUsing}
         >
@@ -133,8 +133,8 @@ export default function WorkflowTemplatesPage() {
           className={cn(
             "px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
             activeCategory === "all"
-              ? "bg-violet-100 text-violet-700 border border-violet-200"
-              : "text-muted-foreground hover:text-foreground hover:bg-slate-100",
+              ? "bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted",
           )}
         >
           All
@@ -146,8 +146,8 @@ export default function WorkflowTemplatesPage() {
             className={cn(
               "px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
               activeCategory === cat
-                ? "bg-violet-100 text-violet-700 border border-violet-200"
-                : "text-muted-foreground hover:text-foreground hover:bg-slate-100",
+                ? "bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted",
             )}
           >
             {cat}

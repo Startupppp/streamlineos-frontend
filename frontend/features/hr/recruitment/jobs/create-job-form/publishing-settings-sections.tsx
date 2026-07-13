@@ -70,7 +70,7 @@ export function Section10({ form }: SectionProps) {
   const { control, formState: { errors } } = form;
 
   const priorityOptions = [
-    { value: "LOW", label: "Low", activeClass: "bg-slate-600 hover:bg-slate-700 text-white border-slate-600" },
+    { value: "LOW", label: "Low", activeClass: "bg-primary hover:bg-primary/90 text-primary-foreground border-primary" },
     { value: "MEDIUM", label: "Medium", activeClass: "bg-blue-600 hover:bg-blue-700 text-white border-blue-600" },
     { value: "HIGH", label: "High", activeClass: "bg-amber-500 hover:bg-amber-600 text-white border-amber-500" },
     { value: "URGENT", label: "Urgent", activeClass: "bg-rose-600 hover:bg-rose-700 text-white border-rose-600" },

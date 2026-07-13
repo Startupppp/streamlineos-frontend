@@ -12,7 +12,7 @@ const STATUS_DOT: Record<string, string> = {
 };
 
 const STATUS_BADGE: Record<string, string> = {
-  TODO: "bg-slate-100 text-slate-700",
+  TODO: "bg-muted text-foreground dark:bg-slate-500/10 dark:text-slate-300",
   IN_PROGRESS: "bg-blue-50 text-blue-700",
   IN_REVIEW: "bg-amber-50 text-amber-700",
   DONE: "bg-emerald-50 text-emerald-700",

@@ -12,15 +12,15 @@ import { useUpdateTestResult } from "@/hooks/api/projects/qa";
 import type { TestRunResult, TestResultStatus, TestCasePriority } from "@/types/projects";
 
 const STATUS_OPTIONS: { value: TestResultStatus; label: string; activeClass: string }[] = [
-  { value: "not_run", label: "Not Run", activeClass: "bg-slate-100 text-slate-700 border-slate-300" },
+  { value: "not_run", label: "Not Run", activeClass: "bg-muted text-foreground border-border dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/30" },
   { value: "passed", label: "Pass", activeClass: "bg-green-50 text-green-700 border-green-300" },
   { value: "failed", label: "Fail", activeClass: "bg-red-50 text-red-700 border-red-300" },
   { value: "blocked", label: "Blocked", activeClass: "bg-amber-50 text-amber-700 border-amber-300" },
-  { value: "skipped", label: "Skip", activeClass: "bg-gray-50 text-gray-600 border-gray-300" },
+  { value: "skipped", label: "Skip", activeClass: "bg-muted text-muted-foreground border-border dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/30" },
 ];
 
 const PRIORITY_STYLES: Record<TestCasePriority, string> = {
-  low: "text-slate-500 border-slate-200",
+  low: "text-muted-foreground border-border",
   medium: "text-amber-600 border-amber-200",
   high: "text-red-600 border-red-200",
 };

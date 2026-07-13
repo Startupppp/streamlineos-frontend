@@ -206,7 +206,7 @@ export default function ReimbursementsPage() {
       key: "category",
       header: "Category",
       cell: (r) => (
-        <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-slate-100 text-slate-700 dark:bg-slate-900/40 dark:text-slate-300 border-slate-200 dark:border-slate-800">
+        <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted text-muted-foreground border-border">
           {r.category}
         </span>
       ),

@@ -34,7 +34,7 @@ const TRIGGER_COLORS: Record<ProvisioningTrigger, string> = {
   joiner: "bg-emerald-50 text-emerald-700",
   mover: "bg-blue-50 text-blue-700",
   leaver: "bg-red-50 text-red-700",
-  manual: "bg-slate-100 text-slate-700",
+  manual: "bg-muted text-muted-foreground",
 };
 
 export function IdentityPageContent() {

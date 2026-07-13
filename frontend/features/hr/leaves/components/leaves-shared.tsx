@@ -140,20 +140,20 @@ export const balanceCardConfig: Record<
   },
   "Unpaid Leave": {
     label: "UNPAID",
-    barColor: "bg-slate-400",
-    valueColor: "text-slate-600 dark:text-slate-400",
-    iconBg: "bg-slate-100 dark:bg-slate-800",
-    iconColor: "text-slate-500 dark:text-slate-400",
+    barColor: "bg-muted-foreground/50",
+    valueColor: "text-muted-foreground",
+    iconBg: "bg-muted",
+    iconColor: "text-muted-foreground",
     icon: Palmtree,
   },
 };
 
 export const DEFAULT_CARD_CONFIG = {
   label: "LEAVE",
-  barColor: "bg-slate-400",
-  valueColor: "text-slate-600 dark:text-slate-400",
-  iconBg: "bg-slate-100 dark:bg-slate-800",
-  iconColor: "text-slate-500",
+  barColor: "bg-muted-foreground/50",
+  valueColor: "text-muted-foreground",
+  iconBg: "bg-muted",
+  iconColor: "text-muted-foreground",
   icon: CalendarDays,
 };
 
@@ -425,7 +425,7 @@ export const RequestHistoryRow = React.memo(function RequestHistoryRow({
       : status === "APPROVED"
         ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800"
         : status === "CANCELLED"
-          ? "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700"
+          ? "bg-muted text-muted-foreground border-border dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700"
           : "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800";
 
   const priority = request.priority || "MEDIUM";
@@ -559,7 +559,7 @@ export const RequestHistoryRow = React.memo(function RequestHistoryRow({
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={handleCancelRequest}
-                  className="text-slate-600"
+                  className="text-muted-foreground"
                 >
                   <X className="mr-2 h-4 w-4" />
                   Cancel Request

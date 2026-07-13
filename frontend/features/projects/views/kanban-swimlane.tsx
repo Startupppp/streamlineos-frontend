@@ -40,7 +40,7 @@ export const SwimlaneRowHeader = memo(function SwimlaneRowHeader({
   if (rowBy === "assignee") {
     const assignee = extractAssignee(tickets);
     return (
-      <div className="flex items-center gap-2 px-1 py-2 mb-1">
+      <>
         {assignee ? (
           <Avatar className="h-6 w-6 flex-shrink-0">
             <AvatarImage src={resolveImageUrl(assignee.image)} />
@@ -57,15 +57,15 @@ export const SwimlaneRowHeader = memo(function SwimlaneRowHeader({
           {assignee ? getUserDisplayName(assignee) : rowKey}
         </span>
         <span className="text-xs text-muted-foreground tabular-nums">({count})</span>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="flex items-center gap-2 px-1 py-2 mb-1">
+    <>
       <span className="text-sm font-semibold text-foreground">{rowKey}</span>
       <span className="text-xs text-muted-foreground tabular-nums">({count})</span>
-    </div>
+    </>
   );
 });
 

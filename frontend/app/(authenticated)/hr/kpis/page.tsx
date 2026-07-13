@@ -10,7 +10,7 @@ export default function KpisPage() {
   return (
     <PageWrapper title="KPIs & Competencies" subtitle="Define performance indicators and competency frameworks">
       <Tabs defaultValue="kpis">
-        <TabsList className="bg-white/80 border border-slate-200/80">
+        <TabsList className="bg-card/80 border border-border/80">
           <TabsTrigger value="kpis">KPI Library</TabsTrigger>
           <TabsTrigger value="frameworks">Competency Frameworks</TabsTrigger>
         </TabsList>

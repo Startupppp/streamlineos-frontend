@@ -48,8 +48,8 @@ export function ExtractTasksCard({ projectId, featureEnabled, requiredPlan }: Ex
   return (
     <div className="bg-card border border-border rounded-xl shadow-sm p-4 flex flex-col gap-3">
       <div className="flex items-start gap-3">
-        <div className="shrink-0 flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 border border-slate-200">
-          <FileText className="h-4 w-4 text-slate-500" />
+        <div className="shrink-0 flex h-8 w-8 items-center justify-center rounded-lg bg-muted border border-border">
+          <FileText className="h-4 w-4 text-muted-foreground" />
         </div>
         <div className="min-w-0 flex-1">
           <h3 className="text-sm font-semibold text-foreground">Extract Tasks from Notes</h3>

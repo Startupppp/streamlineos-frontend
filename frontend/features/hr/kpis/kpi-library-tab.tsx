@@ -27,7 +27,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 function getCategoryColor(category: string) {
-  return CATEGORY_COLORS[category] ?? "bg-slate-100 text-slate-600";
+  return CATEGORY_COLORS[category] ?? "bg-muted text-muted-foreground dark:bg-slate-800/40 dark:text-slate-400";
 }
 
 interface KpiFormState {
@@ -113,10 +113,10 @@ export function KpiLibraryTab() {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="bg-white/90 rounded-2xl border border-slate-200/80 p-5 space-y-3 animate-pulse">
-            <div className="h-5 w-2/3 bg-slate-200 rounded" />
-            <div className="h-4 w-1/3 bg-slate-100 rounded" />
-            <div className="h-3 w-full bg-slate-100 rounded" />
+          <div key={i} className="bg-card rounded-2xl border border-border p-5 space-y-3 animate-pulse">
+            <div className="h-5 w-2/3 bg-muted rounded" />
+            <div className="h-4 w-1/3 bg-muted rounded" />
+            <div className="h-3 w-full bg-muted rounded" />
           </div>
         ))}
       </div>
@@ -141,7 +141,7 @@ export function KpiLibraryTab() {
                 className={`px-3 py-1 rounded-full text-xs font-medium border transition-all duration-150 ${
                   categoryFilter === cat
                     ? "bg-violet-600 text-white border-violet-600"
-                    : "border-slate-200 text-slate-600 hover:border-violet-300 hover:text-violet-600"
+                    : "border-border text-muted-foreground hover:border-violet-300 hover:text-violet-600"
                 }`}
               >
                 {cat}
@@ -213,32 +213,32 @@ export function KpiLibraryTab() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.22, ease: "easeOut", delay: i * 0.06 }}
-              className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 p-5 space-y-3"
+              className="bg-card rounded-2xl border border-border shadow-sm p-5 space-y-3"
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-slate-800 truncate">{kpi.name}</h3>
+                  <h3 className="font-semibold text-foreground truncate">{kpi.name}</h3>
                   {kpi.description && (
-                    <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">{kpi.description}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{kpi.description}</p>
                   )}
                 </div>
                 <button
                   onClick={() => handleDelete(kpi.id)}
-                  className="ml-2 p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                  className="ml-2 p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 <Badge className={`text-xs ${getCategoryColor(kpi.category)}`}>{kpi.category}</Badge>
-                <Badge className={`text-xs ${kpi.isActive ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-500"}`}>
+                <Badge className={`text-xs ${kpi.isActive ? "bg-green-100 text-green-700" : "bg-muted text-muted-foreground dark:bg-slate-800/40 dark:text-slate-400"}`}>
                   {kpi.isActive ? "Active" : "Inactive"}
                 </Badge>
               </div>
-              <div className="grid grid-cols-3 gap-2 text-xs text-slate-500">
-                {kpi.unit && <div><span className="font-medium text-slate-700">{kpi.unit}</span><br />Unit</div>}
-                {kpi.target && <div><span className="font-medium text-slate-700">{kpi.target}</span><br />Target</div>}
-                <div><span className="font-medium text-slate-700">{kpi.weight}</span><br />Weight</div>
+              <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground">
+                {kpi.unit && <div><span className="font-medium text-foreground">{kpi.unit}</span><br />Unit</div>}
+                {kpi.target && <div><span className="font-medium text-foreground">{kpi.target}</span><br />Target</div>}
+                <div><span className="font-medium text-foreground">{kpi.weight}</span><br />Weight</div>
               </div>
               <Button
                 size="sm"

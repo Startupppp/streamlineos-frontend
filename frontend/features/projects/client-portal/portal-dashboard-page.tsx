@@ -20,7 +20,7 @@ const CR_STATUS_LABELS: Record<ChangeRequestStatus, string> = {
 };
 
 const CR_STATUS_STYLES: Record<ChangeRequestStatus, string> = {
-  submitted: "text-slate-600 border-slate-200",
+  submitted: "text-muted-foreground border-border",
   under_review: "text-blue-600 border-blue-200",
   estimated: "text-amber-600 border-amber-200",
   awaiting_approval: "text-orange-600 border-orange-200",

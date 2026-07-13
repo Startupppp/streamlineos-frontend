@@ -22,19 +22,19 @@ const STATUS_CONFIG: Record<
 > = {
   PENDING: {
     label: "Pending",
-    className: "bg-slate-500/10 text-slate-600 border-slate-500/20",
+    className: "bg-muted text-muted-foreground border-border",
   },
   SIGNED_UP: {
     label: "Signed Up",
-    className: "bg-blue-500/10 text-blue-600 border-blue-500/20",
+    className: "bg-blue-500/10 text-blue-600 border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
   },
   ACTIVATED: {
     label: "Activated",
-    className: "bg-amber-500/10 text-amber-600 border-amber-300/60",
+    className: "bg-amber-500/10 text-amber-600 border-amber-300/60 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
   },
   REWARDED: {
     label: "Rewarded",
-    className: "bg-green-500/10 text-green-600 border-green-500/20",
+    className: "bg-green-500/10 text-green-600 border-green-500/20 dark:bg-green-500/10 dark:text-green-300 dark:border-green-500/30",
   },
   EXPIRED: {
     label: "Expired",
@@ -136,7 +136,7 @@ export default function ReferralsPage() {
       subtitle="Invite others and earn rewards"
     >
       <div className="space-y-4">
-        <div className="rounded-lg border border-blue-200 bg-blue-50/40 p-4 space-y-2">
+        <div className="rounded-lg border border-blue-200 bg-blue-50/40 dark:border-blue-500/30 dark:bg-blue-500/10 p-4 space-y-2">
           <div className="flex items-center gap-2">
             <Gift className="h-4 w-4 text-blue-600" />
             <p className="text-sm font-semibold text-foreground">

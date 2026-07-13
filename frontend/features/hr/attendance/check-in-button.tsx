@@ -292,7 +292,7 @@ export const TimerCard = memo(function TimerCard() {
               "text-muted-foreground italic",
             !isActive &&
               isInCooldown &&
-              "text-slate-600 dark:text-slate-400 font-medium",
+              "text-muted-foreground font-medium",
             isBlockedDay && "text-amber-600 dark:text-amber-400 font-medium",
           )}
         >

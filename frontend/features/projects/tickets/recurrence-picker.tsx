@@ -75,7 +75,7 @@ export function RecurrencePicker({ value, onChange }: RecurrencePickerProps) {
                   className={cn("h-7 w-7 rounded-lg text-[10px] font-medium transition-all border",
                     (value.daysOfWeek ?? []).includes(i)
                       ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-white text-slate-500 border-slate-200 hover:border-primary/30")}>
+                      : "bg-background text-muted-foreground border-input hover:border-primary/30")}>
                   {day[0]}
                 </button>
               ))}

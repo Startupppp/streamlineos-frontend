@@ -59,17 +59,17 @@ export function buildComponentColumns(
       cell: (row) => (
         <div className="flex items-center gap-1">
           {row.taxable && (
-            <span className="text-[10px] px-1 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">
+            <span className="text-[10px] px-1 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
               Tax
             </span>
           )}
           {row.showOnPayslip && (
-            <span className="text-[10px] px-1 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
+            <span className="text-[10px] px-1 py-0.5 rounded bg-muted text-muted-foreground border border-border">
               Slip
             </span>
           )}
           {row.isStatutory && (
-            <span className="text-[10px] px-1 py-0.5 rounded bg-violet-50 text-violet-700 border border-violet-200">
+            <span className="text-[10px] px-1 py-0.5 rounded bg-violet-50 text-violet-700 border border-violet-200 dark:bg-violet-500/10 dark:text-violet-300 dark:border-violet-500/30">
               Stat
             </span>
           )}

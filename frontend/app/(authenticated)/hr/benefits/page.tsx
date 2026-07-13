@@ -39,11 +39,11 @@ const CLAIM_STATUS_META: Record<
   InsuranceClaim["status"],
   { label: string; className: string }
 > = {
-  submitted: { label: "Submitted", className: "bg-blue-100 text-blue-700 border-blue-200" },
-  in_review: { label: "In Review", className: "bg-amber-100 text-amber-700 border-amber-200" },
-  approved: { label: "Approved", className: "bg-emerald-100 text-emerald-700 border-emerald-200" },
-  rejected: { label: "Rejected", className: "bg-rose-100 text-rose-700 border-rose-200" },
-  paid: { label: "Paid", className: "bg-emerald-100 text-emerald-700 border-emerald-200" },
+  submitted: { label: "Submitted", className: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30" },
+  in_review: { label: "In Review", className: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30" },
+  approved: { label: "Approved", className: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30" },
+  rejected: { label: "Rejected", className: "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/30" },
+  paid: { label: "Paid", className: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30" },
 };
 
 function MyBenefitsTab() {
@@ -168,9 +168,9 @@ function buildPlanColumns(
           variant="outline"
           className={cn(
             "text-[10px]",
-            plan.status === "active" && "bg-emerald-100 text-emerald-700 border-emerald-200",
-            plan.status === "draft" && "bg-amber-100 text-amber-700 border-amber-200",
-            plan.status === "archived" && "bg-slate-100 text-slate-600 border-slate-200",
+            plan.status === "active" && "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+            plan.status === "draft" && "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+            plan.status === "archived" && "bg-muted text-muted-foreground border-border",
           )}
         >
           {plan.status}

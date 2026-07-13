@@ -41,7 +41,7 @@ function formatDate(value: string | null | undefined): string {
 }
 
 function ReturnStatusBadge({ status }: { status: VendorReturnStatus | CustomerReturnStatus }) {
-  const cls = RETURN_STATUS_BADGE[status] ?? "bg-slate-100 text-slate-700 border-slate-200";
+  const cls = RETURN_STATUS_BADGE[status] ?? "bg-muted text-muted-foreground border-border";
   return (
     <Badge variant="outline" className={cn("h-4 text-[9px] px-1.5 py-0", cls)}>
       {status}

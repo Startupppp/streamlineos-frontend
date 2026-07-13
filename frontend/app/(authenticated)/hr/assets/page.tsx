@@ -193,7 +193,7 @@ function ASSET_COLUMNS(
       key: "type",
       header: "Type",
       cell: (asset) => (
-        <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-slate-100 border-slate-200 text-slate-700 dark:bg-slate-900/40 dark:border-slate-700 dark:text-slate-300">
+        <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted border-border text-foreground dark:bg-slate-900/40 dark:border-slate-700 dark:text-slate-300">
           {asset.type}
         </span>
       ),

@@ -253,7 +253,7 @@ function PreviewSheet({ template, onClose }: PreviewSheetProps) {
         </SheetHeader>
         <div className="flex-1 overflow-y-auto px-6 py-5">
           <div
-            className="prose prose-sm max-w-none border rounded-lg p-4 bg-white text-black"
+            className="prose prose-sm max-w-none border rounded-lg p-4 bg-card text-foreground"
             dangerouslySetInnerHTML={{ __html: preview }}
           />
         </div>

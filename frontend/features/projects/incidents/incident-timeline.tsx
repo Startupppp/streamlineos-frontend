@@ -25,7 +25,7 @@ const STATUS_STYLES: Record<IncidentStatus, string> = {
   mitigating: "text-amber-600 border-amber-200",
   resolved: "text-emerald-600 border-emerald-200",
   postmortem: "text-blue-600 border-blue-200",
-  closed: "text-slate-400 border-slate-200",
+  closed: "text-muted-foreground border-border",
 };
 
 const STATUSES: IncidentStatus[] = [

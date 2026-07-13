@@ -340,7 +340,11 @@ export function FilterCommandMenu({
     categoryListRef.current?.focus();
   }
 
-  function handleListMouseLeave() {
+  function handleMenuMouseLeave(e: React.MouseEvent<HTMLDivElement>) {
+    const next = e.relatedTarget;
+    if (next instanceof Node && e.currentTarget.contains(next)) {
+      return;
+    }
     setHoveredCategory(null);
   }
 
@@ -420,7 +424,10 @@ export function FilterCommandMenu({
             {...sharedProps}
           />
         ) : (
-          <div className="flex max-h-[min(480px,var(--radix-popover-content-available-height))]">
+          <div
+            className="flex max-h-[min(480px,var(--radix-popover-content-available-height))]"
+            onMouseLeave={handleMenuMouseLeave}
+          >
             <div
               className={cn(
                 "flex min-w-0 flex-col",
@@ -439,7 +446,6 @@ export function FilterCommandMenu({
                 ref={categoryListRef}
                 role="menu"
                 aria-label="Filter categories"
-                onMouseLeave={handleListMouseLeave}
                 className="overflow-y-auto p-1"
               >
                 {visibleCategories.map((cat) => {

@@ -483,7 +483,7 @@ export function CreateTicketDialog({
                     >
                       <span
                         className={cn(
-                          "pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow-sm transition-transform",
+                          "pointer-events-none inline-block h-3 w-3 transform rounded-full bg-background shadow-sm transition-transform",
                           createMore ? "translate-x-3" : "translate-x-0",
                         )}
                       />

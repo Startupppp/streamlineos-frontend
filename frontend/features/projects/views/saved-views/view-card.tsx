@@ -27,7 +27,7 @@ export interface ViewItem {
 }
 
 const LAYOUT_META: Record<string, { icon: React.ReactNode; label: string; color: string }> = {
-  board: { icon: <Kanban className="h-4 w-4" />, label: "Board", color: "text-slate-600 bg-slate-100" },
+  board: { icon: <Kanban className="h-4 w-4" />, label: "Board", color: "text-muted-foreground bg-muted" },
   list: { icon: <List className="h-4 w-4" />, label: "List", color: "text-blue-600 bg-blue-50" },
   table: { icon: <LayoutGrid className="h-4 w-4" />, label: "Table", color: "text-emerald-600 bg-emerald-50" },
   calendar: { icon: <Calendar className="h-4 w-4" />, label: "Calendar", color: "text-amber-600 bg-amber-50" },
@@ -70,7 +70,7 @@ export const ViewCard = memo(function ViewCard({
       onClick={handleNavigate}
     >
       <div className="flex items-center gap-3 min-w-0">
-        <div className={cn("shrink-0 h-8 w-8 rounded-md flex items-center justify-center", meta?.color ?? "text-slate-600 bg-slate-100")}>
+        <div className={cn("shrink-0 h-8 w-8 rounded-md flex items-center justify-center", meta?.color ?? "text-muted-foreground bg-muted")}>
           {meta?.icon}
         </div>
         <div className="min-w-0">
@@ -82,7 +82,7 @@ export const ViewCard = memo(function ViewCard({
         </div>
         <div className="flex items-center gap-1 shrink-0">
           {isPinned && (
-            <Badge variant="outline" className="text-[10px] bg-amber-50 text-amber-700 border-amber-200">
+            <Badge variant="outline" className="text-[10px] bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
               Pinned
             </Badge>
           )}

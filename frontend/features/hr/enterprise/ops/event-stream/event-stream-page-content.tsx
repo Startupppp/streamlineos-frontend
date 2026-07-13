@@ -99,7 +99,7 @@ export function EventStreamPageContent() {
       title="HR Event Stream"
       subtitle="Immutable append-only log of all HR domain events"
       badge={
-        <Badge variant="outline" className="text-xs bg-slate-100 text-slate-600 flex items-center gap-1">
+        <Badge variant="outline" className="text-xs bg-muted text-muted-foreground flex items-center gap-1">
           <Database className="h-3 w-3" />
           Append-only
         </Badge>

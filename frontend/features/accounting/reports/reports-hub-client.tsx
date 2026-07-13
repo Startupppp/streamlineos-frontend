@@ -46,7 +46,7 @@ const CATEGORY_TONES: Record<string, { bg: string; text: string }> = {
   Tax: { bg: "bg-violet-50", text: "text-violet-600" },
   Analytics: { bg: "bg-indigo-50", text: "text-indigo-600" },
   Budgeting: { bg: "bg-pink-50", text: "text-pink-600" },
-  Overview: { bg: "bg-slate-100", text: "text-slate-600" },
+  Overview: { bg: "bg-muted", text: "text-muted-foreground" },
 };
 
 const REPORT_PATH_OVERRIDES: Record<string, string> = {
@@ -91,7 +91,7 @@ function ReportCard({ item, category }: ReportCardProps) {
           {item.description}
         </p>
         {item.exportable && (
-          <span className="inline-flex mt-1.5 items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/70">
+          <span className="inline-flex mt-1.5 items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/70 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
             Exportable
           </span>
         )}

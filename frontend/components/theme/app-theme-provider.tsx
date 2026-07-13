@@ -7,6 +7,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  useSyncExternalStore,
 } from "react";
 import {
   APP_THEMES,
@@ -54,8 +55,17 @@ function readStoredMode(): AppThemeMode {
 }
 
 function readSystemPrefersDark(): boolean {
-  if (typeof window === "undefined") return false;
   return window.matchMedia("(prefers-color-scheme: dark)").matches;
+}
+
+function readSystemPrefersDarkServer(): boolean {
+  return false;
+}
+
+function subscribeToSystemPrefersDark(onChange: () => void): () => void {
+  const media = window.matchMedia("(prefers-color-scheme: dark)");
+  media.addEventListener("change", onChange);
+  return () => media.removeEventListener("change", onChange);
 }
 
 function applyThemeClass(theme: AppThemeId): void {
@@ -77,8 +87,10 @@ function applyDarkClass(isDark: boolean): void {
 export function AppThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<AppThemeId>(readStoredTheme);
   const [mode, setModeState] = useState<AppThemeMode>(readStoredMode);
-  const [systemPrefersDark, setSystemPrefersDark] = useState<boolean>(
+  const systemPrefersDark = useSyncExternalStore(
+    subscribeToSystemPrefersDark,
     readSystemPrefersDark,
+    readSystemPrefersDarkServer,
   );
   const [suppressions, setSuppressions] = useState(0);
 
@@ -93,17 +105,6 @@ export function AppThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     applyDarkClass(isDark);
   }, [isDark]);
-
-  useEffect(() => {
-    if (mode !== "system") return;
-    const media = window.matchMedia("(prefers-color-scheme: dark)");
-    function handleChange(event: MediaQueryListEvent) {
-      setSystemPrefersDark(event.matches);
-    }
-    setSystemPrefersDark(media.matches);
-    media.addEventListener("change", handleChange);
-    return () => media.removeEventListener("change", handleChange);
-  }, [mode]);
 
   useEffect(() => {
     return () => {

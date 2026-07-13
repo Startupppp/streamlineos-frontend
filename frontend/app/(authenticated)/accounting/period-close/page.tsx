@@ -125,7 +125,7 @@ export default function PeriodClosePage() {
             />
           ) : (
             <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/20 py-16 px-6 text-center h-full min-h-[300px]">
-              <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-slate-100 text-slate-500 mb-3">
+              <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-muted text-muted-foreground mb-3">
                 <AlertCircle className="h-5 w-5" />
               </div>
               <h3 className="text-sm font-semibold text-foreground">No period selected</h3>

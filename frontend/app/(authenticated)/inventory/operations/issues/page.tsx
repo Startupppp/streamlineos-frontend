@@ -17,7 +17,7 @@ const TYPE_BADGE: Record<string, string> = {
   SALE: "bg-blue-50 text-blue-700 border-blue-200",
   ADJUSTMENT_OUT: "bg-amber-50 text-amber-700 border-amber-200",
   TRANSFER_OUT: "bg-blue-50 text-blue-700 border-blue-200",
-  RETURN_OUT: "bg-slate-100 text-slate-700 border-slate-200",
+  RETURN_OUT: "bg-muted text-muted-foreground border-border",
 };
 
 function formatDate(value: string | null | undefined): string {
@@ -27,7 +27,7 @@ function formatDate(value: string | null | undefined): string {
 }
 
 function TypeBadge({ type }: { type: string }) {
-  const cls = TYPE_BADGE[type] ?? "bg-slate-100 text-slate-700 border-slate-200";
+  const cls = TYPE_BADGE[type] ?? "bg-muted text-muted-foreground border-border";
   return (
     <Badge variant="outline" className={cn("h-4 text-[9px] px-1.5 py-0", cls)}>
       {type.replace(/_/g, " ")}

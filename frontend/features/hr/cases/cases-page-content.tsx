@@ -111,7 +111,7 @@ export function CasesPageContent() {
         <div className="flex items-center gap-2">
           <span className="truncate text-sm">{row.summary}</span>
           {row.anonymous && (
-            <Badge variant="outline" className="text-xs text-slate-500 shrink-0">Anon</Badge>
+            <Badge variant="outline" className="text-xs text-muted-foreground shrink-0">Anon</Badge>
           )}
         </div>
       ),

@@ -47,12 +47,12 @@ function formatDueDate(dueDate: string): string {
 }
 
 function getDueDateClass(dueDate: string | null, status: string): string {
-  if (!dueDate) return "text-slate-400";
-  if (status === "completed") return "text-slate-400";
+  if (!dueDate) return "text-muted-foreground";
+  if (status === "completed") return "text-muted-foreground";
   const date = new Date(dueDate);
   if (isPast(date) && !isToday(date)) return "text-red-500";
   if (isToday(date)) return "text-amber-600";
-  return "text-slate-500";
+  return "text-muted-foreground";
 }
 
 export function TaskRow({
@@ -102,7 +102,7 @@ export function TaskRow({
         type={task.type}
         className={cn(
           "h-3.5 w-3.5 shrink-0",
-          isCompleted ? "text-slate-300" : "text-slate-400",
+          isCompleted ? "text-muted-foreground/40" : "text-muted-foreground",
         )}
       />
 
@@ -110,7 +110,7 @@ export function TaskRow({
         <p
           className={cn(
             "text-sm truncate",
-            isCompleted && "line-through text-slate-400",
+            isCompleted && "line-through text-muted-foreground",
           )}
         >
           {task.title}

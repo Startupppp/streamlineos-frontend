@@ -23,7 +23,7 @@ export function EmployeeCard({ employee: emp, department }: EmployeeCardProps) {
       <Card
         className={cn(
           "h-full cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4",
-          emp.isActive ? "border-l-emerald-500" : "border-l-slate-400",
+          emp.isActive ? "border-l-emerald-500" : "border-l-border",
         )}
       >
         <CardContent className="p-4 flex flex-col items-center text-center gap-3">
@@ -60,13 +60,13 @@ export function EmployeeCard({ employee: emp, department }: EmployeeCardProps) {
               "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
               emp.isActive
                 ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800"
-                : "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-700",
+                : "bg-muted text-muted-foreground border-border",
             )}
           >
             <span
               className={cn(
                 "h-1.5 w-1.5 rounded-full",
-                emp.isActive ? "bg-emerald-500" : "bg-slate-400",
+                emp.isActive ? "bg-emerald-500" : "bg-muted-foreground/50",
               )}
             />
             {emp.isActive ? "Active" : "Inactive"}

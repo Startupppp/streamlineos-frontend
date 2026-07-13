@@ -108,7 +108,7 @@ function AddOptionRow({ type, sortOrder, onCancel }: AddRowProps) {
 
   return (
     <div className="flex items-center gap-2 px-2 py-1.5 border-t border-border bg-muted/30">
-      <span className="size-2 rounded-full bg-slate-300 shrink-0" />
+      <span className="size-2 rounded-full bg-muted-foreground/40 shrink-0" />
       <Input
         value={label}
         onChange={handleLabelChange}
@@ -352,7 +352,7 @@ export default function CrmOptionsPage() {
                     className={cn(
                       "w-full text-left text-xs px-3 py-2 rounded-md flex items-center justify-between gap-2 transition-colors",
                       isActive
-                        ? "bg-blue-50 text-blue-700 font-medium"
+                        ? "bg-blue-50 text-blue-700 font-medium dark:bg-blue-500/10 dark:text-blue-300"
                         : "text-muted-foreground hover:bg-muted"
                     )}
                   >
@@ -363,7 +363,7 @@ export default function CrmOptionsPage() {
                         className={cn(
                           "text-[9px] h-4 px-1.5 py-0 shrink-0",
                           isActive
-                            ? "bg-blue-100 text-blue-700 border-blue-200"
+                            ? "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30"
                             : "bg-muted text-muted-foreground border-border"
                         )}
                       >

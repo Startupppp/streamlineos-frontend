@@ -30,7 +30,7 @@ import { RiskFormSheet } from "./risk-form-sheet";
 
 const LEVEL_LABEL: Record<"low" | "medium" | "high", string> = { low: "Low", medium: "Medium", high: "High" };
 const LEVEL_STYLE: Record<"low" | "medium" | "high", string> = {
-  low: "text-slate-600 border-slate-200",
+  low: "text-muted-foreground border-border",
   medium: "text-amber-600 border-amber-200",
   high: "text-red-600 border-red-200",
 };
@@ -41,7 +41,7 @@ const STATUS_STYLE: Record<RiskStatus, string> = {
   open: "text-blue-600 border-blue-200",
   mitigating: "text-amber-600 border-amber-200",
   monitoring: "text-blue-600 border-blue-200",
-  accepted: "text-slate-500 border-slate-200",
+  accepted: "text-muted-foreground border-border",
   closed: "text-emerald-600 border-emerald-200",
 };
 const STATUS_OPTS = [

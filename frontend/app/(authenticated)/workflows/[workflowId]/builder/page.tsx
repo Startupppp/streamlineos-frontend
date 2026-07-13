@@ -121,9 +121,9 @@ const NODE_PALETTE: Array<{
     label: "Loop",
     description: "Repeat a set of steps",
     icon: <RefreshCcw className="h-4 w-4" />,
-    color: "text-slate-600",
-    border: "border-slate-300",
-    bg: "bg-slate-50",
+    color: "text-foreground",
+    border: "border-border",
+    bg: "bg-muted",
   },
   {
     nodeType: "ai_action",
@@ -148,9 +148,9 @@ const NODE_PALETTE: Array<{
     label: "Script",
     description: "Run custom code",
     icon: <Code className="h-4 w-4" />,
-    color: "text-slate-700",
-    border: "border-slate-400",
-    bg: "bg-slate-100",
+    color: "text-foreground",
+    border: "border-input",
+    bg: "bg-muted",
   },
   {
     nodeType: "end",
@@ -169,7 +169,7 @@ const NODE_PALETTE_MAP = Object.fromEntries(NODE_PALETTE.map((n) => [n.nodeType,
 >;
 
 const STATUS_BADGE: Record<WorkflowStatus, { label: string; cls: string }> = {
-  draft: { label: "Draft", cls: "bg-slate-100 text-slate-600 border-slate-200" },
+  draft: { label: "Draft", cls: "bg-muted text-muted-foreground border-border" },
   published: { label: "Published", cls: "bg-green-50 text-green-700 border-green-200" },
   disabled: { label: "Disabled", cls: "bg-yellow-50 text-yellow-700 border-yellow-200" },
   archived: { label: "Archived", cls: "bg-red-50 text-red-700 border-red-200" },
@@ -205,7 +205,7 @@ function WorkflowNodeComponent({
   return (
     <div
       className={cn(
-        "rounded-xl border-2 bg-white shadow-md min-w-[160px] max-w-[220px] transition-all duration-150",
+        "rounded-xl border-2 bg-card shadow-md min-w-[160px] max-w-[220px] transition-all duration-150",
         selected
           ? "border-violet-500 shadow-violet-200/60 shadow-lg ring-2 ring-violet-200"
           : palette.border,
@@ -244,15 +244,15 @@ function NodeConfigPanel({ node, onChange, onClose }: NodeConfigPanelProps) {
   }
 
   return (
-    <div className="w-72 bg-white border-l border-slate-200 flex flex-col h-full shadow-xl">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 shrink-0">
+    <div className="w-72 bg-card border-l border-border flex flex-col h-full shadow-xl">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
         <div className="flex items-center gap-2">
           {palette && <span className={palette.color}>{palette.icon}</span>}
           <p className="text-sm font-semibold">Node Settings</p>
         </div>
         <button
           onClick={onClose}
-          className="h-6 w-6 flex items-center justify-center rounded hover:bg-slate-100 transition-colors"
+          className="h-6 w-6 flex items-center justify-center rounded hover:bg-muted transition-colors"
           aria-label="Close panel"
         >
           <X className="h-3.5 w-3.5 text-muted-foreground" />
@@ -448,9 +448,9 @@ function BuilderCanvas({ workflow, workflowId }: BuilderCanvasProps) {
   const statusBadge = STATUS_BADGE[workflow.status];
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-slate-50">
-      <div className="w-56 shrink-0 border-r border-slate-200 bg-white flex flex-col shadow-sm">
-        <div className="px-3 py-3 border-b border-slate-100">
+    <div className="flex h-screen w-full overflow-hidden bg-background">
+      <div className="w-56 shrink-0 border-r border-border bg-card flex flex-col shadow-sm">
+        <div className="px-3 py-3 border-b border-border">
           <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
             Node Palette
           </p>
@@ -464,15 +464,15 @@ function BuilderCanvas({ workflow, workflowId }: BuilderCanvasProps) {
       </div>
 
       <div className="flex-1 flex flex-col min-w-0">
-        <div className="h-12 shrink-0 bg-white border-b border-slate-200 flex items-center px-3 gap-3 shadow-sm">
+        <div className="h-12 shrink-0 bg-card border-b border-border flex items-center px-3 gap-3 shadow-sm">
           <button
             onClick={handleBack}
-            className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors text-muted-foreground"
+            className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-muted transition-colors text-muted-foreground"
             aria-label="Back"
           >
             <ArrowLeft className="h-4 w-4" />
           </button>
-          <div className="h-4 w-px bg-slate-200" />
+          <div className="h-4 w-px bg-border" />
           {editingName ? (
             <form onSubmit={handleNameSubmit} className="flex-1 max-w-xs">
               <Input
@@ -487,7 +487,7 @@ function BuilderCanvas({ workflow, workflowId }: BuilderCanvasProps) {
           ) : (
             <button
               onClick={handleStartEditing}
-              className="flex items-center gap-1.5 text-sm font-semibold text-foreground hover:text-violet-600 transition-colors group"
+              className="flex items-center gap-1.5 text-sm font-semibold text-foreground hover:text-primary transition-colors group"
               title="Click to rename"
             >
               {workflowName}
@@ -544,17 +544,17 @@ function BuilderCanvas({ workflow, workflowId }: BuilderCanvasProps) {
               defaultEdgeOptions={DEFAULT_EDGE_OPTIONS}
               fitView
               deleteKeyCode="Delete"
-              className="bg-slate-50"
+              className="bg-muted/30"
             >
-              <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#cbd5e1" />
-              <Controls className="border border-slate-200 shadow-sm rounded-lg overflow-hidden" />
-              <MiniMap className="border border-slate-200 shadow-sm rounded-lg overflow-hidden" />
+              <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="var(--border)" />
+              <Controls className="border border-border shadow-sm rounded-lg overflow-hidden" />
+              <MiniMap className="border border-border shadow-sm rounded-lg overflow-hidden" />
               <Panel position="bottom-center">
-                <div className="bg-white/90 backdrop-blur-sm border border-slate-200 rounded-full px-4 py-1.5 shadow-sm flex items-center gap-3 text-[11px] text-muted-foreground">
+                <div className="bg-card/90 backdrop-blur-sm border border-border rounded-full px-4 py-1.5 shadow-sm flex items-center gap-3 text-[11px] text-muted-foreground">
                   <span>{nodes.length} node{nodes.length !== 1 ? "s" : ""}</span>
-                  <span className="w-px h-3 bg-slate-200" />
+                  <span className="w-px h-3 bg-border" />
                   <span>{edges.length} connection{edges.length !== 1 ? "s" : ""}</span>
-                  <span className="w-px h-3 bg-slate-200" />
+                  <span className="w-px h-3 bg-border" />
                   <span>Delete key removes selected</span>
                 </div>
               </Panel>
@@ -580,10 +580,10 @@ function BuilderGate({ workflowId }: { workflowId: string }) {
 
   if (isLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-slate-50 h-screen">
+      <div className="flex-1 flex items-center justify-center bg-background h-screen">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-violet-600 border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-slate-500">Loading workflow builder…</p>
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-muted-foreground">Loading workflow builder…</p>
         </div>
       </div>
     );
@@ -591,7 +591,7 @@ function BuilderGate({ workflowId }: { workflowId: string }) {
 
   if (isError || !workflow) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-slate-50 h-screen">
+      <div className="flex-1 flex items-center justify-center bg-background h-screen">
         <div className="text-center space-y-3">
           <p className="text-sm font-medium text-foreground">Workflow not found</p>
           <Button variant="outline" size="sm" onClick={() => router.push("/workflows")}>

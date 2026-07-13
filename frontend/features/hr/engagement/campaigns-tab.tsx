@@ -30,7 +30,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 
 const STATUS_COLORS: Record<HrCampaign["status"], string> = {
-  draft: "bg-slate-100 text-slate-700 border-slate-200",
+  draft: "bg-muted text-muted-foreground border-border",
   active: "bg-emerald-50 text-emerald-700 border-emerald-200",
   completed: "bg-blue-50 text-blue-700 border-blue-200",
   cancelled: "bg-muted text-muted-foreground border-border",

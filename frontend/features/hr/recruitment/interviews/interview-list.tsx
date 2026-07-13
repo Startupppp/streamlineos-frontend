@@ -46,7 +46,7 @@ const TYPE_CONFIG: Record<string, { className: string }> = {
   ONSITE: { className: "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300" },
   TECHNICAL: { className: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300" },
   HR: { className: "bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300" },
-  FINAL: { className: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300" },
+  FINAL: { className: "bg-muted text-muted-foreground dark:bg-slate-800 dark:text-slate-300" },
 };
 
 function ResultBadge({ result }: { result: string | null }) {

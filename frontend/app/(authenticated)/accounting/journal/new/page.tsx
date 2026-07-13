@@ -383,7 +383,7 @@ export default function NewJournalEntryPage() {
           )}
         </span>
       </div>
-      <div className="pt-2 border-t border-slate-200/60 mt-2">
+      <div className="pt-2 border-t border-border mt-2">
         <Button
           type="button"
           variant="outline"

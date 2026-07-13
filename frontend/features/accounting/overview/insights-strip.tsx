@@ -22,19 +22,19 @@ function severityClasses(severity: AnomalySeverity): string {
   if (severity === "warning") {
     return "bg-amber-50 border-amber-200";
   }
-  return "bg-slate-50 border-slate-200";
+  return "bg-muted border-border";
 }
 
 function severityTextClass(severity: AnomalySeverity): string {
   if (severity === "critical") return "text-red-700";
   if (severity === "warning") return "text-amber-700";
-  return "text-slate-600";
+  return "text-muted-foreground";
 }
 
 function severityDotClass(severity: AnomalySeverity): string {
   if (severity === "critical") return "bg-red-500";
   if (severity === "warning") return "bg-amber-500";
-  return "bg-slate-400";
+  return "bg-muted-foreground";
 }
 
 export function InsightsStrip({ from, to }: { from?: string; to?: string }) {

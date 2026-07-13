@@ -91,7 +91,7 @@ export function WellnessWidget() {
                       <span
                         className={cn(
                           "font-bold text-base tabular-nums rounded px-1.5 text-white",
-                          SCORE_COLORS[score] ?? "bg-slate-400",
+                          SCORE_COLORS[score] ?? "bg-muted-foreground/50",
                         )}
                       >
                         {score}

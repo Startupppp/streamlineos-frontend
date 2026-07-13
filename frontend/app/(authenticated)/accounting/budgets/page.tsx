@@ -94,7 +94,7 @@ function PeriodTypeBadge({ periodType }: { periodType: BudgetPeriodType }) {
   return (
     <Badge
       variant="outline"
-      className="bg-blue-50 text-blue-700 border-blue-200 text-[9px] px-1.5 py-0 h-4"
+      className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30 text-[9px] px-1.5 py-0 h-4"
     >
       {label}
     </Badge>
@@ -106,7 +106,7 @@ function BudgetStatusCell({ status }: { status: BudgetStatus }) {
     return (
       <Badge
         variant="outline"
-        className="bg-slate-100 text-slate-600 border-slate-200 text-[9px] px-1.5 py-0 h-4"
+        className="bg-muted text-muted-foreground border-border text-[9px] px-1.5 py-0 h-4"
       >
         Archived
       </Badge>

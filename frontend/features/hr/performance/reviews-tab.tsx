@@ -212,7 +212,7 @@ export function ReviewsTab() {
                 : review.status === "IN_PROGRESS"
                 ? "border-l-blue-500"
                 : review.status === "ARCHIVED"
-                ? "border-l-slate-400"
+                ? "border-l-border"
                 : "border-l-amber-400";
             const statusBadgeClass =
               review.status === "COMPLETED"
@@ -220,7 +220,7 @@ export function ReviewsTab() {
                 : review.status === "IN_PROGRESS"
                 ? "border-blue-200 bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800"
                 : review.status === "ARCHIVED"
-                ? "border-slate-200 bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700"
+                ? "border-border bg-muted text-muted-foreground dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700"
                 : "border-amber-200 bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800";
 
             return (

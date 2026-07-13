@@ -37,7 +37,7 @@ function BudgetBar({ allocated, used }: { allocated: number; used: number }) {
         <span>{formatCents(used)} used</span>
         <span>{formatCents(allocated)} budget</span>
       </div>
-      <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+      <div className="h-2 rounded-full bg-muted overflow-hidden">
         <motion.div
           className="h-full rounded-full bg-blue-600"
           initial={{ width: 0 }}
@@ -94,9 +94,9 @@ export function CompCycleDetail({ cycleId, canManage }: Props) {
           <p className="text-sm font-semibold mb-3">Merit Matrix</p>
           <div className="grid grid-cols-3 gap-2">
             {Object.entries(cycle.meritMatrix).map(([rating, pct]) => (
-              <div key={rating} className="p-2 rounded-lg bg-blue-50 text-center">
+              <div key={rating} className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/30 text-center">
                 <p className="text-xs text-muted-foreground">{rating}</p>
-                <p className="text-sm font-bold text-blue-700">{pct}%</p>
+                <p className="text-sm font-bold text-blue-700 dark:text-blue-400">{pct}%</p>
               </div>
             ))}
           </div>

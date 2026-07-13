@@ -31,7 +31,7 @@ const DEC_STATUS_LABEL: Record<DecisionStatus, string> = {
 const DEC_STATUS_STYLE: Record<DecisionStatus, string> = {
   proposed: "text-blue-600 border-blue-200",
   accepted: "text-emerald-600 border-emerald-200",
-  superseded: "text-slate-500 border-slate-200",
+  superseded: "text-muted-foreground border-border",
   revisit: "text-amber-600 border-amber-200",
 };
 const STATUS_OPTS = [

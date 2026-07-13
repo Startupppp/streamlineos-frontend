@@ -6,7 +6,7 @@ const STATUS_STYLES: Record<IncidentStatus, string> = {
   open: "bg-blue-50 text-blue-700 border-blue-200",
   investigating: "bg-amber-50 text-amber-700 border-amber-200",
   mitigated: "bg-teal-50 text-teal-700 border-teal-200",
-  closed: "bg-slate-100 text-slate-600 border-slate-200",
+  closed: "bg-muted text-muted-foreground border-border dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700",
 };
 
 const STATUS_LABELS: Record<IncidentStatus, string> = {
@@ -17,7 +17,7 @@ const STATUS_LABELS: Record<IncidentStatus, string> = {
 };
 
 const SEVERITY_STYLES: Record<IncidentSeverity, string> = {
-  low: "bg-slate-50 text-slate-600 border-slate-200",
+  low: "bg-muted text-muted-foreground border-border dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700",
   medium: "bg-yellow-50 text-yellow-700 border-yellow-200",
   high: "bg-orange-50 text-orange-700 border-orange-200",
   critical: "bg-red-50 text-red-700 border-red-200",

@@ -33,15 +33,15 @@ const BUG_STATUSES: readonly BugStatus[] = [
 const BUG_SEVERITIES: readonly BugSeverity[] = ["blocker", "critical", "major", "minor", "trivial"];
 
 const SEVERITY_STYLES: Record<BugSeverity, string> = {
-  blocker: "text-red-700 border-red-300 bg-red-50",
+  blocker: "text-red-700 border-red-300 bg-red-50 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
   critical: "text-red-600 border-red-200",
   major: "text-amber-600 border-amber-200",
-  minor: "text-slate-500 border-slate-200",
-  trivial: "text-slate-400 border-slate-200",
+  minor: "text-muted-foreground border-border",
+  trivial: "text-muted-foreground border-border",
 };
 
 const STATUS_STYLES: Record<BugStatus, string> = {
-  new: "text-slate-600 border-slate-200",
+  new: "text-muted-foreground border-border",
   triaged: "text-blue-600 border-blue-200",
   assigned: "text-blue-600 border-blue-200",
   in_progress: "text-amber-600 border-amber-200",
@@ -49,7 +49,7 @@ const STATUS_STYLES: Record<BugStatus, string> = {
   ready_for_qa: "text-blue-600 border-blue-200",
   verified: "text-green-700 border-green-300",
   reopened: "text-orange-600 border-orange-200",
-  closed: "text-slate-400 border-slate-200",
+  closed: "text-muted-foreground border-border",
 };
 
 const STATUS_LABELS: Record<BugStatus, string> = {
@@ -59,10 +59,10 @@ const STATUS_LABELS: Record<BugStatus, string> = {
 };
 
 const PRIORITY_STYLES: Record<BugPriority, string> = {
-  low: "text-slate-500 border-slate-200",
+  low: "text-muted-foreground border-border",
   medium: "text-amber-600 border-amber-200",
   high: "text-red-600 border-red-200",
-  urgent: "text-red-700 border-red-300 bg-red-50",
+  urgent: "text-red-700 border-red-300 bg-red-50 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
 };
 
 interface BugsPageProps { projectId: number }

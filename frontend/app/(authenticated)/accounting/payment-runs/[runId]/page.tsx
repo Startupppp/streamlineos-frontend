@@ -53,10 +53,10 @@ function formatDate(value: string | null | undefined): string {
 
 function RunStatusBadge({ status }: { status: PaymentRunStatus }) {
   const classes: Record<PaymentRunStatus, string> = {
-    DRAFT: "bg-blue-50 text-blue-700 border-blue-200",
-    APPROVED: "bg-amber-50 text-amber-700 border-amber-200",
-    COMPLETED: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    CANCELLED: "bg-slate-100 text-slate-700 border-slate-200",
+    DRAFT: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+    APPROVED: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+    COMPLETED: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+    CANCELLED: "bg-muted text-muted-foreground border-border",
   };
   const labels: Record<PaymentRunStatus, string> = {
     DRAFT: "Draft",
@@ -73,9 +73,9 @@ function RunStatusBadge({ status }: { status: PaymentRunStatus }) {
 
 function ItemStatusBadge({ status }: { status: PaymentRunItemStatus }) {
   const classes: Record<PaymentRunItemStatus, string> = {
-    PENDING: "bg-amber-50 text-amber-700 border-amber-200",
-    PAID: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    SKIPPED: "bg-red-50 text-red-700 border-red-200",
+    PENDING: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+    PAID: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+    SKIPPED: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
   };
   return (
     <Badge variant="outline" className={`text-[9px] px-1.5 py-0 h-4 ${classes[status]}`}>

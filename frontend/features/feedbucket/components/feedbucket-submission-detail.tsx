@@ -17,6 +17,7 @@ import {
   useUpdateFeedbucketSubmission,
   useConvertFeedbucketToTicket,
 } from "@/hooks/api/feedbucket/use-feedbucket-submissions";
+import { FeedbucketAiPanel } from "./feedbucket-ai-panel";
 import type {
   FeedbucketSubmissionStatus,
   FeedbucketSubmissionPriority,
@@ -250,6 +251,15 @@ export function FeedbucketSubmissionDetail({ submissionId }: FeedbucketSubmissio
       {submission.consoleLogs && submission.consoleLogs.length > 0 && (
         <ConsoleLogsPanel logs={submission.consoleLogs} />
       )}
+
+      <FeedbucketAiPanel
+        submissionId={submissionId}
+        hasScreenshot={!!submission.screenshotUrl}
+        existingAnalysis={submission.aiAnalysis}
+        linkedTicketId={linkedTicketId}
+        projectId={projectId}
+        onTicketCreated={setConvertedTicketId}
+      />
 
       <div className="rounded-xl border border-border bg-card p-4">
         {linkedTicketId ? (

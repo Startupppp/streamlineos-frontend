@@ -26,7 +26,7 @@ const RELATIONSHIP_COLORS: Record<string, string> = {
   PEER: "bg-blue-100 text-blue-700",
   MANAGER: "bg-violet-100 text-violet-700",
   DIRECT_REPORT: "bg-amber-100 text-amber-700",
-  SELF: "bg-slate-100 text-slate-600",
+  SELF: "bg-muted text-muted-foreground",
 };
 
 interface ReviewAnswers {
@@ -76,9 +76,9 @@ export function MyReviewsTab() {
     return (
       <div className="space-y-3">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="bg-white/90 rounded-2xl border border-slate-200/80 p-5 animate-pulse space-y-2">
-            <div className="h-4 w-1/2 bg-slate-200 rounded" />
-            <div className="h-3 w-1/3 bg-slate-100 rounded" />
+          <div key={i} className="bg-card rounded-2xl border border-border p-5 animate-pulse space-y-2">
+            <div className="h-4 w-1/2 bg-muted rounded" />
+            <div className="h-3 w-1/3 bg-muted rounded" />
           </div>
         ))}
       </div>
@@ -107,14 +107,14 @@ export function MyReviewsTab() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.22, ease: "easeOut", delay: i * 0.06 }}
-            className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 p-5 flex items-center justify-between gap-4"
+            className="bg-card rounded-2xl border border-border shadow-sm p-5 flex items-center justify-between gap-4"
           >
             <div className="space-y-2">
-              <p className="font-medium text-slate-800">
-                Review for <span className="text-violet-600">{req.subjectId}</span>
+              <p className="font-medium text-foreground">
+                Review for <span className="text-blue-600">{req.subjectId}</span>
               </p>
               <div className="flex gap-2 flex-wrap">
-                <Badge className={`text-xs ${RELATIONSHIP_COLORS[req.relationship] ?? "bg-slate-100 text-slate-600"}`}>
+                <Badge className={`text-xs ${RELATIONSHIP_COLORS[req.relationship] ?? "bg-muted text-muted-foreground"}`}>
                   {req.relationship}
                 </Badge>
                 <Badge className={`text-xs ${req.status === "PENDING" ? "bg-amber-100 text-amber-700" : "bg-green-100 text-green-700"}`}>
@@ -141,8 +141,8 @@ export function MyReviewsTab() {
           </DialogHeader>
           {reviewingRequest && (
             <div className="space-y-5 pt-2">
-              <p className="text-sm text-slate-600">
-                For: <span className="font-medium text-slate-800">{reviewingRequest.subjectId}</span>
+              <p className="text-sm text-muted-foreground">
+                For: <span className="font-medium text-foreground">{reviewingRequest.subjectId}</span>
               </p>
               {currentQuestions.map((q, idx) => (
                 <div key={q.id} className="space-y-2">
@@ -166,7 +166,7 @@ export function MyReviewsTab() {
                             className={`w-6 h-6 ${
                               (answers[q.id]?.rating ?? 0) >= star
                                 ? "fill-amber-400 text-amber-400"
-                                : "text-slate-300"
+                                : "text-muted-foreground"
                             }`}
                           />
                         </button>

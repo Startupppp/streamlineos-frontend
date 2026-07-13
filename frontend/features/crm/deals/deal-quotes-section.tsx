@@ -143,7 +143,7 @@ function QuoteRow({ quote, dealId, onDeleteRequest }: QuoteRowProps) {
     <div className="flex items-center gap-3 p-3 bg-card border border-border rounded-lg shadow-sm hover:shadow-md transition-shadow">
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-medium text-slate-800 font-mono truncate">
+          <span className="text-sm font-medium text-foreground font-mono truncate">
             {quote.quoteNumber}
           </span>
           <QuoteStatusBadge status={quote.status} />

@@ -21,7 +21,7 @@ import {
 const READINESS_CONFIG: Record<SuccessionReadiness, { label: string; className: string }> = {
   ready_now: { label: "Ready Now", className: "bg-emerald-100 text-emerald-700 border-emerald-200" },
   "1_2_years": { label: "1–2 Years", className: "bg-amber-100 text-amber-700 border-amber-200" },
-  "3_plus": { label: "3+ Years", className: "bg-slate-100 text-slate-600 border-slate-200" },
+  "3_plus": { label: "3+ Years", className: "bg-muted text-muted-foreground border-border dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700" },
 };
 
 type FormState = {

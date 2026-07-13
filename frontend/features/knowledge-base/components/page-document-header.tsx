@@ -241,10 +241,10 @@ export default function PageDocumentHeader({
   const ancestors = page.ancestors ?? [];
 
   const statusBadgeClass: Record<string, string> = {
-    draft: "bg-slate-100 text-slate-600 border-slate-200",
-    in_review: "bg-amber-50 text-amber-700 border-amber-200",
-    published: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    archived: "bg-slate-100 text-slate-500 border-slate-200 opacity-60",
+    draft: "bg-muted text-muted-foreground border-border",
+    in_review: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+    published: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+    archived: "bg-muted text-muted-foreground border-border opacity-60",
   };
 
   return (
@@ -299,7 +299,7 @@ export default function PageDocumentHeader({
               {page.trustState === "verified" && (
                 <Badge
                   variant="outline"
-                  className="text-[10px] h-4 px-1.5 bg-emerald-50 text-emerald-700 border-emerald-200"
+                  className="text-[10px] h-4 px-1.5 bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30"
                 >
                   Verified
                 </Badge>
@@ -307,7 +307,7 @@ export default function PageDocumentHeader({
               {page.trustState === "verification_expired" && (
                 <Badge
                   variant="outline"
-                  className="text-[10px] h-4 px-1.5 bg-amber-50 text-amber-700 border-amber-200"
+                  className="text-[10px] h-4 px-1.5 bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30"
                 >
                   Stale
                 </Badge>

@@ -40,19 +40,19 @@ import {
 } from "@/hooks/api/workflows";
 
 const STATUS_CONFIG: Record<WorkflowStatus, { label: string; cls: string }> = {
-  draft: { label: "Draft", cls: "bg-slate-100 text-slate-600 border-slate-200" },
+  draft: { label: "Draft", cls: "bg-muted text-muted-foreground border-border" },
   published: { label: "Active", cls: "bg-green-50 text-green-700 border-green-200" },
   disabled: { label: "Disabled", cls: "bg-yellow-50 text-yellow-700 border-yellow-200" },
   archived: { label: "Archived", cls: "bg-red-50 text-red-700 border-red-200" },
 };
 
 const EXEC_STATUS_CONFIG: Record<ExecutionStatus, { label: string; cls: string; icon: React.ReactNode }> = {
-  pending: { label: "Pending", cls: "bg-slate-100 text-slate-600", icon: <Clock className="h-3 w-3" /> },
+  pending: { label: "Pending", cls: "bg-muted text-muted-foreground", icon: <Clock className="h-3 w-3" /> },
   running: { label: "Running", cls: "bg-blue-100 text-blue-700", icon: <Loader2 className="h-3 w-3 animate-spin" /> },
   waiting: { label: "Waiting", cls: "bg-yellow-100 text-yellow-700", icon: <Clock className="h-3 w-3" /> },
   completed: { label: "Completed", cls: "bg-green-100 text-green-700", icon: <CheckCircle2 className="h-3 w-3" /> },
   failed: { label: "Failed", cls: "bg-red-100 text-red-700", icon: <XCircle className="h-3 w-3" /> },
-  cancelled: { label: "Cancelled", cls: "bg-slate-100 text-slate-500", icon: <XCircle className="h-3 w-3" /> },
+  cancelled: { label: "Cancelled", cls: "bg-muted text-muted-foreground", icon: <XCircle className="h-3 w-3" /> },
   timed_out: { label: "Timed Out", cls: "bg-orange-100 text-orange-700", icon: <AlertCircle className="h-3 w-3" /> },
 };
 
@@ -66,7 +66,7 @@ function formatDuration(ms: number | null): string {
 function ExecutionRow({ execution }: { execution: WorkflowExecution }) {
   const cfg = EXEC_STATUS_CONFIG[execution.status];
   return (
-    <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-50 transition-colors">
+    <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted transition-colors">
       <span className={cn("inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium", cfg.cls)}>
         {cfg.icon}
         {cfg.label}
@@ -99,7 +99,7 @@ function WorkflowOverviewTab({ workflow }: WorkflowOverviewTabProps) {
 
   return (
     <div className="space-y-4">
-      <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-sm">
+      <Card className="bg-card rounded-xl border border-border shadow-sm">
         <CardContent className="p-5">
           <div className="flex items-center gap-2 mb-4">
             <span className={cn("inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border", statusCfg.cls)}>
@@ -243,7 +243,7 @@ export default function WorkflowDetailPage() {
           <Button
             size="sm"
             asChild
-            className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm transition-all duration-200"
           >
             <Link href={`/workflows/${workflowId}/builder`}>
               <Pencil className="h-3.5 w-3.5 mr-1.5" />

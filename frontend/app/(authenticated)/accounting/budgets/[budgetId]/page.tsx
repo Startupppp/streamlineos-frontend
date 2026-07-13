@@ -153,7 +153,7 @@ const BVA_COLUMNS: DataTableColumn<BvaAccountPeriodRow>[] = [
     className: "px-3 py-2 w-20",
     cell: (row: BvaAccountPeriodRow): ReactNode =>
       row.exceeded ? (
-        <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-[9px] px-1.5 py-0 h-4">
+        <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30 text-[9px] px-1.5 py-0 h-4">
           Over
         </Badge>
       ) : null,
@@ -341,7 +341,7 @@ export default function BudgetDetailPage() {
 
   const budgetStatusBadge =
     status === "ARCHIVED" ? (
-      <Badge variant="outline" className="bg-slate-100 text-slate-600 border-slate-200 text-xs px-2 py-0.5">
+      <Badge variant="outline" className="bg-muted text-muted-foreground border-border text-xs px-2 py-0.5">
         Archived
       </Badge>
     ) : status ? (

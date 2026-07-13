@@ -404,6 +404,17 @@ export default function ProjectBoardPage({ params }: PageProps) {
 
   const handleOpenImport = useCallback(() => setImportOpen(true), []);
 
+  const createParamOpen = searchParams.get("create") === "1";
+  const handleCreateOpenChange = useCallback(
+    (open: boolean) => {
+      if (open) return;
+      const next = new URLSearchParams(searchParams.toString());
+      next.delete("create");
+      router.replace(`?${next.toString()}`, { scroll: false });
+    },
+    [router, searchParams],
+  );
+
   if (isLoading) {
     return (
       <PageWrapper title="Loading..." noInternalScroll>
@@ -420,13 +431,19 @@ export default function ProjectBoardPage({ params }: PageProps) {
       subtitle={data.description ?? undefined}
       noInternalScroll
       contentClassName="!p-0"
-      actions={<CreateTicketDialog projectId={projectId} />}
+      actions={
+        <CreateTicketDialog
+          projectId={projectId}
+          externalOpen={createParamOpen}
+          onExternalOpenChange={handleCreateOpenChange}
+        />
+      }
       filters={
         <div className="flex w-full min-w-0 flex-col gap-1.5">
           <div className="flex w-full min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex min-w-0 flex-wrap items-center gap-2 sm:flex-nowrap">
               <ViewSwitcher activeView={view} onViewChange={handleViewChange} />
-              <DisplayOptionsPanel options={displayOptions} onChange={setDisplayOptions} />
+              <DisplayOptionsPanel viewType={view} options={displayOptions} onChange={setDisplayOptions} />
               <div className="flex items-center gap-1.5">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -535,7 +552,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
             </div>
           )}
           {view === "list" && (
-            <div className="h-full min-h-0 overflow-y-auto px-4 pb-2 pt-0">
+            <div className="h-full min-h-0 overflow-y-auto px-3 pb-1">
               <ListView
                 tickets={filteredTickets}
                 onTicketClick={handleTicketSelect}

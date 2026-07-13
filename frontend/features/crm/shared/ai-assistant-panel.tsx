@@ -45,9 +45,9 @@ interface AiAssistantPanelProps {
 }
 
 const SENTIMENT_COLOR: Record<string, string> = {
-  positive: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  neutral: "bg-slate-50 text-slate-700 border-slate-200",
-  negative: "bg-red-50 text-red-700 border-red-200",
+  positive: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  neutral: "bg-muted text-muted-foreground border-border",
+  negative: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
 };
 
 function CopyButton({ text }: { text: string }) {

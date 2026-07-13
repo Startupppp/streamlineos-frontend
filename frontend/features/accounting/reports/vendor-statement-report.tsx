@@ -180,7 +180,7 @@ export function VendorStatementReport() {
   }
 
   function rowClassName(row: VendorStatementRow): string {
-    return row.kind === "opening" ? "bg-slate-50/60 border-b border-border/50" : "";
+    return row.kind === "opening" ? "bg-muted/60 border-b border-border/50" : "";
   }
 
   const closingBalanceFooter: ReactNode = data ? (

@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 const STATUS_COLORS: Record<string, string> = {
-  draft: "bg-slate-100 text-slate-700 border-slate-200",
+  draft: "bg-muted text-muted-foreground border-border dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700",
   active: "bg-emerald-50 text-emerald-700 border-emerald-200",
   archived: "bg-amber-50 text-amber-600 border-amber-200",
 };

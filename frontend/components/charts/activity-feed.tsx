@@ -63,8 +63,8 @@ const typeConfig: Record<
   },
   email: {
     icon: Mail,
-    color: "text-slate-600 dark:text-slate-400",
-    bg: "bg-slate-500/10",
+    color: "text-muted-foreground",
+    bg: "bg-muted",
   },
   ticket: {
     icon: Ticket,

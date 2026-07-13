@@ -41,7 +41,7 @@ function HolidayChip({ date, form }: { date: string; form: ReturnType<typeof use
   }, [date, form]);
 
   return (
-    <Badge variant="outline" className="text-[10px] h-6 pl-2 pr-1 gap-1 bg-slate-50">
+    <Badge variant="outline" className="text-[10px] h-6 pl-2 pr-1 gap-1 bg-muted">
       {date}
       <button type="button" onClick={handleRemove} aria-label={`Remove ${date}`} className="hover:text-destructive">
         <X className="h-3 w-3" />

@@ -7,23 +7,23 @@ const STATUS_CONFIG: Record<
 > = {
   UNMATCHED: {
     label: "Unmatched",
-    className: "bg-slate-100 text-slate-700 border-slate-200",
+    className: "bg-muted text-muted-foreground border-border",
   },
   SUGGESTED: {
     label: "Suggested",
-    className: "bg-blue-50 text-blue-700 border-blue-200",
+    className: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
   },
   MATCHED: {
     label: "Matched",
-    className: "bg-blue-100 text-blue-800 border-blue-200",
+    className: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
   },
   RECONCILED: {
     label: "Reconciled",
-    className: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    className: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
   },
   IGNORED: {
     label: "Ignored",
-    className: "bg-slate-50 text-slate-500 border-slate-200",
+    className: "bg-muted text-muted-foreground border-border",
   },
 };
 

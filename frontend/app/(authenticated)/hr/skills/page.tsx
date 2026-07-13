@@ -75,7 +75,7 @@ function getProficiencyMeta(level: number | null): {
 }
 
 function getCardAccent(maxLevel: number | null): string {
-  if (maxLevel === null) return "border-l-slate-300";
+  if (maxLevel === null) return "border-l-border";
   if (maxLevel >= 5) return "border-l-emerald-500";
   if (maxLevel >= 3) return "border-l-blue-500";
   return "border-l-amber-500";

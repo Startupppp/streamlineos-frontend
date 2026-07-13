@@ -317,12 +317,12 @@ export function GoalsTab() {
               ? "border-l-emerald-500"
               : progress > 0
                 ? "border-l-blue-500"
-                : "border-l-slate-300 dark:border-l-slate-600";
+                : "border-l-border";
             const statusBadgeClass = isCompleted
               ? "border-emerald-200 bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800"
               : goal.status === "IN_PROGRESS"
                 ? "border-blue-200 bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800"
-                : "border-slate-200 bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700";
+                : "border-border bg-muted text-muted-foreground dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700";
 
             return (
               <Card

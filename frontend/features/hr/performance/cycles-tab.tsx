@@ -153,7 +153,7 @@ export function CyclesTab() {
                 ? "border-l-blue-500"
                 : cycle.status === "CANCELLED"
                 ? "border-l-rose-400"
-                : "border-l-slate-300 dark:border-l-slate-600";
+                : "border-l-border";
             const badgeClass =
               cycle.status === "ACTIVE"
                 ? "border-emerald-200 bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800"
@@ -161,7 +161,7 @@ export function CyclesTab() {
                 ? "border-blue-200 bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800"
                 : cycle.status === "CANCELLED"
                 ? "border-rose-200 bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800"
-                : "border-slate-200 bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700";
+                : "border-border bg-muted text-muted-foreground dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700";
             const progressBarClass =
               cycle.status === "ACTIVE"
                 ? "bg-emerald-500"
@@ -169,7 +169,7 @@ export function CyclesTab() {
                 ? "bg-blue-500"
                 : cycle.status === "CANCELLED"
                 ? "bg-rose-400"
-                : "bg-slate-300 dark:bg-slate-600";
+                : "bg-muted-foreground/30";
 
             return (
               <Card
@@ -185,7 +185,7 @@ export function CyclesTab() {
                           {cycle.status ?? "DRAFT"}
                         </Badge>
                         {cycle.type && (
-                          <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border border-slate-200 bg-slate-50 text-slate-600 dark:bg-slate-800/60 dark:text-slate-400 dark:border-slate-700">
+                          <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border border-border bg-muted text-muted-foreground dark:bg-slate-800/60 dark:text-slate-400 dark:border-slate-700">
                             {cycle.type.replace("_", " ")}
                           </span>
                         )}

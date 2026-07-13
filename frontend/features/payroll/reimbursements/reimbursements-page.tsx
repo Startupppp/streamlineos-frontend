@@ -208,7 +208,7 @@ export function ReimbursementsPageContent() {
       key: "category",
       header: "Category",
       cell: (row) => (
-        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border bg-slate-50 text-slate-700 border-slate-200">
+        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border bg-muted text-muted-foreground border-border">
           {row.category}
         </span>
       ),
@@ -293,7 +293,7 @@ export function ReimbursementsPageContent() {
         noInternalScroll
       >
         <div className="flex flex-col gap-3 h-full min-h-0">
-          <div className="shrink-0 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-[12px] text-blue-700">
+          <div className="shrink-0 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-[12px] text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300">
             Approved claims flow into the{" "}
             <span className="font-medium">{formatMonth(month)}</span> payroll run automatically.
             Approved reimbursements are included as payroll inputs.

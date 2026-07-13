@@ -45,7 +45,7 @@ function AnnouncementItem({
         "relative rounded-lg border p-3 text-sm",
         ann.isPinned
           ? "border-amber-400 bg-amber-100 dark:bg-amber-900/50 dark:border-amber-600"
-          : "border-amber-200 bg-white dark:bg-amber-950/30 dark:border-amber-700/50",
+          : "border-amber-200 bg-card dark:bg-amber-950/30 dark:border-amber-700/50",
       )}
     >
       {ann.isPinned && (

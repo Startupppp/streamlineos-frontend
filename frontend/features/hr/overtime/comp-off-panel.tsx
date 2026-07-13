@@ -41,7 +41,7 @@ export function CompOffPanel() {
       ].map((stat) => (
         <div
           key={stat.label}
-          className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 p-5 flex flex-col gap-1"
+          className="bg-card rounded-2xl border border-border shadow-sm p-5 flex flex-col gap-1"
         >
           <p className="text-xs text-muted-foreground font-medium">{stat.label}</p>
           <p className={`text-3xl font-bold ${stat.color}`}>{stat.value}</p>

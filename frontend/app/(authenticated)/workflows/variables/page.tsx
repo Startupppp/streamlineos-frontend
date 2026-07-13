@@ -30,11 +30,11 @@ import {
 } from "@/hooks/api/workflows";
 
 const VALUE_TYPE_CLASS: Record<string, string> = {
-  string: "bg-blue-50 text-blue-700 border-blue-200",
-  number: "bg-purple-50 text-purple-700 border-purple-200",
-  boolean: "bg-green-50 text-green-700 border-green-200",
-  object: "bg-amber-50 text-amber-700 border-amber-200",
-  array: "bg-orange-50 text-orange-700 border-orange-200",
+  string: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  number: "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-500/10 dark:text-purple-300 dark:border-purple-500/30",
+  boolean: "bg-green-50 text-green-700 border-green-200 dark:bg-green-500/10 dark:text-green-300 dark:border-green-500/30",
+  object: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  array: "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-500/30",
 };
 
 interface VariableCardProps {
@@ -48,7 +48,7 @@ function VariableCard({ variable, index, onDelete }: VariableCardProps) {
     onDelete(variable);
   }
 
-  const badgeClass = VALUE_TYPE_CLASS[variable.valueType] ?? "bg-slate-100 text-slate-600 border-slate-200";
+  const badgeClass = VALUE_TYPE_CLASS[variable.valueType] ?? "bg-muted text-muted-foreground border-border";
 
   return (
     <motion.div
@@ -57,7 +57,7 @@ function VariableCard({ variable, index, onDelete }: VariableCardProps) {
       exit={{ opacity: 0, scale: 0.96 }}
       transition={{ duration: 0.22, ease: "easeOut", delay: index * 0.04 }}
     >
-      <Card className="bg-white/90 backdrop-blur-sm rounded-xl border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow duration-200">
+      <Card className="bg-card rounded-xl border border-border shadow-sm hover:shadow-md transition-shadow duration-200">
         <CardContent className="p-4">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-lg bg-indigo-50 flex items-center justify-center shrink-0">

@@ -47,7 +47,7 @@ export function ProgressTimeline({ id }: { id: number }) {
                     ? "bg-emerald-500 border-emerald-500"
                     : step.status === "current"
                     ? "bg-background border-blue-500 ring-2 ring-blue-500/30"
-                    : "bg-background border-slate-300 dark:border-slate-600"
+                    : "bg-background border-input"
                 )}
               />
               {i < steps.length - 1 && (
@@ -56,7 +56,7 @@ export function ProgressTimeline({ id }: { id: number }) {
                     "w-0.5 h-5 mt-0.5",
                     step.status === "completed"
                       ? "bg-emerald-500"
-                      : "bg-slate-200 dark:bg-slate-700"
+                      : "bg-border"
                   )}
                 />
               )}

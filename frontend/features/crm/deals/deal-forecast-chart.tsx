@@ -108,7 +108,7 @@ export function DealForecastChart({ deals }: DealForecastChartProps) {
               >
                 <div className="flex items-center justify-between mb-1.5 gap-2">
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${STAGE_DOT[row.stage] ?? "bg-slate-400"}`} />
+                    <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${STAGE_DOT[row.stage] ?? "bg-muted-foreground"}`} />
                     <span className="text-sm font-medium truncate">
                       {STAGE_LABEL[row.stage] ?? row.stage}
                     </span>

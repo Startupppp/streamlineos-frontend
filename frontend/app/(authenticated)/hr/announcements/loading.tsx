@@ -8,7 +8,7 @@ export default function AnnouncementsLoading() {
         {Array.from({ length: 4 }).map((_, i) => (
           <div
             key={i}
-            className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 shadow-xl shadow-slate-200/60 p-6"
+            className="bg-card/90 backdrop-blur-sm rounded-2xl border border-border shadow-sm p-6"
           >
             <div className="flex items-start gap-4">
               <Skeleton className="h-10 w-10 rounded-full shrink-0" />

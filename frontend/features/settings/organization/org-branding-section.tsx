@@ -296,7 +296,7 @@ function EmailBrandingPreview({
     <div className="rounded-xl border overflow-hidden">
       <p className="text-[11px] font-medium text-muted-foreground px-3 py-2 bg-muted border-b">Email template preview</p>
       <div className="bg-[#f4f4f5] p-4">
-        <div className="max-w-sm mx-auto bg-white rounded-lg overflow-hidden shadow-sm border">
+        <div className="max-w-sm mx-auto bg-card rounded-lg overflow-hidden shadow-sm border border-border">
           <div className="px-6 py-4" style={{ backgroundColor: primaryColor }}>
             {logo ? (
               <Image src={logo} alt="Logo" width={200} height={32} className="h-8 w-auto object-contain brightness-0 invert" />
@@ -305,9 +305,9 @@ function EmailBrandingPreview({
             )}
           </div>
           <div className="px-6 py-5 space-y-3">
-            <div className="h-5 w-3/4 rounded bg-slate-200" />
-            <div className="h-3 w-full rounded bg-slate-100" />
-            <div className="h-3 w-5/6 rounded bg-slate-100" />
+            <div className="h-5 w-3/4 rounded bg-muted" />
+            <div className="h-3 w-full rounded bg-muted/60" />
+            <div className="h-3 w-5/6 rounded bg-muted/60" />
             <div
               className="mt-4 inline-block px-4 py-2 rounded text-white text-xs font-medium"
               style={{ backgroundColor: secondaryColor ?? primaryColor }}
@@ -315,7 +315,7 @@ function EmailBrandingPreview({
               Action button
             </div>
           </div>
-          <div className="px-6 py-3 border-t text-[10px] text-slate-400">
+          <div className="px-6 py-3 border-t text-[10px] text-muted-foreground">
             © 2026 · StreamlineOS
           </div>
         </div>

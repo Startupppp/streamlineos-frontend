@@ -34,12 +34,12 @@ const etKeys = { all: [...queryKeys.hr.all, "email-templates"] as const, list: (
 const CATEGORIES = ["Onboarding", "Offboarding", "Leave", "Performance", "General", "Recruitment"];
 
 const CATEGORY_COLORS: Record<string, string> = {
-  Onboarding: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  Offboarding: "bg-rose-100 text-rose-700 border-rose-200",
-  Leave: "bg-blue-100 text-blue-700 border-blue-200",
-  Performance: "bg-amber-100 text-amber-700 border-amber-200",
-  General: "bg-slate-100 text-slate-600 border-slate-200",
-  Recruitment: "bg-violet-100 text-violet-700 border-violet-200",
+  Onboarding: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  Offboarding: "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/30",
+  Leave: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  Performance: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  General: "bg-muted text-muted-foreground border-border",
+  Recruitment: "bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-500/10 dark:text-violet-300 dark:border-violet-500/30",
 };
 
 interface TemplateCardProps {
@@ -87,7 +87,7 @@ function TemplateCard({ template, onCopy, onEdit, onDelete }: TemplateCardProps)
           <p className="line-clamp-2 text-xs text-muted-foreground mt-1">{template.body}</p>
         </div>
         <div>
-          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-violet-100 text-violet-700 border-violet-200">
+          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-500/10 dark:text-violet-300 dark:border-violet-500/30">
             {`{{${varCount}}} variables`}
           </span>
         </div>

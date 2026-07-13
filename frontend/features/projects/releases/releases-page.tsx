@@ -30,9 +30,9 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
 const STATUS_CONFIG: Record<Release["status"], { label: string; className: string }> = {
-  draft: { label: "Draft", className: "text-amber-700 border-amber-300 bg-amber-50" },
-  released: { label: "Released", className: "text-emerald-700 border-emerald-300 bg-emerald-50" },
-  archived: { label: "Archived", className: "text-slate-600 border-slate-300 bg-slate-100" },
+  draft: { label: "Draft", className: "text-amber-700 border-amber-300 bg-amber-50 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30" },
+  released: { label: "Released", className: "text-emerald-700 border-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30" },
+  archived: { label: "Archived", className: "text-muted-foreground border-border bg-muted dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/30" },
 };
 
 function statusSort(r: Release): number {

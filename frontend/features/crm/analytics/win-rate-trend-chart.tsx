@@ -63,7 +63,7 @@ export function WinRateTrendChart({ kpis }: WinRateTrendChartProps) {
             />
             <ReferenceLine
               y={50}
-              stroke="#94A3B8"
+              stroke="var(--muted-foreground)"
               strokeDasharray="4 4"
               label={{
                 value: "50%",
@@ -90,7 +90,7 @@ export function WinRateTrendChart({ kpis }: WinRateTrendChartProps) {
           </div>
           {kpis.prevCloseRate > 0 && (
             <div className="text-center">
-              <p className="text-2xl font-bold text-slate-400">
+              <p className="text-2xl font-bold text-muted-foreground">
                 {kpis.prevCloseRate.toFixed(1)}%
               </p>
               <p className="text-xs text-muted-foreground">Previous period</p>
