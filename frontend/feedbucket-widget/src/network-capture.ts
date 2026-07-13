@@ -44,11 +44,21 @@ function patchXhr(): void {
     private _url = "";
     private _startedAt = 0;
 
-    open(...args: Parameters<XMLHttpRequest["open"]>): void {
-      this._method = args[0].toUpperCase();
-      this._url = truncateUrl(String(args[1]));
+    open(
+      method: string,
+      url: string | URL,
+      async?: boolean,
+      username?: string | null,
+      password?: string | null,
+    ): void {
+      this._method = method.toUpperCase();
+      this._url = truncateUrl(String(url));
       this._startedAt = 0;
-      super.open(...args);
+      if (async === undefined) {
+        super.open(method, url);
+      } else {
+        super.open(method, url, async, username, password);
+      }
     }
 
     send(body?: Document | XMLHttpRequestBodyInit | null): void {
