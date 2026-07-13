@@ -13,17 +13,9 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import type { AttendanceLog } from "@/types/hr/attendance";
 
-type AttendanceRecord = {
-  id: number;
-  date: string;
-  status: string;
-  checkIn?: string | null;
-  checkOut?: string | null;
-  workHours: string;
-};
-
-const ATTENDANCE_COLUMNS: DataTableColumn<AttendanceRecord>[] = [
+const ATTENDANCE_COLUMNS: DataTableColumn<AttendanceLog>[] = [
   {
     key: "date",
     header: "Date",
@@ -38,7 +30,7 @@ const ATTENDANCE_COLUMNS: DataTableColumn<AttendanceRecord>[] = [
           row.status === "PRESENT" || row.status === "WORK_FROM_HOME" ? "default" : "secondary"
         }
       >
-        {row.status}
+        {row.status ?? "—"}
       </Badge>
     ),
   },
@@ -55,11 +47,11 @@ const ATTENDANCE_COLUMNS: DataTableColumn<AttendanceRecord>[] = [
   {
     key: "workHours",
     header: "Work Hours",
-    cell: (row) => <span className="font-bold">{row.workHours}h</span>,
+    cell: (row) => <span className="font-bold">{row.workHours ?? "0"}h</span>,
   },
 ];
 
-function getRowKey(row: AttendanceRecord) {
+function getRowKey(row: AttendanceLog) {
   return row.id;
 }
 
