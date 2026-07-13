@@ -151,7 +151,7 @@ function PermissionsContent() {
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex min-w-0 max-w-full items-center gap-2 overflow-x-auto scrollbar-thin">
           {roles.map((role) => (
             <Badge
               key={role.roleId}
@@ -159,7 +159,7 @@ function PermissionsContent() {
                 role.roleId === currentUserRoleId ? "default" : "outline"
               }
               className={cn(
-                "text-[11px]",
+                "shrink-0 text-[11px]",
                 role.roleId === currentUserRoleId &&
                   "bg-primary text-primary-foreground",
               )}
@@ -303,9 +303,9 @@ function MatrixSkeleton() {
   return (
     <div className="space-y-4">
       <Skeleton className="h-14 w-full rounded-lg" />
-      <div className="flex gap-2">
+      <div className="flex min-w-0 max-w-full items-center gap-2 overflow-x-auto scrollbar-thin">
         {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} className="h-6 w-20 rounded-full" />
+          <Skeleton key={i} className="h-6 w-20 shrink-0 rounded-full" />
         ))}
       </div>
       <Card>

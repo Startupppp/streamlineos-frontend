@@ -7,6 +7,9 @@ import { queryKeys } from "@/lib/query-keys";
 export interface UserSession {
   id: string;
   userAgent: string | null;
+  browser: string;
+  os: string | null;
+  platform: string | null;
   ipAddress: string | null;
   lastActive: string;
   createdAt: string;

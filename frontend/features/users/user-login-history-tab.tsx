@@ -13,15 +13,6 @@ interface UserLoginHistoryTabProps {
   userId: string;
 }
 
-function parseUserAgent(ua: string | null): string {
-  if (!ua) return "Unknown";
-  if (ua.includes("Chrome") && !ua.includes("Edg")) return "Chrome";
-  if (ua.includes("Firefox")) return "Firefox";
-  if (ua.includes("Edg")) return "Edge";
-  if (ua.includes("Safari")) return "Safari";
-  return "Unknown browser";
-}
-
 export function UserLoginHistoryTab({ userId }: UserLoginHistoryTabProps) {
   const [page, setPage] = useState(1);
   const [successFilter, setSuccessFilter] = useState<boolean | undefined>(
@@ -126,7 +117,7 @@ export function UserLoginHistoryTab({ userId }: UserLoginHistoryTabProps) {
                   {entry.ipAddress && (
                     <span className="font-mono">{entry.ipAddress}</span>
                   )}
-                  <span>{parseUserAgent(entry.userAgent)}</span>
+                  <span>{entry.browser}{entry.os ? ` · ${entry.os}` : ""}</span>
                   {(entry.city || entry.country) && (
                     <span>
                       {[entry.city, entry.country].filter(Boolean).join(", ")}

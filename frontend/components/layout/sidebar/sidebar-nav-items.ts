@@ -2411,7 +2411,6 @@ export type ProductKey =
   | "surveys"
   | "administration"
   | "payroll"
-  | "feedbucket"
   | "sign";
 
 export interface ProductDefinition {
@@ -2532,12 +2531,6 @@ export const MODULE_ACCENTS: Record<ProductKey, ModuleAccent> = {
     indicator: "bg-teal-600 dark:bg-teal-500",
     border: "border-teal-600 dark:border-teal-500",
   },
-  feedbucket: {
-    text: "!text-orange-600 dark:!text-orange-400",
-    bg: "bg-orange-50 dark:bg-orange-950/40",
-    indicator: "bg-orange-600 dark:bg-orange-500",
-    border: "border-orange-600 dark:border-orange-500",
-  },
   sign: {
     text: "!text-sky-600 dark:!text-sky-400",
     bg: "bg-sky-50 dark:bg-sky-950/40",
@@ -2567,7 +2560,6 @@ const PRODUCT_NAV_GROUP_LABELS: Record<ProductKey, string[]> = {
     "Developer",
   ],
   payroll: ["Payroll"],
-  feedbucket: ["Feedbucket"],
   sign: ["SignOS"],
 };
 

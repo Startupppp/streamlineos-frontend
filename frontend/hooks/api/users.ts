@@ -23,6 +23,9 @@ interface UserSession {
   id: string;
   userId: string;
   userAgent: string | null;
+  browser: string;
+  os: string | null;
+  platform: string | null;
   ipAddress: string | null;
   isRevoked: boolean;
   lastActive: string;
@@ -409,6 +412,9 @@ interface LoginHistoryItem {
   event: string;
   ipAddress: string | null;
   userAgent: string | null;
+  browser: string;
+  os: string | null;
+  platform: string | null;
   country: string | null;
   city: string | null;
   success: boolean;

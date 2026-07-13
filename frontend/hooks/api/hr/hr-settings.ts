@@ -19,16 +19,6 @@ import type {
   ProcessWfhRequestInput,
 } from "@/types/hr";
 
-export interface NotificationPreferences {
-  emailEnabled: boolean;
-  pushEnabled: boolean;
-  smsEnabled: boolean;
-  inAppEnabled: boolean;
-  quietHoursStart: string | null;
-  quietHoursEnd: string | null;
-  categories: Record<string, boolean>;
-}
-
 interface ChangePasswordInput {
   currentPassword: string;
   newPassword: string;
@@ -185,30 +175,6 @@ export function useProcessWfhRequest() {
       qc.invalidateQueries({ queryKey: queryKeys.hr.wfhRequests() });
       qc.invalidateQueries({ queryKey: queryKeys.hr.pendingWfhRequests() });
     },
-  });
-}
-
-export function useHrNotificationPreferences() {
-  return useQuery({
-    queryKey: [...queryKeys.hr.all, "notificationPreferences"] as const,
-    queryFn: () =>
-      apiClient.get<NotificationPreferences>("/hr/notification-preferences"),
-    staleTime: 2 * 60_000,
-  });
-}
-
-export function useUpdateHrNotificationPreferences() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (data: Partial<NotificationPreferences>) =>
-      apiClient.patch<{ success: boolean }>(
-        "/hr/notification-preferences",
-        data,
-      ),
-    onSuccess: () =>
-      qc.invalidateQueries({
-        queryKey: [...queryKeys.hr.all, "notificationPreferences"] as const,
-      }),
   });
 }
 

@@ -114,12 +114,6 @@ export interface UpdateFeedbucketSubmissionInput {
   assigneeId?: string | null;
 }
 
-export interface FeedbucketStats {
-  total: number;
-  byStatus: Record<FeedbucketSubmissionStatus, number>;
-  byType: Record<FeedbucketSubmissionType, number>;
-}
-
 export interface PaginatedFeedbucketSubmissions {
   data: FeedbucketSubmission[];
   total: number;

@@ -52,12 +52,15 @@ const COLUMNS: DataTableColumn<LoginEntry>[] = [
     ),
   },
   {
-    key: "userAgent",
-    header: "User Agent",
+    key: "browser",
+    header: "Browser",
+    cell: (e) => <span className="font-medium">{e.browser}</span>,
+  },
+  {
+    key: "os",
+    header: "OS",
     cell: (e) => (
-      <span className="text-muted-foreground text-xs max-w-[200px] truncate block">
-        {e.userAgent ?? "—"}
-      </span>
+      <span className="text-muted-foreground">{e.os ?? "—"}</span>
     ),
   },
 ];

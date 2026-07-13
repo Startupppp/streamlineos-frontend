@@ -18,26 +18,14 @@ interface UserSessionsTabProps {
 type Session = {
   id: string;
   userAgent: string | null;
+  browser: string;
+  os: string | null;
+  platform: string | null;
   ipAddress: string | null;
   lastActive: string;
   isRevoked: boolean;
   expiresAt: string | null;
 };
-
-function parseUserAgent(ua: string | null): { browser: string; device: string } {
-  if (!ua) return { browser: "Unknown", device: "Unknown" };
-  const browser = ua.match(/Chrome\/|Firefox\/|Safari\/|Edge\//)
-    ? ua.includes("Chrome") && !ua.includes("Edg")
-      ? "Chrome"
-      : ua.includes("Firefox")
-      ? "Firefox"
-      : ua.includes("Edg")
-      ? "Edge"
-      : "Safari"
-    : "Unknown";
-  const device = ua.includes("Mobile") ? "Mobile" : "Desktop";
-  return { browser, device };
-}
 
 function isSessionActive(session: { isRevoked: boolean; expiresAt: string | null }): boolean {
   if (session.isRevoked) return false;
@@ -94,15 +82,14 @@ export function UserSessionsTab({ userId }: UserSessionsTabProps) {
     {
       key: "browser",
       header: "Browser / Device",
-      cell: (row) => {
-        const { browser, device } = parseUserAgent(row.userAgent);
-        return (
-          <>
-            <span className="font-medium">{browser}</span>
-            <span className="text-muted-foreground ml-1">· {device}</span>
-          </>
-        );
-      },
+      cell: (row) => (
+        <>
+          <span className="font-medium">{row.browser}</span>
+          <span className="text-muted-foreground ml-1">
+            · {row.os ?? row.platform ?? "Unknown"}
+          </span>
+        </>
+      ),
     },
     {
       key: "ip",

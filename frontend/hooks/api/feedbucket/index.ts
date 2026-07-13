@@ -13,5 +13,3 @@ export {
   useDeleteFeedbucketSubmission,
   useConvertFeedbucketToTicket,
 } from "./use-feedbucket-submissions";
-
-export { useFeedbucketStats } from "./use-feedbucket-stats";

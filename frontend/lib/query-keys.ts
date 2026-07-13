@@ -1127,7 +1127,6 @@ export const queryKeys = {
     widget: (id: number) => [...base, "feedbucket", "widgets", id] as const,
     submissions: (params?: Record<string, unknown>) => [...base, "feedbucket", "submissions", params] as const,
     submission: (id: number) => [...base, "feedbucket", "submissions", id] as const,
-    stats: () => [...base, "feedbucket", "stats"] as const,
   },
 
   crmMetadata: {

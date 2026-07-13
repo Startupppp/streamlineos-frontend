@@ -91,24 +91,18 @@ function PasswordInput({
   );
 }
 
-function getDeviceIcon(userAgent: string | null) {
-  if (!userAgent) return <Monitor className="h-4 w-4" />;
-  const ua = userAgent.toLowerCase();
-  if (ua.includes("mobile") || ua.includes("android") || ua.includes("iphone")) {
+function getDeviceIcon(session: { os: string | null; platform: string | null }) {
+  const label = `${session.os ?? ""} ${session.platform ?? ""}`.toLowerCase();
+  if (label.includes("mobile") || label.includes("android") || label.includes("ios")) {
     return <Smartphone className="h-4 w-4" />;
   }
   return <Monitor className="h-4 w-4" />;
 }
 
-function parseDeviceName(userAgent: string | null): string {
-  if (!userAgent) return "Unknown device";
-  const ua = userAgent.toLowerCase();
-  if (ua.includes("firefox")) return "Firefox";
-  if (ua.includes("edg")) return "Microsoft Edge";
-  if (ua.includes("chrome")) return "Chrome";
-  if (ua.includes("safari")) return "Safari";
-  if (ua.includes("opera")) return "Opera";
-  return "Browser";
+function getSessionLabel(session: { browser: string; os: string | null; platform: string | null }): string {
+  if (session.os) return `${session.browser} · ${session.os}`;
+  if (session.platform) return `${session.browser} · ${session.platform}`;
+  return session.browser;
 }
 
 function SessionsSection() {
@@ -334,7 +328,9 @@ export function SettingsSecurity() {
 type SessionData = {
   id: string;
   isCurrent: boolean;
-  userAgent: string | null;
+  browser: string;
+  os: string | null;
+  platform: string | null;
   ipAddress: string | null;
   lastActive: string | Date;
 };
@@ -349,10 +345,10 @@ function SessionRow({ session: s, onRevoke, revokePending }: SessionRowProps) {
   const handleRevoke = useCallback(() => onRevoke(s.id), [s.id, onRevoke]);
   return (
     <div className="flex items-center gap-3 p-3 rounded-md border bg-muted/30">
-      <span className="text-muted-foreground flex-shrink-0">{getDeviceIcon(s.userAgent)}</span>
+      <span className="text-muted-foreground flex-shrink-0">{getDeviceIcon(s)}</span>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <p className="text-[13px] font-medium truncate">{parseDeviceName(s.userAgent)}</p>
+          <p className="text-[13px] font-medium truncate">{getSessionLabel(s)}</p>
           {s.isCurrent && (
             <Badge variant="outline" className="text-[10px] h-4 px-1.5 border-emerald-300 text-emerald-600 bg-emerald-50">
               Current

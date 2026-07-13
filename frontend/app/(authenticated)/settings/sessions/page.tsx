@@ -29,7 +29,8 @@ export default function SessionsPage() {
     ? allSessions.filter((s) => {
         const q = search.toLowerCase();
         return (
-          (s.userAgent ?? "").toLowerCase().includes(q) ||
+          (s.browser ?? "").toLowerCase().includes(q) ||
+          (s.os ?? "").toLowerCase().includes(q) ||
           (s.ipAddress ?? "").toLowerCase().includes(q)
         );
       })
@@ -87,7 +88,8 @@ export default function SessionsPage() {
       cell: (s) => (
         <div className="flex items-center gap-2">
           <span className="truncate max-w-[280px] font-medium">
-            {s.userAgent ?? "Unknown device"}
+            {s.browser}
+            {s.os ? ` · ${s.os}` : s.platform ? ` · ${s.platform}` : ""}
           </span>
           {s.isCurrent && (
             <Badge variant="secondary" className="shrink-0 text-[10px] h-4 px-1.5">

@@ -23,6 +23,9 @@ interface LoginHistoryEntry {
   event: string;
   ipAddress: string | null;
   userAgent: string | null;
+  browser: string;
+  os: string | null;
+  platform: string | null;
   success: boolean;
   failureReason: string | null;
   createdAt: string;

@@ -29,7 +29,8 @@ export function SettingsProfile() {
 
   const updateProfile = useUpdateProfile();
 
-  const isBusy = uploading || updateProfile.isPending;
+  const isPhotoBusy = uploading;
+  const isSavingName = updateProfile.isPending && !uploading;
   const displayImage = previewUrl || resolveImageUrl(session?.user?.image);
   const name = session?.user?.name || "";
   const email = session?.user?.email || "";
@@ -178,12 +179,12 @@ export function SettingsProfile() {
           </Avatar>
           <button
             type="button"
-            disabled={isBusy}
+            disabled={isPhotoBusy}
             onClick={handleOpenFileInput}
             aria-label="Change profile photo"
             className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer disabled:cursor-not-allowed"
           >
-            {isBusy ? (
+            {isPhotoBusy ? (
               <Loader2 className="h-5 w-5 text-white animate-spin" />
             ) : (
               <Camera className="h-5 w-5 text-white" />
@@ -207,10 +208,10 @@ export function SettingsProfile() {
               variant="outline"
               size="sm"
               className="h-7 text-xs"
-              disabled={isBusy}
+              disabled={isPhotoBusy}
               onClick={handleOpenFileInput}
             >
-              {isBusy ? (
+              {isPhotoBusy ? (
                 <><Loader2 className="h-3 w-3 mr-1 animate-spin" />Uploading…</>
               ) : (
                 <><Camera className="h-3 w-3 mr-1" />Change photo</>
@@ -221,7 +222,7 @@ export function SettingsProfile() {
                 variant="ghost"
                 size="sm"
                 className="h-7 text-xs text-muted-foreground hover:text-destructive"
-                disabled={isBusy}
+                disabled={isPhotoBusy}
                 onClick={handleRemovePhoto}
               >
                 <Trash2 className="h-3 w-3 mr-1" />Remove
@@ -250,9 +251,9 @@ export function SettingsProfile() {
                 size="icon"
                 className="h-9 w-9 shrink-0"
                 onClick={handleSaveName}
-                disabled={updateProfile.isPending || !editName.trim()}
+                disabled={isSavingName || !editName.trim()}
               >
-                {updateProfile.isPending ? (
+                {isSavingName ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 ) : (
                   <Check className="h-3.5 w-3.5" />

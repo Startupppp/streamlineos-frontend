@@ -498,7 +498,7 @@ All reconciled (hook URLs↔routes, chat signatures, PermissionKeys). Build not 
 ---
 
 ## Settings
-- [x] `/settings` — Settings (catch-all)
+- [x] `/settings` — Account settings (profile + security only); notification prefs removed 2026-07-13 — use `/notifications/preferences` (deleted `settings-preferences.tsx` + legacy HR notification hooks)
 - [x] `/settings/organization` — Organization settings
 - [x] `/settings/members` — Members management
 - [x] `/settings/roles` — Roles list

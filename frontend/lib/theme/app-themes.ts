@@ -1,4 +1,29 @@
 export const APP_THEME_STORAGE_KEY = "streamlineos-app-theme";
+export const APP_THEME_MODE_STORAGE_KEY = "streamlineos-app-theme-mode";
+
+export const APP_THEME_MODES = [
+  { id: "light", label: "Light" },
+  { id: "dark", label: "Dark" },
+  { id: "system", label: "System" },
+] as const;
+
+export type AppThemeModeOption = (typeof APP_THEME_MODES)[number];
+export type AppThemeMode = AppThemeModeOption["id"];
+
+export const DEFAULT_APP_THEME_MODE: AppThemeMode = "light";
+
+export function isAppThemeMode(value: unknown): value is AppThemeMode {
+  return APP_THEME_MODES.some((mode) => mode.id === value);
+}
+
+export function resolveIsDark(
+  mode: AppThemeMode,
+  systemPrefersDark: boolean,
+): boolean {
+  if (mode === "dark") return true;
+  if (mode === "system") return systemPrefersDark;
+  return false;
+}
 
 export const APP_THEMES = [
   { id: "default", label: "Ink", swatch: "#0b1220" },

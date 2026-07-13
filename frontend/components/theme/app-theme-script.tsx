@@ -1,3 +1,5 @@
+"use client";
+
 import {
   APP_THEME_STORAGE_KEY,
   getSelectableThemeIds,
@@ -12,6 +14,7 @@ export function AppThemeScript({ nonce }: { nonce?: string }) {
 
   return (
     <script
+      type={typeof window === "undefined" ? "text/javascript" : "text/plain"}
       nonce={nonce}
       suppressHydrationWarning
       dangerouslySetInnerHTML={{ __html: script }}
