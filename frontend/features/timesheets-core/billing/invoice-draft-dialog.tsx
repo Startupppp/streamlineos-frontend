@@ -64,8 +64,8 @@ export function InvoiceDraftDialog({
 
         <div className="space-y-3 py-1">
           {hasMissingRates ? (
-            <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-800">
-              <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" />
+            <div className="flex items-start gap-2 rounded-lg border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-3 py-2.5 text-xs text-amber-800 dark:text-amber-300">
+              <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
               <span>
                 One or more projects are missing bill rates. Set rates in{" "}
                 <a href="/timesheets/settings/rates" className="underline font-medium">

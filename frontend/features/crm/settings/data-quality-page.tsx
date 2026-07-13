@@ -22,9 +22,9 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 
 function severityClass(n: number): string {
-  if (n === 0) return "bg-emerald-50 border-emerald-200 text-emerald-700";
-  if (n < 10) return "bg-amber-50 border-amber-200 text-amber-700";
-  return "bg-red-50 border-red-200 text-red-700";
+  if (n === 0) return "bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-500/30 dark:text-emerald-300";
+  if (n < 10) return "bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-300";
+  return "bg-red-50 border-red-200 text-red-700 dark:bg-red-500/10 dark:border-red-500/30 dark:text-red-300";
 }
 
 function badgeVariant(n: number): "default" | "secondary" | "destructive" {

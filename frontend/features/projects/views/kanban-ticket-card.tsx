@@ -53,7 +53,7 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
 
   const ticketKey = projectKey
     ? `${projectKey}-${ticket.ticketNumber}`
-    : `#${ticket.ticketNumber ?? ticket.id}`;
+    : `#${ticket.ticketNumber ?? ""}`;
 
   const primaryAssignee =
     ticket.assignees?.[0]?.user ?? ticket.assignee ?? null;

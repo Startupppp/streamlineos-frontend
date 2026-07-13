@@ -194,7 +194,7 @@ function CommentPill({ entity }: { entity: CommentEntityRef }) {
       className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background/80 px-2 py-1 shadow-sm hover:shadow-md transition-all duration-150 ease-out motion-reduce:transition-none text-[11px] text-muted-foreground hover:text-foreground my-1"
       aria-label={label}
     >
-      <MessageSquare className="h-3 w-3 shrink-0 text-blue-500" />
+      <MessageSquare className="h-3 w-3 shrink-0 text-primary" />
       {label}
     </button>
   );
@@ -361,7 +361,7 @@ export function ChatBubble({
 
         {isEditing ? (
           <div className="mx-1">
-            <div className="rounded-xl border border-blue-500/40 bg-background overflow-hidden shadow-sm">
+            <div className="rounded-xl border border-primary/40 bg-background overflow-hidden shadow-sm">
               <textarea
                 value={editInput}
                 onChange={handleEditInputChange}
@@ -373,7 +373,7 @@ export function ChatBubble({
             <div className="flex items-center gap-2 mt-1 px-1">
               <button onClick={onCancelEdit} className="text-[11px] text-muted-foreground hover:text-foreground">Cancel</button>
               <span className="text-muted-foreground/30">|</span>
-              <button onClick={onSaveEdit} className="text-[11px] text-blue-600 font-bold hover:underline">Save</button>
+              <button onClick={onSaveEdit} className="text-[11px] text-primary font-bold hover:underline">Save</button>
               <span className="text-[10px] text-muted-foreground/30 ml-auto hidden sm:inline">Esc / Enter</span>
             </div>
           </div>
@@ -513,7 +513,7 @@ export function ChatBubble({
           <button
             onClick={onOpenThread}
             className={cn(
-              "mt-1 px-1 flex items-center gap-1 text-[11px] font-medium text-blue-600 hover:underline",
+              "mt-1 px-1 flex items-center gap-1 text-[11px] font-medium text-primary hover:underline",
               isOwn ? "self-end" : "self-start"
             )}
           >
@@ -534,7 +534,7 @@ export function ChatBubble({
                   className={cn(
                     "flex items-center gap-1 px-2 py-0.5 rounded-full border text-[12px] transition-colors",
                     hasReacted
-                      ? "bg-blue-500/15 border-blue-500/30 text-blue-600"
+                      ? "bg-primary/10 border-primary/30 text-primary"
                       : "bg-muted/40 border-border/30 hover:bg-muted/60"
                   )}
                 >

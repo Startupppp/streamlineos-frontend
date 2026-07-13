@@ -91,7 +91,7 @@ const MemberItem = memo(function MemberItem({
         className="pointer-events-none"
         aria-hidden
       />
-      <div className="h-6 w-6 rounded-full bg-brand-core/10 flex items-center justify-center text-[10px] font-medium shrink-0">
+      <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-medium shrink-0">
         {emp.name?.charAt(0) || <User className="h-3 w-3" />}
       </div>
       <div className="flex-1 min-w-0">

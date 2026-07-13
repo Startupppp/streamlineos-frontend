@@ -55,7 +55,7 @@ const columns: DataTableColumn<RankedEntry>[] = [
     headerClassName: "text-right",
     className: "text-right",
     cell: (row) => (
-      <span className="text-[11px] font-mono tabular-nums text-emerald-600">
+      <span className="text-[11px] font-mono tabular-nums text-emerald-600 dark:text-emerald-400">
         {row.leadsConverted}
       </span>
     ),
@@ -86,9 +86,9 @@ const columns: DataTableColumn<RankedEntry>[] = [
           className={cn(
             "text-[11px] font-medium",
             Number(convRate) >= 50
-              ? "text-emerald-600"
+              ? "text-emerald-600 dark:text-emerald-400"
               : Number(convRate) >= 25
-                ? "text-amber-600"
+                ? "text-amber-600 dark:text-amber-400"
                 : "text-muted-foreground",
           )}
         >

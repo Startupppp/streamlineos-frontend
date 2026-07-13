@@ -119,7 +119,7 @@ const ASSET_COLUMNS: DataTableColumn<AssetListItem>[] = [
     cell: (row) => (
       <Link
         href={`/accounting/assets/${row.asset.id}`}
-        className="text-foreground hover:text-blue-600 hover:underline font-medium"
+        className="text-foreground hover:text-primary hover:underline font-medium"
         onClick={(e) => e.stopPropagation()}
       >
         {row.asset.name}

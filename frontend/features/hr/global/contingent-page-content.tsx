@@ -140,7 +140,7 @@ export function ContingentPageContent() {
                 )}
                 {["contractor", "consultant", "intern", "temporary", "agency", "freelancer"].includes(contract.contractType) &&
                   contract.status === "active" && (
-                    <Button variant="ghost" size="sm" className="h-7 text-xs text-blue-600 hover:text-blue-700" onClick={() => setConvertContractId(contract.id)}>
+                    <Button variant="ghost" size="sm" className="h-7 text-xs text-primary hover:text-primary/80" onClick={() => setConvertContractId(contract.id)}>
                       Convert
                     </Button>
                   )}

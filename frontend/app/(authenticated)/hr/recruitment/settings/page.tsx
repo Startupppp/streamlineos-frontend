@@ -57,7 +57,7 @@ function SettingsCard({ link }: { link: SettingsLink }) {
     <Link href={link.href}>
       <Card className="shadow-sm hover:bg-muted/40 transition-colors h-full">
         <CardContent className="p-4 flex items-start gap-3">
-          <div className="h-9 w-9 rounded-lg bg-brand-core/10 flex items-center justify-center text-primary shrink-0">
+          <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
             <Icon className="h-4.5 w-4.5" />
           </div>
           <div className="min-w-0">

@@ -53,7 +53,7 @@ export function EmployeeProjectsList({ projects }: { projects: ProjectItem[] }) 
                             <CardContent className="p-4 flex flex-col h-full">
 
                                 <div className="flex items-start gap-3 mb-3">
-                                    <div className="p-2 rounded-lg bg-brand-core/10 text-primary shrink-0">
+                                    <div className="p-2 rounded-lg bg-primary/10 text-primary shrink-0">
                                         <FolderKanban className="w-4 h-4" />
                                     </div>
                                     <div className="min-w-0 flex-1">

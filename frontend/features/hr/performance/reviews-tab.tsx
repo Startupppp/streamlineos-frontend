@@ -257,7 +257,7 @@ export function ReviewsTab() {
                   <div className="flex items-center gap-2">
                     <Avatar className="h-7 w-7 shrink-0">
                       <AvatarImage src={resolveImageUrl(review.user?.image ?? null)} />
-                      <AvatarFallback className="text-[10px] font-semibold bg-brand-core/10 text-primary">
+                      <AvatarFallback className="text-[10px] font-semibold bg-primary/10 text-primary">
                         {review.user?.name?.[0] ?? "?"}
                       </AvatarFallback>
                     </Avatar>

@@ -136,18 +136,18 @@ export function MyTimeView() {
         )}
 
         {period?.status === "REJECTED" && !rejectionDismissed && isCurrentWeek && (
-          <div className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50/60 px-4 py-3">
+          <div className="flex items-start gap-3 rounded-lg border border-red-200 dark:border-red-500/30 bg-red-50/60 dark:bg-red-500/10 px-4 py-3">
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-red-800">Timesheet rejected</p>
+              <p className="text-sm font-medium text-red-800 dark:text-red-300">Timesheet rejected</p>
               {period.rejectionReason && (
-                <p className="text-xs text-red-700 mt-0.5">{period.rejectionReason}</p>
+                <p className="text-xs text-red-700 dark:text-red-400 mt-0.5">{period.rejectionReason}</p>
               )}
-              <p className="text-xs text-red-600 mt-1">Update your entries and resubmit.</p>
+              <p className="text-xs text-red-600 dark:text-red-400 mt-1">Update your entries and resubmit.</p>
             </div>
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-100 shrink-0"
+              className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-500/10 shrink-0"
               onClick={handleDismissRejection}
             >
               <X className="h-3.5 w-3.5" />

@@ -170,7 +170,7 @@ const PlanningCard = function PlanningCard({
             "p-2 bg-card rounded border text-xs group",
             "flex items-start gap-2 min-w-0",
             dragSnapshot.isDragging && "shadow-md opacity-90",
-            isSelected && "border-brand-core/60 bg-brand-core/5",
+            isSelected && "border-primary/60 bg-primary/5",
           )}
         >
           <button
@@ -527,7 +527,7 @@ export function SprintPlanningPanel({
                     aria-label="Backlog tickets"
                     className={cn(
                       "min-h-[200px] rounded-lg border border-dashed p-2 space-y-1",
-                      snapshot.isDraggingOver && "bg-brand-core/5 border-brand-core/30",
+                      snapshot.isDraggingOver && "bg-primary/5 border-primary/30",
                     )}
                   >
                     {backlogFilters.filtered.map((ticket, index) => (
@@ -599,7 +599,7 @@ export function SprintPlanningPanel({
                     aria-label={`${sprint.name} tickets`}
                     className={cn(
                       "min-h-[200px] rounded-lg border border-dashed p-2 space-y-1",
-                      snapshot.isDraggingOver && "bg-brand-core/5 border-brand-core/30",
+                      snapshot.isDraggingOver && "bg-primary/5 border-primary/30",
                     )}
                   >
                     {sprintTickets.length === 0 && !snapshot.isDraggingOver && (

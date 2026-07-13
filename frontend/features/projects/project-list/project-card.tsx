@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Calendar, Pencil, Archive, Trash2, RotateCcw, Ticket, CheckCircle2 } from "lucide-react";
+import { Calendar, Archive, Trash2, RotateCcw, Ticket, CheckCircle2 } from "lucide-react";
 import { ChevronRightIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,12 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import type { ProjectListItem } from "@/types/projects/projects";
 import { ProjectCardDialogs } from "./project-card-dialogs";
 import {
+  InlineProjectTitle,
+  InlineProjectStatus,
+  InlineProjectDescription,
+  InlineProjectDates,
+} from "./project-card-inline-fields";
+import {
   avatarTints,
   buildTeamMembers,
   dateToneClasses,
@@ -39,12 +45,13 @@ interface ProjectCardProps {
 
 export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectCardProps) {
   const router = useRouter();
-  const [editOpen, setEditOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
   const { iconRef: ellipsisRef, hoverHandlers: ellipsisHover } = useAnimatedIcon();
 
   const canUpdate = useCan("projects:update");
+  const canManage = useCan("projects:manage");
+  const canEdit = canUpdate || canManage;
   const canDelete = useCan("projects:delete");
 
   const status = project.status ?? "ACTIVE";
@@ -60,7 +67,7 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
   const openTickets = project.progress.total - project.progress.done;
   const teamMembers = useMemo(() => buildTeamMembers(project), [project]);
   const initials = project.key.slice(0, 2).toUpperCase();
-  const showActions = canUpdate || canDelete;
+  const showActions = canEdit || canDelete;
 
   const handleCardClick = useCallback(() => {
     router.push(`/projects/${project.id}`);
@@ -80,11 +87,6 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
     (e: React.MouseEvent) => e.stopPropagation(),
     [],
   );
-
-  const handleEditClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    setEditOpen(true);
-  }, []);
 
   const handleArchiveClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -131,21 +133,29 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
                   {project.key}
                 </span>
                 <h3 className="line-clamp-1 text-sm font-semibold leading-tight text-foreground transition-colors group-hover:text-primary">
-                  {project.name}
+                  {canEdit ? (
+                    <InlineProjectTitle projectId={project.id} currentName={project.name} />
+                  ) : (
+                    project.name
+                  )}
                 </h3>
               </div>
 
               <div className="flex shrink-0 items-center gap-0.5">
-                <Badge
-                  variant="secondary"
-                  className={cn(
-                    "gap-0.5 rounded-full border-0 px-1.5 py-0 text-[8px] font-semibold uppercase tracking-wide",
-                    statusColor,
-                  )}
-                >
-                  <span className={cn("h-1 w-1 shrink-0 rounded-full", statusDot)} aria-hidden="true" />
-                  {displayLabel}
-                </Badge>
+                {canEdit ? (
+                  <InlineProjectStatus projectId={project.id} currentStatus={status} />
+                ) : (
+                  <Badge
+                    variant="secondary"
+                    className={cn(
+                      "gap-0.5 rounded-full border-0 px-1.5 py-0 text-[8px] font-semibold uppercase tracking-wide",
+                      statusColor,
+                    )}
+                  >
+                    <span className={cn("h-1 w-1 shrink-0 rounded-full", statusDot)} aria-hidden="true" />
+                    {displayLabel}
+                  </Badge>
+                )}
 
                 {showActions ? (
                   <DropdownMenu>
@@ -162,13 +172,7 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-44" onClick={handleStopPropagation}>
-                      {canUpdate ? (
-                        <DropdownMenuItem onClick={handleEditClick}>
-                          <Pencil className="mr-2 h-3.5 w-3.5" />
-                          Edit project
-                        </DropdownMenuItem>
-                      ) : null}
-                      {canUpdate ? (
+                      {canEdit ? (
                         <DropdownMenuItem onClick={handleArchiveClick}>
                           {isArchived ? (
                             <>
@@ -198,7 +202,12 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
               </div>
             </div>
 
-            {project.description ? (
+            {canEdit ? (
+              <InlineProjectDescription
+                projectId={project.id}
+                currentDescription={project.description}
+              />
+            ) : project.description ? (
               <p className="mt-1 line-clamp-1 text-[10px] text-muted-foreground">
                 {project.description}
               </p>
@@ -276,7 +285,14 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
                 />
               ) : null}
             </div>
-            {dateMeta ? (
+            {canEdit ? (
+              <InlineProjectDates
+                projectId={project.id}
+                currentStartDate={project.startDate}
+                currentEndDate={project.endDate}
+                currentStatus={status}
+              />
+            ) : dateMeta ? (
               <div
                 className={cn(
                   "flex shrink-0 items-center gap-0.5 text-[9px] font-medium",
@@ -294,8 +310,6 @@ export const ProjectCard = React.memo(function ProjectCard({ project }: ProjectC
       <ProjectCardDialogs
         project={project}
         isArchived={isArchived}
-        editOpen={editOpen}
-        onEditOpenChange={setEditOpen}
         archiveConfirmOpen={archiveConfirmOpen}
         onArchiveConfirmOpenChange={setArchiveConfirmOpen}
         deleteConfirmOpen={deleteConfirmOpen}

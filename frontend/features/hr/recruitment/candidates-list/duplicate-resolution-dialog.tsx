@@ -57,7 +57,7 @@ export function DuplicateResolutionDialog({ group, onClose }: DuplicateResolutio
                 type="button"
                 onClick={() => setKeptId(c.id)}
                 className={`text-left rounded-xl border p-4 transition-colors ${
-                  isKept ? "border-brand-core bg-brand-core/5" : "border-border hover:bg-muted/40"
+                  isKept ? "border-brand-core bg-primary/5" : "border-border hover:bg-muted/40"
                 }`}
               >
                 <div className="flex items-center justify-between gap-2 mb-2">

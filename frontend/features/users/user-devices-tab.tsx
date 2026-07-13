@@ -89,7 +89,7 @@ export function UserDevicesTab({ userId }: UserDevicesTabProps) {
       header: "Trusted",
       cell: (row) =>
         row.trusted ? (
-          <Badge variant="outline" className="text-[10px] border-green-200 text-green-600 bg-green-50">
+          <Badge variant="outline" className="text-[10px] border-green-200 dark:border-green-500/30 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-500/10">
             Trusted
           </Badge>
         ) : (

@@ -26,11 +26,11 @@ export const TriggerCard = memo(function TriggerCard({ value, events, onChange }
   return (
     <motion.div
       layout
-      className="rounded-xl border-2 border-blue-200 bg-blue-50/60 p-4 shadow-sm"
+      className="rounded-xl border-2 border-blue-200 dark:border-blue-500/30 bg-blue-50/60 dark:bg-blue-500/10 p-4 shadow-sm"
     >
       <div className="flex items-center gap-2 mb-3">
         <div className="h-6 w-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-[10px] font-bold">T</div>
-        <span className="text-sm font-semibold text-blue-700">Trigger</span>
+        <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">Trigger</span>
       </div>
       <div className="space-y-1.5">
         <Label className="text-xs text-muted-foreground">Event</Label>
@@ -186,11 +186,11 @@ export const WaitCard = memo(function WaitCard({ waitHours, onChangeHours, onRem
   }, [onChangeHours]);
 
   return (
-    <motion.div layout className="rounded-xl border border-amber-200 bg-amber-50/60 p-3 shadow-sm">
+    <motion.div layout className="rounded-xl border border-amber-200 dark:border-amber-500/30 bg-amber-50/60 dark:bg-amber-500/10 p-3 shadow-sm">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <div className="h-5 w-5 rounded bg-amber-100 flex items-center justify-center text-[10px] font-bold text-amber-700">W</div>
-          <span className="text-xs font-medium text-amber-700">Wait</span>
+          <div className="h-5 w-5 rounded bg-amber-100 dark:bg-amber-500/10 flex items-center justify-center text-[10px] font-bold text-amber-700 dark:text-amber-300">W</div>
+          <span className="text-xs font-medium text-amber-700 dark:text-amber-300">Wait</span>
           <Input
             type="number"
             min={0}

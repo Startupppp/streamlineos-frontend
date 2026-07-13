@@ -278,7 +278,7 @@ function PermissionRow({
             key={role.roleId}
             className={cn(
               "flex items-center justify-center py-2",
-              role.roleId === currentUserRoleId && "bg-brand-core/5",
+              role.roleId === currentUserRoleId && "bg-primary/5",
             )}
           >
             {hasPermission ? (

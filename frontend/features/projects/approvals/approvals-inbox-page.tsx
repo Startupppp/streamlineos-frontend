@@ -59,7 +59,7 @@ export function ApprovalsInboxPage() {
   const memberName = useCallback((userId: string | null): string => {
     if (!userId) return "—";
     const m = members.find((m) => m.userId === userId);
-    return m?.name ?? m?.email ?? userId;
+    return m?.name ?? m?.email ?? "Unknown";
   }, [members]);
 
   const handleDecideClick = useCallback((item: ApprovalInboxItem) => {

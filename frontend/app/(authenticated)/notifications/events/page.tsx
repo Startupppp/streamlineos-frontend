@@ -250,7 +250,7 @@ function PolicySheet({
                             key={c.value}
                             className={cn(
                               "flex items-center gap-2 rounded-md border px-3 py-2 text-sm cursor-pointer transition-colors",
-                              checked ? "border-primary bg-brand-core/5" : "hover:bg-muted/40",
+                              checked ? "border-primary bg-primary/5" : "hover:bg-muted/40",
                               !canManage && "pointer-events-none opacity-60",
                             )}
                           >

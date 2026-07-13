@@ -12,7 +12,7 @@ function buildTableColumns(onTicketClick: (id: number) => void): DataTableColumn
       header: "ID",
       headerClassName: "w-16 text-[10px] uppercase tracking-wider font-bold",
       className: "font-mono text-[11px] text-muted-foreground",
-      cell: (row) => `${row.sequenceId ?? row.ticketNumber ?? row.id}`,
+      cell: (row) => `${row.sequenceId ?? row.ticketNumber}`,
     },
     {
       key: "title",

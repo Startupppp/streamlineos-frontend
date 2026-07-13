@@ -196,7 +196,7 @@ export default function FindExpertPage() {
                             <Link href={`/hr/employees/${expert.userId}`} className="flex items-center gap-3 group min-w-0 flex-1">
                               <Avatar className="h-10 w-10 shrink-0">
                                 <AvatarImage src={resolveImageUrl(expert.image)} />
-                                <AvatarFallback className="bg-brand-core/10 text-primary font-bold text-sm">
+                                <AvatarFallback className="bg-primary/10 text-primary font-bold text-sm">
                                   {(expert.name ?? "?")[0]?.toUpperCase() ?? "?"}
                                 </AvatarFallback>
                               </Avatar>

@@ -35,19 +35,19 @@ export function EmptyChatState({
         </p>
         <div className="flex items-center gap-6 mt-5">
           <button onClick={onNewDM} className="flex flex-col items-center gap-1.5 group">
-            <div className="h-10 w-10 rounded-xl bg-muted/40 flex items-center justify-center group-hover:bg-blue-500/10 group-hover:text-blue-600 text-muted-foreground transition-colors">
+            <div className="h-10 w-10 rounded-xl bg-muted/40 flex items-center justify-center group-hover:bg-primary/10 group-hover:text-primary text-muted-foreground transition-colors">
               <Plus className="h-5 w-5" />
             </div>
             <span className="text-[11px] font-medium text-muted-foreground group-hover:text-foreground transition-colors">New DM</span>
           </button>
           <button onClick={onNewChannel} className="flex flex-col items-center gap-1.5 group">
-            <div className="h-10 w-10 rounded-xl bg-muted/40 flex items-center justify-center group-hover:bg-blue-500/10 group-hover:text-blue-600 text-muted-foreground transition-colors">
+            <div className="h-10 w-10 rounded-xl bg-muted/40 flex items-center justify-center group-hover:bg-primary/10 group-hover:text-primary text-muted-foreground transition-colors">
               <Hash className="h-5 w-5" />
             </div>
             <span className="text-[11px] font-medium text-muted-foreground group-hover:text-foreground transition-colors">Channel</span>
           </button>
           <button onClick={onSearch} className="flex flex-col items-center gap-1.5 group">
-            <div className="h-10 w-10 rounded-xl bg-muted/40 flex items-center justify-center group-hover:bg-blue-500/10 group-hover:text-blue-600 text-muted-foreground transition-colors">
+            <div className="h-10 w-10 rounded-xl bg-muted/40 flex items-center justify-center group-hover:bg-primary/10 group-hover:text-primary text-muted-foreground transition-colors">
               <Search className="h-5 w-5" />
             </div>
             <span className="text-[11px] font-medium text-muted-foreground group-hover:text-foreground transition-colors">Search</span>

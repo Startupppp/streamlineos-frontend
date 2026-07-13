@@ -118,7 +118,7 @@ const ProjectCard = memo(function ProjectCard({ project, index }: { project: Pro
       className="group"
     >
       <div className="flex items-center gap-3 px-3 py-2.5 bg-card rounded-lg border border-border hover:shadow-sm hover:border-border/80 transition-all">
-        <Link href={base} className="h-7 w-7 rounded bg-brand-core/10 flex items-center justify-center text-primary text-[10px] font-bold shrink-0">
+        <Link href={base} className="h-7 w-7 rounded bg-primary/10 flex items-center justify-center text-primary text-[10px] font-bold shrink-0">
           {project.key.substring(0, 2).toUpperCase()}
         </Link>
         <Link href={base} className="flex-1 min-w-0">

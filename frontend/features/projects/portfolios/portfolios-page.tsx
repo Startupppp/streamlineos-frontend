@@ -56,7 +56,7 @@ export function PortfoliosPage() {
   function memberName(userId: string | null): string {
     if (!userId) return "—";
     const m = members.find((x) => x.userId === userId);
-    return m?.name ?? m?.email ?? userId;
+    return m?.name ?? m?.email ?? "Unknown";
   }
 
   const displayed = useMemo(() => {

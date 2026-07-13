@@ -198,7 +198,7 @@ export function ExpenseDetailSheet({ expense, open, onOpenChange }: ExpenseDetai
               href={expense.receiptUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline"
+              className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
             >
               <ExternalLink className="h-3.5 w-3.5" />
               {expense.receiptFileName ?? "View receipt"}

@@ -94,7 +94,7 @@ function PeriodTypeBadge({ periodType }: { periodType: BudgetPeriodType }) {
   return (
     <Badge
       variant="outline"
-      className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30 text-[9px] px-1.5 py-0 h-4"
+      className="bg-primary/10 text-foreground border-primary/30 text-[9px] px-1.5 py-0 h-4"
     >
       {label}
     </Badge>
@@ -120,7 +120,7 @@ const budgetColumns: DataTableColumn<BudgetSummary>[] = [
     key: "name",
     header: "Name",
     cell: (row) => (
-      <span className="text-sm font-medium text-foreground hover:text-blue-600">
+      <span className="text-sm font-medium text-foreground hover:text-primary">
         {row.name}
       </span>
     ),

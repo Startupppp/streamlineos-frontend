@@ -68,7 +68,7 @@ export function PolicySimulator() {
                 </FormItem>
               )}
             />
-            <LoadingButton type="submit" isPending={simulate.isPending} loadingText="Simulating…" className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+            <LoadingButton type="submit" isPending={simulate.isPending} loadingText="Simulating…" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
               Run Simulation
             </LoadingButton>
           </form>

@@ -76,11 +76,11 @@ export function ContactCardView({
           >
             <CardContent className="p-4">
               <div className="flex items-start gap-3">
-                <div className="h-8 w-8 rounded-full bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-xs font-semibold text-blue-700 dark:text-blue-300 shrink-0">
+                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary shrink-0">
                   {contact.name[0]?.toUpperCase() ?? "?"}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate group-hover:text-blue-600 transition-colors">
+                  <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">
                     {contact.name}
                   </p>
                   {contact.title && (

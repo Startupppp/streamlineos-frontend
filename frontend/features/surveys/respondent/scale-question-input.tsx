@@ -52,7 +52,7 @@ function NumericScale({
               onClick={() => onSelect(n)}
               className={cn(
                 "flex min-h-12 flex-col items-center justify-center rounded-xl border px-1 py-2.5 text-sm font-semibold transition-all",
-                "hover:border-brand-core/40 hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                "hover:border-primary/40 hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 selected
                   ? cn("ring-2 ring-offset-1", satisfactionTone(n, max))
                   : "border-border bg-background text-foreground",
@@ -203,9 +203,9 @@ export function LikertInput({ question, value, onChange }: QuestionInputProps) {
             onClick={() => onChange({ choiceIds: [choice.id] })}
             className={cn(
               "rounded-xl border px-4 py-3 text-left text-sm font-medium transition-all",
-              "hover:border-brand-core/40 hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              "hover:border-primary/40 hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               active
-                ? "border-brand-core bg-brand-core/5 text-brand-core ring-2 ring-brand-core/20 ring-offset-1"
+                ? "border-brand-core bg-primary/5 text-brand-core ring-2 ring-primary/20 ring-offset-1"
                 : "border-border bg-background text-foreground",
             )}
             aria-pressed={active}

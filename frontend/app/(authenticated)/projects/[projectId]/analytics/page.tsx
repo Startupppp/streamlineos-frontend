@@ -96,7 +96,7 @@ export default function AnalyticsPage({
   const velocityData = useMemo(() => {
     if (!analytics?.cycleVelocity) return [];
     return analytics.cycleVelocity.map((entry) => ({
-      cycle: entry.cycleName ?? `Cycle ${entry.cycleId}`,
+      cycle: entry.cycleName ?? "Deleted cycle",
       points: entry.completedPoints,
     }));
   }, [analytics?.cycleVelocity]);

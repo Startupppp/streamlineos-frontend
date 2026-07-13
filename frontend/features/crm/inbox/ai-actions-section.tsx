@@ -25,7 +25,7 @@ export function AiActionsSection({ actions }: AiActionsSectionProps) {
       >
         <ZapIcon ref={iconRef} size={14} />
         <span className="text-xs font-medium flex-1">AI Recommendations</span>
-        <Badge className="h-4 min-w-[1.25rem] px-1 text-[10px] bg-blue-500/10 text-blue-700 border-0">
+        <Badge className="h-4 min-w-[1.25rem] px-1 text-[10px] bg-primary/10 text-foreground border-0">
           {actions.length}
         </Badge>
       </div>
@@ -35,10 +35,10 @@ export function AiActionsSection({ actions }: AiActionsSectionProps) {
             key={`${action.entityType}-${action.entityId}-${idx}`}
             className="flex items-center gap-2 px-3 h-8 hover:bg-muted/20 transition-colors border-b border-border/30 last:border-b-0"
           >
-            <span className="h-1.5 w-1.5 rounded-full bg-blue-500 shrink-0" />
+            <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
             <Link
               href={action.href}
-              className="text-xs font-medium text-foreground truncate flex-1 hover:text-blue-600 transition-colors"
+              className="text-xs font-medium text-foreground truncate flex-1 hover:text-primary transition-colors"
             >
               {action.title}
             </Link>

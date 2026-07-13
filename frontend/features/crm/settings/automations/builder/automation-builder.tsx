@@ -467,7 +467,7 @@ export function AutomationBuilder({ automationId }: AutomationBuilderProps) {
                     </div>
                     <div className="space-y-1">
                       {testResult.nodes.map((n) => (
-                        <div key={n.nodeId} className={`flex items-center gap-1.5 text-[11px] rounded px-2 py-1 ${n.result === "pass" || n.result === "ok" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-600"}`}>
+                        <div key={n.nodeId} className={`flex items-center gap-1.5 text-[11px] rounded px-2 py-1 ${n.result === "pass" || n.result === "ok" ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400"}`}>
                           <span className="font-medium">{n.type}</span>
                           <span className="text-[10px] opacity-70">{n.result}</span>
                         </div>

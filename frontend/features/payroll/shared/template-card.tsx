@@ -78,8 +78,8 @@ export function TemplateCard({ template, selected, onSelect, actions }: Template
         "relative rounded-lg border p-4 text-left transition-all",
         onSelect && "cursor-pointer",
         selected
-          ? "border-primary bg-brand-core/5 shadow-sm"
-          : "border-border bg-card hover:border-brand-core/40 hover:shadow-sm",
+          ? "border-primary bg-primary/5 shadow-sm"
+          : "border-border bg-card hover:border-primary/40 hover:shadow-sm",
       )}
     >
       {template.isRecommended && (

@@ -74,8 +74,8 @@ export function MemberDetailSheet({
         </SheetHeader>
 
         {isMissingOrDraft && (
-          <div className="flex items-center justify-between p-3 rounded-lg bg-amber-50 border border-amber-200 mb-4">
-            <p className="text-xs text-amber-700">No timesheet submitted yet</p>
+          <div className="flex items-center justify-between p-3 rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 mb-4">
+            <p className="text-xs text-amber-700 dark:text-amber-300">No timesheet submitted yet</p>
             <Button
               size="sm"
               variant="outline"

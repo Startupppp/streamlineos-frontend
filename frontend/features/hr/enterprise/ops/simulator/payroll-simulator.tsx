@@ -107,7 +107,7 @@ export function PayrollSimulator() {
               ))}
             </div>
 
-            <LoadingButton type="submit" isPending={simulate.isPending} loadingText="Projecting…" className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+            <LoadingButton type="submit" isPending={simulate.isPending} loadingText="Projecting…" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
               Project Impact
             </LoadingButton>
           </form>

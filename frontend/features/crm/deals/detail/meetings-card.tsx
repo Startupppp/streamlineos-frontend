@@ -69,7 +69,7 @@ export function MeetingsCard({ meetings, onAddMeeting, onDeleteMeeting }: Meetin
                   </p>
                   {m.agenda && <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{m.agenda}</p>}
                   {m.recordingLink && (
-                    <a href={m.recordingLink} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline flex items-center gap-1 mt-1">
+                    <a href={m.recordingLink} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1 mt-1">
                       <Video className="h-3 w-3" /> Recording <ExternalLink className="h-2.5 w-2.5" />
                     </a>
                   )}

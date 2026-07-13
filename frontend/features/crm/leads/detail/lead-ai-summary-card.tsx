@@ -48,13 +48,13 @@ function ActionRow({
 
   return (
     <li className="flex items-start gap-2 group">
-      <CheckCircle2 className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0" />
+      <CheckCircle2 className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
       <span className="text-xs text-foreground flex-1">{action}</span>
       <div className="hidden group-hover:flex items-center gap-0.5 shrink-0">
         <Button
           size="sm"
           variant="ghost"
-          className="h-5 w-5 p-0 text-blue-600 hover:text-blue-700"
+          className="h-5 w-5 p-0 text-primary hover:text-primary/80"
           title="Add as task"
           onClick={handleAddTask}
           disabled={createTask.isPending}
@@ -102,7 +102,7 @@ export function LeadAiSummaryCard({ leadId, leadName }: LeadAiSummaryCardProps) 
     <Card className="bg-card border border-border rounded-xl shadow-sm">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-sm font-semibold">
-          <Sparkles className="h-4 w-4 text-blue-600" />
+          <Sparkles className="h-4 w-4 text-primary" />
           AI Lead Summary
         </CardTitle>
       </CardHeader>
@@ -110,7 +110,7 @@ export function LeadAiSummaryCard({ leadId, leadName }: LeadAiSummaryCardProps) 
         {flags?.aiLeadScoring === false && (
           <div className="py-2 text-center text-xs text-muted-foreground bg-muted/50 rounded-lg px-3">
             AI lead scoring is disabled for your organization. Enable it in{" "}
-            <Link href="/crm/settings/ai" className="text-blue-600 hover:underline">
+            <Link href="/crm/settings/ai" className="text-primary hover:underline">
               AI Settings
             </Link>
             .
@@ -154,7 +154,7 @@ export function LeadAiSummaryCard({ leadId, leadName }: LeadAiSummaryCardProps) 
               <LoadingButton
                 size="sm"
                 variant="ghost"
-                className="h-7 text-xs text-blue-600 hover:text-blue-700"
+                className="h-7 text-xs text-primary hover:text-primary/80"
                 isPending={isPending}
                 onClick={handleGenerate}
               >
@@ -175,7 +175,7 @@ export function LeadAiSummaryCard({ leadId, leadName }: LeadAiSummaryCardProps) 
               isPending={isPending}
               loadingText="Generating..."
               onClick={handleGenerate}
-              className="gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
+              className="gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               <Sparkles className="h-3.5 w-3.5" />
               Generate AI Summary

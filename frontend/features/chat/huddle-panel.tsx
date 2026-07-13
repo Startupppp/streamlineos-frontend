@@ -340,7 +340,7 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
               size="sm"
               className={cn(
                 "h-9 w-9 rounded-full p-0",
-                isSharingScreen && "bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 hover:text-blue-500",
+                isSharingScreen && "bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary",
               )}
               onClick={isSharingScreen ? handleStopScreenShare : handleStartScreenShare}
               aria-label={isSharingScreen ? "Stop sharing screen" : "Share screen"}

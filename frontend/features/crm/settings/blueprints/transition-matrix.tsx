@@ -78,7 +78,7 @@ export function TransitionMatrix({ blueprint, stages }: TransitionMatrixProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
+      <div className="flex items-start gap-2 rounded-lg border border-blue-200 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/10 px-3 py-2 text-xs text-blue-800 dark:text-blue-300">
         <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
         <span>Unconfigured transitions are allowed by default (fail-open)</span>
       </div>

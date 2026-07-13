@@ -112,7 +112,7 @@ export function InboxSectionCard({
         <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
         <span className="text-xs font-medium text-foreground flex-1">{label}</span>
         {total > 0 && (
-          <Badge className="h-4 min-w-[1.25rem] px-1 text-[10px] bg-blue-500/10 text-blue-700 border-0">
+          <Badge className="h-4 min-w-[1.25rem] px-1 text-[10px] bg-primary/10 text-foreground border-0">
             {total}
           </Badge>
         )}
@@ -141,7 +141,7 @@ export function InboxSectionCard({
                 <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                 <Link
                   href={entityHref(item)}
-                  className="text-xs font-medium text-foreground truncate flex-1 hover:text-blue-600 transition-colors"
+                  className="text-xs font-medium text-foreground truncate flex-1 hover:text-primary transition-colors"
                 >
                   {item.title}
                 </Link>

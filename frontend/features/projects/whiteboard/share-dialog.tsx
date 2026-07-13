@@ -200,7 +200,7 @@ export function ShareDialog({ projectId, whiteboard, open, onOpenChange }: Share
                 {shares.map((share) => (
                   <li key={share.userId} className="flex items-center gap-2">
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm truncate">{share.name ?? share.email ?? share.userId}</p>
+                      <p className="text-sm truncate">{share.name ?? share.email ?? "Unknown user"}</p>
                       {share.name && <p className="text-xs text-muted-foreground truncate">{share.email}</p>}
                     </div>
                     <Select

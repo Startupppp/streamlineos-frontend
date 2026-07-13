@@ -233,7 +233,7 @@ function ASSET_COLUMNS(
         return assignedName ? (
           <div className="flex items-center gap-2">
             <Avatar className="h-6 w-6">
-              <AvatarFallback className="text-[9px] bg-brand-core/10 text-primary">
+              <AvatarFallback className="text-[9px] bg-primary/10 text-primary">
                 {assignedInitial}
               </AvatarFallback>
             </Avatar>

@@ -61,7 +61,7 @@ function MetricCard({
 }: MetricCardProps) {
   const cardClass =
     variant === "highlight"
-      ? "border-brand-core/30 bg-brand-core/5"
+      ? "border-primary/30 bg-primary/5"
       : variant === "danger"
         ? "border-destructive/30 bg-destructive/5"
         : "border-border bg-card";

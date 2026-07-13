@@ -334,7 +334,7 @@ export default function ChartOfAccountsPage() {
 
   const emptyState = (
     <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/20 py-14 px-6 text-center">
-      <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-blue-500/10 text-blue-600 mb-3">
+      <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-primary/10 text-primary mb-3">
         <Calculator className="h-5 w-5" />
       </div>
       <h3 className="text-sm font-semibold text-foreground">No accounts found</h3>

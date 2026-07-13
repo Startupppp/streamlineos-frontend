@@ -44,8 +44,8 @@ function DocumentItem({ doc }: DocumentItemProps) {
       className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/50 transition-colors group cursor-pointer"
       onClick={handleView}
     >
-      <div className="p-2 rounded-lg bg-blue-500/10 shrink-0">
-        <FileText className="h-4 w-4 text-blue-600" />
+      <div className="p-2 rounded-lg bg-primary/10 shrink-0">
+        <FileText className="h-4 w-4 text-primary" />
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-foreground truncate">
@@ -93,14 +93,14 @@ export const PublicDocumentsCard = memo(function PublicDocumentsCard() {
     <Card className="bg-card border-border shadow-noir">
       <CardHeader className="flex-shrink-0 flex flex-row items-center justify-between px-4 py-3">
         <CardTitle className="text-foreground flex items-center gap-2 text-sm font-semibold">
-          <FileText className="h-4 w-4 text-blue-600" aria-hidden="true" />
+          <FileText className="h-4 w-4 text-primary" aria-hidden="true" />
           Public Documents
         </CardTitle>
         <Link href="/hr/documents">
           <Button
             variant="ghost"
             size="sm"
-            className="hover:bg-blue-500/10 hover:text-blue-600"
+            className="hover:bg-primary/10 hover:text-primary"
             aria-label="View all documents"
           >
             View All

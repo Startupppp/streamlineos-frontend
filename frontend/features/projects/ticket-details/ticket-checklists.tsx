@@ -153,7 +153,7 @@ const ChecklistItemRow = memo(function ChecklistItemRow({
       <button
         type="button"
         onClick={handleDelete}
-        className="opacity-0 group-hover:opacity-100 h-5 w-5 flex items-center justify-center rounded text-red-400 hover:text-red-600 hover:bg-red-50 transition-all"
+        className="opacity-0 group-hover:opacity-100 h-5 w-5 flex items-center justify-center rounded text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
         aria-label="Delete item"
       >
         <Trash2 className="h-3 w-3" />
@@ -283,7 +283,7 @@ function ChecklistSection({
         <button
           type="button"
           onClick={handleDeleteChecklist}
-          className="opacity-0 group-hover:opacity-100 h-5 w-5 flex items-center justify-center rounded text-red-400 hover:text-red-600 hover:bg-red-50 transition-all"
+          className="opacity-0 group-hover:opacity-100 h-5 w-5 flex items-center justify-center rounded text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
           aria-label="Delete checklist"
         >
           <Trash2 className="h-3 w-3" />

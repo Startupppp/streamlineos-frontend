@@ -71,10 +71,10 @@ export function KbAskPanel(props: KbAskPanelProps) {
   }
 
   return (
-    <Card className={cn("border-brand-core/20", props.className)}>
+    <Card className={cn("border-primary/20", props.className)}>
       <CardContent className="p-3 space-y-2">
         <div className="flex items-center gap-2 min-w-0">
-          <div className="h-6 w-6 rounded-md bg-brand-core/10 flex items-center justify-center shrink-0">
+          <div className="h-6 w-6 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
             <Sparkles className="h-3.5 w-3.5 text-primary" />
           </div>
           <div className="min-w-0 flex flex-wrap items-baseline gap-x-1.5 gap-y-0">

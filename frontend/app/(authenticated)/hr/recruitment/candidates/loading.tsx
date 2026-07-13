@@ -21,7 +21,7 @@ export default function CandidatesLoading() {
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Card key={i} className="hover:border-brand-core/30 transition-colors">
+            <Card key={i} className="hover:border-primary/30 transition-colors">
               <CardContent className="p-4 space-y-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="space-y-2">

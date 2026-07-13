@@ -202,7 +202,7 @@ export default function AiCreditsPage() {
                   className="rounded-lg border border-border bg-card p-4"
                 >
                   <div className="flex items-start gap-3">
-                    <div className="h-8 w-8 rounded-lg bg-brand-core/10 flex items-center justify-center shrink-0">
+                    <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                       <Package className="h-4 w-4 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">

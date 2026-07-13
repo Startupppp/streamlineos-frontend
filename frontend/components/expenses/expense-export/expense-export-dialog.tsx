@@ -465,7 +465,7 @@ export function ExpenseExportDialog({
                     key={option.value}
                     className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-colors hover:bg-muted/50 ${
                       format === option.value
-                        ? "border-brand-core bg-brand-core/5"
+                        ? "border-brand-core bg-primary/5"
                         : "border-border"
                     }`}
                   >
@@ -599,7 +599,7 @@ export function ExpenseExportDialog({
                 variant="outline"
                 onClick={handleSendEmail}
                 disabled={isSendingEmail || isExporting || !!dateRangeError}
-                className="flex-1 gap-2 border-brand-core/30 text-primary hover:bg-brand-core/5"
+                className="flex-1 gap-2 border-primary/30 text-primary hover:bg-primary/5"
               >
                 {isSendingEmail ? (
                   <>

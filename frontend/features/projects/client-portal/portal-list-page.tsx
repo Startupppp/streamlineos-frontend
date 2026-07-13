@@ -57,7 +57,7 @@ export function PortalListPage() {
             <Link
               key={project.id}
               href={`/projects/portal/${project.id}`}
-              className="group rounded-xl border border-border bg-card p-5 shadow-sm hover:shadow-md hover:border-brand-core/30 transition-all"
+              className="group rounded-xl border border-border bg-card p-5 shadow-sm hover:shadow-md hover:border-primary/30 transition-all"
             >
               <div className="flex items-start gap-3">
                 <div

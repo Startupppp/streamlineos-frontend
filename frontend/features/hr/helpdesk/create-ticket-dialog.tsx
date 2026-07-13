@@ -134,7 +134,7 @@ export function CreateTicketDialog({ open, onClose }: Props) {
                 <p className="text-xs font-medium text-muted-foreground">Suggested articles that may help:</p>
                 <ul className="space-y-1">
                   {suggestions.results.map((r) => (
-                    <li key={`${r.source}-${r.id}`} className="text-xs text-blue-600 hover:underline cursor-default">
+                    <li key={`${r.source}-${r.id}`} className="text-xs text-primary hover:underline cursor-default">
                       {r.title}
                       {r.excerpt && (
                         <span className="text-muted-foreground ml-1 not-italic">— {r.excerpt.slice(0, 60)}…</span>

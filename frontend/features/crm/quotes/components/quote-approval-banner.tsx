@@ -24,7 +24,7 @@ export function QuoteApprovalBanner({
   if (quote.approvalStatus === "pending") {
     return (
       <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-4 py-3">
-        <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+        <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-amber-800 dark:text-amber-300">Pending Approval</p>
           <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">

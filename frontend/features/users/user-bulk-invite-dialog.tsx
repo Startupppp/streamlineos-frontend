@@ -118,9 +118,9 @@ export function UserBulkInviteDialog({ open, onOpenChange }: UserBulkInviteDialo
 
         {result ? (
           <div className="space-y-4 py-2">
-            <div className="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 px-4 py-3">
-              <CheckCircle2 className="h-5 w-5 shrink-0 text-green-600" />
-              <p className="text-sm font-medium text-green-800">
+            <div className="flex items-center gap-3 rounded-lg border border-green-200 dark:border-green-500/30 bg-green-50 dark:bg-green-500/10 px-4 py-3">
+              <CheckCircle2 className="h-5 w-5 shrink-0 text-green-600 dark:text-green-400" />
+              <p className="text-sm font-medium text-green-800 dark:text-green-300">
                 {result.invited} invitation{result.invited !== 1 ? "s" : ""} sent successfully
               </p>
             </div>
@@ -134,7 +134,7 @@ export function UserBulkInviteDialog({ open, onOpenChange }: UserBulkInviteDialo
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {result.failed.map((email) => (
-                    <Badge key={email} variant="outline" className="text-red-600 border-red-200 bg-red-50 text-xs">
+                    <Badge key={email} variant="outline" className="text-red-600 dark:text-red-400 border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 text-xs">
                       {email}
                     </Badge>
                   ))}

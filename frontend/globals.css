@@ -134,10 +134,10 @@
   /* â”€â”€â”€ Dashboard sidebar (white panel â€” matches landing card surfaces) â”€â”€â”€ */
   --sidebar: #ffffff;
   --sidebar-foreground: #0b1220;
-  --sidebar-primary: #3b82f6;
+  --sidebar-primary: #0b1220;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: color-mix(in srgb, var(--sidebar-primary) 10%, transparent);
-  --sidebar-accent-foreground: #1e40af;
+  --sidebar-accent: color-mix(in srgb, var(--sidebar-primary) 8%, transparent);
+  --sidebar-accent-foreground: #0b1220;
   --sidebar-border: #e2e8f0;
   --sidebar-ring: #60a5fa;
 
@@ -184,9 +184,9 @@
   /* â”€â”€â”€ Sidebar (deepest layer â€” same dark-on-dark Linear/Vercel pattern) â”€â”€â”€ */
   --sidebar: #0b1024;
   --sidebar-foreground: #c4cbe0;
-  --sidebar-primary: #3b82f6;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: color-mix(in srgb, var(--sidebar-primary) 14%, transparent);
+  --sidebar-primary: #f1f4fb;
+  --sidebar-primary-foreground: #07091a;
+  --sidebar-accent: color-mix(in srgb, var(--sidebar-primary) 12%, transparent);
   --sidebar-accent-foreground: #f4f7ff;
   --sidebar-border: rgba(148, 178, 245, 0.18);
   --sidebar-ring: #60a5fa;

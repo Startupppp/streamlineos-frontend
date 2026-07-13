@@ -103,7 +103,7 @@ function ScheduleRow({ schedule, onToggle, onDelete, isToggling }: ScheduleRowPr
               aria-label={schedule.isEnabled ? "Pause schedule" : "Activate schedule"}
             >
               {schedule.isEnabled ? (
-                <ToggleRight className="h-4 w-4 text-violet-600" />
+                <ToggleRight className="h-4 w-4 text-violet-600 dark:text-violet-400" />
               ) : (
                 <ToggleLeft className="h-4 w-4 text-muted-foreground" />
               )}

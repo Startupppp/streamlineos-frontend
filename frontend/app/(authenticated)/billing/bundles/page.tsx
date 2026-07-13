@@ -250,7 +250,7 @@ export default function BundlesPage() {
                     className={cn(
                       "flex cursor-pointer items-center gap-2.5 rounded-md border p-3 transition-colors",
                       isSelected
-                        ? "border-primary bg-brand-core/5"
+                        ? "border-primary bg-primary/5"
                         : "border-border bg-background hover:bg-muted/50",
                     )}
                   >

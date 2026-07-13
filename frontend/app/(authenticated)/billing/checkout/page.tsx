@@ -412,8 +412,8 @@ export default function CheckoutPage() {
                   onClick={handlePlanSelectClick}
                   className={`w-full rounded-lg border p-4 text-left transition-colors ${
                     plan === p.id
-                      ? "border-primary bg-brand-core/5"
-                      : "border-border hover:border-brand-core/40"
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/40"
                   }`}
                 >
                   <div className="flex justify-between items-start gap-3">
@@ -473,8 +473,8 @@ export default function CheckoutPage() {
                       onClick={handleBundleToggleClick}
                       className={`w-full rounded-lg border p-4 text-left transition-colors ${
                         isSelected
-                          ? "border-primary bg-brand-core/5"
-                          : "border-border hover:border-brand-core/40"
+                          ? "border-primary bg-primary/5"
+                          : "border-border hover:border-primary/40"
                       }`}
                     >
                       <div className="flex justify-between items-start gap-3">
@@ -529,8 +529,8 @@ export default function CheckoutPage() {
                         onClick={handleAppToggleClick}
                         className={`rounded-lg border p-3 text-left transition-colors ${
                           isSelected
-                            ? "border-primary bg-brand-core/5"
-                            : "border-border hover:border-brand-core/40"
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-primary/40"
                         }`}
                       >
                         <div className="flex items-start gap-2">
@@ -616,8 +616,8 @@ export default function CheckoutPage() {
                     onClick={handleAiPackSelectClick}
                     className={`w-full rounded-lg border p-4 text-left transition-colors ${
                       isSelected
-                        ? "border-primary bg-brand-core/5"
-                        : "border-border hover:border-brand-core/40"
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:border-primary/40"
                     }`}
                   >
                     <div className="flex justify-between items-center gap-3">

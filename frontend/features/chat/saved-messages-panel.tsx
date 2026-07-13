@@ -41,7 +41,7 @@ function SavedMessageCard({
             {item.message.channel && (
               <button
                 onClick={handleJump}
-                className="flex items-center gap-1 text-[10px] text-blue-600 hover:underline"
+                className="flex items-center gap-1 text-[10px] text-primary hover:underline"
               >
                 <Hash className="h-2.5 w-2.5" />
                 {item.message.channel.name}
@@ -111,14 +111,14 @@ export function SavedMessagesPanel({
       <ScrollArea className="flex-1">
         {isLoading ? (
           <div className="flex items-center justify-center py-10">
-            <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+            <Loader2 className="h-5 w-5 animate-spin text-primary" />
           </div>
         ) : isError ? (
           <div className="flex flex-col items-center justify-center py-12 px-4">
             <h4 className="text-[13px] font-semibold mb-1">Could not load saved messages</h4>
             <button
               onClick={() => void refetch()}
-              className="text-[11px] text-blue-600 hover:underline mt-1"
+              className="text-[11px] text-primary hover:underline mt-1"
             >
               Try again
             </button>
@@ -149,7 +149,7 @@ export function SavedMessagesPanel({
                 <button
                   onClick={handleLoadMore}
                   disabled={isFetchingNextPage}
-                  className="text-[11px] text-blue-600 hover:underline disabled:opacity-50"
+                  className="text-[11px] text-primary hover:underline disabled:opacity-50"
                 >
                   {isFetchingNextPage ? "Loading..." : "Load more"}
                 </button>

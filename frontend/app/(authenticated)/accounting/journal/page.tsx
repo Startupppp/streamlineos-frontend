@@ -153,7 +153,7 @@ function EntriesTab() {
       cell: (entry) => (
         <Link
           href={`/accounting/journal/${entry.id}`}
-          className="text-foreground hover:text-blue-600 hover:underline"
+          className="text-foreground hover:text-primary hover:underline"
         >
           {entry.entryNumber}
         </Link>

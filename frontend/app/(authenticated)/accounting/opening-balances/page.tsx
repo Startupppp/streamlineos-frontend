@@ -83,7 +83,7 @@ export default function OpeningBalancesPage() {
                     <p className="text-[11px] font-medium text-muted-foreground">Entry #</p>
                     <Link
                       href={`/accounting/journal/${entry.id}`}
-                      className="text-sm font-mono text-blue-600 hover:underline"
+                      className="text-sm font-mono text-primary hover:underline"
                     >
                       {entry.entryNumber}
                     </Link>

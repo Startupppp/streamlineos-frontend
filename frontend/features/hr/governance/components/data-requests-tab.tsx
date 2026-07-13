@@ -143,7 +143,7 @@ export function DataRequestsTab() {
                 size="sm"
                 onClick={() => handleProcess(row.id)}
                 disabled={processRequest.isPending}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
               >
                 Process
               </Button>
@@ -175,7 +175,7 @@ export function DataRequestsTab() {
       <div className="flex items-center justify-between mb-4">
         <p className="text-sm text-muted-foreground">{data?.total ?? 0} requests</p>
         {canManage && (
-          <Button onClick={handleOpenSheet} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+          <Button onClick={handleOpenSheet} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground">
             <Plus className="h-4 w-4 mr-1.5" />
             New Request
           </Button>

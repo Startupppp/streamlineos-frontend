@@ -46,7 +46,7 @@ export function TicketHeader({
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0 flex-wrap flex-1">
             <Badge variant="outline" className="font-mono text-[11px] shrink-0 h-5 px-1.5">
-              {projectKey && ticketNumber != null ? `${projectKey}-${ticketNumber}` : `#${ticketNumber ?? ticketId}`}
+              {projectKey && ticketNumber != null ? `${projectKey}-${ticketNumber}` : ticketNumber != null ? `#${ticketNumber}` : ""}
             </Badge>
             {!isLoading && (
               <>

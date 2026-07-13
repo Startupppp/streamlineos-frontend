@@ -65,7 +65,7 @@ export function StepType({ draft, updateDraft }: StepSharedProps) {
               className={cn(
                 "cursor-pointer rounded-xl border p-4 flex flex-col gap-2 transition-all",
                 isSelected
-                  ? "border-primary bg-brand-core/5"
+                  ? "border-primary bg-primary/5"
                   : "border-border bg-card hover:border-muted-foreground/40"
               )}
             >

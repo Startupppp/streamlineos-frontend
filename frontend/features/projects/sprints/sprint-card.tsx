@@ -50,23 +50,29 @@ interface SprintCardProps {
 
 interface StatusStyle {
   label: string;
-  variant: "default" | "secondary" | "outline";
-  className?: string;
+  dotClassName: string;
+  badgeClassName: string;
+  stripeClassName: string;
 }
 
 const STATUS_STYLES: Record<string, StatusStyle> = {
   ACTIVE: {
     label: "Active",
-    variant: "secondary",
-    className: "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+    dotClassName: "bg-emerald-500",
+    badgeClassName: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400",
+    stripeClassName: "border-l-emerald-500",
   },
   PLANNED: {
     label: "Planned",
-    variant: "secondary",
+    dotClassName: "bg-primary/60",
+    badgeClassName: "bg-muted text-muted-foreground",
+    stripeClassName: "border-l-primary/35",
   },
   COMPLETED: {
     label: "Completed",
-    variant: "secondary",
+    dotClassName: "bg-muted-foreground/40",
+    badgeClassName: "bg-muted text-muted-foreground",
+    stripeClassName: "border-l-muted-foreground/25",
   },
 };
 
@@ -105,26 +111,58 @@ export const SprintCard = memo(function SprintCard({ sprint, projectId, onStart,
         ? `${Math.abs(daysRemaining)}d overdue`
         : `${daysRemaining}d left`;
 
+  const isOverdue = sprint.status !== "COMPLETED" && daysRemaining < 0;
+
   return (
-    <div className={cn("bg-card border border-border rounded-lg p-4 group", sprint.status === "ACTIVE" && "border-l-2 border-l-emerald-500")}>
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 min-w-0">
-          <Link
-            href={`/projects/${projectId}?sprint=${sprint.id}`}
-            className="font-semibold text-sm truncate hover:text-primary transition-colors"
-          >
-            {sprint.name}
-          </Link>
-          <Badge variant={statusStyle.variant} className={cn("shrink-0", statusStyle.className)}>
-            {statusStyle.label}
-          </Badge>
+    <div
+      className={cn(
+        "group relative overflow-hidden rounded-xl border border-border border-l-[3px] bg-card p-2.5 shadow-sm",
+        "transition-[border-color,box-shadow] duration-200 ease-out motion-reduce:transition-none",
+        "hover:border-primary/35 hover:shadow-sm",
+        statusStyle.stripeClassName,
+      )}
+    >
+      <div className="flex items-start gap-1.5 min-w-0">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-1.5 min-w-0">
+            <div className="min-w-0 flex-1">
+              <Link
+                href={`/projects/${projectId}?sprint=${sprint.id}`}
+                className="block min-w-0 text-sm font-semibold leading-tight text-foreground line-clamp-1 break-all transition-colors hover:text-primary"
+              >
+                {sprint.name}
+              </Link>
+            </div>
+            <Badge
+              variant="secondary"
+              className={cn(
+                "shrink-0 gap-0.5 rounded-full border-0 px-1.5 py-0 text-[8px] font-semibold uppercase tracking-wide",
+                statusStyle.badgeClassName,
+              )}
+            >
+              <span className={cn("h-1 w-1 shrink-0 rounded-full", statusStyle.dotClassName)} aria-hidden="true" />
+              {statusStyle.label}
+            </Badge>
+          </div>
+
+          {sprint.goal ? (
+            <p className="mt-0.5 flex items-center gap-1 text-[10px] text-muted-foreground">
+              <Target className="h-2.5 w-2.5 shrink-0" aria-hidden="true" />
+              <span className="min-w-0 line-clamp-1">{sprint.goal}</span>
+            </p>
+          ) : null}
+
+          <p className="mt-1 text-[10px] text-muted-foreground tabular-nums">
+            {format(startDate, "MMM d")} — {format(endDate, "MMM d, yyyy")}
+          </p>
         </div>
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              size="icon"
-              className="h-7 w-7 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100 transition-opacity"
+              size="icon-sm"
+              className="h-6 w-6 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 focus:opacity-100 transition-opacity"
               aria-label={`Sprint actions for ${sprint.name}`}
             >
               <MoreHorizontal className="h-3.5 w-3.5" />
@@ -168,29 +206,9 @@ export const SprintCard = memo(function SprintCard({ sprint, projectId, onStart,
         </DropdownMenu>
       </div>
 
-      {sprint.goal && (
-        <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1.5">
-          <Target className="h-3 w-3 shrink-0" />
-          <span className="truncate">{sprint.goal}</span>
-        </p>
-      )}
-
-      <div className="flex items-center justify-between text-xs text-muted-foreground mt-2">
-        <span>
-          {format(startDate, "MMM d")} — {format(endDate, "MMM d, yyyy")}
-        </span>
-        <span
-          className={cn(
-            sprint.status !== "COMPLETED" && daysRemaining < 0 && "text-red-500"
-          )}
-        >
-          {daysLabel}
-        </span>
-      </div>
-
-      <div className="mt-3">
+      <div className="mt-1.5 space-y-1 border-t border-border/80 pt-1.5">
         <div
-          className="w-full bg-muted rounded-full h-1.5"
+          className="h-1 overflow-hidden rounded-full bg-muted"
           role="progressbar"
           aria-valuenow={Math.round(progress)}
           aria-valuemin={0}
@@ -199,13 +217,23 @@ export const SprintCard = memo(function SprintCard({ sprint, projectId, onStart,
           aria-valuetext={`${Math.round(progress)}% complete`}
         >
           <div
-            className="bg-primary h-1.5 rounded-full transition-all duration-300"
+            className={cn(
+              "h-full rounded-full transition-[width] duration-300 ease-out motion-reduce:transition-none",
+              progress >= 100 ? "bg-emerald-500" : "bg-primary",
+            )}
             style={{ width: `${progress}%` }}
           />
         </div>
-        <div className="flex justify-between text-xs text-muted-foreground mt-1">
-          <span>{completedPoints}/{totalPoints} pts</span>
-          <span>{doneTickets}/{tickets.length} tickets</span>
+
+        <div className="flex items-center justify-between gap-1.5 text-[9px] font-medium tabular-nums text-muted-foreground">
+          <span>
+            {completedPoints}/{totalPoints} pts
+            <span className="mx-1 text-border" aria-hidden="true">·</span>
+            {doneTickets}/{tickets.length} tickets
+          </span>
+          <span className={cn("shrink-0", isOverdue && "text-red-500 dark:text-red-400")}>
+            {daysLabel}
+          </span>
         </div>
       </div>
     </div>

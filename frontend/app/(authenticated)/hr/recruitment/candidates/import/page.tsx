@@ -228,7 +228,7 @@ export default function BulkImportPage() {
       <div className="flex gap-2 text-xs">
         {(["upload", "map", "preview", "done"] as Step[]).map((s, i) => (
           <div key={s} className="flex items-center gap-2">
-            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${step === s ? "bg-primary text-primary-foreground" : ["map", "preview", "done"].indexOf(s) <= ["upload", "map", "preview", "done"].indexOf(step) ? "bg-brand-core/20 text-primary" : "bg-muted text-muted-foreground"}`}>
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${step === s ? "bg-primary text-primary-foreground" : ["map", "preview", "done"].indexOf(s) <= ["upload", "map", "preview", "done"].indexOf(step) ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"}`}>
               {i + 1}
             </div>
             <span className={step === s ? "font-medium" : "text-muted-foreground capitalize"}>{s}</span>

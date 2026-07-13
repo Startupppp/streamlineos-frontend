@@ -117,7 +117,7 @@ function PaymentDetailSheet({ payment, onClose }: PaymentDetailSheetProps) {
                 <div key={alloc.invoiceId} className="flex justify-between text-xs">
                   <Link
                     href={`/accounting/invoices/${alloc.invoiceId}`}
-                    className="text-blue-600 hover:underline"
+                    className="text-primary hover:underline"
                   >
                     Invoice #{alloc.invoiceId}
                   </Link>
@@ -130,7 +130,7 @@ function PaymentDetailSheet({ payment, onClose }: PaymentDetailSheetProps) {
         <div className="pt-2">
           <Link
             href={`/accounting/invoices/${payment.invoiceId}`}
-            className="text-blue-600 hover:underline text-sm"
+            className="text-primary hover:underline text-sm"
           >
             View Invoice →
           </Link>

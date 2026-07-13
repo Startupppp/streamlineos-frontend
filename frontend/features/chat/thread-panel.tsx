@@ -37,7 +37,7 @@ function ThreadMessage({ message, currentUserId, isParent }: ThreadMessageProps)
       </Avatar>
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline gap-2 mb-0.5">
-          <span className={cn("text-[12px] font-bold", isOwn ? "text-blue-600" : "text-foreground")}>
+          <span className={cn("text-[12px] font-bold", isOwn ? "text-primary" : "text-foreground")}>
             {message.sender?.name ?? "Unknown"}
           </span>
           <span className="text-[10px] text-muted-foreground">
@@ -161,7 +161,7 @@ export function ThreadPanel({
       <ScrollArea className="flex-1">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-10">
-            <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+            <Loader2 className="h-5 w-5 animate-spin text-primary" />
           </div>
         ) : (
           <div className="py-2">
@@ -187,7 +187,7 @@ export function ThreadPanel({
                 <button
                   onClick={handleLoadOlder}
                   disabled={isFetchingNextPage}
-                  className="text-[11px] text-blue-600 hover:underline disabled:opacity-50"
+                  className="text-[11px] text-primary hover:underline disabled:opacity-50"
                 >
                   {isFetchingNextPage ? "Loading..." : "Load older replies"}
                 </button>
@@ -196,8 +196,8 @@ export function ThreadPanel({
 
             {replies.length === 0 && !isLoading && (
               <div className="flex flex-col items-center justify-center py-8 px-4">
-                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500/15 to-blue-500/5 flex items-center justify-center mb-2">
-                  <Send className="h-4 w-4 text-blue-600" />
+                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center mb-2">
+                  <Send className="h-4 w-4 text-primary" />
                 </div>
                 <p className="text-[12px] text-muted-foreground text-center">
                   No replies yet. Start the thread.
@@ -235,7 +235,7 @@ export function ThreadPanel({
             className={cn(
               "shrink-0 h-7 w-7 rounded-lg flex items-center justify-center transition-colors",
               input.trim()
-                ? "bg-blue-600 text-white hover:bg-blue-700"
+                ? "bg-primary text-primary-foreground hover:bg-primary/90"
                 : "bg-muted text-muted-foreground"
             )}
             aria-label="Send reply"

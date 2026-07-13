@@ -63,7 +63,7 @@ function KpiCard({ label, value, sub, icon }: KpiCardProps) {
               <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>
             )}
           </div>
-          <div className="h-9 w-9 rounded-lg bg-brand-core/10 flex items-center justify-center text-primary shrink-0">
+          <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
             {icon}
           </div>
         </div>

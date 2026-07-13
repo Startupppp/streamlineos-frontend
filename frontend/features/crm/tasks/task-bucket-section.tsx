@@ -13,22 +13,22 @@ const BUCKET_CONFIG: Record<
 > = {
   OVERDUE: {
     label: "Overdue",
-    badgeClass: "bg-red-100 text-red-700 border-red-200",
+    badgeClass: "bg-red-100 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
     borderClass: "border-l-red-400",
   },
   TODAY: {
     label: "Today",
-    badgeClass: "bg-blue-100 text-blue-700 border-blue-200",
+    badgeClass: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
     borderClass: "border-l-blue-400",
   },
   THIS_WEEK: {
     label: "This Week",
-    badgeClass: "bg-amber-100 text-amber-700 border-amber-200",
+    badgeClass: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
     borderClass: "border-l-amber-400",
   },
   UPCOMING: {
     label: "Upcoming",
-    badgeClass: "bg-blue-100 text-blue-700 border-blue-200",
+    badgeClass: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
     borderClass: "border-l-blue-400",
   },
   NO_DATE: {

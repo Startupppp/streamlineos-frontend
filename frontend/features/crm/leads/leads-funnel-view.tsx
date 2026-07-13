@@ -79,13 +79,13 @@ export function LeadsFunnelView({ board }: LeadsFunnelViewProps) {
         </div>
         <div className="bg-card rounded-lg border border-border shadow-sm p-4 text-center">
           <p className="text-xs text-muted-foreground">Converted</p>
-          <p className="text-2xl font-bold tabular-nums text-emerald-600">
+          <p className="text-2xl font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
             {board["CONVERTED"]?.length ?? 0}
           </p>
         </div>
         <div className="bg-card rounded-lg border border-border shadow-sm p-4 text-center">
           <p className="text-xs text-muted-foreground">Pipeline Value</p>
-          <p className="text-2xl font-bold tabular-nums text-blue-600">
+          <p className="text-2xl font-bold tabular-nums text-blue-600 dark:text-blue-400">
             ₹{(totalRevenue / 100000).toFixed(1)}L
           </p>
         </div>
@@ -128,10 +128,10 @@ export function LeadsFunnelView({ board }: LeadsFunnelViewProps) {
                     <span
                       className={`text-xs font-medium ${
                         conversionRate >= 50
-                          ? "text-emerald-600"
+                          ? "text-emerald-600 dark:text-emerald-400"
                           : conversionRate >= 25
-                          ? "text-amber-600"
-                          : "text-red-500"
+                          ? "text-amber-600 dark:text-amber-400"
+                          : "text-red-500 dark:text-red-400"
                       }`}
                     >
                       {conversionRate}%

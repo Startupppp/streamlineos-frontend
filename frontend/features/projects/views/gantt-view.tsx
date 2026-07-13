@@ -307,7 +307,7 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
 
       {(cpData?.criticalPath.length ?? 0) > 0 && (
         <div className="flex shrink-0 items-center gap-2 px-1">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 border border-red-200 px-2.5 py-0.5 text-xs text-red-600">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 border border-red-200 px-2.5 py-0.5 text-xs text-red-600 dark:bg-red-500/10 dark:border-red-500/30 dark:text-red-400">
             <span className="inline-block w-2.5 h-2.5 rounded-sm bg-red-400 border border-red-500" />
             Critical path
           </span>

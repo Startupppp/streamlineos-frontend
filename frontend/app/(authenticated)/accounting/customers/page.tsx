@@ -30,7 +30,7 @@ const columns: DataTableColumn<CustomerOutstanding>[] = [
     cell: (row) => (
       <Link
         href={`/accounting/customers/${row.clientId}`}
-        className="text-sm font-medium text-foreground hover:text-blue-600 hover:underline"
+        className="text-sm font-medium text-foreground hover:text-primary hover:underline"
       >
         {row.clientName}
       </Link>
@@ -70,7 +70,7 @@ const columns: DataTableColumn<CustomerOutstanding>[] = [
     cell: (row) => (
       <Link
         href={`/accounting/reports/customer-statement?clientId=${row.clientId}`}
-        className="text-xs text-blue-600 hover:underline whitespace-nowrap"
+        className="text-xs text-primary hover:underline whitespace-nowrap"
       >
         Statement
       </Link>

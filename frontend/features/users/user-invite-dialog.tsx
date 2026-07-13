@@ -126,8 +126,8 @@ export function UserInviteDialog({ open, onOpenChange }: UserInviteDialogProps) 
 
         {invited ? (
           <div className="flex flex-col items-center gap-3 py-6 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-50">
-              <CheckCircle2 className="h-6 w-6 text-green-600" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-50 dark:bg-green-500/10">
+              <CheckCircle2 className="h-6 w-6 text-green-600 dark:text-green-400" />
             </div>
             <p className="font-medium text-sm">Invitation sent!</p>
             <p className="text-xs text-muted-foreground">

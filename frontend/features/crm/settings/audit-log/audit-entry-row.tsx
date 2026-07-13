@@ -157,9 +157,9 @@ function ChangesDisplay({ metadata }: ChangesDisplayProps) {
         return (
           <p key={field} className="text-xs text-muted-foreground">
             <span className="font-medium">{field}</span>:{" "}
-            <span className="text-red-500 line-through">{from}</span>
+            <span className="text-red-500 dark:text-red-400 line-through">{from}</span>
             {" → "}
-            <span className="text-emerald-600">{to}</span>
+            <span className="text-emerald-600 dark:text-emerald-400">{to}</span>
           </p>
         );
       })}

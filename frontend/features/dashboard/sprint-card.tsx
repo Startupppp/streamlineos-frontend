@@ -36,12 +36,12 @@ export const SprintCard = memo(function SprintCard({ summary, isLoading }: Sprin
     <Card className="bg-card border-border shadow-noir flex flex-col h-full w-full">
       <CardHeader className="flex-shrink-0 flex flex-row items-center justify-between px-4 py-3">
         <CardTitle className="text-foreground flex items-center gap-2 text-sm font-semibold">
-          <Zap className="h-4 w-4 text-blue-600" aria-hidden="true" />
+          <Zap className="h-4 w-4 text-primary" aria-hidden="true" />
           Active Sprint
         </CardTitle>
         {summary?.projectId && (
           <Link href={`/projects/${summary.projectId}`}>
-            <Button variant="ghost" size="sm" className="hover:bg-blue-500/10 hover:text-blue-600" aria-label="View sprint project">
+            <Button variant="ghost" size="sm" className="hover:bg-primary/10 hover:text-primary" aria-label="View sprint project">
               <ArrowUpRight className="h-4 w-4" />
             </Button>
           </Link>
@@ -65,11 +65,11 @@ export const SprintCard = memo(function SprintCard({ summary, isLoading }: Sprin
             <div className="space-y-1.5">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Progress</span>
-                <span className="font-medium text-blue-600">{summary.progress}%</span>
+                <span className="font-medium text-primary">{summary.progress}%</span>
               </div>
               <div className="h-2.5 bg-muted rounded-full overflow-hidden" role="progressbar" aria-valuenow={summary.progress} aria-valuemin={0} aria-valuemax={100} aria-label="Sprint progress" aria-valuetext={`${summary.progress}% complete — ${summary.completedPoints} of ${summary.totalPoints} points`}>
                 <div
-                  className="h-full rounded-full transition-all bg-gradient-to-r from-blue-500 to-cyan-500"
+                  className="h-full rounded-full transition-all bg-primary"
                   style={{ width: `${Math.min(100, Math.max(0, summary.progress))}%` }}
                 />
               </div>

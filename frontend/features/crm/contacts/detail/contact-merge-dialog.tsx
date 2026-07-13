@@ -39,7 +39,7 @@ export function ContactDuplicateBanner({ contactId, onMergeComplete }: ContactDu
   return (
     <>
       <div className="flex items-center gap-2 rounded-lg border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-300">
-        <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-600" />
+        <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
         <span>
           {relevantDuplicates.length} potential duplicate{relevantDuplicates.length > 1 ? "s" : ""} detected.
         </span>

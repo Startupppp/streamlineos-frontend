@@ -84,7 +84,7 @@ export function ChatConfigurationPage() {
             className={cn(
               "w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-[13px] font-medium transition-colors",
               activeTab === tab.value
-                ? "bg-blue-500/10 text-blue-600"
+                ? "bg-primary/10 text-foreground"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted/40",
             )}
           >

@@ -28,7 +28,7 @@ function renderInlinePart(part: string, key: number, isOwn: boolean): React.Reac
         key={key}
         className={cn(
           "font-semibold rounded px-0.5 break-all",
-          isOwn ? "bg-primary-foreground/20 text-primary-foreground" : "bg-blue-500/15 text-blue-600",
+          isOwn ? "bg-primary-foreground/20 text-primary-foreground" : "bg-primary/10 text-primary",
         )}
       >
         {part}

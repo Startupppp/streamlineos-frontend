@@ -482,7 +482,7 @@ export function ChannelInfoPanel({
                 <button
                   type="button"
                   onClick={() => setShowAddMembers(true)}
-                  className="inline-flex items-center gap-1 text-[11px] font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                  className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:text-primary/80 transition-colors"
                 >
                   <UserPlus className="h-3.5 w-3.5" />
                   Add

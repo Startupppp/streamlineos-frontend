@@ -27,7 +27,7 @@ export function SharedFilesPanel({ channelId, onClose }: { channelId: number; on
       <ScrollArea className="flex-1">
         {isLoading ? (
           <div className="flex items-center justify-center py-10">
-            <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+            <Loader2 className="h-5 w-5 animate-spin text-primary" />
           </div>
         ) : files.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 px-4">
@@ -79,7 +79,7 @@ export function SharedFilesPanel({ channelId, onClose }: { channelId: number; on
                 <button
                   onClick={() => fetchNextPage()}
                   disabled={isFetchingNextPage}
-                  className="text-[11px] text-blue-600 hover:underline disabled:opacity-50"
+                  className="text-[11px] text-primary hover:underline disabled:opacity-50"
                 >
                   {isFetchingNextPage ? "Loading..." : "Load more"}
                 </button>

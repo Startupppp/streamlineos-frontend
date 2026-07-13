@@ -251,7 +251,7 @@ function LogTab() {
       cell: (row) => (
         <Link
           href={`/accounting/invoices/${row.invoiceId}`}
-          className="text-sm text-blue-600 hover:underline font-mono"
+          className="text-sm text-primary hover:underline font-mono"
         >
           #{row.invoiceId}
         </Link>

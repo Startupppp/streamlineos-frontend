@@ -215,19 +215,19 @@ export function UserImportDialog({ open, onOpenChange }: UserImportDialogProps) 
                   <p className="text-lg font-semibold tabular-nums">{importResult.total}</p>
                   <p className="text-[11px] text-muted-foreground">Total</p>
                 </div>
-                <div className="rounded-md border border-green-200 bg-green-50 p-2">
-                  <p className="text-lg font-semibold tabular-nums text-green-700">{importResult.succeeded}</p>
-                  <p className="text-[11px] text-green-600">Invited</p>
+                <div className="rounded-md border border-green-200 dark:border-green-500/30 bg-green-50 dark:bg-green-500/10 p-2">
+                  <p className="text-lg font-semibold tabular-nums text-green-700 dark:text-green-300">{importResult.succeeded}</p>
+                  <p className="text-[11px] text-green-600 dark:text-green-400">Invited</p>
                 </div>
-                <div className="rounded-md border border-red-200 bg-red-50 p-2">
-                  <p className="text-lg font-semibold tabular-nums text-red-600">{importResult.failed}</p>
-                  <p className="text-[11px] text-red-500">Failed</p>
+                <div className="rounded-md border border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 p-2">
+                  <p className="text-lg font-semibold tabular-nums text-red-600 dark:text-red-400">{importResult.failed}</p>
+                  <p className="text-[11px] text-red-500 dark:text-red-400">Failed</p>
                 </div>
               </div>
 
               {importResult.results.some((r) => !r.success) && (
                 <div className="border rounded-md overflow-hidden max-h-40 overflow-y-auto">
-                  <div className="bg-red-50 border-b px-2 py-1 flex items-center gap-1.5 text-xs font-medium text-red-600">
+                  <div className="bg-red-50 dark:bg-red-500/10 border-b px-2 py-1 flex items-center gap-1.5 text-xs font-medium text-red-600 dark:text-red-400">
                     <AlertTriangle className="h-3.5 w-3.5" />
                     Failed rows
                   </div>

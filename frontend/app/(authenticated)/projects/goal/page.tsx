@@ -54,7 +54,7 @@ function GoalCard({ goal }: { goal: GoalListItem }) {
 
   return (
     <Link href={`/projects/goal/${goal.id}`} className="block group">
-      <div className="bg-card border border-border rounded-xl p-4 space-y-3 shadow-sm transition-colors group-hover:border-brand-core/40">
+      <div className="bg-card border border-border rounded-xl p-4 space-y-3 shadow-sm transition-colors group-hover:border-primary/40">
         <div className="flex items-start justify-between gap-2">
           <p className="font-medium text-sm leading-snug line-clamp-2">
             {goal.title}

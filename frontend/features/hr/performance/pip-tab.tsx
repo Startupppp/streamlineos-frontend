@@ -203,7 +203,7 @@ export function PIPTab() {
                   <div className="flex items-center gap-2 min-w-0">
                     <Avatar className="h-7 w-7 shrink-0">
                       <AvatarImage src={resolveImageUrl(pip.user?.image ?? null)} />
-                      <AvatarFallback className="text-[9px] bg-brand-core/10 text-primary">{pip.user?.name?.[0] ?? "?"}</AvatarFallback>
+                      <AvatarFallback className="text-[9px] bg-primary/10 text-primary">{pip.user?.name?.[0] ?? "?"}</AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
                       <p className="text-sm font-medium truncate">{pip.user?.name ?? "Employee"}</p>

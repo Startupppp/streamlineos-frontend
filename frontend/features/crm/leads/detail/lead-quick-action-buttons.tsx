@@ -7,11 +7,11 @@ import { cn } from "@/lib/utils";
 import type { QuickAction } from "./lead-types";
 
 export const ACTION_BUTTONS = [
-  { key: "call"  as const, label: "Log Call",    icon: Phone,      color: "bg-blue-500/10 text-blue-400 hover:bg-blue-500/20"        },
-  { key: "email" as const, label: "Send Email",  icon: Mail,       color: "bg-blue-500/10 text-blue-400 hover:bg-blue-500/20"        },
+  { key: "call"  as const, label: "Log Call",    icon: Phone,      color: "bg-primary/10 text-primary hover:bg-primary/20"        },
+  { key: "email" as const, label: "Send Email",  icon: Mail,       color: "bg-primary/10 text-primary hover:bg-primary/20"        },
   { key: "note"  as const, label: "Add Note",    icon: StickyNote, color: "bg-amber-500/10 text-amber-400 hover:bg-amber-500/20"     },
   { key: "task"  as const, label: "New Task",    icon: ListTodo,   color: "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"},
-  { key: "draft" as const, label: "Draft Email", icon: Wand2,      color: "bg-blue-500/10 text-blue-400 hover:bg-blue-500/20"        },
+  { key: "draft" as const, label: "Draft Email", icon: Wand2,      color: "bg-primary/10 text-primary hover:bg-primary/20"        },
 ] as const;
 
 type ActionButtonData = (typeof ACTION_BUTTONS)[number];
@@ -67,7 +67,7 @@ export function DraftPanel({ leadName, isPending, onGenerate, onCancel }: DraftP
         <Button
           type="button"
           size="sm"
-          className="bg-blue-600 hover:bg-blue-700 text-white"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground"
           onClick={onGenerate}
           disabled={isPending || !leadName}
         >

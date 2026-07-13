@@ -50,7 +50,7 @@ export function ProgramDetailPage({ programId }: Props) {
   function memberName(userId: string | null): string {
     if (!userId) return "â€”";
     const m = members.find((x) => x.userId === userId);
-    return m?.name ?? m?.email ?? userId;
+    return m?.name ?? m?.email ?? "Unknown";
   }
 
   function portfolioName(portfolioId: number | null): string {

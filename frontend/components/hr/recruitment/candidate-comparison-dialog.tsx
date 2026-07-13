@@ -65,7 +65,7 @@ function CandidateColumn({
   return (
     <div className="flex-1 min-w-0 space-y-4 px-3">
       <div className="text-center space-y-1.5">
-        <div className="h-10 w-10 rounded-full bg-brand-core/10 flex items-center justify-center mx-auto text-sm font-semibold text-primary">
+        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center mx-auto text-sm font-semibold text-primary">
           {candidate.firstName[0]}{candidate.lastName[0]}
         </div>
         <p className="text-sm font-semibold truncate">{name}</p>

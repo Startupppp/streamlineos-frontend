@@ -100,11 +100,11 @@ const BILLING_COLUMNS: DataTableColumn<BillingGroup>[] = [
     header: "Status",
     cell: (row) =>
       row.missingRate ? (
-        <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700 text-[10px]">
+        <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700 text-[10px] dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30">
           Missing rate
         </Badge>
       ) : (
-        <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700 text-[10px]">
+        <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700 text-[10px] dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30">
           Ready
         </Badge>
       ),
@@ -295,8 +295,8 @@ export function BillingView() {
         </StatCardGrid>
 
         {hasMissingRates && (
-          <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-            <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
+          <div className="flex items-center gap-2 rounded-lg border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-300">
+            <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
             <span>
               Some projects are missing bill rates.{" "}
               <a href="/timesheets/settings/rates" className="underline font-medium">

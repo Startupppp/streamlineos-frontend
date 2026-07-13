@@ -32,7 +32,7 @@ export const SubtaskRow = memo(function SubtaskRow({
   const displayKey =
     subtask.project?.key && subtask.ticketNumber != null
       ? `${subtask.project.key}-${subtask.ticketNumber}`
-      : `#${subtask.ticketNumber ?? subtask.id}`;
+      : `#${subtask.ticketNumber ?? ""}`;
 
   return (
     <Link

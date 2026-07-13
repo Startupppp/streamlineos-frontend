@@ -405,7 +405,7 @@ export default function WebhooksPage({ params }: PageProps) {
                             className={cn(
                               "flex items-center gap-2 p-2 rounded-md border cursor-pointer transition-all duration-150 select-none",
                               field.value.includes(ev.value)
-                                ? "border-primary bg-brand-core/5 text-foreground"
+                                ? "border-primary bg-primary/5 text-foreground"
                                 : "border-border hover:border-border/80 bg-card",
                             )}
                           >

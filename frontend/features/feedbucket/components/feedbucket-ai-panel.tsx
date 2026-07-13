@@ -135,7 +135,7 @@ function AiAnalysisResult({ analysis }: AiAnalysisResultProps) {
         <div className="space-y-1">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Description</p>
           <div
-            className="prose prose-slate max-w-none prose-sm prose-p:my-1 prose-headings:font-semibold prose-a:text-blue-600 prose-code:bg-muted prose-code:px-1 prose-code:rounded prose-code:text-xs rounded-lg border border-border bg-muted/30 p-3 text-sm"
+            className="prose prose-slate max-w-none prose-sm prose-p:my-1 prose-headings:font-semibold prose-a:text-primary prose-code:bg-muted prose-code:px-1 prose-code:rounded prose-code:text-xs rounded-lg border border-border bg-muted/30 p-3 text-sm"
             dangerouslySetInnerHTML={{ __html: sanitizedDescription }}
           />
         </div>
@@ -256,7 +256,7 @@ export function FeedbucketAiPanel({
       <div className="rounded-xl border border-border bg-card p-4 space-y-4">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-blue-500" aria-hidden />
+            <Sparkles className="h-4 w-4 text-primary" aria-hidden />
             <p className="text-sm font-semibold text-foreground">AI Triage</p>
           </div>
           <div className="flex items-center gap-2">
@@ -347,7 +347,7 @@ export function FeedbucketAiPanel({
             {projectId && (
               <Link
                 href={`/projects/${projectId}/tickets/${ticketId}`}
-                className="flex items-center gap-1 text-sm text-blue-600 hover:underline"
+                className="flex items-center gap-1 text-sm text-primary hover:underline"
               >
                 View ticket
                 <ExternalLink className="h-3.5 w-3.5" aria-hidden />

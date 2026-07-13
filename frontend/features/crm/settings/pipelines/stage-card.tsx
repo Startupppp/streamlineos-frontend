@@ -98,7 +98,7 @@ export function StageCard({
             <Button variant="ghost" size="icon" className="h-5 w-5" onClick={handleDecrease} disabled={stage.probability <= 0} type="button">
               <span className="text-xs leading-none">−</span>
             </Button>
-            <span className="bg-blue-50 text-blue-700 text-xs px-1.5 rounded min-w-[3rem] text-center">
+            <span className="bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 text-xs px-1.5 rounded min-w-[3rem] text-center">
               {stage.probability}%
             </span>
             <Button variant="ghost" size="icon" className="h-5 w-5" onClick={handleIncrease} disabled={stage.probability >= 100} type="button">

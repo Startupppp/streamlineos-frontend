@@ -193,7 +193,7 @@ export function SelfEditProfileForm({
           <div className="flex items-center gap-4">
             <Avatar className="h-16 w-16 shrink-0">
               <AvatarImage src={resolveImageUrl(imageValue ?? null)} />
-              <AvatarFallback className="text-lg bg-brand-core/10 text-primary font-bold">
+              <AvatarFallback className="text-lg bg-primary/10 text-primary font-bold">
                 {initials}
               </AvatarFallback>
             </Avatar>

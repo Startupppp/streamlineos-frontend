@@ -58,12 +58,6 @@ export function FormSubmissionsTab({ projectId, formId }: FormSubmissionsTabProp
 
   const columns: DataTableColumn<FormSubmission>[] = [
     {
-      key: "id",
-      header: "#",
-      cell: (row) => <span className="font-mono text-muted-foreground text-xs">#{row.id}</span>,
-      className: "w-14",
-    },
-    {
       key: "submittedByName",
       header: "Submitter",
       cell: (row) =>
@@ -85,7 +79,7 @@ export function FormSubmissionsTab({ projectId, formId }: FormSubmissionsTabProp
       header: "Ticket",
       cell: (row) =>
         row.convertedTicketId ? (
-          <Badge variant="outline" className="text-xs">Ticket #{row.convertedTicketId}</Badge>
+          <Badge variant="outline" className="text-xs">Converted</Badge>
         ) : (
           <span className="text-muted-foreground">—</span>
         ),

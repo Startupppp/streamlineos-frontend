@@ -298,8 +298,8 @@ export function UploadDocumentDialog({
             className={cn(
               "flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-6 cursor-pointer transition-colors duration-200",
               isDragOver
-                ? "border-primary bg-brand-core/5"
-                : "border-border hover:border-brand-core/40 hover:bg-muted/30",
+                ? "border-primary bg-primary/5"
+                : "border-border hover:border-primary/40 hover:bg-muted/30",
             )}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}

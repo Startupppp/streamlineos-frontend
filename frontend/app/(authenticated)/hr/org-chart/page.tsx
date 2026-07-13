@@ -104,7 +104,7 @@ function PersonCard({ emp, size = "md" }: { emp: OrgChartNode; size?: "sm" | "md
     )}>
       <Avatar className={isSm ? "h-7 w-7" : "h-8 w-8"}>
         <AvatarImage src={resolveImageUrl(emp.image)} />
-        <AvatarFallback className="bg-brand-core/10 text-primary text-xs">
+        <AvatarFallback className="bg-primary/10 text-primary text-xs">
           {emp.name?.[0] ?? "?"}
         </AvatarFallback>
       </Avatar>
@@ -371,7 +371,7 @@ export default function OrgChartPage() {
                       <div key={emp.id} className="flex items-center gap-2">
                         <Avatar className="h-6 w-6">
                           <AvatarImage src={resolveImageUrl(emp.image)} />
-                          <AvatarFallback className="text-[9px] bg-brand-core/10 text-primary">
+                          <AvatarFallback className="text-[9px] bg-primary/10 text-primary">
                             {emp.name?.[0]}
                           </AvatarFallback>
                         </Avatar>

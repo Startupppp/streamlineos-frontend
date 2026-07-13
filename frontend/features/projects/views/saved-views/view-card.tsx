@@ -28,10 +28,10 @@ export interface ViewItem {
 
 const LAYOUT_META: Record<string, { icon: React.ReactNode; label: string; color: string }> = {
   board: { icon: <Kanban className="h-4 w-4" />, label: "Board", color: "text-muted-foreground bg-muted" },
-  list: { icon: <List className="h-4 w-4" />, label: "List", color: "text-blue-600 bg-blue-50" },
-  table: { icon: <LayoutGrid className="h-4 w-4" />, label: "Table", color: "text-emerald-600 bg-emerald-50" },
-  calendar: { icon: <Calendar className="h-4 w-4" />, label: "Calendar", color: "text-amber-600 bg-amber-50" },
-  gantt: { icon: <GitBranch className="h-4 w-4" />, label: "Gantt", color: "text-rose-600 bg-rose-50" },
+  list: { icon: <List className="h-4 w-4" />, label: "List", color: "text-blue-600 bg-blue-50 dark:text-blue-300 dark:bg-blue-500/10" },
+  table: { icon: <LayoutGrid className="h-4 w-4" />, label: "Table", color: "text-emerald-600 bg-emerald-50 dark:text-emerald-300 dark:bg-emerald-500/10" },
+  calendar: { icon: <Calendar className="h-4 w-4" />, label: "Calendar", color: "text-amber-600 bg-amber-50 dark:text-amber-300 dark:bg-amber-500/10" },
+  gantt: { icon: <GitBranch className="h-4 w-4" />, label: "Gantt", color: "text-rose-600 bg-rose-50 dark:text-rose-300 dark:bg-rose-500/10" },
 };
 
 interface ViewCardProps {

@@ -138,18 +138,18 @@ export function ForwardMessageDialog({ message, open, onOpenChange }: ForwardMes
               onClick={() => setSelectedChannelId(c.id === selectedChannelId ? null : c.id)}
               className={cn(
                 "w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors",
-                selectedChannelId === c.id ? "bg-blue-500/10" : "hover:bg-muted/40",
+                selectedChannelId === c.id ? "bg-primary/10" : "hover:bg-muted/40",
               )}
             >
               <div className={cn(
                 "h-7 w-7 rounded-lg flex items-center justify-center shrink-0 text-muted-foreground",
-                selectedChannelId === c.id ? "bg-blue-500/15 text-blue-600" : "bg-muted",
+                selectedChannelId === c.id ? "bg-primary/10 text-primary" : "bg-muted",
               )}>
                 {getChannelIcon(c)}
               </div>
               <span className="text-[13px] font-medium flex-1 truncate">{getChannelLabel(c)}</span>
               {selectedChannelId === c.id && (
-                <div className="h-4 w-4 rounded-full bg-blue-600 flex items-center justify-center shrink-0">
+                <div className="h-4 w-4 rounded-full bg-primary flex items-center justify-center shrink-0">
                   <div className="h-1.5 w-1.5 rounded-full bg-white" />
                 </div>
               )}

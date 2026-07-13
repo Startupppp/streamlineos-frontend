@@ -90,7 +90,7 @@ function PortalCard({
   );
 
   return (
-    <Card className={connected ? "border-brand-core/30" : ""}>
+    <Card className={connected ? "border-primary/30" : ""}>
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">

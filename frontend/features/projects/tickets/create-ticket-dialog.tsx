@@ -330,17 +330,17 @@ export function CreateTicketDialog({
                       </FormControl>
                       <FormMessage className="text-xs" />
                       {duplicates.length > 0 && (
-                        <div className="flex items-start gap-1.5 rounded-md bg-amber-50 border border-amber-200 px-2.5 py-2 mt-1">
-                          <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0 mt-0.5" />
+                        <div className="flex items-start gap-1.5 rounded-md bg-amber-50 border border-amber-200 dark:bg-amber-500/10 dark:border-amber-500/30 px-2.5 py-2 mt-1">
+                          <AlertTriangle className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
                           <div className="min-w-0">
-                            <p className="text-[11px] text-amber-700 font-medium">
+                            <p className="text-[11px] text-amber-700 dark:text-amber-300 font-medium">
                               Similar open {duplicates.length === 1 ? "ticket" : "tickets"} already exist — you can still create this one.
                             </p>
                             <ul className="mt-0.5 space-y-0.5">
                               {duplicates.slice(0, 3).map((d) => (
-                                <li key={d.id} className="text-[11px] text-amber-600">
+                                <li key={d.id} className="text-[11px] text-amber-600 dark:text-amber-400">
                                   {d.projectKey}-{d.ticketNumber}: {d.title}{" "}
-                                  <span className="text-amber-500">({d.status})</span>
+                                  <span className="text-amber-500 dark:text-amber-400">({d.status})</span>
                                 </li>
                               ))}
                             </ul>

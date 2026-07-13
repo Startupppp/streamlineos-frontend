@@ -100,7 +100,7 @@ export function OfferNegotiationSheet({ candidateId, offer, onClose }: Props) {
           </div>
 
           {offer.offerStatus === "COUNTERED" && (
-            <div className="rounded-lg border border-brand-core/30 bg-brand-core/5 p-3 space-y-3">
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-3">
               <p className="text-xs font-semibold text-foreground/80">Respond to Candidate&apos;s Counter</p>
               <div className="space-y-1.5">
                 <Label className="text-xs">Proposed Salary (₹/year)</Label>

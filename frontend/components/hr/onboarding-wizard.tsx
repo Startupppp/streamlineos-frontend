@@ -160,7 +160,7 @@ export function OnboardingWizard() {
                 disabled={step.id > currentStep}
                 className={cn(
                   "flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-colors w-full",
-                  isCompleted && "bg-brand-core/10 text-primary cursor-pointer hover:bg-brand-core/15",
+                  isCompleted && "bg-primary/10 text-primary cursor-pointer hover:bg-primary/15",
                   isActive && "bg-primary text-primary-foreground",
                   !isCompleted && !isActive && "bg-muted text-muted-foreground cursor-not-allowed"
                 )}

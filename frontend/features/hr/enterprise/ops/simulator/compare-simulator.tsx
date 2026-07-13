@@ -56,7 +56,7 @@ export function CompareSimulator() {
           <Button
             onClick={handleCompare}
             disabled={isLoading || !employeeId || !oldPolicyId || !newPolicyId}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
           >
             {isLoading ? "Comparing…" : "Compare Policies"}
           </Button>

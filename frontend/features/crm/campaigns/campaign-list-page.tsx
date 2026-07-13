@@ -34,8 +34,8 @@ const STATUS_OPTIONS = [
 ];
 
 function roiColorClass(roi: number): string {
-  if (roi > 0) return "text-emerald-600 font-semibold";
-  if (roi < 0) return "text-red-600 font-semibold";
+  if (roi > 0) return "text-emerald-600 dark:text-emerald-400 font-semibold";
+  if (roi < 0) return "text-red-600 dark:text-red-400 font-semibold";
   return "text-muted-foreground";
 }
 
@@ -55,7 +55,7 @@ function buildColumns(onRowClick: (id: number) => void): DataTableColumn<CrmCamp
       header: "Campaign",
       cell: (row) => (
         <button
-          className="text-left font-medium text-foreground hover:text-blue-600 transition-colors truncate max-w-[180px]"
+          className="text-left font-medium text-foreground hover:text-primary transition-colors truncate max-w-[180px]"
           onClick={() => onRowClick(row.id)}
         >
           {row.name}

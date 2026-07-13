@@ -71,7 +71,7 @@ export const RunHistoryDrawer = memo(function RunHistoryDrawer({ ruleId, open, o
                     <span className="capitalize">{run.entityType} {run.entityId}</span>
                   </div>
                   {run.error && (
-                    <p className="text-[11px] text-red-500 bg-red-50 rounded px-2 py-1">{run.error}</p>
+                    <p className="text-[11px] text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-500/10 rounded px-2 py-1">{run.error}</p>
                   )}
                   {run.steps && run.steps.length > 0 && (
                     <div className="space-y-1 pl-2 border-l-2 border-border ml-2">

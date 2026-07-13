@@ -25,7 +25,7 @@ const agedReceivablesColumns: DataTableColumn<AgedReceivablesRow>[] = [
     key: "clientName",
     header: "Customer",
     cell: (row) => (
-      <Link href={"/accounting/customers/" + String(row.clientId)} className="text-blue-600 hover:underline">
+      <Link href={"/accounting/customers/" + String(row.clientId)} className="text-primary hover:underline">
         {row.clientName}
       </Link>
     ),

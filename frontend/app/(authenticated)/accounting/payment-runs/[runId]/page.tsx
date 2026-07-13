@@ -256,7 +256,7 @@ export default function PaymentRunDetailPage({
       cell: (item) => (
         <Link
           href={`/accounting/purchase-bills/${item.billId}`}
-          className="font-mono text-xs text-foreground hover:text-blue-600 hover:underline"
+          className="font-mono text-xs text-foreground hover:text-primary hover:underline"
         >
           {item.billNumber ?? "—"}
         </Link>

@@ -87,7 +87,7 @@ export function DealSidebarCards({
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center text-sm font-semibold text-blue-600">
+              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary">
                 {assignedTo.name?.[0] ?? "?"}
               </div>
               <p className="text-sm font-medium">{assignedTo.name}</p>
@@ -106,11 +106,11 @@ export function DealSidebarCards({
               href={`/crm/leads/${lead.id}`}
               className="flex items-center gap-3 group"
             >
-              <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center text-sm font-semibold text-blue-400">
+              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary">
                 {lead.name?.[0] ?? "?"}
               </div>
               <div>
-                <p className="text-sm font-medium group-hover:text-blue-600 transition-colors">
+                <p className="text-sm font-medium group-hover:text-primary transition-colors">
                   {lead.name}
                 </p>
                 {lead.email && (

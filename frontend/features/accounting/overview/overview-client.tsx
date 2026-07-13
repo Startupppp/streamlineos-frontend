@@ -242,7 +242,7 @@ export function OverviewClient() {
                 <div className="rounded-xl border border-border bg-card p-4">
                   <div className="flex items-center justify-between mb-3">
                     <p className="text-sm font-semibold text-foreground">Bank Accounts</p>
-                    <Link href="/accounting/banking" className="text-xs text-blue-600 hover:underline">
+                    <Link href="/accounting/banking" className="text-xs text-primary hover:underline">
                       View all
                     </Link>
                   </div>

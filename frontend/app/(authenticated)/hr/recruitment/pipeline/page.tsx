@@ -77,7 +77,7 @@ export default function PipelinePage() {
             onClick={() => handleViewChange("kanban")}
             className={cn(
               "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors",
-              view === "kanban" ? "bg-brand-core/10 text-primary" : "text-muted-foreground hover:text-foreground",
+              view === "kanban" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground",
             )}
           >
             <KanbanSquare className="h-3.5 w-3.5" />
@@ -88,7 +88,7 @@ export default function PipelinePage() {
             onClick={() => handleViewChange("table")}
             className={cn(
               "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors",
-              view === "table" ? "bg-brand-core/10 text-primary" : "text-muted-foreground hover:text-foreground",
+              view === "table" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground",
             )}
           >
             <TableIcon className="h-3.5 w-3.5" />

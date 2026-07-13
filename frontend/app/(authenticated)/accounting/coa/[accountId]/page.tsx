@@ -257,7 +257,7 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
       cell: (entry) => (
         <Link
           href={`/accounting/journal/${entry.id}`}
-          className="text-xs text-blue-600 hover:underline whitespace-nowrap"
+          className="text-xs text-primary hover:underline whitespace-nowrap"
         >
           View
         </Link>
@@ -356,7 +356,7 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
                       </p>
                       <Link
                         href={`/accounting/coa/${parentAccount.id}`}
-                        className="mt-1.5 flex items-center gap-1 text-sm text-blue-600 hover:underline"
+                        className="mt-1.5 flex items-center gap-1 text-sm text-primary hover:underline"
                       >
                         <span className="font-mono text-xs text-muted-foreground">
                           {parentAccount.code}

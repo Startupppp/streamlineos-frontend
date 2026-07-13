@@ -43,9 +43,9 @@ interface WorkloadMemberRowProps {
 
 function getUtilizationClass(count: number): string {
   if (count === 0) return "bg-muted";
-  if (count <= 2) return "bg-emerald-100 text-emerald-700";
-  if (count <= 4) return "bg-amber-100 text-amber-700";
-  return "bg-red-100 text-red-700";
+  if (count <= 2) return "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300";
+  if (count <= 4) return "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300";
+  return "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300";
 }
 
 export const WorkloadMemberRow = memo(function WorkloadMemberRow({
@@ -106,7 +106,7 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className="ml-auto h-4 w-4 rounded-full bg-red-100 text-red-700 text-[9px] flex items-center justify-center font-bold shrink-0">
+                  <span className="ml-auto h-4 w-4 rounded-full bg-red-100 text-red-700 text-[9px] flex items-center justify-center font-bold shrink-0 dark:bg-red-500/20 dark:text-red-300">
                     {overdue}
                   </span>
                 </TooltipTrigger>
@@ -125,7 +125,7 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
                 <span
                   className={cn(
                     "text-sm font-semibold",
-                    total > 5 ? "text-red-600" : total > 3 ? "text-amber-600" : "text-foreground",
+                    total > 5 ? "text-red-600 dark:text-red-400" : total > 3 ? "text-amber-600 dark:text-amber-400" : "text-foreground",
                   )}
                 >
                   {total}

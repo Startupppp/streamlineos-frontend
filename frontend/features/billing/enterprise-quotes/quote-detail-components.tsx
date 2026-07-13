@@ -89,7 +89,7 @@ export function TimelineItem({
   return (
     <div className="flex gap-3">
       <div
-        className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border ${active ? "border-brand-core/30 bg-brand-core/10 text-primary" : "border-border bg-muted/50 text-muted-foreground"}`}
+        className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border ${active ? "border-primary/30 bg-primary/10 text-primary" : "border-border bg-muted/50 text-muted-foreground"}`}
       >
         {icon}
       </div>

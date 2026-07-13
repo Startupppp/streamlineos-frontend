@@ -59,7 +59,7 @@ export function FormsDataTable({ forms }: FormsDataTableProps) {
       header: "Name",
       cell: (row) => (
         <div>
-          <Link href={"/hr/settings/forms/" + row.id} className="font-medium text-foreground hover:text-blue-600 transition-colors">
+          <Link href={"/hr/settings/forms/" + row.id} className="font-medium text-foreground hover:text-primary transition-colors">
             {row.name}
           </Link>
           {row.description && (

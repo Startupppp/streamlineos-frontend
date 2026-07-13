@@ -316,7 +316,7 @@ export function WeekGrid({ entries, isLoading, days, weekStart, weekEnd }: WeekG
       </div>
 
       {addingRow ? (
-        <div className="flex items-end gap-2 p-3 rounded-lg border border-dashed border-blue-500/40 bg-blue-50/50">
+        <div className="flex items-end gap-2 p-3 rounded-lg border border-dashed border-blue-500/40 bg-blue-50/50 dark:bg-blue-500/10">
           <div className="flex-1 min-w-0">
             <p className="text-[11px] text-muted-foreground mb-1.5">Select project &amp; ticket for new row</p>
             <ProjectTicketSelect

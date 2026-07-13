@@ -63,7 +63,7 @@ export const CandidateSheet = memo(function CandidateSheet({
         <SheetHeader className="shrink-0 px-5 pt-5 pb-4 border-b border-border/60">
           <div className="flex items-start gap-3">
             <Avatar className="h-12 w-12 shrink-0 rounded-xl">
-              <AvatarFallback className="text-sm font-bold bg-brand-core/10 text-primary rounded-xl">
+              <AvatarFallback className="text-sm font-bold bg-primary/10 text-primary rounded-xl">
                 {getInitials(candidate.name)}
               </AvatarFallback>
             </Avatar>

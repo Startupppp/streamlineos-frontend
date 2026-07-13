@@ -220,7 +220,7 @@ function OnboardingStatusWidget() {
                     key={hire.userId}
                     className="flex items-center gap-3 group"
                   >
-                    <div className="h-7 w-7 rounded-full bg-brand-core/10 flex items-center justify-center shrink-0 text-[10px] font-bold text-primary">
+                    <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-[10px] font-bold text-primary">
                       {hire.name.slice(0, 2).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0 space-y-1">

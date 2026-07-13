@@ -113,7 +113,7 @@ export function UserSessionsTab({ userId }: UserSessionsTabProps) {
       cell: (row) => {
         const active = isSessionActive(row);
         return active ? (
-          <Badge variant="outline" className="text-[10px] border-green-200 text-green-600 bg-green-50">
+          <Badge variant="outline" className="text-[10px] border-green-200 dark:border-green-500/30 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-500/10">
             Active
           </Badge>
         ) : (
@@ -156,7 +156,7 @@ export function UserSessionsTab({ userId }: UserSessionsTabProps) {
             size="sm"
             onClick={handleRevokeAll}
             disabled={isRevokingAll}
-            className="text-red-600 border-red-200 hover:bg-red-50 h-7 text-xs"
+            className="text-red-600 border-red-200 hover:bg-red-50 dark:hover:bg-red-500/10 h-7 text-xs"
           >
             <Trash2 className="h-3.5 w-3.5 mr-1" />
             Revoke all ({activeSessions.length})

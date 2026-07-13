@@ -75,7 +75,7 @@ const glColumns: DataTableColumn<GlRow>[] = [
     header: "Entry #",
     cell: (row) =>
       row.entryId !== null ? (
-        <Link href={"/accounting/journal/" + String(row.entryId)} className="text-foreground hover:text-blue-600 hover:underline font-mono text-xs">
+        <Link href={"/accounting/journal/" + String(row.entryId)} className="text-foreground hover:text-primary hover:underline font-mono text-xs">
           {row.entryNumber}
         </Link>
       ) : (
@@ -292,7 +292,7 @@ export default function GeneralLedgerPage() {
 
         {!hasDateRange ? (
           <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/20 py-14 px-6 text-center">
-            <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-blue-500/10 text-blue-600 mb-3">
+            <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-primary/10 text-primary mb-3">
               <BookOpen className="h-5 w-5" />
             </div>
             <h3 className="text-sm font-semibold text-foreground">Select an account and date range</h3>

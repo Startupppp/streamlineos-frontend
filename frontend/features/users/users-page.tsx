@@ -558,7 +558,7 @@ export function UsersPage() {
           )}
 
           {selectAllMatching && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-blue-50 border border-blue-200 text-xs text-blue-700 flex-wrap">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 text-xs text-blue-700 dark:text-blue-300 flex-wrap">
               <span>All {pagination?.total} matching users are selected.</span>
               <button
                 type="button"
