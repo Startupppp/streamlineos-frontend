@@ -504,7 +504,7 @@ All reconciled (hook URLs↔routes, chat signatures, PermissionKeys). Build not 
 - [x] `/settings/roles` — Roles list
 - [x] `/settings/roles/[roleId]` — Role editor: per-role permission matrix + member list via `useRole`/`useRoleMembers`, gated `settings:rbac:manage`, back button to `/settings/roles`
 - [x] `/settings/roles/simulate` — Permission Simulator — employee combobox, simulates effective permissions via GET /roles/simulate/:targetUserId, grouped by module with expandable rows, scope badges
-- [x] `/settings/modules` — Org module management: enable/disable feature modules via `useOrgModules`/`useToggleOrgModule`, responsive grid with Switch per module, gated `settings:manage`
+- [x] `/settings/modules` — Org module management: enable/disable feature modules via `useOrgModules`/`useToggleOrgModule`, responsive grid with Switch per module, gated `settings:manage`; Feedbucket removed from catalog 2026-07-13 (lives under PM `/projects/[projectId]/feedbucket`)
 - [x] `/settings/permissions` — Permission Matrix — replaced `DashboardGate allowedRoles` with `permission="settings:rbac:manage"`, added `GET /roles/permissions/matrix` backend endpoint, `useRolePermissionsMatrix()` hook, page now renders live role/permission data with loading skeleton, error state, and empty state
 - [x] `/settings/branches` — Branches (E2E fix: empty state fills content height with in-card primary CTA)
 - [x] `/settings/notifications` — Redirects to `/notifications/preferences`

@@ -1,14 +1,63 @@
 "use client";
 
-import { Check, Palette } from "lucide-react";
+import { Check, Monitor, Moon, Palette, Sun, type LucideIcon } from "lucide-react";
 import {
+  DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { APP_THEMES, type AppTheme } from "@/lib/theme/app-themes";
+import {
+  APP_THEMES,
+  APP_THEME_MODES,
+  type AppTheme,
+  type AppThemeModeOption,
+} from "@/lib/theme/app-themes";
 import { useAppTheme } from "./app-theme-provider";
+
+const MODE_ICONS: Record<AppThemeModeOption["id"], LucideIcon> = {
+  light: Sun,
+  dark: Moon,
+  system: Monitor,
+};
+
+function ModeOption({ mode }: { mode: AppThemeModeOption }) {
+  const { mode: activeMode, setMode } = useAppTheme();
+  const isActive = activeMode === mode.id;
+  const Icon = MODE_ICONS[mode.id];
+
+  function handleSelect() {
+    setMode(mode.id);
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleSelect}
+      aria-pressed={isActive}
+      className={cn(
+        "flex flex-1 flex-col items-center gap-1 rounded-lg border px-2 py-1.5 text-[11px] font-medium transition-colors",
+        isActive
+          ? "border-ring bg-accent text-accent-foreground"
+          : "border-border text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+      )}
+    >
+      <Icon className="h-3.5 w-3.5" />
+      {mode.label}
+    </button>
+  );
+}
+
+function ModeOptionsRow() {
+  return (
+    <div className="flex gap-1.5">
+      {APP_THEME_MODES.map((mode) => (
+        <ModeOption key={mode.id} mode={mode} />
+      ))}
+    </div>
+  );
+}
 
 function ThemeOption({ theme }: { theme: AppTheme }) {
   const { theme: activeTheme, setTheme } = useAppTheme();
@@ -59,6 +108,8 @@ export function ThemeMenuSubmenu() {
         Interface theme
       </DropdownMenuSubTrigger>
       <DropdownMenuSubContent className="w-64 p-2">
+        <ModeOptionsRow />
+        <DropdownMenuSeparator className="my-2" />
         <ThemeOptionsGrid />
       </DropdownMenuSubContent>
     </DropdownMenuSub>

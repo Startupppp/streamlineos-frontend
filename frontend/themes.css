@@ -288,3 +288,107 @@
   --gold: #f43f5e;
   --blue: #be123c;
 }
+
+/* Dark-mode reconciliation — accent foregrounds lifted for contrast on dark surfaces */
+
+:root.dark.theme-red {
+  --sidebar-accent-foreground: #fca5a5;
+  --chart-1: #ef4444;
+  --blue: #ef4444;
+}
+
+:root.dark.theme-orange {
+  --sidebar-accent-foreground: #fdba74;
+  --chart-1: #f97316;
+  --blue: #f97316;
+}
+
+:root.dark.theme-amber {
+  --sidebar-accent-foreground: #fcd34d;
+  --chart-1: #f59e0b;
+  --blue: #f59e0b;
+}
+
+:root.dark.theme-yellow {
+  --sidebar-accent-foreground: #fde047;
+  --chart-1: #eab308;
+  --blue: #eab308;
+}
+
+:root.dark.theme-lime {
+  --sidebar-accent-foreground: #bef264;
+  --chart-1: #84cc16;
+  --blue: #84cc16;
+}
+
+:root.dark.theme-green {
+  --sidebar-accent-foreground: #86efac;
+  --chart-1: #22c55e;
+  --blue: #22c55e;
+}
+
+:root.dark.theme-emerald {
+  --sidebar-accent-foreground: #6ee7b7;
+  --chart-1: #10b981;
+  --blue: #10b981;
+}
+
+:root.dark.theme-teal {
+  --sidebar-accent-foreground: #5eead4;
+  --chart-1: #14b8a6;
+  --blue: #14b8a6;
+}
+
+:root.dark.theme-cyan {
+  --sidebar-accent-foreground: #67e8f9;
+  --chart-1: #06b6d4;
+  --blue: #06b6d4;
+}
+
+:root.dark.theme-sky {
+  --sidebar-accent-foreground: #7dd3fc;
+  --chart-1: #0ea5e9;
+  --blue: #0ea5e9;
+}
+
+:root.dark.theme-blue {
+  --sidebar-accent-foreground: #93c5fd;
+  --chart-1: #3b82f6;
+  --blue: #3b82f6;
+}
+
+:root.dark.theme-indigo {
+  --sidebar-accent-foreground: #a5b4fc;
+  --chart-1: #6366f1;
+  --blue: #6366f1;
+}
+
+:root.dark.theme-violet {
+  --sidebar-accent-foreground: #c4b5fd;
+  --chart-1: #8b5cf6;
+  --blue: #8b5cf6;
+}
+
+:root.dark.theme-purple {
+  --sidebar-accent-foreground: #d8b4fe;
+  --chart-1: #a855f7;
+  --blue: #a855f7;
+}
+
+:root.dark.theme-fuchsia {
+  --sidebar-accent-foreground: #f0abfc;
+  --chart-1: #d946ef;
+  --blue: #d946ef;
+}
+
+:root.dark.theme-pink {
+  --sidebar-accent-foreground: #f9a8d4;
+  --chart-1: #ec4899;
+  --blue: #ec4899;
+}
+
+:root.dark.theme-rose {
+  --sidebar-accent-foreground: #fda4af;
+  --chart-1: #f43f5e;
+  --blue: #f43f5e;
+}
