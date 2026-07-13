@@ -40,7 +40,7 @@ const REASON_BADGE: Record<AdjustmentReason, string> = {
   RECOUNT: "bg-blue-50 text-blue-700 border-blue-200",
   PURCHASE: "bg-emerald-50 text-emerald-700 border-emerald-200",
   SALE: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  OTHER: "bg-slate-100 text-slate-700 border-slate-200",
+  OTHER: "bg-muted text-muted-foreground border-border",
 };
 const REASONS: AdjustmentReason[] = ["PURCHASE", "SALE", "RETURN", "DAMAGE", "EXPIRY", "THEFT", "RECOUNT", "OTHER"];
 const ADJ_STATUSES: AdjustmentStatus[] = ["DRAFT", "PENDING_APPROVAL", "APPROVED", "POSTED", "CANCELLED"];

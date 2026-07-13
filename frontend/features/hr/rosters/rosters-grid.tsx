@@ -73,13 +73,13 @@ function RosterCard({ roster, canManage }: RosterCardProps) {
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="border-t border-slate-100 p-4">
+            <div className="border-t border-border p-4">
               {!entries?.length ? (
                 <ChartEmptyState message="No entries in this roster" height={120} compact />
               ) : (
                 <div className="space-y-1">
                   {entries.map((entry) => (
-                    <div key={entry.id} className="flex items-center justify-between text-xs py-1.5 border-b border-slate-50 last:border-0">
+                    <div key={entry.id} className="flex items-center justify-between text-xs py-1.5 border-b border-border/50 last:border-0">
                       <span className="text-muted-foreground">{entry.userId} — {entry.date}</span>
                       <span className="font-medium">
                         {entry.isDayOff ? (

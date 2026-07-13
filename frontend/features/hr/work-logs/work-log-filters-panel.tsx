@@ -37,11 +37,17 @@ export function WorkLogFiltersPanel({
   searchTerm,
   setSearchTerm,
 }: WorkLogFiltersPanelProps) {
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-  }, [setSearchTerm]);
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setSearchTerm(e.target.value);
+    },
+    [setSearchTerm],
+  );
 
-  const handleClearSearch = useCallback(() => setSearchTerm(""), [setSearchTerm]);
+  const handleClearSearch = useCallback(
+    () => setSearchTerm(""),
+    [setSearchTerm],
+  );
 
   const handleClearDepartment = useCallback(() => {
     setFilters((p) => ({ ...p, departmentId: undefined }));
@@ -64,7 +70,10 @@ export function WorkLogFiltersPanel({
   }, [setFilters, setDraftFilters]);
 
   const handleClearAll = useCallback(() => {
-    const reset: WorkLogFilters = { year: currentYear, quarter: currentQuarter };
+    const reset: WorkLogFilters = {
+      year: currentYear,
+      quarter: currentQuarter,
+    };
     setFilters(reset);
     setDraftFilters(reset);
   }, [currentYear, currentQuarter, setFilters, setDraftFilters]);
@@ -72,7 +81,10 @@ export function WorkLogFiltersPanel({
   return (
     <div className="flex flex-wrap items-center gap-2 w-full">
       <div className="relative w-full sm:w-auto sm:max-w-xs">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
+        <Search
+          className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground"
+          aria-hidden="true"
+        />
         <Input
           placeholder="Search by date or keyword..."
           value={searchTerm}
@@ -93,13 +105,16 @@ export function WorkLogFiltersPanel({
 
       {activeFilterCount > 0 && (
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Filters:</span>
+          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+            Filters:
+          </span>
           {filters.departmentId && departments && (
             <Badge
               variant="secondary"
               className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-blue-200 bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800 pr-1"
             >
-              {departments.find((d) => d.id.toString() === filters.departmentId)?.name ?? "Dept"}
+              {departments.find((d) => d.id.toString() === filters.departmentId)
+                ?.name ?? "Dept"}
               <button
                 onClick={handleClearDepartment}
                 className="ml-0.5 hover:text-blue-900 dark:hover:text-blue-100 rounded-full"
@@ -115,8 +130,13 @@ export function WorkLogFiltersPanel({
               className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-violet-200 bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300 dark:border-violet-800 pr-1"
             >
               {(() => {
-                const e = employees.find((emp) => emp.id === filters.selectedUserId);
-                return e ? ([e.firstName, e.lastName].filter(Boolean).join(" ") || "Selected") : "Selected";
+                const e = employees.find(
+                  (emp) => emp.id === filters.selectedUserId,
+                );
+                return e
+                  ? [e.firstName, e.lastName].filter(Boolean).join(" ") ||
+                      "Selected"
+                  : "Selected";
               })()}
               <button
                 onClick={handleClearEmployee}
@@ -145,7 +165,7 @@ export function WorkLogFiltersPanel({
           {(filters.dateFrom || filters.dateTo) && (
             <Badge
               variant="secondary"
-              className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-slate-200 bg-slate-100 text-slate-700 dark:bg-slate-800/60 dark:text-slate-300 dark:border-slate-700 pr-1"
+              className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-border bg-muted text-muted-foreground dark:bg-slate-800/60 dark:text-slate-300 dark:border-slate-700 pr-1"
             >
               {filters.dateFrom && filters.dateTo
                 ? `${filters.dateFrom} – ${filters.dateTo}`
@@ -154,7 +174,7 @@ export function WorkLogFiltersPanel({
                   : `Until ${filters.dateTo}`}
               <button
                 onClick={handleClearDateRange}
-                className="ml-0.5 hover:text-slate-900 dark:hover:text-slate-100 rounded-full"
+                className="ml-0.5 hover:text-foreground rounded-full"
                 aria-label="Remove date range filter"
               >
                 <X className="h-2.5 w-2.5" />
@@ -181,7 +201,7 @@ export function WorkLogFiltersPanel({
           Unsaved
         </span>
         <span className={cn("flex items-center gap-1.5")}>
-          <span className="w-2.5 h-2.5 rounded-sm bg-slate-200 dark:bg-slate-700 shrink-0" />
+          <span className="w-2.5 h-2.5 rounded-sm bg-muted-foreground/20 shrink-0" />
           Empty
         </span>
       </div>

@@ -83,7 +83,7 @@ const QUIET_HOURS_OPTIONS = [
 const priorityBadgeClass: Record<NotificationPriority, string> = {
   CRITICAL: "bg-red-50 text-red-700 border-red-200",
   HIGH: "bg-amber-50 text-amber-700 border-amber-200",
-  NORMAL: "bg-slate-50 text-slate-600 border-slate-200",
+  NORMAL: "bg-muted text-muted-foreground border-border",
   LOW: "bg-muted text-muted-foreground border-border",
 };
 

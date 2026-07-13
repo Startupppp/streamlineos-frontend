@@ -222,7 +222,7 @@ export default function VendorsListPage() {
             "h-4 text-[9px] px-1.5 py-0",
             v.isActive
               ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-              : "bg-slate-100 text-slate-700 border-slate-200",
+              : "bg-muted text-muted-foreground border-border",
           )}
         >
           {v.isActive ? "Active" : "Inactive"}

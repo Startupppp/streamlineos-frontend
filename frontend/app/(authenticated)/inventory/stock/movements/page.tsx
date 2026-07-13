@@ -39,7 +39,7 @@ const TXN_TYPE_CONFIG: Record<TransactionType, { label: string; badgeClass: stri
   ADJUSTMENT_IN: { label: "Adj In", badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200" },
   ADJUSTMENT_OUT: { label: "Adj Out", badgeClass: "bg-amber-50 text-amber-700 border-amber-200" },
   TRANSFER_IN: { label: "Transfer In", badgeClass: "bg-blue-50 text-blue-700 border-blue-200" },
-  TRANSFER_OUT: { label: "Transfer Out", badgeClass: "bg-slate-100 text-slate-700 border-slate-200" },
+  TRANSFER_OUT: { label: "Transfer Out", badgeClass: "bg-muted text-muted-foreground border-border" },
   RETURN_IN: { label: "Return In", badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200" },
   RETURN_OUT: { label: "Return Out", badgeClass: "bg-amber-50 text-amber-700 border-amber-200" },
   OPENING_BALANCE: { label: "Opening Balance", badgeClass: "bg-violet-50 text-violet-700 border-violet-200" },
@@ -50,9 +50,9 @@ const TXN_TYPE_CONFIG: Record<TransactionType, { label: string; badgeClass: stri
   SCRAP: { label: "Scrap", badgeClass: "bg-red-50 text-red-700 border-red-200" },
   QUARANTINE_IN: { label: "Quarantine In", badgeClass: "bg-amber-50 text-amber-700 border-amber-200" },
   QUARANTINE_OUT: { label: "Quarantine Out", badgeClass: "bg-blue-50 text-blue-700 border-blue-200" },
-  RESERVATION_CREATE: { label: "Reserved", badgeClass: "bg-slate-100 text-slate-700 border-slate-200" },
-  RESERVATION_RELEASE: { label: "Res. Released", badgeClass: "bg-slate-100 text-slate-700 border-slate-200" },
-  RESERVATION_CONSUME: { label: "Res. Consumed", badgeClass: "bg-slate-100 text-slate-700 border-slate-200" },
+  RESERVATION_CREATE: { label: "Reserved", badgeClass: "bg-muted text-muted-foreground border-border" },
+  RESERVATION_RELEASE: { label: "Res. Released", badgeClass: "bg-muted text-muted-foreground border-border" },
+  RESERVATION_CONSUME: { label: "Res. Consumed", badgeClass: "bg-muted text-muted-foreground border-border" },
 };
 
 type DatePreset = "today" | "7d" | "30d" | "90d" | "all";

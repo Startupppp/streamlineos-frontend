@@ -55,15 +55,15 @@ const VALID_STATUSES = new Set<string>([
 
 const STATUS_CLASS: Record<SalesOrderStatus, string> = {
   DRAFT: "",
-  CONFIRMED: "bg-blue-100 text-blue-800 border-blue-200",
-  PARTIALLY_RESERVED: "bg-amber-100 text-amber-800 border-amber-200",
-  RESERVED: "bg-amber-100 text-amber-800 border-amber-200",
-  PICKED: "bg-blue-100 text-blue-800 border-blue-200",
-  PACKED: "bg-blue-100 text-blue-800 border-blue-200",
-  PARTIALLY_SHIPPED: "bg-yellow-100 text-yellow-800 border-yellow-200",
-  SHIPPED: "bg-yellow-100 text-yellow-800 border-yellow-200",
-  INVOICED: "bg-green-100 text-green-800 border-green-200",
-  CLOSED: "bg-slate-100 text-slate-600 border-slate-200",
+  CONFIRMED: "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  PARTIALLY_RESERVED: "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  RESERVED: "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  PICKED: "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  PACKED: "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  PARTIALLY_SHIPPED: "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-500/10 dark:text-yellow-300 dark:border-yellow-500/30",
+  SHIPPED: "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-500/10 dark:text-yellow-300 dark:border-yellow-500/30",
+  INVOICED: "bg-green-100 text-green-800 border-green-200 dark:bg-green-500/10 dark:text-green-300 dark:border-green-500/30",
+  CLOSED: "bg-muted text-muted-foreground border-border",
   CANCELLED: "",
 };
 

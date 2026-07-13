@@ -120,7 +120,7 @@ export function WorkLogEntryRow({
           ? "border-l-4 border-l-amber-500"
           : content
             ? "border-l-4 border-l-emerald-500"
-            : "border-l-4 border-l-slate-200 dark:border-l-slate-700",
+            : "border-l-4 border-l-border",
       )}
     >
       <div className="sm:w-28 md:w-32 flex-shrink-0 flex sm:flex-col items-start gap-1.5 p-3 sm:p-4 border-b sm:border-b-0 sm:border-r border-border/60">

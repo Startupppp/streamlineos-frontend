@@ -59,7 +59,7 @@ function LocationRow({ location }: { location: WarehouseLocation }) {
         {SPECIAL_LOCATION_TYPES.includes(location.locationType) && (
           <Badge
             variant="outline"
-            className="h-4 text-[9px] px-1.5 py-0 bg-slate-100 text-slate-500 border-slate-200 shrink-0"
+            className="h-4 text-[9px] px-1.5 py-0 bg-muted text-muted-foreground border-border shrink-0"
           >
             Special
           </Badge>
@@ -67,7 +67,7 @@ function LocationRow({ location }: { location: WarehouseLocation }) {
         {!location.isActive && (
           <Badge
             variant="outline"
-            className="h-4 text-[9px] px-1.5 py-0 bg-slate-100 text-slate-700 border-slate-200 shrink-0"
+            className="h-4 text-[9px] px-1.5 py-0 bg-muted text-muted-foreground border-border shrink-0"
           >
             Inactive
           </Badge>
@@ -216,7 +216,7 @@ export default function WarehouseDetailPage({
           {!warehouse.isActive && (
             <Badge
               variant="outline"
-              className="h-4 text-[9px] px-1.5 py-0 bg-slate-100 text-slate-700 border-slate-200"
+              className="h-4 text-[9px] px-1.5 py-0 bg-muted text-muted-foreground border-border"
             >
               Inactive
             </Badge>
