@@ -134,7 +134,7 @@ export function LegalHoldsTable() {
           {data?.total ?? 0} legal hold{data?.total !== 1 ? "s" : ""}
         </p>
         {canManage && (
-          <Button onClick={handleOpenCreate} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+          <Button onClick={handleOpenCreate} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground">
             <Shield className="h-4 w-4 mr-1.5" />
             Place Hold
           </Button>

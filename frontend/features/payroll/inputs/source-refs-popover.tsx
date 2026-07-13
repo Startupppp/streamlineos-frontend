@@ -19,7 +19,7 @@ export function SourceRefsPopover({ refs }: SourceRefsPopoverProps) {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-blue-600 hover:text-blue-700">
+        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-primary hover:text-primary/80">
           <Link2 className="h-3 w-3" />
           <span className="sr-only">View source records</span>
         </Button>

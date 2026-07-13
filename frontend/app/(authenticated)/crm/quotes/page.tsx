@@ -202,7 +202,7 @@ export default function QuotesPage() {
         cell: (q) => (
           <Link
             href={`/crm/quotes/${q.id}`}
-            className="font-mono text-[11px] font-medium hover:text-blue-600 hover:underline transition-colors"
+            className="font-mono text-[11px] font-medium hover:text-primary hover:underline transition-colors"
           >
             {q.quoteNumber}
           </Link>
@@ -226,7 +226,7 @@ export default function QuotesPage() {
           q.deal ? (
             <Link
               href={`/crm/deals/${q.deal.id}`}
-              className="text-[11px] text-blue-600 hover:underline truncate max-w-[100px] block"
+              className="text-[11px] text-primary hover:underline truncate max-w-[100px] block"
             >
               {q.deal.name}
             </Link>

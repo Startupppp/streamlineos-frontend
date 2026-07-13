@@ -142,7 +142,7 @@ function EmailDraftTab({
         isPending={isPending}
         loadingText="Drafting..."
         onClick={handleDraft}
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white gap-1.5"
+        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5"
       >
         <Sparkles className="h-3.5 w-3.5" />
         Draft Email
@@ -180,7 +180,7 @@ function AiDisabledBanner({ href }: { href: string }) {
   return (
     <div className="py-2 text-center text-xs text-muted-foreground bg-muted/50 rounded-lg px-3">
       This AI feature is disabled for your organization. Enable it in{" "}
-      <Link href={href} className="text-blue-600 hover:underline">
+      <Link href={href} className="text-primary hover:underline">
         AI Settings
       </Link>
       .
@@ -224,7 +224,7 @@ function NotesSummaryTab({ aiEnabled }: { aiEnabled: boolean }) {
         isPending={isPending}
         loadingText="Summarizing..."
         onClick={handleSummarize}
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white gap-1.5"
+        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5"
       >
         <Sparkles className="h-3.5 w-3.5" />
         Summarize
@@ -241,7 +241,7 @@ function NotesSummaryTab({ aiEnabled }: { aiEnabled: boolean }) {
               <ul className="space-y-0.5">
                 {result.actionItems.map((item, i) => (
                   <li key={i} className="text-xs text-foreground flex gap-1.5">
-                    <span className="text-blue-500 shrink-0">•</span>
+                    <span className="text-primary shrink-0">•</span>
                     {item}
                   </li>
                 ))}
@@ -323,7 +323,7 @@ function ObjectionHelpTab({ aiEnabled }: { aiEnabled: boolean }) {
         isPending={isPending}
         loadingText="Getting help..."
         onClick={handleGetHelp}
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white gap-1.5"
+        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5"
       >
         <Sparkles className="h-3.5 w-3.5" />
         Get Help
@@ -336,7 +336,7 @@ function ObjectionHelpTab({ aiEnabled }: { aiEnabled: boolean }) {
               <ul className="space-y-0.5">
                 {result.counterArguments.map((arg, i) => (
                   <li key={i} className="text-xs text-foreground flex gap-1.5">
-                    <span className="text-blue-500 shrink-0">•</span>
+                    <span className="text-primary shrink-0">•</span>
                     {arg}
                   </li>
                 ))}
@@ -388,7 +388,7 @@ export function AiAssistantPanel({ entityType, entityId, entityName, onOpenEmail
         className="w-full flex items-center justify-between p-4 hover:bg-muted/40 transition-colors"
       >
         <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-blue-600" />
+          <Sparkles className="h-4 w-4 text-primary" />
           <span className="text-sm font-semibold text-foreground">AI Sales Assistant</span>
           {entityName && (
             <span className="text-xs text-muted-foreground truncate max-w-[120px]">{entityName}</span>

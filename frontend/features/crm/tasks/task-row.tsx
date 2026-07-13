@@ -118,7 +118,7 @@ export function TaskRow({
         {task.entityType && task.entityId != null && (
           <Link
             href={`${ENTITY_PATHS[task.entityType]}/${task.entityId}`}
-            className="text-[11px] text-blue-600 hover:underline truncate"
+            className="text-[11px] text-primary hover:underline truncate"
           >
             {ENTITY_LABELS[task.entityType]} #{task.entityId}
           </Link>

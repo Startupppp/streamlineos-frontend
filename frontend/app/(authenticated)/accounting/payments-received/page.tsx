@@ -210,7 +210,7 @@ export default function PaymentsReceivedPage() {
       key: "invoiceNumber",
       header: "Invoice #",
       cell: (row) => (
-        <Link href={`/accounting/invoices/${row.invoiceId}`} className="text-sm font-medium text-blue-600 hover:underline">
+        <Link href={`/accounting/invoices/${row.invoiceId}`} className="text-sm font-medium text-primary hover:underline">
           {row.invoiceNumber}
         </Link>
       ),

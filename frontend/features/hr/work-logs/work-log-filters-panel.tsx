@@ -111,13 +111,13 @@ export function WorkLogFiltersPanel({
           {filters.departmentId && departments && (
             <Badge
               variant="secondary"
-              className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-blue-200 bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800 pr-1"
+              className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-primary/10 text-foreground border-primary/30 pr-1"
             >
               {departments.find((d) => d.id.toString() === filters.departmentId)
                 ?.name ?? "Dept"}
               <button
                 onClick={handleClearDepartment}
-                className="ml-0.5 hover:text-blue-900 dark:hover:text-blue-100 rounded-full"
+                className="ml-0.5 hover:text-foreground rounded-full"
                 aria-label="Remove department filter"
               >
                 <X className="h-2.5 w-2.5" />

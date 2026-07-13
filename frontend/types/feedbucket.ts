@@ -57,6 +57,7 @@ export interface FeedbucketWidget {
   autoCreateTicket: boolean;
   defaultTicketType: string;
   isActive: boolean;
+  aiAssistEnabled: boolean;
   theme: FeedbucketWidgetTheme | null;
   createdBy: string | null;
   createdAt: string;
@@ -109,6 +110,7 @@ export interface CreateFeedbucketWidgetInput {
   allowedDomains?: string[];
   autoCreateTicket?: boolean;
   defaultTicketType?: string;
+  aiAssistEnabled?: boolean;
   theme?: FeedbucketWidgetTheme;
 }
 
@@ -119,6 +121,7 @@ export interface UpdateFeedbucketWidgetInput {
   autoCreateTicket?: boolean;
   defaultTicketType?: string;
   isActive?: boolean;
+  aiAssistEnabled?: boolean;
   theme?: FeedbucketWidgetTheme;
 }
 

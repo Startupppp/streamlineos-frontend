@@ -138,7 +138,7 @@ export function DelegationSheet() {
       <div className="flex items-center justify-between mb-4">
         <p className="text-sm text-muted-foreground">{data?.total ?? 0} proxies</p>
         {canManage && (
-          <Button onClick={handleOpenSheet} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+          <Button onClick={handleOpenSheet} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground">
             <Plus className="h-4 w-4 mr-1.5" />
             Grant Proxy
           </Button>
@@ -240,7 +240,7 @@ export function DelegationSheet() {
               />
               <div className="flex justify-end gap-2 pt-2">
                 <Button type="button" variant="outline" onClick={() => setSheetOpen(false)}>Cancel</Button>
-                <LoadingButton type="submit" isPending={grantProxy.isPending} className="bg-blue-600 hover:bg-blue-700 text-white">
+                <LoadingButton type="submit" isPending={grantProxy.isPending} className="bg-primary hover:bg-primary/90 text-primary-foreground">
                   Grant Access
                 </LoadingButton>
               </div>

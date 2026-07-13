@@ -170,7 +170,7 @@ export function WorkLogEntryRow({
       <div className="flex-1 min-w-0 space-y-2 p-3 sm:p-4">
         {ticket && (
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800 font-mono">
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-primary/10 text-primary border-primary/30 font-mono">
               <Ticket className="h-3 w-3" />
               #{ticket.ticketNumber}
             </span>
@@ -238,7 +238,7 @@ export function WorkLogEntryRow({
             href={initialWorkLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors duration-200"
+            className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors duration-200"
           >
             <ExternalLink className="h-3 w-3" />
             {initialWorkLink}

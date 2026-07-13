@@ -198,6 +198,19 @@ export function getStyles(): string {
 .text-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
 .text-input::placeholder { color: #94a3b8; }
 
+.ai-row { display: flex; align-items: center; gap: 8px; }
+.ai-btn {
+  display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px;
+  background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; font-size: 12px;
+  font-weight: 500; font-family: inherit; color: #1d4ed8; cursor: pointer;
+  transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
+  white-space: nowrap; flex-shrink: 0;
+}
+.ai-btn:hover { background: #dbeafe; border-color: #93c5fd; color: #1e40af; }
+.ai-btn:active { transform: scale(0.97); }
+.ai-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.ai-note { font-size: 11px; color: #ef4444; flex: 1 1 auto; }
+
 .actions { display: flex; gap: 8px; justify-content: flex-end; padding-top: 2px; }
 .cancel-btn {
   padding: 8px 16px; background: none; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 13px;
@@ -236,7 +249,8 @@ export function getStyles(): string {
 }
 @media (prefers-reduced-motion: reduce) {
   .launcher-btn, .panel, .type-btn, .close-btn, .capture-btn, .remove-screenshot-btn,
-  .submit-btn, .cancel-btn, .done-btn, .retry-btn, .text-input, .message-textarea { transition: none !important; }
+  .submit-btn, .cancel-btn, .done-btn, .retry-btn, .text-input, .message-textarea,
+  .ai-btn { transition: none !important; }
   .panel[aria-hidden="false"] { transition: none !important; }
 }
 `;

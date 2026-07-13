@@ -110,7 +110,7 @@ export function QuoteDetailContent({ quote, subtotal }: QuoteDetailContentProps)
                   <p className="text-[10px] text-muted-foreground">Deal</p>
                   <Link
                     href={`/crm/deals/${quote.deal.id}`}
-                    className="text-xs font-medium text-blue-600 hover:underline truncate block"
+                    className="text-xs font-medium text-primary hover:underline truncate block"
                   >
                     {quote.deal.name}
                   </Link>
@@ -124,7 +124,7 @@ export function QuoteDetailContent({ quote, subtotal }: QuoteDetailContentProps)
                   <p className="text-[10px] text-muted-foreground">Client</p>
                   <Link
                     href={`/crm/clients/${quote.client.id}`}
-                    className="text-xs font-medium text-blue-600 hover:underline truncate block"
+                    className="text-xs font-medium text-primary hover:underline truncate block"
                   >
                     {quote.client.clientName}
                   </Link>

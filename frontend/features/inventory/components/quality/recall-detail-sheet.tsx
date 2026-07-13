@@ -194,7 +194,7 @@ export function RecallDetailSheet({ open, onOpenChange, recallId }: Props) {
                 <button
                   type="button"
                   onClick={handleEditNotes}
-                  className="text-[10px] text-blue-600 hover:underline"
+                  className="text-[10px] text-primary hover:underline"
                 >
                   Edit
                 </button>

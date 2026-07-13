@@ -56,11 +56,11 @@ interface SelectedUserBadgeProps {
 function SelectedUserBadge({ id, name, onRemove }: SelectedUserBadgeProps) {
   const handleRemove = useCallback(() => onRemove(id), [id, onRemove]);
   return (
-    <span className="inline-flex items-center gap-1 bg-blue-500/10 text-blue-600 rounded-full px-2 py-0.5 text-[11px] font-medium">
+    <span className="inline-flex items-center gap-1 bg-primary/10 text-primary rounded-full px-2 py-0.5 text-[11px] font-medium">
       {name?.split("")[0]}
       <button
         onClick={handleRemove}
-        className="hover:bg-blue-500/20 rounded-full p-0.5"
+        className="hover:bg-primary/20 rounded-full p-0.5"
       >
         <X className="h-2.5 w-2.5" />
       </button>
@@ -81,14 +81,14 @@ function UserSelectItem({ user, selected, onToggle }: UserSelectItemProps) {
       onClick={handleClick}
       className={cn(
         "w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted/40 transition-colors",
-        selected && "bg-blue-500/5",
+        selected && "bg-primary/5",
       )}
     >
       <div
         className={cn(
           "h-5 w-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all",
           selected
-            ? "bg-blue-500 border-blue-500 text-white"
+            ? "bg-primary border-primary text-primary-foreground"
             : "border-border/60",
         )}
       >
@@ -308,7 +308,7 @@ export function NewGroupDialog({
                   className={cn(
                     "flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all text-center",
                     channelKind === kind.value
-                      ? "border-blue-500 bg-blue-500/5 text-blue-600"
+                      ? "border-primary bg-primary/5 text-foreground"
                       : "border-border/40 text-muted-foreground hover:border-border hover:bg-muted/30",
                   )}
                 >

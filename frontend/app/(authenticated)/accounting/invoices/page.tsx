@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
@@ -344,10 +345,10 @@ export default function AccountingInvoicesPage() {
       subtitle="Track outstanding invoices, collections, and payments"
       actions={
         <Button size="sm" asChild>
-          <a href="/billing/invoices/new">
+          <Link href="/billing/invoices/new">
             <Plus className="size-4 mr-1" />
             New Invoice
-          </a>
+          </Link>
         </Button>
       }
       filters={

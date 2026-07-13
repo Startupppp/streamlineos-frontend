@@ -53,7 +53,7 @@ export function UserAvatarMenu({ variant = "header" }: UserAvatarMenuProps) {
           >
             <Avatar className="h-5 w-5 ring-1 ring-border/60">
               <AvatarImage src={image} alt={name} />
-              <AvatarFallback className="text-[9px] font-bold bg-blue-500/15 text-blue-600">
+              <AvatarFallback className="text-[9px] font-bold bg-primary/10 text-primary">
                 {initials}
               </AvatarFallback>
             </Avatar>
@@ -67,7 +67,7 @@ export function UserAvatarMenu({ variant = "header" }: UserAvatarMenuProps) {
           >
             <Avatar className="h-8 w-8 ring-2 ring-sidebar-border">
               <AvatarImage src={image} alt={name} />
-              <AvatarFallback className="text-[11px] font-bold bg-blue-500/15 text-blue-600">
+              <AvatarFallback className="text-[11px] font-bold bg-primary/10 text-primary">
                 {initials}
               </AvatarFallback>
             </Avatar>

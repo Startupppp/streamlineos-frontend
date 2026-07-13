@@ -156,7 +156,7 @@ export function TicketCustomFields({
         <span>No custom fields.</span>
         <Link
           href={`/projects/${projectId}/settings`}
-          className="text-blue-600 hover:underline"
+          className="text-primary hover:underline"
         >
           Configure in Settings
         </Link>

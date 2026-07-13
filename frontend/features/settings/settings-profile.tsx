@@ -173,7 +173,7 @@ export function SettingsProfile() {
         <div className="relative group shrink-0">
           <Avatar className="h-16 w-16 ring-2 ring-border">
             <AvatarImage src={displayImage} />
-            <AvatarFallback className="text-xl font-bold bg-blue-500/10 text-blue-600">
+            <AvatarFallback className="text-xl font-bold bg-primary/10 text-primary">
               {initials}
             </AvatarFallback>
           </Avatar>

@@ -87,8 +87,8 @@ function ProbationRow({ review, onExtend, onConfirm }: ProbationRowProps) {
   return (
     <Card className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
       <CardContent className="p-4 flex items-center gap-4">
-        <div className="h-8 w-8 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center shrink-0">
-          <span className="text-[10px] font-bold text-blue-700 dark:text-blue-400">
+        <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+          <span className="text-[10px] font-bold text-primary">
             {review.firstName[0]}{review.lastName[0]}
           </span>
         </div>
@@ -132,7 +132,7 @@ function ProbationRow({ review, onExtend, onConfirm }: ProbationRowProps) {
             </Button>
             <Button
               size="sm"
-              className="h-7 text-xs gap-1.5 duration-200 bg-blue-600 hover:bg-blue-700 text-white border-0"
+              className="h-7 text-xs gap-1.5 duration-200 bg-primary hover:bg-primary/90 text-primary-foreground border-0"
               onClick={handleConfirm}
             >
               Confirm

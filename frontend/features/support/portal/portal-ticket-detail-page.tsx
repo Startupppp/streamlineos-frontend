@@ -130,7 +130,7 @@ export function PortalTicketDetailPage({ portalTicketId }: PortalTicketDetailPag
                             href={att.fileUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-[11px] text-blue-600 hover:underline bg-blue-50 dark:bg-blue-950/20 rounded px-2 py-0.5 border border-blue-200 dark:border-blue-800"
+                            className="flex items-center gap-1 text-[11px] text-primary hover:underline bg-primary/10 rounded px-2 py-0.5 border border-primary/30"
                           >
                             <Icon className="h-3 w-3 shrink-0" />
                             <span className="truncate max-w-[120px]">{att.fileName}</span>

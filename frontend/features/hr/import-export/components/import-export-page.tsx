@@ -34,7 +34,7 @@ const IMPORT_ENTITIES: ImportEntityConfig[] = [
     label: "Leave Balances",
     description: "Set leave balances per employee and leave type",
     columns: ["employeeEmail", "leaveTypeName", "balance", "year"],
-    accent: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+    accent: "bg-primary/10 text-primary",
     Icon: BarChart2,
   },
   {

@@ -200,7 +200,7 @@ export function Customer360Section({ data, isLoading }: Customer360SectionProps)
                       <li key={item.id}>
                         <Link
                           href={cfg.href(item)}
-                          className="text-[11px] text-blue-600 hover:underline truncate block"
+                          className="text-[11px] text-primary hover:underline truncate block"
                         >
                           {cfg.getLabel(item)}
                         </Link>

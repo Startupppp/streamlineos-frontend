@@ -254,7 +254,7 @@ export function LeadDetailSheet({
                       </div>
                       <a
                         href={`mailto:${lead.email}`}
-                        className="text-blue-600 hover:underline truncate text-sm"
+                        className="text-primary hover:underline truncate text-sm"
                       >
                         {lead.email}
                       </a>
@@ -311,11 +311,11 @@ export function LeadDetailSheet({
                       </div>
                     )}
                     {lead.investmentInterest && (
-                      <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30">
+                      <div className="p-3 rounded-lg bg-primary/10 border border-primary/30">
                         <p className="text-[11px] text-muted-foreground mb-1">
                           Investment Interest
                         </p>
-                        <p className="text-lg font-bold text-blue-600">
+                        <p className="text-lg font-bold text-primary">
                           ₹
                           {Number(lead.investmentInterest).toLocaleString(
                             "en-IN",

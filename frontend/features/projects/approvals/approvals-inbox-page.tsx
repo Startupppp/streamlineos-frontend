@@ -87,7 +87,7 @@ export function ApprovalsInboxPage() {
       cell: (row) => (
         <Link
           href={`/projects/${row.projectId}`}
-          className="text-blue-600 hover:underline font-medium text-[11px]"
+          className="text-primary hover:underline font-medium text-[11px]"
           onClick={(e) => e.stopPropagation()}
         >
           {row.projectKey}

@@ -32,12 +32,12 @@ export default function CompanyHrProfilePage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {LINKS.map((item) => (
             <Link key={item.title} href={item.href}>
-              <div className="bg-card border border-border rounded-xl shadow-sm p-4 hover:border-blue-500/50 hover:shadow-md transition-all group flex items-start justify-between gap-3">
+              <div className="bg-card border border-border rounded-xl shadow-sm p-4 hover:border-primary/50 hover:shadow-md transition-all group flex items-start justify-between gap-3">
                 <div>
                   <p className="text-sm font-semibold text-foreground">{item.title}</p>
                   <p className="text-xs text-muted-foreground mt-1">{item.description}</p>
                 </div>
-                <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-blue-500 transition-colors mt-0.5 shrink-0" />
+                <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors mt-0.5 shrink-0" />
               </div>
             </Link>
           ))}

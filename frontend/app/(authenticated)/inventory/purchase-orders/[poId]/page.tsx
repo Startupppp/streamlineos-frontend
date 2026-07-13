@@ -127,11 +127,11 @@ function buildGrnColumns(onRowClick: (id: number) => void): DataTableColumn<GrnR
     {
       key: "grnNumber",
       header: "GRN #",
-      className: "font-mono text-blue-600",
+      className: "font-mono text-primary",
       cell: (row) => (
         <button
           type="button"
-          className="font-mono text-[11px] text-blue-600 hover:underline"
+          className="font-mono text-[11px] text-primary hover:underline"
           onClick={(e) => { e.stopPropagation(); onRowClick(row.id); }}
         >
           {row.grnNumber}
@@ -335,7 +335,7 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
               {po.vendor ? (
                 <Link
                   href={`/inventory/vendors/${po.vendor.id}`}
-                  className="text-blue-600 hover:underline transition-colors"
+                  className="text-primary hover:underline transition-colors"
                 >
                   {po.vendor.name}
                 </Link>

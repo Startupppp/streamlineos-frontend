@@ -151,7 +151,7 @@ export function CreateBatchSheet({ open, onOpenChange, onCreated }: CreateBatchS
             {pendingExpenses.length > 0 && (
               <button
                 type="button"
-                className="text-xs text-blue-600 hover:underline"
+                className="text-xs text-primary hover:underline"
                 onClick={handleSelectAll}
               >
                 {allSelected ? "Deselect all" : "Select all"}

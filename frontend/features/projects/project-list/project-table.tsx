@@ -177,7 +177,7 @@ export const ProjectTable = React.memo(function ProjectTable({ projects }: Proje
           >
             {p.key.slice(0, 2).toUpperCase()}
           </span>
-          <span className="text-sm font-medium text-foreground truncate group-hover:text-blue-600 transition-colors min-w-0">
+          <span className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors min-w-0">
             {p.name}
           </span>
           <span className="hidden sm:inline-block text-[10px] font-mono text-muted-foreground/60 shrink-0">

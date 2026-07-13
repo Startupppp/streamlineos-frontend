@@ -55,7 +55,7 @@ function buildTransferColumns(
         <Link
           href={`/inventory/stock/transfers/${row.id}`}
           onClick={(e) => e.stopPropagation()}
-          className="font-mono text-[11px] font-semibold text-blue-600 hover:underline"
+          className="font-mono text-[11px] font-semibold text-primary hover:underline"
         >
           {row.referenceNumber}
         </Link>
@@ -107,7 +107,7 @@ function buildTransferColumns(
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 px-2 text-[11px] text-blue-600 hover:text-blue-700"
+          className="h-7 px-2 text-[11px] text-primary hover:text-primary/80"
           onClick={(e) => { e.stopPropagation(); onView(row.id); }}
           aria-label={`View transfer ${row.referenceNumber}`}
         >

@@ -190,7 +190,7 @@ export default function TaxPaymentsPage() {
         row.journalEntryId ? (
           <Link
             href={`/accounting/journal/${row.journalEntryId}`}
-            className="text-xs text-blue-600 hover:underline"
+            className="text-xs text-primary hover:underline"
           >
             View
           </Link>

@@ -42,7 +42,7 @@ export function AuthScreen({ token, authMethod, recipientName }: { token: string
       </div>
       <div className="w-full max-w-sm space-y-4 text-center">
         <div>
-          <h1 className="text-lg font-semibold">Verify it's you, {recipientName}</h1>
+          <h1 className="text-lg font-semibold">Verify it&apos;s you, {recipientName}</h1>
           <p className="text-sm text-muted-foreground mt-1">
             {authMethod === "access_code" ? "Enter the access code you were given." : "We'll send a one-time code to your email."}
           </p>

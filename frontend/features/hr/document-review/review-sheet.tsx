@@ -205,7 +205,7 @@ function DocCard({ doc, canReview, onApprove, onRequestReupload }: DocCardProps)
                 href={doc.fileUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-0.5 text-blue-600 hover:text-blue-700 hover:underline transition-colors duration-200"
+                className="inline-flex items-center gap-0.5 text-primary hover:text-primary/80 hover:underline transition-colors duration-200"
                 aria-label={`Download ${doc.fileName}`}
               >
                 {doc.fileName}

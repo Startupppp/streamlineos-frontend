@@ -123,7 +123,7 @@ export function AccommodationDetailSheet({ id, open, onOpenChange }: Props) {
                   onClick={handleApprove}
                   isPending={approve.isPending}
                   loadingText="Approving…"
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
                 >
                   Approve
                 </LoadingButton>

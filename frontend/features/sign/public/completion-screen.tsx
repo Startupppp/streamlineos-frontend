@@ -8,7 +8,7 @@ export function CompletionScreen({ envelopeTitle, everyoneDone }: { envelopeTitl
         <CheckCircle2 className="size-10 text-emerald-600 dark:text-emerald-400" />
       </div>
       <div className="max-w-sm space-y-1.5">
-        <h1 className="text-lg font-semibold text-foreground">You're all signed!</h1>
+        <h1 className="text-lg font-semibold text-foreground">You&apos;re all signed!</h1>
         <p className="text-sm font-medium text-muted-foreground">{envelopeTitle}</p>
         <p className="text-sm text-muted-foreground">
           {everyoneDone

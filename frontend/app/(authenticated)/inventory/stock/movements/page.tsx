@@ -148,7 +148,7 @@ function renderSourceCell(row: StockTransaction) {
     return (
       <Link
         href={`${basePath}/${row.referenceId}`}
-        className="font-mono text-blue-600 hover:underline text-[11px]"
+        className="font-mono text-primary hover:underline text-[11px]"
         onClick={(e) => e.stopPropagation()}
       >
         {refLabel}

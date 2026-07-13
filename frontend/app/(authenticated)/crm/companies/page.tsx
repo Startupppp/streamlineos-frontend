@@ -143,12 +143,12 @@ export default function CompaniesPage() {
       sortValue: (o) => o.name,
       cell: (o) => (
         <div className="flex items-center gap-2">
-          <div className="h-6 w-6 rounded-md bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-[10px] font-semibold text-blue-600 dark:text-blue-400 shrink-0">
+          <div className="h-6 w-6 rounded-md bg-primary/10 flex items-center justify-center text-[10px] font-semibold text-primary shrink-0">
             {o.name[0]?.toUpperCase() ?? "?"}
           </div>
           <Link
             href={`/crm/companies/${o.id}`}
-            className="font-medium truncate max-w-[140px] hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors"
+            className="font-medium truncate max-w-[140px] hover:text-primary hover:underline transition-colors"
           >
             {o.name}
           </Link>
@@ -211,7 +211,7 @@ export default function CompaniesPage() {
             href={o.website}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 hover:underline truncate max-w-[120px]"
+            className="flex items-center gap-1.5 text-xs text-primary hover:underline truncate max-w-[120px]"
           >
             <Building2 className="h-3 w-3 shrink-0" />
             <span className="truncate">{o.website.replace(/^https?:\/\//, "")}</span>

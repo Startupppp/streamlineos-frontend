@@ -1,7 +1,7 @@
 import { captureScreenshot } from "./screenshot";
 import { collectMetadata, getPageUrl } from "./metadata";
 import { getConsoleBuffer } from "./console-capture";
-import { submitFeedback } from "./api";
+import { submitFeedback, aiAssistFeedback, type AiFeedbackType } from "./api";
 import { getStyles } from "./styles";
 import { Annotator, type AnnotationResult } from "./annotator";
 import { ScreenRecorder } from "./recorder";
@@ -63,6 +63,7 @@ class FeedbucketWidget {
   private readonly hostEl: HTMLElement;
   private readonly apiBase: string;
   private readonly embedKey: string;
+  private readonly aiAssistEnabled: boolean;
 
   private isOpen = false;
   private selectedType: FeedbackType = "bug";
@@ -71,6 +72,7 @@ class FeedbucketWidget {
   private recording: Blob | null = null;
   private capturing = false;
   private submitting = false;
+  private aiAssisting = false;
   private busy = false;
   private viewState: ViewState = "form";
   private errorSubtitle: HTMLElement | null = null;
@@ -87,6 +89,7 @@ class FeedbucketWidget {
   private readonly formView: HTMLDivElement;
   private readonly successView: HTMLDivElement;
   private readonly errorView: HTMLDivElement;
+  private readonly titleInput: HTMLInputElement;
   private readonly messageInput: HTMLTextAreaElement;
   private readonly nameInput: HTMLInputElement;
   private readonly emailInput: HTMLInputElement;
@@ -96,6 +99,8 @@ class FeedbucketWidget {
   private readonly previewImg: HTMLImageElement;
   private readonly recordingBadge: HTMLDivElement;
   private readonly submitBtn: HTMLButtonElement;
+  private aiBtn: HTMLButtonElement | null = null;
+  private aiNote: HTMLSpanElement | null = null;
   private readonly typeButtons: HTMLButtonElement[] = [];
 
   private readonly handleScreenshotLauncher = (): void => {
@@ -144,7 +149,11 @@ class FeedbucketWidget {
   };
 
   private readonly handleSubmitClick = async (): Promise<void> => {
-    const message = this.messageInput.value.trim();
+    const titleVal = this.titleInput.value.trim();
+    const descVal = this.messageInput.value.trim();
+    const message = titleVal && descVal
+      ? `${titleVal}\n\n${descVal}`
+      : titleVal || descVal;
     if ((!message && !this.recording) || this.submitting) return;
     this.submitting = true;
     this.submitBtn.disabled = true;
@@ -217,10 +226,11 @@ class FeedbucketWidget {
     if (this.dragMoved) this.persistPosition();
   };
 
-  constructor(hostEl: HTMLElement, apiBase: string, embedKey: string) {
+  constructor(hostEl: HTMLElement, apiBase: string, embedKey: string, aiAssistEnabled: boolean) {
     this.hostEl = hostEl;
     this.apiBase = apiBase;
     this.embedKey = embedKey;
+    this.aiAssistEnabled = aiAssistEnabled;
 
     const shadow = hostEl.attachShadow({ mode: "open" });
     const style = document.createElement("style");
@@ -319,6 +329,13 @@ class FeedbucketWidget {
     }
     this.formView.appendChild(typeGroup);
 
+    this.titleInput = document.createElement("input");
+    this.titleInput.className = "text-input";
+    this.titleInput.type = "text";
+    this.titleInput.placeholder = "Title (optional)";
+    this.titleInput.setAttribute("aria-label", "Feedback title");
+    this.formView.appendChild(this.titleInput);
+
     this.messageInput = document.createElement("textarea");
     this.messageInput.className = "message-textarea";
     this.messageInput.setAttribute("aria-label", "Feedback message");
@@ -392,6 +409,25 @@ class FeedbucketWidget {
     optionalFields.appendChild(this.emailInput);
     this.formView.appendChild(optionalFields);
 
+    if (this.aiAssistEnabled) {
+      const aiRow = document.createElement("div");
+      aiRow.className = "ai-row";
+      const aiBtn = document.createElement("button");
+      aiBtn.className = "ai-btn";
+      aiBtn.type = "button";
+      aiBtn.setAttribute("aria-label", "Enhance with AI");
+      aiBtn.textContent = "✨ Enhance with AI";
+      aiBtn.addEventListener("click", this.handleAiAssistClick);
+      aiRow.appendChild(aiBtn);
+      const aiNote = document.createElement("span");
+      aiNote.className = "ai-note";
+      aiNote.hidden = true;
+      aiRow.appendChild(aiNote);
+      this.formView.appendChild(aiRow);
+      this.aiBtn = aiBtn;
+      this.aiNote = aiNote;
+    }
+
     const actionsRow = document.createElement("div");
     actionsRow.className = "actions";
     const cancelBtn = document.createElement("button");
@@ -417,10 +453,77 @@ class FeedbucketWidget {
     this.restorePosition();
   }
 
+  private readonly handleAiAssistClick = (): void => {
+    void this.runAiAssist();
+  };
+
   private readonly handleRemoveRecording = (): void => {
     this.recording = null;
     this.recordingBadge.hidden = true;
   };
+
+  private async runAiAssist(): Promise<void> {
+    if (this.aiAssisting || !this.aiBtn) return;
+    this.aiAssisting = true;
+    this.aiBtn.disabled = true;
+    this.aiBtn.textContent = "✨ Thinking…";
+    if (this.aiNote) this.aiNote.hidden = true;
+
+    let screenshot = this.screenshot;
+    if (!screenshot) {
+      const captured = await captureScreenshot(this.hostEl);
+      if (captured) {
+        this.setScreenshot(captured);
+        screenshot = captured;
+      }
+    }
+
+    const titleVal = this.titleInput.value.trim();
+    const descVal = this.messageInput.value.trim();
+    const message = titleVal && descVal
+      ? `${titleVal}\n\n${descVal}`
+      : titleVal || descVal;
+
+    const result = await aiAssistFeedback({
+      apiBase: this.apiBase,
+      key: this.embedKey,
+      type: this.selectedType,
+      message,
+      pageUrl: getPageUrl(),
+      screenshot,
+    });
+
+    this.aiAssisting = false;
+    this.aiBtn.disabled = false;
+    this.aiBtn.textContent = "✨ Enhance with AI";
+
+    if ("kind" in result) {
+      if (result.kind === "feature_off") {
+        this.aiBtn.hidden = true;
+        return;
+      }
+      if (this.aiNote) {
+        this.aiNote.hidden = false;
+        if (result.kind === "credits_exhausted") {
+          this.aiNote.textContent = "AI credits exhausted";
+        } else if (result.kind === "rate_limited") {
+          this.aiNote.textContent = "Too many requests, try again in a moment";
+        } else {
+          this.aiNote.textContent = "AI is unavailable right now";
+        }
+      }
+      return;
+    }
+
+    const suggested = result.suggestedType;
+    const validTypes: ReadonlyArray<string> = ["bug", "idea", "feature", "question", "other"];
+    if (validTypes.includes(suggested)) {
+      this.setSelectedType(suggested as FeedbackType);
+    }
+    this.titleInput.value = result.title;
+    this.messageInput.value = result.description;
+    if (this.aiNote) this.aiNote.hidden = true;
+  }
 
   private launcherButton(label: string, handler: () => void, icon: IconSpec): HTMLButtonElement {
     const btn = document.createElement("button");
@@ -597,12 +700,14 @@ class FeedbucketWidget {
   }
 
   private resetForm(): void {
+    this.titleInput.value = "";
     this.messageInput.value = "";
     this.nameInput.value = "";
     this.emailInput.value = "";
     this.handleRemoveScreenshot();
     this.recording = null;
     this.recordingBadge.hidden = true;
+    if (this.aiNote) this.aiNote.hidden = true;
     this.setSelectedType("bug");
   }
 
@@ -657,5 +762,26 @@ class FeedbucketWidget {
 }
 
 export function mountWidget(hostEl: HTMLElement, apiBase: string, embedKey: string): void {
-  new FeedbucketWidget(hostEl, apiBase, embedKey);
+  void bootstrapWidget(hostEl, apiBase, embedKey);
+}
+
+async function bootstrapWidget(hostEl: HTMLElement, apiBase: string, embedKey: string): Promise<void> {
+  let aiAssistEnabled = false;
+  try {
+    const res = await fetch(`${apiBase}/public/feedbucket/${embedKey}/config`);
+    if (res.ok) {
+      const data: unknown = await res.json();
+      if (
+        typeof data === "object" &&
+        data !== null &&
+        "aiAssistEnabled" in data &&
+        (data as Record<string, unknown>)["aiAssistEnabled"] === true
+      ) {
+        aiAssistEnabled = true;
+      }
+    }
+  } catch {
+    // config fetch failure is non-fatal; widget mounts without AI feature
+  }
+  new FeedbucketWidget(hostEl, apiBase, embedKey, aiAssistEnabled);
 }

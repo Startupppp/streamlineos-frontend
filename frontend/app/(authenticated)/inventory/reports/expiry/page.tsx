@@ -159,7 +159,7 @@ function ExpiryReportContent() {
   const items = query.data?.items ?? [];
   const total = query.data?.total ?? 0;
 
-  const columns = useMemo(buildColumns, []);
+  const columns = useMemo(() => buildColumns(), []);
 
   function handleWithinDaysChange(value: string): void {
     const params = new URLSearchParams(searchParams.toString());

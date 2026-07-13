@@ -29,8 +29,8 @@ interface SortIconProps {
 export function SortIcon({ column, sortColumn, sortDirection }: SortIconProps) {
   if (sortColumn !== column) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-30" />;
   return sortDirection === "asc"
-    ? <ArrowUp className="h-3 w-3 ml-1 text-blue-600" />
-    : <ArrowDown className="h-3 w-3 ml-1 text-blue-600" />;
+    ? <ArrowUp className="h-3 w-3 ml-1 text-primary" />
+    : <ArrowDown className="h-3 w-3 ml-1 text-primary" />;
 }
 
 export interface RenderCellOptions {
@@ -83,7 +83,7 @@ export function useLeadCellRenderer({
       case "name":
         return (
           <button
-            className="font-medium text-[12px] hover:text-blue-600 hover:underline text-left truncate max-w-[140px] block"
+            className="font-medium text-[12px] hover:text-primary hover:underline text-left truncate max-w-[140px] block"
             onClick={() => router.push(`/crm/leads/${lead.id}`)}
           >
             {lead.name}

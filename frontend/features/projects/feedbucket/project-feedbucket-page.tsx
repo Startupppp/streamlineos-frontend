@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,6 +39,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useFeedbucketWidgets,
   useCreateFeedbucketWidget,
+  useUpdateFeedbucketWidget,
   useRotateFeedbucketWidgetKey,
   useFeedbucketSubmissions,
 } from "@/hooks/api/feedbucket";
@@ -97,6 +99,7 @@ interface CreateWidgetSheetProps {
 
 function CreateWidgetSheet({ open, projectId, onClose }: CreateWidgetSheetProps) {
   const [name, setName] = useState("");
+  const [aiAssistEnabled, setAiAssistEnabled] = useState(false);
   const createWidget = useCreateFeedbucketWidget();
 
   async function handleSubmit(e: React.FormEvent) {
@@ -107,11 +110,13 @@ function CreateWidgetSheet({ open, projectId, onClose }: CreateWidgetSheetProps)
       allowedDomains: [],
       autoCreateTicket: false,
       defaultTicketType: "BUG",
+      aiAssistEnabled,
     };
     try {
       await createWidget.mutateAsync(input);
       toast.success("Feedback widget created");
       setName("");
+      setAiAssistEnabled(false);
       onClose();
     } catch (error) {
       toast.error(getErrorMessage(error));
@@ -138,6 +143,22 @@ function CreateWidgetSheet({ open, projectId, onClose }: CreateWidgetSheetProps)
                 onChange={handleNameChange}
                 placeholder="e.g. Production feedback"
                 required
+              />
+            </div>
+            <div className="flex items-start justify-between gap-4 rounded-lg border border-border px-4 py-3">
+              <div className="space-y-0.5 min-w-0">
+                <Label htmlFor="create-ai-assist" className="text-sm font-medium cursor-pointer">
+                  AI assist in widget
+                </Label>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Let people submitting feedback draft a bug/feature with AI from their screenshot. Uses your org&apos;s AI credits; rate-limited.
+                </p>
+              </div>
+              <Switch
+                id="create-ai-assist"
+                checked={aiAssistEnabled}
+                onCheckedChange={setAiAssistEnabled}
+                className="shrink-0 mt-0.5"
               />
             </div>
           </div>
@@ -280,6 +301,7 @@ export function ProjectFeedbucketPage({ projectId }: ProjectFeedbucketPageProps)
   const [confirmRotate, setConfirmRotate] = useState(false);
   const { data: widgets, isLoading: widgetsLoading, isError: widgetsError, refetch: refetchWidgets } = useFeedbucketWidgets();
   const rotateKey = useRotateFeedbucketWidgetKey();
+  const updateWidget = useUpdateFeedbucketWidget();
 
   const projectWidget = widgets?.find((w) => w.projectId === projectId) ?? null;
 
@@ -312,6 +334,16 @@ export function ProjectFeedbucketPage({ projectId }: ProjectFeedbucketPageProps)
     setConfirmRotate(false);
   }
 
+  async function handleToggleAiAssist(enabled: boolean) {
+    if (!projectWidget) return;
+    try {
+      await updateWidget.mutateAsync({ widgetId: projectWidget.id, input: { aiAssistEnabled: enabled } });
+      toast.success(enabled ? "AI assist enabled" : "AI assist disabled");
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  }
+
   return (
     <DashboardGate permission="feedbucket:submissions:view">
       <PageWrapper
@@ -339,7 +371,12 @@ export function ProjectFeedbucketPage({ projectId }: ProjectFeedbucketPageProps)
             <div className="rounded-xl border border-border bg-card p-4 space-y-3">
               <div className="flex items-start justify-between gap-3 flex-wrap">
                 <div className="space-y-0.5 min-w-0">
-                  <p className="text-sm font-medium truncate">{projectWidget.name}</p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-sm font-medium truncate">{projectWidget.name}</p>
+                    {projectWidget.aiAssistEnabled && (
+                      <Badge variant="secondary" className="text-xs shrink-0">AI assist</Badge>
+                    )}
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     {projectWidget.isActive ? "Active" : "Inactive"} · Public key:{" "}
                     <span className="font-mono">{projectWidget.publicKey}</span>
@@ -358,6 +395,21 @@ export function ProjectFeedbucketPage({ projectId }: ProjectFeedbucketPageProps)
               </div>
               <div className="rounded-md bg-muted px-3 py-2 font-mono text-xs text-muted-foreground break-all">
                 {embedSnippet(projectWidget.publicKey)}
+              </div>
+              <div className="flex items-start justify-between gap-4 rounded-lg border border-border px-4 py-3 bg-background">
+                <div className="space-y-0.5 min-w-0">
+                  <p className="text-sm font-medium">AI assist in widget</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Let people submitting feedback draft a bug/feature with AI from their screenshot. Uses your org&apos;s AI credits; rate-limited.
+                  </p>
+                </div>
+                <Switch
+                  id="widget-ai-assist"
+                  checked={projectWidget.aiAssistEnabled}
+                  onCheckedChange={handleToggleAiAssist}
+                  disabled={updateWidget.isPending}
+                  className="shrink-0 mt-0.5"
+                />
               </div>
             </div>
 

@@ -364,7 +364,7 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-9 w-9 rounded-full p-0 text-blue-500"
+                className="h-9 w-9 rounded-full p-0 text-primary"
                 onClick={resumeScreenShare}
                 aria-label="Resume screen share"
               >
@@ -582,8 +582,8 @@ function ParticipantCard({ participant, audioLevel, isCurrentUser, isHost, onKic
           </span>
         )}
         {participant.isScreenSharing && (
-          <span className="absolute -bottom-0.5 -left-0.5 h-4 w-4 rounded-full bg-blue-500/10 border border-border flex items-center justify-center">
-            <Monitor className="h-2.5 w-2.5 text-blue-500" />
+          <span className="absolute -bottom-0.5 -left-0.5 h-4 w-4 rounded-full bg-primary/10 border border-border flex items-center justify-center">
+            <Monitor className="h-2.5 w-2.5 text-primary" />
           </span>
         )}
       </div>

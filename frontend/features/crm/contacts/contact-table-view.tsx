@@ -51,12 +51,12 @@ export function ContactTableView({
       sortValue: (c) => c.name,
       cell: (c) => (
         <div className="flex items-center gap-2">
-          <div className="h-6 w-6 rounded-full bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-[10px] font-semibold text-blue-700 dark:text-blue-300 shrink-0">
+          <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-semibold text-primary shrink-0">
             {c.name[0]?.toUpperCase() ?? "?"}
           </div>
           <Link
             href={`/crm/contacts/${c.id}`}
-            className="font-medium truncate max-w-[120px] hover:text-blue-600 hover:underline transition-colors"
+            className="font-medium truncate max-w-[120px] hover:text-primary hover:underline transition-colors"
           >
             {c.name}
           </Link>
@@ -70,7 +70,7 @@ export function ContactTableView({
         c.email ? (
           <a
             href={`mailto:${c.email}`}
-            className="text-blue-600 hover:underline truncate block max-w-[140px]"
+            className="text-primary hover:underline truncate block max-w-[140px]"
           >
             {c.email}
           </a>

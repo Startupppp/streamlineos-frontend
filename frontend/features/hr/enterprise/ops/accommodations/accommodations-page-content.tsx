@@ -85,7 +85,7 @@ export function AccommodationsPageContent() {
         subtitle="Manage workplace accommodation requests"
         actions={
           canManage ? (
-            <Button size="sm" onClick={() => setShowCreate(true)} className="bg-blue-600 hover:bg-blue-700 text-white">
+            <Button size="sm" onClick={() => setShowCreate(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
               <Plus className="h-4 w-4 mr-1.5" />
               New Request
             </Button>

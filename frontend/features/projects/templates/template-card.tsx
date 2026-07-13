@@ -88,7 +88,7 @@ export const TemplateCard = memo(function TemplateCard({
       className={cn(
         "group relative flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card p-3 shadow-sm",
         "transition-[border-color,box-shadow] duration-200 ease-out motion-reduce:transition-none",
-        "hover:border-blue-500/35 hover:shadow-md",
+        "hover:border-primary/35 hover:shadow-md",
       )}
       role="listitem"
       aria-label={`${template.name} template — ${formatCategoryLabel(category)}, ${taskCount} tasks`}
@@ -109,7 +109,7 @@ export const TemplateCard = memo(function TemplateCard({
 
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="line-clamp-1 text-sm font-semibold text-foreground transition-colors group-hover:text-blue-600">
+            <h3 className="line-clamp-1 text-sm font-semibold text-foreground transition-colors group-hover:text-primary">
               {template.name}
             </h3>
             <span className="inline-flex shrink-0 items-center gap-0.5 rounded-md bg-muted px-1.5 py-0.5 text-[9px] font-medium text-muted-foreground">

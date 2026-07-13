@@ -188,7 +188,7 @@ function AnnouncementCard({
             <button
               type="button"
               onClick={handleToggleExpand}
-              className="mt-1.5 flex items-center gap-1 text-[11px] font-medium text-blue-600 hover:text-blue-700 transition-colors"
+              className="mt-1.5 flex items-center gap-1 text-[11px] font-medium text-primary hover:text-primary/80 transition-colors"
             >
               {expanded ? (
                 <>

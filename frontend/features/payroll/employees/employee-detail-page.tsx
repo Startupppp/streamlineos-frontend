@@ -342,7 +342,7 @@ export function EmployeeDetailPage({ employeeUserId }: EmployeeDetailPageProps) 
             <h3 className="text-sm font-semibold text-foreground">Payslip History</h3>
             <Link
               href={`/payroll/payslips?employee=${employeeUserId}`}
-              className="text-[11px] text-blue-600 hover:underline"
+              className="text-[11px] text-primary hover:underline"
             >
               View payslips
             </Link>

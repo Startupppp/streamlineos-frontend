@@ -249,7 +249,7 @@ export function DataRequestsTab() {
               />
               <div className="flex justify-end gap-2 pt-2">
                 <Button type="button" variant="outline" onClick={() => setSheetOpen(false)}>Cancel</Button>
-                <LoadingButton type="submit" isPending={createRequest.isPending} className="bg-blue-600 hover:bg-blue-700 text-white">
+                <LoadingButton type="submit" isPending={createRequest.isPending} className="bg-primary hover:bg-primary/90 text-primary-foreground">
                   Submit
                 </LoadingButton>
               </div>

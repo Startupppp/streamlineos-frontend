@@ -56,7 +56,7 @@ const VENDOR_PO_COLUMNS: DataTableColumn<VendorPoRow>[] = [
     cell: (row) => (
       <Link
         href={`/inventory/purchase-orders/${row.id}`}
-        className="text-blue-600 hover:underline transition-colors"
+        className="text-primary hover:underline transition-colors"
         onClick={(e) => e.stopPropagation()}
       >
         {row.poNumber}

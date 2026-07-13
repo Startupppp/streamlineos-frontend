@@ -47,12 +47,12 @@ function DealRow({ dealId }: { dealId: number }) {
     <tr className="border-b border-border/50 last:border-0 hover:bg-accent/40 transition-colors">
       <td className="px-4 py-2.5">
         <div className="flex items-center gap-2">
-          <div className="h-6 w-6 rounded-md bg-blue-500/10 flex items-center justify-center shrink-0">
-            <TrendingUp className="h-3 w-3 text-blue-600" />
+          <div className="h-6 w-6 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+            <TrendingUp className="h-3 w-3 text-primary" />
           </div>
           <Link
             href={`/crm/deals/${deal.id}`}
-            className="text-xs font-medium text-blue-600 hover:underline truncate max-w-[180px]"
+            className="text-xs font-medium text-primary hover:underline truncate max-w-[180px]"
           >
             {deal.name}
           </Link>

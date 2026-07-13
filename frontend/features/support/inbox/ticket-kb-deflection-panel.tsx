@@ -89,7 +89,7 @@ export function KbDeflectionPanel({ ticketId, ticketTitle }: KbDeflectionPanelPr
                       href={`/knowledge/spaces/${article.spaceId}/articles/${article.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1 min-w-0 text-[12px] text-blue-600 hover:underline"
+                      className="flex items-center gap-1 min-w-0 text-[12px] text-primary hover:underline"
                     >
                       <ExternalLink className="h-3 w-3 shrink-0" />
                       <span className="truncate">{article.title}</span>

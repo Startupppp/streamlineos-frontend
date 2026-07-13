@@ -96,7 +96,7 @@ const COLUMNS: DataTableColumn<NLSearchLead>[] = [
       <div>
         <Link
           href={`/crm/leads/${lead.id}`}
-          className="font-medium text-blue-600 dark:text-blue-400 hover:underline transition-colors"
+          className="font-medium text-primary hover:underline transition-colors"
         >
           {lead.name}
         </Link>
@@ -352,7 +352,7 @@ export default function SmartLeadSearchPage() {
                   type="button"
                   data-query={q}
                   onClick={handleChipButtonClick}
-                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400 transition-colors group"
+                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors group"
                 >
                   <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
                   {q}

@@ -79,7 +79,7 @@ export function JournalEntryView({
           Reversed by{" "}
           <Link
             href={`/accounting/journal/${entry.reversedEntryId}`}
-            className="text-blue-600 hover:underline font-mono"
+            className="text-primary hover:underline font-mono"
           >
             JE-{entry.reversedEntryId}
           </Link>

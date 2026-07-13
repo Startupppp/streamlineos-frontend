@@ -74,7 +74,7 @@ function DealNameButton({ dealId, name, onNavigate }: DealNameButtonProps) {
   const handleClick = useCallback(() => onNavigate(dealId), [dealId, onNavigate]);
   return (
     <button
-      className="font-medium text-[12px] hover:text-blue-600 hover:underline text-left truncate max-w-[160px] block"
+      className="font-medium text-[12px] hover:text-primary hover:underline text-left truncate max-w-[160px] block"
       onClick={handleClick}
     >
       {name}

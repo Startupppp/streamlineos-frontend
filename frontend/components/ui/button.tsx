@@ -15,7 +15,7 @@ import { cn } from "../../lib/utils";
      ghost        Tertiary      transparent, slate-100 hover
      destructive  Danger        red bg
      secondary    Subtle fill   slate-100 bg
-     link         Inline        blue text, underline on hover
+     link         Inline        theme-accent text, underline on hover
      brand        Gradient CTA  brand gradient (use sparingly — top of funnel)
    ───────────────────────────────────────────────────────────────────────── */
 const buttonVariants = cva(
@@ -28,13 +28,13 @@ const buttonVariants = cva(
         destructive:
           "bg-destructive text-white shadow-sm hover:bg-destructive/90 focus-visible:ring-destructive/30",
         outline:
-          "border border-border bg-card text-foreground shadow-[0_1px_2px_rgba(15,23,42,0.04)] hover:bg-card hover:border-blue-400 hover:text-foreground",
+          "border border-border bg-card text-foreground shadow-[0_1px_2px_rgba(15,23,42,0.04)] hover:bg-card hover:border-primary/50 hover:text-foreground",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/70",
         ghost:
           "text-foreground hover:bg-muted hover:text-foreground",
         link:
-          "text-blue-600 underline-offset-4 hover:text-blue-700 hover:underline",
+          "text-primary underline-offset-4 hover:text-primary/80 hover:underline",
         brand:
           "text-white font-semibold shadow-[0_10px_28px_-10px_rgba(59,130,246,0.5)] hover:shadow-[0_14px_34px_-10px_rgba(59,130,246,0.6)] bg-[linear-gradient(135deg,_var(--brand-deep)_0%,_var(--brand-core)_55%,_var(--brand-cyan)_100%)]",
       },

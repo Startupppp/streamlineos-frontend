@@ -58,7 +58,7 @@ const vendorLedgerColumns: DataTableColumn<VendorLedgerLine>[] = [
     cell: (row) => (
       <Link
         href={`/accounting/journal/${row.entryId}`}
-        className="font-mono text-xs text-foreground hover:text-blue-600 hover:underline"
+        className="font-mono text-xs text-foreground hover:text-primary hover:underline"
       >
         {row.entryNumber}
       </Link>
@@ -82,7 +82,7 @@ const vendorLedgerColumns: DataTableColumn<VendorLedgerLine>[] = [
         {row.billNumber ? (
           <Link
             href={`/accounting/purchase-bills/${row.billId}`}
-            className="font-mono text-xs text-muted-foreground mr-2 hover:text-blue-600 hover:underline"
+            className="font-mono text-xs text-muted-foreground mr-2 hover:text-primary hover:underline"
           >
             {row.billNumber}
           </Link>

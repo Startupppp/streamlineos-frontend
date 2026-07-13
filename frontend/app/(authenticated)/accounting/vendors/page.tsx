@@ -22,7 +22,7 @@ const columns: DataTableColumn<VendorOutstanding>[] = [
     cell: (row) => (
       <Link
         href={`/accounting/vendors/${row.vendorId}`}
-        className="text-sm font-medium text-foreground hover:text-blue-600 hover:underline"
+        className="text-sm font-medium text-foreground hover:text-primary hover:underline"
       >
         {row.vendorName}
       </Link>

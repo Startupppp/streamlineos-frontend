@@ -191,7 +191,7 @@ export function LaborTabs() {
             onClick={() => setActiveTab(tab.key)}
             className={`px-4 py-2 text-sm font-medium transition-colors ${
               activeTab === tab.key
-                ? "border-b-2 border-blue-600 text-blue-600"
+                ? "border-b-2 border-primary text-foreground"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -208,7 +208,7 @@ export function LaborTabs() {
         <>
           <div className="flex items-center justify-between mb-4">
             <p className="text-sm text-muted-foreground">{memberships?.total ?? 0} memberships</p>
-            {canManage && <Button onClick={handleOpenSheet} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white"><Plus className="h-4 w-4 mr-1.5" />Add</Button>}
+            {canManage && <Button onClick={handleOpenSheet} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground"><Plus className="h-4 w-4 mr-1.5" />Add</Button>}
           </div>
           <DataTable columns={membershipColumns} data={memberships?.data ?? []} getRowKey={(r) => r.id}
             emptyState={<div className="flex flex-col items-center py-12"><Users className="h-8 w-8 text-muted-foreground mb-2" /><p className="text-sm text-muted-foreground">No union memberships.</p></div>}
@@ -219,7 +219,7 @@ export function LaborTabs() {
         <>
           <div className="flex items-center justify-between mb-4">
             <p className="text-sm text-muted-foreground">{agreements?.total ?? 0} agreements</p>
-            {canManage && <Button onClick={handleOpenSheet} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white"><Plus className="h-4 w-4 mr-1.5" />Add</Button>}
+            {canManage && <Button onClick={handleOpenSheet} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground"><Plus className="h-4 w-4 mr-1.5" />Add</Button>}
           </div>
           <DataTable columns={agreementColumns} data={agreements?.data ?? []} getRowKey={(r) => r.id}
             emptyState={<div className="flex flex-col items-center py-12"><FileText className="h-8 w-8 text-muted-foreground mb-2" /><p className="text-sm text-muted-foreground">No collective agreements.</p></div>}
@@ -230,7 +230,7 @@ export function LaborTabs() {
         <>
           <div className="flex items-center justify-between mb-4">
             <p className="text-sm text-muted-foreground">{cases?.total ?? 0} cases</p>
-            {canManage && <Button onClick={handleOpenSheet} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white"><Plus className="h-4 w-4 mr-1.5" />New Case</Button>}
+            {canManage && <Button onClick={handleOpenSheet} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground"><Plus className="h-4 w-4 mr-1.5" />New Case</Button>}
           </div>
           <DataTable columns={caseColumns} data={cases?.data ?? []} getRowKey={(r) => r.id}
             emptyState={<div className="flex flex-col items-center py-12"><Briefcase className="h-8 w-8 text-muted-foreground mb-2" /><p className="text-sm text-muted-foreground">No labor cases.</p></div>}
@@ -266,7 +266,7 @@ export function LaborTabs() {
                   )} />
                   <div className="flex justify-end gap-2 pt-2">
                     <Button type="button" variant="outline" onClick={() => setSheetOpen(false)}>Cancel</Button>
-                    <LoadingButton type="submit" isPending={createMembership.isPending} className="bg-blue-600 hover:bg-blue-700 text-white">Add</LoadingButton>
+                    <LoadingButton type="submit" isPending={createMembership.isPending} className="bg-primary hover:bg-primary/90 text-primary-foreground">Add</LoadingButton>
                   </div>
                 </form>
               </Form>
@@ -300,7 +300,7 @@ export function LaborTabs() {
                   )} />
                   <div className="flex justify-end gap-2 pt-2">
                     <Button type="button" variant="outline" onClick={() => setSheetOpen(false)}>Cancel</Button>
-                    <LoadingButton type="submit" isPending={createAgreement.isPending} className="bg-blue-600 hover:bg-blue-700 text-white">Add</LoadingButton>
+                    <LoadingButton type="submit" isPending={createAgreement.isPending} className="bg-primary hover:bg-primary/90 text-primary-foreground">Add</LoadingButton>
                   </div>
                 </form>
               </Form>
@@ -325,7 +325,7 @@ export function LaborTabs() {
                   )} />
                   <div className="flex justify-end gap-2 pt-2">
                     <Button type="button" variant="outline" onClick={() => setSheetOpen(false)}>Cancel</Button>
-                    <LoadingButton type="submit" isPending={createCase.isPending} className="bg-blue-600 hover:bg-blue-700 text-white">Create</LoadingButton>
+                    <LoadingButton type="submit" isPending={createCase.isPending} className="bg-primary hover:bg-primary/90 text-primary-foreground">Create</LoadingButton>
                   </div>
                 </form>
               </Form>

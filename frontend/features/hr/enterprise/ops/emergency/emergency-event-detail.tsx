@@ -143,7 +143,7 @@ export function EmergencyEventDetail({ eventId, onBack }: Props) {
             {canManage && (
               <div className="rounded-xl border border-border bg-card p-4 space-y-3">
                 <p className="text-sm font-medium flex items-center gap-1.5">
-                  <Radio className="h-4 w-4 text-blue-600" />
+                  <Radio className="h-4 w-4 text-primary" />
                   Broadcast Check-in
                 </p>
                 <textarea
@@ -157,7 +157,7 @@ export function EmergencyEventDetail({ eventId, onBack }: Props) {
                   onClick={handleBroadcast}
                   isPending={broadcast.isPending}
                   loadingText="Broadcasting…"
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
                 >
                   Send Check-in
                 </LoadingButton>

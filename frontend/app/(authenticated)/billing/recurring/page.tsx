@@ -68,7 +68,7 @@ const RECURRING_COLUMNS: DataTableColumn<RecurringInvoice>[] = [
     cell: (invoice): ReactNode => (
       <Link
         href={`/billing/invoices/${invoice.id}`}
-        className="text-blue-600 hover:underline"
+        className="text-primary hover:underline"
       >
         {invoice.invoiceNumber}
       </Link>
@@ -197,7 +197,7 @@ export default function RecurringInvoicesPage() {
                 <CardTitle className="text-sm font-medium">
                   Active recurring
                 </CardTitle>
-                <Repeat className="h-4 w-4 text-blue-500" />
+                <Repeat className="h-4 w-4 text-primary" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{recurring.length}</div>

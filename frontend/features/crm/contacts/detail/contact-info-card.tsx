@@ -84,7 +84,7 @@ export function ContactInfoCard({ contact, onEdit, onSendEmail, onLogCall, entit
       <Card className="bg-card rounded-lg border border-border shadow-sm overflow-hidden">
         <CardHeader className="px-5 pt-5 pb-4">
           <div className="flex items-start gap-4">
-            <div className="h-16 w-16 rounded-full bg-blue-100 dark:bg-blue-500/10 flex items-center justify-center text-blue-700 dark:text-blue-300 text-xl font-bold shrink-0">
+            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xl font-bold shrink-0">
               {getInitials(contact.name)}
             </div>
             <div className="flex-1 min-w-0 pt-1">
@@ -128,7 +128,7 @@ export function ContactInfoCard({ contact, onEdit, onSendEmail, onLogCall, entit
               value={
                 <a
                   href={`mailto:${contact.email}`}
-                  className="text-blue-600 hover:underline truncate block max-w-[160px]"
+                  className="text-primary hover:underline truncate block max-w-[160px]"
                 >
                   {contact.email}
                 </a>
@@ -142,7 +142,7 @@ export function ContactInfoCard({ contact, onEdit, onSendEmail, onLogCall, entit
               value={
                 <a
                   href={`tel:${contact.phone}`}
-                  className="text-blue-600 hover:underline font-mono"
+                  className="text-primary hover:underline font-mono"
                 >
                   {contact.phone}
                 </a>
@@ -158,7 +158,7 @@ export function ContactInfoCard({ contact, onEdit, onSendEmail, onLogCall, entit
                   href={contact.linkedinUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline"
+                  className="text-primary hover:underline"
                 >
                   View profile
                 </a>
@@ -174,7 +174,7 @@ export function ContactInfoCard({ contact, onEdit, onSendEmail, onLogCall, entit
                   href={contact.twitterUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline"
+                  className="text-primary hover:underline"
                 >
                   View profile
                 </a>
@@ -190,7 +190,7 @@ export function ContactInfoCard({ contact, onEdit, onSendEmail, onLogCall, entit
                   href={contact.websiteUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline truncate block max-w-[160px]"
+                  className="text-primary hover:underline truncate block max-w-[160px]"
                 >
                   {contact.websiteUrl}
                 </a>
@@ -217,7 +217,7 @@ export function ContactInfoCard({ contact, onEdit, onSendEmail, onLogCall, entit
                 <Badge
                   key={tag}
                   variant="outline"
-                  className="text-[10px] px-1.5 py-0 h-4 border-blue-200 dark:border-blue-500/30 text-blue-700 dark:text-blue-300"
+                  className="text-[10px] px-1.5 py-0 h-4 border-primary/30 text-primary"
                 >
                   {tag}
                 </Badge>
@@ -230,7 +230,7 @@ export function ContactInfoCard({ contact, onEdit, onSendEmail, onLogCall, entit
               <p className="text-[10px] text-muted-foreground mb-1">Organization</p>
               <Link
                 href={`/crm/companies/${contact.crmOrganization.id}`}
-                className="text-xs text-blue-600 hover:underline font-medium"
+                className="text-xs text-primary hover:underline font-medium"
               >
                 {contact.crmOrganization.name}
               </Link>
@@ -247,7 +247,7 @@ export function ContactInfoCard({ contact, onEdit, onSendEmail, onLogCall, entit
                 className="w-full gap-1.5 text-xs"
                 onClick={onSendEmail}
               >
-                <Mail className="h-3 w-3 text-blue-500" />
+                <Mail className="h-3 w-3 text-primary" />
                 Send Email
               </Button>
             </motion.div>
@@ -258,7 +258,7 @@ export function ContactInfoCard({ contact, onEdit, onSendEmail, onLogCall, entit
                 className="w-full gap-1.5 text-xs"
                 onClick={onLogCall}
               >
-                <Phone className="h-3 w-3 text-blue-500" />
+                <Phone className="h-3 w-3 text-primary" />
                 Log Call
               </Button>
             </motion.div>

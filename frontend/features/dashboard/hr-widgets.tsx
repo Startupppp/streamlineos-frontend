@@ -54,7 +54,7 @@ export function LeavesTodayWidget() {
           <li key={l.id} className="flex items-center gap-2.5">
             <Avatar className="h-7 w-7">
               <AvatarImage src={resolveImageUrl(l.employeeImage)} />
-              <AvatarFallback className="text-[10px] bg-blue-500/10 text-blue-600">
+              <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
                 {l.employeeName?.[0]}
               </AvatarFallback>
             </Avatar>

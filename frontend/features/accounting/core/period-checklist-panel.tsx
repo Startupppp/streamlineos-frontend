@@ -57,7 +57,7 @@ export function ChecklistItem({ label, passed, count, href }: ChecklistItemProps
           <span className="text-xs text-red-600 font-medium tabular-nums">{count} pending</span>
         )}
         {href && !passed && (
-          <Link href={href} className="text-xs text-blue-600 hover:underline">
+          <Link href={href} className="text-xs text-primary hover:underline">
             View
           </Link>
         )}

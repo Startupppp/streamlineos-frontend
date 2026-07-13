@@ -195,7 +195,7 @@ const columns: DataTableColumn<PurchaseOrderSummary>[] = [
     cell: (po) => (
       <Link
         href={`/inventory/purchase-orders/${po.id}`}
-        className="font-mono text-[11px] text-blue-600 hover:underline transition-colors"
+        className="font-mono text-[11px] text-primary hover:underline transition-colors"
       >
         {po.poNumber}
       </Link>

@@ -177,7 +177,7 @@ export function PortalDashboardPage({ projectId }: PortalDashboardPageProps) {
                     href={f.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1 text-[10px] text-blue-600 hover:underline shrink-0"
+                    className="flex items-center gap-1 text-[10px] text-primary hover:underline shrink-0"
                   >
                     <Download className="h-3 w-3" />
                     Download

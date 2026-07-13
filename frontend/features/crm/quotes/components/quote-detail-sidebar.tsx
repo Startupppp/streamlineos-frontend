@@ -133,7 +133,7 @@ export function QuoteDetailSidebar({ quote }: QuoteDetailSidebarProps) {
           </h3>
           <Link
             href="/crm/billing"
-            className="text-xs text-blue-600 hover:underline"
+            className="text-xs text-primary hover:underline"
           >
             View invoice #{quote.convertedInvoiceId}
           </Link>

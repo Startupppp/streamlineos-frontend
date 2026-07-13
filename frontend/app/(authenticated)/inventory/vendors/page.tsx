@@ -176,7 +176,7 @@ export default function VendorsListPage() {
       cell: (v) => (
         <Link
           href={`/inventory/vendors/${v.id}`}
-          className="font-medium text-blue-600 hover:underline transition-colors"
+          className="font-medium text-primary hover:underline transition-colors"
         >
           {v.name}
         </Link>

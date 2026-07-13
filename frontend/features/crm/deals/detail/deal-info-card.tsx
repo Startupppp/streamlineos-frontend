@@ -86,7 +86,7 @@ export function DealInfoCard({ deal }: DealInfoCardProps) {
               <div>
                 <p className="text-xs text-muted-foreground">{item.label}</p>
                 {item.href ? (
-                  <a href={item.href} className="text-sm text-blue-600 hover:underline">
+                  <a href={item.href} className="text-sm text-primary hover:underline">
                     {item.value || "—"}
                   </a>
                 ) : (
@@ -104,7 +104,7 @@ export function DealInfoCard({ deal }: DealInfoCardProps) {
             <div className="mt-2">
               <div className="h-2 rounded-full bg-muted overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-blue-500"
+                  className="h-full rounded-full bg-primary"
                   style={{ width: `${deal.probability}%` }}
                 />
               </div>

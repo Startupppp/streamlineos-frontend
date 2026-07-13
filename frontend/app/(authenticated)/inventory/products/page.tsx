@@ -316,7 +316,7 @@ function ProductsPageInner() {
           </div>
           <Link
             href={`/inventory/products/${p.id}`}
-            className="text-blue-600 hover:underline transition-colors font-medium truncate"
+            className="text-primary hover:underline transition-colors font-medium truncate"
           >
             {p.name}
           </Link>

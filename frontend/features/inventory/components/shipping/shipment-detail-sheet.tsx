@@ -173,7 +173,7 @@ export function ShipmentDetailSheet({ open, onOpenChange, shipmentId }: Shipment
                 {shipment.soId ? (
                   <Link
                     href={`/inventory/sales-orders/${shipment.soId}`}
-                    className="text-blue-600 hover:underline"
+                    className="text-primary hover:underline"
                   >
                     SO #{shipment.soId}
                   </Link>

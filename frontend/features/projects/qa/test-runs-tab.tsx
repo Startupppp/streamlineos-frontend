@@ -114,7 +114,7 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
       cell: (row) => (
         <Link
           href={`/projects/${projectId}/qa/runs/${row.id}`}
-          className="text-[11px] font-mono text-blue-600 hover:underline"
+          className="text-[11px] font-mono text-primary hover:underline"
         >
           Run #{row.runNumber}
         </Link>

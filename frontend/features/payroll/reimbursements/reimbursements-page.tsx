@@ -230,7 +230,7 @@ export function ReimbursementsPageContent() {
             href={row.receiptUrl}
             target="_blank"
             rel="noreferrer"
-            className="text-[10px] text-blue-600 hover:underline"
+            className="text-[10px] text-primary hover:underline"
           >
             View
           </a>

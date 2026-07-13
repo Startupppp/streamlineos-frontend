@@ -77,7 +77,7 @@ function VariancePanel({ summary, runId }: { summary: VarianceSummary | null; ru
       {runId && (
         <Link
           href={`/payroll/runs/${runId}?tab=variance`}
-          className="text-[11px] text-blue-600 hover:underline"
+          className="text-[11px] text-primary hover:underline"
         >
           View variance details →
         </Link>
@@ -169,7 +169,7 @@ export function CommandCenterPanels({ data, runId }: CommandCenterPanelsProps) {
           {!panels.payoutReadiness && runId && (
             <Link
               href={`/payroll/runs/${runId}`}
-              className="block text-[11px] text-blue-600 hover:underline pt-1"
+              className="block text-[11px] text-primary hover:underline pt-1"
             >
               Complete run to unlock payout →
             </Link>

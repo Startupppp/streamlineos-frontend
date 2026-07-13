@@ -123,7 +123,7 @@ export const ModuleCard = memo(function ModuleCard({
             "relative flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card",
             "border-l-[3px] shadow-sm",
             "transition-[border-color,box-shadow] duration-200 ease-out motion-reduce:transition-none",
-            "group-hover:border-blue-500/40 group-hover:shadow-md",
+            "group-hover:border-primary/40 group-hover:shadow-md",
             style.stripe,
           )}
         >
@@ -150,7 +150,7 @@ export const ModuleCard = memo(function ModuleCard({
 
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-2">
-                  <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground transition-colors group-hover:text-blue-600">
+                  <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground transition-colors group-hover:text-primary">
                     {mod.name}
                   </h3>
                   <span
@@ -177,7 +177,7 @@ export const ModuleCard = memo(function ModuleCard({
                   <span className="text-foreground">{progress}%</span> complete
                 </span>
                 <ArrowRight
-                  className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-blue-500 motion-reduce:transition-none"
+                  className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-primary motion-reduce:transition-none"
                   aria-hidden="true"
                 />
               </div>
