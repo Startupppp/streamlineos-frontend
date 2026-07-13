@@ -33,6 +33,10 @@ interface TableViewProps {
   projectKey?: string | null;
   projectId?: number;
   projectStatuses?: Array<{ name: string; color: string | null; type?: string | null }>;
+  selection?: {
+    selected: Set<string | number>;
+    onChange: (sel: Set<string | number>) => void;
+  };
 }
 
 function isOverdue(ticket: Ticket): boolean {
@@ -44,7 +48,7 @@ function isOverdue(ticket: Ticket): boolean {
   return due < today;
 }
 
-export const TableView = memo(function TableView({ tickets, onTicketClick, projectKey, projectId, projectStatuses }: TableViewProps) {
+export const TableView = memo(function TableView({ tickets, onTicketClick, projectKey, projectId, projectStatuses, selection }: TableViewProps) {
   const hasProjectId = projectId != null;
 
   const columns = useMemo<DataTableColumn<Ticket>[]>(() => [
@@ -236,13 +240,14 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
   ], [projectKey, projectId, projectStatuses, onTicketClick, hasProjectId]);
 
   return (
-    <div className="p-3 sm:p-4">
+    <div className="w-full min-w-0">
       <DataTable
         data={tickets}
         columns={columns}
         getRowKey={(ticket) => ticket.id}
-        minWidth="820px"
-        className="overflow-hidden"
+        selection={selection}
+        minWidth="640px"
+        className="w-full min-w-0 overflow-hidden"
         emptyState={<div className="text-center py-8 text-muted-foreground text-sm">No work items found</div>}
       />
     </div>

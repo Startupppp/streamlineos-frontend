@@ -284,8 +284,8 @@ export function CreateTicketDialog({
       )}
 
       <Dialog open={resolvedOpen} onOpenChange={handleOpenChange}>
-        <DialogContent className="gap-0 p-0 overflow-hidden md:max-w-2xl md:sm:max-w-2xl">
-          <DialogHeader className="px-5 pt-4 pb-3 border-b border-border/60">
+        <DialogContent className="flex flex-col gap-0 p-0 min-h-0 max-h-[calc(100vh-100px)] overflow-hidden md:flex md:flex-col md:max-w-2xl md:sm:max-w-2xl">
+          <DialogHeader className="shrink-0 px-5 pt-4 pb-3 border-b border-border/60">
             <div className="flex items-center gap-2">
               {project && (
                 <Badge
@@ -304,14 +304,15 @@ export function CreateTicketDialog({
           <Form {...form}>
             <form
               onSubmit={handleFormSubmit}
-              className="flex flex-col"
+              className="flex flex-1 min-h-0 flex-col"
               onDragEnter={handleDragEnter}
               onDragLeave={handleDragLeave}
               onDragOver={handleDragOver}
               onDrop={handleDrop}
             >
-              <div className="px-5 pt-4 pb-2 space-y-3">
-                <FormField
+              <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain scrollbar-thin">
+                <div className="space-y-3 px-5 pt-4 pb-2">
+                  <FormField
                   control={form.control}
                   name="title"
                   render={({ field }) => (
@@ -372,21 +373,21 @@ export function CreateTicketDialog({
                     </FormItem>
                   )}
                 />
-              </div>
+                </div>
 
-              <div className="px-5 py-3 border-t border-border/60">
-                <TicketCreateProperties
-                  value={properties}
-                  onChange={handlePropertiesChange}
-                  projectStatuses={projectStatuses}
-                  members={members}
-                  labels={labels}
-                  cycles={cycles}
-                />
-              </div>
+                <div className="px-5 py-3 border-t border-border/60">
+                  <TicketCreateProperties
+                    value={properties}
+                    onChange={handlePropertiesChange}
+                    projectStatuses={projectStatuses}
+                    members={members}
+                    labels={labels}
+                    cycles={cycles}
+                  />
+                </div>
 
-              <div className="px-5 pb-2">
-                {files.length > 0 ? (
+                <div className="px-5 pb-2">
+                  {files.length > 0 ? (
                   <div className="space-y-1.5">
                     {files.map((file, idx) => (
                       <AttachmentPreview
@@ -423,18 +424,25 @@ export function CreateTicketDialog({
                     <span className="text-[10px] text-muted-foreground/70">
                       Images, PDF, DOC, XLS — up to 25MB each
                     </span>
-                  </button>
+                    </button>
+                  )}
+                </div>
+
+                {(showLinksEditor || relatedLinks.length > 0) && (
+                  <div className="px-5 pb-3 border-t border-border/60 pt-3">
+                    <p className="text-[11px] font-medium text-muted-foreground mb-1.5">Related links</p>
+                    <TicketRelatedLinksEditor links={relatedLinks} onChange={setRelatedLinks} />
+                  </div>
+                )}
+
+                {fileError && (
+                  <div className="px-5 pb-3">
+                    <p className="text-[11px] text-destructive">{fileError}</p>
+                  </div>
                 )}
               </div>
 
-              {(showLinksEditor || relatedLinks.length > 0) && (
-                <div className="px-5 pb-3 border-t border-border/60 pt-3">
-                  <p className="text-[11px] font-medium text-muted-foreground mb-1.5">Related links</p>
-                  <TicketRelatedLinksEditor links={relatedLinks} onChange={setRelatedLinks} />
-                </div>
-              )}
-
-              <div className="flex items-center justify-between gap-3 border-t border-border/60 px-5 py-3">
+              <div className="shrink-0 flex items-center justify-between gap-3 border-t border-border/60 px-5 py-3 bg-background">
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
@@ -502,12 +510,6 @@ export function CreateTicketDialog({
                   </LoadingButton>
                 </div>
               </div>
-
-              {fileError && (
-                <div className="px-5 pb-3">
-                  <p className="text-[11px] text-destructive">{fileError}</p>
-                </div>
-              )}
             </form>
           </Form>
         </DialogContent>

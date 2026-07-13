@@ -1,7 +1,8 @@
 "use client";
 
 import { use, useState, useMemo, useCallback, useEffect, useRef } from "react";
-import { useProject } from "@/hooks/api";
+import { useProject, useSprints, useBulkUpdateTickets } from "@/hooks/api";
+import type { BulkUpdateTicketsInput } from "@/hooks/api";
 import { useViews, useCreateView } from "@/hooks/api/projects";
 import { KanbanBoard } from "@/features/projects/views/kanban-board";
 import { ListView } from "@/features/projects/views/list-view";
@@ -41,6 +42,7 @@ import { notFound, useRouter, useSearchParams } from "next/navigation";
 import type { KanbanTicket } from "@/features/projects/shared/types";
 import { useExportTickets } from "@/hooks/api/projects/import-export";
 import { ImportTicketsDialog } from "@/features/projects/tickets/import-tickets-dialog";
+import { BulkActionBar } from "@/features/projects/backlog/bulk-action-bar";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import type { IconHandle } from "@animateicons/react";
 
@@ -79,6 +81,8 @@ export default function ProjectBoardPage({ params }: PageProps) {
   const { projectId: projectIdStr } = use(params);
   const projectId = parseInt(projectIdStr);
   const { data, isLoading } = useProject(projectId);
+  const { data: sprints } = useSprints(projectId);
+  const bulkUpdate = useBulkUpdateTickets(projectId);
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -89,6 +93,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
   const [displayOptions, setDisplayOptions] = useDisplayOptions(projectId);
 
   const [importOpen, setImportOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set());
 
   const ticketParam = searchParams.get("ticket");
   const selectedTicketId = ticketParam ? parseInt(ticketParam) : null;
@@ -103,6 +108,8 @@ export default function ProjectBoardPage({ params }: PageProps) {
   const filterAssigneeId = searchParams.get("assigneeId") ?? "";
   const filterLabels = searchParams.get("labels") ?? "";
   const filterCycle = searchParams.get("cycle") ?? "";
+  const filterSprint = searchParams.get("sprint") ?? "";
+  const filterModule = searchParams.get("module") ?? "";
 
   const { data: views } = useViews(projectId);
   const createView = useCreateView();
@@ -178,6 +185,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
       const p = new URLSearchParams(searchParams.toString());
       p.set("view", v);
       router.replace(`?${p.toString()}`, { scroll: false });
+      setSelectedIds(new Set());
     },
     [router, searchParams],
   );
@@ -204,6 +212,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
         assigneeId: t.assigneeId ?? undefined,
         sprintId: t.sprintId ?? undefined,
         cycleId: t.cycleId ?? null,
+        moduleId: t.moduleId ?? null,
         dueDate: t.dueDate ?? null,
         startDate: t.startDate ?? null,
         sequenceId: t.sequenceId ?? null,
@@ -292,8 +301,16 @@ export default function ProjectBoardPage({ params }: PageProps) {
       const cycleIds = new Set(filterCycle.split(",").filter(Boolean).map(Number));
       tickets = tickets.filter((t) => t.cycleId != null && cycleIds.has(t.cycleId));
     }
+    if (filterSprint) {
+      const sprintIds = new Set(filterSprint.split(",").filter(Boolean).map(Number));
+      tickets = tickets.filter((t) => t.sprintId != null && sprintIds.has(t.sprintId));
+    }
+    if (filterModule) {
+      const moduleIds = new Set(filterModule.split(",").filter(Boolean).map(Number));
+      tickets = tickets.filter((t) => t.moduleId != null && moduleIds.has(t.moduleId));
+    }
     return tickets;
-  }, [allTickets, hideCompleted, q, filterStatus, filterPriority, filterType, filterAssigneeId, filterLabels, filterCycle, data]);
+  }, [allTickets, hideCompleted, q, filterStatus, filterPriority, filterType, filterAssigneeId, filterLabels, filterCycle, filterSprint, filterModule, data]);
 
   const members = useMemo(() => {
     if (!data?.members) return [];
@@ -344,7 +361,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
 
   const doneCount = allTickets.filter((t) => t.status === "DONE").length;
 
-  const hasActiveFilters = !!(q || filterStatus || filterPriority || filterType || filterAssigneeId || filterLabels || filterCycle);
+  const hasActiveFilters = !!(q || filterStatus || filterPriority || filterType || filterAssigneeId || filterLabels || filterCycle || filterSprint || filterModule);
   const showEmptyFilterState = hasActiveFilters && filteredTickets.length === 0 && allTickets.length > 0;
 
   const handleClearSearch = useCallback(() => {
@@ -356,8 +373,49 @@ export default function ProjectBoardPage({ params }: PageProps) {
     next.delete("assigneeId");
     next.delete("labels");
     next.delete("cycle");
+    next.delete("sprint");
+    next.delete("module");
     router.replace(`?${next.toString()}`, { scroll: false });
   }, [router, searchParams]);
+
+  const handleBulkUpdate = useCallback(
+    (update: Partial<Pick<BulkUpdateTicketsInput, "assigneeId" | "status" | "sprintId" | "priority">>) => {
+      if (selectedIds.size === 0) {
+        toast.error("No tickets selected");
+        return;
+      }
+      bulkUpdate.mutate(
+        { ticketIds: [...selectedIds].map(Number), ...update },
+        {
+          onSuccess: (d) => {
+            toast.success(`${d.updated} ticket${d.updated !== 1 ? "s" : ""} updated`);
+            setSelectedIds(new Set());
+          },
+          onError: (e) => toast.error(getErrorMessage(e)),
+        },
+      );
+    },
+    [selectedIds, bulkUpdate],
+  );
+
+  const handleBulkStatus = useCallback((v: string) => handleBulkUpdate({ status: v }), [handleBulkUpdate]);
+  const handleBulkPriority = useCallback(
+    (v: string) => {
+      if (v === "LOW" || v === "MEDIUM" || v === "HIGH" || v === "URGENT") {
+        handleBulkUpdate({ priority: v });
+      }
+    },
+    [handleBulkUpdate],
+  );
+  const handleBulkAssignee = useCallback((v: string) => handleBulkUpdate({ assigneeId: v }), [handleBulkUpdate]);
+  const handleBulkSprint = useCallback(
+    (v: string) => handleBulkUpdate({ sprintId: v === "backlog" ? null : Number(v) }),
+    [handleBulkUpdate],
+  );
+  const handleClearSelection = useCallback(() => setSelectedIds(new Set()), []);
+  const handleSelectionChange = useCallback((sel: Set<string | number>) => {
+    setSelectedIds(sel);
+  }, []);
 
   const handleExportCurrentView = useCallback(() => {
     if (filteredTickets.length === 0) {
@@ -568,8 +626,27 @@ export default function ProjectBoardPage({ params }: PageProps) {
             </div>
           )}
           {view === "table" && (
-            <div className="h-full min-h-0 overflow-y-auto px-4 pb-2 pt-0">
-              <TableView tickets={filteredTickets} onTicketClick={handleTicketSelect} projectKey={data.key} projectId={projectId} projectStatuses={statuses} />
+            <div className="h-full min-h-0 overflow-y-auto px-3 pb-1">
+              {selectedIds.size > 0 && (
+                <BulkActionBar
+                  selectedCount={selectedIds.size}
+                  members={members}
+                  sprints={sprints ?? []}
+                  onBulkStatus={handleBulkStatus}
+                  onBulkPriority={handleBulkPriority}
+                  onBulkAssignee={handleBulkAssignee}
+                  onBulkSprint={handleBulkSprint}
+                  onClear={handleClearSelection}
+                />
+              )}
+              <TableView
+                tickets={filteredTickets}
+                onTicketClick={handleTicketSelect}
+                projectKey={data.key}
+                projectId={projectId}
+                projectStatuses={statuses}
+                selection={{ selected: selectedIds, onChange: handleSelectionChange }}
+              />
             </div>
           )}
           {view === "calendar" && (

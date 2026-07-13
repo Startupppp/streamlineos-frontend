@@ -4,8 +4,9 @@ import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
+import { LabelColorPicker, LabelCreateForm } from "@/components/labels";
+import { DEFAULT_LABEL_COLOR } from "@/components/labels/label-colors";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertDialog,
@@ -27,8 +28,6 @@ import {
   useDeleteLabel,
   type TicketLabel,
 } from "@/hooks/api/projects/labels";
-import { LabelColorPicker } from "../shared/label-color-picker";
-import { DEFAULT_LABEL_COLOR } from "../shared/label-colors";
 
 export function LabelsSettings() {
   const [showForm, setShowForm] = useState(false);
@@ -211,43 +210,29 @@ export function LabelsSettings() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="p-3 rounded-lg border border-border bg-muted/30 space-y-3"
+            className="rounded-lg border border-border bg-muted/30 p-3"
           >
-            <div className="flex items-center gap-3">
-              <div
-                className="h-6 w-6 rounded-full shrink-0 border-2 border-white shadow-sm"
-                style={{ background: color }}
-              />
-              <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Label name"
-                className="h-8 text-sm flex-1"
-                autoFocus
-                onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-              />
-            </div>
-            <LabelColorPicker value={color} onChange={setColor} />
-            <div className="flex gap-2">
-              <LoadingButton
-                size="sm"
-                onClick={handleCreate}
-                disabled={!name.trim()}
-                isPending={createLabel.isPending}
-                loadingText="Creating…"
-                className="h-7 text-xs"
-              >
-                Create
-              </LoadingButton>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={handleCancelForm}
-                className="h-7 text-xs"
-              >
-                Cancel
-              </Button>
-            </div>
+            <LabelCreateForm
+              name={name}
+              color={color}
+              onNameChange={setName}
+              onColorChange={setColor}
+              onSubmit={handleCreate}
+              isPending={createLabel.isPending}
+              submitLabel="Create"
+              loadingText="Creating…"
+              showPreview={false}
+              fullWidthSubmit={false}
+              autoFocus
+            />
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={handleCancelForm}
+              className="mt-2 h-7 text-xs"
+            >
+              Cancel
+            </Button>
           </motion.div>
         )}
       </AnimatePresence>

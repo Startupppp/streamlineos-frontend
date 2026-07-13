@@ -49,14 +49,14 @@ const PRODUCT_ACTIONS: Record<string, CreateAction[]> = {
   ],
   hrms: [
     { label: "New Employee", href: "/hr/employees?create=1", icon: UserPlus },
-    { label: "Leave Request", href: "/hr/leave?create=1", icon: FileText },
+    { label: "Leave Request", href: "/hr/leaves?create=1", icon: FileText },
   ],
   projects: [
     { label: "New Project", href: "/projects/all?create=1", icon: FolderPlus },
-    { label: "New Task", href: "/projects/tasks?create=1", icon: FileText },
+    { label: "New Task", href: "/projects/my-work", icon: FileText },
   ],
   helpdesk: [
-    { label: "New Ticket", href: "/support/tickets?create=1", icon: TicketPlus },
+    { label: "New Ticket", href: "/support?create=1", icon: TicketPlus },
   ],
   inventory: [
     { label: "New Product", href: "/inventory/products?create=1", icon: Package },
@@ -70,7 +70,7 @@ const PRODUCT_ACTIONS: Record<string, CreateAction[]> = {
     { label: "New Document", href: "/support/kb?create=1", icon: FileText },
   ],
   administration: [
-    { label: "Invite User", href: "/users/invite", icon: UserPlus },
+    { label: "Invite User", href: "/users/invitations", icon: UserPlus },
   ],
   payroll: [
     { label: "New Payroll Run", href: "/payroll/runs?create=1", icon: FileText },

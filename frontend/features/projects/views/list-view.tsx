@@ -407,11 +407,11 @@ export const ListView = memo(function ListView({ tickets, onTicketClick, groupBy
 
   if (hasRowBy && nested) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4">
         <Accordion
           type="multiple"
           defaultValue={visibleOuterKeys}
-          className="flex flex-col gap-6"
+          className="flex flex-col gap-4"
         >
           {visibleOuterKeys.map((outerKey) => {
             const innerGroups = nested[outerKey];

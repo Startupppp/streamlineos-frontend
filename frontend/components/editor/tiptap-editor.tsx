@@ -25,6 +25,7 @@ export interface TiptapEditorProps {
   minHeightClassName?: string;
   contentKey?: string | number;
   menuMode?: "bubble" | "static";
+  embedded?: boolean;
 }
 
 interface UploadResult {
@@ -78,6 +79,7 @@ export function TiptapEditor({
   minHeightClassName = "min-h-[300px]",
   contentKey,
   menuMode = "bubble",
+  embedded = false,
 }: TiptapEditorProps) {
   const lastInitKey = useRef<string | number | boolean>(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -105,7 +107,7 @@ export function TiptapEditor({
     },
     editorProps: {
       attributes: {
-        class: `prose prose-sm dark:prose-invert max-w-none ${minHeightClassName} p-4 focus:outline-none`,
+        class: `prose prose-sm dark:prose-invert max-w-none ${minHeightClassName} ${embedded ? "p-0 text-[13px] text-foreground/90" : "p-4"} focus:outline-none`,
       },
       handlePaste(view, event) {
         const items = event.clipboardData?.items;
@@ -196,7 +198,7 @@ export function TiptapEditor({
   }
 
   return (
-    <div className="rounded-md border bg-background">
+    <div className={embedded ? undefined : "rounded-md border bg-background"}>
       {editable && menuMode === "static" && editor && (
         <div className="border-b">
           <TiptapToolbar editor={editor} onImageInsert={handleImageInsert} />

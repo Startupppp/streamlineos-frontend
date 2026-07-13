@@ -123,7 +123,7 @@ export const ModuleCard = memo(function ModuleCard({
       className="h-full"
     >
       <Link
-        href={`/projects/${projectId}/modules/${mod.id}`}
+        href={`/projects/${projectId}?module=${mod.id}`}
         className="group block h-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-xl"
       >
         <article

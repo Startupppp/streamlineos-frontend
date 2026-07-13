@@ -400,7 +400,7 @@ export function KanbanBoard({
         <Accordion
           type="multiple"
           defaultValue={visibleSwimlaneRows}
-          className="flex flex-col gap-6 h-full min-w-0 overflow-auto pb-1 px-1"
+          className="flex flex-col gap-4 h-full min-w-0 overflow-auto pb-1 px-1"
         >
           {visibleSwimlaneRows.map((rowKey) => {
             const rowTickets = optimisticTickets.filter(

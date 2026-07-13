@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useCallback, useEffect, memo } from "react";
+import dynamic from "next/dynamic";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,8 +22,18 @@ import { formatDistanceToNow } from "date-fns";
 import type { TicketComment, CommentReaction } from "@/types/projects";
 import { MentionTextarea, type MentionUser } from "@/features/projects/comments/mention-textarea";
 import { EmojiReactionBar, type ReactionGroup } from "@/features/projects/comments/emoji-reaction-bar";
-import { formatMentionText } from "@/lib/format-mention";
+import { RichTextContent } from "@/components/editor/rich-text-content";
 import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
+
+const TiptapEditorDynamic = dynamic(
+  () => import("@/components/editor/tiptap-editor").then((m) => ({ default: m.TiptapEditor })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="rounded-md border border-input bg-background animate-pulse min-h-[60px]" />
+    ),
+  },
+);
 
 function groupReactions(
   rawReactions: CommentReaction[],
@@ -143,7 +153,7 @@ function CommentItemComponent({
   }, [editText, comment.content, comment.id, onSaveEdit]);
 
   const handleEditKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    (e: React.KeyboardEvent) => {
       if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         handleSaveEdit();
@@ -152,6 +162,10 @@ function CommentItemComponent({
     },
     [handleSaveEdit, handleCancelEdit],
   );
+
+  const handleEditContentChange = useCallback((html: string) => {
+    setEditText(html);
+  }, []);
 
   const handleDeleteConfirm = useCallback(() => {
     onDelete(comment.id);
@@ -202,13 +216,17 @@ function CommentItemComponent({
 
         {isEditing ? (
           <div className="mt-1 space-y-1.5">
-            <Textarea
-              value={editText}
-              onChange={(e) => setEditText(e.target.value)}
-              onKeyDown={handleEditKeyDown}
-              className="min-h-[60px] text-sm resize-none"
-              autoFocus
-            />
+            <div onKeyDown={handleEditKeyDown}>
+              <TiptapEditorDynamic
+                content={editText}
+                contentKey={comment.id}
+                onChangeHtml={handleEditContentChange}
+                output="html"
+                minHeightClassName="min-h-[60px]"
+                placeholder="Edit comment..."
+                menuMode="bubble"
+              />
+            </div>
             <div className="flex gap-1.5 justify-end">
               <Button
                 size="sm"
@@ -236,9 +254,7 @@ function CommentItemComponent({
             </div>
           </div>
         ) : (
-          <p className="text-[13px] text-foreground/90 mt-0.5 whitespace-pre-wrap break-words">
-            {formatMentionText(comment.content)}
-          </p>
+          <RichTextContent content={comment.content} contentKey={comment.id} />
         )}
 
         {!isEditing && (

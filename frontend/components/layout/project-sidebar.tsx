@@ -81,6 +81,7 @@ interface ProjectSidebarProps {
   projectId: string;
   projectName: string | undefined;
   projectKey: string | undefined;
+  defaultCollapsed?: boolean;
 }
 
 interface NavItem {
@@ -475,7 +476,11 @@ function ProjectSwitcher({
   );
 }
 
-const SIDEBAR_COLLAPSED_KEY = "streamlineos:project-sidebar:collapsed";
+const PROJECT_SIDEBAR_COOKIE = "project-sidebar-collapsed";
+
+function persistCollapsed(collapsed: boolean) {
+  document.cookie = `${PROJECT_SIDEBAR_COOKIE}=${collapsed}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
+}
 
 function getProjectInitials(
   projectKey: string | undefined,
@@ -498,11 +503,9 @@ function DesktopSidebar({
   projectId,
   projectName,
   projectKey,
+  defaultCollapsed = false,
 }: ProjectSidebarProps) {
-  const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true";
-  });
+  const [isCollapsed, setIsCollapsed] = useState<boolean>(defaultCollapsed);
   const baseUrl = `/projects/${projectId}`;
   const allSections = useSidebarSections(baseUrl);
   const { hiddenItems, toggleItem, resetPrefs } = useProjectSidebarPrefs();
@@ -512,7 +515,7 @@ function DesktopSidebar({
   function handleToggleCollapse() {
     setIsCollapsed((prev) => {
       const next = !prev;
-      localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(next));
+      persistCollapsed(next);
       return next;
     });
   }

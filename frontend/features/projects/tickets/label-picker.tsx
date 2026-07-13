@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { LabelCreateForm } from "@/components/labels";
+import { DEFAULT_LABEL_COLOR } from "@/components/labels/label-colors";
 import {
   Popover,
   PopoverContent,
@@ -20,8 +21,6 @@ import { queryKeys } from "@/lib/query-keys";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { LabelColorPicker } from "../shared/label-color-picker";
-import { DEFAULT_LABEL_COLOR } from "../shared/label-colors";
 
 interface LabelPickerProps {
   ticketId: number;
@@ -80,12 +79,6 @@ export function LabelPicker({
 
   const handleAddLabel = (labelId: number) => () => {
     addLabel.mutate({ ticketId, projectId, labelId });
-  };
-
-  const handleLabelKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && newLabelName.trim()) {
-      createLabel.mutate({ name: newLabelName.trim(), color: selectedColor });
-    }
   };
 
   const handleCreateLabel = () => {
@@ -148,35 +141,18 @@ export function LabelPicker({
                   ))}
                 </div>
               )}
-              <div className="border-t pt-4 space-y-4">
-                <p className="text-xs font-medium text-muted-foreground">
-                  Create new label
-                </p>
-                <div className="flex items-center gap-3">
-                  <div
-                    className="h-8 w-8 shrink-0 rounded-full border-2 border-white shadow-sm"
-                    style={{ backgroundColor: selectedColor }}
-                  />
-                  <Input
-                    value={newLabelName}
-                    onChange={(e) => setNewLabelName(e.target.value)}
-                    placeholder="Label name"
-                    className="h-8 text-sm"
-                    onKeyDown={handleLabelKeyDown}
-                  />
-                </div>
-                <LabelColorPicker
-                  value={selectedColor}
-                  onChange={setSelectedColor}
+              <div className="border-t pt-3">
+                <LabelCreateForm
+                  name={newLabelName}
+                  color={selectedColor}
+                  onNameChange={setNewLabelName}
+                  onColorChange={setSelectedColor}
+                  onSubmit={handleCreateLabel}
+                  isPending={createLabel.isPending}
+                  submitLabel="Create & Add"
+                  loadingText="Creating…"
+                  showHeading
                 />
-                <Button
-                  size="sm"
-                  className="w-full h-8 text-xs"
-                  disabled={!newLabelName.trim() || createLabel.isPending}
-                  onClick={handleCreateLabel}
-                >
-                  Create & Add
-                </Button>
               </div>
             </div>
           </PopoverContent>
