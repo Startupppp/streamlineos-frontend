@@ -9,6 +9,9 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import type { Plan } from "@/lib/billing/feature-gates";
 import type { AiSeverity, ProjectAiEvidence } from "@/types/projects/ai";
 import { useAskProjectAi } from "@/hooks/api/projects/ai";
+import { PM_PANEL } from "@/features/projects/shared/pm-chrome";
+import { TEXT_BODY, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { cn } from "@/lib/utils";
 import { EvidenceStrip } from "./evidence-strip";
 
 interface AskCardProps {
@@ -127,15 +130,19 @@ export function AskCard({ projectId, featureEnabled }: AskCardProps) {
   }, []);
 
   return (
-    <div className="bg-card border border-border rounded-xl shadow-sm p-4 flex flex-col gap-3">
+    <div className={cn(PM_PANEL, "flex flex-col gap-3 p-4")}>
       <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-3">
-          <div className="shrink-0 flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 border border-primary/20">
+        <div className="flex min-w-0 items-start gap-3">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10">
             <MessageSquare className="h-4 w-4 text-primary" />
           </div>
           <div className="min-w-0">
-            <h3 className="text-sm font-semibold text-foreground">Ask the AI</h3>
-            <p className="text-[12px] text-muted-foreground mt-0.5">Get instant answers about this project</p>
+            <h3 className={cn("text-sm font-semibold text-foreground", TEXT_ONE_LINE)}>
+              Ask the AI
+            </h3>
+            <p className={cn("mt-0.5 text-[12px] text-muted-foreground", TEXT_BODY)}>
+              Get instant answers about this project
+            </p>
           </div>
         </div>
         {entries.length > 0 && (

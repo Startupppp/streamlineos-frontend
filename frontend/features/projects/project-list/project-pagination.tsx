@@ -2,6 +2,8 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { PM_PANEL } from "@/features/projects/shared/pm-chrome";
 
 interface ProjectPaginationProps {
   page: number;
@@ -33,21 +35,27 @@ export function ProjectPagination({ page, totalPages, onPageChange }: ProjectPag
   const pages = getPageNumbers(page, totalPages);
 
   return (
-    <nav aria-label="Projects pagination" className="flex items-center justify-center gap-1 pt-6">
+    <nav
+      aria-label="Projects pagination"
+      className={cn(PM_PANEL, "flex shrink-0 items-center justify-center gap-0.5 px-2 py-1.5")}
+    >
       <Button
         variant="ghost"
         size="icon"
-        className="h-8 w-8"
+        className="h-7 w-7"
         disabled={page <= 1}
         onClick={() => onPageChange(page - 1)}
         aria-label="Previous page"
       >
-        <ChevronLeft className="h-4 w-4" />
+        <ChevronLeft className="h-3.5 w-3.5" />
       </Button>
 
       {pages.map((p, i) =>
         p === "ellipsis" ? (
-          <span key={`ellipsis-${i}`} className="px-1 text-muted-foreground text-sm select-none">
+          <span
+            key={`ellipsis-${i}`}
+            className="select-none px-1 text-xs text-muted-foreground"
+          >
             ...
           </span>
         ) : (
@@ -55,25 +63,25 @@ export function ProjectPagination({ page, totalPages, onPageChange }: ProjectPag
             key={p}
             variant={p === page ? "default" : "ghost"}
             size="icon"
-            className="h-8 w-8 text-sm"
+            className="h-7 w-7 text-xs"
             onClick={() => onPageChange(p)}
             aria-current={p === page ? "page" : undefined}
             aria-label={`Page ${p}`}
           >
             {p}
           </Button>
-        )
+        ),
       )}
 
       <Button
         variant="ghost"
         size="icon"
-        className="h-8 w-8"
+        className="h-7 w-7"
         disabled={page >= totalPages}
         onClick={() => onPageChange(page + 1)}
         aria-label="Next page"
       >
-        <ChevronRight className="h-4 w-4" />
+        <ChevronRight className="h-3.5 w-3.5" />
       </Button>
     </nav>
   );

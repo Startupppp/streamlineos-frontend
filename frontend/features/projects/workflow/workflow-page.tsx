@@ -1,12 +1,17 @@
 "use client";
 
-import { motion, AnimatePresence, useReducedMotion, type MotionProps } from "framer-motion";
 import { useCustomStates } from "@/hooks/api/projects/custom-states";
 import { useCan } from "@/hooks/api/access";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { DataTableSkeleton } from "@/components/ui/data-table";
+import {
+  PmPageShell,
+  PmPanel,
+  PmSection,
+} from "@/features/projects/shared/pm-chrome";
+import { TEXT_BODY, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 import { TransitionsTable } from "./transitions-table";
 import { WipRow } from "./wip-row";
 
@@ -15,7 +20,6 @@ interface WorkflowPageProps {
 }
 
 export function WorkflowPage({ projectId }: WorkflowPageProps) {
-  const shouldReduce = useReducedMotion();
   const canManage = useCan("projects:workflow:manage");
 
   const {
@@ -25,14 +29,6 @@ export function WorkflowPage({ projectId }: WorkflowPageProps) {
     refetch,
   } = useCustomStates(projectId);
 
-  const fadeUp: MotionProps = shouldReduce
-    ? {}
-    : {
-        initial: { opacity: 0, y: 10 },
-        animate: { opacity: 1, y: 0 },
-        transition: { duration: 0.22, ease: "easeOut" },
-      };
-
   const noStatuses = !isLoading && !isError && (statuses ?? []).length === 0;
 
   return (
@@ -41,12 +37,12 @@ export function WorkflowPage({ projectId }: WorkflowPageProps) {
       eyebrow="Project"
       subtitle="Configure allowed status transitions and WIP limits."
     >
-      <div className="flex flex-1 min-h-0 flex-col space-y-6">
+      <PmPageShell>
         {isLoading ? (
-          <>
+          <div className="flex min-h-0 flex-1 flex-col space-y-4">
             <DataTableSkeleton rows={4} columns={2} className="flex-1" />
             <DataTableSkeleton rows={5} columns={6} className="flex-1" />
-          </>
+          </div>
         ) : isError ? (
           <ErrorState className="flex-1" onRetry={() => void refetch()} />
         ) : noStatuses ? (
@@ -55,34 +51,37 @@ export function WorkflowPage({ projectId }: WorkflowPageProps) {
             title="No statuses configured"
             description="Add custom statuses in project settings before setting up workflow transitions."
             action={{ label: "Go to Settings", href: `/projects/${projectId}/settings` }}
+            className="min-h-[40vh]"
           />
         ) : (
-          <AnimatePresence mode="wait">
-            <motion.div key="content" {...fadeUp} className="space-y-6">
-              <section>
-                <h2 className="text-sm font-semibold mb-1">Statuses & WIP Limits</h2>
-                <p className="text-xs text-muted-foreground mb-3">
-                  WIP limit caps how many items can sit in this status. Leave empty for no limit.
-                </p>
-                <div className="rounded-lg border bg-card">
-                  {(statuses ?? []).map((s) => (
-                    <WipRow
-                      key={s.id}
-                      status={s}
-                      projectId={projectId}
-                      canManage={canManage}
-                    />
-                  ))}
-                </div>
-              </section>
+          <div className="space-y-4">
+            <PmSection index={0}>
+              <h2 className={`mb-1 text-sm font-semibold ${TEXT_ONE_LINE}`}>
+                Statuses & WIP Limits
+              </h2>
+              <p className={`mb-3 text-xs text-muted-foreground ${TEXT_BODY}`}>
+                WIP limit caps how many items can sit in this status. Leave empty for no limit.
+              </p>
+              <PmPanel solid>
+                {(statuses ?? []).map((s) => (
+                  <WipRow
+                    key={s.id}
+                    status={s}
+                    projectId={projectId}
+                    canManage={canManage}
+                  />
+                ))}
+              </PmPanel>
+            </PmSection>
 
-              <section>
+            <PmSection index={1}>
+              <PmPanel className="p-0" solid>
                 <TransitionsTable projectId={projectId} statuses={statuses ?? []} />
-              </section>
-            </motion.div>
-          </AnimatePresence>
+              </PmPanel>
+            </PmSection>
+          </div>
         )}
-      </div>
+      </PmPageShell>
     </PageWrapper>
   );
 }

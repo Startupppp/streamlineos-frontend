@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { motion, useReducedMotion } from "framer-motion";
 import { usePortalProjects } from "@/hooks/api/projects/client-portal";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -8,13 +9,23 @@ import { ErrorState } from "@/components/shared/error-state";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CalendarDays, ArrowRight } from "lucide-react";
+import {
+  PmPageShell,
+  PmPanel,
+  PmSection,
+  PmStaggerList,
+  PM_PANEL,
+} from "@/features/projects/shared/pm-chrome";
+import { listItem, listItemReduced, pmSnappy } from "@/features/projects/shared/pm-motion";
+import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { cn } from "@/lib/utils";
 
 function ProjectCardSkeleton() {
   return (
-    <div className="rounded-xl border border-border bg-card p-5 space-y-3">
+    <div className={cn(PM_PANEL, "space-y-3 p-5")}>
       <div className="flex items-center gap-2">
-        <Skeleton className="h-8 w-8 rounded-lg" />
-        <div className="space-y-1.5 flex-1">
+        <Skeleton className="h-9 w-9 rounded-lg" />
+        <div className="min-w-0 flex-1 space-y-1.5">
           <Skeleton className="h-4 w-32" />
           <Skeleton className="h-3 w-16" />
         </div>
@@ -26,11 +37,20 @@ function ProjectCardSkeleton() {
 
 function formatDate(d: string | null) {
   if (!d) return null;
-  return new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+  return new Date(d).toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 export function PortalListPage() {
   const { data, isLoading, isError, refetch } = usePortalProjects();
+  const shouldReduceMotion = useReducedMotion();
+
+  function handleRetry() {
+    void refetch();
+  }
 
   return (
     <PageWrapper
@@ -38,55 +58,84 @@ export function PortalListPage() {
       title="Client Portal"
       subtitle="Your projects and their current status"
     >
-      {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({ length: 3 }).map((_, i) => <ProjectCardSkeleton key={i} />)}
-        </div>
-      ) : isError ? (
-        <ErrorState onRetry={refetch} className="flex-1" />
-      ) : (data ?? []).length === 0 ? (
-        <EmptyState
-          illustrationPreset="projects"
-          title="No projects"
-          description="You don't have access to any projects yet. Contact your project manager."
-          className="flex-1"
-        />
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {data?.map((project) => (
-            <Link
-              key={project.id}
-              href={`/projects/portal/${project.id}`}
-              className="group rounded-xl border border-border bg-card p-5 shadow-sm hover:shadow-md hover:border-primary/30 transition-all"
-            >
-              <div className="flex items-start gap-3">
-                <div
-                  className="h-9 w-9 rounded-lg flex items-center justify-center text-white text-xs font-bold shrink-0"
-                  style={{ backgroundColor: project.color ?? "#6366f1" }}
+      <PmPageShell>
+        <PmSection index={0}>
+          {isLoading ? (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <ProjectCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : isError ? (
+            <PmPanel className="flex min-h-[14rem] items-center justify-center p-6">
+              <ErrorState onRetry={handleRetry} className="flex-1" />
+            </PmPanel>
+          ) : (data ?? []).length === 0 ? (
+            <PmPanel className="flex min-h-[14rem] items-center justify-center p-6">
+              <EmptyState
+                illustrationPreset="projects"
+                title="No projects"
+                description="You don't have access to any projects yet. Contact your project manager."
+                className="min-h-[12rem]"
+              />
+            </PmPanel>
+          ) : (
+            <PmStaggerList className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {data?.map((project) => (
+                <motion.div
+                  key={project.id}
+                  variants={shouldReduceMotion ? listItemReduced : listItem}
+                  transition={pmSnappy}
                 >
-                  {project.key.substring(0, 2)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold truncate text-foreground group-hover:text-primary transition-colors">
-                    {project.name}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground font-mono">{project.key}</p>
-                </div>
-                <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0 mt-0.5" />
-              </div>
-              <div className="mt-3 flex items-center gap-2 flex-wrap">
-                <Badge variant="outline" className="text-[10px] capitalize">{project.status}</Badge>
-                {(project.startDate ?? project.targetEndDate) && (
-                  <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                    <CalendarDays className="h-3 w-3" />
-                    {formatDate(project.startDate)} – {formatDate(project.targetEndDate) ?? "TBD"}
-                  </span>
-                )}
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
+                  <Link
+                    href={`/projects/portal/${project.id}`}
+                    className={cn(
+                      PM_PANEL,
+                      "group block p-5 transition-[border-color,box-shadow] duration-200 hover:border-primary/35 hover:shadow-md",
+                    )}
+                  >
+                    <div className="flex min-w-0 items-start gap-3">
+                      <div
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white"
+                        style={{ backgroundColor: project.color ?? "var(--primary)" }}
+                      >
+                        {project.key.substring(0, 2)}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p
+                          className={cn(
+                            TEXT_ONE_LINE,
+                            "text-sm font-semibold text-foreground transition-colors group-hover:text-primary",
+                          )}
+                          title={project.name}
+                        >
+                          {project.name}
+                        </p>
+                        <p className="font-mono text-[10px] text-muted-foreground">{project.key}</p>
+                      </div>
+                      <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
+                    </div>
+                    <div className="mt-3 flex min-w-0 flex-wrap items-center gap-2">
+                      <Badge variant="outline" className="text-[10px] capitalize">
+                        {project.status}
+                      </Badge>
+                      {project.startDate ?? project.targetEndDate ? (
+                        <span className="flex min-w-0 items-center gap-1 text-[10px] text-muted-foreground">
+                          <CalendarDays className="h-3 w-3 shrink-0" />
+                          <span className={TEXT_ONE_LINE}>
+                            {formatDate(project.startDate)} –{" "}
+                            {formatDate(project.targetEndDate) ?? "TBD"}
+                          </span>
+                        </span>
+                      ) : null}
+                    </div>
+                  </Link>
+                </motion.div>
+              ))}
+            </PmStaggerList>
+          )}
+        </PmSection>
+      </PmPageShell>
     </PageWrapper>
   );
 }

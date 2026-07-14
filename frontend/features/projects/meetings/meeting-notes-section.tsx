@@ -4,9 +4,10 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useUpdateMeeting } from "@/hooks/api/projects";
 import { TiptapEditor } from "@/components/editor/tiptap-editor";
-import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { cn } from "@/lib/utils";
+import { PM_PANEL } from "@/features/projects/shared/pm-chrome";
 import type { MeetingDetail } from "@/types/projects";
 
 interface MeetingNotesSectionProps {
@@ -45,10 +46,8 @@ export function MeetingNotesSection({ meeting, projectId, canManage }: MeetingNo
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-foreground">Agenda</h3>
-        </div>
-        <div className="rounded-lg border bg-card overflow-hidden">
+        <h3 className="text-sm font-semibold text-foreground">Agenda</h3>
+        <div className={cn(PM_PANEL, "overflow-hidden")}>
           <TiptapEditor
             content={meeting.agenda ?? ""}
             output="html"
@@ -62,15 +61,15 @@ export function MeetingNotesSection({ meeting, projectId, canManage }: MeetingNo
       </div>
 
       <div className="space-y-2">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <h3 className="text-sm font-semibold text-foreground">Notes</h3>
-          {canManage && dirty && (
+          {canManage && dirty ? (
             <LoadingButton size="sm" className="h-7 text-xs" onClick={handleSave} isPending={updateMeeting.isPending} loadingText="Saving…">
               Save Notes
             </LoadingButton>
-          )}
+          ) : null}
         </div>
-        <div className="rounded-lg border bg-card overflow-hidden">
+        <div className={cn(PM_PANEL, "overflow-hidden")}>
           <TiptapEditor
             content={meeting.notes ?? ""}
             output="html"
@@ -81,9 +80,9 @@ export function MeetingNotesSection({ meeting, projectId, canManage }: MeetingNo
             contentKey={`notes-${meeting.id}`}
           />
         </div>
-        {canManage && !dirty && (
+        {canManage && !dirty ? (
           <p className="text-xs text-muted-foreground">Notes are auto-saved when you click Save Notes.</p>
-        )}
+        ) : null}
       </div>
     </div>
   );

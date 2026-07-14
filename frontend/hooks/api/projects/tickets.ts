@@ -29,6 +29,42 @@ export function useTickets(
       apiClient.get<PaginatedResponse<Ticket>>(`/projects/${projectId}/tickets`, filters ? { ...filters } : undefined),
     enabled: !!projectId,
     staleTime: 30_000,
+    placeholderData: (prev) => prev,
+    ...options,
+  });
+}
+
+const BOARD_PAGE_SIZE = 100;
+const BOARD_MAX_PAGES = 5;
+
+export function useProjectBoardTickets(
+  projectId: number,
+  options?: Omit<UseQueryOptions<Ticket[]>, "queryKey" | "queryFn" | "enabled">
+) {
+  return useQuery<Ticket[]>({
+    queryKey: queryKeys.projects.tickets({ projectId, view: "board" }),
+    queryFn: async () => {
+      const first = await apiClient.get<PaginatedResponse<Ticket>>(
+        `/projects/${projectId}/tickets`,
+        { limit: BOARD_PAGE_SIZE, page: 1, orderBy: "order", orderDir: "asc" },
+      );
+      const pages = Math.min(first.totalPages ?? 1, BOARD_MAX_PAGES);
+      if (pages <= 1) return first.data ?? [];
+      const rest = await Promise.all(
+        Array.from({ length: pages - 1 }, (_, i) =>
+          apiClient.get<PaginatedResponse<Ticket>>(`/projects/${projectId}/tickets`, {
+            limit: BOARD_PAGE_SIZE,
+            page: i + 2,
+            orderBy: "order",
+            orderDir: "asc",
+          }),
+        ),
+      );
+      return [...(first.data ?? []), ...rest.flatMap((p) => p.data ?? [])];
+    },
+    enabled: !!projectId,
+    staleTime: 30_000,
+    placeholderData: (prev) => prev,
     ...options,
   });
 }
@@ -77,6 +113,7 @@ export function useCreateTicket(
   });
 }
 
+
 export interface UpdateTicketResponse {
   updated: boolean;
   updatedAt: string;
@@ -85,8 +122,11 @@ export interface UpdateTicketResponse {
 interface UpdateTicketContext {
   detailKey: readonly unknown[];
   ticketKey: readonly unknown[];
+  boardKey: readonly unknown[];
   previousDetail: ProjectWithDetails | null | undefined;
   previousTicket: Ticket | null | undefined;
+  previousBoard: Ticket[] | undefined;
+  listSnapshots: [readonly unknown[], PaginatedResponse<Ticket> | undefined][];
 }
 
 function resolveAssigneeId(input: UpdateTicketInput): string | null | undefined {
@@ -152,10 +192,20 @@ export function useUpdateTicket(
     onMutate: async (variables) => {
       const detailKey = queryKeys.projects.detail(projectId);
       const ticketKey = queryKeys.projects.ticket(variables.ticketId);
-      await queryClient.cancelQueries({ queryKey: detailKey });
+      const boardKey = queryKeys.projects.tickets({ projectId, view: "board" });
+      await Promise.all([
+        queryClient.cancelQueries({ queryKey: detailKey }),
+        queryClient.cancelQueries({ queryKey: boardKey }),
+        queryClient.cancelQueries({ queryKey: queryKeys.projects.tickets({ projectId }) }),
+      ]);
       const previousDetail = queryClient.getQueryData<ProjectWithDetails | null>(detailKey);
       const previousTicket = queryClient.getQueryData<Ticket | null>(ticketKey);
+      const previousBoard = queryClient.getQueryData<Ticket[]>(boardKey);
       const members = previousDetail?.members ?? [];
+      const listSnapshots = queryClient.getQueriesData<PaginatedResponse<Ticket>>({
+        queryKey: queryKeys.projects.tickets({ projectId }),
+      });
+
       if (previousDetail?.tickets) {
         queryClient.setQueryData<ProjectWithDetails | null>(detailKey, (old) => {
           if (!old?.tickets) return old;
@@ -172,18 +222,51 @@ export function useUpdateTicket(
           old ? applyTicketPatch(old, variables, members) : old,
         );
       }
-      return { detailKey, ticketKey, previousDetail, previousTicket };
+      if (previousBoard) {
+        queryClient.setQueryData<Ticket[]>(boardKey, (old) =>
+          old
+            ? old.map((t) =>
+                t.id === variables.ticketId ? applyTicketPatch(t, variables, members) : t,
+              )
+            : old,
+        );
+      }
+      for (const [key, page] of listSnapshots) {
+        if (!page?.data) continue;
+        queryClient.setQueryData<PaginatedResponse<Ticket>>(key, {
+          ...page,
+          data: page.data.map((t) =>
+            t.id === variables.ticketId ? applyTicketPatch(t, variables, members) : t,
+          ),
+        });
+      }
+      return {
+        detailKey,
+        ticketKey,
+        boardKey,
+        previousDetail,
+        previousTicket,
+        previousBoard,
+        listSnapshots,
+      };
     },
     onError: (error, variables, context, mutFnCtx) => {
       if (context) {
         queryClient.setQueryData(context.detailKey, context.previousDetail);
         queryClient.setQueryData(context.ticketKey, context.previousTicket);
+        queryClient.setQueryData(context.boardKey, context.previousBoard);
+        for (const [key, page] of context.listSnapshots) {
+          queryClient.setQueryData(key, page);
+        }
       }
       options?.onError?.(error, variables, context, mutFnCtx);
     },
     onSettled: (data, error, variables, context, mutFnCtx) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.ticket(variables.ticketId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.tickets({ projectId }),
       });
       queryClient.invalidateQueries({
         queryKey: queryKeys.ticketActivity.list(variables.ticketId),
@@ -249,6 +332,9 @@ export function useMoveTicket(
     mutationFn: ({ projectId, items }: MoveTicketInput) =>
       apiClient.patch<{ success: boolean }>(`/projects/${projectId}/tickets/reorder`, { items }),
     onSuccess: (data, variables, context, mutFnCtx) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.tickets({ projectId: variables.projectId }),
+      });
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.detail(variables.projectId),
       });
@@ -400,7 +486,7 @@ export function useBulkUpdateTickets(projectId: number) {
       ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.projects.detail(projectId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.projects.tickets() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects.tickets({ projectId }) });
     },
   });
 }

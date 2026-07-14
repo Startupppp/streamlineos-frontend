@@ -4,6 +4,7 @@ import { use, useMemo, useCallback, useEffect } from "react";
 import { EmptyTasksIllustration } from "@/components/illustrations";
 import { useSession } from "next-auth/react";
 import { useProject } from "@/hooks/api";
+import { useProjectBoardTickets } from "@/hooks/api/projects";
 import { notFound, useRouter, useSearchParams } from "next/navigation";
 import { TicketFilterBar } from "@/features/projects/shared/ticket-filter-bar";
 import { TicketTypeIcon } from "@/features/projects/shared/ticket-type-icon";
@@ -24,7 +25,9 @@ interface PageProps {
 export default function TicketsPage({ params }: PageProps) {
   const { projectId: projectIdStr } = use(params);
   const projectId = parseInt(projectIdStr);
-  const { data, isLoading } = useProject(projectId);
+  const { data, isLoading: projectLoading } = useProject(projectId);
+  const { data: boardTickets, isLoading: ticketsLoading } = useProjectBoardTickets(projectId);
+  const isLoading = projectLoading || ticketsLoading;
   const { data: session } = useSession();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -40,14 +43,14 @@ export default function TicketsPage({ params }: PageProps) {
   const filterType = searchParams.get("type") ?? "";
 
   const myTickets = useMemo(() => {
-    if (!data?.tickets || !userId) return [];
-    return data.tickets.filter((t) => {
+    if (!boardTickets || !userId) return [];
+    return boardTickets.filter((t) => {
       if (t.assigneeId === userId) return true;
       if (t.assignees?.some((a) => a.userId === userId)) return true;
       if (t.reporterId === userId) return true;
       return false;
     });
-  }, [data?.tickets, userId]);
+  }, [boardTickets, userId]);
 
   const filteredTickets = useMemo(() => {
     let result = myTickets;
@@ -102,7 +105,12 @@ export default function TicketsPage({ params }: PageProps) {
         header: "Title",
         className: "max-w-md",
         cell: (ticket) => (
-          <span className="text-sm font-medium line-clamp-1">{ticket.title}</span>
+          <span
+            className="block max-w-[min(100%,28rem)] min-w-0 truncate text-sm font-medium [overflow-wrap:anywhere]"
+            title={ticket.title}
+          >
+            {ticket.title}
+          </span>
         ),
       },
       {

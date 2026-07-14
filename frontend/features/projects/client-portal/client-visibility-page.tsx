@@ -1,37 +1,66 @@
 "use client";
 
 import { useState } from "react";
-import { useClientVisibility, useUpdateTicketVisibility, useUpdateMilestoneVisibility } from "@/hooks/api/projects/client-portal";
+import {
+  useClientVisibility,
+  useUpdateTicketVisibility,
+  useUpdateMilestoneVisibility,
+} from "@/hooks/api/projects/client-portal";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Info } from "lucide-react";
 import { toast } from "sonner";
 import type { ClientVisibilityTicket, ClientVisibilityMilestone } from "@/types/projects";
+import {
+  PmPageShell,
+  PmPanel,
+  PmSection,
+  PM_PANEL,
+  PM_ROW,
+  PM_TOOLBAR,
+} from "@/features/projects/shared/pm-chrome";
+import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 type VisibilityTab = "tickets" | "milestones";
 
-interface ClientVisibilityPageProps { projectId: number }
+interface ClientVisibilityPageProps {
+  projectId: number;
+}
 
-function TicketRow({ ticket, projectId }: { ticket: ClientVisibilityTicket; projectId: number }) {
+function TicketRow({
+  ticket,
+  projectId,
+}: {
+  ticket: ClientVisibilityTicket;
+  projectId: number;
+}) {
   const update = useUpdateTicketVisibility(projectId);
+
   function handleChange(checked: boolean) {
     update.mutate(
       { id: ticket.id, clientVisible: checked },
-      { onError: () => toast.error("Failed to update visibility") },
+      { onError: (e) => toast.error(getErrorMessage(e)) },
     );
   }
+
   return (
-    <div className="flex items-center gap-3 py-2 px-3 rounded-md hover:bg-muted/40 transition-colors">
-      <span className="text-[10px] font-mono text-muted-foreground w-16 shrink-0">
+    <div className={PM_ROW}>
+      <span className="w-16 shrink-0 font-mono text-[10px] text-muted-foreground">
         #{ticket.ticketNumber}
       </span>
-      <span className="text-[11px] flex-1 min-w-0 truncate">{ticket.title}</span>
-      <Badge variant="outline" className="text-[10px] shrink-0 capitalize">{ticket.type}</Badge>
+      <span className={cn(TEXT_ONE_LINE, "flex-1 text-[11px]")} title={ticket.title}>
+        {ticket.title}
+      </span>
+      <Badge variant="outline" className="w-16 shrink-0 justify-center text-[10px] capitalize">
+        {ticket.type}
+      </Badge>
       <Switch
         checked={ticket.clientVisible}
         onCheckedChange={handleChange}
@@ -42,17 +71,27 @@ function TicketRow({ ticket, projectId }: { ticket: ClientVisibilityTicket; proj
   );
 }
 
-function MilestoneRow({ milestone, projectId }: { milestone: ClientVisibilityMilestone; projectId: number }) {
+function MilestoneRow({
+  milestone,
+  projectId,
+}: {
+  milestone: ClientVisibilityMilestone;
+  projectId: number;
+}) {
   const update = useUpdateMilestoneVisibility(projectId);
+
   function handleChange(checked: boolean) {
     update.mutate(
       { id: milestone.id, clientVisible: checked },
-      { onError: () => toast.error("Failed to update visibility") },
+      { onError: (e) => toast.error(getErrorMessage(e)) },
     );
   }
+
   return (
-    <div className="flex items-center gap-3 py-2 px-3 rounded-md hover:bg-muted/40 transition-colors">
-      <span className="text-[11px] flex-1 min-w-0 truncate">{milestone.name}</span>
+    <div className={PM_ROW}>
+      <span className={cn(TEXT_ONE_LINE, "flex-1 text-[11px]")} title={milestone.name}>
+        {milestone.name}
+      </span>
       <Switch
         checked={milestone.clientVisible}
         onCheckedChange={handleChange}
@@ -71,9 +110,14 @@ export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
   const milestoneCount = data?.milestones.length ?? 0;
 
   const VISIBILITY_TABS = ["tickets", "milestones"] as const;
+
   function handleTabChange(value: string) {
     const found = VISIBILITY_TABS.find((t) => t === value);
     if (found) setActiveTab(found);
+  }
+
+  function handleRetry() {
+    void refetch();
   }
 
   return (
@@ -82,83 +126,108 @@ export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
       title="Client Portal"
       subtitle="Control what clients see in their portal"
     >
-      <div className="flex flex-1 min-h-0 flex-col space-y-4">
-        <div className="flex items-start gap-2.5 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/40 px-4 py-3">
-          <Info className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
-          <p className="text-[11px] text-blue-700 dark:text-blue-300 leading-relaxed">
-            Items toggled here appear in the client&apos;s portal. Only enabled tickets and milestones are visible to project clients.
-          </p>
-        </div>
+      <PmPageShell>
+        <PmSection index={0}>
+          <div className="flex items-start gap-2.5 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3">
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+            <p className="text-[11px] leading-relaxed text-foreground/80">
+              Items toggled here appear in the client&apos;s portal. Only enabled tickets and
+              milestones are visible to project clients.
+            </p>
+          </div>
+        </PmSection>
 
-        {isLoading ? (
-          <DataTableSkeleton rows={6} columns={3} />
-        ) : isError ? (
-          <ErrorState onRetry={refetch} />
-        ) : (
-          <Tabs value={activeTab} onValueChange={handleTabChange}>
-            <TabsList>
-              <TabsTrigger value="tickets">
-                Tickets
-                {ticketCount > 0 && (
-                  <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">{ticketCount}</Badge>
+        <PmSection index={1}>
+          {isLoading ? (
+            <div className={cn(PM_PANEL, "space-y-2 p-3")}>
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Skeleton key={i} className="h-10 w-full rounded-md" />
+              ))}
+            </div>
+          ) : isError ? (
+            <PmPanel className="flex min-h-[14rem] items-center justify-center p-6">
+              <ErrorState onRetry={handleRetry} />
+            </PmPanel>
+          ) : (
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-3">
+              <div className={PM_TOOLBAR}>
+                <TabsList className="h-8 rounded-lg border border-border/50 bg-muted/40 p-0.5">
+                  <TabsTrigger value="tickets" className="h-7 px-3 text-xs">
+                    Tickets
+                    {ticketCount > 0 ? (
+                      <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">
+                        {ticketCount}
+                      </Badge>
+                    ) : null}
+                  </TabsTrigger>
+                  <TabsTrigger value="milestones" className="h-7 px-3 text-xs">
+                    Milestones
+                    {milestoneCount > 0 ? (
+                      <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">
+                        {milestoneCount}
+                      </Badge>
+                    ) : null}
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+
+              <TabsContent value="tickets" className="mt-0">
+                {(data?.tickets ?? []).length === 0 ? (
+                  <PmPanel className="flex items-center justify-center p-4">
+                    <EmptyState
+                      illustrationPreset="ticket"
+                      title="No tickets"
+                      description="This project has no tickets yet."
+                      compact
+                      className="min-h-[120px]"
+                    />
+                  </PmPanel>
+                ) : (
+                  <PmPanel>
+                    <div className="flex items-center gap-3 border-b border-border/50 bg-muted/30 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      <span className="w-16 shrink-0">ID</span>
+                      <span className="flex-1">Title</span>
+                      <span className="w-16 shrink-0">Type</span>
+                      <span className="w-10 shrink-0 text-right">Visible</span>
+                    </div>
+                    {data?.tickets.map((ticket) => (
+                      <TicketRow key={ticket.id} ticket={ticket} projectId={projectId} />
+                    ))}
+                  </PmPanel>
                 )}
-              </TabsTrigger>
-              <TabsTrigger value="milestones">
-                Milestones
-                {milestoneCount > 0 && (
-                  <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">{milestoneCount}</Badge>
+              </TabsContent>
+
+              <TabsContent value="milestones" className="mt-0">
+                {(data?.milestones ?? []).length === 0 ? (
+                  <PmPanel className="flex items-center justify-center p-4">
+                    <EmptyState
+                      illustrationPreset="calendar"
+                      title="No milestones"
+                      description="This project has no milestones yet."
+                      compact
+                      className="min-h-[120px]"
+                    />
+                  </PmPanel>
+                ) : (
+                  <PmPanel>
+                    <div className="flex items-center gap-3 border-b border-border/50 bg-muted/30 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      <span className="flex-1">Name</span>
+                      <span className="w-10 shrink-0 text-right">Visible</span>
+                    </div>
+                    {data?.milestones.map((milestone) => (
+                      <MilestoneRow
+                        key={milestone.id}
+                        milestone={milestone}
+                        projectId={projectId}
+                      />
+                    ))}
+                  </PmPanel>
                 )}
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="tickets">
-              {(data?.tickets ?? []).length === 0 ? (
-                <EmptyState
-                  illustrationPreset="ticket"
-                  title="No tickets"
-                  description="This project has no tickets yet."
-                  compact
-                  className="min-h-[120px]"
-                />
-              ) : (
-                <div className="rounded-lg border border-border overflow-hidden divide-y divide-border">
-                  <div className="flex items-center gap-3 px-3 py-1.5 bg-muted/40 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                    <span className="w-16 shrink-0">ID</span>
-                    <span className="flex-1">Title</span>
-                    <span className="w-16 shrink-0">Type</span>
-                    <span className="w-10 shrink-0 text-right">Visible</span>
-                  </div>
-                  {data?.tickets.map((ticket) => (
-                    <TicketRow key={ticket.id} ticket={ticket} projectId={projectId} />
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="milestones">
-              {(data?.milestones ?? []).length === 0 ? (
-                <EmptyState
-                  illustrationPreset="calendar"
-                  title="No milestones"
-                  description="This project has no milestones yet."
-                  compact
-                  className="min-h-[120px]"
-                />
-              ) : (
-                <div className="rounded-lg border border-border overflow-hidden divide-y divide-border">
-                  <div className="flex items-center gap-3 px-3 py-1.5 bg-muted/40 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                    <span className="flex-1">Name</span>
-                    <span className="w-10 shrink-0 text-right">Visible</span>
-                  </div>
-                  {data?.milestones.map((milestone) => (
-                    <MilestoneRow key={milestone.id} milestone={milestone} projectId={projectId} />
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        )}
-      </div>
+              </TabsContent>
+            </Tabs>
+          )}
+        </PmSection>
+      </PmPageShell>
     </PageWrapper>
   );
 }

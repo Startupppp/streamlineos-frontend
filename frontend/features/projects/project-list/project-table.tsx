@@ -4,13 +4,13 @@ import React, { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   Calendar,
-  MoreHorizontal,
   Pencil,
   Archive,
   Trash2,
   RotateCcw,
   User,
 } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -23,7 +23,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
-import { cn } from "@/lib/utils";
+import { cn, resolveImageUrl } from "@/lib/utils";
 import { format, isPast, differenceInDays } from "date-fns";
 import {
   getColorSafe,
@@ -31,8 +31,10 @@ import {
   projectStatusDisplayLabels,
 } from "@/lib/theme-constants";
 import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
+import { TEXT_ONE_LINE, TEXT_FLEX_CHILD } from "@/features/projects/shared/text-overflow";
+import { PmPanel } from "@/features/projects/shared/pm-chrome";
 import { useCan } from "@/hooks/api/access";
-import { resolveImageUrl } from "@/lib/utils";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import type { ProjectListItem } from "@/types/projects/projects";
 import { ProjectCardDialogs } from "./project-card-dialogs";
 import { statusDotColors } from "./project-card-utils";
@@ -46,7 +48,7 @@ type ActiveDialog = "edit" | "delete" | "archive" | null;
 function StatusDot({ status }: { status: string }) {
   const dotColor = getColorSafe(statusDotColors, status);
   return (
-    <span className={cn("inline-block h-1.5 w-1.5 rounded-full shrink-0", dotColor)} aria-hidden="true" />
+    <span className={cn("inline-block h-1.5 w-1.5 shrink-0 rounded-full", dotColor)} aria-hidden="true" />
   );
 }
 
@@ -85,15 +87,29 @@ function ActionsCell({
   onDelete: (p: ProjectListItem) => void;
 }) {
   const canUpdate = useCan("projects:update");
+  const canManage = useCan("projects:manage");
+  const canEdit = canUpdate || canManage;
   const canDelete = useCan("projects:delete");
   const isArchived = (project.status ?? "ACTIVE") === "ARCHIVED";
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
 
-  if (!canUpdate && !canDelete) return null;
+  if (!canEdit && !canDelete) return null;
 
-  function handleStopPropagation(e: React.MouseEvent) { e.stopPropagation(); }
-  function handleEditClick(e: React.MouseEvent) { e.stopPropagation(); onEdit(project); }
-  function handleArchiveClick(e: React.MouseEvent) { e.stopPropagation(); onArchive(project); }
-  function handleDeleteClick(e: React.MouseEvent) { e.stopPropagation(); onDelete(project); }
+  function handleStopPropagation(e: React.MouseEvent) {
+    e.stopPropagation();
+  }
+  function handleEditClick(e: React.MouseEvent) {
+    e.stopPropagation();
+    onEdit(project);
+  }
+  function handleArchiveClick(e: React.MouseEvent) {
+    e.stopPropagation();
+    onArchive(project);
+  }
+  function handleDeleteClick(e: React.MouseEvent) {
+    e.stopPropagation();
+    onDelete(project);
+  }
 
   return (
     <div onClick={handleStopPropagation}>
@@ -102,29 +118,36 @@ function ActionsCell({
           <Button
             variant="ghost"
             size="icon"
-            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+            className="h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100"
             aria-label={`Actions for ${project.name}`}
+            {...hoverHandlers}
           >
-            <MoreHorizontal className="h-3.5 w-3.5" />
+            <EllipsisIcon ref={iconRef} size={14} />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-44">
-          {canUpdate && (
+          {canEdit ? (
             <DropdownMenuItem onClick={handleEditClick}>
               <Pencil className="mr-2 h-3.5 w-3.5" />
               Edit project
             </DropdownMenuItem>
-          )}
-          {canUpdate && (
+          ) : null}
+          {canEdit ? (
             <DropdownMenuItem onClick={handleArchiveClick}>
               {isArchived ? (
-                <><RotateCcw className="mr-2 h-3.5 w-3.5" />Restore project</>
+                <>
+                  <RotateCcw className="mr-2 h-3.5 w-3.5" />
+                  Restore project
+                </>
               ) : (
-                <><Archive className="mr-2 h-3.5 w-3.5" />Archive project</>
+                <>
+                  <Archive className="mr-2 h-3.5 w-3.5" />
+                  Archive project
+                </>
               )}
             </DropdownMenuItem>
-          )}
-          {canDelete && (
+          ) : null}
+          {canDelete ? (
             <>
               <DropdownMenuSeparator />
               <DropdownMenuItem variant="destructive" onClick={handleDeleteClick}>
@@ -132,7 +155,7 @@ function ActionsCell({
                 Delete project
               </DropdownMenuItem>
             </>
-          )}
+          ) : null}
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
@@ -159,9 +182,9 @@ export const ProjectTable = React.memo(function ProjectTable({ projects }: Proje
     setActiveDialog("delete");
   }, []);
 
-  function handleDialogClose(open: boolean) {
+  const handleDialogClose = useCallback((open: boolean) => {
     if (!open) setActiveDialog(null);
-  }
+  }, []);
 
   const columns = useMemo<DataTableColumn<ProjectListItem>[]>(() => [
     {
@@ -170,17 +193,23 @@ export const ProjectTable = React.memo(function ProjectTable({ projects }: Proje
       sortable: true,
       sortValue: (p) => p.name,
       cell: (p) => (
-        <div className="flex items-center gap-2.5 min-w-0">
+        <div className={cn(TEXT_FLEX_CHILD, "flex items-center gap-2")}>
           <span
-            className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-[9px] font-bold tracking-tight bg-muted text-muted-foreground"
+            className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-[9px] font-bold tracking-tight bg-primary/10 text-primary ring-1 ring-primary/10"
             aria-hidden="true"
           >
             {p.key.slice(0, 2).toUpperCase()}
           </span>
-          <span className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors min-w-0">
+          <span
+            className={cn(
+              TEXT_ONE_LINE,
+              "max-w-[min(100%,28rem)] text-[13px] font-medium text-foreground transition-colors group-hover:text-primary",
+            )}
+            title={p.name}
+          >
             {p.name}
           </span>
-          <span className="hidden sm:inline-block text-[10px] font-mono text-muted-foreground/60 shrink-0">
+          <span className="hidden shrink-0 font-mono text-[10px] text-muted-foreground/60 sm:inline-block">
             {p.key}
           </span>
         </div>
@@ -191,7 +220,7 @@ export const ProjectTable = React.memo(function ProjectTable({ projects }: Proje
       header: "Status",
       sortable: true,
       sortValue: (p) => p.status ?? "",
-      className: "w-[120px]",
+      className: "w-[100px]",
       cell: (p) => {
         const status = p.status ?? "ACTIVE";
         const displayLabel = projectStatusDisplayLabels[status] ?? status;
@@ -200,7 +229,7 @@ export const ProjectTable = React.memo(function ProjectTable({ projects }: Proje
           <Badge
             variant="secondary"
             className={cn(
-              "gap-1 rounded-full border-0 px-2 py-0.5 text-[10px] font-medium",
+              "gap-1 rounded-full border-0 px-1.5 py-0 text-[10px] font-medium",
               statusColor,
             )}
           >
@@ -216,19 +245,21 @@ export const ProjectTable = React.memo(function ProjectTable({ projects }: Proje
       sortable: true,
       sortValue: (p) => getUserDisplayName(p.manager),
       headerClassName: "hidden md:table-cell",
-      className: "w-[140px] hidden md:table-cell",
+      className: "w-[130px] hidden md:table-cell",
       cell: (p) => {
         const leadName = getUserDisplayName(p.manager);
         const leadInitials = getUserInitials(p.manager);
         return p.manager ? (
-          <div className="flex items-center gap-1.5">
+          <div className={cn(TEXT_FLEX_CHILD, "flex items-center gap-1.5")}>
             <Avatar className="h-5 w-5 shrink-0">
               {p.manager.image ? (
                 <AvatarImage src={resolveImageUrl(p.manager.image)} alt={leadName} />
               ) : null}
               <AvatarFallback className="text-[9px]">{leadInitials}</AvatarFallback>
             </Avatar>
-            <span className="text-xs text-muted-foreground truncate max-w-[100px]">{leadName}</span>
+            <span className={cn(TEXT_ONE_LINE, "max-w-[96px] text-xs text-muted-foreground")} title={leadName}>
+              {leadName}
+            </span>
           </div>
         ) : (
           <span className="flex items-center gap-1 text-xs text-muted-foreground/50">
@@ -244,7 +275,7 @@ export const ProjectTable = React.memo(function ProjectTable({ projects }: Proje
       sortable: true,
       sortValue: (p) => (p.endDate ? new Date(p.endDate).getTime() : Infinity),
       headerClassName: "hidden lg:table-cell",
-      className: "w-[100px] hidden lg:table-cell",
+      className: "w-[84px] hidden lg:table-cell",
       cell: (p) => {
         const status = p.status ?? "ACTIVE";
         const targetDate = resolveTargetDate(p.endDate, status);
@@ -264,13 +295,13 @@ export const ProjectTable = React.memo(function ProjectTable({ projects }: Proje
       sortable: true,
       sortValue: (p) => p.progress.percentage,
       headerClassName: "hidden sm:table-cell",
-      className: "w-[130px] hidden sm:table-cell",
+      className: "w-[110px] hidden sm:table-cell",
       cell: (p) => {
         const progressValue = p.progress.total > 0 ? p.progress.percentage : 0;
         return p.progress.total > 0 ? (
           <div className="flex items-center gap-2">
-            <Progress value={progressValue} className="h-1 flex-1 min-w-0" />
-            <span className="text-[10px] text-muted-foreground tabular-nums shrink-0 w-7 text-right">
+            <Progress value={progressValue} className="h-1 min-w-0 flex-1" />
+            <span className="w-7 shrink-0 text-right text-[10px] tabular-nums text-muted-foreground">
               {Math.round(progressValue)}%
             </span>
           </div>
@@ -282,7 +313,7 @@ export const ProjectTable = React.memo(function ProjectTable({ projects }: Proje
     {
       key: "actions",
       header: "",
-      className: "w-10 pr-3",
+      className: "w-10 pr-2",
       cell: (p) => (
         <ActionsCell
           project={p}
@@ -294,22 +325,27 @@ export const ProjectTable = React.memo(function ProjectTable({ projects }: Proje
     },
   ], [handleEdit, handleArchive, handleDelete]);
 
-  function handleRowClick(project: ProjectListItem) {
-    router.push(`/projects/${project.id}`);
-  }
+  const handleRowClick = useCallback(
+    (project: ProjectListItem) => {
+      router.push(`/projects/${project.id}`);
+    },
+    [router],
+  );
 
   return (
-    <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+    <PmPanel className="flex min-h-0 flex-1 flex-col">
       <DataTable
         data={projects}
         columns={columns}
         getRowKey={(p) => p.id}
         onRowClick={handleRowClick}
-        rowClassName={() => "group"}
-        className="border-0 rounded-none"
-        emptyState={<div className="text-center py-8 text-muted-foreground text-sm">No projects found</div>}
+        rowClassName={() => "group h-9 hover:bg-primary/[0.035]"}
+        className="min-h-0 flex-1 rounded-none border-0 bg-transparent shadow-none"
+        emptyState={
+          <div className="py-8 text-center text-sm text-muted-foreground">No projects found</div>
+        }
       />
-      {activeProject && (
+      {activeProject ? (
         <ProjectCardDialogs
           project={activeProject}
           isArchived={activeProject.status === "ARCHIVED"}
@@ -320,7 +356,7 @@ export const ProjectTable = React.memo(function ProjectTable({ projects }: Proje
           deleteConfirmOpen={activeDialog === "delete"}
           onDeleteConfirmOpenChange={handleDialogClose}
         />
-      )}
-    </div>
+      ) : null}
+    </PmPanel>
   );
 });

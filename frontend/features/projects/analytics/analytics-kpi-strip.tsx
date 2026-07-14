@@ -4,6 +4,8 @@ import { memo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import type { ProjectAnalytics } from "@/types/projects";
+import { PM_PANEL } from "@/features/projects/shared/pm-chrome";
+import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 
 interface KpiCardProps {
   label: string;
@@ -14,8 +16,8 @@ interface KpiCardProps {
 
 const KpiCard = memo(function KpiCard({ label, value, sub, accent }: KpiCardProps) {
   return (
-    <div className="bg-card border border-border rounded-xl shadow-sm px-4 py-3 flex flex-col gap-0.5 min-w-0">
-      <span className="text-[11px] font-medium text-muted-foreground leading-none truncate">
+    <div className={cn(PM_PANEL, "flex min-w-0 flex-col gap-0.5 px-4 py-3")}>
+      <span className={cn("text-[11px] font-medium leading-none text-muted-foreground", TEXT_ONE_LINE)}>
         {label}
       </span>
       <span
@@ -26,9 +28,11 @@ const KpiCard = memo(function KpiCard({ label, value, sub, accent }: KpiCardProp
       >
         {value}
       </span>
-      {sub && (
-        <span className="text-[11px] text-muted-foreground leading-none truncate">{sub}</span>
-      )}
+      {sub ? (
+        <span className={cn("text-[11px] leading-none text-muted-foreground", TEXT_ONE_LINE)}>
+          {sub}
+        </span>
+      ) : null}
     </div>
   );
 });

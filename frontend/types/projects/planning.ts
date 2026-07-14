@@ -20,9 +20,3 @@ export interface ProjectBudget {
   totalHours: number;
   memberBreakdown: { userId: string; hours: number; cost: number }[];
 }
-
-export interface ResourceAllocationEntry {
-  user: { id: string; name: string | null; email: string; image: string | null };
-  totalOpen: number;
-  byProject: { projectId: number; projectName: string; projectKey: string; open: number }[];
-}

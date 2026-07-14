@@ -13,6 +13,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RoadmapTab } from "@/features/projects/roadmap/roadmap-tab";
 import { FeedbackTab } from "@/features/projects/roadmap/feedback-tab";
 import { ChangelogTab } from "@/features/projects/roadmap/changelog-tab";
+import {
+  PmPageShell,
+  PmSection,
+  PM_TOOLBAR,
+} from "@/features/projects/shared/pm-chrome";
 
 type RoadmapTabValue = "roadmap" | "feedback" | "changelog";
 
@@ -54,29 +59,29 @@ export default function RoadmapPage() {
   const showSearch = activeTab === "roadmap" || activeTab === "feedback";
 
   const filters = (
-    <div className="flex flex-1 min-w-0 items-center gap-2 flex-wrap">
-      <TabsList className="h-8 shrink-0 rounded-lg border p-1 bg-muted/40 w-fit">
-        <TabsTrigger value="roadmap" className="text-xs h-7 px-3 gap-1.5 rounded-md">
+    <div className={PM_TOOLBAR}>
+      <TabsList className="h-8 w-fit shrink-0 rounded-lg border border-border/50 bg-muted/40 p-0.5">
+        <TabsTrigger value="roadmap" className="h-7 gap-1.5 rounded-md px-3 text-xs">
           <Sparkles className="h-3.5 w-3.5" />
           Roadmap
         </TabsTrigger>
-        <TabsTrigger value="feedback" className="text-xs h-7 px-3 gap-1.5 rounded-md">
+        <TabsTrigger value="feedback" className="h-7 gap-1.5 rounded-md px-3 text-xs">
           <MessageSquare className="h-3.5 w-3.5" />
           Feedback
         </TabsTrigger>
-        <TabsTrigger value="changelog" className="text-xs h-7 px-3 gap-1.5 rounded-md">
+        <TabsTrigger value="changelog" className="h-7 gap-1.5 rounded-md px-3 text-xs">
           <Megaphone className="h-3.5 w-3.5" />
           Changelog
         </TabsTrigger>
       </TabsList>
-      {showSearch && (
+      {showSearch ? (
         <Input
           placeholder="Search…"
           value={search}
           onChange={handleSearchChange}
-          className="h-8 text-xs w-full sm:w-56 sm:ml-auto"
+          className="h-8 w-full text-xs sm:ml-auto sm:w-56"
         />
-      )}
+      ) : null}
     </div>
   );
 
@@ -117,22 +122,26 @@ export default function RoadmapPage() {
           filters={filters}
           actions={hasActions ? actions : undefined}
         >
-          <TabsContent value="roadmap" className="mt-0">
-            <RoadmapTab
-              search={debouncedSearch}
-              createOpen={roadmapCreateOpen}
-              onCreateOpenChange={handleRoadmapCreateOpenChange}
-            />
-          </TabsContent>
-          <TabsContent value="feedback" className="mt-0">
-            <FeedbackTab search={debouncedSearch} />
-          </TabsContent>
-          <TabsContent value="changelog" className="mt-0">
-            <ChangelogTab
-              createOpen={changelogCreateOpen}
-              onCreateOpenChange={handleChangelogCreateOpenChange}
-            />
-          </TabsContent>
+          <PmPageShell>
+            <PmSection index={0}>
+              <TabsContent value="roadmap" className="mt-0">
+                <RoadmapTab
+                  search={debouncedSearch}
+                  createOpen={roadmapCreateOpen}
+                  onCreateOpenChange={handleRoadmapCreateOpenChange}
+                />
+              </TabsContent>
+              <TabsContent value="feedback" className="mt-0">
+                <FeedbackTab search={debouncedSearch} />
+              </TabsContent>
+              <TabsContent value="changelog" className="mt-0">
+                <ChangelogTab
+                  createOpen={changelogCreateOpen}
+                  onCreateOpenChange={handleChangelogCreateOpenChange}
+                />
+              </TabsContent>
+            </PmSection>
+          </PmPageShell>
         </PageWrapper>
       </Tabs>
     </RequireModule>

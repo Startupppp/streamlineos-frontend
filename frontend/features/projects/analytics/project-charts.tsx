@@ -1,7 +1,6 @@
 "use client";
 
 import { memo, useCallback } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   BarChart,
   PieChart,
@@ -22,6 +21,9 @@ import {
 import type { Sprint } from "@/types/projects";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { STATE_COLORS, PRIORITY_COLORS, CHART_COLORS } from "./project-stats";
+import { PmPanel } from "@/features/projects/shared/pm-chrome";
+import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { cn } from "@/lib/utils";
 
 const TOOLTIP_STYLE = {
   backgroundColor: "hsl(var(--card))",
@@ -41,17 +43,13 @@ interface ChartCardProps {
 
 function ChartCard({ title, children, colSpan, actions }: ChartCardProps) {
   return (
-    <Card
-      className={`bg-card border border-border rounded-xl shadow-sm${colSpan === "full" ? " md:col-span-2" : ""}`}
-    >
-      <CardHeader className="pb-1 pt-4 px-4">
-        <div className="flex items-center justify-between gap-2">
-          <CardTitle className="text-sm font-semibold">{title}</CardTitle>
-          {actions}
-        </div>
-      </CardHeader>
-      <CardContent className="px-4 pb-4 pt-0">{children}</CardContent>
-    </Card>
+    <PmPanel className={cn("p-4", colSpan === "full" && "md:col-span-2")}>
+      <div className="mb-3 flex min-w-0 items-center justify-between gap-2">
+        <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>{title}</h3>
+        {actions}
+      </div>
+      {children}
+    </PmPanel>
   );
 }
 

@@ -51,6 +51,14 @@ import {
   type WebhookDelivery,
 } from "@/hooks/api/projects/webhooks";
 import { cn } from "@/lib/utils";
+import {
+  PmPageShell,
+  PmSection,
+  PmStaggerList,
+  PM_PANEL,
+} from "@/features/projects/shared/pm-chrome";
+import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { LoadingButton } from "@/components/ui/loading-button";
 
 const WEBHOOK_EVENTS = [
   { value: "ticket.created", label: "Ticket Created" },
@@ -145,14 +153,14 @@ function WebhookCard({
   return (
     <motion.div
       layout
-      className="border border-border rounded-lg overflow-hidden bg-card shadow-sm"
+      className={cn(PM_PANEL, "overflow-hidden transition-[border-color,box-shadow] duration-200 hover:border-primary/35 hover:shadow-md")}
     >
       <div className="flex items-center gap-3 p-3.5">
-        <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center shrink-0">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted">
           <Zap className="h-4 w-4 text-muted-foreground" />
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium truncate text-foreground">{webhook.url}</p>
+        <div className="min-w-0 flex-1">
+          <p className={cn("text-sm font-medium text-foreground", TEXT_ONE_LINE)}>{webhook.url}</p>
           <div className="flex flex-wrap gap-1 mt-1">
             {webhook.events.slice(0, 3).map((e) => (
               <Badge
@@ -320,49 +328,46 @@ export default function WebhooksPage({ params }: PageProps) {
         </Button>
       }
     >
-      <div className="space-y-3 pb-8">
-        {isLoading ? (
-          <div className="space-y-3">
-            {Array.from({ length: 2 }).map((_, i) => (
-              <Skeleton key={i} className="h-20 w-full rounded-lg" />
-            ))}
-          </div>
-        ) : isError ? (
-          <ErrorState
-            title="Could not load webhooks"
-            description="Failed to load webhooks."
-            onRetry={handleRetry}
-            className="flex-1 min-h-[40vh]"
-          />
-        ) : (
-          <>
-            <AnimatePresence initial={false}>
-              {webhooks.map((wh, idx) => (
-                <motion.div
-                  key={wh.id}
-                  initial={{ opacity: 0, y: -4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ delay: idx * 0.04 }}
-                >
-                  <WebhookCard webhook={wh} projectId={projectId} onDelete={handleDelete} />
-                </motion.div>
+      <PmPageShell>
+        <div className="space-y-3 pb-8">
+          {isLoading ? (
+            <div className="space-y-3">
+              {Array.from({ length: 2 }).map((_, i) => (
+                <Skeleton key={i} className="h-20 w-full rounded-xl" />
               ))}
-            </AnimatePresence>
-
-            {webhooks.length === 0 && (
-              <EmptyState
-                illustrationPreset="automations"
-                title="No webhooks configured"
-                description="Get notified in real-time when tickets, sprints, or members change."
-                action={{ label: "Create Webhook", onClick: handleShowForm }}
-                className="min-h-[40vh]"
-              />
-            )}
-          </>
-        )}
-
-      </div>
+            </div>
+          ) : isError ? (
+            <ErrorState
+              title="Could not load webhooks"
+              description="Failed to load webhooks."
+              onRetry={handleRetry}
+              className="min-h-[40vh] flex-1"
+            />
+          ) : webhooks.length === 0 ? (
+            <EmptyState
+              illustrationPreset="automations"
+              title="No webhooks configured"
+              description="Get notified in real-time when tickets, sprints, or members change."
+              action={{ label: "Create Webhook", onClick: handleShowForm }}
+              className="min-h-[40vh]"
+            />
+          ) : (
+            <PmSection index={0}>
+              <PmStaggerList className="space-y-2.5" role="list" aria-label="Webhooks">
+                <AnimatePresence initial={false}>
+                  {webhooks.map((wh) => (
+                    <WebhookCard
+                      key={wh.id}
+                      webhook={wh}
+                      projectId={projectId}
+                      onDelete={handleDelete}
+                    />
+                  ))}
+                </AnimatePresence>
+              </PmStaggerList>
+            </PmSection>
+          )}
+        </div>
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md overflow-hidden">
@@ -454,13 +459,20 @@ export default function WebhooksPage({ params }: PageProps) {
           <div className="shrink-0 px-6 py-4 border-t">
             <div className="grid grid-cols-2 gap-2">
               <Button variant="outline" size="sm" onClick={handleCancelForm}>Cancel</Button>
-              <Button size="sm" type="submit" form="webhook-form" disabled={createWebhook.isPending}>
-                {createWebhook.isPending ? "Creating…" : "Create Webhook"}
-              </Button>
+              <LoadingButton
+                size="sm"
+                type="submit"
+                form="webhook-form"
+                isPending={createWebhook.isPending}
+                loadingText="Creating…"
+              >
+                Create Webhook
+              </LoadingButton>
             </div>
           </div>
         </SheetContent>
       </Sheet>
+      </PmPageShell>
     </PageWrapper>
   );
 }

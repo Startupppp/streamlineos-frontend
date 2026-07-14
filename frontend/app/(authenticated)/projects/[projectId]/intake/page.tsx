@@ -29,6 +29,13 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { IntakeItemCard } from "@/features/projects/intake/intake-item-card";
+import {
+  PmPageShell,
+  PmSection,
+  PmStaggerList,
+  PM_TOOLBAR,
+} from "@/features/projects/shared/pm-chrome";
+import { LoadingButton } from "@/components/ui/loading-button";
 
 const createIntakeSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -174,11 +181,13 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
   if (isLoading) {
     return (
       <PageWrapper title="Intake" eyebrow="Project" subtitle="Collect and triage incoming requests from your team or clients">
-        <div className="space-y-3">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-20 w-full" />
-          ))}
-        </div>
+        <PmPageShell>
+          <div className="space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-20 w-full rounded-xl" />
+            ))}
+          </div>
+        </PmPageShell>
       </PageWrapper>
     );
   }
@@ -221,9 +230,15 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
               <div className="shrink-0 px-6 py-4 border-t">
                 <div className="grid grid-cols-2 gap-2">
                   <Button variant="outline" size="sm" onClick={handleCloseCreate}>Cancel</Button>
-                  <Button size="sm" type="submit" form="create-intake-form" disabled={createMutation.isPending}>
-                    {createMutation.isPending ? "Creating…" : "Create Item"}
-                  </Button>
+                  <LoadingButton
+                    size="sm"
+                    type="submit"
+                    form="create-intake-form"
+                    isPending={createMutation.isPending}
+                    loadingText="Creating…"
+                  >
+                    Create Item
+                  </LoadingButton>
                 </div>
               </div>
             </SheetContent>
@@ -231,19 +246,25 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
         </div>
       }
     >
-      <div className="space-y-4">
+      <PmPageShell>
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            <TabsTrigger value="pending">
-              Pending
-              {pendingCount > 0 && (
-                <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">{pendingCount}</Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="accepted">Accepted</TabsTrigger>
-            <TabsTrigger value="declined">Declined</TabsTrigger>
-            <TabsTrigger value="all">All</TabsTrigger>
-          </TabsList>
+          <PmSection index={0}>
+            <div className={PM_TOOLBAR}>
+              <TabsList className="h-auto w-full justify-start bg-transparent p-0 sm:w-auto">
+                <TabsTrigger value="pending">
+                  Pending
+                  {pendingCount > 0 ? (
+                    <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">
+                      {pendingCount}
+                    </Badge>
+                  ) : null}
+                </TabsTrigger>
+                <TabsTrigger value="accepted">Accepted</TabsTrigger>
+                <TabsTrigger value="declined">Declined</TabsTrigger>
+                <TabsTrigger value="all">All</TabsTrigger>
+              </TabsList>
+            </div>
+          </PmSection>
 
           <TabsContent value={activeTab} className="mt-4">
             {filteredItems.length === 0 ? (
@@ -263,21 +284,22 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
                 className="min-h-[40vh]"
               />
             ) : (
-              <div className="space-y-3">
-                {filteredItems.map((item) => (
-                  <IntakeItemCard
-                    key={item.id}
-                    item={item}
-                    onAccept={handleAccept}
-                    onDecline={handleDecline}
-                    onDuplicate={handleDuplicate}
-                  />
-                ))}
-              </div>
+              <PmSection index={1}>
+                <PmStaggerList className="space-y-2.5">
+                  {filteredItems.map((item) => (
+                    <IntakeItemCard
+                      key={item.id}
+                      item={item}
+                      onAccept={handleAccept}
+                      onDecline={handleDecline}
+                      onDuplicate={handleDuplicate}
+                    />
+                  ))}
+                </PmStaggerList>
+              </PmSection>
             )}
           </TabsContent>
         </Tabs>
-      </div>
 
       <Sheet open={acceptOpen} onOpenChange={setAcceptOpen}>
         <SheetContent side="right" className="sm:max-w-md p-0 flex flex-col gap-0">
@@ -395,6 +417,7 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
           </div>
         </SheetContent>
       </Sheet>
+      </PmPageShell>
     </PageWrapper>
   );
 }

@@ -19,7 +19,7 @@
 |---|---|
 | **HR** | Employees, attendance, leaves, payroll, expenses, assets, documents, performance reviews, goals, recruitment pipeline, onboarding, exit & termination, compliance. |
 | **CRM** | Leads, deals, clients, organizations, targets, quotes, assignment & scoring rules, SLA tracking, territories, win/loss analysis. |
-| **Projects** | Projects, sprints, cycles, modules, tickets (with epics/sub-issues), timesheets, resource allocation, project templates. |
+| **Projects** | Projects, sprints, cycles, modules, tickets (with epics/sub-issues), timesheets, project templates. |
 | **Chat & Comms** | Realtime DMs and channels (Ably), notifications, command palette (⌘K), helpdesk inbox. |
 | **Marketing** | Campaigns, landing pages, content + email calendars, social analytics, A/B testing. |
 | **Finance** | Billing, invoices, sales commissions, customer success, renewal pipeline. |

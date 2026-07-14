@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ViewToggle, type ViewOption } from "@/components/ui/view-toggle";
+import { cn } from "@/lib/utils";
 
 type ViewMode = "grid" | "list";
 type StatusFilter = "ALL" | "ACTIVE" | "COMPLETED" | "ARCHIVED";
@@ -62,29 +63,41 @@ export function ProjectFilterBar({
   );
 
   return (
-    <div className="flex w-full min-w-0 flex-wrap items-center gap-2">
+    <div className="flex w-full min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
       <div className="relative min-w-0 flex-1 sm:max-w-[240px]">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+        <Search
+          className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground"
+          aria-hidden="true"
+        />
         <Input
-          placeholder="Search projects..."
+          placeholder="Search projects…"
           value={search}
           onChange={handleSearchInputChange}
-          className="h-8 pl-8 pr-7 text-xs"
+          className={cn(
+            "h-8 border-border/60 bg-background/50 pl-8 pr-7 text-xs shadow-none",
+            "placeholder:text-muted-foreground/70 focus-visible:bg-background/80",
+          )}
           aria-label="Search projects"
         />
-        {search && (
+        {search ? (
           <button
+            type="button"
             onClick={handleClearSearch}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
             aria-label="Clear search"
           >
             <X className="h-3.5 w-3.5" />
           </button>
-        )}
+        ) : null}
       </div>
 
       <Select value={status} onValueChange={handleStatusValueChange}>
-        <SelectTrigger className="h-8 w-full sm:w-[140px] text-xs">
+        <SelectTrigger
+          className={cn(
+            "h-8 w-full border-border/60 bg-background/50 text-xs shadow-none sm:w-[132px]",
+            "focus:bg-background/80",
+          )}
+        >
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -99,7 +112,8 @@ export function ProjectFilterBar({
         value={viewMode}
         options={VIEW_OPTIONS}
         onChange={onViewModeChange}
-        className="ml-auto shrink-0"
+        size="sm"
+        className="ml-auto shrink-0 border-border/60 bg-background/40"
       />
     </div>
   );

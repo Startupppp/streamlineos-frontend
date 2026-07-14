@@ -20,6 +20,7 @@ import {
   projectStatusDisplayLabels,
 } from "@/lib/theme-constants";
 import { popoverOptionBaseClass, popoverOptionSelectedClass } from "@/features/projects/shared/popover-option-classes";
+import { TEXT_ONE_LINE, TEXT_TWO_LINES } from "@/features/projects/shared/text-overflow";
 import { InlineFieldWrapper } from "@/features/projects/views/card-inline-fields";
 import { dateToneClasses, resolveDateMeta, statusDotColors } from "./project-card-utils";
 import type { ProjectStatusValue } from "@/types/projects";
@@ -73,8 +74,12 @@ export const InlineProjectTitle = memo(function InlineProjectTitle({
         <PopoverTrigger asChild>
           <button
             type="button"
-            className="line-clamp-1 text-left text-sm font-semibold text-foreground transition-colors hover:text-primary"
+            className={cn(
+              TEXT_ONE_LINE,
+              "block w-full text-left text-[13px] font-semibold text-foreground transition-colors hover:text-primary",
+            )}
             aria-label="Edit project name"
+            title={currentName}
           >
             {currentName}
           </button>
@@ -215,10 +220,14 @@ export const InlineProjectDescription = memo(function InlineProjectDescription({
           <button
             type="button"
             className={cn(
-              "mt-1 line-clamp-1 flex-1 text-left text-[10px] transition-colors",
-              preview ? "text-muted-foreground hover:text-foreground" : "text-muted-foreground/50 hover:text-muted-foreground",
+              TEXT_TWO_LINES,
+              "mt-1 flex-1 text-left text-[10px] transition-colors",
+              preview
+                ? "text-muted-foreground hover:text-foreground"
+                : "text-muted-foreground/50 hover:text-muted-foreground",
             )}
             aria-label="Edit project description"
+            title={preview || undefined}
           >
             {preview || "Add description…"}
           </button>

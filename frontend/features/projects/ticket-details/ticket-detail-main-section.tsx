@@ -106,8 +106,8 @@ export function TicketDetailMainSection({
       <Textarea
         value={localTitle}
         onChange={onTitleChange}
-        rows={1}
-        className="text-xl font-semibold border-0 bg-transparent px-0 py-0 min-h-0 h-auto resize-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-0 shadow-none hover:border-0"
+        rows={2}
+        className="min-h-0 h-auto max-w-full resize-none break-words border-0 bg-transparent px-0 py-0 text-xl font-semibold shadow-none [overflow-wrap:anywhere] [word-break:break-word] focus-visible:border-0 focus-visible:ring-0 focus-visible:ring-offset-0 hover:border-0"
         placeholder="Ticket title"
       />
 

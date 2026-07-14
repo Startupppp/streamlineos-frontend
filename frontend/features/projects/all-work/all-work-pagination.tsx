@@ -23,28 +23,28 @@ export function PaginationFooter({ page, limit, total, onPageChange }: Paginatio
   }
 
   return (
-    <div className="shrink-0 flex items-center justify-between border-t border-border px-4 py-2 text-xs text-muted-foreground">
-      <span>
+    <div className="flex shrink-0 items-center justify-between border-t border-border/60 bg-card/40 px-4 py-2 text-xs text-muted-foreground backdrop-blur-md supports-[backdrop-filter]:bg-card/30">
+      <span className="tabular-nums">
         Showing {from}–{to} of {total}
       </span>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 text-xs"
+          className="h-7 px-2.5 text-xs"
           disabled={page <= 1}
           onClick={handlePrev}
           aria-label="Previous page"
         >
           Prev
         </Button>
-        <span className="tabular-nums">
+        <span className="min-w-[3rem] text-center tabular-nums">
           {page} / {totalPages || 1}
         </span>
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 text-xs"
+          className="h-7 px-2.5 text-xs"
           disabled={page >= totalPages}
           onClick={handleNext}
           aria-label="Next page"

@@ -33,10 +33,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { LoadingState } from "@/components/shared/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyDevicesIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared/error-state";
+import { Skeleton } from "@/components/ui/skeleton";
 import { RequireModule } from "@/components/auth/require-module";
 import {
   useGitConnections,
@@ -48,6 +48,15 @@ import {
   type CreatedGitConnection,
 } from "@/hooks/api/git-integration";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { cn } from "@/lib/utils";
+import {
+  PmPageShell,
+  PmPanel,
+  PmSection,
+  PmStaggerList,
+  PM_PANEL,
+} from "@/features/projects/shared/pm-chrome";
 import { ProviderIcon, ConnectionRow } from "./git-connection-row";
 import { CreatedSecretDialog } from "./git-created-secret-dialog";
 import { SetupInstructions } from "./git-setup-instructions";
@@ -126,7 +135,7 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
           resetForm();
           setCreated(data);
         },
-        onError: () => toast.error("Failed to create connection"),
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }, [provider, repoUrl, repoName, createConnection, resetForm]);
@@ -142,7 +151,7 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
                 ? "Connection paused"
                 : "Connection activated",
             ),
-          onError: () => toast.error("Failed to update connection"),
+          onError: (e) => toast.error(getErrorMessage(e)),
         },
       );
     },
@@ -156,9 +165,13 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
         toast.success("Connection deleted");
         setDeleteId(null);
       },
-      onError: () => toast.error("Failed to delete connection"),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [deleteId, deleteConnection]);
+
+  function handleCancelDialog() {
+    handleDialogChange(false);
+  }
 
   const handleDeleteDialogChange = useCallback((open: boolean) => {
     if (!open) setDeleteId(null);
@@ -172,148 +185,171 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
 
   return (
     <RequireModule module="PROJECTS">
-    <PageWrapper
-      title="Integrations"
-      eyebrow="Projects"
-      subtitle="Connect Git repositories to link commits and pull requests to tickets"
-      actions={
-        <Button size="sm" onClick={handleOpenDialog}>
-          <Plus className="h-4 w-4 mr-1" />
-          Add connection
-        </Button>
-      }
-    >
-      {isLoading ? (
-        <LoadingState variant="cards" rows={3} />
-      ) : isError ? (
-        <ErrorState
-          title="Could not load connections"
-          description="There was a problem loading your Git connections."
-          onRetry={handleRetry}
-        />
-      ) : !connections || connections.length === 0 ? (
-        <div className="flex-1 flex flex-col gap-4">
-          <EmptyState
-            illustration={<EmptyDevicesIllustration />}
-            title="No repositories connected"
-            description="Connect GitHub, GitLab, or Bitbucket to link commits and PRs to your tickets."
-            action={{ label: "Add connection", onClick: handleOpenDialog }}
-            className="flex-1"
-          />
-          <SetupInstructions />
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {connections.map((connection) => (
-            <ConnectionRow
-              key={connection.id}
-              connection={connection}
-              onToggle={handleToggle}
-              onDelete={setDeleteId}
-              isToggling={updateConnection.isPending}
-            />
-          ))}
-          <SetupInstructions />
-        </div>
-      )}
-
-      {footer ? <div className="mt-6">{footer}</div> : null}
-
-      <Dialog open={dialogOpen} onOpenChange={handleDialogChange}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add Git connection</DialogTitle>
-            <DialogDescription>
-              We generate a webhook URL and secret for you to paste into your
-              repository.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="git-provider">Provider</Label>
-              <Select value={provider} onValueChange={handleProviderChange}>
-                <SelectTrigger id="git-provider">
-                  <SelectValue placeholder="Select provider" />
-                </SelectTrigger>
-                <SelectContent>
-                  {PROVIDERS.map((p) => (
-                    <SelectItem key={p.value} value={p.value}>
-                      <span className="flex items-center gap-2">
-                        <ProviderIcon provider={p.value} className="h-4 w-4" />
-                        {p.label}
-                      </span>
-                    </SelectItem>
+      <PageWrapper
+        title="Integrations"
+        eyebrow="Projects"
+        subtitle="Connect Git repositories to link commits and pull requests to tickets"
+        actions={
+          <Button size="sm" onClick={handleOpenDialog}>
+            <Plus className="mr-1 h-4 w-4" />
+            Add connection
+          </Button>
+        }
+      >
+        <PmPageShell>
+          <PmSection index={0}>
+            {isLoading ? (
+              <div className="space-y-3">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className={cn(PM_PANEL, "space-y-3 p-4")}>
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="h-9 w-9 rounded-lg" />
+                      <div className="min-w-0 flex-1 space-y-1.5">
+                        <Skeleton className="h-4 w-40" />
+                        <Skeleton className="h-3 w-64" />
+                      </div>
+                    </div>
+                    <Skeleton className="h-9 w-full rounded-md" />
+                  </div>
+                ))}
+              </div>
+            ) : isError ? (
+              <PmPanel className="flex min-h-[14rem] items-center justify-center p-6">
+                <ErrorState
+                  title="Could not load connections"
+                  description="There was a problem loading your Git connections."
+                  onRetry={handleRetry}
+                />
+              </PmPanel>
+            ) : !connections || connections.length === 0 ? (
+              <div className="flex flex-1 flex-col gap-4">
+                <PmPanel className="flex min-h-[14rem] items-center justify-center p-6">
+                  <EmptyState
+                    illustration={<EmptyDevicesIllustration />}
+                    title="No repositories connected"
+                    description="Connect GitHub, GitLab, or Bitbucket to link commits and PRs to your tickets."
+                    action={{ label: "Add connection", onClick: handleOpenDialog }}
+                    className="min-h-[12rem]"
+                  />
+                </PmPanel>
+                <SetupInstructions />
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <PmStaggerList className="space-y-3">
+                  {connections.map((connection) => (
+                    <ConnectionRow
+                      key={connection.id}
+                      connection={connection}
+                      onToggle={handleToggle}
+                      onDelete={setDeleteId}
+                      isToggling={updateConnection.isPending}
+                    />
                   ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="git-repo-url">Repository URL *</Label>
-              <div className="relative">
-                <ExternalLink className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                </PmStaggerList>
+                <SetupInstructions />
+              </div>
+            )}
+          </PmSection>
+
+          {footer ? (
+            <PmSection index={1}>
+              <div className="mt-2">{footer}</div>
+            </PmSection>
+          ) : null}
+        </PmPageShell>
+
+        <Dialog open={dialogOpen} onOpenChange={handleDialogChange}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add Git connection</DialogTitle>
+              <DialogDescription>
+                We generate a webhook URL and secret for you to paste into your repository.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="git-provider">Provider</Label>
+                <Select value={provider} onValueChange={handleProviderChange}>
+                  <SelectTrigger id="git-provider">
+                    <SelectValue placeholder="Select provider" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PROVIDERS.map((p) => (
+                      <SelectItem key={p.value} value={p.value}>
+                        <span className="flex items-center gap-2">
+                          <ProviderIcon provider={p.value} className="h-4 w-4" />
+                          {p.label}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="git-repo-url">Repository URL *</Label>
+                <div className="relative">
+                  <ExternalLink className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="git-repo-url"
+                    className="pl-9"
+                    placeholder="https://github.com/org/repo"
+                    value={repoUrl}
+                    onChange={handleRepoUrlChange}
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="git-repo-name">Display name (optional)</Label>
                 <Input
-                  id="git-repo-url"
-                  className="pl-9"
-                  placeholder="https://github.com/org/repo"
-                  value={repoUrl}
-                  onChange={handleRepoUrlChange}
+                  id="git-repo-name"
+                  placeholder="org/repo"
+                  value={repoName}
+                  onChange={handleRepoNameChange}
                 />
               </div>
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="git-repo-name">Display name (optional)</Label>
-              <Input
-                id="git-repo-name"
-                placeholder="org/repo"
-                value={repoName}
-                onChange={handleRepoNameChange}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => handleDialogChange(false)}>
-              Cancel
-            </Button>
-            <LoadingButton
-              onClick={handleCreate}
-              disabled={!repoUrl.trim()}
-              isPending={createConnection.isPending}
-              loadingText="Creating…"
-            >
-              Create connection
-            </LoadingButton>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <DialogFooter>
+              <Button variant="outline" onClick={handleCancelDialog}>
+                Cancel
+              </Button>
+              <LoadingButton
+                onClick={handleCreate}
+                disabled={!repoUrl.trim()}
+                isPending={createConnection.isPending}
+                loadingText="Creating…"
+              >
+                Create connection
+              </LoadingButton>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
-      {created && (
-        <CreatedSecretDialog created={created} onClose={handleCloseCreated} />
-      )}
+        {created ? (
+          <CreatedSecretDialog created={created} onClose={handleCloseCreated} />
+        ) : null}
 
-      <AlertDialog
-        open={deleteId !== null}
-        onOpenChange={handleDeleteDialogChange}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete connection?</AlertDialogTitle>
-            <AlertDialogDescription>
-              The webhook will stop linking commits and pull requests. Existing
-              links are kept. This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive hover:bg-destructive/90"
-              onClick={handleConfirmDelete}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </PageWrapper>
+        <AlertDialog open={deleteId !== null} onOpenChange={handleDeleteDialogChange}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete connection?</AlertDialogTitle>
+              <AlertDialogDescription>
+                The webhook will stop linking commits and pull requests. Existing links are kept.
+                This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive hover:bg-destructive/90"
+                onClick={handleConfirmDelete}
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </PageWrapper>
     </RequireModule>
   );
 }

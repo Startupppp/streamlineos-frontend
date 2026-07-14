@@ -54,6 +54,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { cn } from "@/lib/utils";
+import { PM_PANEL, PM_ROW } from "@/features/projects/shared/pm-chrome";
+import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 
 const EXPIRY_OPTIONS = [
   { value: "30", label: "30 days" },
@@ -121,31 +124,33 @@ function TokenRow({
   const handleRevoke = useCallback(() => onRevoke(token.id), [onRevoke, token.id]);
 
   return (
-    <div className="flex items-center gap-3 py-3 border-b border-border/60 last:border-0">
-      <div className="flex-1 min-w-0 space-y-0.5">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-medium truncate">{token.name}</span>
-          <code className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded text-muted-foreground">
+    <div className={cn(PM_ROW, "gap-3 py-3")}>
+      <div className="min-w-0 flex-1 space-y-0.5">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <span className={cn(TEXT_ONE_LINE, "text-sm font-medium")} title={token.name}>
+            {token.name}
+          </span>
+          <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-muted-foreground">
             {token.tokenPrefix}…
           </code>
           <StatusBadge status={status} />
         </div>
-        <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
           <span>Created {relativeDate(token.createdAt)}</span>
-          {token.lastUsedAt && <span>Last used {relativeDate(token.lastUsedAt)}</span>}
+          {token.lastUsedAt ? <span>Last used {relativeDate(token.lastUsedAt)}</span> : null}
           <span>Expires {expiryLabel(token.expiresAt)}</span>
         </div>
       </div>
-      {status === "active" && (
+      {status === "active" ? (
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 text-xs text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
+          className="h-7 shrink-0 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
           onClick={handleRevoke}
         >
           Revoke
         </Button>
-      )}
+      ) : null}
     </div>
   );
 }
@@ -442,21 +447,21 @@ export function AgentTokensSection() {
   }, [refetch]);
 
   return (
-    <div className="rounded-xl border border-border bg-card shadow-sm p-6 space-y-5">
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-1 min-w-0">
+    <div className={cn(PM_PANEL, "space-y-5 p-5")}>
+      <div className="flex min-w-0 items-start justify-between gap-4">
+        <div className="min-w-0 space-y-1">
           <div className="flex items-center gap-2">
-            <Bot className="h-4 w-4 text-primary shrink-0" />
+            <Bot className="h-4 w-4 shrink-0 text-primary" />
             <h3 className="text-sm font-semibold">AI Agent Access (MCP)</h3>
           </div>
-          <p className="text-xs text-muted-foreground leading-relaxed max-w-lg">
+          <p className="max-w-lg text-xs leading-relaxed text-muted-foreground">
             Generate tokens to connect Cursor or Claude Code via the Model Context Protocol.
             Agents can read tickets, view attached images, post comments, and move tickets to
             In Review — scoped to your project access only.
           </p>
         </div>
         <Button size="sm" className="h-8 shrink-0" onClick={handleOpenDialog}>
-          <Plus className="h-4 w-4 mr-1" />
+          <Plus className="mr-1 h-4 w-4" />
           New token
         </Button>
       </div>
@@ -478,7 +483,7 @@ export function AgentTokensSection() {
           action={{ label: "New token", onClick: handleOpenDialog }}
         />
       ) : (
-        <div>
+        <div className="overflow-hidden rounded-lg border border-border/50">
           {tokens.map((token) => (
             <TokenRow key={token.id} token={token} onRevoke={handleRevoke} />
           ))}

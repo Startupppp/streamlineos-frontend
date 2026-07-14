@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Check, X, Copy } from "lucide-react";
 import { PriorityBadge } from "@/features/projects/shared/priority-badge";
+import { PM_PANEL } from "@/features/projects/shared/pm-chrome";
+import { TEXT_ONE_LINE, TEXT_TWO_LINES } from "@/features/projects/shared/text-overflow";
 
 const STATUS_BADGE_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   pending: "secondary",
@@ -57,11 +59,11 @@ export const IntakeItemCard = memo(function IntakeItemCard({ item, onAccept, onD
   const submitterDisplay = item.submitterName ?? item.submitterEmail ?? null;
 
   return (
-    <div className="flex overflow-hidden rounded-lg border border-border bg-card hover:shadow-md transition-shadow">
+    <div className={cn(PM_PANEL, "flex overflow-hidden transition-[border-color,box-shadow] duration-200 hover:border-primary/35 hover:shadow-md")}>
       <div className={cn("w-1 shrink-0", STATUS_LEFT_COLOR[item.status] ?? "bg-border")} />
-      <div className="flex-1 py-3 px-4 min-w-0">
-        <div className="flex items-center gap-2 mb-1 flex-wrap">
-          <p className="font-semibold truncate text-sm">{item.title}</p>
+      <div className="min-w-0 flex-1 px-4 py-3">
+        <div className="mb-1 flex flex-wrap items-center gap-2">
+          <p className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>{item.title}</p>
           <Badge
             variant={STATUS_BADGE_VARIANT[item.status] ?? "outline"}
             className="text-xs font-medium px-1.5 py-0.5 rounded-md"
@@ -77,14 +79,14 @@ export const IntakeItemCard = memo(function IntakeItemCard({ item, onAccept, onD
             <PriorityBadge priority={item.priority} showLabel size="sm" />
           )}
         </div>
-        {item.description != null && (
-          <p className="text-sm text-muted-foreground line-clamp-2">
+        {item.description != null ? (
+          <p className={cn(TEXT_TWO_LINES, "text-sm text-muted-foreground")}>
             {typeof item.description === "string" ? item.description : JSON.stringify(item.description)}
           </p>
-        )}
-        <p className="text-xs text-muted-foreground mt-1">
+        ) : null}
+        <p className={cn(TEXT_ONE_LINE, "mt-1 text-xs text-muted-foreground")}>
           {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : ""}
-          {submitterDisplay && ` · ${submitterDisplay}`}
+          {submitterDisplay ? ` · ${submitterDisplay}` : ""}
         </p>
         {item.declineReason && (
           <p className="text-xs text-destructive mt-1">Reason: {item.declineReason}</p>

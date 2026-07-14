@@ -2,7 +2,6 @@
 
 import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
 import { Siren, Plus, MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { useIncidents, useDeleteIncident } from "@/hooks/api/projects/incidents";
@@ -27,6 +26,15 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { IncidentSheet } from "./incident-sheet";
 import { getSlaState } from "./sla";
 import type { Incident, IncidentSeverity, IncidentStatus } from "@/types/projects";
+import {
+  PmPageShell,
+  PmPanel,
+  PmSection,
+  PM_TOOLBAR,
+} from "@/features/projects/shared/pm-chrome";
+import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const SEVERITY_STYLES: Record<IncidentSeverity, string> = {
   critical: "text-red-700 border-red-300 bg-red-50 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
@@ -56,7 +64,6 @@ interface IncidentsPageProps { projectId: number }
 
 export function IncidentsPage({ projectId }: IncidentsPageProps) {
   const canManage = useCan("projects:incidents:manage");
-  const prefersReduced = useReducedMotion();
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -93,7 +100,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
       { projectId, id: deleteTarget.id },
       {
         onSuccess: () => { toast.success("Incident deleted"); setDeleteTarget(null); },
-        onError: () => toast.error("Failed to delete incident"),
+        onError: (error) => toast.error(getErrorMessage(error)),
       },
     );
   }, [deleteTarget, deleteIncident, projectId]);
@@ -112,7 +119,11 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
     {
       key: "title",
       header: "Title",
-      cell: (row) => <span className="text-[11px] font-medium">{row.title}</span>,
+      cell: (row) => (
+        <span className={cn("text-[11px] font-medium", TEXT_ONE_LINE)} title={row.title}>
+          {row.title}
+        </span>
+      ),
     },
     {
       key: "severity",
@@ -187,27 +198,41 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
   ], [canManage, projectId, handleEdit, members]);
 
   const filtersBar = (
-    <div className="flex items-center gap-2 flex-wrap w-full">
-      <Input
-        placeholder="Search incidents..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="h-7 text-[11px] w-44"
-      />
-      <Select value={statusFilter} onValueChange={setStatusFilter}>
-        <SelectTrigger className="h-7 text-[11px] w-36"><SelectValue placeholder="Status" /></SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All statuses</SelectItem>
-          {STATUSES.map((s) => <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>)}
-        </SelectContent>
-      </Select>
-      <Select value={severityFilter} onValueChange={setSeverityFilter}>
-        <SelectTrigger className="h-7 text-[11px] w-28"><SelectValue placeholder="Severity" /></SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All severities</SelectItem>
-          {SEVERITIES.map((s) => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}
-        </SelectContent>
-      </Select>
+    <div className={cn(PM_TOOLBAR, "sm:justify-start")}>
+      <div className="flex w-full min-w-0 flex-wrap items-center gap-2">
+        <Input
+          placeholder="Search incidents..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="h-7 w-44 text-[11px]"
+        />
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="h-7 w-36 text-[11px]">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All statuses</SelectItem>
+            {STATUSES.map((s) => (
+              <SelectItem key={s} value={s}>
+                {STATUS_LABELS[s]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={severityFilter} onValueChange={setSeverityFilter}>
+          <SelectTrigger className="h-7 w-28 text-[11px]">
+            <SelectValue placeholder="Severity" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All severities</SelectItem>
+            {SEVERITIES.map((s) => (
+              <SelectItem key={s} value={s} className="capitalize">
+                {s}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
     </div>
   );
 
@@ -226,35 +251,44 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
         ) : undefined
       }
     >
-      <div className="flex flex-1 min-h-0 flex-col space-y-4">
-        <StatCardGrid cols={3}>
-          <StatCard label="Open" value={openCount} icon={Siren} tone="amber" isLoading={isLoading} />
-          <StatCard label="SLA Breached" value={slaBreachedCount} tone="red" isLoading={isLoading} />
-          <StatCard label="Resolved" value={resolvedCount} tone="emerald" isLoading={isLoading} />
-        </StatCardGrid>
+      <PmPageShell>
+        <PmSection index={0}>
+          <StatCardGrid cols={3}>
+            <StatCard label="Open" value={openCount} icon={Siren} tone="amber" isLoading={isLoading} />
+            <StatCard label="SLA Breached" value={slaBreachedCount} tone="red" isLoading={isLoading} />
+            <StatCard label="Resolved" value={resolvedCount} tone="emerald" isLoading={isLoading} />
+          </StatCardGrid>
+        </PmSection>
 
-        {isLoading ? (
-          <DataTableSkeleton rows={8} columns={7} className="flex-1" />
-        ) : isError ? (
-          <ErrorState onRetry={refetch} />
-        ) : filtered.length === 0 ? (
-          <EmptyState
-            illustrationPreset="ticket"
-            title="No incidents found"
-            description={search || statusFilter !== "all" || severityFilter !== "all" ? "No incidents match the active filters." : "Create an incident to start tracking."}
-            action={canManage ? { label: "New Incident", onClick: handleNew } : undefined}
-          />
-        ) : (
-          <motion.div
-            initial={prefersReduced ? false : { opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.22, ease: "easeOut" }}
-            className="flex flex-1 min-h-0 flex-col"
-          >
-            <DataTable<Incident> data={filtered} columns={columns} getRowKey={(row) => row.id} className="flex-1 min-h-0" />
-          </motion.div>
-        )}
-      </div>
+        <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
+          {isLoading ? (
+            <DataTableSkeleton rows={8} columns={7} className="flex-1" />
+          ) : isError ? (
+            <ErrorState onRetry={refetch} />
+          ) : filtered.length === 0 ? (
+            <EmptyState
+              illustrationPreset="ticket"
+              title="No incidents found"
+              description={
+                search || statusFilter !== "all" || severityFilter !== "all"
+                  ? "No incidents match the active filters."
+                  : "Create an incident to start tracking."
+              }
+              action={canManage ? { label: "New Incident", onClick: handleNew } : undefined}
+              className="min-h-[40vh]"
+            />
+          ) : (
+            <PmPanel className="flex min-h-0 flex-1 flex-col" solid>
+              <DataTable<Incident>
+                data={filtered}
+                columns={columns}
+                getRowKey={(row) => row.id}
+                className="min-h-0 flex-1 border-0"
+              />
+            </PmPanel>
+          )}
+        </PmSection>
+      </PmPageShell>
 
       <IncidentSheet
         projectId={projectId}

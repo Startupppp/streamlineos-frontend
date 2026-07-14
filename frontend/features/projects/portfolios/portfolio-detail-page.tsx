@@ -1,41 +1,93 @@
-﻿"use client";
+"use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Plus, X, MoreHorizontal } from "lucide-react";
 import Link from "next/link";
-import { usePortfolio, useUpdatePortfolio, useDeletePortfolio, useLinkPortfolioProject, useUnlinkPortfolioProject, useProjects } from "@/hooks/api/projects";
+import {
+  usePortfolio,
+  useUpdatePortfolio,
+  useDeletePortfolio,
+  useLinkPortfolioProject,
+  useUnlinkPortfolioProject,
+  useProjects,
+} from "@/hooks/api/projects";
 import { useCan } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { LoadingButton } from "@/components/ui/loading-button";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { PortfolioStatusBadge, PortfolioHealthBadge } from "./portfolio-status-badge";
 import { PortfolioFormSheet } from "./portfolio-form-sheet";
 import type { UpdatePortfolioInput } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
-
-type PortfolioTab = "projects" | "programs";
-const PORTFOLIO_TABS = ["projects", "programs"] as const;
+import {
+  PmPageShell,
+  PmPanel,
+  PmSection,
+  PM_PANEL,
+  PM_ROW,
+} from "@/features/projects/shared/pm-chrome";
+import { TEXT_ONE_LINE, TEXT_BODY } from "@/features/projects/shared/text-overflow";
+import { cn } from "@/lib/utils";
 
 interface Props {
   portfolioId: number;
 }
 
+function DetailSkeleton() {
+  return (
+    <PmPageShell>
+      <div className={cn(PM_PANEL, "space-y-3 p-4")}>
+        <div className="flex gap-2">
+          <Skeleton className="h-5 w-16 rounded-full" />
+          <Skeleton className="h-5 w-16 rounded-full" />
+          <Skeleton className="h-4 w-32" />
+        </div>
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-2/3" />
+      </div>
+      <div className={cn(PM_PANEL, "space-y-2 p-2")}>
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton key={i} className="h-10 w-full rounded-md" />
+        ))}
+      </div>
+    </PmPageShell>
+  );
+}
+
 export function PortfolioDetailPage({ portfolioId }: Props) {
   const canManage = useCan("projects:portfolios:manage");
+  const router = useRouter();
 
-  const [activeTab, setActiveTab] = useState<PortfolioTab>("projects");
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [linkProjectId, setLinkProjectId] = useState("");
@@ -51,12 +103,15 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
   const unlinkProject = useUnlinkPortfolioProject(portfolioId);
 
   function memberName(userId: string | null): string {
-    if (!userId) return "â€”";
+    if (!userId) return "—";
     const m = members.find((x) => x.userId === userId);
     return m?.name ?? m?.email ?? "Unknown";
   }
 
-  const linkedIds = useMemo(() => new Set((data?.projects ?? []).map((p) => p.id)), [data?.projects]);
+  const linkedIds = useMemo(
+    () => new Set((data?.projects ?? []).map((p) => p.id)),
+    [data?.projects],
+  );
   const availableProjects = useMemo(
     () => (allProjectsRes?.data ?? []).filter((p) => !linkedIds.has(p.id)),
     [allProjectsRes?.data, linkedIds],
@@ -64,14 +119,20 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
 
   function handleEdit(input: UpdatePortfolioInput & { id: number }) {
     updatePortfolio.mutate(input, {
-      onSuccess: () => { toast.success("Portfolio updated"); setEditOpen(false); },
+      onSuccess: () => {
+        toast.success("Portfolio updated");
+        setEditOpen(false);
+      },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
   }
 
   function handleDeleteConfirm() {
     deletePortfolio.mutate(portfolioId, {
-      onSuccess: () => { toast.success("Portfolio deleted"); window.location.href = "/projects/portfolios"; },
+      onSuccess: () => {
+        toast.success("Portfolio deleted");
+        router.push("/projects/portfolios");
+      },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
   }
@@ -79,7 +140,10 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
   function handleLink() {
     if (!linkProjectId) return;
     linkProject.mutate(parseInt(linkProjectId, 10), {
-      onSuccess: () => { toast.success("Project linked"); setLinkProjectId(""); },
+      onSuccess: () => {
+        toast.success("Project linked");
+        setLinkProjectId("");
+      },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
   }
@@ -91,23 +155,38 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
     });
   }
 
-  function handleTabChange(v: string) {
-    const tab = PORTFOLIO_TABS.find((t) => t === v);
-    if (tab) setActiveTab(tab);
+  function handleOpenEdit() {
+    setEditOpen(true);
+  }
+
+  function handleOpenDelete() {
+    setDeleteOpen(true);
+  }
+
+  function handleRetry() {
+    void refetch();
+  }
+
+  function handleUnlinkClick(projectId: number) {
+    handleUnlink(projectId);
   }
 
   if (isLoading) {
     return (
-      <PageWrapper title="Portfolio" eyebrow="Portfolio" backHref="/projects/portfolios">
-        <DataTableSkeleton rows={4} columns={3} className="flex-1" />
+      <PageWrapper title="Portfolio" eyebrow="Portfolios" backHref="/projects/portfolios">
+        <DetailSkeleton />
       </PageWrapper>
     );
   }
 
   if (isError || !data) {
     return (
-      <PageWrapper title="Portfolio" eyebrow="Portfolio" backHref="/projects/portfolios">
-        <ErrorState className="flex-1" onRetry={() => void refetch()} />
+      <PageWrapper title="Portfolio" eyebrow="Portfolios" backHref="/projects/portfolios">
+        <PmPageShell withGlow={false}>
+          <PmPanel className="flex min-h-[14rem] items-center justify-center p-6">
+            <ErrorState className="flex-1" onRetry={handleRetry} />
+          </PmPanel>
+        </PmPageShell>
       </PageWrapper>
     );
   }
@@ -115,115 +194,139 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
   return (
     <PageWrapper
       title={data.name}
-      eyebrow="Portfolio"
+      eyebrow="Portfolios"
       backHref="/projects/portfolios"
-      actions={canManage ? (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5">
-              <MoreHorizontal className="h-3.5 w-3.5" /> Actions
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setEditOpen(true)}>Edit Portfolio</DropdownMenuItem>
-            <DropdownMenuItem variant="destructive" onClick={() => setDeleteOpen(true)}>Delete Portfolio</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ) : undefined}
+      actions={
+        canManage ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
+                <MoreHorizontal className="h-3.5 w-3.5" /> Actions
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleOpenEdit}>Edit Portfolio</DropdownMenuItem>
+              <DropdownMenuItem variant="destructive" onClick={handleOpenDelete}>
+                Delete Portfolio
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : undefined
+      }
     >
-      <div className="flex flex-1 min-h-0 flex-col space-y-6">
-        <div className="flex flex-wrap items-center gap-2 pb-4 border-b border-border">
-          <PortfolioStatusBadge status={data.status} />
-          <PortfolioHealthBadge health={data.health} />
-          <span className="text-sm text-muted-foreground">Owner: <span className="text-foreground">{memberName(data.ownerId)}</span></span>
-        </div>
-
-        {data.strategicGoal && (
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Strategic Goal</p>
-            <p className="text-sm text-foreground">{data.strategicGoal}</p>
-          </div>
-        )}
-
-        {data.description && (
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Description</p>
-            <p className="text-sm text-muted-foreground">{data.description}</p>
-          </div>
-        )}
-
-        <Tabs value={activeTab} onValueChange={handleTabChange}>
-          <TabsList>
-            <TabsTrigger value="projects">
-              Linked Projects
-              {data.projects.length > 0 && (
-                <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">{data.projects.length}</Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="programs">
-              Programs
-              {data.programs.length > 0 && (
-                <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">{data.programs.length}</Badge>
-              )}
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="projects">
-            <div className="space-y-3">
-              {canManage && availableProjects.length > 0 && (
-                <div className="flex items-center gap-2">
-                  <Select value={linkProjectId} onValueChange={setLinkProjectId}>
-                    <SelectTrigger className="h-7 w-48 text-xs"><SelectValue placeholder="Link a project…" /></SelectTrigger>
-                    <SelectContent>
-                      {availableProjects.map((p) => (
-                        <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Button size="sm" className="h-7 text-xs gap-1" onClick={handleLink} disabled={!linkProjectId || linkProject.isPending}>
-                    <Plus className="h-3 w-3" /> Link
-                  </Button>
-                </div>
-              )}
-              {data.projects.length === 0 ? (
-                <EmptyState illustrationPreset="projects" title="No linked projects" description="Link projects to this portfolio to track them here." compact />
-              ) : (
-                <div className="rounded-lg border border-border divide-y divide-border/50">
-                  {data.projects.map((proj) => (
-                    <div key={proj.id} className="flex items-center justify-between px-4 py-2.5 hover:bg-muted/30">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <span className="font-mono text-xs text-muted-foreground shrink-0">{proj.key}</span>
-                        <Link href={`/projects/${proj.id}`} className="text-sm font-medium text-foreground hover:text-primary truncate">{proj.name}</Link>
-                        <Badge variant="outline" className="text-[10px] px-1.5 py-0.5 shrink-0">{proj.status}</Badge>
-                      </div>
-                      {canManage && (
-                        <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => handleUnlink(proj.id)} disabled={unlinkProject.isPending}>
-                          <X className="h-3.5 w-3.5" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
+      <PmPageShell>
+        <PmSection index={0}>
+          <PmPanel className="space-y-4 p-4">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <PortfolioStatusBadge status={data.status} />
+              <PortfolioHealthBadge health={data.health} />
+              <span className="text-sm text-muted-foreground">
+                Owner:{" "}
+                <span className="text-foreground">{memberName(data.ownerId)}</span>
+              </span>
             </div>
-          </TabsContent>
 
-          <TabsContent value="programs">
-            {data.programs.length === 0 ? (
-              <EmptyState illustrationPreset="projects" title="No programs" description="Programs in this portfolio will appear here." compact />
-            ) : (
-              <div className="rounded-lg border border-border divide-y divide-border/50">
-                {data.programs.map((prog) => (
-                  <div key={prog.id} className="flex items-center justify-between px-4 py-2.5 hover:bg-muted/30">
-                    <Link href={`/projects/programs/${prog.id}`} className="text-sm font-medium text-foreground hover:text-primary">{prog.name}</Link>
-                    <PortfolioStatusBadge status={prog.status} />
-                  </div>
-                ))}
+            {data.strategicGoal ? (
+              <div>
+                <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Strategic Goal
+                </p>
+                <p className={cn(TEXT_BODY, "text-sm text-foreground")}>{data.strategicGoal}</p>
               </div>
-            )}
-          </TabsContent>
-        </Tabs>
-      </div>
+            ) : null}
+
+            {data.description ? (
+              <div>
+                <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Description
+                </p>
+                <p className={cn(TEXT_BODY, "text-sm text-muted-foreground")}>{data.description}</p>
+              </div>
+            ) : null}
+          </PmPanel>
+        </PmSection>
+
+        <PmSection index={1} className="space-y-3">
+          <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Linked Projects
+              {data.projects.length > 0 ? ` (${data.projects.length})` : ""}
+            </p>
+            {canManage && availableProjects.length > 0 ? (
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <Select value={linkProjectId} onValueChange={setLinkProjectId}>
+                  <SelectTrigger className="h-7 w-48 text-xs">
+                    <SelectValue placeholder="Link a project…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableProjects.map((p) => (
+                      <SelectItem key={p.id} value={String(p.id)}>
+                        {p.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <LoadingButton
+                  size="sm"
+                  className="h-7 gap-1 text-xs"
+                  onClick={handleLink}
+                  disabled={!linkProjectId}
+                  isPending={linkProject.isPending}
+                  loadingText="Linking…"
+                >
+                  <Plus className="h-3 w-3" /> Link
+                </LoadingButton>
+              </div>
+            ) : null}
+          </div>
+
+          {data.projects.length === 0 ? (
+            <PmPanel className="flex items-center justify-center p-4">
+              <EmptyState
+                illustrationPreset="projects"
+                title="No linked projects"
+                description="Link projects to this portfolio to track them here."
+                compact
+              />
+            </PmPanel>
+          ) : (
+            <PmPanel>
+              {data.projects.map((proj) => (
+                <div key={proj.id} className={PM_ROW}>
+                  <span className="shrink-0 font-mono text-xs text-muted-foreground">
+                    {proj.key}
+                  </span>
+                  <Link
+                    href={`/projects/${proj.id}`}
+                    className={cn(
+                      TEXT_ONE_LINE,
+                      "flex-1 text-sm font-medium text-foreground hover:text-primary",
+                    )}
+                    title={proj.name}
+                  >
+                    {proj.name}
+                  </Link>
+                  <Badge variant="outline" className="shrink-0 px-1.5 py-0.5 text-[10px]">
+                    {proj.status}
+                  </Badge>
+                  {canManage ? (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 shrink-0"
+                      onClick={() => handleUnlinkClick(proj.id)}
+                      disabled={unlinkProject.isPending}
+                      aria-label={`Unlink ${proj.name}`}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                  ) : null}
+                </div>
+              ))}
+            </PmPanel>
+          )}
+        </PmSection>
+      </PmPageShell>
 
       <PortfolioFormSheet
         open={editOpen}
@@ -240,11 +343,18 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete &ldquo;{data.name}&rdquo;?</AlertDialogTitle>
-            <AlertDialogDescription>This action cannot be undone. Projects will not be deleted.</AlertDialogDescription>
+            <AlertDialogDescription>
+              This action cannot be undone. Projects will not be deleted.
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction className="bg-destructive text-destructive-foreground" onClick={handleDeleteConfirm}>Delete</AlertDialogAction>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground"
+              onClick={handleDeleteConfirm}
+            >
+              {deletePortfolio.isPending ? "Deleting…" : "Delete"}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

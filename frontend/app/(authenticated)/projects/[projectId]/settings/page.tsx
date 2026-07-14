@@ -26,6 +26,12 @@ import {
 import { CustomFieldsSettings } from "@/features/projects/settings/custom-fields-settings";
 import { LabelsSettings } from "@/features/projects/settings/labels-settings";
 import { StatusesSettings } from "@/features/projects/settings/statuses-settings";
+import {
+  PmPageShell,
+  PmPanel,
+  PmSection,
+} from "@/features/projects/shared/pm-chrome";
+import { TEXT_ONE_LINE, TEXT_BODY } from "@/features/projects/shared/text-overflow";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -189,18 +195,20 @@ export default function ProjectSettingsPage({ params }: PageProps) {
   if (isLoading) {
     return (
       <PageWrapper title="Settings" eyebrow="Project">
-        <div className="flex flex-col md:flex-row gap-4 pb-8">
-          <div className="flex md:flex-col gap-0.5 md:w-48 shrink-0 pb-2 md:pb-0 border-b md:border-b-0 md:border-r border-border md:pr-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-8 w-24 md:w-full rounded-md" />
-            ))}
+        <PmPageShell>
+          <div className="flex flex-col gap-4 pb-8 md:flex-row">
+            <div className="flex shrink-0 gap-0.5 border-b border-border pb-2 md:w-48 md:flex-col md:border-b-0 md:border-r md:pb-0 md:pr-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-8 w-24 rounded-md md:w-full" />
+              ))}
+            </div>
+            <div className="min-w-0 flex-1 space-y-3">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-24 w-full" />
+              <Skeleton className="h-10 w-full" />
+            </div>
           </div>
-          <div className="flex-1 min-w-0 space-y-3">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-24 w-full" />
-            <Skeleton className="h-10 w-full" />
-          </div>
-        </div>
+        </PmPageShell>
       </PageWrapper>
     );
   }
@@ -208,16 +216,18 @@ export default function ProjectSettingsPage({ params }: PageProps) {
   if (!project) {
     return (
       <PageWrapper title="Settings" eyebrow="Project">
-        <div className="flex items-center justify-center h-64" role="alert">
-          <div className="text-center space-y-2">
-            <h2 className="text-lg font-semibold text-destructive">
-              Project not found
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              The requested project could not be loaded.
-            </p>
-          </div>
-        </div>
+        <PmPageShell>
+          <PmPanel className="flex h-64 items-center justify-center" solid>
+            <div className="space-y-2 text-center" role="alert">
+              <h2 className="text-lg font-semibold text-destructive">
+                Project not found
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                The requested project could not be loaded.
+              </p>
+            </div>
+          </PmPanel>
+        </PmPageShell>
       </PageWrapper>
     );
   }
@@ -228,116 +238,127 @@ export default function ProjectSettingsPage({ params }: PageProps) {
       title="Settings"
       subtitle={project.name}
     >
-      <div className="flex flex-col md:flex-row gap-4 pb-8">
-        <nav
-          aria-label="Project settings"
-          className="flex md:flex-col gap-0.5 overflow-x-auto md:overflow-visible w-full md:w-48 shrink-0 pb-2 md:pb-0 border-b md:border-b-0 md:border-r border-border md:pr-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-        >
-          {navSections.map((section) => (
-            <button
-              key={section.id}
-              type="button"
-              data-section={section.id}
-              onClick={handleSectionClick}
-              className={cn(
-                "whitespace-nowrap rounded-md px-3 py-2 text-xs text-left transition-colors shrink-0",
-                section.id === "danger" &&
-                  "md:mt-2 md:pt-2 md:border-t md:border-border max-md:ml-1 max-md:pl-2 max-md:border-l max-md:border-border",
-                activeSection === section.id
-                  ? section.id === "danger"
-                    ? "bg-destructive/10 text-destructive font-medium"
-                    : "bg-primary/10 text-foreground font-medium"
-                  : section.id === "danger"
-                    ? "text-destructive hover:bg-destructive/5 hover:text-destructive"
-                    : "text-foreground/80 hover:bg-muted hover:text-foreground"
-              )}
-            >
-              {section.label}
-            </button>
-          ))}
-        </nav>
+      <PmPageShell>
+        <div className="flex flex-col gap-4 pb-8 md:flex-row">
+          <PmSection index={0} className="w-full shrink-0 md:w-48">
+            <PmPanel className="p-1.5">
+              <nav
+                aria-label="Project settings"
+                className="flex w-full gap-0.5 overflow-x-auto md:flex-col md:overflow-visible [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+              >
+                {navSections.map((section) => (
+                  <button
+                    key={section.id}
+                    type="button"
+                    data-section={section.id}
+                    onClick={handleSectionClick}
+                    className={cn(
+                      "shrink-0 rounded-md px-3 py-2 text-left text-xs transition-colors",
+                      TEXT_ONE_LINE,
+                      section.id === "danger" &&
+                        "md:mt-2 md:border-t md:border-border md:pt-2 max-md:ml-1 max-md:border-l max-md:border-border max-md:pl-2",
+                      activeSection === section.id
+                        ? section.id === "danger"
+                          ? "bg-destructive/10 font-medium text-destructive"
+                          : "bg-primary/10 font-medium text-foreground"
+                        : section.id === "danger"
+                          ? "text-destructive hover:bg-destructive/5 hover:text-destructive"
+                          : "text-foreground/80 hover:bg-muted hover:text-foreground",
+                    )}
+                  >
+                    {section.label}
+                  </button>
+                ))}
+              </nav>
+            </PmPanel>
+          </PmSection>
 
-        <div className="flex-1 min-w-0">
-          {activeSection === "general" && (
-            <div className="bg-card border border-border rounded-lg p-4">
-              <div className="pb-3 mb-3 border-b border-border">
-                <h3 className="text-sm font-semibold">General</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Project name, description, status, and members.
-                </p>
-              </div>
-              <ProjectInfoSection
-                form={form}
-                isPending={updateMutation.isPending}
-                originalMemberIds={
-                  project.members?.map((m: { userId: string }) => m.userId) ??
-                  []
-                }
-                onMemberRemoved={handleMemberRemoved}
-                onSubmit={handleSubmit}
-                MembersSelector={MembersSelector}
-              />
-            </div>
-          )}
+          <PmSection index={1} className="min-w-0 flex-1">
+            {activeSection === "general" ? (
+              <PmPanel className="p-4" solid>
+                <div className="mb-3 border-b border-border pb-3">
+                  <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>General</h3>
+                  <p className={cn("mt-0.5 text-xs text-muted-foreground", TEXT_BODY)}>
+                    Project name, description, status, and members.
+                  </p>
+                </div>
+                <ProjectInfoSection
+                  form={form}
+                  isPending={updateMutation.isPending}
+                  originalMemberIds={
+                    project.members?.map((m: { userId: string }) => m.userId) ??
+                    []
+                  }
+                  onMemberRemoved={handleMemberRemoved}
+                  onSubmit={handleSubmit}
+                  MembersSelector={MembersSelector}
+                />
+              </PmPanel>
+            ) : null}
 
-          {activeSection === "labels" && (
-            <div className="bg-card border border-border rounded-lg p-4">
-              <div className="pb-3 mb-3 border-b border-border">
-                <h3 className="text-sm font-semibold">Labels</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Manage labels for organizing tickets across this organization.
-                </p>
-              </div>
-              <LabelsSettings />
-            </div>
-          )}
+            {activeSection === "labels" ? (
+              <PmPanel className="p-4" solid>
+                <div className="mb-3 border-b border-border pb-3">
+                  <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>Labels</h3>
+                  <p className={cn("mt-0.5 text-xs text-muted-foreground", TEXT_BODY)}>
+                    Manage labels for organizing tickets across this organization.
+                  </p>
+                </div>
+                <LabelsSettings />
+              </PmPanel>
+            ) : null}
 
-          {activeSection === "statuses" && (
-            <div className="bg-card border border-border rounded-lg p-4">
-              <div className="pb-3 mb-3 border-b border-border">
-                <h3 className="text-sm font-semibold">Workflow Statuses</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Define custom workflow statuses for this project.
-                </p>
-              </div>
-              <StatusesSettings projectId={projectId} />
-            </div>
-          )}
+            {activeSection === "statuses" ? (
+              <PmPanel className="p-4" solid>
+                <div className="mb-3 border-b border-border pb-3">
+                  <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>
+                    Workflow Statuses
+                  </h3>
+                  <p className={cn("mt-0.5 text-xs text-muted-foreground", TEXT_BODY)}>
+                    Define custom workflow statuses for this project.
+                  </p>
+                </div>
+                <StatusesSettings projectId={projectId} />
+              </PmPanel>
+            ) : null}
 
-          {activeSection === "custom-fields" && (
-            <div className="bg-card border border-border rounded-lg p-4">
-              <div className="pb-3 mb-3 border-b border-border">
-                <h3 className="text-sm font-semibold">Custom Fields</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Define additional data fields for tickets in this project.
-                </p>
-              </div>
-              <CustomFieldsSettings projectId={projectId} />
-            </div>
-          )}
+            {activeSection === "custom-fields" ? (
+              <PmPanel className="p-4" solid>
+                <div className="mb-3 border-b border-border pb-3">
+                  <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>
+                    Custom Fields
+                  </h3>
+                  <p className={cn("mt-0.5 text-xs text-muted-foreground", TEXT_BODY)}>
+                    Define additional data fields for tickets in this project.
+                  </p>
+                </div>
+                <CustomFieldsSettings projectId={projectId} />
+              </PmPanel>
+            ) : null}
 
-          {activeSection === "danger" && isOwner && (
-            <div className="bg-destructive/5 border border-destructive/30 rounded-lg p-4">
-              <div className="pb-3 mb-3 border-b border-destructive/20">
-                <h3 className="text-sm font-semibold text-destructive">
-                  Danger Zone
-                </h3>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Irreversible actions for this project.
-                </p>
-              </div>
-              <DangerZoneSection
-                projectName={project.name}
-                isPending={deleteMutation.isPending}
-                deleteDialogOpen={deleteDialogOpen}
-                onDeleteClick={handleDeleteClick}
-                onDeleteDialogChange={setDeleteDialogOpen}
-                onDeleteConfirm={handleDeleteConfirm}
-              />
-            </div>
-          )}
+            {activeSection === "danger" && isOwner ? (
+              <PmPanel className="border-destructive/30 bg-destructive/5 p-4" solid>
+                <div className="mb-3 border-b border-destructive/20 pb-3">
+                  <h3 className={cn("text-sm font-semibold text-destructive", TEXT_ONE_LINE)}>
+                    Danger Zone
+                  </h3>
+                  <p className={cn("mt-0.5 text-xs text-muted-foreground", TEXT_BODY)}>
+                    Irreversible actions for this project.
+                  </p>
+                </div>
+                <DangerZoneSection
+                  projectName={project.name}
+                  isPending={deleteMutation.isPending}
+                  deleteDialogOpen={deleteDialogOpen}
+                  onDeleteClick={handleDeleteClick}
+                  onDeleteDialogChange={setDeleteDialogOpen}
+                  onDeleteConfirm={handleDeleteConfirm}
+                />
+              </PmPanel>
+            ) : null}
+          </PmSection>
         </div>
-      </div>
+      </PmPageShell>
 
       <ReassignDialog
         open={reassignDialog !== null}

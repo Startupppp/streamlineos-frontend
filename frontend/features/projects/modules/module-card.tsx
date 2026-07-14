@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 import type { Module } from "@/types/projects/projects";
 import type { ModuleStatus } from "@/types/projects/shared";
 import { getModuleAvatarDisplay } from "@/features/projects/modules/lib/module-name";
+import { PM_PANEL } from "@/features/projects/shared/pm-chrome";
+import { TEXT_ONE_LINE, TEXT_TWO_LINES } from "@/features/projects/shared/text-overflow";
 
 interface ModuleStatusStyle {
   label: string;
@@ -120,8 +122,8 @@ export const ModuleCard = memo(function ModuleCard({
       >
         <article
           className={cn(
-            "relative flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card",
-            "border-l-[3px] shadow-sm",
+            PM_PANEL,
+            "relative flex h-full flex-col border-l-[3px]",
             "transition-[border-color,box-shadow] duration-200 ease-out motion-reduce:transition-none",
             "group-hover:border-primary/40 group-hover:shadow-md",
             style.stripe,
@@ -150,7 +152,7 @@ export const ModuleCard = memo(function ModuleCard({
 
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-2">
-                  <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground transition-colors group-hover:text-primary">
+                  <h3 className={cn(TEXT_TWO_LINES, "text-sm font-semibold leading-snug text-foreground transition-colors group-hover:text-primary")}>
                     {mod.name}
                   </h3>
                   <span
@@ -164,7 +166,7 @@ export const ModuleCard = memo(function ModuleCard({
                 </div>
 
                 {mod.description ? (
-                  <p className="mt-1 line-clamp-1 text-[11px] text-muted-foreground">
+                  <p className={cn(TEXT_ONE_LINE, "mt-1 text-[11px] text-muted-foreground")}>
                     {mod.description}
                   </p>
                 ) : null}

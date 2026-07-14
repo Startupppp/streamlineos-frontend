@@ -43,6 +43,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
 import { getColorSafe, priorityColors } from "@/lib/theme-constants";
 import type { ProjectStatusRecord, Ticket } from "@/types/projects";
+import { PM_PANEL } from "@/features/projects/shared/pm-chrome";
+import { TEXT_ONE_LINE, TEXT_TWO_LINES } from "@/features/projects/shared/text-overflow";
 
 export interface EpicCardProps {
   epic: {
@@ -55,6 +57,7 @@ export interface EpicCardProps {
   };
   stories: Ticket[];
   projectId: number;
+  projectKey?: string | null;
   projectStatuses?: ProjectStatusRecord[];
   unlinkedStories: Array<{ id: number; title: string }>;
   onDeleteEpic: (epicId: number) => void;
@@ -73,14 +76,18 @@ export const LinkStoryItem = memo(function LinkStoryItem({ story, onSelect }: Li
   return (
     <button
       onClick={handleClick}
-      className="w-full text-left p-2 text-sm rounded hover:bg-muted transition-colors truncate"
+      className={cn(
+        TEXT_ONE_LINE,
+        "w-full rounded-md p-2 text-left text-xs transition-colors hover:bg-primary/[0.06]",
+      )}
+      title={story.title}
     >
       {story.title}
     </button>
   );
 });
 
-export const EpicCard = memo(function EpicCard({ epic, stories, projectId, projectStatuses, unlinkedStories, onDeleteEpic, onLinkStory, onCreateStory, isDeleting }: EpicCardProps) {
+export const EpicCard = memo(function EpicCard({ epic, stories, projectId, projectKey, projectStatuses, unlinkedStories, onDeleteEpic, onLinkStory, onCreateStory, isDeleting }: EpicCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [newStoryTitle, setNewStoryTitle] = useState("");
@@ -167,9 +174,9 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
 
   return (
     <>
-      <Card className="overflow-hidden rounded-lg border border-border bg-card">
+      <Card className={cn(PM_PANEL, "overflow-hidden shadow-sm transition-[border-color,box-shadow,background-color] duration-200 hover:border-primary/35 hover:shadow-md")}>
         <CardHeader
-          className="cursor-pointer hover:bg-muted/40 transition-colors py-3 px-4"
+          className="cursor-pointer px-3 py-2.5 transition-colors hover:bg-primary/[0.03]"
           onClick={handleToggleExpand}
           role="button"
           aria-expanded={isExpanded}
@@ -177,55 +184,75 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
           tabIndex={0}
           onKeyDown={handleKeyDown}
         >
-          <div className="flex items-start justify-between">
-            <div className="flex items-start gap-2.5 min-w-0">
-              <Button variant="ghost" size="icon" className="h-5 w-5 shrink-0 mt-0.5" aria-label={isExpanded ? "Collapse epic" : "Expand epic"}>
+          <div className="flex min-w-0 items-start justify-between gap-2">
+            <div className="flex min-w-0 items-start gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="mt-0.5 h-5 w-5 shrink-0"
+                aria-label={isExpanded ? "Collapse epic" : "Expand epic"}
+              >
                 {isExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
               </Button>
-              <div className="space-y-0.5 min-w-0">
-                <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
-                  <Layers className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <span className="truncate">{epic.title}</span>
+              <div className="min-w-0 space-y-0.5">
+                <CardTitle className="flex min-w-0 items-center gap-1.5 text-[13px] font-semibold">
+                  <Layers className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <span className={TEXT_ONE_LINE} title={epic.title}>
+                    {epic.title}
+                  </span>
                 </CardTitle>
-                {epic.description && (
-                  <p className="text-xs text-muted-foreground line-clamp-1">{epic.description}</p>
-                )}
+                {epic.description ? (
+                  <p className={cn(TEXT_TWO_LINES, "text-[11px] text-muted-foreground")} title={epic.description}>
+                    {epic.description}
+                  </p>
+                ) : null}
               </div>
             </div>
-            <div className="flex items-center gap-1.5 shrink-0 ml-2" onClick={handleStopPropagation}>
-              <Badge variant="outline" className={cn("text-xs", getColorSafe(priorityColors, epic.priority || "MEDIUM"))}>
+            <div className="ml-1 flex shrink-0 items-center gap-1" onClick={handleStopPropagation}>
+              <Badge
+                variant="outline"
+                className={cn("h-5 px-1.5 text-[10px]", getColorSafe(priorityColors, epic.priority || "MEDIUM"))}
+              >
                 {epic.priority || "MEDIUM"}
               </Badge>
-              <EditEpicDialog epic={epic} projectId={projectId} trigger={
-                <button ref={editTriggerRef} className="sr-only" aria-hidden tabIndex={-1}>Edit</button>
-              } />
+              <EditEpicDialog
+                epic={epic}
+                projectId={projectId}
+                trigger={
+                  <button ref={editTriggerRef} className="sr-only" aria-hidden tabIndex={-1}>
+                    Edit
+                  </button>
+                }
+              />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="More actions">
-                    <MoreHorizontal className="h-4 w-4" />
+                  <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="More actions">
+                    <MoreHorizontal className="h-3.5 w-3.5" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onSelect={handleEditMenuSelect}>
-                    <Pencil className="h-3.5 w-3.5 mr-2" /> Edit
+                    <Pencil className="mr-2 h-3.5 w-3.5" /> Edit
                   </DropdownMenuItem>
-                  <DropdownMenuItem variant="destructive"
-                    onSelect={handleDeleteMenuSelect}
-                  >
-                    <Trash2 className="h-3.5 w-3.5 mr-2" /> Delete
+                  <DropdownMenuItem variant="destructive" onSelect={handleDeleteMenuSelect}>
+                    <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
           </div>
 
-          <div className="ml-7 mt-3 space-y-1.5">
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>{completedItems} of {totalItems} stories</span>
-              <span>{completedPoints} / {totalPoints} pts</span>
+          <div className="ml-7 mt-2 space-y-1">
+            <div className="flex items-center justify-between gap-2 text-[10px] tabular-nums text-muted-foreground">
+              <span className="min-w-0 truncate">
+                {completedItems} of {totalItems} stories
+              </span>
+              <span className="shrink-0">
+                {completedPoints} / {totalPoints} pts
+              </span>
             </div>
             <div
-              className="w-full h-1.5 bg-muted rounded-full flex overflow-hidden"
+              className="flex h-1 w-full overflow-hidden rounded-full bg-muted/80"
               role="progressbar"
               aria-valuenow={totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0}
               aria-valuemin={0}
@@ -233,79 +260,95 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
               aria-label={`Epic progress: ${completedItems} of ${totalItems} stories completed`}
               aria-valuetext={`${totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0}% complete`}
             >
-              {totalItems > 0 && (
+              {totalItems > 0 ? (
                 <>
-                  <div className="bg-green-500 h-full transition-all" style={{ width: `${(completedItems / totalItems) * 100}%` }} />
-                  <div className="bg-blue-500 h-full transition-all" style={{ width: `${(inProgressItems / totalItems) * 100}%` }} />
-                  <div className="bg-muted-foreground/20 h-full transition-all" style={{ width: `${(todoItems / totalItems) * 100}%` }} />
+                  <div
+                    className="h-full bg-emerald-500 transition-[width] duration-300"
+                    style={{ width: `${(completedItems / totalItems) * 100}%` }}
+                  />
+                  <div
+                    className="h-full bg-primary/70 transition-[width] duration-300"
+                    style={{ width: `${(inProgressItems / totalItems) * 100}%` }}
+                  />
+                  <div
+                    className="h-full bg-muted-foreground/20 transition-[width] duration-300"
+                    style={{ width: `${(todoItems / totalItems) * 100}%` }}
+                  />
                 </>
-              )}
+              ) : null}
             </div>
-            {totalItems > 0 && (
-              <div className="flex gap-3 text-[10px] text-muted-foreground">
-                <span className="flex items-center gap-1"><span className="w-2 h-2 bg-green-500 rounded-full" /> Done ({completedItems})</span>
-                <span className="flex items-center gap-1"><span className="w-2 h-2 bg-blue-500 rounded-full" /> In Progress ({inProgressItems})</span>
-                <span className="flex items-center gap-1"><span className="w-2 h-2 bg-muted-foreground/30 rounded-full" /> To Do ({todoItems})</span>
+            {totalItems > 0 ? (
+              <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[9px] text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Done ({completedItems})
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary/70" /> In Progress ({inProgressItems})
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/30" /> To Do ({todoItems})
+                </span>
               </div>
-            )}
+            ) : null}
           </div>
         </CardHeader>
 
-        {isExpanded && (
-          <CardContent className="pt-0 pb-3 px-4" id={epicCardId} role="region" aria-label={`Stories for ${epic.title}`}>
-            <div className="ml-7 space-y-1.5 border-l-2 border-muted pl-3">
+        {isExpanded ? (
+          <CardContent
+            className="border-t border-border/50 px-3 pb-2.5 pt-2"
+            id={epicCardId}
+            role="region"
+            aria-label={`Stories for ${epic.title}`}
+          >
+            <div className="ml-6 space-y-1 border-l border-border/60 pl-2.5">
               {stories.map((story) => (
                 <EpicStoryRow
                   key={story.id}
                   story={story}
                   projectId={projectId}
+                  projectKey={projectKey}
                   projectStatuses={projectStatuses}
                 />
               ))}
 
-              {stories.length === 0 && (
-                <EmptyState compact title="No stories linked yet" className="py-3 border-0 bg-transparent" />
-              )}
+              {stories.length === 0 ? (
+                <EmptyState compact title="No stories linked yet" className="border-0 bg-transparent py-2.5" />
+              ) : null}
 
-              <div className="flex gap-2 pt-1.5">
+              <div className="flex min-w-0 flex-wrap gap-1.5 pt-1">
                 <Input
                   value={newStoryTitle}
                   onChange={handleTitleChange}
                   placeholder="New story title..."
                   aria-label={`Add new story to ${epic.title}`}
-                  className="h-8 text-sm flex-1"
+                  className="h-7 min-w-0 flex-1 border-border/70 bg-background/60 text-xs backdrop-blur-sm"
                   onKeyDown={handleTitleKeyDown}
                 />
-                <Button
-                  size="sm"
-                  className="h-8"
-                  onClick={handleAddStory}
-                  disabled={!newStoryTitle.trim()}
-                >
-                  <Plus className="h-3.5 w-3.5 mr-1" />
+                <Button size="sm" className="h-7 px-2.5 text-xs" onClick={handleAddStory} disabled={!newStoryTitle.trim()}>
+                  <Plus className="mr-1 h-3.5 w-3.5" />
                   Add
                 </Button>
-                {unlinkedStories.length > 0 && (
+                {unlinkedStories.length > 0 ? (
                   <Popover open={linkOpen} onOpenChange={setLinkOpen}>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" size="sm" className="h-8">
-                        <Link2 className="h-3.5 w-3.5 mr-1" />
+                      <Button variant="outline" size="sm" className="h-7 border-border/70 bg-background/60 px-2.5 text-xs backdrop-blur-sm">
+                        <Link2 className="mr-1 h-3.5 w-3.5" />
                         Link
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-72 p-2" align="end">
-                      <div className="space-y-1 max-h-48 overflow-y-auto">
+                    <PopoverContent className="w-72 p-1.5" align="end">
+                      <div className="max-h-48 space-y-0.5 overflow-y-auto">
                         {unlinkedStories.map((s) => (
                           <LinkStoryItem key={s.id} story={s} onSelect={handleSelectLink} />
                         ))}
                       </div>
                     </PopoverContent>
                   </Popover>
-                )}
+                ) : null}
               </div>
             </div>
           </CardContent>
-        )}
+        ) : null}
       </Card>
 
       <AlertDialog open={showDeleteAlert} onOpenChange={handleDeleteAlertOpenChange}>

@@ -12,6 +12,9 @@ import {
 } from "@/components/ui/select";
 import type { Sprint } from "@/types/projects";
 import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
+import { PM_TOOLBAR } from "@/features/projects/shared/pm-chrome";
+import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { cn } from "@/lib/utils";
 
 interface Member {
   id: string;
@@ -53,11 +56,18 @@ export const BulkActionBar = memo(function BulkActionBar({
   onClear,
 }: BulkActionBarProps) {
   return (
-    <div className="flex flex-wrap items-center gap-3 bg-background border-b border-border px-4 py-2 mb-2">
-      <span className="text-sm font-medium text-primary shrink-0">{selectedCount} selected</span>
-      <div className="flex items-center gap-2 ml-auto flex-wrap">
+    <div
+      className={cn(
+        PM_TOOLBAR,
+        "sticky top-0 z-10 mb-2 gap-2 border-primary/15 bg-card/70 px-2.5 py-1.5 supports-[backdrop-filter]:bg-card/55",
+      )}
+    >
+      <span className="shrink-0 rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-primary">
+        {selectedCount} selected
+      </span>
+      <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:ml-auto">
         <Select onValueChange={onBulkStatus}>
-          <SelectTrigger className="h-7 text-xs w-36">
+          <SelectTrigger className="h-7 w-[8.5rem] border-border/70 bg-background/60 text-xs backdrop-blur-sm">
             <SelectValue placeholder="Set Status" />
           </SelectTrigger>
           <SelectContent>
@@ -69,7 +79,7 @@ export const BulkActionBar = memo(function BulkActionBar({
           </SelectContent>
         </Select>
         <Select onValueChange={onBulkPriority}>
-          <SelectTrigger className="h-7 text-xs w-36">
+          <SelectTrigger className="h-7 w-[8.5rem] border-border/70 bg-background/60 text-xs backdrop-blur-sm">
             <SelectValue placeholder="Set Priority" />
           </SelectTrigger>
           <SelectContent>
@@ -81,45 +91,57 @@ export const BulkActionBar = memo(function BulkActionBar({
           </SelectContent>
         </Select>
         <Select onValueChange={onBulkAssignee}>
-          <SelectTrigger className="h-7 text-xs w-36">
+          <SelectTrigger className="h-7 w-[8.5rem] border-border/70 bg-background/60 text-xs backdrop-blur-sm">
             <SelectValue placeholder="Assign to" />
           </SelectTrigger>
           <SelectContent>
             {members.map((m) => (
               <SelectItem key={m.id} value={m.id} className="text-xs">
-                {getUserDisplayName(m)}
+                <span className={TEXT_ONE_LINE}>{getUserDisplayName(m)}</span>
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
-        {onBulkLabel !== undefined && (labels?.length ?? 0) > 0 && (
+        {onBulkLabel !== undefined && (labels?.length ?? 0) > 0 ? (
           <Select onValueChange={onBulkLabel}>
-            <SelectTrigger className="h-7 text-xs w-36">
+            <SelectTrigger className="h-7 w-[8.5rem] border-border/70 bg-background/60 text-xs backdrop-blur-sm">
               <SelectValue placeholder="Add Label" />
             </SelectTrigger>
             <SelectContent>
               {(labels ?? []).map((l) => (
                 <SelectItem key={l.id} value={String(l.id)} className="text-xs">
-                  {l.name}
+                  <span className={TEXT_ONE_LINE}>{l.name}</span>
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-        )}
-        {!hideSprint && (
+        ) : null}
+        {!hideSprint ? (
           <Select onValueChange={onBulkSprint}>
-            <SelectTrigger className="h-7 text-xs w-40">
+            <SelectTrigger className="h-7 w-40 border-border/70 bg-background/60 text-xs backdrop-blur-sm">
               <SelectValue placeholder="Move to Sprint" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="backlog" className="text-xs">Backlog (remove sprint)</SelectItem>
-              {sprints.filter((s) => s.status !== "COMPLETED").map((s) => (
-                <SelectItem key={s.id} value={String(s.id)} className="text-xs">{s.name}</SelectItem>
-              ))}
+              <SelectItem value="backlog" className="text-xs">
+                Backlog (remove sprint)
+              </SelectItem>
+              {sprints
+                .filter((s) => s.status !== "COMPLETED")
+                .map((s) => (
+                  <SelectItem key={s.id} value={String(s.id)} className="text-xs">
+                    <span className={TEXT_ONE_LINE}>{s.name}</span>
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
-        )}
-        <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={onClear}>
+        ) : null}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 w-7 shrink-0 px-0 text-xs"
+          onClick={onClear}
+          aria-label="Clear selection"
+        >
           <X className="h-3.5 w-3.5" />
         </Button>
       </div>

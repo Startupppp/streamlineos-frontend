@@ -1,53 +1,17 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback, Suspense, type ChangeEvent } from "react";
 import Link from "next/link";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   SidebarAnimatedNavIcon,
   useAnimatedNavIconHover,
 } from "@/components/layout/sidebar/sidebar-animated-nav";
+import { MenuIcon } from "@animateicons/react/lucide";
 import {
-  ActivityIcon,
-  BookOpenTextIcon,
-  ChartBarIcon,
-  CircleCheckIcon,
-  ClipboardIcon,
-  GitBranchIcon,
-  GlobeIcon,
-  IndianRupeeIcon,
-  LayersIcon,
-  LayoutGridIcon,
-  LayoutListIcon,
-  MenuIcon,
-  MessageCircleIcon,
-  PackageOpenIcon,
-  RocketIcon,
-  SettingsIcon,
-  ShieldXIcon,
-  SparklesIcon,
-  TriangleAlertIcon,
-  UserIcon,
-  UsersIcon,
-  WebhookIcon,
-  ZapIcon,
-} from "@animateicons/react/lucide";
-import {
-  Calendar,
-  CalendarClock,
-  RefreshCcw,
-  GanttChart,
-  Inbox,
-  Diamond,
-  PenTool,
   PanelLeftClose,
   PanelLeftOpen,
-  FlaskConical,
-  Bug,
-  FilePen,
-  Gavel,
-  MessageSquareText,
   ChevronsUpDown,
   Check,
   Search,
@@ -73,9 +37,15 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useCan } from "@/hooks/api/access";
-import { useProjectSidebarPrefs } from "@/features/projects/sidebar/use-project-sidebar-prefs";
-import { ProjectSidebarCustomizer } from "@/features/projects/sidebar/project-sidebar-customizer";
 import { useProjects } from "@/hooks/api/projects/projects";
+import {
+  buildMoreGroups,
+  buildPrimaryNav,
+  settingsNavItem,
+  type ProjectNavItem,
+  type ProjectNavPermissions,
+} from "@/features/projects/sidebar/project-nav-config";
+import { ProjectMoreMenu } from "@/features/projects/sidebar/project-more-menu";
 
 interface ProjectSidebarProps {
   projectId: string;
@@ -84,241 +54,99 @@ interface ProjectSidebarProps {
   defaultCollapsed?: boolean;
 }
 
-interface NavItem {
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-  href: string;
-}
-
-interface NavSection {
-  label: string;
-  items: NavItem[];
-}
-
-function useSidebarSections(baseUrl: string): NavSection[] {
-  const canQA = useCan("projects:qa:view");
-  const canBugs = useCan("projects:bugs:view");
-  const canIncidents = useCan("projects:incidents:view");
-  const canChangerequests = useCan("projects:changerequests:view");
-  const canClientVisibility = useCan("projects:clientvisibility:manage");
-  const canApprovals = useCan("projects:approvals:view");
-  const canAI = useCan("projects:ai:use");
-  const canForms = useCan("projects:forms:view");
-  const canRisks = useCan("projects:risks:view");
-  const canDecisions = useCan("projects:decisions:view");
-  const canMeetings = useCan("projects:meetings:view");
-  const canWorkflow = useCan("projects:workflow:view");
-  const canChat = useCan("projects:tickets:view");
-  const canFeedback = useCan("feedbucket:submissions:view");
-
-  return [
-    {
-      label: "Planning",
-      items: [
-        { label: "Board", icon: LayoutGridIcon, href: baseUrl },
-        { label: "Backlog", icon: LayoutListIcon, href: `${baseUrl}/backlog` },
-        { label: "My Tickets", icon: UserIcon, href: `${baseUrl}/my-tickets` },
-        { label: "Sprints", icon: Calendar, href: `${baseUrl}/sprints` },
-        ...(canMeetings
-          ? [
-              {
-                label: "Meetings",
-                icon: CalendarClock,
-                href: `${baseUrl}/meetings`,
-              },
-            ]
-          : []),
-        ...(canChat
-          ? [
-              {
-                label: "Chat",
-                icon: MessageCircleIcon,
-                href: `${baseUrl}/chat`,
-              },
-            ]
-          : []),
-      ],
-    },
-    {
-      label: "Tracking",
-      items: [
-        { label: "Cycles", icon: RefreshCcw, href: `${baseUrl}/cycles` },
-        { label: "Modules", icon: PackageOpenIcon, href: `${baseUrl}/modules` },
-        { label: "Epics", icon: LayersIcon, href: `${baseUrl}/epics` },
-        { label: "Timeline", icon: GanttChart, href: `${baseUrl}/timeline` },
-        { label: "Milestones", icon: Diamond, href: `${baseUrl}/milestones` },
-        { label: "Releases", icon: RocketIcon, href: `${baseUrl}/releases` },
-        { label: "Workload", icon: UsersIcon, href: `${baseUrl}/workload` },
-        ...(canApprovals
-          ? [
-              {
-                label: "Approvals",
-                icon: CircleCheckIcon,
-                href: `${baseUrl}/approvals`,
-              },
-            ]
-          : []),
-      ],
-    },
-    {
-      label: "Quality",
-      items: [
-        ...(canQA
-          ? [{ label: "QA / Tests", icon: FlaskConical, href: `${baseUrl}/qa` }]
-          : []),
-        ...(canBugs
-          ? [{ label: "Bugs", icon: Bug, href: `${baseUrl}/bugs` }]
-          : []),
-        ...(canIncidents
-          ? [
-              {
-                label: "Incidents",
-                icon: TriangleAlertIcon,
-                href: `${baseUrl}/incidents`,
-              },
-            ]
-          : []),
-      ],
-    },
-    {
-      label: "Client",
-      items: [
-        ...(canChangerequests
-          ? [
-              {
-                label: "Change Requests",
-                icon: FilePen,
-                href: `${baseUrl}/change-requests`,
-              },
-            ]
-          : []),
-        ...(canClientVisibility
-          ? [
-              {
-                label: "Client Portal",
-                icon: GlobeIcon,
-                href: `${baseUrl}/client-portal`,
-              },
-            ]
-          : []),
-      ],
-    },
-    {
-      label: "Governance",
-      items: [
-        ...(canRisks
-          ? [{ label: "Risks", icon: ShieldXIcon, href: `${baseUrl}/risks` }]
-          : []),
-        ...(canDecisions
-          ? [{ label: "Decisions", icon: Gavel, href: `${baseUrl}/decisions` }]
-          : []),
-      ],
-    },
-    {
-      label: "More",
-      items: [
-        ...(canForms
-          ? [{ label: "Forms", icon: ClipboardIcon, href: `${baseUrl}/forms` }]
-          : []),
-        ...(canWorkflow
-          ? [
-              {
-                label: "Workflow",
-                icon: GitBranchIcon,
-                href: `${baseUrl}/workflow`,
-              },
-            ]
-          : []),
-        { label: "Wiki", icon: BookOpenTextIcon, href: `${baseUrl}/pages` },
-        { label: "Reports", icon: ChartBarIcon, href: `${baseUrl}/analytics` },
-        {
-          label: "Agile Reports",
-          icon: ActivityIcon,
-          href: `${baseUrl}/reports`,
-        },
-        { label: "Whiteboard", icon: PenTool, href: `${baseUrl}/whiteboard` },
-        { label: "Budget", icon: IndianRupeeIcon, href: `${baseUrl}/budget` },
-        { label: "Intake", icon: Inbox, href: `${baseUrl}/intake` },
-        { label: "Automations", icon: ZapIcon, href: `${baseUrl}/automations` },
-        { label: "Webhooks", icon: WebhookIcon, href: `${baseUrl}/webhooks` },
-        ...(canFeedback
-          ? [
-              {
-                label: "Feedback",
-                icon: MessageSquareText,
-                href: `${baseUrl}/feedbucket`,
-              },
-            ]
-          : []),
-        ...(canAI
-          ? [
-              {
-                label: "AI Assistant",
-                icon: SparklesIcon,
-                href: `${baseUrl}/ai`,
-              },
-            ]
-          : []),
-        { label: "Settings", icon: SettingsIcon, href: `${baseUrl}/settings` },
-      ],
-    },
-  ].filter((s) => s.items.length > 0);
-}
-
-function applyHiddenItems(sections: NavSection[], hiddenItems: ReadonlySet<string>): NavSection[] {
-  if (hiddenItems.size === 0) return sections;
-  return sections
-    .map((section) => ({
-      ...section,
-      items: section.items.filter((item) => !hiddenItems.has(item.label)),
-    }))
-    .filter((section) => section.items.length > 0);
+function useProjectNavPermissions(): ProjectNavPermissions {
+  return {
+    canQA: useCan("projects:qa:view"),
+    canBugs: useCan("projects:bugs:view"),
+    canIncidents: useCan("projects:incidents:view"),
+    canChangerequests: useCan("projects:changerequests:view"),
+    canClientVisibility: useCan("projects:clientvisibility:manage"),
+    canApprovals: useCan("projects:approvals:view"),
+    canAI: useCan("projects:ai:use"),
+    canForms: useCan("projects:forms:view"),
+    canRisks: useCan("projects:risks:view"),
+    canDecisions: useCan("projects:decisions:view"),
+    canMeetings: useCan("projects:meetings:view"),
+    canWorkflow: useCan("projects:workflow:view"),
+    canChat: useCan("projects:tickets:view"),
+    canFeedback: useCan("feedbucket:submissions:view"),
+  };
 }
 
 function useIsActive(baseUrl: string) {
   const pathname = usePathname();
-  return (href: string) => {
-    if (href === baseUrl) return pathname === baseUrl;
-    return pathname === href || pathname?.startsWith(href + "/");
-  };
+  const searchParams = useSearchParams();
+
+  return useCallback(
+    (href: string) => {
+      if (!pathname) return false;
+      if (href.includes("view=workload")) {
+        return pathname === baseUrl && searchParams.get("view") === "workload";
+      }
+      if (href === baseUrl) {
+        if (pathname !== baseUrl) return false;
+        const view = searchParams.get("view");
+        return !view || view === "board" || view === "list" || view === "table" || view === "calendar" || view === "gantt";
+      }
+      return pathname === href || pathname.startsWith(`${href}/`);
+    },
+    [pathname, searchParams, baseUrl],
+  );
+}
+
+function getProjectInitials(key?: string, name?: string): string {
+  if (key && key.length >= 2) return key.slice(0, 2).toUpperCase();
+  if (name) {
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return `${parts[0]?.[0] ?? ""}${parts[1]?.[0] ?? ""}`.toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  }
+  return "PR";
 }
 
 function ProjectNavLink({
-  href,
-  label,
-  icon: Icon,
+  item,
   active,
   collapsed,
   onNavigate,
 }: {
-  href: string;
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
+  item: ProjectNavItem;
   active: boolean;
   collapsed: boolean;
   onNavigate?: () => void;
 }) {
   const { iconRef, animatedNavHoverHandlers } = useAnimatedNavIconHover();
+  const Icon = item.icon;
 
   const link = (
     <Link
-      href={href}
+      href={item.href}
       onClick={onNavigate}
       {...animatedNavHoverHandlers}
       className={cn(
-        "flex items-center rounded-md text-[13px] font-medium transition-colors",
-        collapsed ? "justify-center p-1.5 mx-auto" : "px-2 py-1.5",
+        "group/nav relative flex items-center rounded-lg text-[13px] font-medium",
+        "transition-[color,background-color,box-shadow,transform] duration-150 ease-out",
+        collapsed ? "mx-auto justify-center p-1.5" : "px-2.5 py-1.5",
         active
-          ? "bg-muted text-foreground"
-          : "text-muted-foreground hover:bg-muted hover:text-foreground",
+          ? "bg-primary/12 text-foreground shadow-[inset_0_0_0_1px] shadow-primary/15"
+          : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
       )}
     >
+      {active ? (
+        <span className="absolute inset-y-1.5 left-0 w-0.5 rounded-full bg-primary shadow-[0_0_10px] shadow-primary/60" />
+      ) : null}
       <SidebarAnimatedNavIcon
         icon={Icon}
         iconRef={iconRef}
-        className={cn("h-4 w-4 shrink-0", !collapsed && "mr-2")}
+        className={cn(
+          "h-4 w-4 shrink-0 transition-transform duration-150",
+          active ? "text-primary" : "group-hover/nav:scale-105",
+          !collapsed && "mr-2",
+        )}
       />
-      {!collapsed && <span className="truncate">{label}</span>}
+      {!collapsed ? <span className="truncate tracking-tight">{item.label}</span> : null}
     </Link>
   );
 
@@ -328,108 +156,74 @@ function ProjectNavLink({
     <Tooltip delayDuration={0}>
       <TooltipTrigger asChild>{link}</TooltipTrigger>
       <TooltipContent side="right" sideOffset={10} className="text-xs font-medium">
-        {label}
+        {item.label}
       </TooltipContent>
     </Tooltip>
-  );
-}
-
-function MobileProjectNavLink({
-  href,
-  label,
-  icon: Icon,
-  active,
-  onNavigate,
-}: {
-  href: string;
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-  active: boolean;
-  onNavigate: () => void;
-}) {
-  const { iconRef, animatedNavHoverHandlers } = useAnimatedNavIconHover();
-
-  return (
-    <Link
-      href={href}
-      onClick={onNavigate}
-      {...animatedNavHoverHandlers}
-      className={cn(
-        "flex items-center px-2 py-2 rounded-md text-sm font-medium transition-colors",
-        active
-          ? "bg-muted text-foreground"
-          : "text-muted-foreground hover:bg-muted hover:text-foreground",
-      )}
-    >
-      <SidebarAnimatedNavIcon
-        icon={Icon}
-        iconRef={iconRef}
-        className="h-4 w-4 mr-2.5 shrink-0"
-      />
-      {label}
-    </Link>
   );
 }
 
 function ProjectSwitcher({
   currentProjectId,
   currentProjectName,
-  currentProjectKey,
 }: {
   currentProjectId: string;
   currentProjectName: string | undefined;
-  currentProjectKey: string | undefined;
+  currentProjectKey?: string | undefined;
 }) {
   const router = useRouter();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const { data: projectsData } = useProjects({ limit: 100 });
-  const projects = projectsData?.data ?? [];
 
   const filtered = useMemo(() => {
+    const projects = projectsData?.data ?? [];
     if (!search.trim()) return projects;
     const q = search.toLowerCase();
     return projects.filter(
       (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.key.toLowerCase().includes(q),
+        p.name.toLowerCase().includes(q) || p.key.toLowerCase().includes(q),
     );
-  }, [projects, search]);
+  }, [projectsData?.data, search]);
 
-  function handleSelect(projectId: number) {
-    setOpen(false);
-    setSearch("");
-    const currentBase = `/projects/${currentProjectId}`;
-    const subPath = pathname?.startsWith(currentBase)
-      ? pathname.slice(currentBase.length)
-      : "";
-    const target = subPath ? `/projects/${projectId}${subPath}` : `/projects/${projectId}`;
-    router.push(target);
-  }
+  const handleSelect = useCallback(
+    (projectId: number) => {
+      setOpen(false);
+      setSearch("");
+      const currentBase = `/projects/${currentProjectId}`;
+      const subPath = pathname?.startsWith(currentBase)
+        ? pathname.slice(currentBase.length)
+        : "";
+      const target = subPath
+        ? `/projects/${projectId}${subPath}`
+        : `/projects/${projectId}`;
+      router.push(target);
+    },
+    [currentProjectId, pathname, router],
+  );
 
-  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
+  const handleSearchChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
-  }
+  }, []);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="flex items-center gap-0.5 text-sm font-semibold truncate flex-1 min-w-0 hover:text-foreground/80 transition-colors"
+          className="flex min-w-0 flex-1 items-center gap-0.5 text-sm font-semibold transition-colors hover:text-foreground/80"
           aria-label="Switch project"
           aria-expanded={open}
           aria-haspopup="listbox"
         >
           <span className="truncate">{currentProjectName ?? "Project"}</span>
-          <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground ml-0.5" />
+          <ChevronsUpDown className="ml-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-64 p-0" align="start" sideOffset={8}>
-        <div className="p-2 border-b">
+        <div className="border-b p-2">
           <div className="relative">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Search className="absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={search}
               onChange={handleSearchChange}
@@ -441,30 +235,33 @@ function ProjectSwitcher({
         </div>
         <ScrollArea className="max-h-64">
           {filtered.length === 0 ? (
-            <p className="py-4 text-center text-xs text-muted-foreground">No projects found.</p>
+            <p className="py-4 text-center text-xs text-muted-foreground">
+              No projects found.
+            </p>
           ) : (
             <div className="p-1" role="listbox" aria-label="Projects">
               {filtered.map((p) => {
                 const isCurrent = String(p.id) === currentProjectId;
+                const handleClick = () => handleSelect(p.id);
                 return (
                   <button
                     key={p.id}
                     type="button"
                     role="option"
                     aria-selected={isCurrent}
-                    onClick={() => handleSelect(p.id)}
+                    onClick={handleClick}
                     className={cn(
-                      "w-full flex items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors",
+                      "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors",
                       isCurrent
                         ? "bg-muted text-foreground"
-                        : "hover:bg-muted text-foreground/80 hover:text-foreground",
+                        : "text-foreground/80 hover:bg-muted hover:text-foreground",
                     )}
                   >
-                    <div className="h-5 w-5 rounded bg-primary/10 flex items-center justify-center text-primary text-[9px] font-bold shrink-0">
+                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-primary/10 text-[9px] font-bold text-primary">
                       {p.key.substring(0, 2).toUpperCase()}
                     </div>
-                    <span className="text-xs truncate flex-1 min-w-0">{p.name}</span>
-                    {isCurrent && <Check className="h-3 w-3 shrink-0 text-primary" />}
+                    <span className="min-w-0 flex-1 truncate text-xs">{p.name}</span>
+                    {isCurrent ? <Check className="h-3 w-3 shrink-0 text-primary" /> : null}
                   </button>
                 );
               })}
@@ -478,134 +275,124 @@ function ProjectSwitcher({
 
 const PROJECT_SIDEBAR_COOKIE = "project-sidebar-collapsed";
 
-function persistCollapsed(collapsed: boolean) {
-  document.cookie = `${PROJECT_SIDEBAR_COOKIE}=${collapsed}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
-}
-
-function getProjectInitials(
-  projectKey: string | undefined,
-  projectName: string | undefined,
-): string {
-  const key = projectKey?.trim();
-  if (key) return key.substring(0, 2).toUpperCase();
-  const name = (projectName ?? "").trim();
-  if (!name) return "P";
-  const words = name.split(/\s+/).filter((word) => word.length > 0);
-  if (words.length >= 2) {
-    const first = words[0]?.[0];
-    const second = words[1]?.[0];
-    if (first && second) return `${first}${second}`.toUpperCase();
-  }
-  return name.substring(0, 2).toUpperCase();
-}
-
 function DesktopSidebar({
   projectId,
   projectName,
   projectKey,
   defaultCollapsed = false,
 }: ProjectSidebarProps) {
-  const [isCollapsed, setIsCollapsed] = useState<boolean>(defaultCollapsed);
+  const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
   const baseUrl = `/projects/${projectId}`;
-  const allSections = useSidebarSections(baseUrl);
-  const { hiddenItems, toggleItem, resetPrefs } = useProjectSidebarPrefs();
-  const visibleSections = applyHiddenItems(allSections, hiddenItems);
+  const perms = useProjectNavPermissions();
+  const primary = buildPrimaryNav(baseUrl, perms);
+  const moreGroups = buildMoreGroups(baseUrl, perms);
+  const settings = settingsNavItem(baseUrl);
   const isActive = useIsActive(baseUrl);
 
-  function handleToggleCollapse() {
+  const handleToggleCollapse = useCallback(() => {
     setIsCollapsed((prev) => {
       const next = !prev;
-      persistCollapsed(next);
+      document.cookie = `${PROJECT_SIDEBAR_COOKIE}=${next}; path=/; max-age=31536000; SameSite=Lax`;
       return next;
     });
-  }
+  }, []);
 
   return (
     <TooltipProvider delayDuration={0}>
-    <div
-      className={cn(
-        "h-full flex flex-col border-r border-border bg-card/50 transition-[width] duration-200 ease-out",
-        isCollapsed ? "w-[3.25rem]" : "w-52",
-      )}
-    >
       <div
         className={cn(
-          "shrink-0 border-b",
-          isCollapsed ? "p-1.5" : "px-3 py-2.5",
+          "relative flex h-full shrink-0 flex-col overflow-hidden border-r border-border/60",
+          "bg-gradient-to-b from-card/80 via-card/50 to-background/40 backdrop-blur-xl",
+          "supports-[backdrop-filter]:bg-card/40",
+          isCollapsed ? "w-[52px]" : "w-[228px]",
         )}
       >
         <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-primary/[0.07] to-transparent"
+        />
+        <div
           className={cn(
-            "flex items-center",
-            isCollapsed ? "flex-col gap-1.5" : "gap-2",
+            "relative shrink-0 border-b border-border/50",
+            isCollapsed ? "p-1.5" : "px-2.5 py-3",
           )}
         >
-          <div className="h-7 w-7 rounded bg-primary/10 flex items-center justify-center text-primary text-[11px] font-bold shrink-0">
-            {getProjectInitials(projectKey, projectName)}
-          </div>
-          {!isCollapsed && (
-            <ProjectSwitcher
-              currentProjectId={projectId}
-              currentProjectName={projectName}
-              currentProjectKey={projectKey}
-            />
-          )}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 shrink-0 text-muted-foreground hover:text-foreground"
-            onClick={handleToggleCollapse}
-            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          >
-            {isCollapsed ? (
-              <PanelLeftOpen className="h-3.5 w-3.5" />
-            ) : (
-              <PanelLeftClose className="h-3.5 w-3.5" />
+          <div
+            className={cn(
+              "flex items-center",
+              isCollapsed ? "flex-col gap-1.5" : "gap-2",
             )}
-          </Button>
-        </div>
-      </div>
-
-      <ScrollArea className="flex-1">
-        <div className={cn("py-1.5", isCollapsed ? "px-1" : "px-1.5")}>
-          {visibleSections.map((section, si) => (
-            <div key={section.label}>
-              {si > 0 && <div className="my-1.5 mx-1 border-t" />}
-              {!isCollapsed && (
-                <p className="px-2 pt-1.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
-                  {section.label}
-                </p>
-              )}
-              {section.items.map((item) => (
-                <ProjectNavLink
-                  key={item.href}
-                  href={item.href}
-                  label={item.label}
-                  icon={item.icon}
-                  active={isActive(item.href)}
-                  collapsed={isCollapsed}
-                />
-              ))}
+          >
+            <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-[11px] font-bold text-primary-foreground shadow-[0_0_20px_-4px] shadow-primary/50 ring-1 ring-primary/30">
+              {getProjectInitials(projectKey, projectName)}
             </div>
-          ))}
+            {!isCollapsed ? (
+              <ProjectSwitcher
+                currentProjectId={projectId}
+                currentProjectName={projectName}
+                currentProjectKey={projectKey}
+              />
+            ) : null}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 shrink-0 rounded-md text-muted-foreground hover:bg-primary/10 hover:text-foreground"
+              onClick={handleToggleCollapse}
+              aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              {isCollapsed ? (
+                <PanelLeftOpen className="h-3.5 w-3.5" />
+              ) : (
+                <PanelLeftClose className="h-3.5 w-3.5" />
+              )}
+            </Button>
+          </div>
+          {!isCollapsed && projectKey ? (
+            <p className="mt-1.5 truncate px-0.5 font-mono text-[10px] tracking-wide text-muted-foreground/80">
+              {projectKey}
+            </p>
+          ) : null}
         </div>
-      </ScrollArea>
 
-      <div
-        className={cn(
-          "shrink-0 border-t py-1.5",
-          isCollapsed ? "px-1 flex justify-center" : "px-1.5",
-        )}
-      >
-        <ProjectSidebarCustomizer
-          sections={allSections}
-          hiddenItems={hiddenItems}
-          onToggleItem={toggleItem}
-          onReset={resetPrefs}
-          collapsed={isCollapsed}
-        />
+        <ScrollArea className="relative flex-1">
+          <div className={cn("space-y-0.5 py-2.5", isCollapsed ? "px-1" : "px-1.5")}>
+            {!isCollapsed ? (
+              <p className="px-2 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/50">
+                Navigate
+              </p>
+            ) : null}
+            {primary.map((item) => (
+              <ProjectNavLink
+                key={item.id}
+                item={item}
+                active={isActive(item.href)}
+                collapsed={isCollapsed}
+              />
+            ))}
+
+            <div className="pt-1.5">
+              <ProjectMoreMenu
+                baseUrl={baseUrl}
+                groups={moreGroups}
+                collapsed={isCollapsed}
+              />
+            </div>
+          </div>
+        </ScrollArea>
+
+        <div
+          className={cn(
+            "relative shrink-0 space-y-0.5 border-t border-border/50 bg-background/20 py-2 backdrop-blur-sm",
+            isCollapsed ? "px-1" : "px-1.5",
+          )}
+        >
+          <ProjectNavLink
+            item={settings}
+            active={isActive(settings.href)}
+            collapsed={isCollapsed}
+          />
+        </div>
       </div>
-    </div>
     </TooltipProvider>
   );
 }
@@ -617,21 +404,22 @@ function MobileProjectNav({
 }: ProjectSidebarProps) {
   const [open, setOpen] = useState(false);
   const baseUrl = `/projects/${projectId}`;
-  const allSections = useSidebarSections(baseUrl);
-  const { hiddenItems, toggleItem, resetPrefs } = useProjectSidebarPrefs();
-  const visibleSections = applyHiddenItems(allSections, hiddenItems);
+  const perms = useProjectNavPermissions();
+  const primary = buildPrimaryNav(baseUrl, perms);
+  const moreGroups = buildMoreGroups(baseUrl, perms);
+  const settings = settingsNavItem(baseUrl);
   const isActive = useIsActive(baseUrl);
   const pathname = usePathname();
 
-  const allItems = visibleSections.flatMap((s) => s.items);
-  const current = allItems.find((i) => isActive(i.href));
+  const current =
+    primary.find((i) => isActive(i.href)) ??
+    moreGroups.flatMap((g) => g.items).find((i) => isActive(i.href)) ??
+    (isActive(settings.href) ? settings : undefined);
 
-  function handleClose() {
-    setOpen(false);
-  }
+  const handleClose = useCallback(() => setOpen(false), []);
 
   return (
-    <div className="flex items-center gap-2 border-b px-3 py-2 bg-background">
+    <div className="flex items-center gap-2 border-b border-border/80 bg-background px-3 py-2">
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
           <Button
@@ -643,85 +431,107 @@ function MobileProjectNav({
             <MenuIcon className="h-4 w-4" />
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-64 p-0 bg-card/50">
+        <SheetContent side="left" className="w-72 bg-card/80 p-0">
           <SheetTitle className="sr-only">Project Navigation</SheetTitle>
-          <div className="flex flex-col h-full">
-            <div className="px-3 py-3 border-b">
+          <div className="flex h-full flex-col">
+            <div className="border-b border-border/80 px-3 py-3">
               <div className="flex items-center gap-2">
-                <div className="h-7 w-7 rounded bg-primary/10 flex items-center justify-center text-primary text-[11px] font-bold shrink-0">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-[11px] font-bold text-primary">
                   {getProjectInitials(projectKey, projectName)}
                 </div>
-                <span className="text-sm font-semibold truncate">
-                  {projectName ?? "Project"}
-                </span>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold">
+                    {projectName ?? "Project"}
+                  </p>
+                  {projectKey ? (
+                    <p className="font-mono text-[10px] text-muted-foreground">{projectKey}</p>
+                  ) : null}
+                </div>
               </div>
             </div>
 
             <ScrollArea className="flex-1">
-              <div className="py-1.5 px-1.5">
-                {visibleSections.map((section, si) => (
-                  <div key={section.label}>
-                    {si > 0 && <div className="my-1.5 mx-1 border-t" />}
-                    <p className="px-2 pt-1.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
-                      {section.label}
-                    </p>
-                    {section.items.map((item) => (
-                      <MobileProjectNavLink
-                        key={item.href}
-                        href={item.href}
-                        label={item.label}
-                        icon={item.icon}
-                        active={isActive(item.href)}
-                        onNavigate={handleClose}
-                      />
-                    ))}
-                  </div>
+              <div className="space-y-0.5 px-1.5 py-2">
+                <p className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                  Workspace
+                </p>
+                {primary.map((item) => (
+                  <ProjectNavLink
+                    key={item.id}
+                    item={item}
+                    active={isActive(item.href)}
+                    collapsed={false}
+                    onNavigate={handleClose}
+                  />
                 ))}
+                <div className="pt-1">
+                  <ProjectMoreMenu
+                    baseUrl={baseUrl}
+                    groups={moreGroups}
+                    collapsed={false}
+                    onNavigate={handleClose}
+                  />
+                </div>
               </div>
             </ScrollArea>
 
-            <div className="shrink-0 border-t py-1.5 px-1.5">
-              <ProjectSidebarCustomizer
-                sections={allSections}
-                hiddenItems={hiddenItems}
-                onToggleItem={toggleItem}
-                onReset={resetPrefs}
+            <div className="shrink-0 border-t border-border/80 px-1.5 py-1.5">
+              <ProjectNavLink
+                item={settings}
+                active={isActive(settings.href)}
                 collapsed={false}
+                onNavigate={handleClose}
               />
             </div>
           </div>
         </SheetContent>
       </Sheet>
 
-      <div className="flex items-center gap-1.5 min-w-0 text-sm">
+      <div className="flex min-w-0 items-center gap-1.5 text-sm">
         <Link
-          href={`/projects/${projectId}`}
-          className="font-semibold text-foreground shrink-0"
+          href={baseUrl}
+          className="shrink-0 font-semibold text-foreground"
         >
-          {projectKey}
+          {projectKey ?? "Project"}
         </Link>
-        {current && pathname !== baseUrl && (
+        {current && pathname !== baseUrl ? (
           <>
             <span className="text-muted-foreground">/</span>
-            <span className="text-muted-foreground truncate">
-              {current.label}
-            </span>
+            <span className="truncate text-muted-foreground">{current.label}</span>
           </>
-        )}
+        ) : null}
       </div>
     </div>
+  );
+}
+
+function SidebarSuspenseFallback({
+  defaultCollapsed,
+}: {
+  defaultCollapsed?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "hidden h-full shrink-0 border-r border-border/80 bg-card/40 md:flex",
+        defaultCollapsed ? "w-[52px]" : "w-[220px]",
+      )}
+    />
   );
 }
 
 export function ProjectSidebar(props: ProjectSidebarProps) {
   return (
     <>
-      <div className="hidden md:flex h-full">
-        <DesktopSidebar {...props} />
+      <div className="hidden h-full md:flex">
+        <Suspense fallback={<SidebarSuspenseFallback defaultCollapsed={props.defaultCollapsed} />}>
+          <DesktopSidebar {...props} />
+        </Suspense>
       </div>
-
       <div className="md:hidden">
-        <MobileProjectNav {...props} />
+        <Suspense fallback={null}>
+          <MobileProjectNav {...props} />
+        </Suspense>
       </div>
     </>
   );

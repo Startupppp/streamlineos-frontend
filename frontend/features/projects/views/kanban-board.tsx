@@ -30,8 +30,9 @@ import {
   filterHiddenCompletedTickets,
   isCompletedTicketStatus,
 } from "../shared/completed-status";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useCan } from "@/hooks/api/access";
+import { pmSnappy, scaleIn } from "@/features/projects/shared/pm-motion";
 
 type UpdateOrderContext = { previous: KanbanTicket[] };
 
@@ -124,6 +125,7 @@ export function KanbanBoard({
   hideCompleted = false,
 }: KanbanBoardProps) {
   const canManage = useCan("projects:manage");
+  const shouldReduceMotion = useReducedMotion();
   const [optimisticTickets, setOptimisticTickets] = useState(tickets);
   const [optimisticStatuses, setOptimisticStatuses] = useState(statuses);
   const [optimisticColumnOrder, setOptimisticColumnOrder] = useState<KanbanColumn[] | null>(null);
@@ -190,7 +192,7 @@ export function KanbanBoard({
   const updateOrder = useUpdateTicketOrder({
     onMutate: async (): Promise<UpdateOrderContext> => {
       await queryClient.cancelQueries({
-        queryKey: queryKeys.projects.detail(projectId),
+        queryKey: queryKeys.projects.tickets({ projectId, view: "board" }),
       });
       return { previous: optimisticTickets };
     },
@@ -200,7 +202,7 @@ export function KanbanBoard({
     },
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.detail(projectId),
+        queryKey: queryKeys.projects.tickets({ projectId }),
       });
       queryClient.invalidateQueries({
         queryKey: queryKeys.ticketActivity.all,
@@ -425,31 +427,50 @@ export function KanbanBoard({
     ) => (
       <Droppable droppableId={droppableId} type={TICKET_DND_TYPE}>
         {(provided, snapshot) => (
-          <div
+          <motion.div
             ref={provided.innerRef}
             {...provided.droppableProps}
+            animate={
+              shouldReduceMotion
+                ? undefined
+                : {
+                    backgroundColor: snapshot.isDraggingOver
+                      ? "color-mix(in srgb, var(--primary) 7%, transparent)"
+                      : "transparent",
+                    scale: snapshot.isDraggingOver ? 1.01 : 1,
+                  }
+            }
+            transition={pmSnappy}
             className={cn(
               stretchColumn ? "flex-1" : "",
-              "overflow-y-auto scrollbar-thin px-2 pb-2 space-y-1.5 transition-colors",
+              "overflow-y-auto scrollbar-thin px-2 pb-2 space-y-1.5 rounded-b-lg",
               minHeight,
-              snapshot.isDraggingOver && "bg-primary/5",
+              snapshot.isDraggingOver && "ring-1 ring-inset ring-primary/15",
             )}
           >
             <AnimatePresence mode="popLayout">
               {columnTickets.length === 0 && !snapshot.isDraggingOver && (
                 <motion.div
                   key="empty"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
+                  initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 4 }}
+                  animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
                   className={cn(
                     "flex flex-col items-center justify-center text-center",
                     minHeight === "min-h-[60px]" ? "py-6" : "py-8",
                   )}
                 >
-                  <div className="h-8 w-8 rounded-lg bg-muted/50 flex items-center justify-center mb-2">
+                  <motion.div
+                    className="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-muted/50"
+                    animate={
+                      shouldReduceMotion
+                        ? undefined
+                        : { y: [0, -2, 0] }
+                    }
+                    transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+                  >
                     <Plus className="h-4 w-4 text-muted-foreground/50" />
-                  </div>
+                  </motion.div>
                   <p className="text-[11px] text-muted-foreground">Drop tickets here</p>
                 </motion.div>
               )}
@@ -471,6 +492,7 @@ export function KanbanBoard({
                         onSelect={handleSelect}
                         projectStatuses={optimisticStatuses}
                         displayOptions={displayOptions}
+                        index={index}
                       />
                     </div>
                   )}
@@ -478,7 +500,7 @@ export function KanbanBoard({
               ))}
             </AnimatePresence>
             {provided.placeholder}
-          </div>
+          </motion.div>
         )}
       </Droppable>
     ),
@@ -488,6 +510,7 @@ export function KanbanBoard({
       handleSelect,
       optimisticStatuses,
       displayOptions,
+      shouldReduceMotion,
     ],
   );
 
@@ -594,9 +617,17 @@ export function KanbanBoard({
                   isDragDisabled={!canReorderColumn}
                 >
                   {(columnProvided, columnSnapshot) => (
-                    <div
+                    <motion.div
                       ref={columnProvided.innerRef}
                       {...columnProvided.draggableProps}
+                      variants={scaleIn}
+                      initial="hidden"
+                      animate="show"
+                      transition={{
+                        ...pmSnappy,
+                        delay: shouldReduceMotion ? 0 : Math.min(index * 0.04, 0.24),
+                      }}
+                      style={columnProvided.draggableProps.style}
                       className={cn(
                         "w-72 min-w-[280px] shrink-0 rounded-lg border bg-muted/20 flex flex-col min-h-0 self-stretch",
                         overWip && "border-destructive/60",
@@ -621,7 +652,7 @@ export function KanbanBoard({
                       <div className="border-t">
                         <QuickAddInput columnId={col.id} projectId={projectId} />
                       </div>
-                    </div>
+                    </motion.div>
                   )}
                 </Draggable>
               );

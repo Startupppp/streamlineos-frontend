@@ -1,10 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ChangeEvent } from "react";
 import { toast } from "sonner";
 import { Plus, MoreHorizontal } from "lucide-react";
 import Link from "next/link";
-import { usePortfolios, useCreatePortfolio, useUpdatePortfolio, useDeletePortfolio } from "@/hooks/api/projects";
+import {
+  usePortfolios,
+  useCreatePortfolio,
+  useUpdatePortfolio,
+  useDeletePortfolio,
+} from "@/hooks/api/projects";
 import { useCan } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -15,16 +20,41 @@ import { ErrorState } from "@/components/shared/error-state";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { PortfolioStatusBadge, PortfolioHealthBadge } from "./portfolio-status-badge";
 import { PortfolioFormSheet } from "./portfolio-form-sheet";
 import type { Portfolio, CreatePortfolioInput, UpdatePortfolioInput } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
+import {
+  PmPageShell,
+  PmPanel,
+  PmSection,
+  PM_TOOLBAR,
+} from "@/features/projects/shared/pm-chrome";
+import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { cn } from "@/lib/utils";
 
 const STATUS_OPTS = [
   { value: "all", label: "All statuses" },
@@ -67,14 +97,20 @@ export function PortfoliosPage() {
 
   function handleCreate(input: CreatePortfolioInput) {
     createPortfolio.mutate(input, {
-      onSuccess: () => { toast.success("Portfolio created"); setSheetOpen(false); },
+      onSuccess: () => {
+        toast.success("Portfolio created");
+        setSheetOpen(false);
+      },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
   }
 
   function handleEdit(input: UpdatePortfolioInput & { id: number }) {
     updatePortfolio.mutate(input, {
-      onSuccess: () => { toast.success("Portfolio updated"); setEditTarget(null); },
+      onSuccess: () => {
+        toast.success("Portfolio updated");
+        setEditTarget(null);
+      },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
   }
@@ -82,48 +118,126 @@ export function PortfoliosPage() {
   function handleDeleteConfirm() {
     if (!deleteTarget) return;
     deletePortfolio.mutate(deleteTarget.id, {
-      onSuccess: () => { toast.success("Portfolio deleted"); setDeleteTarget(null); },
+      onSuccess: () => {
+        toast.success("Portfolio deleted");
+        setDeleteTarget(null);
+      },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
   }
 
+  function handleSearchChange(e: ChangeEvent<HTMLInputElement>) {
+    setSearch(e.target.value);
+  }
+
+  function handleClearFilters() {
+    setStatusFilter("all");
+    setSearch("");
+  }
+
+  function handleOpenCreate() {
+    setSheetOpen(true);
+  }
+
+  function handleSheetOpenChange(open: boolean) {
+    if (!open) {
+      setSheetOpen(false);
+      setEditTarget(null);
+    }
+  }
+
+  function handleDeleteDialogChange(open: boolean) {
+    if (!open) setDeleteTarget(null);
+  }
+
+  function handleRetry() {
+    void refetch();
+  }
+
+  function handleEditRow(row: Portfolio) {
+    setEditTarget(row);
+  }
+
+  function handleDeleteRow(row: Portfolio) {
+    setDeleteTarget(row);
+  }
+
   const columns: DataTableColumn<Portfolio>[] = [
     {
-      key: "name", header: "Name", sortable: true, sortValue: (r) => r.name,
+      key: "name",
+      header: "Name",
+      sortable: true,
+      sortValue: (r) => r.name,
       cell: (row) => (
-        <Link href={`/projects/portfolios/${row.id}`} className="font-medium text-foreground hover:text-primary truncate max-w-[220px] block">
+        <Link
+          href={`/projects/portfolios/${row.id}`}
+          className={cn(
+            TEXT_ONE_LINE,
+            "block max-w-[220px] font-medium text-foreground hover:text-primary",
+          )}
+          title={row.name}
+        >
           {row.name}
         </Link>
       ),
     },
-    { key: "status", header: "Status", cell: (row) => <PortfolioStatusBadge status={row.status} /> },
-    { key: "health", header: "Health", cell: (row) => <PortfolioHealthBadge health={row.health} /> },
     {
-      key: "ownerId", header: "Owner",
-      cell: (row) => <span className="text-muted-foreground text-sm">{memberName(row.ownerId)}</span>,
+      key: "status",
+      header: "Status",
+      cell: (row) => <PortfolioStatusBadge status={row.status} />,
     },
     {
-      key: "projectCount", header: "Projects", className: "w-20",
-      cell: (row) => <span className="tabular-nums text-muted-foreground">{row.projectCount ?? 0}</span>,
+      key: "health",
+      header: "Health",
+      cell: (row) => <PortfolioHealthBadge health={row.health} />,
     },
     {
-      key: "strategicGoal", header: "Strategic Goal",
+      key: "ownerId",
+      header: "Owner",
       cell: (row) => (
-        <span className="text-muted-foreground text-sm truncate max-w-[200px] block">{row.strategicGoal ?? "—"}</span>
+        <span className={cn(TEXT_ONE_LINE, "block max-w-[140px] text-sm text-muted-foreground")}>
+          {memberName(row.ownerId)}
+        </span>
       ),
     },
     {
-      key: "actions", header: "", className: "w-10",
+      key: "projectCount",
+      header: "Projects",
+      className: "w-20",
+      cell: (row) => (
+        <span className="tabular-nums text-muted-foreground">{row.projectCount ?? 0}</span>
+      ),
+    },
+    {
+      key: "strategicGoal",
+      header: "Strategic Goal",
+      cell: (row) => (
+        <span
+          className={cn(TEXT_ONE_LINE, "block max-w-[200px] text-sm text-muted-foreground")}
+          title={row.strategicGoal ?? undefined}
+        >
+          {row.strategicGoal ?? "—"}
+        </span>
+      ),
+    },
+    {
+      key: "actions",
+      header: "",
+      className: "w-10",
       cell: (row) => {
         if (!canManage) return null;
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-7 w-7"><MoreHorizontal className="h-4 w-4" /></Button>
+              <Button variant="ghost" size="icon" className="h-7 w-7">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setEditTarget(row)}>Edit</DropdownMenuItem>
-              <DropdownMenuItem variant="destructive" onClick={() => setDeleteTarget(row)}>Delete</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleEditRow(row)}>Edit</DropdownMenuItem>
+              <DropdownMenuItem variant="destructive" onClick={() => handleDeleteRow(row)}>
+                Delete
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         );
@@ -133,15 +247,32 @@ export function PortfoliosPage() {
 
   const isFiltered = statusFilter !== "all" || !!search.trim();
   const filtersBar = (
-    <div className="flex items-center gap-2 flex-wrap">
-      <Select value={statusFilter} onValueChange={setStatusFilter}>
-        <SelectTrigger className="h-8 w-40 text-xs"><SelectValue /></SelectTrigger>
-        <SelectContent>{STATUS_OPTS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
-      </Select>
-      <Input className="h-8 text-xs w-52" placeholder="Search portfolios…" value={search} onChange={(e) => setSearch(e.target.value)} />
-      {isFiltered && (
-        <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => { setStatusFilter("all"); setSearch(""); }}>Clear</Button>
-      )}
+    <div className={PM_TOOLBAR}>
+      <div className="flex min-w-0 flex-wrap items-center gap-2">
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="h-8 w-40 text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {STATUS_OPTS.map((o) => (
+              <SelectItem key={o.value} value={o.value}>
+                {o.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Input
+          className="h-8 w-52 text-xs"
+          placeholder="Search portfolios…"
+          value={search}
+          onChange={handleSearchChange}
+        />
+        {isFiltered ? (
+          <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={handleClearFilters}>
+            Clear
+          </Button>
+        ) : null}
+      </div>
     </div>
   );
 
@@ -149,37 +280,63 @@ export function PortfoliosPage() {
     <PageWrapper
       title="Portfolios"
       eyebrow="Projects"
-      subtitle="Group related programs and projects into portfolios"
+      subtitle="Group related projects into portfolios"
       filters={filtersBar}
-      actions={canManage ? (
-        <Button size="sm" className="h-8 text-xs gap-1.5" onClick={() => setSheetOpen(true)}>
-          <Plus className="h-3.5 w-3.5" /> New Portfolio
-        </Button>
-      ) : undefined}
+      actions={
+        canManage ? (
+          <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={handleOpenCreate}>
+            <Plus className="h-3.5 w-3.5" /> New Portfolio
+          </Button>
+        ) : undefined
+      }
     >
-      <div className="flex flex-1 min-h-0 flex-col">
-        {isLoading ? (
-          <DataTableSkeleton rows={5} columns={7} className="flex-1" />
-        ) : isError ? (
-          <ErrorState className="flex-1" onRetry={() => void refetch()} />
-        ) : displayed.length === 0 ? (
-          <EmptyState
-            illustrationPreset="projects"
-            title={isFiltered ? "No matching portfolios" : "No portfolios yet"}
-            description={isFiltered ? "Try adjusting your filters." : "Create a portfolio to group and govern your projects."}
-            action={isFiltered
-              ? { label: "Clear filters", onClick: () => { setStatusFilter("all"); setSearch(""); } }
-              : canManage ? { label: "New Portfolio", onClick: () => setSheetOpen(true) } : undefined}
-            className="flex-1"
-          />
-        ) : (
-          <DataTable data={displayed} columns={columns} getRowKey={(row) => row.id} minWidth="780px" className="flex-1 min-h-0" />
-        )}
-      </div>
+      <PmPageShell>
+        <PmSection index={0}>
+          {isLoading ? (
+            <PmPanel className="p-2">
+              <DataTableSkeleton rows={5} columns={7} className="flex-1" />
+            </PmPanel>
+          ) : isError ? (
+            <PmPanel className="flex min-h-[14rem] items-center justify-center p-6">
+              <ErrorState className="flex-1" onRetry={handleRetry} />
+            </PmPanel>
+          ) : displayed.length === 0 ? (
+            <PmPanel className="flex min-h-[14rem] items-center justify-center p-6">
+              <EmptyState
+                illustrationPreset="projects"
+                title={isFiltered ? "No matching portfolios" : "No portfolios yet"}
+                description={
+                  isFiltered
+                    ? "Try adjusting your filters."
+                    : "Create a portfolio to group and govern your projects."
+                }
+                action={
+                  isFiltered
+                    ? { label: "Clear filters", onClick: handleClearFilters }
+                    : canManage
+                      ? { label: "New Portfolio", onClick: handleOpenCreate }
+                      : undefined
+                }
+                className="min-h-[12rem]"
+              />
+            </PmPanel>
+          ) : (
+            <PmPanel className="flex min-h-0 flex-1 flex-col">
+              <DataTable
+                data={displayed}
+                columns={columns}
+                getRowKey={(row) => row.id}
+                minWidth="780px"
+                className="min-h-0 flex-1"
+              />
+            </PmPanel>
+          )}
+        </PmSection>
+      </PmPageShell>
 
       <PortfolioFormSheet
         open={sheetOpen || !!editTarget}
-        onOpenChange={(open) => { if (!open) { setSheetOpen(false); setEditTarget(null); } }}
+        onOpenChange={handleSheetOpenChange}
         mode={editTarget ? "edit" : "create"}
         defaultValues={editTarget ?? undefined}
         onSubmitCreate={handleCreate}
@@ -188,15 +345,22 @@ export function PortfoliosPage() {
         members={members}
       />
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+      <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteDialogChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this portfolio?</AlertDialogTitle>
-            <AlertDialogDescription>This action cannot be undone. Projects will not be deleted.</AlertDialogDescription>
+            <AlertDialogDescription>
+              This action cannot be undone. Projects will not be deleted.
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction className="bg-destructive text-destructive-foreground" onClick={handleDeleteConfirm}>Delete</AlertDialogAction>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground"
+              onClick={handleDeleteConfirm}
+            >
+              Delete
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

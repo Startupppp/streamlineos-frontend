@@ -186,7 +186,6 @@ const MIGRATED_PREFIXES = [
   "/storage",
   "/tasks",
   "/webhooks",
-  "/whiteboards",
   "/workflows",
   "/workspace-onboarding",
   "/feature-flags",

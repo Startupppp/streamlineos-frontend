@@ -2,7 +2,6 @@
 
 import { useCallback, useState, useTransition } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { motion } from "framer-motion";
 import { useProjects } from "@/hooks/api/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { RequireModule } from "@/components/auth/require-module";
@@ -13,11 +12,21 @@ import { ProjectFilterBar } from "@/features/projects/project-list/project-filte
 import { ProjectPagination } from "@/features/projects/project-list/project-pagination";
 import { ProjectsEmptyState } from "@/features/projects/project-list/projects-empty-state";
 import { EmptySearchIllustration } from "@/components/illustrations";
-import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import {
+  PmPageShell,
+  PmPanel,
+  PmStaggerList,
+  PmSection,
+  PM_TOOLBAR,
+  PM_PANEL,
+} from "@/features/projects/shared/pm-chrome";
+import { fadeUp, fadeUpReduced } from "@/features/projects/shared/pm-motion";
+import { motion, useReducedMotion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 type StatusFilter = "ALL" | "ACTIVE" | "COMPLETED" | "ARCHIVED";
 type ViewMode = "grid" | "list";
@@ -25,11 +34,74 @@ type ViewMode = "grid" | "list";
 const STATUS_FILTERS: readonly StatusFilter[] = ["ALL", "ACTIVE", "COMPLETED", "ARCHIVED"];
 const VIEW_MODES: readonly ViewMode[] = ["grid", "list"];
 
+function GridSkeleton() {
+  return (
+    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div
+          key={i}
+          className={cn(
+            PM_PANEL,
+            "border-l-[3px] border-l-muted p-2 space-y-2",
+          )}
+        >
+          <div className="flex gap-2">
+            <Skeleton className="h-7 w-7 rounded-md shrink-0" />
+            <div className="min-w-0 flex-1 space-y-1.5">
+              <Skeleton className="h-2.5 w-10 rounded" />
+              <Skeleton className="h-3.5 w-3/4" />
+            </div>
+          </div>
+          <Skeleton className="h-1 w-full rounded-full" />
+          <div className="flex justify-between border-t border-border/60 pt-1.5">
+            <Skeleton className="h-2.5 w-14" />
+            <Skeleton className="h-2.5 w-12" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ListSkeleton() {
+  return (
+    <PmPanel className="flex min-h-0 flex-1 flex-col">
+      <div className="flex items-center gap-4 border-b border-border/60 bg-muted/20 px-3 py-1.5">
+        <Skeleton className="h-3 w-14" />
+        <Skeleton className="ml-auto hidden h-3 w-12 sm:block" />
+        <Skeleton className="hidden h-3 w-10 md:block" />
+        <Skeleton className="hidden h-3 w-12 lg:block" />
+        <Skeleton className="hidden h-3 w-14 sm:block" />
+      </div>
+      {Array.from({ length: 10 }).map((_, i) => (
+        <div
+          key={i}
+          className="flex items-center gap-2.5 border-b border-border/40 px-3 py-1.5 last:border-0"
+        >
+          <Skeleton className="h-5 w-5 shrink-0 rounded" />
+          <Skeleton className="h-3.5 max-w-[220px] flex-1" />
+          <Skeleton className="ml-auto h-5 w-14 shrink-0 rounded-full" />
+          <div className="hidden shrink-0 items-center gap-1.5 md:flex">
+            <Skeleton className="h-5 w-5 rounded-full" />
+            <Skeleton className="h-3 w-14" />
+          </div>
+          <Skeleton className="hidden h-3 w-12 shrink-0 lg:block" />
+          <div className="hidden w-[100px] shrink-0 items-center gap-2 sm:flex">
+            <Skeleton className="h-1 flex-1 rounded-full" />
+            <Skeleton className="h-3 w-6" />
+          </div>
+        </div>
+      ))}
+    </PmPanel>
+  );
+}
+
 export default function ProjectsPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
   const [, startTransition] = useTransition();
+  const shouldReduceMotion = useReducedMotion();
   const createFromUrl = searchParams.get("create") === "1";
   const [manualCreateOpen, setManualCreateOpen] = useState(false);
   const createOpen = createFromUrl || manualCreateOpen;
@@ -50,6 +122,10 @@ export default function ProjectsPage() {
     },
     [searchParams, router, pathname],
   );
+
+  const handleOpenCreate = useCallback(() => {
+    setManualCreateOpen(true);
+  }, []);
 
   const search = searchParams.get("q") || "";
   const status = STATUS_FILTERS.find((s) => s === searchParams.get("status")) ?? "ALL";
@@ -114,113 +190,78 @@ export default function ProjectsPage() {
 
   return (
     <RequireModule module="PROJECTS">
-    <PageWrapper
-      title="All Projects"
-      eyebrow="Projects"
-      subtitle="Browse and manage every project in your workspace"
-      actions={
-        <NewProjectDialog open={createOpen} onOpenChange={handleCreateOpenChange} />
-      }
-      filters={
-        <ProjectFilterBar
-          search={search}
-          onSearchChange={handleSearchChange}
-          status={status}
-          onStatusChange={handleStatusChange}
-          viewMode={viewMode}
-          onViewModeChange={handleViewModeChange}
-        />
-      }
-    >
-      {isLoading ? (
-        viewMode === "grid" ? (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="rounded-xl border border-border border-l-[3px] border-l-muted bg-card p-2.5 space-y-2 shadow-sm">
-                <div className="flex gap-2">
-                  <div className="h-8 w-8 rounded-lg bg-muted shrink-0" />
-                  <div className="flex-1 space-y-1.5">
-                    <Skeleton className="h-3 w-10 rounded" />
-                    <Skeleton className="h-4 w-3/4" />
-                  </div>
-                </div>
-                <Skeleton className="h-1 w-full rounded-full" />
-                <div className="flex justify-between pt-1 border-t border-border/80">
-                  <Skeleton className="h-3 w-16" />
-                  <Skeleton className="h-3 w-14" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
-            <div className="bg-muted/30 border-b border-border px-3 py-2 flex items-center gap-4">
-              <Skeleton className="h-3 w-16" />
-              <Skeleton className="h-3 w-14 ml-auto hidden sm:block" />
-              <Skeleton className="h-3 w-12 hidden md:block" />
-              <Skeleton className="h-3 w-14 hidden lg:block" />
-              <Skeleton className="h-3 w-16 hidden sm:block" />
+      <PageWrapper
+        title="All Projects"
+        eyebrow="Projects"
+        subtitle="Browse and manage every project in your workspace"
+        actions={
+          <NewProjectDialog open={createOpen} onOpenChange={handleCreateOpenChange} />
+        }
+      >
+        <PmPageShell>
+          <PmSection index={0}>
+            <div className={PM_TOOLBAR}>
+              <ProjectFilterBar
+                search={search}
+                onSearchChange={handleSearchChange}
+                status={status}
+                onStatusChange={handleStatusChange}
+                viewMode={viewMode}
+                onViewModeChange={handleViewModeChange}
+              />
             </div>
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-3 px-3 py-2.5 border-b border-border/50 last:border-0">
-                <Skeleton className="h-6 w-6 rounded shrink-0" />
-                <Skeleton className="h-4 flex-1 max-w-[240px]" />
-                <Skeleton className="h-3 w-12 hidden sm:block shrink-0" />
-                <Skeleton className="h-5 w-20 rounded-full ml-auto shrink-0" />
-                <div className="hidden md:flex items-center gap-1.5 shrink-0">
-                  <Skeleton className="h-5 w-5 rounded-full" />
-                  <Skeleton className="h-3 w-16" />
-                </div>
-                <Skeleton className="h-3 w-14 hidden lg:block shrink-0" />
-                <div className="hidden sm:flex items-center gap-2 w-[130px] shrink-0">
-                  <Skeleton className="h-1 flex-1 rounded-full" />
-                  <Skeleton className="h-3 w-7" />
-                </div>
-              </div>
-            ))}
-          </div>
-        )
-      ) : isError ? (
-        <ErrorState onRetry={handleRetry} />
-      ) : projects.length === 0 && !debouncedSearch && status === "ALL" ? (
-        <ProjectsEmptyState />
-      ) : projects.length === 0 ? (
-        <EmptyState
-          illustration={<EmptySearchIllustration className="h-32 w-32" />}
-          title="No projects match your filters"
-          description="Try adjusting the search or status filter."
-          action={{
-            label: "Clear all filters",
-            onClick: handleClearFilters,
-          }}
-        />
-      ) : viewMode === "grid" ? (
-        <motion.div
-          className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
-          role="list"
-          aria-label="Projects grid"
-          variants={staggerContainer}
-          initial="hidden"
-          animate="visible"
-        >
-          {projects.map((project) => (
-            <motion.div key={project.id} variants={fadeUp} className="h-full">
-              <ProjectCard project={project} />
-            </motion.div>
-          ))}
-        </motion.div>
-      ) : (
-        <ProjectTable projects={projects} />
-      )}
+          </PmSection>
 
-      {pagination && pagination.totalPages > 1 && (
-        <ProjectPagination
-          page={pagination.page}
-          totalPages={pagination.totalPages}
-          onPageChange={setPage}
-        />
-      )}
-    </PageWrapper>
+          {isLoading ? (
+            viewMode === "grid" ? <GridSkeleton /> : <ListSkeleton />
+          ) : isError ? (
+            <PmPanel className="flex flex-1 items-center justify-center">
+              <ErrorState onRetry={handleRetry} className="border-0 bg-transparent" />
+            </PmPanel>
+          ) : projects.length === 0 && !debouncedSearch && status === "ALL" ? (
+            <PmPanel className="flex flex-1 items-center justify-center">
+              <ProjectsEmptyState onCreate={handleOpenCreate} />
+            </PmPanel>
+          ) : projects.length === 0 ? (
+            <PmPanel className="flex flex-1 items-center justify-center">
+              <EmptyState
+                illustration={<EmptySearchIllustration className="h-28 w-28" />}
+                title="No projects match your filters"
+                description="Try adjusting the search or status filter."
+                action={{
+                  label: "Clear all filters",
+                  onClick: handleClearFilters,
+                }}
+              />
+            </PmPanel>
+          ) : viewMode === "grid" ? (
+            <div role="list" aria-label="Projects grid">
+              <PmStaggerList className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+                {projects.map((project) => (
+                  <motion.div
+                    key={project.id}
+                    variants={shouldReduceMotion ? fadeUpReduced : fadeUp}
+                    className="h-full"
+                    role="presentation"
+                  >
+                    <ProjectCard project={project} />
+                  </motion.div>
+                ))}
+              </PmStaggerList>
+            </div>
+          ) : (
+            <ProjectTable projects={projects} />
+          )}
+
+          {pagination && pagination.totalPages > 1 ? (
+            <ProjectPagination
+              page={pagination.page}
+              totalPages={pagination.totalPages}
+              onPageChange={setPage}
+            />
+          ) : null}
+        </PmPageShell>
+      </PageWrapper>
     </RequireModule>
   );
 }

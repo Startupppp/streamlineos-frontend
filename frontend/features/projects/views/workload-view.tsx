@@ -22,6 +22,8 @@ import { INITIAL_FILTERS } from "./workload-types";
 import { useSprints } from "@/hooks/api/projects/sprints";
 import { useCycles } from "@/hooks/api/projects/advanced";
 import Link from "next/link";
+import { getTicketDetailHref } from "@/features/projects/shared/format-ticket-key";
+import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 
 interface WorkloadMember {
   id: string;
@@ -34,6 +36,7 @@ interface WorkloadMember {
 interface WorkloadViewProps {
   tickets: KanbanTicket[];
   projectId: number;
+  projectKey?: string | null;
   members: WorkloadMember[];
   projectStatuses?: Array<{ name: string; color: string | null; type?: string | null }>;
 }
@@ -90,6 +93,7 @@ export const WorkloadView = memo(function WorkloadView({
   tickets,
   members,
   projectId,
+  projectKey,
   projectStatuses,
 }: WorkloadViewProps) {
   const shouldReduceMotion = useReducedMotion();
@@ -267,6 +271,7 @@ export const WorkloadView = memo(function WorkloadView({
                   points={points}
                   days={days}
                   projectId={projectId}
+                  projectKey={projectKey}
                   expanded={expandedMembers.has(member.id)}
                   motionDelay={idx * 0.04}
                   reducedMotion={shouldReduceMotion}
@@ -328,14 +333,23 @@ export const WorkloadView = memo(function WorkloadView({
                           <span className="text-xs text-muted-foreground font-mono w-12 shrink-0">
                             #{ticket.ticketNumber}
                           </span>
-                          <span className="text-xs text-foreground truncate flex-1">{ticket.title}</span>
+                          <span
+                            className={cn(TEXT_ONE_LINE, "flex-1 text-xs text-foreground")}
+                            title={ticket.title}
+                          >
+                            {ticket.title}
+                          </span>
                           {ticket.points != null && (
                             <span className="text-[10px] text-muted-foreground shrink-0 tabular-nums">
                               {ticket.points}pt
                             </span>
                           )}
                           <Link
-                            href={`/projects/${projectId}?ticket=${ticket.id}`}
+                            href={
+                              ticket.ticketNumber != null
+                                ? getTicketDetailHref(projectId, projectKey, ticket.ticketNumber)
+                                : `/projects/${projectId}`
+                            }
                             onMouseDown={stopEvent}
                             onClick={stopEvent}
                             className="shrink-0 opacity-0 group-hover/unassigned:opacity-100 transition-opacity p-1 rounded hover:bg-muted"

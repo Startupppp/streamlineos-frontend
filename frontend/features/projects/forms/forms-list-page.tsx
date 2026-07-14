@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
-import { motion, useReducedMotion } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -18,6 +17,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useCan } from "@/hooks/api/access";
 import { useForms, useCreateForm } from "@/hooks/api/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
+import {
+  PmPageShell,
+  PmPanel,
+  PmSection,
+  PM_TOOLBAR,
+} from "@/features/projects/shared/pm-chrome";
+import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { cn } from "@/lib/utils";
 import { FORM_TYPE_LABELS, FORM_TYPES } from "./field-type-meta";
 import type { ProjectForm } from "@/types/projects/forms";
 
@@ -39,7 +46,6 @@ interface FormsListPageProps {
 export function FormsListPage({ projectId }: FormsListPageProps) {
   const router = useRouter();
   const canManage = useCan("projects:forms:manage");
-  const shouldReduceMotion = useReducedMotion();
 
   const [typeFilter, setTypeFilter] = useState("all");
   const [activeFilter, setActiveFilter] = useState("all");
@@ -103,7 +109,10 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
       key: "name",
       header: "Name",
       cell: (row) => (
-        <Link href={`/projects/${projectId}/forms/${row.id}`} className="font-medium hover:underline text-sm">
+        <Link
+          href={`/projects/${projectId}/forms/${row.id}`}
+          className={cn("text-sm font-medium hover:underline", TEXT_ONE_LINE)}
+        >
           {row.name}
         </Link>
       ),
@@ -148,29 +157,39 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
   ];
 
   const filtersBar = (
-    <div className="flex items-center gap-2 flex-wrap">
-      <Input
-        value={search}
-        onChange={handleSearchChange}
-        placeholder="Search…"
-        className="h-8 w-36 text-xs"
-      />
-      <Select value={typeFilter} onValueChange={setTypeFilter}>
-        <SelectTrigger className="h-8 w-40 text-xs">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {TYPE_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-        </SelectContent>
-      </Select>
-      <Select value={activeFilter} onValueChange={setActiveFilter}>
-        <SelectTrigger className="h-8 w-32 text-xs">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {ACTIVE_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-        </SelectContent>
-      </Select>
+    <div className={cn(PM_TOOLBAR, "sm:justify-start")}>
+      <div className="flex min-w-0 flex-wrap items-center gap-2">
+        <Input
+          value={search}
+          onChange={handleSearchChange}
+          placeholder="Search…"
+          className="h-8 w-36 text-xs"
+        />
+        <Select value={typeFilter} onValueChange={setTypeFilter}>
+          <SelectTrigger className="h-8 w-40 text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {TYPE_OPTIONS.map((o) => (
+              <SelectItem key={o.value} value={o.value}>
+                {o.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={activeFilter} onValueChange={setActiveFilter}>
+          <SelectTrigger className="h-8 w-32 text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {ACTIVE_OPTIONS.map((o) => (
+              <SelectItem key={o.value} value={o.value}>
+                {o.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
     </div>
   );
 
@@ -183,7 +202,8 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
       actions={
         canManage ? (
           <LoadingButton
-            size="sm" className="h-8 text-xs"
+            size="sm"
+            className="h-8 text-xs"
             onClick={handleNewForm}
             isPending={createForm.isPending}
             loadingText="Creating…"
@@ -193,37 +213,43 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
         ) : undefined
       }
     >
-      <motion.div
-        className="flex flex-1 min-h-0 flex-col"
-        initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: shouldReduceMotion ? 0 : 0.22, ease: "easeOut" }}
-      >
-        {isLoading ? (
-          <DataTableSkeleton rows={5} columns={6} className="flex-1" />
-        ) : isError ? (
-          <ErrorState onRetry={() => void refetch()} />
-        ) : filtered.length === 0 ? (
-          <EmptyState
-            illustrationPreset="documents"
-            title={isFiltered ? "No matching forms" : "No forms yet"}
-            description={
-              isFiltered
-                ? "No forms match your current filters."
-                : "Create a form to collect structured data from your team or clients."
-            }
-            action={
-              isFiltered
-                ? { label: "Clear filters", onClick: handleClearFilters }
-                : canManage
-                  ? { label: "New Form", onClick: handleNewForm }
-                  : undefined
-            }
-          />
-        ) : (
-          <DataTable data={filtered} columns={columns} getRowKey={(row) => row.id} minWidth="680px" className="flex-1 min-h-0" />
-        )}
-      </motion.div>
+      <PmPageShell>
+        <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
+          {isLoading ? (
+            <DataTableSkeleton rows={5} columns={6} className="flex-1" />
+          ) : isError ? (
+            <ErrorState onRetry={() => void refetch()} />
+          ) : filtered.length === 0 ? (
+            <EmptyState
+              illustrationPreset="documents"
+              title={isFiltered ? "No matching forms" : "No forms yet"}
+              description={
+                isFiltered
+                  ? "No forms match your current filters."
+                  : "Create a form to collect structured data from your team or clients."
+              }
+              action={
+                isFiltered
+                  ? { label: "Clear filters", onClick: handleClearFilters }
+                  : canManage
+                    ? { label: "New Form", onClick: handleNewForm }
+                    : undefined
+              }
+              className="min-h-[40vh]"
+            />
+          ) : (
+            <PmPanel className="flex min-h-0 flex-1 flex-col" solid>
+              <DataTable
+                data={filtered}
+                columns={columns}
+                getRowKey={(row) => row.id}
+                minWidth="680px"
+                className="min-h-0 flex-1 border-0"
+              />
+            </PmPanel>
+          )}
+        </PmSection>
+      </PmPageShell>
     </PageWrapper>
   );
 }

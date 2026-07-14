@@ -5,6 +5,7 @@ import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useBugs, useDeleteBug } from "@/hooks/api/projects/bugs";
 import { useCan } from "@/hooks/api/access";
 import { useProjectMembers } from "@/hooks/api/projects";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
 import type { Bug, BugSeverity, BugStatus, BugPriority } from "@/types/projects";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -22,8 +23,17 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Plus } from "lucide-react";
+import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { cn } from "@/lib/utils";
+import {
+  PmPageShell,
+  PmPanel,
+  PmSection,
+  PM_TOOLBAR,
+} from "@/features/projects/shared/pm-chrome";
+import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 import { BugSheet } from "./bug-sheet";
 
 const BUG_STATUSES: readonly BugStatus[] = [
@@ -65,6 +75,48 @@ const PRIORITY_STYLES: Record<BugPriority, string> = {
   urgent: "text-red-700 border-red-300 bg-red-50 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
 };
 
+function ReportBugButton({ onClick }: { onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button size="sm" className="h-7 gap-1 text-[11px]" onClick={onClick} {...hoverHandlers}>
+      <PlusIcon ref={iconRef} size={14} />
+      Report Bug
+    </Button>
+  );
+}
+
+function BugActions({
+  canUpdate,
+  canDelete,
+  onEdit,
+  onDelete,
+}: {
+  canUpdate: boolean;
+  canDelete: boolean;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  if (!canUpdate && !canDelete) return null;
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="Bug actions" {...hoverHandlers}>
+          <EllipsisIcon ref={iconRef} size={14} />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {canUpdate ? <DropdownMenuItem onSelect={onEdit}>Edit</DropdownMenuItem> : null}
+        {canDelete ? (
+          <DropdownMenuItem variant="destructive" onSelect={onDelete}>
+            Delete
+          </DropdownMenuItem>
+        ) : null}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 interface BugsPageProps { projectId: number }
 
 export function BugsPage({ projectId }: BugsPageProps) {
@@ -105,29 +157,38 @@ export function BugsPage({ projectId }: BugsPageProps) {
       { projectId, id: deleteTarget.id },
       {
         onSuccess: () => { toast.success("Bug deleted"); setDeleteTarget(null); },
-        onError: () => toast.error("Failed to delete bug"),
+        onError: (error) => toast.error(getErrorMessage(error)),
       },
     );
   }, [deleteTarget, deleteBug, projectId]);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const columns = useMemo<DataTableColumn<Bug>[]>(() => [
     {
       key: "bugNumber",
       header: "ID",
-      cell: (row) => <span className="text-[11px] font-mono text-muted-foreground">BUG-{row.bugNumber}</span>,
+      cell: (row) => <span className="font-mono text-[11px] text-muted-foreground">BUG-{row.bugNumber}</span>,
       className: "w-[72px]",
     },
     {
       key: "title",
       header: "Title",
       cell: (row) => (
-        <div className="flex items-center gap-1.5">
-          <span className="text-[11px] font-medium">{row.title}</span>
-          {row.reopenCount > 0 && (
-            <Badge variant="outline" className="text-[9px] text-orange-600 border-orange-200">
+        <div className="flex min-w-0 items-center gap-1.5">
+          <span
+            className={cn(TEXT_ONE_LINE, "block max-w-[min(100%,24rem)] text-[11px] font-medium")}
+            title={row.title}
+          >
+            {row.title}
+          </span>
+          {row.reopenCount > 0 ? (
+            <Badge variant="outline" className="shrink-0 text-[9px] text-orange-600 border-orange-200 dark:text-orange-400 dark:border-orange-500/30">
               ×{row.reopenCount}
             </Badge>
-          )}
+          ) : null}
         </div>
       ),
     },
@@ -135,7 +196,7 @@ export function BugsPage({ projectId }: BugsPageProps) {
       key: "severity",
       header: "Severity",
       cell: (row) => (
-        <Badge variant="outline" className={`text-[10px] capitalize ${SEVERITY_STYLES[row.severity]}`}>
+        <Badge variant="outline" className={cn("text-[10px] capitalize", SEVERITY_STYLES[row.severity])}>
           {row.severity}
         </Badge>
       ),
@@ -145,7 +206,7 @@ export function BugsPage({ projectId }: BugsPageProps) {
       key: "status",
       header: "Status",
       cell: (row) => (
-        <Badge variant="outline" className={`text-[10px] ${STATUS_STYLES[row.status]}`}>
+        <Badge variant="outline" className={cn("text-[10px]", STATUS_STYLES[row.status])}>
           {STATUS_LABELS[row.status]}
         </Badge>
       ),
@@ -155,7 +216,7 @@ export function BugsPage({ projectId }: BugsPageProps) {
       key: "priority",
       header: "Priority",
       cell: (row) => (
-        <Badge variant="outline" className={`text-[10px] capitalize ${PRIORITY_STYLES[row.priority]}`}>
+        <Badge variant="outline" className={cn("text-[10px] capitalize", PRIORITY_STYLES[row.priority])}>
           {row.priority}
         </Badge>
       ),
@@ -166,9 +227,10 @@ export function BugsPage({ projectId }: BugsPageProps) {
       header: "Assignee",
       cell: (row) => {
         const member = members.find((m) => m.id === row.assigneeId);
+        const label = member ? getUserDisplayName(member) : "—";
         return (
-          <span className="text-[11px] text-muted-foreground">
-            {member ? getUserDisplayName(member) : "—"}
+          <span className={cn(TEXT_ONE_LINE, "block max-w-[7rem] text-[11px] text-muted-foreground")} title={label}>
+            {label}
           </span>
         );
       },
@@ -177,62 +239,55 @@ export function BugsPage({ projectId }: BugsPageProps) {
     {
       key: "actions",
       header: "",
-      cell: (row) => (canUpdate || canDelete) ? (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-6 w-6">
-              <MoreHorizontal className="h-3.5 w-3.5" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {canUpdate && <DropdownMenuItem onSelect={() => handleEdit(row)}>Edit</DropdownMenuItem>}
-            {canDelete && (
-              <DropdownMenuItem variant="destructive" onSelect={() => setDeleteTarget(row)}>
-                Delete
-              </DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ) : null,
+      cell: (row) => (
+        <BugActions
+          canUpdate={canUpdate}
+          canDelete={canDelete}
+          onEdit={() => handleEdit(row)}
+          onDelete={() => setDeleteTarget(row)}
+        />
+      ),
       className: "w-[40px]",
     },
   ], [canUpdate, canDelete, handleEdit, members]);
 
   const filtersBar = (
-    <div className="flex items-center gap-2 flex-wrap w-full">
-      <Input
-        placeholder="Search bugs..."
-        value={search}
-        onChange={handleSearchChange}
-        className="h-7 text-[11px] w-44"
-      />
-      <Select value={statusFilter} onValueChange={setStatusFilter}>
-        <SelectTrigger className="h-7 text-[11px] w-32"><SelectValue placeholder="Status" /></SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All statuses</SelectItem>
-          {BUG_STATUSES.map((s) => (
-            <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <Select value={severityFilter} onValueChange={setSeverityFilter}>
-        <SelectTrigger className="h-7 text-[11px] w-28"><SelectValue placeholder="Severity" /></SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All severities</SelectItem>
-          {BUG_SEVERITIES.map((s) => (
-            <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
-        <SelectTrigger className="h-7 text-[11px] w-32"><SelectValue placeholder="Assignee" /></SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All assignees</SelectItem>
-          {members.map((m) => (
-            <SelectItem key={m.id} value={m.id}>{getUserDisplayName(m)}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+    <div className={cn(PM_TOOLBAR, "w-full")}>
+      <div className="flex min-w-0 flex-wrap items-center gap-2">
+        <Input
+          placeholder="Search bugs..."
+          value={search}
+          onChange={handleSearchChange}
+          className="h-7 w-44 text-[11px]"
+        />
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="h-7 w-32 text-[11px]"><SelectValue placeholder="Status" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All statuses</SelectItem>
+            {BUG_STATUSES.map((s) => (
+              <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={severityFilter} onValueChange={setSeverityFilter}>
+          <SelectTrigger className="h-7 w-28 text-[11px]"><SelectValue placeholder="Severity" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All severities</SelectItem>
+            {BUG_SEVERITIES.map((s) => (
+              <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
+          <SelectTrigger className="h-7 w-32 text-[11px]"><SelectValue placeholder="Assignee" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All assignees</SelectItem>
+            {members.map((m) => (
+              <SelectItem key={m.id} value={m.id}>{getUserDisplayName(m)}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
     </div>
   );
 
@@ -242,36 +297,44 @@ export function BugsPage({ projectId }: BugsPageProps) {
       title="Bugs"
       subtitle="Track and triage project bugs"
       filters={filtersBar}
-      actions={
-        canCreate ? (
-          <Button size="sm" className="h-7 text-[11px]" onClick={handleNewBug}>
-            <Plus className="h-3.5 w-3.5 mr-1" />
-            Report Bug
-          </Button>
-        ) : undefined
-      }
+      actions={canCreate ? <ReportBugButton onClick={handleNewBug} /> : undefined}
     >
-      <div className="flex flex-1 min-h-0 flex-col">
-        {isLoading ? (
-          <DataTableSkeleton rows={8} columns={6} className="flex-1" />
-        ) : isError ? (
-          <ErrorState onRetry={refetch} />
-        ) : (bugs ?? []).length === 0 ? (
-          <EmptyState
-            illustrationPreset="ticket"
-            title="No bugs found"
-            description={search || statusFilter !== "all" || severityFilter !== "all" ? "No bugs match the active filters." : "Report a bug to get started."}
-            action={canCreate ? { label: "Report Bug", onClick: handleNewBug } : undefined}
-          />
-        ) : (
-          <DataTable<Bug>
-            data={bugs ?? []}
-            columns={columns}
-            getRowKey={(row) => row.id}
-            className="flex-1 min-h-0"
-          />
-        )}
-      </div>
+      <PmPageShell>
+        <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
+          {isLoading ? (
+            <PmPanel className="p-2">
+              <DataTableSkeleton rows={8} columns={6} className="flex-1" />
+            </PmPanel>
+          ) : isError ? (
+            <PmPanel className="flex flex-1 items-center justify-center p-6">
+              <ErrorState onRetry={handleRetry} />
+            </PmPanel>
+          ) : (bugs ?? []).length === 0 ? (
+            <PmPanel className="flex flex-1 items-center justify-center p-6">
+              <EmptyState
+                illustrationPreset="ticket"
+                title="No bugs found"
+                description={
+                  search || statusFilter !== "all" || severityFilter !== "all"
+                    ? "No bugs match the active filters."
+                    : "Report a bug to get started."
+                }
+                action={canCreate ? { label: "Report Bug", onClick: handleNewBug } : undefined}
+                className="min-h-[32vh]"
+              />
+            </PmPanel>
+          ) : (
+            <PmPanel className="min-h-0 flex-1">
+              <DataTable<Bug>
+                data={bugs ?? []}
+                columns={columns}
+                getRowKey={(row) => row.id}
+                className="min-h-0 flex-1"
+              />
+            </PmPanel>
+          )}
+        </PmSection>
+      </PmPageShell>
 
       <BugSheet
         projectId={projectId}
@@ -285,7 +348,8 @@ export function BugsPage({ projectId }: BugsPageProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete bug?</AlertDialogTitle>
             <AlertDialogDescription>
-              BUG-{deleteTarget?.bugNumber} will be permanently deleted.
+              BUG-{deleteTarget?.bugNumber}
+              {deleteTarget?.title ? ` · ${deleteTarget.title}` : ""} will be permanently deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

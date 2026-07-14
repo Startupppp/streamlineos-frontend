@@ -11,6 +11,8 @@ import {
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { EditSprintDialog } from "@/features/projects/sprints/edit-sprint-dialog";
+import { PM_PANEL } from "@/features/projects/shared/pm-chrome";
+import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 
 export interface SprintData {
   id: number;
@@ -116,19 +118,24 @@ export const SprintCard = memo(function SprintCard({ sprint, projectId, onStart,
   return (
     <div
       className={cn(
-        "group relative overflow-hidden rounded-xl border border-border border-l-[3px] bg-card p-2.5 shadow-sm",
-        "transition-[border-color,box-shadow] duration-200 ease-out motion-reduce:transition-none",
-        "hover:border-primary/35 hover:shadow-sm",
+        PM_PANEL,
+        "group relative overflow-hidden border-l-[3px] p-2.5",
+        "transition-[border-color,box-shadow,background-color] duration-200 ease-out motion-reduce:transition-none",
+        "hover:border-primary/40 hover:shadow-md hover:bg-card/60",
         statusStyle.stripeClassName,
       )}
     >
-      <div className="flex items-start gap-1.5 min-w-0">
+      <div className="flex min-w-0 items-start gap-1.5">
         <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-1.5 min-w-0">
+          <div className="flex min-w-0 items-start justify-between gap-1.5">
             <div className="flex min-w-0 flex-1">
               <Link
                 href={`/projects/${projectId}?sprint=${sprint.id}`}
-                className="min-w-0 flex-1 text-sm font-semibold leading-tight text-foreground line-clamp-1 break-all break-words transition-colors hover:text-primary"
+                className={cn(
+                  TEXT_ONE_LINE,
+                  "flex-1 text-[13px] font-semibold leading-tight text-foreground transition-colors hover:text-primary",
+                )}
+                title={sprint.name}
               >
                 {sprint.name}
               </Link>
@@ -146,13 +153,15 @@ export const SprintCard = memo(function SprintCard({ sprint, projectId, onStart,
           </div>
 
           {sprint.goal ? (
-            <p className="mt-0.5 flex items-center gap-1 text-[10px] text-muted-foreground">
+            <p className="mt-0.5 flex min-w-0 items-center gap-1 text-[10px] text-muted-foreground">
               <Target className="h-2.5 w-2.5 shrink-0" aria-hidden="true" />
-              <span className="min-w-0 line-clamp-1">{sprint.goal}</span>
+              <span className={TEXT_ONE_LINE} title={sprint.goal}>
+                {sprint.goal}
+              </span>
             </p>
           ) : null}
 
-          <p className="mt-1 text-[10px] text-muted-foreground tabular-nums">
+          <p className="mt-1 text-[10px] tabular-nums text-muted-foreground">
             {format(startDate, "MMM d")} — {format(endDate, "MMM d, yyyy")}
           </p>
         </div>
@@ -162,7 +171,7 @@ export const SprintCard = memo(function SprintCard({ sprint, projectId, onStart,
             <Button
               variant="ghost"
               size="icon-sm"
-              className="h-6 w-6 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 focus:opacity-100 transition-opacity"
+              className="h-6 w-6 shrink-0 opacity-100 transition-opacity focus:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
               aria-label={`Sprint actions for ${sprint.name}`}
             >
               <MoreHorizontal className="h-3.5 w-3.5" />
@@ -174,31 +183,31 @@ export const SprintCard = memo(function SprintCard({ sprint, projectId, onStart,
                 sprint={sprint}
                 projectId={projectId}
                 trigger={
-                  <button className="flex items-center w-full px-2 py-1.5 text-sm">
-                    <Pencil className="h-4 w-4 mr-2" />
+                  <button className="flex w-full items-center px-2 py-1.5 text-sm">
+                    <Pencil className="mr-2 h-4 w-4" />
                     Edit Sprint
                   </button>
                 }
               />
             </DropdownMenuItem>
-            {onPlan && (
+            {onPlan ? (
               <DropdownMenuItem onClick={handlePlan}>
-                <ArrowLeftRight className="h-4 w-4 mr-2" />
+                <ArrowLeftRight className="mr-2 h-4 w-4" />
                 Plan Sprint
               </DropdownMenuItem>
-            )}
-            {sprint.status === "PLANNED" && onStart && (
+            ) : null}
+            {sprint.status === "PLANNED" && onStart ? (
               <DropdownMenuItem onClick={handleStart} disabled={isUpdating}>
-                <Play className="h-4 w-4 mr-2" />
+                <Play className="mr-2 h-4 w-4" />
                 Start Sprint
               </DropdownMenuItem>
-            )}
-            {sprint.status === "ACTIVE" && onComplete && (
+            ) : null}
+            {sprint.status === "ACTIVE" && onComplete ? (
               <DropdownMenuItem onClick={handleComplete} disabled={isUpdating}>
-                <Square className="h-4 w-4 mr-2" />
+                <Square className="mr-2 h-4 w-4" />
                 Complete Sprint
               </DropdownMenuItem>
-            )}
+            ) : null}
             <DropdownMenuItem asChild>
               <Link href={`/projects/${projectId}?sprint=${sprint.id}`}>View Board</Link>
             </DropdownMenuItem>
@@ -206,9 +215,9 @@ export const SprintCard = memo(function SprintCard({ sprint, projectId, onStart,
         </DropdownMenu>
       </div>
 
-      <div className="mt-1.5 space-y-1 border-t border-border/80 pt-1.5">
+      <div className="mt-1.5 space-y-1 border-t border-border/50 pt-1.5">
         <div
-          className="h-1 overflow-hidden rounded-full bg-muted"
+          className="h-1 overflow-hidden rounded-full bg-muted/80"
           role="progressbar"
           aria-valuenow={Math.round(progress)}
           aria-valuemin={0}
@@ -226,9 +235,11 @@ export const SprintCard = memo(function SprintCard({ sprint, projectId, onStart,
         </div>
 
         <div className="flex items-center justify-between gap-1.5 text-[9px] font-medium tabular-nums text-muted-foreground">
-          <span>
+          <span className="min-w-0 truncate">
             {completedPoints}/{totalPoints} pts
-            <span className="mx-1 text-border" aria-hidden="true">·</span>
+            <span className="mx-1 text-border" aria-hidden="true">
+              ·
+            </span>
             {doneTickets}/{tickets.length} tickets
           </span>
           <span className={cn("shrink-0", isOverdue && "text-red-500 dark:text-red-400")}>

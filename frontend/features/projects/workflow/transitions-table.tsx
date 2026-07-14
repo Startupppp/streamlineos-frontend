@@ -35,6 +35,8 @@ import { TransitionFormSheet } from "./transition-form-sheet";
 import type { CustomState } from "@/hooks/api/projects/custom-states";
 import type { WorkflowTransition, CreateTransitionInput } from "@/types/projects/workflow";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { cn } from "@/lib/utils";
 
 interface TransitionsTableProps {
   projectId: number;
@@ -128,9 +130,11 @@ export function TransitionsTable({ projectId, statuses }: TransitionsTableProps)
       header: "Label",
       cell: (row) =>
         row.name ? (
-          <span className="text-sm font-medium">{row.name}</span>
+          <span className={cn("text-sm font-medium", TEXT_ONE_LINE)} title={row.name}>
+            {row.name}
+          </span>
         ) : (
-          <span className="text-muted-foreground text-xs">—</span>
+          <span className="text-xs text-muted-foreground">—</span>
         ),
     },
     {
@@ -198,18 +202,18 @@ export function TransitionsTable({ projectId, statuses }: TransitionsTableProps)
 
   return (
     <>
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold">Transitions</h2>
-        {canManage && (
-          <Button size="sm" variant="outline" className="h-7 text-xs gap-1.5" onClick={handleAddClick}>
+      <div className="mb-3 flex min-w-0 items-center justify-between gap-2 px-4 pt-4">
+        <h2 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>Transitions</h2>
+        {canManage ? (
+          <Button size="sm" variant="outline" className="h-7 gap-1.5 text-xs" onClick={handleAddClick}>
             <Plus className="h-3.5 w-3.5" />
             Add
           </Button>
-        )}
+        ) : null}
       </div>
 
       {isLoading ? (
-        <DataTableSkeleton rows={4} columns={6} />
+        <DataTableSkeleton rows={4} columns={6} className="px-4 pb-4" />
       ) : (transitions ?? []).length === 0 ? (
         <EmptyState
           illustrationPreset="projects"
@@ -217,6 +221,7 @@ export function TransitionsTable({ projectId, statuses }: TransitionsTableProps)
           title="No transitions defined"
           description="All status changes are currently unrestricted. Add a transition to enforce your workflow."
           action={canManage ? { label: "Add transition", onClick: handleAddClick } : undefined}
+          className="px-4 pb-4"
         />
       ) : (
         <DataTable
@@ -224,6 +229,7 @@ export function TransitionsTable({ projectId, statuses }: TransitionsTableProps)
           columns={columns}
           getRowKey={(row) => row.id}
           minWidth="680px"
+          className="border-0"
         />
       )}
 

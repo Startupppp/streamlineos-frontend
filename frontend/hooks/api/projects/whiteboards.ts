@@ -26,11 +26,6 @@ export interface WhiteboardSummary {
   updatedAt: string | null;
 }
 
-export interface WhiteboardHubItem extends WhiteboardSummary {
-  projectId: number;
-  projectName: string;
-}
-
 export interface WhiteboardShareEntry {
   userId: string;
   role: WhiteboardShareRole;
@@ -79,14 +74,6 @@ export interface SetWhiteboardSharesInput {
   shares: Array<{ userId: string; role: WhiteboardShareRole }>;
 }
 
-export function useAllWhiteboards() {
-  return useQuery({
-    queryKey: queryKeys.whiteboards.hub(),
-    queryFn: () => apiClient.get<WhiteboardHubItem[]>("/whiteboards"),
-    staleTime: 30_000,
-  });
-}
-
 export function useWhiteboards(projectId: number) {
   return useQuery({
     queryKey: queryKeys.whiteboards.list(projectId),
@@ -113,19 +100,6 @@ export function useCreateWhiteboard(projectId: number) {
     mutationFn: (name: string) =>
       apiClient.post<WhiteboardDetail>(`/projects/${projectId}/whiteboards`, { name }),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.whiteboards.list(projectId) }),
-  });
-}
-
-export function useCreateWhiteboardInProject() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ["projects", "whiteboards", "create-in-project"],
-    mutationFn: ({ projectId, name }: { projectId: number; name: string }) =>
-      apiClient.post<WhiteboardDetail>(`/projects/${projectId}/whiteboards`, { name }),
-    onSuccess: (_board, variables) => {
-      qc.invalidateQueries({ queryKey: queryKeys.whiteboards.hub() });
-      qc.invalidateQueries({ queryKey: queryKeys.whiteboards.list(variables.projectId) });
-    },
   });
 }
 

@@ -27,6 +27,14 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { getRiskSeverity } from "./risk-severity";
 import { RiskMatrix } from "./risk-matrix";
 import { RiskFormSheet } from "./risk-form-sheet";
+import {
+  PmPageShell,
+  PmPanel,
+  PmSection,
+  PM_TOOLBAR,
+} from "@/features/projects/shared/pm-chrome";
+import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { cn } from "@/lib/utils";
 
 const LEVEL_LABEL: Record<"low" | "medium" | "high", string> = { low: "Low", medium: "Medium", high: "High" };
 const LEVEL_STYLE: Record<"low" | "medium" | "high", string> = {
@@ -135,7 +143,14 @@ export function RisksPage({ projectId }: RisksPageProps) {
     },
     {
       key: "title", header: "Title", sortable: true, sortValue: (r) => r.title,
-      cell: (row) => <span className="font-medium text-foreground truncate max-w-[200px] block">{row.title}</span>,
+      cell: (row) => (
+        <span
+          className={cn("block max-w-[min(100%,20rem)] font-medium text-foreground", TEXT_ONE_LINE)}
+          title={row.title}
+        >
+          {row.title}
+        </span>
+      ),
     },
     {
       key: "probability", header: "Probability",
@@ -202,67 +217,111 @@ export function RisksPage({ projectId }: RisksPageProps) {
       subtitle="Identify, assess, and mitigate project risks"
       actions={
         canManage ? (
-          <Button size="sm" className="h-8 text-xs gap-1.5" onClick={() => setSheetOpen(true)}>
+          <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={() => setSheetOpen(true)}>
             <Plus className="h-3.5 w-3.5" /> New Risk
           </Button>
         ) : undefined
       }
     >
-      <div className="flex flex-1 min-h-0 flex-col space-y-4">
-        <StatCardGrid cols={3}>
-          <StatCard label="Open" value={openCount} icon={ShieldAlert} tone="blue" isLoading={isLoading} />
-          <StatCard label="High / Critical" value={highCritCount} icon={AlertTriangle} tone="red" isLoading={isLoading} />
-          <StatCard label="Closed" value={closedCount} icon={CheckCircle2} tone="emerald" isLoading={isLoading} />
-        </StatCardGrid>
+      <PmPageShell>
+        <PmSection index={0}>
+          <StatCardGrid cols={3}>
+            <StatCard label="Open" value={openCount} icon={ShieldAlert} tone="blue" isLoading={isLoading} />
+            <StatCard label="High / Critical" value={highCritCount} icon={AlertTriangle} tone="red" isLoading={isLoading} />
+            <StatCard label="Closed" value={closedCount} icon={CheckCircle2} tone="emerald" isLoading={isLoading} />
+          </StatCardGrid>
+        </PmSection>
 
-        {!isLoading && !isError && (
-          <RiskMatrix risks={allRisks} onCellClick={handleCellClick} selectedCell={matrixCell} />
-        )}
+        {!isLoading && !isError ? (
+          <PmSection index={1}>
+            <PmPanel className="p-3" solid>
+              <RiskMatrix risks={allRisks} onCellClick={handleCellClick} selectedCell={matrixCell} />
+            </PmPanel>
+          </PmSection>
+        ) : null}
 
-        <div className="flex items-center gap-2 flex-wrap">
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="h-8 w-40 text-xs"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {STATUS_OPTS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Input
-            className="h-8 text-xs w-52"
-            placeholder="Search risks…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          {isFiltered && (
-            <Button size="sm" variant="ghost" className="h-8 text-xs"
-              onClick={() => { setStatusFilter("all"); setSearch(""); setMatrixCell(null); }}>
-              Clear
-            </Button>
+        <PmSection index={2}>
+          <div className={cn(PM_TOOLBAR, "sm:justify-start")}>
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="h-8 w-40 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {STATUS_OPTS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Input
+                className="h-8 w-52 text-xs"
+                placeholder="Search risks…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              {isFiltered ? (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 text-xs"
+                  onClick={() => {
+                    setStatusFilter("all");
+                    setSearch("");
+                    setMatrixCell(null);
+                  }}
+                >
+                  Clear
+                </Button>
+              ) : null}
+            </div>
+          </div>
+        </PmSection>
+
+        <PmSection index={3} className="flex min-h-0 flex-1 flex-col">
+          {isLoading ? (
+            <DataTableSkeleton rows={5} columns={8} className="flex-1" />
+          ) : isError ? (
+            <ErrorState className="flex-1" onRetry={() => void refetch()} />
+          ) : displayed.length === 0 ? (
+            <EmptyState
+              illustrationPreset="alert"
+              title={isFiltered ? "No matching risks" : "No risks logged"}
+              description={
+                isFiltered
+                  ? "Try adjusting your filters or clearing the matrix selection."
+                  : "Log risks to track probability, impact, and mitigation plans."
+              }
+              action={
+                isFiltered
+                  ? {
+                      label: "Clear filters",
+                      onClick: () => {
+                        setStatusFilter("all");
+                        setSearch("");
+                        setMatrixCell(null);
+                      },
+                    }
+                  : canManage
+                    ? { label: "New Risk", onClick: () => setSheetOpen(true) }
+                    : undefined
+              }
+              className="min-h-[40vh]"
+            />
+          ) : (
+            <PmPanel className="flex min-h-0 flex-1 flex-col" solid>
+              <DataTable
+                data={displayed}
+                columns={columns}
+                getRowKey={(row) => row.id}
+                minWidth="780px"
+                className="min-h-0 flex-1 border-0"
+              />
+            </PmPanel>
           )}
-        </div>
-
-        {isLoading ? (
-          <DataTableSkeleton rows={5} columns={8} className="flex-1" />
-        ) : isError ? (
-          <ErrorState className="flex-1" onRetry={() => void refetch()} />
-        ) : displayed.length === 0 ? (
-          <EmptyState
-            illustrationPreset="alert"
-            title={isFiltered ? "No matching risks" : "No risks logged"}
-            description={
-              isFiltered
-                ? "Try adjusting your filters or clearing the matrix selection."
-                : "Log risks to track probability, impact, and mitigation plans."
-            }
-            action={
-              isFiltered
-                ? { label: "Clear filters", onClick: () => { setStatusFilter("all"); setSearch(""); setMatrixCell(null); } }
-                : canManage ? { label: "New Risk", onClick: () => setSheetOpen(true) } : undefined
-            }
-          />
-        ) : (
-          <DataTable data={displayed} columns={columns} getRowKey={(row) => row.id} minWidth="780px" className="flex-1 min-h-0" />
-        )}
-      </div>
+        </PmSection>
+      </PmPageShell>
 
       <RiskFormSheet
         open={sheetOpen || !!editRisk}

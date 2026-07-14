@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { useTestRunDetail, useUpdateTestRun, useCreateBugFromResult } from "@/hooks/api/projects/qa";
 import { useCan } from "@/hooks/api/access";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -17,16 +18,26 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CheckCircle } from "lucide-react";
+import { CircleCheckIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { cn } from "@/lib/utils";
+import {
+  PmPageShell,
+  PmPanel,
+  PmSection,
+  PmStaggerList,
+  PM_PANEL,
+} from "@/features/projects/shared/pm-chrome";
+import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 import { ResultRow } from "./result-row";
 import type { TestRunStatus, TestRunCounts } from "@/types/projects";
 
 const STATUS_STYLES: Record<TestRunStatus, string> = {
   not_started: "text-muted-foreground border-border",
-  in_progress: "text-blue-600 border-blue-200",
-  completed: "text-green-600 border-green-200",
-  aborted: "text-red-600 border-red-200",
+  in_progress: "text-blue-600 border-blue-200 dark:text-blue-400 dark:border-blue-500/30",
+  completed: "text-green-600 border-green-200 dark:text-green-400 dark:border-green-500/30",
+  aborted: "text-red-600 border-red-200 dark:text-red-400 dark:border-red-500/30",
 };
 
 const STATUS_LABELS: Record<TestRunStatus, string> = {
@@ -42,13 +53,33 @@ function ProgressBar({ counts }: { counts?: TestRunCounts }) {
   const passPct = Math.round((counts.passed / counts.total) * 100);
   return (
     <div className="flex items-center gap-3">
-      <div className="w-40 h-2 bg-muted rounded-full overflow-hidden">
-        <div className="h-full bg-green-500 rounded-full transition-[width] duration-300" style={{ width: `${passPct}%` }} />
+      <div className="h-2 w-40 overflow-hidden rounded-full bg-muted">
+        <div
+          className="h-full rounded-full bg-emerald-500 transition-[width] duration-300"
+          style={{ width: `${passPct}%` }}
+        />
       </div>
-      <span className="text-[11px] text-muted-foreground">
+      <span className="text-[11px] tabular-nums text-muted-foreground">
         {counts.passed}/{counts.total} passed · {pct}% executed
       </span>
     </div>
+  );
+}
+
+function CompleteRunButton({ onClick, isPending }: { onClick: () => void; isPending: boolean }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <LoadingButton
+      size="sm"
+      className="h-7 gap-1 text-[11px]"
+      onClick={onClick}
+      isPending={isPending}
+      loadingText="Completing…"
+      {...hoverHandlers}
+    >
+      <CircleCheckIcon ref={iconRef} size={14} />
+      Complete Run
+    </LoadingButton>
   );
 }
 
@@ -77,14 +108,15 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
       { projectId, id: run.id, status: "completed" },
       {
         onSuccess: () => toast.success("Run marked as completed"),
-        onError: () => toast.error("Failed to complete run"),
+        onError: (error) => toast.error(getErrorMessage(error)),
       },
     );
   }, [run, updateRun, projectId]);
 
   const handleOpenCreateBug = useCallback((resultId: number) => {
     const result = run?.results.find((r) => r.id === resultId);
-    setBugTitle(result?.testCase ? `Bug in TC-${result.testCase.caseNumber}: ${result.testCase.title}` : "");
+    const tc = result?.testCase;
+    setBugTitle(tc ? `Bug in TC-${tc.caseNumber}: ${tc.title}` : "");
     setBugResultId(resultId);
     setBugSheetOpen(true);
   }, [run]);
@@ -94,20 +126,34 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
     createBugFromResult.mutate(
       { projectId, runId, resultId: bugResultId, title: bugTitle || undefined, severity: bugSeverity },
       {
-        onSuccess: () => { toast.success("Bug created"); setBugSheetOpen(false); setBugResultId(null); },
-        onError: () => toast.error("Failed to create bug"),
+        onSuccess: () => {
+          toast.success("Bug created");
+          setBugSheetOpen(false);
+          setBugResultId(null);
+        },
+        onError: (error) => toast.error(getErrorMessage(error)),
       },
     );
   }, [bugResultId, bugTitle, bugSeverity, createBugFromResult, projectId, runId]);
 
+  const handleBugTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setBugTitle(e.target.value);
+  }, []);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
   if (isLoading) {
     return (
-      <PageWrapper title="Loading..." backHref={`/projects/${projectId}/qa`}>
-        <div className="flex flex-1 min-h-0 flex-col space-y-2">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-20 rounded-lg" />
-          ))}
-        </div>
+      <PageWrapper title="Loading…" backHref={`/projects/${projectId}/qa`}>
+        <PmPageShell>
+          <div className="space-y-2">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className={cn("h-20 rounded-xl", PM_PANEL)} />
+            ))}
+          </div>
+        </PmPageShell>
       </PageWrapper>
     );
   }
@@ -115,7 +161,9 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
   if (isError || !run) {
     return (
       <PageWrapper title="Run" backHref={`/projects/${projectId}/qa`}>
-        <ErrorState onRetry={refetch} />
+        <PmPageShell withGlow={false}>
+          <ErrorState onRetry={handleRetry} />
+        </PmPageShell>
       </PageWrapper>
     );
   }
@@ -129,64 +177,62 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
       backHref={`/projects/${projectId}/qa`}
       actions={
         canManage && run.status !== "completed" ? (
-          <Button
-            size="sm"
-            className="h-7 text-[11px]"
-            onClick={handleCompleteRun}
-            disabled={updateRun.isPending}
-          >
-            <CheckCircle className="h-3.5 w-3.5 mr-1" />
-            Complete Run
-          </Button>
+          <CompleteRunButton onClick={handleCompleteRun} isPending={updateRun.isPending} />
         ) : undefined
       }
     >
-      <div className="flex flex-1 min-h-0 flex-col space-y-4">
-        <div className="flex items-center gap-3 flex-wrap">
-          <Badge variant="outline" className={`text-[10px] ${STATUS_STYLES[run.status]}`}>
-            {STATUS_LABELS[run.status]}
-          </Badge>
-          {run.environment && (
-            <span className="text-[11px] text-muted-foreground">{run.environment}</span>
-          )}
-          <ProgressBar counts={run.counts} />
-        </div>
+      <PmPageShell>
+        <PmSection index={0}>
+          <PmPanel className="flex flex-wrap items-center gap-3 px-3 py-2.5">
+            <Badge variant="outline" className={cn("text-[10px]", STATUS_STYLES[run.status])}>
+              {STATUS_LABELS[run.status]}
+            </Badge>
+            {run.environment ? (
+              <span className={cn(TEXT_ONE_LINE, "max-w-[12rem] text-[11px] text-muted-foreground")}>
+                {run.environment}
+              </span>
+            ) : null}
+            <ProgressBar counts={run.counts} />
+          </PmPanel>
+        </PmSection>
 
-        {results.length === 0 ? (
-          <EmptyState
-            illustrationPreset="ticket"
-            title="No test results"
-            description="No test cases were added to this run."
-            compact
-          />
-        ) : (
-          <div className="space-y-2">
-            {results.map((result) => (
-              <ResultRow
-                key={result.id}
-                result={result}
-                projectId={projectId}
-                canExecute={canExecute}
-                canCreateBug={canCreateBug}
-                onCreateBug={handleOpenCreateBug}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+        <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
+          {results.length === 0 ? (
+            <EmptyState
+              illustrationPreset="ticket"
+              title="No test results"
+              description="No test cases were added to this run."
+              className="min-h-[32vh]"
+            />
+          ) : (
+            <PmStaggerList className="space-y-2">
+              {results.map((result) => (
+                <ResultRow
+                  key={result.id}
+                  result={result}
+                  projectId={projectId}
+                  canExecute={canExecute}
+                  canCreateBug={canCreateBug}
+                  onCreateBug={handleOpenCreateBug}
+                />
+              ))}
+            </PmStaggerList>
+          )}
+        </PmSection>
+      </PmPageShell>
 
       <Sheet open={bugSheetOpen} onOpenChange={setBugSheetOpen}>
-        <SheetContent className="p-0 flex flex-col w-full sm:max-w-md">
-          <SheetHeader className="px-5 py-4 border-b shrink-0">
+        <SheetContent className="flex w-full flex-col p-0 sm:max-w-md">
+          <SheetHeader className="shrink-0 border-b px-5 py-4">
             <SheetTitle>Create Bug from Result</SheetTitle>
           </SheetHeader>
           <ScrollArea className="flex-1">
-            <div className="px-5 py-4 space-y-4">
+            <div className="space-y-4 px-5 py-4">
               <div className="space-y-1.5">
                 <Label className="text-[11px]">Title *</Label>
                 <Input
                   value={bugTitle}
-                  onChange={(e) => setBugTitle(e.target.value)}
+                  onChange={handleBugTitleChange}
                   className="h-8 text-[11px]"
                   placeholder="Bug title"
                 />
@@ -206,7 +252,7 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
               </div>
             </div>
           </ScrollArea>
-          <SheetFooter className="px-5 py-3 border-t shrink-0 flex gap-2">
+          <SheetFooter className="flex shrink-0 gap-2 border-t px-5 py-3">
             <SheetClose asChild>
               <Button variant="outline" size="sm" className="text-[11px]">Cancel</Button>
             </SheetClose>

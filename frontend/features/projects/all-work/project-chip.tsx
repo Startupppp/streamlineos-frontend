@@ -17,9 +17,9 @@ export function ProjectChip({ projectId, projectKey, projectName, className }: P
       onClick={(e) => e.stopPropagation()}
       title={projectName}
       className={cn(
-        "inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium tabular-nums",
-        "bg-primary/10 text-foreground hover:bg-primary/20 transition-colors shrink-0",
-        className
+        "inline-flex shrink-0 items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium tabular-nums",
+        "bg-primary/10 text-primary ring-1 ring-primary/10 transition-colors duration-150 hover:bg-primary/15 hover:ring-primary/20",
+        className,
       )}
     >
       {projectKey}

@@ -70,7 +70,8 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
           <button
             type="button"
             onClick={handleClick}
-            className="block min-w-0 truncate text-[13px] font-medium text-left hover:underline underline-offset-2"
+            className="block max-w-[min(100%,28rem)] min-w-0 truncate text-left text-[13px] font-medium [overflow-wrap:anywhere] hover:underline underline-offset-2"
+            title={ticket.title}
           >
             {ticket.title}
           </button>

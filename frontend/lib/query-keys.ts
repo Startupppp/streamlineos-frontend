@@ -213,7 +213,6 @@ export const queryKeys = {
     analytics: (projectId: number) => [...base, "projects", "analytics", projectId] as const,
     watchers: (ticketId: number) => [...base, "projects", "watchers", ticketId] as const,
     budget: (projectId: number) => [...base, "projects", "budget", projectId] as const,
-    resourceAllocation: () => [...base, "projects", "resourceAllocation"] as const,
     templates: () => [...base, "projects", "templates"] as const,
     qa: {
       suites: (projectId?: number) => [...base, "projects", projectId, "qa", "suites"] as const,
@@ -270,10 +269,6 @@ export const queryKeys = {
     portfolios: {
       list: (params?: Record<string, unknown>) => [...base, "projects", "portfolios", "list", params] as const,
       detail: (id: number) => [...base, "projects", "portfolios", "detail", id] as const,
-    },
-    programs: {
-      list: (params?: Record<string, unknown>) => [...base, "projects", "programs", "list", params] as const,
-      detail: (id: number) => [...base, "projects", "programs", "detail", id] as const,
     },
     workflow: {
       transitions: (projectId: number) => [...base, "projects", projectId, "workflow", "transitions"] as const,
@@ -575,8 +570,6 @@ export const queryKeys = {
   },
 
   whiteboards: {
-    all: [...base, "whiteboards"] as const,
-    hub: () => [...base, "whiteboards", "hub"] as const,
     list: (projectId: number) => [...base, "whiteboards", "list", projectId] as const,
     detail: (id: number) => [...base, "whiteboards", "detail", id] as const,
     publicLink: (token: string) => [...base, "whiteboards", "publicLink", token] as const,

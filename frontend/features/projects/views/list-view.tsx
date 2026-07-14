@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, memo, useCallback, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -24,6 +25,8 @@ import { useCreateTicket } from "@/hooks/api";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import type { DisplayOptions } from "../shared/types";
+import { pmSnappy } from "@/features/projects/shared/pm-motion";
+import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 
 interface Ticket {
   id: number;
@@ -68,6 +71,7 @@ interface ListViewItemProps {
 
 const ListViewItem = memo(function ListViewItem({ ticket, projectKey, projectId, projectStatuses, onClick, displayOptions }: ListViewItemProps) {
   const handleClick = useCallback(() => onClick(ticket.id), [onClick, ticket.id]);
+  const shouldReduceMotion = useReducedMotion();
 
   const showId = displayOptions?.showId ?? true;
   const showPriority = displayOptions?.showPriority ?? true;
@@ -82,7 +86,17 @@ const ListViewItem = memo(function ListViewItem({ ticket, projectKey, projectId,
   const hasProjectId = projectId != null;
 
   return (
-    <div className="group flex items-center bg-card transition-colors hover:bg-muted/40">
+    <motion.div
+      className="group flex items-center border-b border-border/50 bg-card last:border-b-0"
+      initial={shouldReduceMotion ? false : { opacity: 0, x: -4 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={pmSnappy}
+      whileHover={
+        shouldReduceMotion
+          ? undefined
+          : { backgroundColor: "color-mix(in srgb, var(--primary) 4%, transparent)", x: 1 }
+      }
+    >
       <div className="flex flex-1 min-w-0 items-center gap-2 px-3 py-1.5">
         {hasProjectId ? (
           <InlineStatus
@@ -110,7 +124,11 @@ const ListViewItem = memo(function ListViewItem({ ticket, projectKey, projectId,
         )}
         <button
           onClick={handleClick}
-          className="text-sm text-foreground truncate flex-1 text-left hover:underline underline-offset-2"
+          className={cn(
+            TEXT_ONE_LINE,
+            "flex-1 text-left text-sm text-foreground hover:underline underline-offset-2",
+          )}
+          title={ticket.title}
         >
           {ticket.title}
         </button>
@@ -171,10 +189,10 @@ const ListViewItem = memo(function ListViewItem({ ticket, projectKey, projectId,
         <TicketQuickActions
           ticketId={ticket.id}
           projectId={projectId}
-          className="opacity-0 group-hover:opacity-100 transition-opacity"
+          className="opacity-0 translate-x-1 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100"
         />
       </div>
-    </div>
+    </motion.div>
   );
 });
 

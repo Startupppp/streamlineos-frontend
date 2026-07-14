@@ -203,12 +203,12 @@ function CommentItemComponent({
           {getUserInitials(user)}
         </AvatarFallback>
       </Avatar>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold">
+      <div className="min-w-0 max-w-full flex-1">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="min-w-0 truncate text-xs font-semibold">
             {getUserDisplayName(user)}
           </span>
-          <span className="text-[11px] text-muted-foreground">{timeAgo}</span>
+          <span className="shrink-0 text-[11px] text-muted-foreground">{timeAgo}</span>
           {isEdited && (
             <span className="text-[10px] text-muted-foreground/60 italic">(edited)</span>
           )}
@@ -254,7 +254,11 @@ function CommentItemComponent({
             </div>
           </div>
         ) : (
-          <RichTextContent content={comment.content} contentKey={comment.id} />
+          <RichTextContent
+            content={comment.content}
+            contentKey={comment.id}
+            className="mt-0.5 max-w-full"
+          />
         )}
 
         {!isEditing && (

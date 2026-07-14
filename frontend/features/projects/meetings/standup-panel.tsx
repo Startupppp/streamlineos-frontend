@@ -11,11 +11,13 @@ import {
   Form, FormField, FormItem, FormLabel, FormControl,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Separator } from "@/components/ui/separator";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
+import { cn } from "@/lib/utils";
+import { PM_PANEL, PM_PANEL_SOLID } from "@/features/projects/shared/pm-chrome";
+import { TEXT_ONE_LINE, TEXT_BODY } from "@/features/projects/shared/text-overflow";
 import type { StandupEntry, MeetingAttendee, ProjectMemberRecord } from "@/types/projects";
 
 const standupSchema = z.object({
@@ -73,7 +75,7 @@ export function StandupPanel({
 
   function memberName(userId: string): string {
     const m = projectMembers.find((p) => p.id === userId);
-    return getUserDisplayName(m) || userId;
+    return getUserDisplayName(m) || "Unknown";
   }
 
   const otherEntries = standupEntries.filter((e) => e.userId !== currentUserId);
@@ -87,15 +89,15 @@ export function StandupPanel({
     <div className="space-y-4">
       <h3 className="text-sm font-semibold text-foreground">Standup</h3>
 
-      <div className="rounded-lg border bg-card p-4 space-y-3">
-        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Your Update</p>
+      <div className={cn(PM_PANEL_SOLID, "space-y-3 p-4")}>
+        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Your Update</p>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3">
             <FormField control={form.control} name="yesterday" render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-xs">Yesterday</FormLabel>
                 <FormControl>
-                  <Textarea {...field} rows={2} placeholder="What did you do yesterday?" className="text-sm resize-none" />
+                  <Textarea {...field} rows={2} placeholder="What did you do yesterday?" className="resize-none text-sm" />
                 </FormControl>
               </FormItem>
             )} />
@@ -103,7 +105,7 @@ export function StandupPanel({
               <FormItem>
                 <FormLabel className="text-xs">Today</FormLabel>
                 <FormControl>
-                  <Textarea {...field} rows={2} placeholder="What will you do today?" className="text-sm resize-none" />
+                  <Textarea {...field} rows={2} placeholder="What will you do today?" className="resize-none text-sm" />
                 </FormControl>
               </FormItem>
             )} />
@@ -111,7 +113,7 @@ export function StandupPanel({
               <FormItem>
                 <FormLabel className="text-xs">Blockers</FormLabel>
                 <FormControl>
-                  <Textarea {...field} rows={2} placeholder="Any blockers or impediments?" className="text-sm resize-none" />
+                  <Textarea {...field} rows={2} placeholder="Any blockers or impediments?" className="resize-none text-sm" />
                 </FormControl>
               </FormItem>
             )} />
@@ -122,36 +124,40 @@ export function StandupPanel({
         </Form>
       </div>
 
-      {(otherEntries.length > 0 || attendeesWithoutEntry.length > 0) && (
+      {(otherEntries.length > 0 || attendeesWithoutEntry.length > 0) ? (
         <>
           <Separator />
           <div className="space-y-3">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Team Updates</p>
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Team Updates</p>
             {otherEntries.map((entry) => (
-              <div key={entry.userId} className="rounded-lg border bg-muted/30 p-3 space-y-2">
-                <p className="text-xs font-semibold text-foreground">{memberName(entry.userId)}</p>
-                {entry.yesterday && (
+              <div key={entry.userId} className={cn(PM_PANEL, "space-y-2 p-3")}>
+                <p className={cn(TEXT_ONE_LINE, "text-xs font-semibold text-foreground")}>
+                  {memberName(entry.userId)}
+                </p>
+                {entry.yesterday ? (
                   <div>
-                    <p className="text-[10px] uppercase text-muted-foreground tracking-wide mb-0.5">Yesterday</p>
-                    <p className="text-sm text-foreground whitespace-pre-wrap">{entry.yesterday}</p>
+                    <p className="mb-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">Yesterday</p>
+                    <p className={cn(TEXT_BODY, "whitespace-pre-wrap text-sm text-foreground")}>{entry.yesterday}</p>
                   </div>
-                )}
-                {entry.today && (
+                ) : null}
+                {entry.today ? (
                   <div>
-                    <p className="text-[10px] uppercase text-muted-foreground tracking-wide mb-0.5">Today</p>
-                    <p className="text-sm text-foreground whitespace-pre-wrap">{entry.today}</p>
+                    <p className="mb-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">Today</p>
+                    <p className={cn(TEXT_BODY, "whitespace-pre-wrap text-sm text-foreground")}>{entry.today}</p>
                   </div>
-                )}
-                {entry.blockers && (
+                ) : null}
+                {entry.blockers ? (
                   <div>
-                    <p className="text-[10px] uppercase text-muted-foreground tracking-wide mb-0.5">Blockers</p>
-                    <p className="text-sm text-amber-700 whitespace-pre-wrap">{entry.blockers}</p>
+                    <p className="mb-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">Blockers</p>
+                    <p className={cn(TEXT_BODY, "whitespace-pre-wrap text-sm text-amber-700 dark:text-amber-400")}>
+                      {entry.blockers}
+                    </p>
                   </div>
-                )}
+                ) : null}
               </div>
             ))}
             {attendeesWithoutEntry.filter((id) => allAttendeeIds.has(id)).map((userId) => (
-              <div key={userId} className="rounded-lg border border-dashed bg-muted/10 p-3">
+              <div key={userId} className="rounded-xl border border-dashed border-border/60 bg-muted/10 p-3">
                 <p className="text-xs text-muted-foreground">
                   <span className="font-medium text-foreground">{memberName(userId)}</span> — not submitted yet
                 </p>
@@ -159,7 +165,7 @@ export function StandupPanel({
             ))}
           </div>
         </>
-      )}
+      ) : null}
     </div>
   );
 }

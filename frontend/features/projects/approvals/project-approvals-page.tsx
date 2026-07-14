@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { MoreHorizontal } from "lucide-react";
+import { EllipsisIcon, PlusIcon } from "@animateicons/react/lucide";
 import {
   useProjectApprovals,
   useCreateApproval,
@@ -13,6 +13,7 @@ import {
 } from "@/hooks/api/projects";
 import { useCan } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
@@ -50,6 +51,14 @@ import { DelegateDialog } from "./delegate-dialog";
 import { RequestApprovalSheet } from "./request-approval-sheet";
 import type { Approval, ApprovalEntityType, ApprovalStatus, CreateApprovalInput, DecideApprovalInput } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { cn } from "@/lib/utils";
+import {
+  PmPageShell,
+  PmPanel,
+  PmSection,
+  PM_TOOLBAR,
+} from "@/features/projects/shared/pm-chrome";
+import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 
 const STATUS_OPTIONS: { value: string; label: string }[] = [
   { value: "all", label: "All statuses" },
@@ -75,6 +84,63 @@ const ENTITY_OPTIONS: { value: string; label: string }[] = [
 ];
 
 const DECIDABLE = new Set<ApprovalStatus>(["pending", "requested", "escalated", "changes_requested"]);
+
+function RequestApprovalButton({ onClick }: { onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={onClick} {...hoverHandlers}>
+      <PlusIcon ref={iconRef} size={14} />
+      Request Approval
+    </Button>
+  );
+}
+
+function ApprovalActions({
+  canDecideRow,
+  canManage,
+  decidable,
+  isEscalated,
+  onDecide,
+  onDelegate,
+  onEscalate,
+  onCancel,
+  onDelete,
+}: {
+  canDecideRow: boolean;
+  canManage: boolean;
+  decidable: boolean;
+  isEscalated: boolean;
+  onDecide: () => void;
+  onDelegate: () => void;
+  onEscalate: () => void;
+  onCancel: () => void;
+  onDelete: () => void;
+}) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  if (!canDecideRow && !canManage) return null;
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Approval actions" {...hoverHandlers}>
+          <EllipsisIcon ref={iconRef} size={16} />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {canDecideRow ? <DropdownMenuItem onClick={onDecide}>Decide</DropdownMenuItem> : null}
+        {canManage && decidable ? <DropdownMenuItem onClick={onDelegate}>Delegate</DropdownMenuItem> : null}
+        {canManage && decidable && !isEscalated ? (
+          <DropdownMenuItem onClick={onEscalate}>Escalate</DropdownMenuItem>
+        ) : null}
+        {canManage && decidable ? <DropdownMenuItem onClick={onCancel}>Cancel</DropdownMenuItem> : null}
+        {canManage ? (
+          <DropdownMenuItem variant="destructive" onClick={onDelete}>
+            Delete
+          </DropdownMenuItem>
+        ) : null}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 interface ProjectApprovalsPageProps {
   projectId: number;
@@ -118,6 +184,10 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
     setDefaultEntityType(preset);
     setRequestOpen(true);
   }, []);
+
+  const handleRequestClick = useCallback(() => {
+    handleOpenRequest();
+  }, [handleOpenRequest]);
 
   const handleCreate = useCallback((input: CreateApprovalInput) => {
     createApproval.mutate(input, {
@@ -192,12 +262,21 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
     });
   }, [deleteTarget, deleteApproval]);
 
+  const handleClearFilters = useCallback(() => {
+    setStatus("all");
+    setEntityType("all");
+  }, []);
+
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
   const columns = useMemo<DataTableColumn<Approval>[]>(() => [
     {
       key: "entityType",
       header: "Type",
       cell: (row) => (
-        <Badge variant="outline" className="text-[10px] px-1.5 py-0.5">
+        <Badge variant="outline" className="px-1.5 py-0.5 text-[10px]">
           {entityTypeLabel(row.entityType)}
         </Badge>
       ),
@@ -205,14 +284,28 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
     {
       key: "title",
       header: "Title",
-      cell: (row) => <span className="font-medium text-foreground truncate max-w-[220px] block">{row.title}</span>,
+      cell: (row) => (
+        <span
+          className={cn(TEXT_ONE_LINE, "block max-w-[min(100%,22rem)] font-medium text-foreground")}
+          title={row.title}
+        >
+          {row.title}
+        </span>
+      ),
       sortable: true,
       sortValue: (row) => row.title,
     },
     {
       key: "approver",
       header: "Approver",
-      cell: (row) => <span className="text-muted-foreground">{memberName(row.approverId)}</span>,
+      cell: (row) => {
+        const name = memberName(row.approverId);
+        return (
+          <span className={cn(TEXT_ONE_LINE, "block max-w-[8rem] text-muted-foreground")} title={name}>
+            {name}
+          </span>
+        );
+      },
     },
     {
       key: "level",
@@ -225,7 +318,7 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
       header: "Due",
       cell: (row) =>
         row.dueAt ? (
-          <span className="text-muted-foreground tabular-nums">{row.dueAt.slice(0, 10)}</span>
+          <span className="tabular-nums text-muted-foreground">{row.dueAt.slice(0, 10)}</span>
         ) : (
           <span className="text-muted-foreground">—</span>
         ),
@@ -243,59 +336,47 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
       className: "w-10",
       cell: (row) => {
         const canDecideRow = canDecide && DECIDABLE.has(row.status) && (canManage || row.approverId === currentUserId);
-        if (!canDecideRow && !canManage) return null;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-7 w-7">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {canDecideRow && <DropdownMenuItem onClick={() => setDecideTarget(row)}>Decide</DropdownMenuItem>}
-              {canManage && DECIDABLE.has(row.status) && (
-                <DropdownMenuItem onClick={() => setDelegateTarget(row)}>Delegate</DropdownMenuItem>
-              )}
-              {canManage && DECIDABLE.has(row.status) && row.status !== "escalated" && (
-                <DropdownMenuItem onClick={() => handleEscalate(row)}>Escalate</DropdownMenuItem>
-              )}
-              {canManage && DECIDABLE.has(row.status) && (
-                <DropdownMenuItem onClick={() => setCancelTarget(row)}>Cancel</DropdownMenuItem>
-              )}
-              {canManage && (
-                <DropdownMenuItem variant="destructive" onClick={() => setDeleteTarget(row)}>
-                  Delete
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <ApprovalActions
+            canDecideRow={canDecideRow}
+            canManage={canManage}
+            decidable={DECIDABLE.has(row.status)}
+            isEscalated={row.status === "escalated"}
+            onDecide={() => setDecideTarget(row)}
+            onDelegate={() => setDelegateTarget(row)}
+            onEscalate={() => handleEscalate(row)}
+            onCancel={() => setCancelTarget(row)}
+            onDelete={() => setDeleteTarget(row)}
+          />
         );
       },
     },
   ], [canDecide, canManage, currentUserId, memberName, handleEscalate]);
 
   const filtersBar = (
-    <div className="flex items-center gap-2">
-      <Select value={status} onValueChange={setStatus}>
-        <SelectTrigger className="h-8 w-40 text-xs">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {STATUS_OPTIONS.map((o) => (
-            <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <Select value={entityType} onValueChange={setEntityType}>
-        <SelectTrigger className="h-8 w-40 text-xs">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {ENTITY_OPTIONS.map((o) => (
-            <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+    <div className={cn(PM_TOOLBAR, "w-full")}>
+      <div className="flex flex-wrap items-center gap-2">
+        <Select value={status} onValueChange={setStatus}>
+          <SelectTrigger className="h-8 w-40 text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {STATUS_OPTIONS.map((o) => (
+              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={entityType} onValueChange={setEntityType}>
+          <SelectTrigger className="h-8 w-40 text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {ENTITY_OPTIONS.map((o) => (
+              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
     </div>
   );
 
@@ -308,57 +389,60 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
       eyebrow="Project"
       subtitle="Review and manage approval requests for this project"
       filters={filtersBar}
-      actions={
-        canRequest ? (
-          <Button size="sm" className="h-8 text-xs" onClick={() => handleOpenRequest()}>
-            Request Approval
-          </Button>
-        ) : undefined
-      }
+      actions={canRequest ? <RequestApprovalButton onClick={handleRequestClick} /> : undefined}
     >
-      <div className="flex flex-1 min-h-0 flex-col">
-        {isLoading ? (
-          <DataTableSkeleton rows={6} columns={7} className="flex-1" />
-        ) : isError ? (
-          <ErrorState className="flex-1" onRetry={() => void refetch()} />
-        ) : items.length === 0 ? (
-          <EmptyState
-            illustrationPreset="approval"
-            title={isFiltered ? "No matching approvals" : "No approvals yet"}
-            description={
-              isFiltered
-                ? "No approvals match your filters."
-                : "Use approvals to get sign-off on tasks, milestones, and releases before they ship."
-            }
-            action={
-              isFiltered
-                ? { label: "Clear filters", onClick: () => { setStatus("all"); setEntityType("all"); } }
-                : canRequest
-                  ? { label: "Request task approval", onClick: () => handleOpenRequest("task") }
-                  : undefined
-            }
-            secondaryAction={
-              !isFiltered && canRequest
-                ? { label: "Request release approval", onClick: () => handleOpenRequest("release") }
-                : undefined
-            }
-          />
-        ) : (
-          <DataTable data={items} columns={columns} getRowKey={(row) => row.id} minWidth="720px" className="flex-1 min-h-0" />
-        )}
-        {!isFiltered && items.length === 0 && canRequest && (
-          <div className="flex justify-center mt-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs text-muted-foreground h-7"
-              onClick={() => handleOpenRequest("milestone")}
-            >
-              Request milestone approval
-            </Button>
-          </div>
-        )}
-      </div>
+      <PmPageShell>
+        <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
+          {isLoading ? (
+            <PmPanel className="p-2">
+              <DataTableSkeleton rows={6} columns={7} className="flex-1" />
+            </PmPanel>
+          ) : isError ? (
+            <PmPanel className="flex flex-1 items-center justify-center p-6">
+              <ErrorState className="flex-1" onRetry={handleRetry} />
+            </PmPanel>
+          ) : items.length === 0 ? (
+            <PmPanel className="flex flex-1 flex-col items-center justify-center gap-3 p-6">
+              <EmptyState
+                illustrationPreset="approval"
+                title={isFiltered ? "No matching approvals" : "No approvals yet"}
+                description={
+                  isFiltered
+                    ? "No approvals match your filters."
+                    : "Use approvals to get sign-off on tasks, milestones, and releases before they ship."
+                }
+                action={
+                  isFiltered
+                    ? { label: "Clear filters", onClick: handleClearFilters }
+                    : canRequest
+                      ? { label: "Request task approval", onClick: () => handleOpenRequest("task") }
+                      : undefined
+                }
+                secondaryAction={
+                  !isFiltered && canRequest
+                    ? { label: "Request release approval", onClick: () => handleOpenRequest("release") }
+                    : undefined
+                }
+                className="min-h-[28vh]"
+              />
+              {!isFiltered && canRequest ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-xs text-muted-foreground"
+                  onClick={() => handleOpenRequest("milestone")}
+                >
+                  Request milestone approval
+                </Button>
+              ) : null}
+            </PmPanel>
+          ) : (
+            <PmPanel className="min-h-0 flex-1">
+              <DataTable data={items} columns={columns} getRowKey={(row) => row.id} minWidth="720px" className="min-h-0 flex-1" />
+            </PmPanel>
+          )}
+        </PmSection>
+      </PmPageShell>
 
       <RequestApprovalSheet
         open={requestOpen}
@@ -389,7 +473,9 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Cancel this approval?</AlertDialogTitle>
             <AlertDialogDescription>
-              The request will be marked cancelled and removed from the approver&apos;s inbox.
+              {cancelTarget?.title
+                ? `"${cancelTarget.title}" will be marked cancelled and removed from the approver's inbox.`
+                : "The request will be marked cancelled and removed from the approver's inbox."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -402,7 +488,11 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this approval?</AlertDialogTitle>
-            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+            <AlertDialogDescription>
+              {deleteTarget?.title
+                ? `"${deleteTarget.title}" will be permanently deleted.`
+                : "This action cannot be undone."}
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>

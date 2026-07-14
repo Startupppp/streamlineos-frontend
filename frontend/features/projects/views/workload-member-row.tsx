@@ -17,6 +17,8 @@ import type { KanbanTicket } from "../shared/types";
 import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
 import { stopEvent, InlineAssignee } from "./card-inline-fields";
 import { TicketQuickActions } from "./ticket-quick-actions";
+import { getTicketDetailHref } from "@/features/projects/shared/format-ticket-key";
+import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 
 interface WorkloadMember {
   id: string;
@@ -35,6 +37,7 @@ interface WorkloadMemberRowProps {
   points: number;
   days: Date[];
   projectId: number;
+  projectKey?: string | null;
   expanded: boolean;
   motionDelay: number;
   reducedMotion: boolean | null;
@@ -57,6 +60,7 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
   points,
   days,
   projectId,
+  projectKey,
   expanded,
   motionDelay,
   reducedMotion,
@@ -187,7 +191,12 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
                 <span className="text-xs text-muted-foreground font-mono w-12 shrink-0">
                   #{ticket.ticketNumber}
                 </span>
-                <span className="text-xs text-foreground truncate flex-1">{ticket.title}</span>
+                <span
+                  className={cn(TEXT_ONE_LINE, "flex-1 text-xs text-foreground")}
+                  title={ticket.title}
+                >
+                  {ticket.title}
+                </span>
                 {ticket.points != null && (
                   <span className="text-[10px] text-muted-foreground shrink-0 tabular-nums">
                     {ticket.points}pt
@@ -199,7 +208,11 @@ export const WorkloadMemberRow = memo(function WorkloadMemberRow({
                   </span>
                 )}
                 <Link
-                  href={`/projects/${projectId}?ticket=${ticket.id}`}
+                  href={
+                    ticket.ticketNumber != null
+                      ? getTicketDetailHref(projectId, projectKey, ticket.ticketNumber)
+                      : `/projects/${projectId}`
+                  }
                   onMouseDown={stopEvent}
                   onClick={stopEvent}
                   className="shrink-0 opacity-0 group-hover/workload:opacity-100 transition-opacity p-1 rounded hover:bg-muted"

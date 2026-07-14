@@ -20,6 +20,9 @@ import { ActionItemStatusBadge } from "./meeting-badges";
 import { ActionItemFormSheet } from "./action-item-form-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
+import { cn } from "@/lib/utils";
+import { PM_ROW } from "@/features/projects/shared/pm-chrome";
+import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 import type { ActionItem, CreateActionItemInput, UpdateActionItemInput, ProjectMemberRecord } from "@/types/projects";
 
 const CONVERTIBLE = new Set(["open", "in_progress"]);
@@ -49,41 +52,48 @@ const ActionItemRow = memo(function ActionItemRow({
   const handleDeleteClick = useCallback(() => onDelete(item), [item, onDelete]);
 
   return (
-    <div className="flex items-start gap-3 px-3 py-2.5">
-      <div className="flex-1 min-w-0 space-y-1">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className={`text-sm font-medium ${isConverted ? "text-muted-foreground line-through" : "text-foreground"} truncate`}>
+    <div className={cn(PM_ROW, "items-start py-2.5")}>
+      <div className="min-w-0 flex-1 space-y-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <span
+            className={cn(
+              TEXT_ONE_LINE,
+              "max-w-[min(100%,22rem)] text-sm font-medium",
+              isConverted ? "text-muted-foreground line-through" : "text-foreground",
+            )}
+            title={item.title}
+          >
             {item.title}
           </span>
           <ActionItemStatusBadge status={item.status} />
-          {item.convertedTicketId != null && (
-            <Badge variant="outline" className="text-[9px] px-1.5 py-0.5 text-primary border-primary/30">
-              → TASK-{item.convertedTicketId}
+          {isConverted ? (
+            <Badge variant="outline" className="border-primary/30 px-1.5 py-0.5 text-[9px] text-primary">
+              Converted to task
             </Badge>
-          )}
+          ) : null}
         </div>
-        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-          <span>{assigneeName}</span>
-          {item.dueDate && <span>Due {item.dueDate.slice(0, 10)}</span>}
+        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+          <span className={cn(TEXT_ONE_LINE, "max-w-[10rem]")}>{assigneeName}</span>
+          {item.dueDate ? <span>Due {item.dueDate.slice(0, 10)}</span> : null}
         </div>
       </div>
-      {canManage && !isConverted && (
-        <div className="flex items-center gap-1 shrink-0">
-          {CONVERTIBLE.has(item.status) && (
+      {canManage && !isConverted ? (
+        <div className="flex shrink-0 items-center gap-1">
+          {CONVERTIBLE.has(item.status) ? (
             <Button
               size="sm"
               variant="ghost"
-              className="h-7 text-xs gap-1 text-muted-foreground hover:text-foreground"
+              className="h-7 gap-1 text-xs text-muted-foreground hover:text-foreground"
               onClick={handleConvertClick}
               disabled={convertPending}
               title="Convert to task"
             >
               <ArrowRightCircle className="h-3.5 w-3.5" />
             </Button>
-          )}
+          ) : null}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-7 w-7">
+              <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Action item menu">
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -93,7 +103,7 @@ const ActionItemRow = memo(function ActionItemRow({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      )}
+      ) : null}
     </div>
   );
 });
@@ -121,7 +131,7 @@ export function ActionItemsSection({
   function memberName(userId: string | null): string {
     if (!userId) return "—";
     const m = projectMembers.find((p) => p.id === userId);
-    return getUserDisplayName(m) || userId;
+    return getUserDisplayName(m) || "Unknown";
   }
 
   function handleCreate(input: CreateActionItemInput) {
@@ -155,27 +165,28 @@ export function ActionItemsSection({
 
   const handleEditRow = useCallback((item: ActionItem) => setEditItem(item), []);
   const handleDeleteRow = useCallback((item: ActionItem) => setDeleteTarget(item), []);
+  const handleOpenCreate = useCallback(() => setSheetOpen(true), []);
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <h3 className="text-sm font-semibold text-foreground">
           Action Items
-          {actionItems.length > 0 && (
-            <span className="ml-2 text-xs text-muted-foreground font-normal">({actionItems.length})</span>
-          )}
+          {actionItems.length > 0 ? (
+            <span className="ml-2 text-xs font-normal text-muted-foreground">({actionItems.length})</span>
+          ) : null}
         </h3>
-        {canManage && (
-          <Button size="sm" variant="outline" className="h-7 text-xs gap-1.5" onClick={() => setSheetOpen(true)}>
+        {canManage ? (
+          <Button size="sm" variant="outline" className="h-7 gap-1.5 text-xs" onClick={handleOpenCreate}>
             <Plus className="h-3.5 w-3.5" /> Add
           </Button>
-        )}
+        ) : null}
       </div>
 
       {actionItems.length === 0 ? (
         <EmptyState compact title="No action items" description="Track follow-up tasks from this meeting." />
       ) : (
-        <div className="divide-y divide-border rounded-lg border bg-card">
+        <div className="overflow-hidden rounded-lg border border-border/60 bg-card/30">
           {actionItems.map((item) => (
             <ActionItemRow
               key={item.id}
@@ -206,7 +217,11 @@ export function ActionItemsSection({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this action item?</AlertDialogTitle>
-            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+            <AlertDialogDescription>
+              {deleteTarget?.title
+                ? `"${deleteTarget.title}" will be permanently deleted.`
+                : "This action cannot be undone."}
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>

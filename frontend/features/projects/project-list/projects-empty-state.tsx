@@ -1,24 +1,32 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyProjectsIllustration } from "@/components/illustrations";
-import { NewProjectDialog } from "./new-project-dialog";
+import { useCan } from "@/hooks/api/access";
 
-export function ProjectsEmptyState() {
-  const [open, setOpen] = useState(false);
-  const handleCreate = useCallback(() => setOpen(true), []);
+interface ProjectsEmptyStateProps {
+  onCreate?: () => void;
+}
+
+export function ProjectsEmptyState({ onCreate }: ProjectsEmptyStateProps) {
+  const canCreate = useCan("projects:create");
+
+  const handleCreate = useCallback(() => {
+    onCreate?.();
+  }, [onCreate]);
 
   return (
-    <>
-      <EmptyState
-        className="flex-1 h-full"
-        illustration={<EmptyProjectsIllustration />}
-        title="No projects found"
-        description="Create your first project to start organizing work."
-        action={{ label: "Create your first project", onClick: handleCreate }}
-      />
-      <NewProjectDialog open={open} onOpenChange={setOpen} trigger={<span className="hidden" />} />
-    </>
+    <EmptyState
+      className="h-full flex-1 border-0 bg-transparent"
+      illustration={<EmptyProjectsIllustration />}
+      title="No projects yet"
+      description="Create your first project to start organizing work."
+      action={
+        canCreate && onCreate
+          ? { label: "Create your first project", onClick: handleCreate }
+          : undefined
+      }
+    />
   );
 }

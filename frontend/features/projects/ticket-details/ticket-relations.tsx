@@ -5,9 +5,9 @@ import {
   useTicketRelations,
   useAddTicketRelation,
   useRemoveTicketRelation,
+  useProjectBoardTickets,
 } from "@/hooks/api/projects";
 import type { WorkItemRelationType } from "@/hooks/api/projects";
-import { useProject } from "@/hooks/api";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -61,7 +61,7 @@ const RELATION_LABELS: Record<WorkItemRelationType, { label: string; icon: React
 
 export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
   const { data: relations, isLoading } = useTicketRelations(ticketId, projectId);
-  const { data: projectData } = useProject(projectId);
+  const { data: boardTickets } = useProjectBoardTickets(projectId);
   const addRelation = useAddTicketRelation(ticketId, projectId);
   const removeRelation = useRemoveTicketRelation(ticketId, projectId);
 
@@ -69,7 +69,7 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
   const [selectedType, setSelectedType] = useState<WorkItemRelationType>("relates_to");
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
 
-  const allTickets = (projectData?.tickets ?? []).filter((t) => t.id !== ticketId);
+  const allTickets = (boardTickets ?? []).filter((t) => t.id !== ticketId);
   const existingRelatedIds = new Set(
     (relations ?? []).map((r) => r.relatedTicket?.id).filter(Boolean)
   );

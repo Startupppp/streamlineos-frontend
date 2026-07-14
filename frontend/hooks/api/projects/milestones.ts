@@ -3,8 +3,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
-import type { ProjectMilestone, ProjectBudget, ResourceAllocationEntry } from "@/types/projects";
-export type { ProjectMilestone, ProjectBudget, ResourceAllocationEntry } from "@/types/projects";
+import type { ProjectMilestone, ProjectBudget } from "@/types/projects";
+export type { ProjectMilestone, ProjectBudget } from "@/types/projects";
 
 interface CreateMilestoneInput {
   name: string;
@@ -79,13 +79,5 @@ export function useUpdateProjectBudget(projectId: number) {
     mutationFn: (budget: number) =>
       apiClient.patch<{ id: number; budget: string }>(`/projects/${projectId}/budget`, { budget }),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.projects.budget(projectId) }),
-  });
-}
-
-export function useResourceAllocation() {
-  return useQuery({
-    queryKey: queryKeys.projects.resourceAllocation(),
-    queryFn: () => apiClient.get<ResourceAllocationEntry[]>("/projects/resource-allocation"),
-    staleTime: 60_000,
   });
 }

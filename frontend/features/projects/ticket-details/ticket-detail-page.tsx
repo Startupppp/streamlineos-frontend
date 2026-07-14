@@ -10,12 +10,14 @@ import { isApiError, getApiErrorCode } from "@/lib/api-client";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useProject } from "@/hooks/api";
+import { useProjectBoardTickets } from "@/hooks/api/projects";
 import { formatTicketKey, parseTicketKey } from "@/features/projects/shared/format-ticket-key";
 import { TicketDetailMainSection } from "./ticket-detail-main-section";
 import { TicketDetailRightPanel } from "./ticket-detail-right-panel";
 import { TicketDetailActions } from "./ticket-detail-actions";
 import { useTicketDetail } from "./use-ticket-detail";
 import { resolveTicketId } from "./resolve-ticket-id";
+
 
 interface TicketDetailPageProps {
   projectId: number;
@@ -60,12 +62,13 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
 
   const parsed = useMemo(() => parseTicketKey(ticketKey), [ticketKey]);
   const { data: projectData, isLoading: projectLoading } = useProject(projectId);
+  const { data: boardTickets, isLoading: boardLoading } = useProjectBoardTickets(projectId);
 
   const ticketId = useMemo(() => {
     if (!parsed) return null;
-    const tickets = projectData?.tickets?.map((t) => ({ id: t.id, ticketNumber: t.ticketNumber }));
+    const tickets = boardTickets?.map((t) => ({ id: t.id, ticketNumber: t.ticketNumber }));
     return resolveTicketId(parsed, projectData?.key, tickets);
-  }, [parsed, projectData?.key, projectData?.tickets]);
+  }, [parsed, projectData?.key, boardTickets]);
 
   const handleDeleted = () => {
     router.push(`/projects/${projectId}`);
@@ -109,8 +112,10 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
 
   if (!parsed) return notFound();
 
-  if (projectLoading || (ticketId === null && projectData && !isLoading)) {
-    if (!projectLoading && projectData && ticketId === null) return notFound();
+  if (projectLoading || boardLoading || (ticketId === null && projectData && boardTickets && !isLoading)) {
+    if (!projectLoading && !boardLoading && projectData && boardTickets && ticketId === null) {
+      return notFound();
+    }
     return (
       <PageWrapper title="Loading..." backHref={`/projects/${projectId}`} noInternalScroll className="h-full">
         <DetailSkeleton />
@@ -174,6 +179,7 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
             <Button
               size="icon-sm"
               variant="outline"
+              className="border-border/60 bg-card/50 backdrop-blur-sm"
               onClick={handleToggleRightPanel}
               aria-label="Expand details panel"
             >
@@ -183,6 +189,7 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
           <Button
             size="icon-sm"
             variant="outline"
+            className="border-border/60 bg-card/50 backdrop-blur-sm"
             onClick={handleShare}
             aria-label="Copy share link"
           >
@@ -195,8 +202,12 @@ export function TicketDetailPage({ projectId, ticketKey }: TicketDetailPageProps
         </div>
       }
     >
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto md:flex-row md:overflow-hidden">
-        <div className="order-2 min-w-0 flex-1 bg-card px-4 pb-4 pt-2 md:order-1 md:overflow-y-auto md:scrollbar-thin md:px-6 md:pb-5 md:pt-2">
+      <div className="relative flex min-h-0 flex-1 flex-col overflow-y-auto md:flex-row md:overflow-hidden">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -top-6 right-1/3 h-32 w-32 rounded-full bg-primary/[0.05] blur-3xl"
+        />
+        <div className="order-2 min-w-0 flex-1 bg-gradient-to-b from-card/80 to-background/40 px-4 pb-4 pt-2 md:order-1 md:overflow-y-auto md:scrollbar-thin md:px-6 md:pb-5 md:pt-2">
           <TicketDetailMainSection
             ticket={ticket}
             ticketId={ticketId}

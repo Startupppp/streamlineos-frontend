@@ -1,5 +1,6 @@
 "use client";
 
+import type { ComponentType } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { List, Table2, LayoutGrid } from "lucide-react";
 import {
@@ -14,7 +15,7 @@ export type AllWorkView = "list" | "table" | "board";
 
 export const VIEW_OPTIONS: {
   value: AllWorkView;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: ComponentType<{ className?: string }>;
   label: string;
 }[] = [
   { value: "list", icon: List, label: "List" },
@@ -30,12 +31,12 @@ export function parseView(raw: string | null): AllWorkView {
 export function AllWorkSkeleton({ view }: { view: AllWorkView }) {
   if (view === "board") {
     return (
-      <div className="flex gap-4 px-4 pb-4">
+      <div className="flex gap-3 px-3 pb-3 sm:px-4">
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="w-64 flex-shrink-0 space-y-2">
             <Skeleton className="h-8 w-full rounded-lg" />
             {Array.from({ length: 3 }).map((__, j) => (
-              <Skeleton key={j} className="h-24 w-full rounded-lg" />
+              <Skeleton key={j} className="h-24 w-full rounded-xl" />
             ))}
           </div>
         ))}
@@ -43,10 +44,10 @@ export function AllWorkSkeleton({ view }: { view: AllWorkView }) {
     );
   }
   return (
-    <div className="space-y-1.5 px-4 pb-4">
-      <Skeleton className="h-8 w-full rounded" />
+    <div className="space-y-1.5 px-3 pb-3 sm:px-4">
+      <Skeleton className="h-9 w-full rounded-lg" />
       {Array.from({ length: 12 }).map((_, i) => (
-        <Skeleton key={i} className="h-8 w-full rounded" />
+        <Skeleton key={i} className="h-9 w-full rounded-md" />
       ))}
     </div>
   );
@@ -66,7 +67,10 @@ export function AllWorkViewSwitcher({ activeView, onViewChange }: AllWorkViewSwi
 
   return (
     <Select value={activeView} onValueChange={handleChange}>
-      <SelectTrigger className="h-8 w-[110px] shrink-0 bg-card text-xs" aria-label="Select view">
+      <SelectTrigger
+        className="h-8 w-[110px] shrink-0 border-border/60 bg-card/60 text-xs backdrop-blur-sm"
+        aria-label="Select view"
+      >
         <SelectValue />
       </SelectTrigger>
       <SelectContent>

@@ -56,12 +56,10 @@ export function ActivityFeed({
 
   const commentPermalink = useCallback(
     (commentId: number) => {
-      if (ticketNumber != null) {
-        return getTicketDetailHref(projectId, projectKey, ticketNumber, commentId);
-      }
-      return `/projects/${projectId}?ticket=${ticketId}&comment=${commentId}`;
+      if (ticketNumber == null) return undefined;
+      return getTicketDetailHref(projectId, projectKey, ticketNumber, commentId);
     },
-    [projectId, projectKey, ticketNumber, ticketId],
+    [projectId, projectKey, ticketNumber],
   );
 
   const commentNotFound =
@@ -189,8 +187,14 @@ export function ActivityFeed({
     onSuccess: (ticket) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.ticketActivity.list(ticketId) });
       toast.success("Issue created");
-      if (ticket.projectId != null) {
-        router.push(`/projects/${ticket.projectId}?ticket=${ticket.id}`);
+      if (ticket.projectId != null && ticket.ticketNumber != null) {
+        router.push(
+          getTicketDetailHref(
+            ticket.projectId,
+            ticket.project?.key ?? projectKey,
+            ticket.ticketNumber,
+          ),
+        );
       }
     },
     onError: (error) => toast.error(getErrorMessage(error)),

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, type MouseEvent } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
@@ -18,7 +18,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Tag, CheckCircle2, Archive, Clock, Pencil, Trash2 } from "lucide-react";
+import { Tag, CheckCircle2, Archive, Clock, Pencil } from "lucide-react";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import {
   useReleases,
   useDeleteRelease,
@@ -26,13 +27,33 @@ import {
 } from "@/hooks/api/projects/releases";
 import { ReleaseFormSheet } from "./release-form-sheet";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
+import {
+  PmPageShell,
+  PmPanel,
+  PmSection,
+} from "@/features/projects/shared/pm-chrome";
+import { TEXT_ONE_LINE, TEXT_FLEX_CHILD } from "@/features/projects/shared/text-overflow";
 
 const STATUS_CONFIG: Record<Release["status"], { label: string; className: string }> = {
-  draft: { label: "Draft", className: "text-amber-700 border-amber-300 bg-amber-50 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30" },
-  released: { label: "Released", className: "text-emerald-700 border-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30" },
-  archived: { label: "Archived", className: "text-muted-foreground border-border bg-muted dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/30" },
+  draft: {
+    label: "Draft",
+    className:
+      "text-amber-700 border-amber-300 bg-amber-50 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  },
+  released: {
+    label: "Released",
+    className:
+      "text-emerald-700 border-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
+  },
+  archived: {
+    label: "Archived",
+    className:
+      "text-muted-foreground border-border bg-muted dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/30",
+  },
 };
 
 function statusSort(r: Release): number {
@@ -41,6 +62,39 @@ function statusSort(r: Release): number {
 
 interface ReleasesPageProps {
   projectId: number;
+}
+
+function NewReleaseButton({ onClick }: { onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button size="sm" className="h-8 gap-1.5" onClick={onClick} {...hoverHandlers}>
+      <PlusIcon ref={iconRef} size={14} />
+      New Release
+    </Button>
+  );
+}
+
+function DeleteReleaseButton({ onClick }: { onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  const handleClick = useCallback(
+    (e: MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation();
+      onClick();
+    },
+    [onClick],
+  );
+  return (
+    <Button
+      size="icon"
+      variant="ghost"
+      className="h-7 w-7 text-destructive hover:text-destructive"
+      onClick={handleClick}
+      aria-label="Delete release"
+      {...hoverHandlers}
+    >
+      <Trash2Icon ref={iconRef} size={12} />
+    </Button>
+  );
 }
 
 export function ReleasesPage({ projectId }: ReleasesPageProps) {
@@ -85,12 +139,17 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
   const handleConfirmDelete = useCallback(() => {
     if (!deleteTarget) return;
     deleteRelease.mutate(deleteTarget.id, {
-      onSuccess: () => { toast.success("Release deleted"); setDeleteTarget(null); },
-      onError: () => toast.error("Failed to delete release"),
+      onSuccess: () => {
+        toast.success("Release deleted");
+        setDeleteTarget(null);
+      },
+      onError: (err) => toast.error(getErrorMessage(err)),
     });
   }, [deleteTarget, deleteRelease]);
 
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const columns = useMemo<DataTableColumn<Release>[]>(
     () => [
@@ -100,9 +159,13 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
         sortable: true,
         sortValue: (r) => r.name,
         cell: (r) => (
-          <div>
-            <p className="font-medium text-foreground text-xs">{r.name}</p>
-            <p className="text-[10px] text-muted-foreground font-mono">{r.version}</p>
+          <div className={cn(TEXT_FLEX_CHILD, "max-w-[220px] space-y-0.5")}>
+            <p className={cn(TEXT_ONE_LINE, "text-xs font-medium text-foreground")} title={r.name}>
+              {r.name}
+            </p>
+            <p className={cn(TEXT_ONE_LINE, "font-mono text-[10px] text-muted-foreground")} title={r.version}>
+              {r.version}
+            </p>
           </div>
         ),
       },
@@ -114,7 +177,7 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
         cell: (r) => {
           const cfg = STATUS_CONFIG[r.status];
           return (
-            <Badge variant="outline" className={cn("text-[10px] py-0 h-5", cfg.className)}>
+            <Badge variant="outline" className={cn("h-5 py-0 text-[10px]", cfg.className)}>
               {cfg.label}
             </Badge>
           );
@@ -127,7 +190,7 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
         sortValue: (r) => r.releaseDate ?? "",
         cell: (r) =>
           r.releaseDate ? (
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs tabular-nums text-muted-foreground">
               {format(new Date(r.releaseDate), "MMM d, yyyy")}
             </span>
           ) : (
@@ -147,28 +210,23 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
         key: "actions",
         header: "",
         cell: (r) => (
-          <div className="flex items-center gap-1 justify-end">
+          <div className="flex items-center justify-end gap-0.5">
             <Button
               size="icon"
               variant="ghost"
-              className="h-6 w-6"
-              onClick={(e) => { e.stopPropagation(); handleOpenEdit(r); }}
-              aria-label="Edit release"
+              className="h-7 w-7"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleOpenEdit(r);
+              }}
+              aria-label={`Edit ${r.name}`}
             >
               <Pencil className="h-3 w-3" />
             </Button>
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-6 w-6 text-destructive hover:text-destructive"
-              onClick={(e) => { e.stopPropagation(); handleDeleteTarget(r); }}
-              aria-label="Delete release"
-            >
-              <Trash2 className="h-3 w-3" />
-            </Button>
+            <DeleteReleaseButton onClick={() => handleDeleteTarget(r)} />
           </div>
         ),
-        className: "w-16",
+        className: "w-20",
       },
     ],
     [handleOpenEdit, handleDeleteTarget],
@@ -177,76 +235,93 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
   return (
     <PageWrapper
       title="Releases"
-      eyebrow="Project"
       subtitle="Track versions and shipped features"
-      actions={
-        <Button size="sm" onClick={handleOpenCreate}>
-          <Plus className="h-4 w-4 mr-1" />
-          New Release
-        </Button>
-      }
+      actions={<NewReleaseButton onClick={handleOpenCreate} />}
     >
-      <div className="flex flex-1 min-h-0 flex-col space-y-4">
-        <StatCardGrid cols={4}>
-          <StatCard label="Total" value={stats.total} icon={Tag} tone="default" index={0} />
-          <StatCard label="Released" value={stats.released} icon={CheckCircle2} tone="emerald" index={1} />
-          <StatCard label="Draft" value={stats.draft} icon={Clock} tone="amber" index={2} />
-          <StatCard label="Archived" value={stats.archived} icon={Archive} tone="default" index={3} />
-        </StatCardGrid>
-
-        {isError ? (
-          <ErrorState
-            title="Failed to load releases"
-            description="Could not fetch release data. Please try again."
-            onRetry={handleRetry}
-          />
-        ) : (
-          <DataTable
-            className="flex-1 min-h-0"
-            data={releases ?? []}
-            columns={columns}
-            getRowKey={(r) => r.id}
-            isLoading={isLoading}
-            onRowClick={handleOpenEdit}
-            emptyState={
-              <EmptyState
-                illustrationPreset="projects"
-                title="No releases yet"
-                description="Create your first release to track shipped features and versions."
-                action={{ label: "New Release", onClick: handleOpenCreate }}
+      <PmPageShell>
+        <div className="flex min-h-0 flex-1 flex-col space-y-4">
+          <PmSection index={0}>
+            <StatCardGrid cols={4}>
+              <StatCard label="Total" value={stats.total} icon={Tag} tone="default" index={0} />
+              <StatCard
+                label="Released"
+                value={stats.released}
+                icon={CheckCircle2}
+                tone="emerald"
+                index={1}
               />
-            }
+              <StatCard label="Draft" value={stats.draft} icon={Clock} tone="amber" index={2} />
+              <StatCard
+                label="Archived"
+                value={stats.archived}
+                icon={Archive}
+                tone="default"
+                index={3}
+              />
+            </StatCardGrid>
+          </PmSection>
+
+          <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
+            {isError ? (
+              <ErrorState
+                title="Failed to load releases"
+                description="Could not fetch release data. Please try again."
+                onRetry={handleRetry}
+              />
+            ) : (
+              <PmPanel className="flex min-h-0 flex-1 flex-col">
+                <DataTable
+                  className="min-h-0 flex-1 border-0 bg-transparent shadow-none"
+                  data={releases ?? []}
+                  columns={columns}
+                  getRowKey={(r) => r.id}
+                  isLoading={isLoading}
+                  onRowClick={handleOpenEdit}
+                  emptyState={
+                    <EmptyState
+                      illustrationPreset="projects"
+                      title="No releases yet"
+                      description="Create your first release to track shipped features and versions."
+                      action={{ label: "New Release", onClick: handleOpenCreate }}
+                      className="min-h-[36vh]"
+                    />
+                  }
+                />
+              </PmPanel>
+            )}
+          </PmSection>
+        </div>
+
+        {sheetOpen ? (
+          <ReleaseFormSheet
+            projectId={projectId}
+            release={editTarget ?? undefined}
+            onClose={handleCloseSheet}
           />
-        )}
-      </div>
+        ) : null}
 
-      {sheetOpen && (
-        <ReleaseFormSheet
-          projectId={projectId}
-          release={editTarget ?? undefined}
-          onClose={handleCloseSheet}
-        />
-      )}
-
-      <AlertDialog open={!!deleteTarget} onOpenChange={handleAlertOpenChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete release?</AlertDialogTitle>
-            <AlertDialogDescription>
-              &ldquo;{deleteTarget?.name} {deleteTarget?.version}&rdquo; will be permanently deleted.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={handleConfirmDelete}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        <AlertDialog open={!!deleteTarget} onOpenChange={handleAlertOpenChange}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete release?</AlertDialogTitle>
+              <AlertDialogDescription>
+                &ldquo;{deleteTarget?.name} {deleteTarget?.version}&rdquo; will be permanently
+                deleted.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleteRelease.isPending}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={handleConfirmDelete}
+                disabled={deleteRelease.isPending}
+              >
+                {deleteRelease.isPending ? "Deleting…" : "Delete"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </PmPageShell>
     </PageWrapper>
   );
 }

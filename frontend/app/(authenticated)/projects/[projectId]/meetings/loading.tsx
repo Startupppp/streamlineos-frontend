@@ -1,23 +1,39 @@
-import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTableSkeleton } from "@/components/ui/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { PM_PANEL, PM_TOOLBAR } from "@/features/projects/shared/pm-chrome";
+import { cn } from "@/lib/utils";
 
-export default function ProjectMeetingsLoading() {
+export default function MeetingsLoading() {
   return (
     <PageWrapper
       title="Meetings"
       eyebrow="Project"
+      subtitle="Schedule meetings, standups, and retros for your project"
       actions={<Skeleton className="h-8 w-32 rounded-md" />}
       filters={
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-8 w-36 rounded-md" />
-          <Skeleton className="h-8 w-36 rounded-md" />
-          <Skeleton className="h-8 w-52 rounded-md" />
+        <div className={cn(PM_TOOLBAR, "w-full")}>
+          <div className="flex flex-wrap items-center gap-2">
+            <Skeleton className="h-8 w-36 rounded-md" />
+            <Skeleton className="h-8 w-36 rounded-md" />
+            <Skeleton className="h-8 w-32 rounded-md" />
+            <Skeleton className="h-8 w-40 rounded-md" />
+          </div>
         </div>
       }
     >
-      <div className="px-4 pb-4">
-        <DataTableSkeleton rows={6} columns={7} />
+      <div className="relative flex min-h-0 flex-1 flex-col gap-4">
+        <Skeleton className={cn("h-14 w-full rounded-xl", PM_PANEL)} />
+        <div className={cn("space-y-2 p-2", PM_PANEL)}>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="flex h-12 items-center gap-3 border-b border-border/50 px-2 last:border-0">
+              <Skeleton className="h-3 w-14" />
+              <Skeleton className="h-3 max-w-[14rem] flex-1" />
+              <Skeleton className="h-4 w-16 rounded-full" />
+              <Skeleton className="h-4 w-20 rounded-full" />
+              <Skeleton className="h-3 w-24" />
+            </div>
+          ))}
+        </div>
       </div>
     </PageWrapper>
   );

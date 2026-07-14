@@ -1,9 +1,10 @@
 "use client";
 
 import { use, useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useProject, useSprints, useBulkUpdateTickets } from "@/hooks/api";
 import type { BulkUpdateTicketsInput } from "@/hooks/api";
-import { useViews, useCreateView } from "@/hooks/api/projects";
+import { useViews, useCreateView, useProjectBoardTickets } from "@/hooks/api/projects";
 import { KanbanBoard } from "@/features/projects/views/kanban-board";
 import { ListView } from "@/features/projects/views/list-view";
 import { TableView } from "@/features/projects/views/table-view";
@@ -49,6 +50,13 @@ import { ImportTicketsDialog } from "@/features/projects/tickets/import-tickets-
 import { BulkActionBar } from "@/features/projects/backlog/bulk-action-bar";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import type { IconHandle } from "@animateicons/react";
+import {
+  pmSnappy,
+  viewSwap,
+  viewSwapReduced,
+} from "@/features/projects/shared/pm-motion";
+import { PM_PANEL, PM_TOOLBAR } from "@/features/projects/shared/pm-chrome";
+import { cn } from "@/lib/utils";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -72,7 +80,7 @@ function AnimatedToolbarIconButton({ onClick, ariaLabel, Icon }: AnimatedToolbar
       variant="outline"
       size="icon"
       onClick={onClick}
-      className="h-8 w-8 shrink-0 bg-card"
+      className="h-8 w-8 shrink-0 border-border/70 bg-background/60 backdrop-blur-sm"
       aria-label={ariaLabel}
       {...hoverHandlers}
     >
@@ -84,11 +92,15 @@ function AnimatedToolbarIconButton({ onClick, ariaLabel, Icon }: AnimatedToolbar
 export default function ProjectBoardPage({ params }: PageProps) {
   const { projectId: projectIdStr } = use(params);
   const projectId = parseInt(projectIdStr);
-  const { data, isLoading } = useProject(projectId);
+  const { data, isLoading: projectLoading } = useProject(projectId);
+  const { data: boardTickets, isLoading: ticketsLoading } = useProjectBoardTickets(projectId);
   const { data: sprints } = useSprints(projectId);
   const bulkUpdate = useBulkUpdateTickets(projectId);
+  const isLoading = projectLoading || ticketsLoading;
   const searchParams = useSearchParams();
   const router = useRouter();
+  const shouldReduceMotion = useReducedMotion();
+  const viewVariants = shouldReduceMotion ? viewSwapReduced : viewSwap;
 
   const view = parseViewType(searchParams.get("view"));
   const [hideCompleted, setHideCompleted] = useState(true);
@@ -200,54 +212,53 @@ export default function ProjectBoardPage({ params }: PageProps) {
   );
 
   const allTickets: KanbanTicket[] = useMemo(() => {
-    if (!data) return [];
-    return (data.tickets || []).map((t) => {
-      return {
-        id: t.id,
-        title: t.title,
-        status: t.status ?? "TODO",
-        type: t.type ?? "TASK",
-        priority: t.priority ?? undefined,
-        points: t.points ?? undefined,
-        timeSpent: t.timeSpent ?? undefined,
-        ticketNumber: t.ticketNumber,
-        order: t.order ?? undefined,
-        epicId: t.epicId ?? undefined,
-        assigneeId: t.assigneeId ?? undefined,
-        sprintId: t.sprintId ?? undefined,
-        cycleId: t.cycleId ?? null,
-        moduleId: t.moduleId ?? null,
-        dueDate: t.dueDate ?? null,
-        startDate: t.startDate ?? null,
-        updatedAt: t.updatedAt != null ? String(t.updatedAt) : null,
-        sequenceId: t.sequenceId ?? null,
-        assignee: t.assignee
-          ? {
-              id: t.assignee.id,
-              name: t.assignee.name ?? undefined,
-              firstName: t.assignee.firstName ?? undefined,
-              lastName: t.assignee.lastName ?? undefined,
-              email: t.assignee.email ?? undefined,
-              image: t.assignee.image ?? null,
-            }
-          : null,
-        labels: (t.labels || []).flatMap((l) =>
-          l.label
-            ? [{ label: { id: l.label.id, name: l.label.name, color: l.label.color } }]
-            : [],
-        ),
-        cycle: t.cycle
-          ? {
-              id: t.cycle.id,
-              name: t.cycle.name,
-              status: t.cycle.status,
-              startDate: t.cycle.startDate,
-              endDate: t.cycle.endDate,
-            }
-          : null,
-      };
-    });
-  }, [data]);
+    if (!boardTickets) return [];
+    return boardTickets.map((t) => ({
+      id: t.id,
+      title: t.title,
+      status: t.status ?? "TODO",
+      type: t.type ?? "TASK",
+      priority: t.priority ?? undefined,
+      points: t.points ?? undefined,
+      timeSpent: t.timeSpent ?? undefined,
+      ticketNumber: t.ticketNumber,
+      order: t.order ?? undefined,
+      epicId: t.epicId ?? undefined,
+      assigneeId: t.assigneeId ?? undefined,
+      sprintId: t.sprintId ?? undefined,
+      cycleId: t.cycleId ?? null,
+      moduleId: t.moduleId ?? null,
+      dueDate: t.dueDate ?? null,
+      startDate: t.startDate ?? null,
+      updatedAt: t.updatedAt != null ? String(t.updatedAt) : null,
+      sequenceId: t.sequenceId ?? null,
+      assignees: t.assignees,
+      assignee: t.assignee
+        ? {
+            id: t.assignee.id,
+            name: t.assignee.name ?? undefined,
+            firstName: t.assignee.firstName ?? undefined,
+            lastName: t.assignee.lastName ?? undefined,
+            email: t.assignee.email ?? undefined,
+            image: t.assignee.image ?? null,
+          }
+        : null,
+      labels: (t.labels || []).flatMap((l) =>
+        l.label
+          ? [{ label: { id: l.label.id, name: l.label.name, color: l.label.color } }]
+          : [],
+      ),
+      cycle: t.cycle
+        ? {
+            id: t.cycle.id,
+            name: t.cycle.name,
+            status: t.cycle.status,
+            startDate: t.cycle.startDate,
+            endDate: t.cycle.endDate,
+          }
+        : null,
+    }));
+  }, [boardTickets]);
 
   const statuses =
     data && "statuses" in data
@@ -498,7 +509,8 @@ export default function ProjectBoardPage({ params }: PageProps) {
       title={data.name}
       subtitle={data.description ?? undefined}
       noInternalScroll
-      contentClassName="!p-0"
+      contentClassName="!p-0 flex flex-col"
+      className="relative"
       actions={
         <CreateTicketDialog
           projectId={projectId}
@@ -507,175 +519,251 @@ export default function ProjectBoardPage({ params }: PageProps) {
         />
       }
       filters={
-        <div className="flex w-full min-w-0 flex-col gap-1.5">
-          <div className="flex w-full min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex min-w-0 flex-wrap items-center gap-2 sm:flex-nowrap">
-              <ViewSwitcher activeView={view} onViewChange={handleViewChange} />
-              <DisplayOptionsPanel viewType={view} options={displayOptions} onChange={setDisplayOptions} />
-              <div className="flex items-center gap-1.5">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8 shrink-0 bg-card"
-                      aria-label="Export tickets"
-                    >
-                      <Download className="h-3.5 w-3.5" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-48">
-                    <DropdownMenuItem onClick={handleExportCurrentView}>
-                      Export current view
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleExportAllTickets}>
-                      Export all tickets
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <AnimatedToolbarIconButton
-                  onClick={handleOpenImport}
-                  ariaLabel="Import tickets"
-                  Icon={UploadIcon}
-                />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => {
-                    setSaveViewName("");
-                    setSaveViewOpen(true);
-                  }}
-                  className="h-8 w-8 shrink-0 bg-card"
-                  aria-label="Save view"
-                >
-                  <Bookmark className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-              {activeView && (
-                <Badge
-                  variant="secondary"
-                  className="h-6 shrink-0 cursor-default gap-1 bg-card pl-2 pr-1 text-xs font-normal"
-                >
-                  View: {activeView.name}
-                  <button
-                    type="button"
-                    onClick={handleClearView}
-                    aria-label="Clear view"
-                    className="ml-0.5 rounded-sm transition-colors hover:bg-muted"
+        <div className={cn(PM_TOOLBAR)}>
+          <div className="flex min-w-0 flex-wrap items-center gap-2 sm:flex-nowrap">
+            <ViewSwitcher activeView={view} onViewChange={handleViewChange} />
+            <DisplayOptionsPanel viewType={view} options={displayOptions} onChange={setDisplayOptions} />
+            <div className="flex items-center gap-1.5">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 shrink-0 border-border/70 bg-background/60 backdrop-blur-sm"
+                    aria-label="Export tickets"
                   >
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              )}
+                    <Download className="h-3.5 w-3.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-48">
+                  <DropdownMenuItem onClick={handleExportCurrentView}>
+                    Export current view
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleExportAllTickets}>
+                    Export all tickets
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <AnimatedToolbarIconButton
+                onClick={handleOpenImport}
+                ariaLabel="Import tickets"
+                Icon={UploadIcon}
+              />
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => {
+                  setSaveViewName("");
+                  setSaveViewOpen(true);
+                }}
+                className="h-8 w-8 shrink-0 border-border/70 bg-background/60 backdrop-blur-sm"
+                aria-label="Save view"
+              >
+                <Bookmark className="h-3.5 w-3.5" />
+              </Button>
             </div>
-            <TicketFilterBar
-              className="w-full sm:min-w-0 sm:max-w-xl sm:flex-1"
-              align="end"
-              members={members}
-              statuses={statuses}
-              projectId={projectId}
-              showSprintFilter={false}
-              showDoneToggle
-              hideCompleted={hideCompleted}
-              onHideCompletedChange={setHideCompleted}
-              doneCount={doneCount}
-            />
+            {activeView && (
+              <Badge
+                variant="secondary"
+                className="h-6 max-w-[12rem] shrink-0 cursor-default gap-1 bg-background/60 pl-2 pr-1 text-xs font-normal backdrop-blur-sm"
+              >
+                <span className="min-w-0 truncate">View: {activeView.name}</span>
+                <button
+                  type="button"
+                  onClick={handleClearView}
+                  aria-label="Clear view"
+                  className="ml-0.5 rounded-sm transition-colors hover:bg-muted"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            )}
           </div>
+          <TicketFilterBar
+            className="w-full sm:min-w-0 sm:max-w-xl sm:flex-1"
+            align="end"
+            members={members}
+            statuses={statuses}
+            projectId={projectId}
+            showSprintFilter={false}
+            showDoneToggle
+            hideCompleted={hideCompleted}
+            onHideCompletedChange={setHideCompleted}
+            doneCount={doneCount}
+          />
         </div>
       }
     >
       {showEmptyFilterState ? (
-        <div className="flex h-full flex-1 flex-col items-center justify-center gap-3 px-4 py-12 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted/60">
-            <SearchX className="h-6 w-6 text-muted-foreground" />
-          </div>
-          <div className="space-y-1">
-            <p className="text-sm font-medium text-foreground">No tickets match your filters</p>
-            <p className="text-xs text-muted-foreground">
-              Try adjusting your search or filters to find what you&apos;re looking for.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={handleClearSearch}
-            className="mt-1 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted/60"
+        <div className="relative flex h-full flex-1 flex-col items-center justify-center px-4 py-12">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -top-6 right-1/4 h-36 w-36 rounded-full bg-primary/[0.06] blur-3xl"
+          />
+          <div
+            className={cn(
+              PM_PANEL,
+              "relative flex w-full max-w-sm flex-col items-center gap-3 px-6 py-8 text-center",
+            )}
           >
-            Clear all filters
-          </button>
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-border/60 bg-primary/[0.06] shadow-sm">
+              <SearchX className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-semibold text-foreground">No tickets match your filters</p>
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                Try adjusting your search or filters to find what you&apos;re looking for.
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleClearSearch}
+              className="mt-0.5 h-8 border-border/70 bg-background/60 text-xs backdrop-blur-sm"
+            >
+              Clear all filters
+            </Button>
+          </div>
         </div>
       ) : (
-        <>
-          {view === "board" && (
-            <div className="h-full w-full px-3 pb-1">
-              <KanbanBoard
-                tickets={filteredTickets}
-                projectId={projectId}
-                projectKey={data.key}
-                statuses={statuses}
-                wipLimits={wipLimits}
-                onTicketSelect={handleTicketSelect}
-                displayOptions={displayOptions}
-                hideCompleted={hideCompleted}
-              />
-            </div>
-          )}
-          {view === "list" && (
-            <div className="h-full min-h-0 overflow-y-auto px-3 pb-1">
-              <ListView
-                tickets={filteredTickets}
-                onTicketClick={handleTicketSelect}
-                groupBy={displayOptions.groupBy !== "none" ? displayOptions.groupBy : undefined}
-                rowBy={displayOptions.rowBy !== "none" ? displayOptions.rowBy : undefined}
-                projectKey={data.key}
-                projectStatuses={statuses}
-                displayOptions={displayOptions}
-                showEmptyColumns={displayOptions.showEmptyColumns}
-                showEmptyRows={displayOptions.showEmptyRows}
-                projectId={projectId}
-              />
-            </div>
-          )}
-          {view === "table" && (
-            <div className="h-full min-h-0 overflow-y-auto px-3 pb-1">
-              {selectedIds.size > 0 && (
-                <BulkActionBar
-                  selectedCount={selectedIds.size}
-                  members={members}
-                  sprints={sprints ?? []}
-                  onBulkStatus={handleBulkStatus}
-                  onBulkPriority={handleBulkPriority}
-                  onBulkAssignee={handleBulkAssignee}
-                  onBulkSprint={handleBulkSprint}
-                  onClear={handleClearSelection}
+        <div className="flex min-h-0 flex-1 flex-col">
+          <AnimatePresence mode="wait" initial={false}>
+            {view === "board" ? (
+              <motion.div
+                key="board"
+                className="flex h-full min-h-0 w-full flex-1 flex-col px-3 pb-1"
+                variants={viewVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={pmSnappy}
+              >
+                <KanbanBoard
+                  tickets={filteredTickets}
+                  projectId={projectId}
+                  projectKey={data.key}
+                  statuses={statuses}
+                  wipLimits={wipLimits}
+                  onTicketSelect={handleTicketSelect}
+                  displayOptions={displayOptions}
+                  hideCompleted={hideCompleted}
                 />
-              )}
-              <TableView
-                tickets={filteredTickets}
-                onTicketClick={handleTicketSelect}
-                projectKey={data.key}
-                projectId={projectId}
-                projectStatuses={statuses}
-                selection={{ selected: selectedIds, onChange: handleSelectionChange }}
-              />
-            </div>
-          )}
-          {view === "calendar" && (
-            <div className="flex h-full min-h-0 flex-col overflow-hidden px-4 pb-2 pt-0">
-              <CalendarView tickets={filteredTickets} onTicketClick={handleTicketSelect} projectId={projectId} projectStatuses={statuses} />
-            </div>
-          )}
-          {view === "gantt" && (
-            <div className="h-full min-h-0 flex flex-col overflow-hidden px-4 pb-2 pt-0">
-              <GanttView tickets={filteredTickets} projectId={projectId} onTicketClick={handleTicketSelect} />
-            </div>
-          )}
-          {view === "workload" && (
-            <div className="h-full min-h-0 flex flex-col overflow-hidden px-4 pb-2 pt-0">
-              <WorkloadView tickets={filteredTickets} projectId={projectId} members={members} projectStatuses={statuses} />
-            </div>
-          )}
-        </>
+              </motion.div>
+            ) : null}
+            {view === "list" ? (
+              <motion.div
+                key="list"
+                className="min-h-0 flex-1 overflow-y-auto px-3 pb-1"
+                variants={viewVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={pmSnappy}
+              >
+                <ListView
+                  tickets={filteredTickets}
+                  onTicketClick={handleTicketSelect}
+                  groupBy={displayOptions.groupBy !== "none" ? displayOptions.groupBy : undefined}
+                  rowBy={displayOptions.rowBy !== "none" ? displayOptions.rowBy : undefined}
+                  projectKey={data.key}
+                  projectStatuses={statuses}
+                  displayOptions={displayOptions}
+                  showEmptyColumns={displayOptions.showEmptyColumns}
+                  showEmptyRows={displayOptions.showEmptyRows}
+                  projectId={projectId}
+                />
+              </motion.div>
+            ) : null}
+            {view === "table" ? (
+              <motion.div
+                key="table"
+                className="min-h-0 flex-1 overflow-y-auto px-3 pb-1"
+                variants={viewVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={pmSnappy}
+              >
+                {selectedIds.size > 0 && (
+                  <BulkActionBar
+                    selectedCount={selectedIds.size}
+                    members={members}
+                    sprints={sprints ?? []}
+                    onBulkStatus={handleBulkStatus}
+                    onBulkPriority={handleBulkPriority}
+                    onBulkAssignee={handleBulkAssignee}
+                    onBulkSprint={handleBulkSprint}
+                    onClear={handleClearSelection}
+                  />
+                )}
+                <TableView
+                  tickets={filteredTickets}
+                  onTicketClick={handleTicketSelect}
+                  projectKey={data.key}
+                  projectId={projectId}
+                  projectStatuses={statuses}
+                  selection={{ selected: selectedIds, onChange: handleSelectionChange }}
+                />
+              </motion.div>
+            ) : null}
+            {view === "calendar" ? (
+              <motion.div
+                key="calendar"
+                className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pb-2 pt-0"
+                variants={viewVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={pmSnappy}
+              >
+                <CalendarView
+                  tickets={filteredTickets}
+                  onTicketClick={handleTicketSelect}
+                  projectId={projectId}
+                  projectStatuses={statuses}
+                />
+              </motion.div>
+            ) : null}
+            {view === "gantt" ? (
+              <motion.div
+                key="gantt"
+                className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pb-2 pt-0"
+                variants={viewVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={pmSnappy}
+              >
+                <GanttView
+                  tickets={filteredTickets}
+                  projectId={projectId}
+                  onTicketClick={handleTicketSelect}
+                />
+              </motion.div>
+            ) : null}
+            {view === "workload" ? (
+              <motion.div
+                key="workload"
+                className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pb-2 pt-0"
+                variants={viewVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={pmSnappy}
+              >
+                <WorkloadView
+                  tickets={filteredTickets}
+                  projectId={projectId}
+                  projectKey={data.key}
+                  members={members}
+                  projectStatuses={statuses}
+                />
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
+        </div>
       )}
 
       <SaveViewDialog

@@ -1,50 +1,22 @@
 "use client";
 
-import { memo, useMemo, useCallback, useEffect, useState } from "react";
+import {
+  useMemo,
+  useCallback,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
-import { PageWrapper, PageSection } from "@/components/ui/page-wrapper";
+import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
-  Briefcase,
-  CheckSquare,
-  AlertCircle,
-  ChevronRight,
-  ArrowRight,
-  Plus,
-  FolderPlus,
-  ListPlus,
-  GitBranch,
-  CircleCheck,
-  LayoutGrid,
-  LayoutList,
-  GanttChart,
-  BarChart2,
-  Settings,
-  ExternalLink,
-} from "lucide-react";
+import { ArrowRight, Briefcase, CheckSquare, AlertCircle } from "lucide-react";
 import { useCan } from "@/hooks/api/access";
 import { useProjects } from "@/hooks/api/projects/projects";
 import { useMyWork } from "@/hooks/api/projects/my-work";
@@ -52,337 +24,37 @@ import { useCommandPalette } from "@/features/command-palette/hooks/use-command-
 import { ProjectCreateWizard } from "@/features/projects/project-create/project-create-wizard";
 import type { MyWorkItem } from "@/types/projects/my-work";
 import type { ProjectListItem } from "@/types/projects";
-import { isPast, isToday, parseISO } from "date-fns";
+import {
+  CreateIssueButton,
+  PinnedNav,
+  QuickCreateMenu,
+} from "./command-center-actions";
+import { isOverdue, MyWorkRow, ProjectCard } from "./command-center-rows";
+import {
+  PmPageShell,
+  PmPanel,
+  PmSection,
+  PmStaggerList,
+  PM_PANEL,
+} from "@/features/projects/shared/pm-chrome";
+import { pmSnappy } from "@/features/projects/shared/pm-motion";
 import { cn } from "@/lib/utils";
-
-const STATUS_COLOR: Record<string, string> = {
-  ACTIVE: "text-emerald-700 border-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
-  PLANNING: "text-blue-700 border-blue-300 bg-blue-50 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
-  ON_HOLD: "text-amber-700 border-amber-300 bg-amber-50 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
-  COMPLETED: "text-muted-foreground border-border bg-muted dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/30",
-  ARCHIVED: "text-muted-foreground border-border bg-muted dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/30",
-};
-
-const PINNED_LINKS = [
-  { label: "My Work", href: "/projects/my-work", icon: LayoutList },
-  { label: "All Work", href: "/projects/all-work", icon: LayoutGrid },
-  { label: "Approvals", href: "/projects/approvals", icon: CircleCheck },
-  { label: "Roadmap", href: "/projects/roadmap", icon: GanttChart },
-  { label: "Portfolios", href: "/projects/portfolios", icon: Briefcase },
-  { label: "Resources", href: "/projects/resource-allocation", icon: BarChart2 },
-];
-
-function isOverdue(item: MyWorkItem): boolean {
-  if (!item.dueDate) return false;
-  try {
-    const d = parseISO(item.dueDate);
-    return isPast(d) && !isToday(d) && item.status !== "DONE";
-  } catch {
-    return false;
-  }
-}
-
-const MyWorkRow = memo(function MyWorkRow({ item, index }: { item: MyWorkItem; index: number }) {
-  const shouldReduceMotion = useReducedMotion();
-
-  return (
-    <motion.div
-      initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 4 }}
-      animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.04, duration: 0.18, ease: "easeOut" }}
-    >
-      <Link
-        href={`/projects/${item.projectId}?ticket=${item.id}`}
-        className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted/50 transition-colors group border border-transparent hover:border-border/50"
-      >
-        <div className="flex-1 min-w-0">
-          <p className="text-sm text-foreground truncate">{item.title}</p>
-          <span className="text-[10px] text-primary font-medium">{item.projectKey}</span>
-        </div>
-        <div className="flex items-center gap-1.5 shrink-0">
-          {isOverdue(item) && (
-            <AlertCircle className="h-3.5 w-3.5 text-red-500" />
-          )}
-          <Badge variant="outline" className="text-[10px] py-0 h-4 px-1.5">
-            {item.status.replace(/_/g, " ")}
-          </Badge>
-          <ChevronRight className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-        </div>
-      </Link>
-    </motion.div>
-  );
-});
-
-const ProjectCard = memo(function ProjectCard({ project, index }: { project: ProjectListItem; index: number }) {
-  const base = `/projects/${project.id}`;
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 4 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.04, duration: 0.18, ease: "easeOut" }}
-      className="group"
-    >
-      <div className="flex items-center gap-3 px-3 py-2.5 bg-card rounded-lg border border-border hover:shadow-sm hover:border-border/80 transition-all">
-        <Link href={base} className="h-7 w-7 rounded bg-primary/10 flex items-center justify-center text-primary text-[10px] font-bold shrink-0">
-          {project.key.substring(0, 2).toUpperCase()}
-        </Link>
-        <Link href={base} className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-foreground truncate">{project.name}</p>
-          {project.description && (
-            <p className="text-[11px] text-muted-foreground truncate">{project.description}</p>
-          )}
-        </Link>
-        <div className="flex items-center gap-1.5 shrink-0">
-          {project.progress && (
-            <div className="flex items-center gap-1.5">
-              <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
-                <div
-                  className="h-full bg-primary rounded-full transition-[width] duration-300"
-                  style={{ width: `${project.progress.percentage}%` }}
-                />
-              </div>
-              <span className="text-[10px] text-muted-foreground tabular-nums">
-                {project.progress.percentage}%
-              </span>
-            </div>
-          )}
-          {project.status && (
-            <Badge
-              variant="outline"
-              className={cn("text-[10px] py-0 h-4 px-1.5", STATUS_COLOR[project.status] ?? "")}
-            >
-              {project.status.replace(/_/g, " ")}
-            </Badge>
-          )}
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-1">
-            <TooltipProvider delayDuration={0}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Link
-                    href={base}
-                    className="h-6 w-6 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                    aria-label="Open Board"
-                  >
-                    <LayoutGrid className="h-3 w-3" />
-                  </Link>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs">Board</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Link
-                    href={`${base}/backlog`}
-                    className="h-6 w-6 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                    aria-label="Open Backlog"
-                  >
-                    <LayoutList className="h-3 w-3" />
-                  </Link>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs">Backlog</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Link
-                    href={`${base}?create=1`}
-                    className="h-6 w-6 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                    aria-label="New Task"
-                  >
-                    <ListPlus className="h-3 w-3" />
-                  </Link>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs">New Task</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Link
-                    href={`${base}/sprints`}
-                    className="h-6 w-6 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                    aria-label="New Sprint"
-                  >
-                    <GitBranch className="h-3 w-3" />
-                  </Link>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs">New Sprint</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Link
-                    href={`${base}/settings`}
-                    className="h-6 w-6 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                    aria-label="Settings"
-                  >
-                    <Settings className="h-3 w-3" />
-                  </Link>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs">Settings</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  );
-});
 
 function resolveDefaultCreateProjectId(
   projects: ProjectListItem[],
   work: MyWorkItem[],
 ): number | null {
-  const recentWork = work.find((item) => item.status !== "DONE" && item.status !== "CANCELLED");
+  const recentWork = work.find(
+    (item) => item.status !== "DONE" && item.status !== "CANCELLED",
+  );
   if (recentWork) return recentWork.projectId;
   const firstProject = projects[0];
   return firstProject ? firstProject.id : null;
 }
 
-interface CreateTaskButtonProps {
-  projects: ProjectListItem[];
-  onCreateForProject: (projectId: number) => void;
-  className?: string;
-}
-
-function CreateTaskButton({ projects, onCreateForProject, className }: CreateTaskButtonProps) {
-  const canCreate = useCan("projects:tickets:create");
-  if (!canCreate || projects.length === 0) return null;
-
-  if (projects.length === 1) {
-    const project = projects[0];
-    if (!project) return null;
-    const handleClick = () => onCreateForProject(project.id);
-    return (
-      <Button
-        variant="ghost"
-        size="sm"
-        className={cn("h-7 text-xs gap-1 text-muted-foreground", className)}
-        onClick={handleClick}
-      >
-        Create Task
-      </Button>
-    );
-  }
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          className={cn("h-7 text-xs gap-1 text-muted-foreground", className)}
-        >
-          Create Task
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
-        {projects.map((project) => {
-          const handleSelect = () => onCreateForProject(project.id);
-          return (
-            <DropdownMenuItem key={project.id} onClick={handleSelect} className="cursor-pointer">
-              <span className="truncate">{project.name}</span>
-              <span className="ml-auto text-[10px] text-muted-foreground font-mono shrink-0">
-                {project.key}
-              </span>
-            </DropdownMenuItem>
-          );
-        })}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
-
-interface QuickCreateMenuProps {
-  projects: ProjectListItem[];
-  onCreateProject: () => void;
-  onCreateForProject: (projectId: number) => void;
-}
-
-function QuickCreateMenu({ projects, onCreateProject, onCreateForProject }: QuickCreateMenuProps) {
-  const canCreate = useCan("projects:tickets:create");
-  const hasProjects = projects.length > 0;
-
-  const handleCreateTaskForSingleProject = useCallback(() => {
-    const project = projects[0];
-    if (project) onCreateForProject(project.id);
-  }, [projects, onCreateForProject]);
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button size="sm" className="h-8 gap-1.5">
-          <Plus className="h-3.5 w-3.5" />
-          New
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuItem onClick={onCreateProject} className="gap-2 cursor-pointer">
-          <FolderPlus className="h-4 w-4 text-muted-foreground" />
-          <span>Create Project</span>
-          <span className="ml-auto text-[10px] text-muted-foreground font-mono">C P</span>
-        </DropdownMenuItem>
-        {canCreate && hasProjects ? (
-          <>
-            <DropdownMenuSeparator />
-            {projects.length === 1 ? (
-              <DropdownMenuItem onClick={handleCreateTaskForSingleProject} className="gap-2 cursor-pointer">
-                <ListPlus className="h-4 w-4 text-muted-foreground" />
-                <span>Create Task</span>
-                <span className="ml-auto text-[10px] text-muted-foreground font-mono">C T</span>
-              </DropdownMenuItem>
-            ) : (
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger className="gap-2 cursor-pointer">
-                  <ListPlus className="h-4 w-4 text-muted-foreground" />
-                  <span>Create Task</span>
-                  <span className="ml-auto text-[10px] text-muted-foreground font-mono">C T</span>
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent className="w-56">
-                  {projects.map((project) => {
-                    const handleSelect = () => onCreateForProject(project.id);
-                    return (
-                      <DropdownMenuItem key={project.id} onClick={handleSelect} className="cursor-pointer">
-                        <span className="truncate">{project.name}</span>
-                        <span className="ml-auto text-[10px] text-muted-foreground font-mono shrink-0">
-                          {project.key}
-                        </span>
-                      </DropdownMenuItem>
-                    );
-                  })}
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-            )}
-          </>
-        ) : null}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild className="gap-2 cursor-pointer">
-          <Link href="/projects/approvals">
-            <CircleCheck className="h-4 w-4 text-muted-foreground" />
-            <span>Create Approval</span>
-          </Link>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
-
-function PinnedNav() {
-  return (
-    <div className="flex items-center gap-1 flex-wrap">
-      {PINNED_LINKS.map(({ label, href, icon: Icon }) => (
-        <Link
-          key={href}
-          href={href}
-          className="group inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground hover:border-border/80 hover:bg-muted/30 transition-colors"
-        >
-          <Icon className="h-3 w-3" />
-          {label}
-          <ExternalLink className="h-2.5 w-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
-        </Link>
-      ))}
-    </div>
-  );
-}
-
 function useKeyboardShortcuts(
   onCreateProject: () => void,
-  onCreateTask: () => void,
+  onCreateIssue: () => void,
 ) {
   const router = useRouter();
   const [pendingKey, setPendingKey] = useState<string | null>(null);
@@ -403,7 +75,7 @@ function useKeyboardShortcuts(
 
       if (e.key === "/") {
         e.preventDefault();
-        const searchEl = document.querySelector<HTMLElement>('[data-search-input]');
+        const searchEl = document.querySelector<HTMLElement>("[data-search-input]");
         searchEl?.focus();
         return;
       }
@@ -426,6 +98,12 @@ function useKeyboardShortcuts(
         return;
       }
 
+      if (pendingKey === "g" && e.key === "p") {
+        setPendingKey(null);
+        router.push("/projects/all");
+        return;
+      }
+
       if (pendingKey === "c" && e.key === "p") {
         setPendingKey(null);
         onCreateProject();
@@ -434,7 +112,7 @@ function useKeyboardShortcuts(
 
       if (pendingKey === "c" && e.key === "t") {
         setPendingKey(null);
-        onCreateTask();
+        onCreateIssue();
         return;
       }
 
@@ -446,13 +124,68 @@ function useKeyboardShortcuts(
       window.removeEventListener("keydown", handleKeyDown);
       clearTimeout(timer);
     };
-  }, [pendingKey, onCreateProject, onCreateTask, router]);
+  }, [pendingKey, onCreateProject, onCreateIssue, router]);
+}
+
+type EmptyAction = { label: string; onClick?: () => void; href?: string };
+
+function resolveMyIssuesEmptyActions(params: {
+  canCreateIssue: boolean;
+  canCreateProject: boolean;
+  hasProjects: boolean;
+  onCreateIssue: () => void;
+  onCreateProject: () => void;
+}): { action: EmptyAction; secondaryAction?: EmptyAction } {
+  const { canCreateIssue, canCreateProject, hasProjects, onCreateIssue, onCreateProject } =
+    params;
+  if (hasProjects && canCreateIssue) {
+    return {
+      action: { label: "New issue", onClick: onCreateIssue },
+      secondaryAction: { label: "View all", href: "/projects/my-work" },
+    };
+  }
+  if (canCreateProject) {
+    return {
+      action: { label: "New project", onClick: onCreateProject },
+      secondaryAction: hasProjects
+        ? { label: "View all", href: "/projects/my-work" }
+        : { label: "All projects", href: "/projects/all" },
+    };
+  }
+  if (hasProjects) {
+    return { action: { label: "View all", href: "/projects/my-work" } };
+  }
+  return { action: { label: "All projects", href: "/projects/all" } };
+}
+
+const STAT_GLASS =
+  "border-border/60 bg-card/50 shadow-sm backdrop-blur-md supports-[backdrop-filter]:bg-card/40 hover:border-primary/20 hover:shadow-md";
+
+function PanelHeader({
+  title,
+  actions,
+}: {
+  title: string;
+  actions?: ReactNode;
+}) {
+  return (
+    <div className="flex min-w-0 items-center justify-between gap-2 border-b border-border/50 px-3 py-2">
+      <h2 className="min-w-0 truncate text-xs font-semibold tracking-wide text-foreground">
+        {title}
+      </h2>
+      {actions ? (
+        <div className="flex shrink-0 items-center gap-1">{actions}</div>
+      ) : null}
+    </div>
+  );
 }
 
 export function CommandCenterPage() {
   const [wizardOpen, setWizardOpen] = useState(false);
   const { openCreateTicket } = useCommandPalette();
-  const canCreateTask = useCan("projects:tickets:create");
+  const canCreateIssue = useCan("projects:tickets:create");
+  const canCreateProject = useCan("projects:create");
+  const shouldReduceMotion = useReducedMotion();
 
   const {
     data: projectsData,
@@ -468,7 +201,10 @@ export function CommandCenterPage() {
     refetch: refetchWork,
   } = useMyWork();
 
-  const handleOpenWizard = useCallback(() => setWizardOpen(true), []);
+  const handleOpenWizard = useCallback(() => {
+    if (!canCreateProject) return;
+    setWizardOpen(true);
+  }, [canCreateProject]);
 
   const projects = useMemo(() => projectsData?.data ?? [], [projectsData]);
   const workItems = useMemo(() => myWork ?? [], [myWork]);
@@ -480,13 +216,13 @@ export function CommandCenterPage() {
     [openCreateTicket],
   );
 
-  const handleCreateTaskShortcut = useCallback(() => {
-    if (!canCreateTask) return;
+  const handleCreateIssueShortcut = useCallback(() => {
+    if (!canCreateIssue) return;
     const projectId = resolveDefaultCreateProjectId(projects, workItems);
     if (projectId !== null) openCreateTicket(projectId);
-  }, [canCreateTask, projects, workItems, openCreateTicket]);
+  }, [canCreateIssue, projects, workItems, openCreateTicket]);
 
-  useKeyboardShortcuts(handleOpenWizard, handleCreateTaskShortcut);
+  useKeyboardShortcuts(handleOpenWizard, handleCreateIssueShortcut);
 
   const handleRetry = useCallback(() => {
     void refetchProjects();
@@ -494,20 +230,40 @@ export function CommandCenterPage() {
   }, [refetchProjects, refetchWork]);
 
   const stats = useMemo(() => {
-    const projects = projectsData?.data ?? [];
+    const projectList = projectsData?.data ?? [];
     const work = myWork ?? [];
-    const openTickets = work.filter((i) => i.status !== "DONE" && i.status !== "CANCELLED");
-    const overdueTickets = work.filter(isOverdue);
+    const openIssues = work.filter(
+      (i) => i.status !== "DONE" && i.status !== "CANCELLED",
+    );
+    const overdueIssues = work.filter(isOverdue);
     return {
-      activeProjects: projects.length,
-      openTickets: openTickets.length,
-      overdueTickets: overdueTickets.length,
+      activeProjects: projectList.length,
+      openIssues: openIssues.length,
+      overdueIssues: overdueIssues.length,
     };
   }, [projectsData, myWork]);
 
   const topWork = useMemo(
-    () => (myWork ?? []).filter((i) => i.status !== "DONE").slice(0, 5),
+    () => (myWork ?? []).filter((i) => i.status !== "DONE").slice(0, 8),
     [myWork],
+  );
+
+  const myIssuesEmpty = useMemo(
+    () =>
+      resolveMyIssuesEmptyActions({
+        canCreateIssue,
+        canCreateProject,
+        hasProjects: projects.length > 0,
+        onCreateIssue: handleCreateIssueShortcut,
+        onCreateProject: handleOpenWizard,
+      }),
+    [
+      canCreateIssue,
+      canCreateProject,
+      projects.length,
+      handleCreateIssueShortcut,
+      handleOpenWizard,
+    ],
   );
 
   const isLoading = projectsLoading || workLoading;
@@ -515,28 +271,31 @@ export function CommandCenterPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Command Center" eyebrow="Projects">
-        <div className="flex flex-1 min-h-0 flex-col space-y-6">
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+      <PageWrapper title="Home" eyebrow="Projects">
+        <PmPageShell>
+          <div className="grid grid-cols-2 gap-2 lg:grid-cols-3">
             {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-20 rounded-xl" />
+              <Skeleton key={i} className={cn("h-16 rounded-xl", PM_PANEL)} />
             ))}
           </div>
-          <Skeleton className="h-48 rounded-xl" />
-          <Skeleton className="h-48 rounded-xl" />
-        </div>
+          <Skeleton className={cn("h-14 w-full max-w-xl rounded-xl", PM_PANEL)} />
+          <Skeleton className={cn("h-56 rounded-xl", PM_PANEL)} />
+          <Skeleton className={cn("h-48 rounded-xl", PM_PANEL)} />
+        </PmPageShell>
       </PageWrapper>
     );
   }
 
   if (isError) {
     return (
-      <PageWrapper title="Command Center" eyebrow="Projects">
-        <ErrorState
-          title="Failed to load command center"
-          description="Could not fetch project data. Please try again."
-          onRetry={handleRetry}
-        />
+      <PageWrapper title="Home" eyebrow="Projects">
+        <PmPageShell withGlow={false}>
+          <ErrorState
+            title="Failed to load home"
+            description="Could not fetch project data. Please try again."
+            onRetry={handleRetry}
+          />
+        </PmPageShell>
       </PageWrapper>
     );
   }
@@ -544,9 +303,9 @@ export function CommandCenterPage() {
   return (
     <>
       <PageWrapper
-        title="Command Center"
+        title="Home"
         eyebrow="Projects"
-        subtitle="Overview of your projects and active work"
+        subtitle="Your issues, projects, and shortcuts"
         actions={
           <QuickCreateMenu
             projects={projects}
@@ -555,105 +314,193 @@ export function CommandCenterPage() {
           />
         }
       >
-        <div className="flex flex-1 min-h-0 flex-col space-y-6">
-          <StatCardGrid cols={3}>
-            <StatCard
-              label="Active Projects"
-              value={stats.activeProjects}
-              icon={Briefcase}
-              tone="blue"
-              index={0}
-            />
-            <StatCard
-              label="Open Tickets"
-              value={stats.openTickets}
-              icon={CheckSquare}
-              tone="emerald"
-              index={1}
-            />
-            <StatCard
-              label="Overdue"
-              value={stats.overdueTickets}
-              icon={AlertCircle}
-              tone={stats.overdueTickets > 0 ? "red" : "default"}
-              index={2}
-            />
-          </StatCardGrid>
+        <PmPageShell>
+          <PmSection index={0}>
+            <StatCardGrid cols={3}>
+              <motion.div
+                whileHover={shouldReduceMotion ? undefined : { y: -2 }}
+                transition={pmSnappy}
+              >
+                <StatCard
+                  label="Projects"
+                  value={stats.activeProjects}
+                  icon={Briefcase}
+                  tone="default"
+                  index={0}
+                  href="/projects/all"
+                  className={STAT_GLASS}
+                />
+              </motion.div>
+              <motion.div
+                whileHover={shouldReduceMotion ? undefined : { y: -2 }}
+                transition={pmSnappy}
+              >
+                <StatCard
+                  label="Open issues"
+                  value={stats.openIssues}
+                  icon={CheckSquare}
+                  tone="emerald"
+                  index={1}
+                  href="/projects/my-work"
+                  className={STAT_GLASS}
+                />
+              </motion.div>
+              <motion.div
+                whileHover={shouldReduceMotion ? undefined : { y: -2 }}
+                transition={pmSnappy}
+                animate={
+                  stats.overdueIssues > 0 && !shouldReduceMotion
+                    ? { scale: [1, 1.015, 1] }
+                    : undefined
+                }
+              >
+                <StatCard
+                  label="Overdue"
+                  value={stats.overdueIssues}
+                  icon={AlertCircle}
+                  tone={stats.overdueIssues > 0 ? "red" : "default"}
+                  index={2}
+                  href="/projects/my-work"
+                  className={STAT_GLASS}
+                />
+              </motion.div>
+            </StatCardGrid>
+          </PmSection>
 
-          <div>
-            <p className="text-xs text-muted-foreground font-medium mb-2">Quick navigation</p>
-            <PinnedNav />
+          <PmSection index={1}>
+            <PmPanel className="p-2.5">
+              <p className="mb-1.5 px-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                Jump to
+              </p>
+              <PinnedNav />
+            </PmPanel>
+          </PmSection>
+
+          <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-5">
+            <PmSection index={2} className="flex min-h-0 flex-col lg:col-span-3">
+              <PmPanel className="flex min-h-0 flex-1 flex-col">
+                <PanelHeader
+                  title="My issues"
+                  actions={
+                    <>
+                      <CreateIssueButton
+                        projects={projects}
+                        onCreateForProject={handleCreateForProject}
+                      />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 gap-1 text-xs"
+                        asChild
+                      >
+                        <Link href="/projects/my-work">
+                          View all <ArrowRight className="h-3 w-3" />
+                        </Link>
+                      </Button>
+                    </>
+                  }
+                />
+                <div className="min-h-0 flex-1">
+                  {topWork.length === 0 ? (
+                    <EmptyState
+                      illustrationPreset="projects"
+                      title="Inbox zero"
+                      description={
+                        projects.length === 0
+                          ? "Create a project to start tracking issues."
+                          : "No open issues assigned to you. Create one or open the board."
+                      }
+                      className="min-h-[12rem]"
+                      action={myIssuesEmpty.action}
+                      secondaryAction={myIssuesEmpty.secondaryAction}
+                    />
+                  ) : (
+                    <PmStaggerList>
+                      {topWork.map((item) => (
+                        <MyWorkRow key={item.id} item={item} />
+                      ))}
+                    </PmStaggerList>
+                  )}
+                </div>
+              </PmPanel>
+            </PmSection>
+
+            <PmSection index={3} className="flex min-h-0 flex-col lg:col-span-2">
+              <PmPanel className="flex min-h-0 flex-1 flex-col">
+                <PanelHeader
+                  title="Projects"
+                  actions={
+                    <>
+                      {canCreateProject ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 gap-1 text-xs text-muted-foreground"
+                          onClick={handleOpenWizard}
+                        >
+                          New
+                        </Button>
+                      ) : null}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 gap-1 text-xs"
+                        asChild
+                      >
+                        <Link href="/projects/all">
+                          All <ArrowRight className="h-3 w-3" />
+                        </Link>
+                      </Button>
+                    </>
+                  }
+                />
+                <div className="min-h-0 flex-1 p-1.5">
+                  {projects.length === 0 ? (
+                    <EmptyState
+                      illustrationPreset="projects"
+                      title="No projects yet"
+                      description="Create a project to start shipping."
+                      className="min-h-[12rem]"
+                      action={
+                        canCreateProject
+                          ? { label: "New project", onClick: handleOpenWizard }
+                          : { label: "All projects", href: "/projects/all" }
+                      }
+                    />
+                  ) : (
+                    <PmStaggerList className="flex flex-col gap-1">
+                      {projects.slice(0, 8).map((project) => (
+                        <ProjectCard
+                          key={project.id}
+                          project={project}
+                          onCreateIssue={
+                            canCreateIssue ? handleCreateForProject : undefined
+                          }
+                        />
+                      ))}
+                    </PmStaggerList>
+                  )}
+                </div>
+              </PmPanel>
+            </PmSection>
           </div>
 
-          <PageSection
-            title="My Work"
-            actions={
-              <div className="flex items-center gap-2">
-                <CreateTaskButton
-                  projects={projects}
-                  onCreateForProject={handleCreateForProject}
-                />
-                <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" asChild>
-                  <Link href="/projects/my-work">
-                    View all <ArrowRight className="h-3 w-3" />
-                  </Link>
-                </Button>
-              </div>
-            }
+          <motion.p
+            className="text-center text-[10px] text-muted-foreground/70"
+            initial={shouldReduceMotion ? false : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ ...pmSnappy, delay: 0.28 }}
           >
-            {topWork.length === 0 ? (
-              <EmptyState
-                illustrationPreset="projects"
-                title="No open tickets"
-                description="You have no open tickets across any project."
-                className="min-h-[12rem]"
-              />
-            ) : (
-              <div className="space-y-0.5 bg-card rounded-lg border border-border overflow-hidden">
-                {topWork.map((item, i) => (
-                  <MyWorkRow key={item.id} item={item} index={i} />
-                ))}
-              </div>
-            )}
-          </PageSection>
-
-          <PageSection
-            title="Active Projects"
-            actions={
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 text-xs gap-1 text-muted-foreground"
-                  onClick={handleOpenWizard}
-                >
-                  Create Project
-                </Button>
-                <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" asChild>
-                  <Link href="/projects/all">
-                    All projects <ArrowRight className="h-3 w-3" />
-                  </Link>
-                </Button>
-              </div>
-            }
-          >
-            {projects.length === 0 ? (
-              <EmptyState
-                illustrationPreset="projects"
-                title="No active projects"
-                description="Active projects will appear here."
-                className="min-h-[12rem]"
-                action={{ label: "Create Project", onClick: handleOpenWizard }}
-              />
-            ) : (
-              <div className="space-y-2">
-                {projects.slice(0, 8).map((project, idx) => (
-                  <ProjectCard key={project.id} project={project} index={idx} />
-                ))}
-              </div>
-            )}
-          </PageSection>
-        </div>
+            Shortcuts · <kbd className="rounded border border-border bg-muted/80 px-1">C</kbd>
+            <kbd className="ml-0.5 rounded border border-border bg-muted/80 px-1">P</kbd> project ·{" "}
+            <kbd className="rounded border border-border bg-muted/80 px-1">C</kbd>
+            <kbd className="ml-0.5 rounded border border-border bg-muted/80 px-1">T</kbd> issue ·{" "}
+            <kbd className="rounded border border-border bg-muted/80 px-1">G</kbd>
+            <kbd className="ml-0.5 rounded border border-border bg-muted/80 px-1">M</kbd> my issues ·{" "}
+            <kbd className="rounded border border-border bg-muted/80 px-1">G</kbd>
+            <kbd className="ml-0.5 rounded border border-border bg-muted/80 px-1">P</kbd> projects
+          </motion.p>
+        </PmPageShell>
       </PageWrapper>
 
       <ProjectCreateWizard open={wizardOpen} onOpenChange={setWizardOpen} />

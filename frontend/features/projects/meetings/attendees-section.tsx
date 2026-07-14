@@ -8,8 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Combobox } from "@/components/ui/combobox";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { resolveImageUrl } from "@/lib/utils";
+import { cn, resolveImageUrl } from "@/lib/utils";
 import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
+import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 import type { MeetingAttendee, ProjectMemberRecord } from "@/types/projects";
 
 const FIELD_CLASS = "h-8 w-full text-xs bg-card border-border shadow-xs";
@@ -116,10 +117,12 @@ export function AttendeesSection({
                     {getUserInitials(member)}
                   </AvatarFallback>
                 </Avatar>
-                <span className="truncate max-w-[140px] text-[11px]">{displayName}</span>
-                {attendee.attended && (
-                  <Check className="h-3 w-3 text-emerald-600 shrink-0" aria-hidden />
-                )}
+                <span className={cn(TEXT_ONE_LINE, "max-w-[140px] text-[11px]")} title={displayName}>
+                  {displayName}
+                </span>
+                {attendee.attended ? (
+                  <Check className="h-3 w-3 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden />
+                ) : null}
                 {canManage && (
                   <button
                     type="button"

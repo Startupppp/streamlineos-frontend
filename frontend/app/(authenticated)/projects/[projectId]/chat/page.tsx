@@ -1,11 +1,13 @@
 "use client";
 
-import { use, useEffect, useRef } from "react";
+import { use, useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { useEntityChannel } from "@/hooks/api/chat";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Button } from "@/components/ui/button";
+import { PageWrapper } from "@/components/ui/page-wrapper";
+import { PmPageShell, PmPanel } from "@/features/projects/shared/pm-chrome";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -23,21 +25,33 @@ export default function ProjectChatRoute({ params }: PageProps) {
     router.replace(`/chat?channel=${channel.id}`);
   }, [channel?.id, router]);
 
+  const handleGoToChat = useCallback(() => {
+    router.push("/chat");
+  }, [router]);
+
   if (error) {
     return (
-      <div className="flex h-full flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
-        <p className="text-sm text-muted-foreground">{getErrorMessage(error)}</p>
-        <Button variant="outline" size="sm" onClick={() => router.push("/chat")}>
-          Go to Chat
-        </Button>
-      </div>
+      <PageWrapper title="Chat" eyebrow="Project" subtitle="Opening project conversation">
+        <PmPageShell>
+          <PmPanel className="flex min-h-[40vh] flex-1 flex-col items-center justify-center gap-3 p-8 text-center" solid>
+            <p className="text-sm text-muted-foreground">{getErrorMessage(error)}</p>
+            <Button variant="outline" size="sm" onClick={handleGoToChat}>
+              Go to Chat
+            </Button>
+          </PmPanel>
+        </PmPageShell>
+      </PageWrapper>
     );
   }
 
   return (
-    <div className="flex h-full flex-1 items-center justify-center">
-      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-      <span className="sr-only">Opening project chat…</span>
-    </div>
+    <PageWrapper title="Chat" eyebrow="Project" subtitle="Opening project conversation">
+      <PmPageShell>
+        <PmPanel className="flex min-h-[40vh] flex-1 items-center justify-center gap-2 p-8" solid>
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          <span className="sr-only">Opening project chat…</span>
+        </PmPanel>
+      </PmPageShell>
+    </PageWrapper>
   );
 }

@@ -31,6 +31,14 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import {
+  PmPageShell,
+  PmPanel,
+  PM_ROW,
+} from "@/features/projects/shared/pm-chrome";
+import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { cn } from "@/lib/utils";
 
 const createPageSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -106,16 +114,18 @@ function PageTreeItem({
   return (
     <div>
       <div
-        className={`flex items-center gap-1 py-1.5 px-2 rounded-md cursor-pointer transition-colors group ${
-          isActive ? "bg-muted text-foreground font-medium" : "hover:bg-muted"
-        }`}
+        className={cn(
+          PM_ROW,
+          "cursor-pointer border-0 last:border-b-0",
+          isActive && "bg-primary/10 font-medium text-foreground",
+        )}
         style={{ paddingLeft: `${depth * 16 + 8}px` }}
         onClick={handleSelect}
       >
         {hasChildren ? (
           <button
             onClick={handleToggleExpand}
-            className="h-5 w-5 flex items-center justify-center shrink-0"
+            className="flex h-5 w-5 shrink-0 items-center justify-center"
           >
             {expanded ? (
               <ChevronDown className="h-3.5 w-3.5" />
@@ -126,8 +136,8 @@ function PageTreeItem({
         ) : (
           <span className="w-5 shrink-0" />
         )}
-        <span className="text-base shrink-0">{page.icon ?? "📄"}</span>
-        <span className="text-sm truncate flex-1">{page.title}</span>
+        <span className="shrink-0 text-base">{page.icon ?? "📄"}</span>
+        <span className={cn("flex-1 text-sm", TEXT_ONE_LINE)}>{page.title}</span>
         <button
           onClick={handleTogglePin}
           className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
@@ -171,15 +181,15 @@ const PinnedPageItem = memo(function PinnedPageItem({
   return (
     <div
       onClick={handleClick}
-      className={`flex items-center gap-2 py-1.5 px-2 rounded-md cursor-pointer transition-colors ${
-        activePage === page.id
-          ? "bg-muted text-foreground font-medium"
-          : "hover:bg-muted"
-      }`}
+      className={cn(
+        PM_ROW,
+        "cursor-pointer border-0 last:border-b-0",
+        activePage === page.id && "bg-primary/10 font-medium text-foreground",
+      )}
     >
-      <Pin className="h-3 w-3 text-muted-foreground shrink-0" />
-      <span className="text-base shrink-0">{page.icon ?? "📄"}</span>
-      <span className="text-sm truncate">{page.title}</span>
+      <Pin className="h-3 w-3 shrink-0 text-muted-foreground" />
+      <span className="shrink-0 text-base">{page.icon ?? "📄"}</span>
+      <span className={cn("text-sm", TEXT_ONE_LINE)}>{page.title}</span>
     </div>
   );
 });
@@ -277,16 +287,18 @@ export default function PagesPage({
   if (isLoading) {
     return (
       <PageWrapper title="Pages" eyebrow="Project" subtitle="Create and manage project documentation and notes" noInternalScroll contentClassName="p-0">
-        <div className="flex h-full">
-          <div className="w-64 border-r p-4 space-y-2">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-8 w-full" />
-            ))}
+        <PmPageShell className="h-full gap-0" withGlow={false}>
+          <div className="flex h-full">
+            <div className="w-64 space-y-2 border-r border-border/60 p-4">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="h-8 w-full" />
+              ))}
+            </div>
+            <div className="flex-1 p-6">
+              <Skeleton className="h-64 w-full rounded-xl" />
+            </div>
           </div>
-          <div className="flex-1 p-6">
-            <Skeleton className="h-64 w-full" />
-          </div>
-        </div>
+        </PmPageShell>
       </PageWrapper>
     );
   }
@@ -343,9 +355,15 @@ export default function PagesPage({
             <div className="shrink-0 px-6 py-4 border-t">
               <div className="grid grid-cols-2 gap-2">
                 <Button variant="outline" size="sm" onClick={handleCloseCreate}>Cancel</Button>
-                <Button size="sm" type="submit" form="create-page-form" disabled={createMutation.isPending}>
-                  {createMutation.isPending ? "Creating…" : "Create Page"}
-                </Button>
+                <LoadingButton
+                  size="sm"
+                  type="submit"
+                  form="create-page-form"
+                  isPending={createMutation.isPending}
+                  loadingText="Creating…"
+                >
+                  Create Page
+                </LoadingButton>
               </div>
             </div>
           </SheetContent>
@@ -354,82 +372,85 @@ export default function PagesPage({
       noInternalScroll
       contentClassName="p-0"
     >
-      {!pages?.length ? (
-        <EmptyState
-          illustration={<EmptyDocumentsIllustration />}
-          title="No pages yet"
-          description="Create your first page to start documenting your project."
-          action={{ label: "Create First Page", onClick: handleOpenCreatePage }}
-          className="flex-1 min-h-[60vh]"
-        />
-      ) : (
-        <div className="flex h-full overflow-hidden">
-          <div className="w-64 border-r overflow-y-auto p-3 space-y-1 bg-muted/20">
-            {pinnedPages.length > 0 && (
-              <div className="mb-3">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-2 mb-1">
-                  Pinned
-                </p>
-                {pinnedPages.map((page) => (
-                  <PinnedPageItem
-                    key={`pin-${page.id}`}
-                    page={page}
-                    activePage={activePage}
-                    onSelect={handleSelectPage}
-                  />
-                ))}
-                <div className="border-b my-2" />
-              </div>
-            )}
-            {tree.map((page) => (
-              <PageTreeItem
-                key={page.id}
-                page={page}
-                depth={0}
-                activePage={activePage}
-                onSelect={handleSelectPage}
-                onTogglePin={handleTogglePin}
-              />
-            ))}
-          </div>
-
-          <div className="flex-1 flex flex-col overflow-hidden">
-            {selectedPage ? (
-              <div className="flex-1 flex flex-col p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold flex items-center gap-2">
-                    <span className="text-2xl">
-                      {selectedPage.icon ?? "📄"}
-                    </span>
-                    {selectedPage.title}
-                  </h2>
-                  <Button
-                    size="sm"
-                    onClick={handleSave}
-                    disabled={updateMutation.isPending}
-                  >
-                    {updateMutation.isPending ? "Saving..." : "Save"}
-                  </Button>
+      <PmPageShell className="h-full gap-0" withGlow={false}>
+        {!pages?.length ? (
+          <EmptyState
+            illustration={<EmptyDocumentsIllustration />}
+            title="No pages yet"
+            description="Create your first page to start documenting your project."
+            action={{ label: "Create First Page", onClick: handleOpenCreatePage }}
+            className="min-h-[60vh] flex-1"
+          />
+        ) : (
+          <div className="flex h-full min-h-0 overflow-hidden">
+            <PmPanel className="w-64 shrink-0 space-y-1 overflow-y-auto rounded-none border-y-0 border-l-0 p-2" solid>
+              {pinnedPages.length > 0 ? (
+                <div className="mb-2">
+                  <p className="mb-1 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Pinned
+                  </p>
+                  {pinnedPages.map((page) => (
+                    <PinnedPageItem
+                      key={`pin-${page.id}`}
+                      page={page}
+                      activePage={activePage}
+                      onSelect={handleSelectPage}
+                    />
+                  ))}
+                  <div className="my-2 border-b border-border/60" />
                 </div>
-                <Textarea
-                  className="flex-1 min-h-[400px] resize-none font-mono text-sm"
-                  placeholder="Start writing..."
-                  value={editContent}
-                  onChange={handleEditContentChange}
+              ) : null}
+              {tree.map((page) => (
+                <PageTreeItem
+                  key={page.id}
+                  page={page}
+                  depth={0}
+                  activePage={activePage}
+                  onSelect={handleSelectPage}
+                  onTogglePin={handleTogglePin}
                 />
-              </div>
-            ) : (
-              <EmptyState
-                illustration={<EmptyDocumentsIllustration />}
-                title="Select a page"
-                description="Choose a page from the list to start editing."
-                compact
-                className="flex-1"
-              />
-            )}
+              ))}
+            </PmPanel>
+
+            <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+              {selectedPage ? (
+                <div className="flex flex-1 flex-col p-6">
+                  <div className="mb-4 flex min-w-0 items-center justify-between gap-3">
+                    <h2 className={cn("flex min-w-0 items-center gap-2 text-xl font-bold", TEXT_ONE_LINE)}>
+                      <span className="shrink-0 text-2xl">
+                        {selectedPage.icon ?? "📄"}
+                      </span>
+                      <span className={TEXT_ONE_LINE}>{selectedPage.title}</span>
+                    </h2>
+                    <LoadingButton
+                      size="sm"
+                      onClick={handleSave}
+                      isPending={updateMutation.isPending}
+                      loadingText="Saving…"
+                    >
+                      Save
+                    </LoadingButton>
+                  </div>
+                  <Textarea
+                    className="min-h-[400px] flex-1 resize-none font-mono text-sm"
+                    placeholder="Start writing..."
+                    value={editContent}
+                    onChange={handleEditContentChange}
+                  />
+                </div>
+              ) : (
+                <EmptyState
+                  illustration={<EmptyDocumentsIllustration />}
+                  title="Select a page"
+                  description="Choose a page from the list to start editing."
+                  compact
+                  className="flex-1"
+                />
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </PmPageShell>
     </PageWrapper>
   );
 }

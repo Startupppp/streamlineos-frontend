@@ -3,6 +3,7 @@ export interface MyWorkItem {
   projectId: number;
   projectName: string;
   projectKey: string;
+  ticketNumber: number;
   title: string;
   status: string;
   priority: string | null;

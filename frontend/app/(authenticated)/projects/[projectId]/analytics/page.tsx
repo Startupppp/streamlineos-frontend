@@ -9,7 +9,6 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Sprint, SprintBurndownPoint } from "@/types/projects";
 import {
   AnalyticsKpiStrip,
@@ -26,6 +25,12 @@ import {
   STATE_COLORS,
   PRIORITY_COLORS,
 } from "@/features/projects/analytics/project-charts";
+import {
+  PmPageShell,
+  PmPanel,
+  PmSection,
+} from "@/features/projects/shared/pm-chrome";
+import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 
 export default function AnalyticsPage({
   params,
@@ -140,12 +145,14 @@ export default function AnalyticsPage({
         eyebrow="Project"
         subtitle="Velocity, health, and ticket insights"
       >
-        <AnalyticsKpiStripSkeleton />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-[296px] w-full rounded-xl" />
-          ))}
-        </div>
+        <PmPageShell>
+          <AnalyticsKpiStripSkeleton />
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-[296px] w-full rounded-xl" />
+            ))}
+          </div>
+        </PmPageShell>
       </PageWrapper>
     );
   }
@@ -157,12 +164,14 @@ export default function AnalyticsPage({
         eyebrow="Project"
         subtitle="Velocity, health, and ticket insights"
       >
-        <EmptyState
-          illustrationPreset="chart"
-          title="No analytics yet"
-          description="Analytics will appear once your project has tickets."
-          className="flex-1 min-h-[50vh]"
-        />
+        <PmPageShell>
+          <EmptyState
+            illustrationPreset="chart"
+            title="No analytics yet"
+            description="Analytics will appear once your project has tickets."
+            className="min-h-[50vh] flex-1"
+          />
+        </PmPageShell>
       </PageWrapper>
     );
   }
@@ -173,40 +182,46 @@ export default function AnalyticsPage({
       eyebrow="Project"
       subtitle="Velocity, health, and ticket insights"
     >
-      <AnalyticsKpiStrip analytics={analytics} />
+      <PmPageShell>
+        <PmSection index={0}>
+          <AnalyticsKpiStrip analytics={analytics} />
+        </PmSection>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <ChartShell title="State Distribution">
-          <StateDistributionChart data={stateData} />
-        </ChartShell>
+        <PmSection index={1}>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <ChartShell title="State Distribution">
+              <StateDistributionChart data={stateData} />
+            </ChartShell>
 
-        <ChartShell title="Priority Breakdown">
-          <PriorityBreakdownChart data={priorityData} />
-        </ChartShell>
+            <ChartShell title="Priority Breakdown">
+              <PriorityBreakdownChart data={priorityData} />
+            </ChartShell>
 
-        <ChartShell title="Volume Over Time">
-          <VolumeOverTimeChart data={volumeData} />
-        </ChartShell>
+            <ChartShell title="Volume Over Time">
+              <VolumeOverTimeChart data={volumeData} />
+            </ChartShell>
 
-        <ChartShell title="Completion by Assignee">
-          <AssigneeCompletionChart data={assigneeData} />
-        </ChartShell>
+            <ChartShell title="Completion by Assignee">
+              <AssigneeCompletionChart data={assigneeData} />
+            </ChartShell>
 
-        <ChartShell title="Cycle Velocity">
-          <CycleVelocityChart data={velocityData} />
-        </ChartShell>
+            <ChartShell title="Cycle Velocity">
+              <CycleVelocityChart data={velocityData} />
+            </ChartShell>
 
-        <ChartShell title="Estimate vs Actual">
-          <EstimateVsActualChart data={estimateData} />
-        </ChartShell>
+            <ChartShell title="Estimate vs Actual">
+              <EstimateVsActualChart data={estimateData} />
+            </ChartShell>
 
-        <SprintBurndownChart
-          data={burndownChartData}
-          sprints={sprints}
-          sprintId={sprintId}
-          onSprintChange={setSelectedSprintId}
-        />
-      </div>
+            <SprintBurndownChart
+              data={burndownChartData}
+              sprints={sprints}
+              sprintId={sprintId}
+              onSprintChange={setSelectedSprintId}
+            />
+          </div>
+        </PmSection>
+      </PmPageShell>
     </PageWrapper>
   );
 }
@@ -219,11 +234,9 @@ function ChartShell({
   children: React.ReactNode;
 }) {
   return (
-    <Card className="bg-card border border-border rounded-xl shadow-sm">
-      <CardHeader className="pb-1 pt-4 px-4">
-        <CardTitle className="text-sm font-semibold">{title}</CardTitle>
-      </CardHeader>
-      <CardContent className="px-4 pb-4 pt-0">{children}</CardContent>
-    </Card>
+    <PmPanel className="p-4">
+      <h3 className={`mb-3 text-sm font-semibold ${TEXT_ONE_LINE}`}>{title}</h3>
+      {children}
+    </PmPanel>
   );
 }

@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyMailIllustration } from "@/components/illustrations";
-import { LoadingState } from "@/components/shared/loading-state";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 import {
   AlertDialog,
@@ -22,10 +22,30 @@ import {
   useRoadmapItems,
 } from "@/hooks/api/projects/roadmap";
 import type { FeedbackPost } from "@/types/projects";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { cn } from "@/lib/utils";
+import { PmPanel, PmStaggerList, PM_PANEL } from "@/features/projects/shared/pm-chrome";
 import { FeedbackRow } from "./feedback-row";
 
 interface FeedbackTabProps {
   search: string;
+}
+
+function FeedbackListSkeleton() {
+  return (
+    <div className="space-y-2">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <div key={i} className={cn(PM_PANEL, "flex gap-3 p-3")}>
+          <Skeleton className="h-12 w-10 shrink-0 rounded-md" />
+          <div className="min-w-0 flex-1 space-y-2">
+            <Skeleton className="h-4 w-2/3" />
+            <Skeleton className="h-3 w-full" />
+            <Skeleton className="h-7 w-36" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 export function FeedbackTab({ search }: FeedbackTabProps) {
@@ -36,42 +56,64 @@ export function FeedbackTab({ search }: FeedbackTabProps) {
   const deletePost = useDeleteFeedbackPost();
   const [deleteTarget, setDeleteTarget] = useState<FeedbackPost | null>(null);
 
-  function handleRetry() { refetch(); }
-  function handleDeleteDialogChange(open: boolean) { if (!open) setDeleteTarget(null); }
-  const handleSetDeleteTarget = useCallback((post: FeedbackPost) => { setDeleteTarget(post); }, []);
+  function handleRetry() {
+    void refetch();
+  }
+
+  function handleDeleteDialogChange(open: boolean) {
+    if (!open) setDeleteTarget(null);
+  }
+
+  const handleSetDeleteTarget = useCallback((post: FeedbackPost) => {
+    setDeleteTarget(post);
+  }, []);
 
   function handleDelete() {
     if (!deleteTarget) return;
     deletePost.mutate(deleteTarget.id, {
-      onSuccess: () => { toast.success("Feedback deleted"); setDeleteTarget(null); },
-      onError: () => toast.error("Failed to delete feedback"),
+      onSuccess: () => {
+        toast.success("Feedback deleted");
+        setDeleteTarget(null);
+      },
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }
 
-  if (isLoading) return <LoadingState variant="list" rows={6} />;
-  if (isError) return <ErrorState onRetry={handleRetry} />;
+  if (isLoading) return <FeedbackListSkeleton />;
+
+  if (isError) {
+    return (
+      <PmPanel className="flex min-h-[14rem] items-center justify-center p-6">
+        <ErrorState onRetry={handleRetry} />
+      </PmPanel>
+    );
+  }
 
   if (!data || data.length === 0) {
     return (
-      <EmptyState
-        illustration={<EmptyMailIllustration />}
-        title="No feedback yet"
-        description="Feedback submitted from your public board will appear here, sorted by votes."
-        className="flex-1"
-      />
+      <PmPanel className="flex min-h-[14rem] items-center justify-center p-6">
+        <EmptyState
+          illustration={<EmptyMailIllustration />}
+          title="No feedback yet"
+          description="Feedback submitted from your public board will appear here, sorted by votes."
+          className="min-h-[12rem]"
+        />
+      </PmPanel>
     );
   }
 
   return (
-    <div className="space-y-3">
-      {data.map((post) => (
-        <FeedbackRow
-          key={post.id}
-          post={post}
-          roadmapItems={roadmapData ?? []}
-          onDelete={handleSetDeleteTarget}
-        />
-      ))}
+    <>
+      <PmStaggerList className="space-y-2">
+        {data.map((post) => (
+          <FeedbackRow
+            key={post.id}
+            post={post}
+            roadmapItems={roadmapData ?? []}
+            onDelete={handleSetDeleteTarget}
+          />
+        ))}
+      </PmStaggerList>
 
       <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteDialogChange}>
         <AlertDialogContent>
@@ -92,6 +134,6 @@ export function FeedbackTab({ search }: FeedbackTabProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </>
   );
 }

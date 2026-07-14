@@ -4,7 +4,7 @@ import { use, useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,7 +34,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { LoadingState } from "@/components/shared/loading-state";
+import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   EmptyTasksIllustration,
@@ -42,7 +42,6 @@ import {
 } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared/error-state";
 import {
-  ArrowLeft,
   Pencil,
   Trash2,
   ListChecks,
@@ -74,6 +73,16 @@ import {
   keyResultPercent,
   formatMetricValue,
 } from "@/features/projects/goals/constants";
+import {
+  PmPageShell,
+  PmPanel,
+  PmSection,
+  PM_PANEL,
+  PM_ROW,
+} from "@/features/projects/shared/pm-chrome";
+import { TEXT_ONE_LINE, TEXT_BODY } from "@/features/projects/shared/text-overflow";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { cn } from "@/lib/utils";
 
 function CheckInDialog({
   goalId,
@@ -96,6 +105,10 @@ function CheckInDialog({
     setNote(e.target.value);
   }
 
+  function handleOpenChange(open: boolean) {
+    if (!open) onClose();
+  }
+
   function handleSubmit() {
     const parsed = Number(newValue);
     if (Number.isNaN(parsed)) {
@@ -109,16 +122,16 @@ function CheckInDialog({
           toast.success("Check-in recorded");
           onClose();
         },
-        onError: () => toast.error("Failed to record check-in"),
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }
 
   return (
-    <Dialog open onOpenChange={onClose}>
+    <Dialog open onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Check in — {keyResult.title}</DialogTitle>
+          <DialogTitle className={TEXT_ONE_LINE}>Check in — {keyResult.title}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="space-y-1.5">
@@ -130,7 +143,8 @@ function CheckInDialog({
               onChange={handleNewValueChange}
             />
             <p className="text-xs text-muted-foreground">
-              Target: {formatMetricValue(keyResult.targetValue, keyResult.metricType, keyResult.unit)}
+              Target:{" "}
+              {formatMetricValue(keyResult.targetValue, keyResult.metricType, keyResult.unit)}
             </p>
           </div>
           <div className="space-y-1.5">
@@ -148,9 +162,9 @@ function CheckInDialog({
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={checkIn.isPending}>
-            {checkIn.isPending ? "Saving..." : "Record Check-in"}
-          </Button>
+          <LoadingButton onClick={handleSubmit} isPending={checkIn.isPending} loadingText="Saving…">
+            Record Check-in
+          </LoadingButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -170,6 +184,10 @@ function AddLinkDialog({ goalId, onClose }: { goalId: number; onClose: () => voi
     setTicketId("");
   }
 
+  function handleOpenChange(open: boolean) {
+    if (!open) onClose();
+  }
+
   function handleSubmit() {
     if (!projectId) {
       toast.error("Select a project");
@@ -183,12 +201,12 @@ function AddLinkDialog({ goalId, onClose }: { goalId: number; onClose: () => voi
         toast.success("Work item linked");
         onClose();
       },
-      onError: () => toast.error("Failed to link work item"),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }
 
   return (
-    <Dialog open onOpenChange={onClose}>
+    <Dialog open onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Link work item</DialogTitle>
@@ -196,10 +214,7 @@ function AddLinkDialog({ goalId, onClose }: { goalId: number; onClose: () => voi
         <div className="space-y-4 py-2">
           <div className="space-y-1.5">
             <Label>Project</Label>
-            <Select
-              value={projectId}
-              onValueChange={handleProjectChange}
-            >
+            <Select value={projectId} onValueChange={handleProjectChange}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select a project" />
               </SelectTrigger>
@@ -232,9 +247,14 @@ function AddLinkDialog({ goalId, onClose }: { goalId: number; onClose: () => voi
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={addLink.isPending || !projectId}>
-            {addLink.isPending ? "Linking..." : "Link"}
-          </Button>
+          <LoadingButton
+            onClick={handleSubmit}
+            disabled={!projectId}
+            isPending={addLink.isPending}
+            loadingText="Linking…"
+          >
+            Link
+          </LoadingButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -255,9 +275,11 @@ function KeyResultRow({
   }
 
   return (
-    <div className="rounded-lg border border-border/60 p-3 space-y-2">
-      <div className="flex items-start justify-between gap-2">
-        <p className="text-sm font-medium leading-snug">{keyResult.title}</p>
+    <div className={cn(PM_PANEL, "space-y-2 p-3")}>
+      <div className="flex min-w-0 items-start justify-between gap-2">
+        <p className={cn(TEXT_ONE_LINE, "text-sm font-medium")} title={keyResult.title}>
+          {keyResult.title}
+        </p>
         <Button size="sm" variant="outline" className="h-7 shrink-0" onClick={handleCheckIn}>
           Check in
         </Button>
@@ -288,32 +310,53 @@ function LinkRow({
     onRemove(link.id);
   }
 
+  const label = link.ticketId
+    ? (link.ticketTitle ?? `Ticket #${link.ticketId}`)
+    : (link.projectName ?? `Project #${link.projectId}`);
+
   return (
-    <div className="flex items-center justify-between gap-2 rounded-lg border border-border/60 px-3 py-2">
-      <div className="flex items-center gap-2 min-w-0">
+    <div className={cn(PM_ROW, "rounded-lg border border-border/50 last:border-b")}>
+      <div className="flex min-w-0 flex-1 items-center gap-2">
         {link.ticketId ? (
-          <TicketIcon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+          <TicketIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
         ) : (
-          <FolderKanban className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+          <FolderKanban className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
         )}
-        <span className="text-sm truncate">
-          {link.ticketId ? link.ticketTitle ?? `Ticket #${link.ticketId}` : link.projectName ?? `Project #${link.projectId}`}
+        <span className={cn(TEXT_ONE_LINE, "text-sm")} title={label}>
+          {label}
         </span>
-        {link.ticketId && link.projectKey && (
-          <Badge variant="outline" className="text-[9px] shrink-0">
+        {link.ticketId && link.projectKey ? (
+          <Badge variant="outline" className="shrink-0 text-[9px]">
             {link.projectKey}
           </Badge>
-        )}
+        ) : null}
       </div>
       <Button
         size="icon"
         variant="ghost"
-        className="h-6 w-6 text-muted-foreground hover:text-destructive shrink-0"
+        className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"
         onClick={handleRemove}
       >
         <X className="h-3.5 w-3.5" />
       </Button>
     </div>
+  );
+}
+
+function GoalDetailSkeleton() {
+  return (
+    <PmPageShell>
+      <div className={cn(PM_PANEL, "space-y-3 p-4")}>
+        <Skeleton className="h-5 w-24 rounded-full" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-2 w-full rounded-full" />
+      </div>
+      <div className="space-y-2">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton key={i} className="h-20 w-full rounded-xl" />
+        ))}
+      </div>
+    </PmPageShell>
   );
 }
 
@@ -330,10 +373,6 @@ export default function GoalDetailPage({ params }: { params: Promise<{ goalId: s
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [checkInTarget, setCheckInTarget] = useState<KeyResult | null>(null);
   const [addLinkOpen, setAddLinkOpen] = useState(false);
-
-  function handleNavigateBack() {
-    router.push("/projects/goal");
-  }
 
   function handleOpenEdit() {
     setEditOpen(true);
@@ -369,33 +408,37 @@ export default function GoalDetailPage({ params }: { params: Promise<{ goalId: s
         toast.success("Goal deleted");
         router.push("/projects/goal");
       },
-      onError: () => toast.error("Failed to delete goal"),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }
 
   function handleRemoveLink(linkId: number) {
     removeLink.mutate(linkId, {
       onSuccess: () => toast.success("Link removed"),
-      onError: () => toast.error("Failed to remove link"),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }
 
   if (isLoading) {
     return (
-      <PageWrapper title="Goal">
-        <LoadingState variant="page" />
+      <PageWrapper title="Goal" eyebrow="Goals" backHref="/projects/goal">
+        <GoalDetailSkeleton />
       </PageWrapper>
     );
   }
 
   if (isError || !goal) {
     return (
-      <PageWrapper title="Goal">
-        <ErrorState
-          title="Failed to load goal"
-          description="This goal may have been removed or is unavailable."
-          onRetry={handleRetry}
-        />
+      <PageWrapper title="Goal" eyebrow="Goals" backHref="/projects/goal">
+        <PmPageShell withGlow={false}>
+          <PmPanel className="flex min-h-[14rem] items-center justify-center p-6">
+            <ErrorState
+              title="Failed to load goal"
+              description="This goal may have been removed or is unavailable."
+              onRetry={handleRetry}
+            />
+          </PmPanel>
+        </PmPageShell>
       </PageWrapper>
     );
   }
@@ -408,12 +451,9 @@ export default function GoalDetailPage({ params }: { params: Promise<{ goalId: s
     <PageWrapper
       title={detail.title}
       eyebrow={LEVEL_LABEL[detail.level]}
+      backHref="/projects/goal"
       actions={
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handleNavigateBack}>
-            <ArrowLeft className="h-4 w-4 sm:mr-1" />
-            <span className="hidden sm:inline">Back</span>
-          </Button>
           <Button variant="outline" size="sm" onClick={handleOpenEdit}>
             <Pencil className="h-4 w-4 sm:mr-1" />
             <span className="hidden sm:inline">Edit</span>
@@ -430,19 +470,21 @@ export default function GoalDetailPage({ params }: { params: Promise<{ goalId: s
         </div>
       }
     >
-      <div className="space-y-6">
-        <Card>
-          <CardContent className="p-4 space-y-3">
-            <div className="flex items-center justify-between gap-2">
+      <PmPageShell>
+        <PmSection index={0}>
+          <PmPanel className="space-y-3 p-4">
+            <div className="flex min-w-0 items-center justify-between gap-2">
               <Badge variant={cfg.variant}>{cfg.label}</Badge>
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Users className="h-3.5 w-3.5" />
-                <span>{ownerName}</span>
+              <div className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+                <Users className="h-3.5 w-3.5 shrink-0" />
+                <span className={TEXT_ONE_LINE}>{ownerName}</span>
               </div>
             </div>
-            {detail.description && (
-              <p className="text-sm text-muted-foreground leading-relaxed">{detail.description}</p>
-            )}
+            {detail.description ? (
+              <p className={cn(TEXT_BODY, "text-sm leading-relaxed text-muted-foreground")}>
+                {detail.description}
+              </p>
+            ) : null}
             <div className="space-y-1">
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>Overall progress</span>
@@ -450,30 +492,30 @@ export default function GoalDetailPage({ params }: { params: Promise<{ goalId: s
               </div>
               <Progress value={detail.progress} className="h-2" />
             </div>
-            <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground pt-1">
-              {detail.startDate && (
+            <div className="flex flex-wrap items-center gap-4 pt-1 text-xs text-muted-foreground">
+              {detail.startDate ? (
                 <span className="flex items-center gap-1.5">
                   <CalendarDays className="h-3.5 w-3.5" />
                   Start {format(new Date(detail.startDate), "MMM d, yyyy")}
                 </span>
-              )}
-              {detail.dueDate && (
+              ) : null}
+              {detail.dueDate ? (
                 <span className="flex items-center gap-1.5">
                   <CalendarDays className="h-3.5 w-3.5" />
                   Due {format(new Date(detail.dueDate), "MMM d, yyyy")}
                 </span>
-              )}
-              {detail.project && (
-                <span className="flex items-center gap-1.5">
-                  <FolderKanban className="h-3.5 w-3.5" />
-                  {detail.project.name}
+              ) : null}
+              {detail.project ? (
+                <span className="flex min-w-0 items-center gap-1.5">
+                  <FolderKanban className="h-3.5 w-3.5 shrink-0" />
+                  <span className={TEXT_ONE_LINE}>{detail.project.name}</span>
                 </span>
-              )}
+              ) : null}
             </div>
-          </CardContent>
-        </Card>
+          </PmPanel>
+        </PmSection>
 
-        <section className="space-y-3">
+        <PmSection index={1} className="space-y-3">
           <div className="flex items-center gap-2">
             <ListChecks className="h-4 w-4 text-muted-foreground" />
             <h2 className="text-sm font-semibold">Key Results</h2>
@@ -482,12 +524,14 @@ export default function GoalDetailPage({ params }: { params: Promise<{ goalId: s
             </Badge>
           </div>
           {detail.keyResults.length === 0 ? (
-            <EmptyState
-              illustration={<EmptyTasksIllustration />}
-              compact
-              title="No key results"
-              description="Edit this goal to add measurable key results."
-            />
+            <PmPanel className="flex items-center justify-center p-4">
+              <EmptyState
+                illustration={<EmptyTasksIllustration />}
+                compact
+                title="No key results"
+                description="Edit this goal to add measurable key results."
+              />
+            </PmPanel>
           ) : (
             <div className="space-y-2">
               {detail.keyResults.map((kr) => (
@@ -495,10 +539,10 @@ export default function GoalDetailPage({ params }: { params: Promise<{ goalId: s
               ))}
             </div>
           )}
-        </section>
+        </PmSection>
 
-        <section className="space-y-3">
-          <div className="flex items-center justify-between">
+        <PmSection index={2} className="space-y-3">
+          <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <Link2 className="h-4 w-4 text-muted-foreground" />
               <h2 className="text-sm font-semibold">Linked Work Items</h2>
@@ -507,47 +551,51 @@ export default function GoalDetailPage({ params }: { params: Promise<{ goalId: s
               </Badge>
             </div>
             <Button size="sm" variant="outline" className="h-7" onClick={handleOpenAddLink}>
-              <Plus className="h-3.5 w-3.5 mr-1" /> Link
+              <Plus className="mr-1 h-3.5 w-3.5" /> Link
             </Button>
           </div>
           {detail.links.length === 0 ? (
-            <EmptyState
-              illustration={<EmptyActivityIllustration />}
-              compact
-              title="No linked work"
-              description="Connect projects or tickets that contribute to this goal."
-            />
+            <PmPanel className="flex items-center justify-center p-4">
+              <EmptyState
+                illustration={<EmptyActivityIllustration />}
+                compact
+                title="No linked work"
+                description="Connect projects or tickets that contribute to this goal."
+              />
+            </PmPanel>
           ) : (
-            <div className="space-y-2">
+            <PmPanel>
               {detail.links.map((link) => (
                 <LinkRow key={link.id} link={link} onRemove={handleRemoveLink} />
               ))}
-            </div>
+            </PmPanel>
           )}
-        </section>
+        </PmSection>
 
-        <section className="space-y-3">
+        <PmSection index={3} className="space-y-3">
           <div className="flex items-center gap-2">
             <History className="h-4 w-4 text-muted-foreground" />
             <h2 className="text-sm font-semibold">Updates Timeline</h2>
           </div>
           {detail.updates.length === 0 ? (
-            <EmptyState
-              illustration={<EmptyActivityIllustration />}
-              compact
-              title="No updates yet"
-              description="Check-ins on key results will appear here."
-            />
+            <PmPanel className="flex items-center justify-center p-4">
+              <EmptyState
+                illustration={<EmptyActivityIllustration />}
+                compact
+                title="No updates yet"
+                description="Check-ins on key results will appear here."
+              />
+            </PmPanel>
           ) : (
-            <div className="space-y-3">
+            <PmPanel className="space-y-0 p-3">
               {detail.updates.map((update) => (
                 <div key={update.id} className="flex gap-3">
                   <div className="flex flex-col items-center">
-                    <div className="h-2 w-2 rounded-full bg-primary mt-1.5" />
+                    <div className="mt-1.5 h-2 w-2 rounded-full bg-primary" />
                     <div className="w-px flex-1 bg-border" />
                   </div>
-                  <div className="pb-3 min-w-0">
-                    <p className="text-sm">
+                  <div className="min-w-0 pb-3">
+                    <p className={cn(TEXT_BODY, "text-sm")}>
                       <span className="font-medium">{update.userName ?? "Someone"}</span>
                       {update.previousValue !== null && update.newValue !== null ? (
                         <>
@@ -560,36 +608,39 @@ export default function GoalDetailPage({ params }: { params: Promise<{ goalId: s
                         " posted an update"
                       )}
                     </p>
-                    {update.note && (
-                      <p className="text-xs text-muted-foreground mt-0.5">{update.note}</p>
-                    )}
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                    {update.note ? (
+                      <p className={cn(TEXT_BODY, "mt-0.5 text-xs text-muted-foreground")}>
+                        {update.note}
+                      </p>
+                    ) : null}
+                    <p className="mt-0.5 text-[11px] text-muted-foreground">
                       {formatDistanceToNow(new Date(update.createdAt), { addSuffix: true })}
                     </p>
                   </div>
                 </div>
               ))}
-            </div>
+            </PmPanel>
           )}
-        </section>
-      </div>
+        </PmSection>
+      </PmPageShell>
 
-      {editOpen && <GoalFormSheet open={editOpen} onOpenChange={setEditOpen} goal={detail} />}
-      {checkInTarget && (
+      {editOpen ? <GoalFormSheet open={editOpen} onOpenChange={setEditOpen} goal={detail} /> : null}
+      {checkInTarget ? (
         <CheckInDialog
           goalId={goalId}
           keyResult={checkInTarget}
           onClose={handleCloseCheckIn}
         />
-      )}
-      {addLinkOpen && <AddLinkDialog goalId={goalId} onClose={handleCloseAddLink} />}
+      ) : null}
+      {addLinkOpen ? <AddLinkDialog goalId={goalId} onClose={handleCloseAddLink} /> : null}
 
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete goal?</AlertDialogTitle>
             <AlertDialogDescription>
-              &ldquo;{detail.title}&rdquo; and all its key results, updates, and links will be permanently deleted.
+              &ldquo;{detail.title}&rdquo; and all its key results, updates, and links will be
+              permanently deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -598,7 +649,7 @@ export default function GoalDetailPage({ params }: { params: Promise<{ goalId: s
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={handleDelete}
             >
-              Delete
+              {deleteGoal.isPending ? "Deleting…" : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -15,6 +15,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { PM_ROW } from "@/features/projects/shared/pm-chrome";
+import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 
 export interface ViewItem {
   id: number;
@@ -66,18 +68,18 @@ export const ViewCard = memo(function ViewCard({
 
   return (
     <div
-      className="bg-card border border-border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer mb-1.5 flex items-center justify-between gap-3"
+      className={cn(PM_ROW, "cursor-pointer rounded-lg border-0 last:border-b-0")}
       onClick={handleNavigate}
     >
-      <div className="flex items-center gap-3 min-w-0">
-        <div className={cn("shrink-0 h-8 w-8 rounded-md flex items-center justify-center", meta?.color ?? "text-muted-foreground bg-muted")}>
+      <div className="flex min-w-0 flex-1 items-center gap-3">
+        <div className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-md", meta?.color ?? "bg-muted text-muted-foreground")}>
           {meta?.icon}
         </div>
         <div className="min-w-0">
-          <p className="font-medium text-sm truncate">{view.name}</p>
-          <p className="text-xs text-muted-foreground">
+          <p className={cn("text-sm font-medium", TEXT_ONE_LINE)}>{view.name}</p>
+          <p className={cn("text-xs text-muted-foreground", TEXT_ONE_LINE)}>
             {meta?.label ?? view.layoutType}
-            {filterCount > 0 && ` · ${filterCount} filter${filterCount > 1 ? "s" : ""}`}
+            {filterCount > 0 ? ` · ${filterCount} filter${filterCount > 1 ? "s" : ""}` : ""}
           </p>
         </div>
         <div className="flex items-center gap-1 shrink-0">

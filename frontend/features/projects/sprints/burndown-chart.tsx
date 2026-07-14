@@ -7,6 +7,8 @@ import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { TrendingDown } from "lucide-react";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
+import { PM_PANEL } from "@/features/projects/shared/pm-chrome";
+import { cn } from "@/lib/utils";
 
 interface BurndownChartProps {
   sprintId: number;
@@ -26,15 +28,17 @@ export function BurndownChart({ sprintId, projectId }: BurndownChartProps) {
 
   if (isLoading) {
     return (
-      <Card>
-        <CardContent className="py-8 text-center text-muted-foreground">Loading burndown chart...</CardContent>
+      <Card className={cn(PM_PANEL, "shadow-sm")}>
+        <CardContent className="py-6 text-center text-xs text-muted-foreground">
+          Loading burndown chart...
+        </CardContent>
       </Card>
     );
   }
 
   if (!data) {
     return (
-      <Card>
+      <Card className={cn(PM_PANEL, "shadow-sm")}>
         <CardContent>
           <ChartEmptyState />
         </CardContent>
@@ -71,15 +75,17 @@ export function BurndownChart({ sprintId, projectId }: BurndownChartProps) {
   const handlePointMouseLeave = () => setHoveredPoint(null);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base flex items-center gap-2">
-          <TrendingDown className="h-5 w-5 text-primary" />
-          Burndown Chart
-          <span className="text-sm font-normal text-muted-foreground ml-auto">{totalPoints} total points</span>
+    <Card className={cn(PM_PANEL, "shadow-sm")}>
+      <CardHeader className="px-3 py-2.5">
+        <CardTitle className="flex min-w-0 items-center gap-2 text-sm">
+          <TrendingDown className="h-4 w-4 shrink-0 text-primary" />
+          <span className="min-w-0 truncate">Burndown Chart</span>
+          <span className="ml-auto shrink-0 text-[11px] font-normal tabular-nums text-muted-foreground">
+            {totalPoints} total points
+          </span>
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-3 pb-3 pt-0">
         <div className="relative" style={{ height: `${chartHeight}px` }}>
           <svg width="100%" height={chartHeight} className="overflow-visible">
             <defs>

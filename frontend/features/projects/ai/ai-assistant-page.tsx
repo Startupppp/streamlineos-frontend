@@ -1,11 +1,11 @@
 ﻿"use client";
 
-import { motion, useReducedMotion } from "framer-motion";
 import { ShieldOff, Sparkles } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useCan } from "@/hooks/api/access";
 import { useFeature } from "@/lib/billing/use-feature";
+import { PmPageShell, PmSection } from "@/features/projects/shared/pm-chrome";
 import { AskCard } from "./ask-card";
 import { AiToolsRail } from "./ai-tools-rail";
 
@@ -18,17 +18,18 @@ const SUBTITLE = "Analyze, plan, and get answers about this project.";
 export function AiAssistantPage({ projectId }: AiAssistantPageProps) {
   const canUseAI = useCan("projects:ai:use");
   const feature = useFeature("ai.project-manager");
-  const prefersReducedMotion = useReducedMotion();
 
   if (!canUseAI) {
     return (
       <PageWrapper title="AI Assistant" eyebrow="Project" subtitle={SUBTITLE}>
-        <EmptyState
-          illustration={<ShieldOff className="h-10 w-10 text-muted-foreground/40" />}
-          title="Access restricted"
-          description="You need the projects:ai:use permission to use the AI Assistant."
-          className="mt-12"
-        />
+        <PmPageShell>
+          <EmptyState
+            illustration={<ShieldOff className="h-10 w-10 text-muted-foreground/40" />}
+            title="Access restricted"
+            description="You need the projects:ai:use permission to use the AI Assistant."
+            className="min-h-[40vh]"
+          />
+        </PmPageShell>
       </PageWrapper>
     );
   }
@@ -36,13 +37,15 @@ export function AiAssistantPage({ projectId }: AiAssistantPageProps) {
   if (!feature.enabled) {
     return (
       <PageWrapper title="AI Assistant" eyebrow="Project" subtitle={SUBTITLE}>
-        <EmptyState
-          illustration={<Sparkles className="h-10 w-10 text-primary/40" />}
-          title="Upgrade to unlock AI features"
-          description={`AI Project Manager is available on the ${feature.requiredPlan ?? "PROFESSIONAL"} plan and above.`}
-          action={{ label: "View plans", href: "/billing" }}
-          className="mt-12"
-        />
+        <PmPageShell>
+          <EmptyState
+            illustration={<Sparkles className="h-10 w-10 text-primary/40" />}
+            title="Upgrade to unlock AI features"
+            description={`AI Project Manager is available on the ${feature.requiredPlan ?? "PROFESSIONAL"} plan and above.`}
+            action={{ label: "View plans", href: "/billing" }}
+            className="min-h-[40vh]"
+          />
+        </PmPageShell>
       </PageWrapper>
     );
   }
@@ -61,26 +64,21 @@ export function AiAssistantPage({ projectId }: AiAssistantPageProps) {
       noInternalScroll
       contentClassName="px-0 pb-0"
     >
-      <div className="flex h-full overflow-hidden">
-        <div className="flex-1 min-w-0 overflow-y-auto scrollbar-thin">
-          <motion.div
-            initial={prefersReducedMotion ? false : { opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={prefersReducedMotion ? undefined : { duration: 0.22, ease: "easeOut" }}
-            className="px-4 sm:px-6 py-4 pb-6 space-y-4"
-          >
-            <AskCard {...sharedProps} />
-
-            <div className="md:hidden">
-              <AiToolsRail {...sharedProps} variant="stacked" />
-            </div>
-          </motion.div>
+      <PmPageShell className="h-full gap-0" withGlow={false}>
+        <div className="relative flex h-full min-h-0 overflow-hidden">
+          <div className="min-w-0 flex-1 overflow-y-auto scrollbar-thin">
+            <PmSection index={0} className="space-y-4 px-4 py-4 pb-6 sm:px-6">
+              <AskCard {...sharedProps} />
+              <div className="md:hidden">
+                <AiToolsRail {...sharedProps} variant="stacked" />
+              </div>
+            </PmSection>
+          </div>
+          <div className="hidden h-full md:flex">
+            <AiToolsRail {...sharedProps} variant="sidebar" />
+          </div>
         </div>
-
-        <div className="hidden md:flex h-full">
-          <AiToolsRail {...sharedProps} variant="sidebar" />
-        </div>
-      </div>
+      </PmPageShell>
     </PageWrapper>
   );
 }

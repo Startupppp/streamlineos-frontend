@@ -23,6 +23,15 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { MoreHorizontal, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { ChangeRequestSheet } from "./change-request-sheet";
+import {
+  PmPageShell,
+  PmPanel,
+  PmSection,
+  PM_TOOLBAR,
+} from "@/features/projects/shared/pm-chrome";
+import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const CR_STATUS_LABELS: Record<ChangeRequestStatus, string> = {
   submitted: "Submitted", under_review: "Under Review", estimated: "Estimated",
@@ -73,7 +82,7 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
     if (!deleteTarget) return;
     deleteCr.mutate(deleteTarget.id, {
       onSuccess: () => { toast.success("Change request deleted"); setDeleteTarget(null); },
-      onError: () => toast.error("Failed to delete"),
+      onError: (error) => toast.error(getErrorMessage(error)),
     });
   }, [deleteTarget, deleteCr]);
 
@@ -92,7 +101,14 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
     {
       key: "title",
       header: "Title",
-      cell: (row) => <span className="text-[11px] font-medium">{row.title}</span>,
+      cell: (row) => (
+        <span
+          className={cn("block max-w-[min(100%,24rem)] text-[11px] font-medium", TEXT_ONE_LINE)}
+          title={row.title}
+        >
+          {row.title}
+        </span>
+      ),
     },
     {
       key: "status",
@@ -167,22 +183,28 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
   ], [canManage, handleEdit, members]);
 
   const filtersBar = (
-    <div className="flex items-center gap-2 flex-wrap w-full">
-      <Input
-        placeholder="Search..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="h-7 text-[11px] w-44"
-      />
-      <Select value={statusFilter} onValueChange={setStatusFilter}>
-        <SelectTrigger className="h-7 text-[11px] w-40"><SelectValue placeholder="Status" /></SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All statuses</SelectItem>
-          {CR_STATUSES.map((s) => (
-            <SelectItem key={s} value={s}>{CR_STATUS_LABELS[s]}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+    <div className={cn(PM_TOOLBAR, "sm:justify-start")}>
+      <div className="flex w-full min-w-0 flex-wrap items-center gap-2">
+        <Input
+          placeholder="Search..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="h-7 w-44 text-[11px]"
+        />
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="h-7 w-40 text-[11px]">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All statuses</SelectItem>
+            {CR_STATUSES.map((s) => (
+              <SelectItem key={s} value={s}>
+                {CR_STATUS_LABELS[s]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
     </div>
   );
 
@@ -201,31 +223,36 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
         ) : undefined
       }
     >
-      <div className="flex flex-1 min-h-0 flex-col">
-        {isLoading ? (
-          <DataTableSkeleton rows={6} columns={7} className="flex-1" />
-        ) : isError ? (
-          <ErrorState onRetry={refetch} />
-        ) : filtered.length === 0 ? (
-          <EmptyState
-            illustrationPreset="ticket"
-            title="No change requests"
-            description={
-              search || statusFilter !== "all"
-                ? "No change requests match the active filters."
-                : "Create a change request to get started."
-            }
-            action={canCreate ? { label: "New Change Request", onClick: handleNew } : undefined}
-          />
-        ) : (
-          <DataTable<ChangeRequest>
-            data={filtered}
-            columns={columns}
-            getRowKey={(row) => row.id}
-            className="flex-1 min-h-0"
-          />
-        )}
-      </div>
+      <PmPageShell>
+        <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
+          {isLoading ? (
+            <DataTableSkeleton rows={6} columns={7} className="flex-1" />
+          ) : isError ? (
+            <ErrorState onRetry={refetch} />
+          ) : filtered.length === 0 ? (
+            <EmptyState
+              illustrationPreset="ticket"
+              title="No change requests"
+              description={
+                search || statusFilter !== "all"
+                  ? "No change requests match the active filters."
+                  : "Create a change request to get started."
+              }
+              action={canCreate ? { label: "New Change Request", onClick: handleNew } : undefined}
+              className="min-h-[40vh]"
+            />
+          ) : (
+            <PmPanel className="flex min-h-0 flex-1 flex-col" solid>
+              <DataTable<ChangeRequest>
+                data={filtered}
+                columns={columns}
+                getRowKey={(row) => row.id}
+                className="min-h-0 flex-1 border-0"
+              />
+            </PmPanel>
+          )}
+        </PmSection>
+      </PmPageShell>
 
       <ChangeRequestSheet
         projectId={projectId}

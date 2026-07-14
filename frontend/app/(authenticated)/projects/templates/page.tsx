@@ -28,6 +28,40 @@ import {
 import { TemplateCard } from "@/features/projects/templates/template-card";
 import { CreateTemplateSheet } from "@/features/projects/templates/create-template-sheet";
 import { ApplyTemplateDialog } from "@/features/projects/templates/apply-template-dialog";
+import { getErrorMessage } from "@/lib/get-error-message";
+import {
+  PmPageShell,
+  PmPanel,
+  PmSection,
+  PmStaggerList,
+  PM_PANEL,
+} from "@/features/projects/shared/pm-chrome";
+import { cn } from "@/lib/utils";
+
+function TemplatesGridSkeleton() {
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className={cn(PM_PANEL, "space-y-3 p-4")}>
+          <div className="flex items-start justify-between gap-2">
+            <div className="space-y-1.5">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-3 w-48" />
+            </div>
+            <Skeleton className="h-5 w-16 rounded-full" />
+          </div>
+          <Skeleton className="h-3 w-full" />
+          <Skeleton className="h-3 w-full" />
+          <Skeleton className="h-3 w-3/4" />
+          <div className="flex gap-2 pt-1">
+            <Skeleton className="h-8 flex-1" />
+            <Skeleton className="h-8 w-8" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function ProjectTemplatesPage() {
   const { data: templates, isLoading, isError, refetch } = useProjectTemplates();
@@ -53,7 +87,7 @@ export default function ProjectTemplatesPage() {
         toast.success("Template deleted");
         setDeleteTarget(null);
       },
-      onError: () => toast.error("Failed to delete template"),
+      onError: (e) => toast.error(getErrorMessage(e)),
     });
   }, [deleteTarget, deleteTemplate]);
 
@@ -68,71 +102,61 @@ export default function ProjectTemplatesPage() {
         eyebrow="Projects"
         subtitle="Reusable project structures to bootstrap new work"
         actions={
-          <Button size="sm" onClick={handleOpenCreate} className="active:scale-[0.98]">
-            <Plus className="h-3.5 w-3.5 mr-1" /> New Template
+          <Button size="sm" onClick={handleOpenCreate}>
+            <Plus className="mr-1 h-3.5 w-3.5" /> New Template
           </Button>
         }
       >
-        {isLoading ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="rounded-xl border border-border bg-card p-4 space-y-3 shadow-sm"
+        <PmPageShell>
+          <PmSection index={0}>
+            {isLoading ? (
+              <TemplatesGridSkeleton />
+            ) : isError ? (
+              <PmPanel className="flex min-h-[14rem] items-center justify-center p-6">
+                <ErrorState onRetry={handleRetry} className="flex-1" />
+              </PmPanel>
+            ) : templates && templates.length > 0 ? (
+              <PmStaggerList
+                className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+                role="list"
+                aria-label="Project templates"
               >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="space-y-1.5">
-                    <Skeleton className="h-4 w-32" />
-                    <Skeleton className="h-3 w-48" />
-                  </div>
-                  <Skeleton className="h-5 w-16 rounded-full" />
-                </div>
-                <Skeleton className="h-3 w-full" />
-                <Skeleton className="h-3 w-full" />
-                <Skeleton className="h-3 w-3/4" />
-                <div className="flex gap-2 pt-1">
-                  <Skeleton className="h-8 flex-1" />
-                  <Skeleton className="h-8 w-8" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : isError ? (
-          <ErrorState onRetry={handleRetry} className="flex-1" />
-        ) : templates && templates.length > 0 ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {templates.map((t) => (
-              <TemplateCard
-                key={t.id}
-                template={t}
-                onApply={handleApplyTarget}
-                onDelete={handleDeleteTarget}
-              />
-            ))}
-          </div>
-        ) : (
-          <EmptyState
-            illustration={<EmptyProjectsIllustration className="h-32 w-32" />}
-            title="No templates yet"
-            description="Create a reusable project structure to bootstrap new projects quickly."
-            action={{ label: "Create your first template", onClick: handleOpenCreate }}
-            className="flex-1"
-          />
-        )}
+                {templates.map((t) => (
+                  <TemplateCard
+                    key={t.id}
+                    template={t}
+                    onApply={handleApplyTarget}
+                    onDelete={handleDeleteTarget}
+                  />
+                ))}
+              </PmStaggerList>
+            ) : (
+              <PmPanel className="flex min-h-[14rem] items-center justify-center p-6">
+                <EmptyState
+                  illustration={<EmptyProjectsIllustration className="h-32 w-32" />}
+                  title="No templates yet"
+                  description="Create a reusable project structure to bootstrap new projects quickly."
+                  action={{ label: "Create your first template", onClick: handleOpenCreate }}
+                  className="min-h-[12rem]"
+                />
+              </PmPanel>
+            )}
+          </PmSection>
+        </PmPageShell>
 
         <CreateTemplateSheet open={createOpen} onClose={handleCloseCreate} />
 
-        {applyTarget && (
+        {applyTarget ? (
           <ApplyTemplateDialog template={applyTarget} onClose={handleCloseApply} />
-        )}
+        ) : null}
 
         <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteDialogChange}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Delete template?</AlertDialogTitle>
               <AlertDialogDescription>
-                &ldquo;{deleteTarget?.name}&rdquo; will be permanently deleted.
-                Projects created from it will not be affected.
+                &ldquo;{deleteTarget?.name}&rdquo; will be permanently deleted. Projects created
+                from it will not be affected.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

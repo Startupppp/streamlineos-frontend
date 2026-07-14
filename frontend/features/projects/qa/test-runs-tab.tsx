@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import { useTestRuns, useDeleteTestRun } from "@/hooks/api/projects/qa";
 import { useCan } from "@/hooks/api/access";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import type { TestRun, TestRunStatus, TestRunCounts } from "@/types/projects";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
@@ -35,15 +36,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Plus } from "lucide-react";
+import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { cn } from "@/lib/utils";
+import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 import { TestRunSheet } from "./test-run-sheet";
 
 const RUN_STATUS_STYLES: Record<TestRunStatus, string> = {
   not_started: "text-muted-foreground border-border",
-  in_progress: "text-blue-600 border-blue-200",
-  completed: "text-green-600 border-green-200",
-  aborted: "text-red-600 border-red-200",
+  in_progress: "text-blue-600 border-blue-200 dark:text-blue-400 dark:border-blue-500/30",
+  completed: "text-green-600 border-green-200 dark:text-green-400 dark:border-green-500/30",
+  aborted: "text-red-600 border-red-200 dark:text-red-400 dark:border-red-500/30",
 };
 
 const RUN_STATUS_LABELS: Record<TestRunStatus, string> = {
@@ -59,15 +63,43 @@ function RunProgress({ counts }: { counts?: TestRunCounts }) {
   }
   const pct = Math.round((counts.passed / counts.total) * 100);
   return (
-    <div className="flex items-center gap-1.5 min-w-[80px]">
-      <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+    <div className="flex min-w-[80px] items-center gap-1.5">
+      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
         <div
-          className="h-full bg-green-500 rounded-full transition-[width] duration-300"
+          className="h-full rounded-full bg-emerald-500 transition-[width] duration-300"
           style={{ width: `${pct}%` }}
         />
       </div>
-      <span className="text-[10px] text-muted-foreground shrink-0">{pct}%</span>
+      <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground">{pct}%</span>
     </div>
+  );
+}
+
+function NewRunButton({ onClick }: { onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button size="sm" className="ml-auto h-7 gap-1 text-[11px]" onClick={onClick} {...hoverHandlers}>
+      <PlusIcon ref={iconRef} size={14} />
+      New Test Run
+    </Button>
+  );
+}
+
+function RunActions({ onDelete }: { onDelete: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="Run actions" {...hoverHandlers}>
+          <EllipsisIcon ref={iconRef} size={14} />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem variant="destructive" onSelect={onDelete}>
+          Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -94,7 +126,7 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
           toast.success("Test run deleted");
           setDeleteTarget(null);
         },
-        onError: () => toast.error("Failed to delete test run"),
+        onError: (error) => toast.error(getErrorMessage(error)),
       },
     );
   }, [deleteTarget, deleteRun, projectId]);
@@ -107,6 +139,10 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
     setSheetOpen(true);
   }, []);
 
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
   const columns = useMemo<DataTableColumn<TestRun>[]>(() => [
     {
       key: "runNumber",
@@ -114,7 +150,7 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
       cell: (row) => (
         <Link
           href={`/projects/${projectId}/qa/runs/${row.id}`}
-          className="text-[11px] font-mono text-primary hover:underline"
+          className="font-mono text-[11px] text-primary hover:underline"
         >
           Run #{row.runNumber}
         </Link>
@@ -127,7 +163,8 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
       cell: (row) => (
         <Link
           href={`/projects/${projectId}/qa/runs/${row.id}`}
-          className="text-[11px] font-medium hover:underline"
+          className={cn(TEXT_ONE_LINE, "block max-w-[min(100%,24rem)] text-[11px] font-medium hover:underline")}
+          title={row.name}
         >
           {row.name}
         </Link>
@@ -139,7 +176,7 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
       cell: (row) => (
         <Badge
           variant="outline"
-          className={`text-[10px] ${RUN_STATUS_STYLES[row.status]}`}
+          className={cn("text-[10px]", RUN_STATUS_STYLES[row.status])}
         >
           {RUN_STATUS_LABELS[row.status]}
         </Badge>
@@ -150,7 +187,9 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
       key: "environment",
       header: "Environment",
       cell: (row) => (
-        <span className="text-[11px] text-muted-foreground">{row.environment ?? "—"}</span>
+        <span className={cn(TEXT_ONE_LINE, "block max-w-[7rem] text-[11px] text-muted-foreground")}>
+          {row.environment ?? "—"}
+        </span>
       ),
       className: "w-[110px]",
     },
@@ -165,33 +204,20 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
       header: "",
       cell: (row) =>
         canManage ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-6 w-6">
-                <MoreHorizontal className="h-3.5 w-3.5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem variant="destructive"
-                onSelect={() => setDeleteTarget(row)}
-              >
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <RunActions onDelete={() => setDeleteTarget(row)} />
         ) : null,
       className: "w-[40px]",
     },
   ], [canManage, projectId]);
 
-  if (isLoading) return <DataTableSkeleton rows={5} columns={5} />;
-  if (isError) return <ErrorState onRetry={refetch} />;
+  if (isLoading) return <DataTableSkeleton rows={5} columns={5} className="flex-1" />;
+  if (isError) return <ErrorState onRetry={handleRetry} />;
 
   return (
-    <div className="space-y-3">
+    <div className="flex min-h-0 flex-1 flex-col space-y-3">
       <div className="flex items-center gap-2">
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="h-7 text-[11px] w-36">
+          <SelectTrigger className="h-7 w-36 text-[11px]">
             <SelectValue placeholder="All statuses" />
           </SelectTrigger>
           <SelectContent>
@@ -202,12 +228,7 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
             <SelectItem value="aborted">Aborted</SelectItem>
           </SelectContent>
         </Select>
-        {canManage && (
-          <Button size="sm" className="h-7 text-[11px] ml-auto" onClick={handleNewRun}>
-            <Plus className="h-3.5 w-3.5 mr-1" />
-            New Test Run
-          </Button>
-        )}
+        {canManage ? <NewRunButton onClick={handleNewRun} /> : null}
       </div>
 
       {(runs ?? []).length === 0 ? (
@@ -216,13 +237,14 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
           title="No test runs"
           description="Create a test run to start executing tests."
           action={canManage ? { label: "New Test Run", onClick: handleNewRun } : undefined}
-          compact
+          className="min-h-[32vh] flex-1"
         />
       ) : (
         <DataTable<TestRun>
           data={runs ?? []}
           columns={columns}
           getRowKey={(row) => row.id}
+          className="min-h-0 flex-1"
         />
       )}
 
@@ -237,7 +259,7 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete test run?</AlertDialogTitle>
             <AlertDialogDescription>
-              Run #{deleteTarget?.runNumber} will be permanently deleted.
+              {deleteTarget?.name ?? `Run #${deleteTarget?.runNumber}`} will be permanently deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -2,7 +2,7 @@
 
 import { use, useMemo, useCallback, useState, useEffect } from "react";
 import { useProject, useSprints } from "@/hooks/api";
-import { useBulkUpdateTickets } from "@/hooks/api/projects";
+import { useBulkUpdateTickets, useProjectBoardTickets } from "@/hooks/api/projects";
 import type { BulkUpdateTicketsInput } from "@/hooks/api/projects";
 import { notFound, useRouter, useSearchParams } from "next/navigation";
 import { CreateTicketDialog } from "@/features/projects/tickets/create-ticket-dialog";
@@ -14,14 +14,16 @@ import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import type { BacklogTicket } from "@/features/projects/backlog/backlog-ticket-row";
 import { BulkActionBar } from "@/features/projects/backlog/bulk-action-bar";
+import type { Ticket } from "@/types/projects";
 import { TicketTypeIcon } from "@/features/projects/shared/ticket-type-icon";
 import { PriorityBadge } from "@/features/projects/shared/priority-badge";
 import { StatusBadge } from "@/features/projects/shared/status-badge";
 import { formatTicketKey } from "@/features/projects/shared/format-ticket-key";
 import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
-import { resolveImageUrl } from "@/lib/utils";
+import { PmPageShell, PM_TOOLBAR, PmPanel } from "@/features/projects/shared/pm-chrome";
+import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { cn, resolveImageUrl } from "@/lib/utils";
 import { format } from "date-fns";
 
 interface PageProps {
@@ -31,7 +33,9 @@ interface PageProps {
 export default function BacklogPage({ params }: PageProps) {
   const { projectId: projectIdStr } = use(params);
   const projectId = parseInt(projectIdStr);
-  const { data, isLoading } = useProject(projectId);
+  const { data, isLoading: projectLoading } = useProject(projectId);
+  const { data: boardTickets, isLoading: ticketsLoading } = useProjectBoardTickets(projectId);
+  const isLoading = projectLoading || ticketsLoading;
   const { data: sprints } = useSprints(projectId);
   const bulkUpdate = useBulkUpdateTickets(projectId);
   const searchParams = useSearchParams();
@@ -48,7 +52,7 @@ export default function BacklogPage({ params }: PageProps) {
   const filterType = searchParams.get("type") ?? "";
   const filterAssigneeId = searchParams.get("assigneeId") ?? "";
 
-  const tickets = useMemo(() => data?.tickets || [], [data?.tickets]);
+  const tickets = useMemo(() => boardTickets ?? [], [boardTickets]);
 
   const filteredTickets = useMemo(() => {
     let result = tickets;
@@ -134,11 +138,11 @@ export default function BacklogPage({ params }: PageProps) {
   }, []);
 
   const handleRowClick = useCallback(
-    (ticket: BacklogTicket) => handleTicketSelect(ticket.id),
+    (ticket: Ticket) => handleTicketSelect(ticket.id),
     [handleTicketSelect],
   );
 
-  const columns = useMemo<DataTableColumn<BacklogTicket>[]>(
+  const columns = useMemo<DataTableColumn<Ticket>[]>(
     () => [
       {
         key: "id",
@@ -154,9 +158,14 @@ export default function BacklogPage({ params }: PageProps) {
       {
         key: "title",
         header: "Title",
-        className: "max-w-md",
+        className: "max-w-md min-w-0",
         cell: (ticket) => (
-          <span className="text-[11px] font-medium line-clamp-1">{ticket.title}</span>
+          <span
+            className={cn(TEXT_ONE_LINE, "text-[11px] font-medium")}
+            title={ticket.title ?? undefined}
+          >
+            {ticket.title}
+          </span>
         ),
       },
       {
@@ -186,7 +195,7 @@ export default function BacklogPage({ params }: PageProps) {
                   {getUserInitials(ticket.assignee)}
                 </AvatarFallback>
               </Avatar>
-              <span className="text-[11px] truncate">{getUserDisplayName(ticket.assignee)}</span>
+              <span className={cn(TEXT_ONE_LINE, "text-[11px]")}>{getUserDisplayName(ticket.assignee)}</span>
             </div>
           ) : (
             <span className="text-xs text-muted-foreground">—</span>
@@ -219,38 +228,52 @@ export default function BacklogPage({ params }: PageProps) {
       title="Backlog"
       subtitle="Manage and prioritize unscheduled work"
       actions={<CreateTicketDialog projectId={projectId} />}
-      filters={<TicketFilterBar members={members} showSprintFilter={false} />}
-    >
-      {selectedIds.size > 0 && (
-        <BulkActionBar
-          selectedCount={selectedIds.size}
-          members={members}
-          sprints={sprints ?? []}
-          onBulkStatus={handleBulkStatus}
-          onBulkPriority={handleBulkPriority}
-          onBulkAssignee={handleBulkAssignee}
-          onBulkSprint={handleBulkSprint}
-          onClear={handleClearSelection}
-        />
-      )}
-
-      <DataTable
-        data={filteredTickets}
-        columns={columns}
-        getRowKey={(ticket) => ticket.id}
-        onRowClick={handleRowClick}
-        selection={{ selected: selectedIds, onChange: handleSelectionChange }}
-        minWidth="640px"
-        emptyState={
-          <EmptyState
-            illustrationPreset="projects"
-            title="No tickets found"
-            description={tickets.length === 0 ? "Create a ticket to get started." : "No tickets match the active filters."}
-            compact
-            className="min-h-[200px] border-0 bg-transparent"
+      filters={
+        <div className={cn(PM_TOOLBAR, "sm:justify-end")}>
+          <TicketFilterBar
+            className="w-full sm:min-w-0 sm:max-w-xl"
+            align="end"
+            members={members}
+            showSprintFilter={false}
           />
-        }
-      />
+        </div>
+      }
+    >
+      <PmPageShell>
+        {selectedIds.size > 0 ? (
+          <BulkActionBar
+            selectedCount={selectedIds.size}
+            members={members}
+            sprints={sprints ?? []}
+            onBulkStatus={handleBulkStatus}
+            onBulkPriority={handleBulkPriority}
+            onBulkAssignee={handleBulkAssignee}
+            onBulkSprint={handleBulkSprint}
+            onClear={handleClearSelection}
+          />
+        ) : null}
+
+        <PmPanel className="min-w-0">
+          <DataTable
+            data={filteredTickets}
+            columns={columns}
+            getRowKey={(ticket) => ticket.id}
+            onRowClick={handleRowClick}
+            selection={{ selected: selectedIds, onChange: handleSelectionChange }}
+            minWidth="640px"
+            className="border-0 rounded-none"
+            emptyState={
+              <EmptyState
+                illustrationPreset="projects"
+                title="No tickets found"
+                description={tickets.length === 0 ? "Create a ticket to get started." : "No tickets match the active filters."}
+                compact
+                className="min-h-[200px] border-0 bg-transparent"
+              />
+            }
+          />
+        </PmPanel>
+      </PmPageShell>
     </PageWrapper>
   );
 }

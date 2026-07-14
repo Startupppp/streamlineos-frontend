@@ -1,11 +1,14 @@
 "use client";
 
 import { use, useMemo, useCallback } from "react";
-import { useProject } from "@/hooks/api";
+import { useRouter, notFound } from "next/navigation";
+import { useProject, useProjectBoardTickets } from "@/hooks/api/projects";
 import { GanttView } from "@/features/projects/views/gantt-view";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
-import { notFound } from "next/navigation";
+import { buildTicketDetailUrl } from "@/features/projects/ticket-details/build-ticket-detail-url";
+import { PmPageShell, PmPanel, PM_TOOLBAR } from "@/features/projects/shared/pm-chrome";
+import { cn } from "@/lib/utils";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -13,12 +16,15 @@ interface PageProps {
 
 export default function TimelinePage({ params }: PageProps) {
   const { projectId: projectIdStr } = use(params);
-  const projectId = parseInt(projectIdStr);
-  const { data, isLoading } = useProject(projectId);
+  const projectId = parseInt(projectIdStr, 10);
+  const router = useRouter();
+  const { data, isLoading: projectLoading } = useProject(projectId);
+  const { data: boardTickets, isLoading: ticketsLoading } = useProjectBoardTickets(projectId);
+  const isLoading = projectLoading || ticketsLoading;
 
   const tickets = useMemo(() => {
-    if (!data?.tickets) return [];
-    return data.tickets.map((t) => ({
+    if (!boardTickets) return [];
+    return boardTickets.map((t) => ({
       id: t.id,
       title: t.title,
       status: t.status ?? "TODO",
@@ -35,22 +41,36 @@ export default function TimelinePage({ params }: PageProps) {
           }
         : null,
     }));
-  }, [data]);
+  }, [boardTickets]);
 
-  const handleTicketClick = useCallback((_: number) => {}, []);
+  const handleTicketClick = useCallback(
+    (ticketId: number) => {
+      const href = buildTicketDetailUrl(projectId, data?.key, ticketId, tickets);
+      if (href) router.push(href);
+    },
+    [router, projectId, data?.key, tickets],
+  );
 
   if (isLoading) {
     return (
       <PageWrapper title="Timeline" subtitle="Loading..." noInternalScroll contentClassName="!p-0">
-        <div className="px-4 pt-4 pb-4 space-y-1">
-          <Skeleton className="h-8 w-full mb-3" />
-          {[0, 1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="flex items-center gap-3">
-              <Skeleton className="h-8 w-32 shrink-0" />
-              <Skeleton className="h-8 flex-1" />
-            </div>
-          ))}
-        </div>
+        <PmPageShell className="px-4 pb-4 pt-0 sm:px-6">
+          <div className={cn(PM_TOOLBAR, "h-10 animate-pulse bg-muted/40")} />
+          <PmPanel className="flex min-h-0 flex-1 flex-col p-3">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3 py-1.5">
+                <Skeleton className="h-7 w-28 shrink-0 rounded-md sm:w-40" />
+                <Skeleton
+                  className="h-7 rounded-md"
+                  style={{
+                    width: `${28 + ((i * 11) % 48)}%`,
+                    marginLeft: `${(i * 6) % 24}%`,
+                  }}
+                />
+              </div>
+            ))}
+          </PmPanel>
+        </PmPageShell>
       </PageWrapper>
     );
   }
@@ -60,13 +80,13 @@ export default function TimelinePage({ params }: PageProps) {
   return (
     <PageWrapper
       title="Timeline"
-      subtitle="Visual timeline of project tickets and deadlines"
+      subtitle="Visual schedule of work items, dependencies, and milestones"
       noInternalScroll
       contentClassName="!p-0"
     >
-      <div className="flex h-full min-h-0 flex-col px-4 pb-4 pt-0 sm:px-6">
+      <PmPageShell className="h-full min-h-0 px-4 pb-4 pt-0 sm:px-6">
         <GanttView tickets={tickets} projectId={projectId} onTicketClick={handleTicketClick} />
-      </div>
+      </PmPageShell>
     </PageWrapper>
   );
 }

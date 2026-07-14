@@ -1,18 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
 import { ProjectCreateWizard } from "@/features/projects/project-create/project-create-wizard";
+import { useCan } from "@/hooks/api/access";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 
 interface NewProjectDialogProps {
-  trigger?: React.ReactNode;
+  trigger?: ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
 
-export function NewProjectDialog({ trigger, open: controlledOpen, onOpenChange }: NewProjectDialogProps = {}) {
+export function NewProjectDialog({
+  trigger,
+  open: controlledOpen,
+  onOpenChange,
+}: NewProjectDialogProps = {}) {
   const [internalOpen, setInternalOpen] = useState(false);
+  const canCreate = useCan("projects:create");
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : internalOpen;
 
@@ -28,11 +36,15 @@ export function NewProjectDialog({ trigger, open: controlledOpen, onOpenChange }
     handleOpenChange(true);
   }
 
+  if (!canCreate && !open) {
+    return null;
+  }
+
   return (
     <>
       {trigger ?? (
-        <Button size="sm" className="gap-1.5" onClick={handleTriggerClick}>
-          <Plus className="h-3.5 w-3.5" />
+        <Button size="sm" className="gap-1.5 h-8" onClick={handleTriggerClick} {...hoverHandlers}>
+          <PlusIcon ref={iconRef} size={14} />
           New Project
         </Button>
       )}

@@ -3,7 +3,7 @@
 import { use, useState, useMemo, useCallback } from "react";
 import { notFound, useRouter, useSearchParams } from "next/navigation";
 import { useProject } from "@/hooks/api";
-import { useCycles } from "@/hooks/api/projects";
+import { useCycles, useProjectBoardTickets } from "@/hooks/api/projects";
 import { KanbanBoard } from "@/features/projects/views/kanban-board";
 import { ListView } from "@/features/projects/views/list-view";
 import { ViewSwitcher, parseViewType, type ViewType } from "@/features/projects/views/view-switcher";
@@ -32,9 +32,10 @@ export default function CycleDetailPage({ params }: PageProps) {
   const [displayOptions, setDisplayOptions] = useState<DisplayOptions>(DEFAULT_DISPLAY_OPTIONS);
 
   const { data: projectData, isLoading: projectLoading } = useProject(projectId);
+  const { data: boardTickets, isLoading: ticketsLoading } = useProjectBoardTickets(projectId);
   const { data: cycles, isLoading: cyclesLoading } = useCycles(projectId);
 
-  const isLoading = projectLoading || cyclesLoading;
+  const isLoading = projectLoading || cyclesLoading || ticketsLoading;
 
   const cycle = useMemo(
     () => cycles?.find((c) => c.id === cycleId) ?? null,
@@ -56,8 +57,8 @@ export default function CycleDetailPage({ params }: PageProps) {
   }, [statuses]);
 
   const allTickets = useMemo<KanbanTicket[]>(() => {
-    if (!projectData) return [];
-    return (projectData.tickets || []).map((t) => ({
+    if (!boardTickets) return [];
+    return boardTickets.map((t) => ({
         id: t.id,
         title: t.title,
         status: t.status ?? "TODO",
@@ -103,7 +104,7 @@ export default function CycleDetailPage({ params }: PageProps) {
             }
           : null,
       }));
-  }, [projectData]);
+  }, [boardTickets]);
 
   const cycleTickets = useMemo(
     () => allTickets.filter((t) => t.cycleId === cycleId),

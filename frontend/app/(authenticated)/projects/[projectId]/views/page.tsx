@@ -14,6 +14,13 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { ViewCard } from "@/features/projects/views/saved-views/view-card";
 import { CreateViewSheet } from "@/features/projects/views/saved-views/create-view-sheet";
+import {
+  PmPageShell,
+  PmPanel,
+  PmSection,
+  PmStaggerList,
+} from "@/features/projects/shared/pm-chrome";
+import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 
 export default function ViewsPage({
   params,
@@ -73,11 +80,13 @@ export default function ViewsPage({
   if (isLoading) {
     return (
       <PageWrapper title="Views" subtitle="Loading...">
-        <div className="space-y-2">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-14 w-full rounded-lg" />
-          ))}
-        </div>
+        <PmPageShell>
+          <div className="space-y-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-14 w-full rounded-xl" />
+            ))}
+          </div>
+        </PmPageShell>
       </PageWrapper>
     );
   }
@@ -92,7 +101,7 @@ export default function ViewsPage({
         </Button>
       }
     >
-      <div className="space-y-6">
+      <PmPageShell>
         {!views?.length ? (
           <EmptyState
             illustration={<EmptySearchIllustration />}
@@ -102,52 +111,56 @@ export default function ViewsPage({
             className="min-h-[40vh]"
           />
         ) : (
-          <>
-            {pinnedViews.length > 0 && (
-              <section>
-                <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-0.5">
+          <div className="space-y-4">
+            {pinnedViews.length > 0 ? (
+              <PmSection index={0}>
+                <h2 className={`mb-2 px-0.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground ${TEXT_ONE_LINE}`}>
                   Pinned
                 </h2>
-                <div>
-                  {pinnedViews.map((view) => (
-                    <ViewCard
-                      key={view.id}
-                      view={view}
-                      isPinned
-                      currentUserId={currentUserId}
-                      onNavigate={handleNavigateToView}
-                      onTogglePin={handleTogglePin}
-                      onDelete={handleDelete}
-                    />
-                  ))}
-                </div>
-              </section>
-            )}
-            {unpinnedViews.length > 0 && (
-              <section>
-                {pinnedViews.length > 0 && (
-                  <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-0.5">
+                <PmPanel className="space-y-0.5 p-1.5" solid>
+                  <PmStaggerList>
+                    {pinnedViews.map((view) => (
+                      <ViewCard
+                        key={view.id}
+                        view={view}
+                        isPinned
+                        currentUserId={currentUserId}
+                        onNavigate={handleNavigateToView}
+                        onTogglePin={handleTogglePin}
+                        onDelete={handleDelete}
+                      />
+                    ))}
+                  </PmStaggerList>
+                </PmPanel>
+              </PmSection>
+            ) : null}
+            {unpinnedViews.length > 0 ? (
+              <PmSection index={1}>
+                {pinnedViews.length > 0 ? (
+                  <h2 className={`mb-2 px-0.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground ${TEXT_ONE_LINE}`}>
                     All Views
                   </h2>
-                )}
-                <div>
-                  {unpinnedViews.map((view) => (
-                    <ViewCard
-                      key={view.id}
-                      view={view}
-                      isPinned={false}
-                      currentUserId={currentUserId}
-                      onNavigate={handleNavigateToView}
-                      onTogglePin={handleTogglePin}
-                      onDelete={handleDelete}
-                    />
-                  ))}
-                </div>
-              </section>
-            )}
-          </>
+                ) : null}
+                <PmPanel className="space-y-0.5 p-1.5" solid>
+                  <PmStaggerList>
+                    {unpinnedViews.map((view) => (
+                      <ViewCard
+                        key={view.id}
+                        view={view}
+                        isPinned={false}
+                        currentUserId={currentUserId}
+                        onNavigate={handleNavigateToView}
+                        onTogglePin={handleTogglePin}
+                        onDelete={handleDelete}
+                      />
+                    ))}
+                  </PmStaggerList>
+                </PmPanel>
+              </PmSection>
+            ) : null}
+          </div>
         )}
-      </div>
+      </PmPageShell>
 
       <CreateViewSheet
         projectId={projectId}

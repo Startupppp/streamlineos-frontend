@@ -2,8 +2,6 @@
 
 import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { useReducedMotion } from "framer-motion";
 import { Clock, ListChecks } from "lucide-react";
 import { toast } from "sonner";
 import { useApprovalInbox, useDecideApproval } from "@/hooks/api/projects";
@@ -22,6 +20,14 @@ import { ApprovalStatusBadge, entityTypeLabel } from "./approval-status-badge";
 import { DecideDialog } from "./decide-dialog";
 import type { ApprovalInboxItem, DecideApprovalInput } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { cn } from "@/lib/utils";
+import {
+  PmPageShell,
+  PmPanel,
+  PmSection,
+  PM_PANEL,
+} from "@/features/projects/shared/pm-chrome";
+import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 
 interface DecideTarget {
   approvalId: number;
@@ -31,7 +37,6 @@ interface DecideTarget {
 
 export function ApprovalsInboxPage() {
   const canDecide = useCan("projects:approvals:decide");
-  const prefersReduced = useReducedMotion();
 
   const { data, isLoading, isError, refetch } = useApprovalInbox();
   const { data: membersRes } = useOrgMembers(1, 100);
@@ -58,7 +63,7 @@ export function ApprovalsInboxPage() {
 
   const memberName = useCallback((userId: string | null): string => {
     if (!userId) return "—";
-    const m = members.find((m) => m.userId === userId);
+    const m = members.find((row) => row.userId === userId);
     return m?.name ?? m?.email ?? "Unknown";
   }, [members]);
 
@@ -80,6 +85,10 @@ export function ApprovalsInboxPage() {
     );
   }, [decideTarget, decideApproval]);
 
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
   const columns = useMemo<DataTableColumn<ApprovalInboxItem>[]>(() => [
     {
       key: "project",
@@ -87,7 +96,8 @@ export function ApprovalsInboxPage() {
       cell: (row) => (
         <Link
           href={`/projects/${row.projectId}`}
-          className="text-primary hover:underline font-medium text-[11px]"
+          className={cn(TEXT_ONE_LINE, "block max-w-[6rem] text-[11px] font-medium text-primary hover:underline")}
+          title={row.projectKey}
           onClick={(e) => e.stopPropagation()}
         >
           {row.projectKey}
@@ -98,7 +108,7 @@ export function ApprovalsInboxPage() {
       key: "entityType",
       header: "Type",
       cell: (row) => (
-        <Badge variant="outline" className="text-[10px] px-1.5 py-0.5">
+        <Badge variant="outline" className="px-1.5 py-0.5 text-[10px]">
           {entityTypeLabel(row.entityType)}
         </Badge>
       ),
@@ -107,7 +117,10 @@ export function ApprovalsInboxPage() {
       key: "title",
       header: "Title",
       cell: (row) => (
-        <span className="font-medium text-foreground truncate max-w-[200px] block">
+        <span
+          className={cn(TEXT_ONE_LINE, "block max-w-[min(100%,20rem)] font-medium text-foreground")}
+          title={row.title}
+        >
           {row.title}
         </span>
       ),
@@ -117,9 +130,14 @@ export function ApprovalsInboxPage() {
     {
       key: "requester",
       header: "Requested By",
-      cell: (row) => (
-        <span className="text-muted-foreground">{memberName(row.requestedById)}</span>
-      ),
+      cell: (row) => {
+        const name = memberName(row.requestedById);
+        return (
+          <span className={cn(TEXT_ONE_LINE, "block max-w-[8rem] text-muted-foreground")} title={name}>
+            {name}
+          </span>
+        );
+      },
     },
     {
       key: "dueAt",
@@ -128,7 +146,14 @@ export function ApprovalsInboxPage() {
         if (!row.dueAt) return <span className="text-muted-foreground">—</span>;
         const isOverdue = new Date(row.dueAt) < new Date();
         return (
-          <span className={isOverdue ? "text-red-600 font-medium" : "text-muted-foreground"}>
+          <span
+            className={cn(
+              "tabular-nums",
+              isOverdue
+                ? "font-medium text-red-600 dark:text-red-400"
+                : "text-muted-foreground",
+            )}
+          >
             {row.dueAt.slice(0, 10)}
           </span>
         );
@@ -149,7 +174,7 @@ export function ApprovalsInboxPage() {
           <Button
             variant="outline"
             size="sm"
-            className="h-6 text-[11px] px-2"
+            className="h-6 px-2 text-[11px]"
             onClick={(e) => {
               e.stopPropagation();
               handleDecideClick(row);
@@ -162,20 +187,16 @@ export function ApprovalsInboxPage() {
     },
   ], [canDecide, memberName, handleDecideClick]);
 
-  const fadeVariant = prefersReduced
-    ? {}
-    : { initial: { opacity: 0, y: 8 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.2 } };
-
   if (isLoading) {
     return (
       <PageWrapper title="Approvals" eyebrow="Projects" subtitle="Approvals waiting for your decision across all projects">
-        <div className="flex flex-1 min-h-0 flex-col space-y-4">
+        <PmPageShell>
           <div className="grid grid-cols-2 gap-2">
-            <Skeleton className="h-14 rounded-lg" />
-            <Skeleton className="h-14 rounded-lg" />
+            <Skeleton className={cn("h-16 rounded-xl", PM_PANEL)} />
+            <Skeleton className={cn("h-16 rounded-xl", PM_PANEL)} />
           </div>
-          <Skeleton className="h-48 rounded-lg" />
-        </div>
+          <Skeleton className={cn("h-48 rounded-xl", PM_PANEL)} />
+        </PmPageShell>
       </PageWrapper>
     );
   }
@@ -183,7 +204,9 @@ export function ApprovalsInboxPage() {
   if (isError) {
     return (
       <PageWrapper title="Approvals" eyebrow="Projects" subtitle="Approvals waiting for your decision across all projects">
-        <ErrorState onRetry={() => void refetch()} />
+        <PmPageShell withGlow={false}>
+          <ErrorState onRetry={handleRetry} />
+        </PmPageShell>
       </PageWrapper>
     );
   }
@@ -196,29 +219,38 @@ export function ApprovalsInboxPage() {
       eyebrow="Projects"
       subtitle="Approvals waiting for your decision across all projects"
     >
-      <motion.div className="flex flex-1 min-h-0 flex-col space-y-4" {...fadeVariant}>
-        <StatCardGrid cols={2}>
-          <StatCard label="Pending" value={pending} icon={ListChecks} tone="amber" />
-          <StatCard label="Overdue" value={overdue} icon={Clock} tone="red" />
-        </StatCardGrid>
+      <PmPageShell>
+        <PmSection index={0}>
+          <StatCardGrid cols={2}>
+            <StatCard label="Pending" value={pending} icon={ListChecks} tone="amber" index={0} />
+            <StatCard label="Overdue" value={overdue} icon={Clock} tone="red" index={1} />
+          </StatCardGrid>
+        </PmSection>
 
-        {items.length === 0 ? (
-          <EmptyState
-            illustrationPreset="approval"
-            title="No approvals waiting"
-            description="You have no pending approvals across your projects."
-          />
-        ) : (
-          <DataTable
-            data={items}
-            columns={columns}
-            getRowKey={(row) => `${row.projectId}-${row.id}`}
-            pagination={{ pageSize: 25 }}
-            minWidth="680px"
-            className="flex-1 min-h-0"
-          />
-        )}
-      </motion.div>
+        <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
+          {items.length === 0 ? (
+            <PmPanel className="flex flex-1 items-center justify-center p-6">
+              <EmptyState
+                illustrationPreset="approval"
+                title="No approvals waiting"
+                description="You have no pending approvals across your projects."
+                className="min-h-[28vh]"
+              />
+            </PmPanel>
+          ) : (
+            <PmPanel className="min-h-0 flex-1">
+              <DataTable
+                data={items}
+                columns={columns}
+                getRowKey={(row) => `${row.projectId}-${row.id}`}
+                pagination={{ pageSize: 25 }}
+                minWidth="680px"
+                className="min-h-0 flex-1"
+              />
+            </PmPanel>
+          )}
+        </PmSection>
+      </PmPageShell>
 
       <DecideDialog
         open={!!decideTarget}

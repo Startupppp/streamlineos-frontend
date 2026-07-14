@@ -2,7 +2,11 @@
 
 import { use, useState, useCallback } from "react";
 import {
-  useSprints, useProject, useUpdateSprint, useUpdateTicket,
+  useSprints,
+  useProject,
+  useUpdateSprint,
+  useUpdateTicket,
+  useProjectBoardTickets,
 } from "@/hooks/api/projects";
 import { CreateSprintDialog } from "@/features/projects/sprints/create-sprint-dialog";
 import { BurndownChart } from "@/features/projects/sprints/burndown-chart";
@@ -18,6 +22,11 @@ import { SprintCard } from "@/features/projects/sprints/sprint-card";
 import { CompleteSprintSheet } from "@/features/projects/sprints/complete-sprint-sheet";
 import { SprintPlanningPanel, type PlanningTicket } from "@/features/projects/sprints/sprint-planning-panel";
 import { ModuleDisabledState } from "@/features/projects/shared/module-disabled-state";
+import {
+  PmPageShell,
+  PmSection,
+  PmStaggerList,
+} from "@/features/projects/shared/pm-chrome";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -29,6 +38,7 @@ export default function SprintsPage({ params }: PageProps) {
 
   const { data: sprints, isLoading } = useSprints(projectId);
   const { data: project } = useProject(projectId);
+  const { data: boardTickets } = useProjectBoardTickets(projectId);
 
   const [planningSprintId, setPlanningSprintId] = useState<number | null>(null);
   const [completionSprintId, setCompletionSprintId] = useState<number | null>(null);
@@ -147,20 +157,22 @@ export default function SprintsPage({ params }: PageProps) {
   if (isLoading) {
     return (
       <PageWrapper title="Sprints" subtitle="Loading..." actions={<CreateSprintDialog projectId={projectId} />}>
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <Skeleton className="h-3 w-20" />
-            <Skeleton className="h-24 rounded-lg" />
-            <Skeleton className="h-24 rounded-lg" />
+        <PmPageShell>
+          <div className="space-y-5">
+            <div className="space-y-2">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-20 rounded-xl" />
+              <Skeleton className="h-20 rounded-xl" />
+            </div>
+            <div className="border-t border-border/50" />
+            <div className="space-y-2">
+              <Skeleton className="h-3 w-24" />
+              {Array.from({ length: 2 }).map((_, i) => (
+                <Skeleton key={i} className="h-16 rounded-xl" />
+              ))}
+            </div>
           </div>
-          <div className="border-t border-border" />
-          <div className="space-y-2">
-            <Skeleton className="h-3 w-24" />
-            {Array.from({ length: 2 }).map((_, i) => (
-              <Skeleton key={i} className="h-20 rounded-lg" />
-            ))}
-          </div>
-        </div>
+        </PmPageShell>
       </PageWrapper>
     );
   }
@@ -169,9 +181,9 @@ export default function SprintsPage({ params }: PageProps) {
   const plannedSprints = sprints?.filter((s) => s.status === "PLANNED") || [];
   const completedSprints = sprints?.filter((s) => s.status === "COMPLETED") || [];
 
-  const allTickets = project?.tickets || [];
+  const allTickets = boardTickets ?? [];
   const sprintTicketIds = new Set(
-    (sprints ?? []).flatMap((s) => (s.tickets ?? []).map((t) => t.id))
+    (sprints ?? []).flatMap((s) => (s.tickets ?? []).map((t) => t.id)),
   );
   const backlogTickets: PlanningTicket[] = allTickets
     .filter((t) => !t.sprintId && t.type !== "EPIC" && !sprintTicketIds.has(t.id))
@@ -200,112 +212,116 @@ export default function SprintsPage({ params }: PageProps) {
       subtitle="Plan and track time-boxed iterations"
       actions={<CreateSprintDialog projectId={projectId} />}
     >
-      {planningSprintId && planningSprint && (
-        <SprintPlanningPanel
-          sprint={planningSprint}
-          backlogTickets={backlogTickets}
-          projectKey={project?.key ?? null}
-          onDragEnd={handlePlanningDragEnd}
-          onAddTicket={handleAddTicket}
-          onRemoveTicket={handleRemoveTicket}
-          onBulkAdd={handleBulkAdd}
-          onBulkRemove={handleBulkRemove}
-          onDone={handleClosePlanningSheet}
-          isMutating={updateTicket.isPending}
-          sprintCapacity={null}
-        />
-      )}
+      <PmPageShell>
+        {planningSprintId && planningSprint ? (
+          <SprintPlanningPanel
+            sprint={planningSprint}
+            backlogTickets={backlogTickets}
+            projectKey={project?.key ?? null}
+            onDragEnd={handlePlanningDragEnd}
+            onAddTicket={handleAddTicket}
+            onRemoveTicket={handleRemoveTicket}
+            onBulkAdd={handleBulkAdd}
+            onBulkRemove={handleBulkRemove}
+            onDone={handleClosePlanningSheet}
+            isMutating={updateTicket.isPending}
+            sprintCapacity={null}
+          />
+        ) : null}
 
-      {hasSections && (
-        <div className="space-y-6">
-          {activeSprints.length > 0 && (
-            <section>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-                Active
-              </p>
-              <div className="grid gap-3">
-                {activeSprints.map((sprint) => (
-                  <div key={sprint.id} className="space-y-3">
-                    <SprintCard
-                      sprint={sprint}
-                      projectId={projectId}
-                      onComplete={handleOpenCompletionSheet}
-                      onPlan={handleOpenPlanningSheet}
-                      isUpdating={updateSprint.isPending}
-                    />
-                    <BurndownChart sprintId={sprint.id} projectId={projectId} />
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {activeSprints.length > 0 && plannedSprints.length > 0 && (
-            <div className="border-t border-border" />
-          )}
-
-          {plannedSprints.length > 0 && (
-            <section>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-                Planned
-              </p>
-              <div className="grid gap-3">
-                {plannedSprints.map((sprint) => (
-                  <SprintCard
-                    key={sprint.id}
-                    sprint={sprint}
-                    projectId={projectId}
-                    onStart={handleStartSprint}
-                    onPlan={handleOpenPlanningSheet}
-                    isUpdating={updateSprint.isPending}
-                  />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {completedSprints.length > 0 && (
-            <>
-              <div className="border-t border-border" />
-              <VelocityChart sprints={completedSprints} />
-              <section>
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-                  Completed
+        {hasSections ? (
+          <div className="space-y-5">
+            {activeSprints.length > 0 ? (
+              <PmSection index={0}>
+                <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Active
                 </p>
-                <div className="grid gap-3">
-                  {completedSprints.map((sprint) => (
+                <PmStaggerList className="grid gap-2.5">
+                  {activeSprints.map((sprint) => (
+                    <div key={sprint.id} className="space-y-2.5">
+                      <SprintCard
+                        sprint={sprint}
+                        projectId={projectId}
+                        onComplete={handleOpenCompletionSheet}
+                        onPlan={handleOpenPlanningSheet}
+                        isUpdating={updateSprint.isPending}
+                      />
+                      <BurndownChart sprintId={sprint.id} projectId={projectId} />
+                    </div>
+                  ))}
+                </PmStaggerList>
+              </PmSection>
+            ) : null}
+
+            {activeSprints.length > 0 && plannedSprints.length > 0 ? (
+              <div className="border-t border-border/50" />
+            ) : null}
+
+            {plannedSprints.length > 0 ? (
+              <PmSection index={1}>
+                <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Planned
+                </p>
+                <PmStaggerList className="grid gap-2.5">
+                  {plannedSprints.map((sprint) => (
                     <SprintCard
                       key={sprint.id}
                       sprint={sprint}
                       projectId={projectId}
+                      onStart={handleStartSprint}
+                      onPlan={handleOpenPlanningSheet}
                       isUpdating={updateSprint.isPending}
                     />
                   ))}
-                </div>
-              </section>
-            </>
-          )}
-        </div>
-      )}
+                </PmStaggerList>
+              </PmSection>
+            ) : null}
 
-      {sprints?.length === 0 && (
-        <EmptyState
-          illustration={<EmptySprintIllustration />}
-          title="No sprints yet"
-          description="Create your first sprint to start organizing your work."
-          className="min-h-[40vh]"
+            {completedSprints.length > 0 ? (
+              <>
+                <div className="border-t border-border/50" />
+                <PmSection index={2}>
+                  <VelocityChart sprints={completedSprints} />
+                </PmSection>
+                <PmSection index={3}>
+                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Completed
+                  </p>
+                  <PmStaggerList className="grid gap-2.5">
+                    {completedSprints.map((sprint) => (
+                      <SprintCard
+                        key={sprint.id}
+                        sprint={sprint}
+                        projectId={projectId}
+                        isUpdating={updateSprint.isPending}
+                      />
+                    ))}
+                  </PmStaggerList>
+                </PmSection>
+              </>
+            ) : null}
+          </div>
+        ) : null}
+
+        {sprints?.length === 0 ? (
+          <EmptyState
+            illustration={<EmptySprintIllustration />}
+            title="No sprints yet"
+            description="Create your first sprint to start organizing your work."
+            className="min-h-[40vh]"
+          />
+        ) : null}
+
+        <CompleteSprintSheet
+          sprint={completionSprint ?? null}
+          nextPlannedSprint={nextPlannedSprint}
+          moveToOption={moveToOption}
+          isUpdating={updateSprint.isPending}
+          onMoveToChange={setMoveToOption}
+          onCancel={handleCancelCompletion}
+          onConfirm={handleConfirmCompletion}
         />
-      )}
-
-      <CompleteSprintSheet
-        sprint={completionSprint ?? null}
-        nextPlannedSprint={nextPlannedSprint}
-        moveToOption={moveToOption}
-        isUpdating={updateSprint.isPending}
-        onMoveToChange={setMoveToOption}
-        onCancel={handleCancelCompletion}
-        onConfirm={handleConfirmCompletion}
-      />
+      </PmPageShell>
     </PageWrapper>
   );
 }

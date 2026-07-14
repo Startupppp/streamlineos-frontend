@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, type MouseEvent } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,35 +41,45 @@ export function ProjectCardDialogs({
   const deleteProject = useDeleteProject();
   const archiveProject = useArchiveProject();
 
-  const handleArchiveConfirm = useCallback(() => {
-    archiveProject.mutate(
-      { projectId: project.id, restore: isArchived },
-      {
-        onSuccess: () => {
-          toast.success(isArchived ? "Project restored" : "Project archived");
-          onArchiveConfirmOpenChange(false);
+  const handleArchiveConfirm = useCallback(
+    (e: MouseEvent) => {
+      e.preventDefault();
+      if (archiveProject.isPending) return;
+      archiveProject.mutate(
+        { projectId: project.id, restore: isArchived },
+        {
+          onSuccess: () => {
+            toast.success(isArchived ? "Project restored" : "Project archived");
+            onArchiveConfirmOpenChange(false);
+          },
+          onError: (error) => {
+            toast.error(getErrorMessage(error));
+          },
         },
-        onError: (error) => {
-          toast.error(getErrorMessage(error));
-        },
-      },
-    );
-  }, [archiveProject, project.id, isArchived, onArchiveConfirmOpenChange]);
+      );
+    },
+    [archiveProject, project.id, isArchived, onArchiveConfirmOpenChange],
+  );
 
-  const handleDeleteConfirm = useCallback(() => {
-    deleteProject.mutate(
-      { projectId: project.id },
-      {
-        onSuccess: () => {
-          toast.success("Project deleted");
-          onDeleteConfirmOpenChange(false);
+  const handleDeleteConfirm = useCallback(
+    (e: MouseEvent) => {
+      e.preventDefault();
+      if (deleteProject.isPending) return;
+      deleteProject.mutate(
+        { projectId: project.id },
+        {
+          onSuccess: () => {
+            toast.success("Project deleted");
+            onDeleteConfirmOpenChange(false);
+          },
+          onError: (error) => {
+            toast.error(getErrorMessage(error));
+          },
         },
-        onError: (error) => {
-          toast.error(getErrorMessage(error));
-        },
-      },
-    );
-  }, [deleteProject, project.id, onDeleteConfirmOpenChange]);
+      );
+    },
+    [deleteProject, project.id, onDeleteConfirmOpenChange],
+  );
 
   return (
     <>
@@ -88,9 +98,15 @@ export function ProjectCardDialogs({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={archiveProject.isPending}>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleArchiveConfirm} disabled={archiveProject.isPending}>
-              {isArchived ? "Restore" : "Archive"}
+              {archiveProject.isPending
+                ? isArchived
+                  ? "Restoring…"
+                  : "Archiving…"
+                : isArchived
+                  ? "Restore"
+                  : "Archive"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -105,13 +121,13 @@ export function ProjectCardDialogs({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleteProject.isPending}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
               disabled={deleteProject.isPending}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete
+              {deleteProject.isPending ? "Deleting…" : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -33,14 +33,24 @@ export function RichTextContent({ content, className, contentKey }: RichTextCont
 
   if (looksLikeMarkdown(content)) {
     return (
-      <div className={cn("text-[13px] text-foreground/90 break-words", className)}>
+      <div
+        className={cn(
+          "max-w-full min-w-0 text-[13px] text-foreground/90 break-words [overflow-wrap:anywhere] [word-break:break-word]",
+          className,
+        )}
+      >
         <MarkdownContent content={content} />
       </div>
     );
   }
 
   return (
-    <div className={cn("mt-0.5 break-words", className)}>
+    <div
+      className={cn(
+        "mt-0.5 max-w-full min-w-0 break-words [overflow-wrap:anywhere] [word-break:break-word] [&_*]:max-w-full [&_*]:break-words [&_*]:[overflow-wrap:anywhere]",
+        className,
+      )}
+    >
       <TiptapEditorDynamic
         content={content}
         contentKey={contentKey}

@@ -4,7 +4,6 @@ import { use, useState, useMemo, type ChangeEvent } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/ui/stat-card";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
@@ -17,6 +16,14 @@ import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/
 import { resolveImageUrl } from "@/lib/utils";
 import { toast } from "sonner";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import {
+  PmPageShell,
+  PmPanel,
+  PmSection,
+} from "@/features/projects/shared/pm-chrome";
+import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 type MemberBreakdownRow = { userId: string; hours: number; cost: number };
 
@@ -51,7 +58,7 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
     if (!Number.isFinite(val) || val < 0) return;
     updateBudget.mutate(val, {
       onSuccess: () => { toast.success("Budget updated"); setEditMode(false); },
-      onError: () => toast.error("Failed to update budget"),
+      onError: (error) => toast.error(getErrorMessage(error)),
     });
   }
 
@@ -77,8 +84,10 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0">
-              <p className="text-sm font-medium truncate">{displayName}</p>
-              {email && <p className="text-[11px] text-muted-foreground truncate">{email}</p>}
+              <p className={cn("text-sm font-medium", TEXT_ONE_LINE)}>{displayName}</p>
+              {email ? (
+                <p className={cn("text-[11px] text-muted-foreground", TEXT_ONE_LINE)}>{email}</p>
+              ) : null}
             </div>
           </div>
         );
@@ -144,10 +153,14 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
         subtitle="Planned budget vs actual cost from billable timesheets"
         actions={<Skeleton className="h-8 w-32 rounded-md" />}
       >
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-24 rounded-lg" />)}
-        </div>
-        <Skeleton className="h-20 rounded-lg" />
+        <PmPageShell>
+          <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-24 rounded-xl" />
+            ))}
+          </div>
+          <Skeleton className="h-20 rounded-xl" />
+        </PmPageShell>
       </PageWrapper>
     );
   }
@@ -161,75 +174,81 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
       subtitle="Planned budget vs actual cost from billable timesheets"
       actions={budgetActions}
     >
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-        <StatCard
-          label="Planned Budget"
-          value={fmt(budget?.plannedBudget ?? 0)}
-          icon={IndianRupee}
-          hint={budget?.plannedBudget ? "Project budget" : "Not set"}
-          color="blue"
-          index={0}
-        />
-        <StatCard
-          label="Actual Cost"
-          value={fmt(budget?.actualCost ?? 0)}
-          icon={TrendingUp}
-          hint={`${(budget?.totalHours ?? 0).toFixed(1)} billable hours`}
-          color={overBudget ? "red" : "cyan"}
-          index={1}
-        />
-        <StatCard
-          label="Remaining"
-          value={fmt(Math.abs(budget?.remaining ?? 0))}
-          icon={IndianRupee}
-          hint={overBudget ? "Over budget" : "Available"}
-          color={overBudget ? "red" : "green"}
-          index={2}
-        />
-      </div>
-
-      {(budget?.plannedBudget ?? 0) > 0 && (
-        <Card className="mb-4 bg-card border border-border rounded-lg hover:shadow-md transition-shadow">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Budget Utilization</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-              <span>{budget?.utilizationPct ?? 0}% used</span>
-              <span>{fmt(budget?.plannedBudget ?? 0)} planned</span>
-            </div>
-            <Progress
-              value={Math.min(budget?.utilizationPct ?? 0, 100)}
-              className={overBudget ? "h-2 [&>div]:bg-red-500" : "h-2 [&>div]:bg-primary"}
+      <PmPageShell>
+        <PmSection index={0}>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <StatCard
+              label="Planned Budget"
+              value={fmt(budget?.plannedBudget ?? 0)}
+              icon={IndianRupee}
+              hint={budget?.plannedBudget ? "Project budget" : "Not set"}
+              color="blue"
+              index={0}
             />
-          </CardContent>
-        </Card>
-      )}
-
-      {budget?.memberBreakdown && budget.memberBreakdown.length > 0 && (
-        <Card className="rounded-lg border border-border bg-card hover:shadow-md transition-shadow">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Member Cost Breakdown</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <DataTable
-              data={budget.memberBreakdown}
-              columns={memberColumns}
-              getRowKey={(row) => row.userId}
-              className="border-0 rounded-none rounded-b-lg"
+            <StatCard
+              label="Actual Cost"
+              value={fmt(budget?.actualCost ?? 0)}
+              icon={TrendingUp}
+              hint={`${(budget?.totalHours ?? 0).toFixed(1)} billable hours`}
+              color={overBudget ? "red" : "cyan"}
+              index={1}
             />
-          </CardContent>
-        </Card>
-      )}
+            <StatCard
+              label="Remaining"
+              value={fmt(Math.abs(budget?.remaining ?? 0))}
+              icon={IndianRupee}
+              hint={overBudget ? "Over budget" : "Available"}
+              color={overBudget ? "red" : "green"}
+              index={2}
+            />
+          </div>
+        </PmSection>
 
-      {(budget?.memberBreakdown?.length ?? 0) === 0 && !isLoading && (
-        <EmptyState
-          illustrationPreset="calendar"
-          title="No billable time logged"
-          description="Log billable hours to track costs against this project's budget."
-          className="flex-1 min-h-[40vh]"
-        />
-      )}
+        {(budget?.plannedBudget ?? 0) > 0 ? (
+          <PmSection index={1}>
+            <PmPanel className="p-4">
+              <h3 className={cn("mb-3 text-sm font-semibold", TEXT_ONE_LINE)}>
+                Budget Utilization
+              </h3>
+              <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
+                <span>{budget?.utilizationPct ?? 0}% used</span>
+                <span>{fmt(budget?.plannedBudget ?? 0)} planned</span>
+              </div>
+              <Progress
+                value={Math.min(budget?.utilizationPct ?? 0, 100)}
+                className={overBudget ? "h-2 [&>div]:bg-red-500" : "h-2 [&>div]:bg-primary"}
+              />
+            </PmPanel>
+          </PmSection>
+        ) : null}
+
+        {budget?.memberBreakdown && budget.memberBreakdown.length > 0 ? (
+          <PmSection index={2}>
+            <PmPanel solid>
+              <div className="border-b border-border/60 px-4 py-3">
+                <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>
+                  Member Cost Breakdown
+                </h3>
+              </div>
+              <DataTable
+                data={budget.memberBreakdown}
+                columns={memberColumns}
+                getRowKey={(row) => row.userId}
+                className="rounded-none border-0"
+              />
+            </PmPanel>
+          </PmSection>
+        ) : null}
+
+        {(budget?.memberBreakdown?.length ?? 0) === 0 && !isLoading ? (
+          <EmptyState
+            illustrationPreset="calendar"
+            title="No billable time logged"
+            description="Log billable hours to track costs against this project's budget."
+            className="min-h-[40vh] flex-1"
+          />
+        ) : null}
+      </PmPageShell>
     </PageWrapper>
   );
 }

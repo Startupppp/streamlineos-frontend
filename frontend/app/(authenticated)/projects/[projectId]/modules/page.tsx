@@ -37,6 +37,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { EmojiIconPicker } from "@/components/ui/emoji-icon-picker";
 import { formatModuleName } from "@/features/projects/modules/lib/module-name";
+import {
+  PmPageShell,
+  PmSection,
+  PmStaggerList,
+} from "@/features/projects/shared/pm-chrome";
 
 const MODULE_STATUSES = ["backlog", "planned", "in-progress", "paused", "completed", "cancelled"] as const;
 const DESC_MAX = 500;
@@ -208,18 +213,20 @@ export default function ModulesPage({
   if (isLoading) {
     return (
       <PageWrapper title="Modules" eyebrow="Project" subtitle="Organize work into feature groups and track module progress">
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-20 rounded-xl" />
-            ))}
+        <PmPageShell>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-20 rounded-xl" />
+              ))}
+            </div>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <ModuleCardSkeleton key={i} />
+              ))}
+            </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <ModuleCardSkeleton key={i} />
-            ))}
-          </div>
-        </div>
+        </PmPageShell>
       </PageWrapper>
     );
   }
@@ -379,13 +386,15 @@ export default function ModulesPage({
         </Sheet>
       }
     >
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard label="Total" value={total} icon={Package} tone="blue" index={0} />
-          <StatCard label="In Progress" value={inProgress} icon={Activity} tone="blue" index={1} />
-          <StatCard label="Completed" value={completed} icon={CheckCircle2} tone="emerald" index={2} />
-          <StatCard label="Planned" value={planned} icon={Calendar} tone="amber" index={3} />
-        </div>
+      <PmPageShell>
+        <PmSection index={0}>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            <StatCard label="Total" value={total} icon={Package} tone="blue" index={0} />
+            <StatCard label="In Progress" value={inProgress} icon={Activity} tone="blue" index={1} />
+            <StatCard label="Completed" value={completed} icon={CheckCircle2} tone="emerald" index={2} />
+            <StatCard label="Planned" value={planned} icon={Calendar} tone="amber" index={3} />
+          </div>
+        </PmSection>
 
         {!modules?.length ? (
           <EmptyState
@@ -396,13 +405,15 @@ export default function ModulesPage({
             className="min-h-[40vh]"
           />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {modules.map((mod, index) => (
-              <ModuleCard key={mod.id} module={mod} projectId={projectId} index={index} />
-            ))}
-          </div>
+          <PmSection index={1}>
+            <PmStaggerList className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+              {modules.map((mod, index) => (
+                <ModuleCard key={mod.id} module={mod} projectId={projectId} index={index} />
+              ))}
+            </PmStaggerList>
+          </PmSection>
         )}
-      </div>
+      </PmPageShell>
     </PageWrapper>
   );
 }

@@ -24,6 +24,14 @@ import { AutomationsIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared/error-state";
 import { AutomationValueInput } from "@/features/projects/automations/automation-value-input";
 import {
+  PmPageShell,
+  PmSection,
+  PmStaggerList,
+  PM_PANEL,
+} from "@/features/projects/shared/pm-chrome";
+import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { LoadingButton } from "@/components/ui/loading-button";
+import {
   useAutomations,
   useCreateAutomation,
   useUpdateAutomation,
@@ -94,17 +102,23 @@ function AutomationCard({ automation, onToggle, onDelete, onEdit }: AutomationCa
   const handleDeleteAutomation = useCallback(() => onDelete(automation.id), [automation.id, onDelete]);
 
   return (
-    <motion.div layout className="rounded-lg border border-border bg-card hover:shadow-md transition-shadow p-4">
+    <motion.div
+      layout
+      className={cn(
+        PM_PANEL,
+        "p-4 transition-[border-color,box-shadow] duration-200 hover:border-primary/35 hover:shadow-md",
+      )}
+    >
       <div className="flex items-start gap-3">
         <div className={cn("relative h-9 w-9 rounded-lg flex items-center justify-center shrink-0",
           automation.isActive ? "bg-primary/10 border border-primary/20" : "bg-muted border border-border")}>
           <Zap className={cn("h-4 w-4", automation.isActive ? "text-primary" : "text-muted-foreground")} />
-          <span className={cn("absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white",
+          <span className={cn("absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-background",
             automation.isActive ? "bg-emerald-500" : "bg-muted-foreground/40")} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-sm font-semibold text-foreground truncate">{automation.name}</p>
+            <p className={cn("text-sm font-semibold text-foreground", TEXT_ONE_LINE)}>{automation.name}</p>
             <Badge variant="secondary" className="text-[10px] bg-muted text-muted-foreground border-border shrink-0">
               {getTriggerLabel(automation.triggerEvent)}
             </Badge>
@@ -274,69 +288,70 @@ export default function AutomationsPage({ params }: PageProps) {
         </Button>
       }
     >
-      <div className="space-y-3 pb-8">
-        {isLoading ? (
-          <div className="space-y-3">
-            {Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} className="h-28 w-full rounded-lg" />)}
-          </div>
-        ) : isError ? (
-          <ErrorState
-            title="Could not load automations"
-            description="Failed to load automations."
-            onRetry={handleRetry}
-            className="flex-1 min-h-[40vh]"
-          />
-        ) : (
-          <>
-            {automations.length > 0 && (
-              <StatCardGrid cols={2} className="mb-4">
-                <StatCard
-                  label="Active"
-                  value={automations.filter((a) => a.isActive).length}
-                  icon={Zap}
-                  tone="emerald"
-                />
-                <StatCard
-                  label="Inactive"
-                  value={automations.filter((a) => !a.isActive).length}
-                  icon={Zap}
-                  tone="default"
-                />
-              </StatCardGrid>
-            )}
-
-            <AnimatePresence initial={false}>
-              {automations.map((auto, idx) => (
-                <motion.div
-                  key={auto.id}
-                  initial={{ opacity: 0, y: -4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ delay: idx * 0.04 }}
-                >
-                  <AutomationCard
-                    automation={auto}
-                    onToggle={handleToggle}
-                    onDelete={handleDelete}
-                    onEdit={handleEdit}
-                  />
-                </motion.div>
+      <PmPageShell>
+        <div className="space-y-3 pb-8">
+          {isLoading ? (
+            <div className="space-y-3">
+              {Array.from({ length: 2 }).map((_, i) => (
+                <Skeleton key={i} className="h-28 w-full rounded-xl" />
               ))}
-            </AnimatePresence>
+            </div>
+          ) : isError ? (
+            <ErrorState
+              title="Could not load automations"
+              description="Failed to load automations."
+              onRetry={handleRetry}
+              className="min-h-[40vh] flex-1"
+            />
+          ) : (
+            <>
+              {automations.length > 0 ? (
+                <PmSection index={0}>
+                  <StatCardGrid cols={2} className="mb-1">
+                    <StatCard
+                      label="Active"
+                      value={automations.filter((a) => a.isActive).length}
+                      icon={Zap}
+                      tone="emerald"
+                    />
+                    <StatCard
+                      label="Inactive"
+                      value={automations.filter((a) => !a.isActive).length}
+                      icon={Zap}
+                      tone="default"
+                    />
+                  </StatCardGrid>
+                </PmSection>
+              ) : null}
 
-            {automations.length === 0 && (
-              <EmptyState
-                illustration={<AutomationsIllustration className="h-32 w-32" />}
-                title="No automations yet"
-                description="Automate repetitive work — assign tickets, change statuses, and more with if-then rules."
-                action={{ label: "Create Automation", onClick: handleOpenNew }}
-                className="min-h-[40vh]"
-              />
-            )}
-
-          </>
-        )}
-      </div>
+              {automations.length === 0 ? (
+                <EmptyState
+                  illustration={<AutomationsIllustration className="h-32 w-32" />}
+                  title="No automations yet"
+                  description="Automate repetitive work — assign tickets, change statuses, and more with if-then rules."
+                  action={{ label: "Create Automation", onClick: handleOpenNew }}
+                  className="min-h-[40vh]"
+                />
+              ) : (
+                <PmSection index={1}>
+                  <PmStaggerList className="space-y-2.5" role="list" aria-label="Automations">
+                    <AnimatePresence initial={false}>
+                      {automations.map((auto) => (
+                        <AutomationCard
+                          key={auto.id}
+                          automation={auto}
+                          onToggle={handleToggle}
+                          onDelete={handleDelete}
+                          onEdit={handleEdit}
+                        />
+                      ))}
+                    </AnimatePresence>
+                  </PmStaggerList>
+                </PmSection>
+              )}
+            </>
+          )}
+        </div>
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent className="flex flex-col gap-0 p-0 w-full sm:max-w-lg overflow-hidden">
@@ -463,19 +478,19 @@ export default function AutomationsPage({ params }: PageProps) {
             >
               Cancel
             </Button>
-            <Button
+            <LoadingButton
               form="automation-form"
               type="submit"
-              disabled={createAutomation.isPending || updateAutomation.isPending}
+              isPending={createAutomation.isPending || updateAutomation.isPending}
+              loadingText="Saving…"
               className={cn(FIELD_CLASS, "flex-1")}
             >
-              {(createAutomation.isPending || updateAutomation.isPending)
-                ? "Saving..."
-                : editingAutomation ? "Save Changes" : "Create Automation"}
-            </Button>
+              {editingAutomation ? "Save Changes" : "Create Automation"}
+            </LoadingButton>
           </SheetFooter>
         </SheetContent>
       </Sheet>
+      </PmPageShell>
     </PageWrapper>
   );
 }

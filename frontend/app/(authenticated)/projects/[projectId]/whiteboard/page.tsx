@@ -53,6 +53,13 @@ import { useWhiteboardAutosave } from "@/features/projects/whiteboard/use-whiteb
 import { WhiteboardToolbar } from "@/features/projects/whiteboard/whiteboard-toolbar";
 import { ShareDialog } from "@/features/projects/whiteboard/share-dialog";
 import { computeStoredVersion } from "@/features/projects/whiteboard/scene-utils";
+import {
+  PmPageShell,
+  PmPanel,
+  PM_ROW,
+} from "@/features/projects/shared/pm-chrome";
+import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const BOARDS_COLLAPSED_KEY = "streamlineos:whiteboard:boards-collapsed";
 
@@ -170,19 +177,20 @@ const BoardItem = memo(function BoardItem({
         onClick={handleSelect}
         onKeyDown={handleKeyDown}
         className={cn(
-          "group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm cursor-pointer transition-colors",
+          PM_ROW,
+          "cursor-pointer border-0 last:border-b-0 text-sm",
           isSelected
             ? "bg-primary/10 text-primary"
-            : "text-muted-foreground hover:bg-muted hover:text-foreground",
+            : "text-muted-foreground",
         )}
       >
         <StickyNote className="h-3.5 w-3.5 shrink-0" />
         <div className="min-w-0 flex-1">
-          <p className="truncate font-medium flex items-center gap-1">
-            {board.name}
+          <p className={cn("flex items-center gap-1 font-medium", TEXT_ONE_LINE)}>
+            <span className={TEXT_ONE_LINE}>{board.name}</span>
             {visibilityIcon}
           </p>
-          <p className="text-[11px] text-muted-foreground">
+          <p className={cn("text-[11px] text-muted-foreground", TEXT_ONE_LINE)}>
             {board.elementCount} {board.elementCount === 1 ? "item" : "items"}
           </p>
         </div>
@@ -319,7 +327,7 @@ export default function WhiteboardPage({
         setChosenBoardId(board.id);
         setCreateOpen(false);
       },
-      onError: () => toast.error("Failed to create board"),
+      onError: (error) => toast.error(getErrorMessage(error)),
     });
   }
 
@@ -331,7 +339,7 @@ export default function WhiteboardPage({
         if (chosenBoardId === deleteTarget.id) setChosenBoardId(null);
         setDeleteTarget(null);
       },
-      onError: () => toast.error("Failed to delete board"),
+      onError: (error) => toast.error(getErrorMessage(error)),
     });
   }
 
@@ -395,88 +403,88 @@ export default function WhiteboardPage({
       contentClassName="flex min-h-0"
       actions={headerActions}
     >
-      {isLoading ? (
-        <div className="flex-1">
-          <LoadingState variant="page" />
-        </div>
-      ) : isError ? (
-        <div className="flex flex-1 items-center justify-center">
-          <ErrorState onRetry={handleRefetch} />
-        </div>
-      ) : !boards || boards.length === 0 ? (
-        <div className="flex flex-1">
+      <PmPageShell className="h-full min-h-0 gap-3" withGlow={false}>
+        {isLoading ? (
+          <div className="flex-1">
+            <LoadingState variant="page" />
+          </div>
+        ) : isError ? (
+          <PmPanel className="flex flex-1 items-center justify-center" solid>
+            <ErrorState onRetry={handleRefetch} />
+          </PmPanel>
+        ) : !boards || boards.length === 0 ? (
           <EmptyState
             illustration={<EmptyUploadIllustration />}
             title="Create your first board"
             description="Whiteboards let your team brainstorm visually with sticky notes, shapes, arrows, and freehand drawing."
             action={canManage ? { label: "New Board", onClick: handleOpenCreate } : undefined}
-            className="flex-1"
+            className="min-h-[40vh] flex-1"
           />
-        </div>
-      ) : (
-        <div className="flex flex-1 min-h-0 gap-3">
-          {!listCollapsed && (
-            <aside className="w-48 shrink-0 border-r border-border pr-3 hidden md:flex md:flex-col">
-              <div className="flex items-center mb-1 shrink-0">
-                <span className="text-xs font-medium text-muted-foreground">Boards</span>
-              </div>
-              <ul className="space-y-0.5 overflow-y-auto flex-1 min-h-0">
-                {boards.map((board) => (
-                  <BoardItem
-                    key={board.id}
-                    board={board}
-                    isSelected={board.id === (selectedBoard?.id ?? null)}
-                    canManage={canManage}
-                    onSelect={handleBoardSelect}
-                    onDelete={handleBoardDelete}
-                  />
-                ))}
-              </ul>
-            </aside>
-          )}
-
-          <div className="flex gap-1.5 overflow-x-auto pb-1 border-b border-border shrink-0 md:hidden">
-            {boards.map((board) => (
-              <MobileBoardChip
-                key={board.id}
-                board={board}
-                isSelected={board.id === (selectedBoard?.id ?? null)}
-                onSelect={handleBoardSelect}
-              />
-            ))}
-          </div>
-
-          <div className="flex flex-1 min-h-0 flex-col">
-            {selectedBoard ? (
-              detailLoading ? (
-                <LoadingState variant="page" />
-              ) : detailError || !detail ? (
-                <div className="flex flex-1 items-center justify-center">
-                  <ErrorState onRetry={handleDetailRetry} />
+        ) : (
+          <div className="flex min-h-0 flex-1 gap-3">
+            {!listCollapsed ? (
+              <PmPanel className="hidden w-48 shrink-0 flex-col rounded-xl p-2 md:flex" solid>
+                <div className="mb-1 flex shrink-0 items-center px-1">
+                  <span className="text-xs font-medium text-muted-foreground">Boards</span>
                 </div>
+                <ul className="min-h-0 flex-1 space-y-0.5 overflow-y-auto">
+                  {boards.map((board) => (
+                    <BoardItem
+                      key={board.id}
+                      board={board}
+                      isSelected={board.id === (selectedBoard?.id ?? null)}
+                      canManage={canManage}
+                      onSelect={handleBoardSelect}
+                      onDelete={handleBoardDelete}
+                    />
+                  ))}
+                </ul>
+              </PmPanel>
+            ) : null}
+
+            <div className="flex shrink-0 gap-1.5 overflow-x-auto border-b border-border pb-1 md:hidden">
+              {boards.map((board) => (
+                <MobileBoardChip
+                  key={board.id}
+                  board={board}
+                  isSelected={board.id === (selectedBoard?.id ?? null)}
+                  onSelect={handleBoardSelect}
+                />
+              ))}
+            </div>
+
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+              {selectedBoard ? (
+                detailLoading ? (
+                  <LoadingState variant="page" />
+                ) : detailError || !detail ? (
+                  <PmPanel className="flex flex-1 items-center justify-center" solid>
+                    <ErrorState onRetry={handleDetailRetry} />
+                  </PmPanel>
+                ) : (
+                  <ExcalidrawCanvas
+                    key={selectedBoard.id}
+                    detail={detail}
+                    isFullscreen={isFullscreen}
+                    saveStatus={saveStatus}
+                    onSceneChange={handleSceneChange}
+                    onExitFullscreen={handleExitFullscreen}
+                  />
+                )
               ) : (
-                <ExcalidrawCanvas
-                  key={selectedBoard.id}
-                  detail={detail}
-                  isFullscreen={isFullscreen}
-                  saveStatus={saveStatus}
-                  onSceneChange={handleSceneChange}
-                  onExitFullscreen={handleExitFullscreen}
-                />
-              )
-            ) : (
-              <div className="flex flex-1 items-center justify-center">
-                <EmptyState
-                  illustration={<EmptyUploadIllustration />}
-                  title="Select a board"
-                  description="Choose a board from the list to start editing."
-                  compact
-                />
-              </div>
-            )}
+                <PmPanel className="flex flex-1 items-center justify-center" solid>
+                  <EmptyState
+                    illustration={<EmptyUploadIllustration />}
+                    title="Select a board"
+                    description="Choose a board from the list to start editing."
+                    compact
+                  />
+                </PmPanel>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </PmPageShell>
 
       {canManage && (
         <CreateBoardDialog

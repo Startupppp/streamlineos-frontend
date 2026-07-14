@@ -14,19 +14,6 @@ export interface Portfolio {
   projectCount?: number;
 }
 
-export interface Program {
-  id: number;
-  portfolioId: number | null;
-  name: string;
-  description: string | null;
-  ownerId: string | null;
-  status: PortfolioStatus;
-  health: PortfolioHealth | null;
-  createdAt: string;
-  updatedAt: string;
-  projectCount?: number;
-}
-
 export interface LinkedProject {
   id: number;
   name: string;
@@ -35,11 +22,6 @@ export interface LinkedProject {
 }
 
 export interface PortfolioDetail extends Portfolio {
-  projects: LinkedProject[];
-  programs: Array<{ id: number; name: string; status: PortfolioStatus }>;
-}
-
-export interface ProgramDetail extends Program {
   projects: LinkedProject[];
 }
 
@@ -59,22 +41,4 @@ export interface UpdatePortfolioInput {
   status?: PortfolioStatus;
   health?: PortfolioHealth;
   strategicGoal?: string;
-}
-
-export interface CreateProgramInput {
-  name: string;
-  description?: string;
-  portfolioId?: number;
-  ownerId?: string;
-  status: PortfolioStatus;
-  health?: PortfolioHealth;
-}
-
-export interface UpdateProgramInput {
-  name?: string;
-  description?: string;
-  portfolioId?: number;
-  ownerId?: string;
-  status?: PortfolioStatus;
-  health?: PortfolioHealth;
 }

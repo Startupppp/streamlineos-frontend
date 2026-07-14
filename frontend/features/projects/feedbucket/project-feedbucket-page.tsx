@@ -8,6 +8,13 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { formatDistanceToNow } from "date-fns";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
+import {
+  PmPageShell,
+  PmPanel,
+  PmSection,
+} from "@/features/projects/shared/pm-chrome";
+import { TEXT_BODY, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -351,6 +358,7 @@ export function ProjectFeedbucketPage({ projectId }: ProjectFeedbucketPageProps)
         title="Feedback"
         subtitle="Collect and triage user feedback submitted via this project's widget."
       >
+        <PmPageShell>
         {widgetsLoading ? (
           <div className="space-y-3">
             <Skeleton className="h-24 w-full rounded-xl" />
@@ -364,61 +372,72 @@ export function ProjectFeedbucketPage({ projectId }: ProjectFeedbucketPageProps)
             title="No feedback widget"
             description="Create a widget to embed on your product and start collecting feedback for this project."
             action={{ label: "Create feedback widget", onClick: handleOpenCreate }}
-            className="flex-1 py-16"
+            className="min-h-[40vh] flex-1 py-16"
           />
         ) : (
-          <div className="space-y-6">
-            <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-              <div className="flex items-start justify-between gap-3 flex-wrap">
-                <div className="space-y-0.5 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-sm font-medium truncate">{projectWidget.name}</p>
-                    {projectWidget.aiAssistEnabled && (
-                      <Badge variant="secondary" className="text-xs shrink-0">AI assist</Badge>
-                    )}
+          <div className="space-y-4">
+            <PmSection index={0}>
+              <PmPanel className="space-y-3 p-4" solid>
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0 space-y-0.5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className={cn("text-sm font-medium", TEXT_ONE_LINE)}>
+                        {projectWidget.name}
+                      </p>
+                      {projectWidget.aiAssistEnabled ? (
+                        <Badge variant="secondary" className="shrink-0 text-xs">
+                          AI assist
+                        </Badge>
+                      ) : null}
+                    </div>
+                    <p className={cn("text-xs text-muted-foreground", TEXT_ONE_LINE)}>
+                      {projectWidget.isActive ? "Active" : "Inactive"} · Public key:{" "}
+                      <span className="font-mono">{projectWidget.publicKey}</span>
+                    </p>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    {projectWidget.isActive ? "Active" : "Inactive"} · Public key:{" "}
-                    <span className="font-mono">{projectWidget.publicKey}</span>
-                  </p>
+                  <div className="flex shrink-0 gap-2">
+                    <Button size="sm" variant="outline" onClick={handleCopySnippet}>
+                      <Copy className="mr-1.5 h-3.5 w-3.5" />
+                      Copy snippet
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={handleOpenRotate}>
+                      <RefreshCcw className="mr-1.5 h-3.5 w-3.5" />
+                      Rotate key
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex gap-2 flex-shrink-0">
-                  <Button size="sm" variant="outline" onClick={handleCopySnippet}>
-                    <Copy className="h-3.5 w-3.5 mr-1.5" />
-                    Copy snippet
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={handleOpenRotate}>
-                    <RefreshCcw className="h-3.5 w-3.5 mr-1.5" />
-                    Rotate key
-                  </Button>
+                <div className={cn("rounded-md bg-muted px-3 py-2 font-mono text-xs text-muted-foreground", TEXT_BODY)}>
+                  {embedSnippet(projectWidget.publicKey)}
                 </div>
-              </div>
-              <div className="rounded-md bg-muted px-3 py-2 font-mono text-xs text-muted-foreground break-all">
-                {embedSnippet(projectWidget.publicKey)}
-              </div>
-              <div className="flex items-start justify-between gap-4 rounded-lg border border-border px-4 py-3 bg-background">
-                <div className="space-y-0.5 min-w-0">
-                  <p className="text-sm font-medium">AI assist in widget</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    Let people submitting feedback draft a bug/feature with AI from their screenshot. Uses your org&apos;s AI credits; rate-limited.
-                  </p>
+                <div className="flex items-start justify-between gap-4 rounded-lg border border-border/60 bg-background/60 px-4 py-3">
+                  <div className="min-w-0 space-y-0.5">
+                    <p className={cn("text-sm font-medium", TEXT_ONE_LINE)}>AI assist in widget</p>
+                    <p className={cn("text-xs leading-relaxed text-muted-foreground", TEXT_BODY)}>
+                      Let people submitting feedback draft a bug/feature with AI from their screenshot. Uses your org&apos;s AI credits; rate-limited.
+                    </p>
+                  </div>
+                  <Switch
+                    id="widget-ai-assist"
+                    checked={projectWidget.aiAssistEnabled}
+                    onCheckedChange={handleToggleAiAssist}
+                    disabled={updateWidget.isPending}
+                    className="mt-0.5 shrink-0"
+                  />
                 </div>
-                <Switch
-                  id="widget-ai-assist"
-                  checked={projectWidget.aiAssistEnabled}
-                  onCheckedChange={handleToggleAiAssist}
-                  disabled={updateWidget.isPending}
-                  className="shrink-0 mt-0.5"
-                />
-              </div>
-            </div>
+              </PmPanel>
+            </PmSection>
 
-            <div className="space-y-2">
-              <p className="text-sm font-semibold text-foreground">Submissions</p>
-              <ProjectSubmissionsInbox widgetId={projectWidget.id} projectId={projectId} />
-            </div>
+            <PmSection index={1}>
+              <p className={cn("mb-2 text-sm font-semibold text-foreground", TEXT_ONE_LINE)}>
+                Submissions
+              </p>
+              <PmPanel className="p-0" solid>
+                <ProjectSubmissionsInbox widgetId={projectWidget.id} projectId={projectId} />
+              </PmPanel>
+            </PmSection>
           </div>
         )}
+        </PmPageShell>
 
         <CreateWidgetSheet
           open={createOpen}

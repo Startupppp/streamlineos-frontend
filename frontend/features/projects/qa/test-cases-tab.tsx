@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useTestCases, useTestSuites, useDeleteTestCase } from "@/hooks/api/projects/qa";
 import { useCan } from "@/hooks/api/access";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import type { TestCase, TestCasePriority, TestCaseAutomationStatus } from "@/types/projects";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
@@ -36,20 +37,23 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Plus } from "lucide-react";
+import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { cn } from "@/lib/utils";
+import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 import { TestCaseSheet } from "./test-case-sheet";
 
 const PRIORITY_STYLES: Record<TestCasePriority, string> = {
   low: "text-muted-foreground border-border",
-  medium: "text-amber-600 border-amber-200",
-  high: "text-red-600 border-red-200",
+  medium: "text-amber-600 border-amber-200 dark:text-amber-400 dark:border-amber-500/30",
+  high: "text-red-600 border-red-200 dark:text-red-400 dark:border-red-500/30",
 };
 
 const AUTOMATION_STYLES: Record<TestCaseAutomationStatus, string> = {
   manual: "text-muted-foreground border-border",
-  automated: "text-green-600 border-green-200",
-  planned: "text-blue-600 border-blue-200",
+  automated: "text-green-600 border-green-200 dark:text-green-400 dark:border-green-500/30",
+  planned: "text-blue-600 border-blue-200 dark:text-blue-400 dark:border-blue-500/30",
 };
 
 function priorityLabel(p: TestCasePriority) {
@@ -58,6 +62,41 @@ function priorityLabel(p: TestCasePriority) {
 
 function automationLabel(a: TestCaseAutomationStatus) {
   return a.charAt(0).toUpperCase() + a.slice(1);
+}
+
+function NewCaseButton({ onClick }: { onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button size="sm" className="ml-auto h-7 gap-1 text-[11px]" onClick={onClick} {...hoverHandlers}>
+      <PlusIcon ref={iconRef} size={14} />
+      New Test Case
+    </Button>
+  );
+}
+
+function CaseActions({
+  onEdit,
+  onDelete,
+}: {
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="Case actions" {...hoverHandlers}>
+          <EllipsisIcon ref={iconRef} size={14} />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onSelect={onEdit}>Edit</DropdownMenuItem>
+        <DropdownMenuItem variant="destructive" onSelect={onDelete}>
+          Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 }
 
 interface TestCasesTabProps {
@@ -101,7 +140,7 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
           toast.success("Test case deleted");
           setDeleteTarget(null);
         },
-        onError: () => toast.error("Failed to delete test case"),
+        onError: (error) => toast.error(getErrorMessage(error)),
       },
     );
   }, [deleteTarget, deleteCase, projectId]);
@@ -114,12 +153,16 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
     if (!open) setDeleteTarget(null);
   }, []);
 
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
   const columns = useMemo<DataTableColumn<TestCase>[]>(() => [
     {
       key: "id",
       header: "ID",
       cell: (row) => (
-        <span className="text-[11px] font-mono text-muted-foreground">
+        <span className="font-mono text-[11px] text-muted-foreground">
           TC-{row.caseNumber}
         </span>
       ),
@@ -128,13 +171,17 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
     {
       key: "title",
       header: "Title",
-      cell: (row) => <span className="text-[11px] font-medium">{row.title}</span>,
+      cell: (row) => (
+        <span className={cn(TEXT_ONE_LINE, "block max-w-[min(100%,24rem)] text-[11px] font-medium")} title={row.title}>
+          {row.title}
+        </span>
+      ),
     },
     {
       key: "priority",
       header: "Priority",
       cell: (row) => (
-        <Badge variant="outline" className={`text-[10px] ${PRIORITY_STYLES[row.priority]}`}>
+        <Badge variant="outline" className={cn("text-[10px]", PRIORITY_STYLES[row.priority])}>
           {priorityLabel(row.priority)}
         </Badge>
       ),
@@ -146,7 +193,7 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
       cell: (row) => (
         <Badge
           variant="outline"
-          className={`text-[10px] ${AUTOMATION_STYLES[row.automationStatus]}`}
+          className={cn("text-[10px]", AUTOMATION_STYLES[row.automationStatus])}
         >
           {automationLabel(row.automationStatus)}
         </Badge>
@@ -157,7 +204,9 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
       key: "component",
       header: "Component",
       cell: (row) => (
-        <span className="text-[11px] text-muted-foreground">{row.component ?? "—"}</span>
+        <span className={cn(TEXT_ONE_LINE, "block max-w-[8rem] text-[11px] text-muted-foreground")}>
+          {row.component ?? "—"}
+        </span>
       ),
       className: "w-[120px]",
     },
@@ -166,40 +215,29 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
       header: "",
       cell: (row) =>
         canManage ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-6 w-6">
-                <MoreHorizontal className="h-3.5 w-3.5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onSelect={() => handleEdit(row)}>Edit</DropdownMenuItem>
-              <DropdownMenuItem variant="destructive"
-                onSelect={() => setDeleteTarget(row)}
-              >
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <CaseActions
+            onEdit={() => handleEdit(row)}
+            onDelete={() => setDeleteTarget(row)}
+          />
         ) : null,
       className: "w-[40px]",
     },
   ], [canManage, handleEdit]);
 
-  if (isLoading) return <DataTableSkeleton rows={8} columns={5} />;
-  if (isError) return <ErrorState onRetry={refetch} />;
+  if (isLoading) return <DataTableSkeleton rows={8} columns={5} className="flex-1" />;
+  if (isError) return <ErrorState onRetry={handleRetry} />;
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2 flex-wrap">
+    <div className="flex min-h-0 flex-1 flex-col space-y-3">
+      <div className="flex flex-wrap items-center gap-2">
         <Input
           placeholder="Search cases..."
           value={search}
           onChange={handleSearchChange}
-          className="h-7 text-[11px] w-48"
+          className="h-7 w-48 text-[11px]"
         />
         <Select value={suiteFilter} onValueChange={setSuiteFilter}>
-          <SelectTrigger className="h-7 text-[11px] w-36">
+          <SelectTrigger className="h-7 w-36 text-[11px]">
             <SelectValue placeholder="All suites" />
           </SelectTrigger>
           <SelectContent>
@@ -211,12 +249,7 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
             ))}
           </SelectContent>
         </Select>
-        {canManage && (
-          <Button size="sm" className="h-7 text-[11px] ml-auto" onClick={handleNewCase}>
-            <Plus className="h-3.5 w-3.5 mr-1" />
-            New Test Case
-          </Button>
-        )}
+        {canManage ? <NewCaseButton onClick={handleNewCase} /> : null}
       </div>
 
       {(cases ?? []).length === 0 ? (
@@ -225,13 +258,14 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
           title="No test cases"
           description="Create a test case to get started."
           action={canManage ? { label: "New Test Case", onClick: handleNewCase } : undefined}
-          compact
+          className="min-h-[32vh] flex-1"
         />
       ) : (
         <DataTable<TestCase>
           data={cases ?? []}
           columns={columns}
           getRowKey={(row) => row.id}
+          className="min-h-0 flex-1"
         />
       )}
 
@@ -248,7 +282,8 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete test case?</AlertDialogTitle>
             <AlertDialogDescription>
-              TC-{deleteTarget?.caseNumber} will be permanently deleted.
+              TC-{deleteTarget?.caseNumber}
+              {deleteTarget?.title ? ` · ${deleteTarget.title}` : ""} will be permanently deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

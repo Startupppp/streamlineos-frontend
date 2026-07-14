@@ -1,7 +1,9 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useCallback } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { LayoutGrid, List, Table2, Calendar, BarChart3, Users } from "lucide-react";
+import { cn } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -9,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { pmSpring } from "@/features/projects/shared/pm-motion";
 
 export type ViewType = "board" | "list" | "table" | "calendar" | "gantt" | "workload";
 
@@ -33,35 +36,86 @@ const views = [
   { value: "workload" as const, icon: Users, label: "Workload" },
 ];
 
-export const ViewSwitcher = memo(function ViewSwitcher({ activeView, onViewChange }: ViewSwitcherProps) {
-  function handleViewChange(value: string) {
-    if (
-      value === "board" ||
-      value === "list" ||
-      value === "table" ||
-      value === "calendar" ||
-      value === "gantt" ||
-      value === "workload"
-    ) {
-      onViewChange(value);
-    }
-  }
+export const ViewSwitcher = memo(function ViewSwitcher({
+  activeView,
+  onViewChange,
+}: ViewSwitcherProps) {
+  const shouldReduceMotion = useReducedMotion();
+
+  const handleSelectChange = useCallback(
+    (value: string) => {
+      if (
+        value === "board" ||
+        value === "list" ||
+        value === "table" ||
+        value === "calendar" ||
+        value === "gantt" ||
+        value === "workload"
+      ) {
+        onViewChange(value);
+      }
+    },
+    [onViewChange],
+  );
 
   return (
-    <Select value={activeView} onValueChange={handleViewChange}>
-      <SelectTrigger className="h-8 w-[128px] shrink-0 bg-card text-xs" aria-label="Select view">
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        {views.map((v) => (
-          <SelectItem key={v.value} value={v.value} className="text-xs">
-            <span className="flex items-center gap-1.5">
-              <v.icon className="h-3.5 w-3.5 text-muted-foreground" />
-              {v.label}
-            </span>
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <>
+      <div
+        className="relative hidden h-8 items-center gap-0.5 rounded-lg border border-border/50 bg-background/50 p-0.5 shadow-inner backdrop-blur-md sm:inline-flex"
+        role="tablist"
+        aria-label="Board view"
+      >
+        {views.map((v) => {
+          const active = activeView === v.value;
+          const Icon = v.icon;
+          const handleClick = () => onViewChange(v.value);
+          return (
+            <button
+              key={v.value}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={handleClick}
+              className={cn(
+                "relative z-10 inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium",
+                "transition-colors duration-150",
+                active
+                  ? "text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {active ? (
+                <motion.span
+                  layoutId="pm-view-pill"
+                  className="absolute inset-0 -z-10 rounded-md border border-primary/20 bg-card shadow-[0_0_12px_-4px] shadow-primary/30"
+                  transition={shouldReduceMotion ? { duration: 0 } : pmSpring}
+                />
+              ) : null}
+              <Icon className={cn("h-3.5 w-3.5", active && "text-primary")} />
+              <span className="hidden lg:inline">{v.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <Select value={activeView} onValueChange={handleSelectChange}>
+        <SelectTrigger
+          className="h-8 w-[128px] shrink-0 bg-card text-xs sm:hidden"
+          aria-label="Select view"
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {views.map((v) => (
+            <SelectItem key={v.value} value={v.value} className="text-xs">
+              <span className="flex items-center gap-1.5">
+                <v.icon className="h-3.5 w-3.5 text-muted-foreground" />
+                {v.label}
+              </span>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </>
   );
 });

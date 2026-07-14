@@ -399,10 +399,11 @@ export const InlineTitle = memo(function InlineTitle({
           <button
             type="button"
             className={cn(
-              "min-w-0 truncate text-left text-sm font-semibold transition-colors hover:text-primary",
+              "min-w-0 max-w-full truncate text-left text-sm font-semibold transition-colors hover:text-primary [overflow-wrap:anywhere]",
               className,
             )}
             aria-label="Edit title"
+            title={currentTitle}
           >
             {currentTitle}
           </button>

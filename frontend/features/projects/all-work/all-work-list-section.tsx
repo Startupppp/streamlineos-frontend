@@ -4,8 +4,12 @@ import { memo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { ListView } from "@/features/projects/views/list-view";
+import { PmPanel } from "@/features/projects/shared/pm-chrome";
+import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { cn } from "@/lib/utils";
 import { ProjectChip } from "./project-chip";
 import type { AllWorkTicket } from "@/types/projects";
+import { getTicketDetailHref } from "@/features/projects/shared/format-ticket-key";
 
 interface ProjectGroup {
   projectId: number;
@@ -58,21 +62,35 @@ const ProjectSection = memo(function ProjectSection({
 
   const handleTicketClick = useCallback(
     (ticketId: number) => {
-      router.push(`/projects/${group.projectId}?ticket=${ticketId}`);
+      const ticket = group.tickets.find((t) => t.id === ticketId);
+      if (!ticket) return;
+      router.push(
+        getTicketDetailHref(group.projectId, group.projectKey, ticket.ticketNumber),
+      );
     },
-    [router, group.projectId]
+    [router, group.projectId, group.projectKey, group.tickets],
   );
 
   return (
-    <div className="mb-4">
-      <div className="flex items-center gap-2 mb-2 px-4">
+    <PmPanel className="mx-3 mb-3 sm:mx-4">
+      <div className="flex min-w-0 items-center gap-2 border-b border-border/50 bg-muted/20 px-3 py-2">
         <ProjectChip
           projectId={group.projectId}
           projectKey={group.projectKey}
           projectName={group.projectName}
         />
-        <span className="text-sm font-semibold text-foreground">{group.projectName}</span>
-        <Badge variant="secondary" className="text-xs">{group.tickets.length}</Badge>
+        <span
+          className={cn(TEXT_ONE_LINE, "text-[13px] font-semibold text-foreground")}
+          title={group.projectName}
+        >
+          {group.projectName}
+        </span>
+        <Badge
+          variant="secondary"
+          className="h-5 shrink-0 rounded-md bg-primary/10 px-1.5 text-[10px] font-medium tabular-nums text-primary"
+        >
+          {group.tickets.length}
+        </Badge>
       </div>
       <ListView
         tickets={group.tickets.map(toListTicket)}
@@ -80,7 +98,7 @@ const ProjectSection = memo(function ProjectSection({
         projectKey={group.projectKey}
         projectId={group.projectId}
       />
-    </div>
+    </PmPanel>
   );
 });
 
@@ -90,7 +108,7 @@ export const AllWorkListSection = memo(function AllWorkListSection({
   if (groups.length === 0) return null;
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-0">
       {groups.map((group) => (
         <ProjectSection key={group.projectId} group={group} />
       ))}

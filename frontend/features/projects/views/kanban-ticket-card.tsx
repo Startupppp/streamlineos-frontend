@@ -3,11 +3,13 @@
 import { useCallback, memo } from "react";
 import { cn } from "@/lib/utils";
 import type { KanbanTicket, DisplayOptions } from "../shared/types";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { TicketQuickActions } from "./ticket-quick-actions";
 import { InlinePriority, InlineAssignee, InlineEstimate } from "./card-inline-fields";
 import { InlineType, InlineLabels, InlineCycle } from "./card-inline-extra-fields";
 import { InlineDueDate, InlineStartDate } from "./card-inline-date-fields";
+import { pmSnappy, pmSpring } from "@/features/projects/shared/pm-motion";
+import { TEXT_TWO_LINES } from "@/features/projects/shared/text-overflow";
 
 interface KanbanTicketCardProps {
   ticket: KanbanTicket;
@@ -18,6 +20,7 @@ interface KanbanTicketCardProps {
   onSelect: (id: number) => void;
   projectStatuses?: Array<{ name: string; color: string | null; type?: string | null }>;
   displayOptions?: DisplayOptions;
+  index?: number;
 }
 
 export const KanbanTicketCard = memo(function KanbanTicketCard({
@@ -28,12 +31,15 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
   dragStartRef,
   onSelect,
   displayOptions,
+  index = 0,
 }: KanbanTicketCardProps) {
+  const shouldReduceMotion = useReducedMotion();
+
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
       dragStartRef.current = { x: e.clientX, y: e.clientY };
     },
-    [dragStartRef]
+    [dragStartRef],
   );
 
   const handleClick = useCallback(
@@ -48,15 +54,14 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
         onSelect(ticket.id);
       }
     },
-    [ticket.id, onSelect, dragStartRef]
+    [ticket.id, onSelect, dragStartRef],
   );
 
   const ticketKey = projectKey
     ? `${projectKey}-${ticket.ticketNumber}`
     : `#${ticket.ticketNumber ?? ""}`;
 
-  const primaryAssignee =
-    ticket.assignees?.[0]?.user ?? ticket.assignee ?? null;
+  const primaryAssignee = ticket.assignees?.[0]?.user ?? ticket.assignee ?? null;
 
   const showId = displayOptions?.showId ?? true;
   const showPriority = displayOptions?.showPriority ?? true;
@@ -70,13 +75,42 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
 
   return (
     <motion.div
-      layoutId={`ticket-${ticket.id}`}
+      layout={!shouldReduceMotion}
+      layoutId={shouldReduceMotion ? undefined : `ticket-${ticket.id}`}
+      initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 6, scale: 0.98 }}
+      animate={
+        isDragging
+          ? shouldReduceMotion
+            ? { opacity: 1, scale: 1 }
+            : { opacity: 1, y: 0, scale: 1.03, rotate: 0.6 }
+          : shouldReduceMotion
+            ? { opacity: 1 }
+            : { opacity: 1, y: 0, scale: 1, rotate: 0 }
+      }
+      exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96, y: -4 }}
+      whileHover={
+        shouldReduceMotion || isDragging
+          ? undefined
+          : { y: -1, transition: pmSnappy }
+      }
+      whileTap={shouldReduceMotion || isDragging ? undefined : { scale: 0.985 }}
+      transition={
+        shouldReduceMotion
+          ? { duration: 0.12 }
+          : {
+              ...pmSpring,
+              delay: Math.min(index * 0.02, 0.16),
+              layout: { duration: 0.2, ease: [0.22, 1, 0.36, 1] },
+            }
+      }
       className={cn(
-        "group rounded-lg border bg-card px-3 py-2.5",
-        "transition-[box-shadow,border-color] duration-150 ease-out motion-reduce:transition-none",
-        "cursor-grab active:cursor-grabbing",
-        "hover:shadow-md hover:border-primary/20",
-        isDragging && "shadow-xl ring-1 ring-primary/20 scale-[1.02]"
+        "group relative rounded-md border border-border/80 bg-card px-2.5 py-2",
+        "cursor-grab active:cursor-grabbing will-change-transform",
+        "before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded-full",
+        "before:bg-transparent before:transition-colors before:duration-150",
+        "hover:border-primary/25 hover:bg-primary/[0.03] hover:shadow-md hover:before:bg-primary/60",
+        isDragging &&
+          "z-20 border-primary/30 bg-card shadow-xl ring-1 ring-primary/25 before:bg-primary",
       )}
       onMouseDown={handleMouseDown}
       onClick={handleClick}
@@ -91,75 +125,77 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
             />
           </div>
         ) : null}
-        <p className="text-[13px] font-medium leading-snug line-clamp-2 flex-1">
+        <p className={cn(TEXT_TWO_LINES, "flex-1 text-[12.5px] font-medium leading-snug text-foreground/95")}>
           {ticket.title}
         </p>
         <TicketQuickActions
           ticketId={ticket.id}
           projectId={projectId}
-          className="opacity-0 group-hover:opacity-100 transition-opacity -mt-0.5 -mr-1"
+          className="-mr-1 -mt-0.5 opacity-0 transition-all duration-150 group-hover:opacity-100 group-hover:translate-x-0 translate-x-1"
         />
       </div>
 
-      <div className="mt-2 flex items-center justify-between gap-1 min-w-0">
-        <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
-          {showId && (
-            <span className="text-[10px] font-mono text-muted-foreground shrink-0">
+      <div className="mt-1.5 flex min-w-0 items-center justify-between gap-1">
+        <div className="flex min-w-0 flex-wrap items-center gap-1">
+          {showId ? (
+            <span className="shrink-0 font-mono text-[10px] tracking-tight text-muted-foreground/80">
               {ticketKey}
             </span>
-          )}
+          ) : null}
 
-          {showPriority && projectId && (
+          {showPriority && projectId ? (
             <InlinePriority
               ticketId={ticket.id}
               projectId={projectId}
               currentPriority={ticket.priority}
             />
-          )}
+          ) : null}
 
-          {showLabels && projectId && (
+          {showLabels && projectId ? (
             <InlineLabels
               ticketId={ticket.id}
               projectId={projectId}
-              currentLabelIds={ticket.labels?.flatMap((l) => (l.label ? [l.label.id] : [])) ?? []}
+              currentLabelIds={
+                ticket.labels?.flatMap((l) => (l.label ? [l.label.id] : [])) ?? []
+              }
             />
-          )}
+          ) : null}
 
-          {showEstimate && projectId && (
+          {showEstimate && projectId ? (
             <InlineEstimate
               ticketId={ticket.id}
               projectId={projectId}
               currentPoints={points}
             />
-          )}
+          ) : null}
 
-          {showCycle && projectId && (
+          {showCycle && projectId ? (
             <InlineCycle
               ticketId={ticket.id}
               projectId={projectId}
               currentCycleId={ticket.cycleId}
             />
-          )}
+          ) : null}
 
-          {showDueDate && projectId && (
+          {showDueDate && projectId ? (
             <InlineDueDate
               ticketId={ticket.id}
               projectId={projectId}
               currentDueDate={ticket.dueDate}
             />
-          )}
+          ) : null}
 
-          {projectId && (
+          {projectId ? (
             <InlineStartDate
               ticketId={ticket.id}
               projectId={projectId}
               currentStartDate={ticket.startDate}
             />
-          )}
+          ) : null}
         </div>
 
-        {showAssignee && projectId && (
-          <div className="shrink-0 ml-1">
+        {showAssignee && projectId ? (
+          <div className="ml-1 shrink-0 transition-transform duration-150 group-hover:scale-105">
             <InlineAssignee
               ticketId={ticket.id}
               projectId={projectId}
@@ -167,7 +203,7 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
               assignee={primaryAssignee}
             />
           </div>
-        )}
+        ) : null}
       </div>
     </motion.div>
   );

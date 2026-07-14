@@ -58,9 +58,10 @@ export const SubtaskRow = memo(function SubtaskRow({
 
       <span
         className={cn(
-          "flex-1 min-w-0 truncate text-xs",
+          "min-w-0 max-w-full flex-1 truncate text-xs [overflow-wrap:anywhere]",
           isDone && "line-through text-muted-foreground",
         )}
+        title={subtask.title}
       >
         {subtask.title}
       </span>

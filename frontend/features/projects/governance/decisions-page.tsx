@@ -24,6 +24,14 @@ import {
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { DecisionFormSheet } from "./decision-form-sheet";
+import {
+  PmPageShell,
+  PmPanel,
+  PmSection,
+  PM_TOOLBAR,
+} from "@/features/projects/shared/pm-chrome";
+import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { cn } from "@/lib/utils";
 
 const DEC_STATUS_LABEL: Record<DecisionStatus, string> = {
   proposed: "Proposed", accepted: "Accepted", superseded: "Superseded", revisit: "Revisit",
@@ -107,7 +115,14 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
     },
     {
       key: "title", header: "Title", sortable: true, sortValue: (d) => d.title,
-      cell: (row) => <span className="font-medium text-foreground truncate max-w-[220px] block">{row.title}</span>,
+      cell: (row) => (
+        <span
+          className={cn("block max-w-[min(100%,22rem)] font-medium text-foreground", TEXT_ONE_LINE)}
+          title={row.title}
+        >
+          {row.title}
+        </span>
+      ),
     },
     {
       key: "status", header: "Status",
@@ -167,58 +182,92 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
       subtitle="Log and track key project decisions for accountability and audit"
       actions={
         canManage ? (
-          <Button size="sm" className="h-8 text-xs gap-1.5" onClick={() => setSheetOpen(true)}>
+          <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={() => setSheetOpen(true)}>
             <Plus className="h-3.5 w-3.5" /> New Decision
           </Button>
         ) : undefined
       }
       filters={
-        <div className="flex items-center gap-2 flex-wrap">
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="h-8 w-40 text-xs"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {STATUS_OPTS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Input
-            className="h-8 text-xs w-52"
-            placeholder="Search decisions..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          {isFiltered && (
-            <Button size="sm" variant="ghost" className="h-8 text-xs"
-              onClick={() => { setStatusFilter("all"); setSearch(""); }}>
-              Clear
-            </Button>
-          )}
+        <div className={cn(PM_TOOLBAR, "sm:justify-start")}>
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="h-8 w-40 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUS_OPTS.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input
+              className="h-8 w-52 text-xs"
+              placeholder="Search decisions..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            {isFiltered ? (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 text-xs"
+                onClick={() => {
+                  setStatusFilter("all");
+                  setSearch("");
+                }}
+              >
+                Clear
+              </Button>
+            ) : null}
+          </div>
         </div>
       }
     >
-      <div className="flex flex-1 min-h-0 flex-col">
-        {isLoading ? (
-          <DataTableSkeleton rows={5} columns={7} className="flex-1" />
-        ) : isError ? (
-          <ErrorState className="flex-1" onRetry={() => void refetch()} />
-        ) : displayed.length === 0 ? (
-          <EmptyState
-            illustrationPreset="documents"
-            title={isFiltered ? "No matching decisions" : "No decisions recorded"}
-            description={
-              isFiltered
-                ? "Try adjusting your filters."
-                : "Record key project decisions to maintain a clear audit trail."
-            }
-            action={
-              isFiltered
-                ? { label: "Clear filters", onClick: () => { setStatusFilter("all"); setSearch(""); } }
-                : canManage ? { label: "Log Decision", onClick: () => setSheetOpen(true) } : undefined
-            }
-          />
-        ) : (
-          <DataTable data={displayed} columns={columns} getRowKey={(row) => row.id} minWidth="720px" className="flex-1 min-h-0" />
-        )}
-      </div>
+      <PmPageShell>
+        <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
+          {isLoading ? (
+            <DataTableSkeleton rows={5} columns={7} className="flex-1" />
+          ) : isError ? (
+            <ErrorState className="flex-1" onRetry={() => void refetch()} />
+          ) : displayed.length === 0 ? (
+            <EmptyState
+              illustrationPreset="documents"
+              title={isFiltered ? "No matching decisions" : "No decisions recorded"}
+              description={
+                isFiltered
+                  ? "Try adjusting your filters."
+                  : "Record key project decisions to maintain a clear audit trail."
+              }
+              action={
+                isFiltered
+                  ? {
+                      label: "Clear filters",
+                      onClick: () => {
+                        setStatusFilter("all");
+                        setSearch("");
+                      },
+                    }
+                  : canManage
+                    ? { label: "Log Decision", onClick: () => setSheetOpen(true) }
+                    : undefined
+              }
+              className="min-h-[40vh]"
+            />
+          ) : (
+            <PmPanel className="flex min-h-0 flex-1 flex-col" solid>
+              <DataTable
+                data={displayed}
+                columns={columns}
+                getRowKey={(row) => row.id}
+                minWidth="720px"
+                className="min-h-0 flex-1 border-0"
+              />
+            </PmPanel>
+          )}
+        </PmSection>
+      </PmPageShell>
 
       <DecisionFormSheet
         open={sheetOpen || !!editDecision}

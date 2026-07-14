@@ -1,7 +1,9 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Gauge } from "lucide-react";
+import { PmPanel } from "@/features/projects/shared/pm-chrome";
+import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { cn } from "@/lib/utils";
 
 export const TOOLTIP_STYLE = {
   background: "hsl(var(--card))",
@@ -37,15 +39,15 @@ export function ChartCard({
   children: React.ReactNode;
 }) {
   return (
-    <Card className="bg-card border border-border rounded-lg shadow-none">
-      <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0 pb-2">
-        <CardTitle className="flex items-center gap-2 text-sm font-semibold">
-          <Icon className="h-4 w-4 text-muted-foreground" />
-          {title}
-        </CardTitle>
+    <PmPanel className="p-4">
+      <div className="mb-3 flex min-w-0 items-center justify-between gap-3">
+        <h3 className={cn("flex min-w-0 items-center gap-2 text-sm font-semibold", TEXT_ONE_LINE)}>
+          <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <span className={TEXT_ONE_LINE}>{title}</span>
+        </h3>
         {actions}
-      </CardHeader>
-      <CardContent className="p-4 pt-0">{children}</CardContent>
-    </Card>
+      </div>
+      {children}
+    </PmPanel>
   );
 }
