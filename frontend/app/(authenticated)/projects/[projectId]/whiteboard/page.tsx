@@ -313,11 +313,9 @@ export default function WhiteboardPage({
             isViewMode={detail.access === "view"}
             canManage={detail.access === "manage"}
             isFullscreen={isFullscreen}
-            listCollapsed={listCollapsed}
             shareToken={detail.sharing?.shareToken ?? null}
             onManualSave={manualSave}
             onToggleFullscreen={handleToggleFullscreen}
-            onToggleList={handleToggleList}
             onOpenShare={handleOpenShare}
           />
         )}

@@ -5,10 +5,7 @@ import {
   Save,
   Maximize2,
   Minimize2,
-  MoreHorizontal,
   Share2,
-  PanelLeftClose,
-  PanelLeftOpen,
   ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,13 +15,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import type { SaveStatus } from "./use-whiteboard-autosave";
 
 interface WhiteboardToolbarProps {
@@ -32,11 +22,9 @@ interface WhiteboardToolbarProps {
   isViewMode: boolean;
   canManage: boolean;
   isFullscreen: boolean;
-  listCollapsed: boolean;
   shareToken: string | null;
   onManualSave: () => void;
   onToggleFullscreen: () => void;
-  onToggleList: () => void;
   onOpenShare: () => void;
 }
 
@@ -45,11 +33,9 @@ export function WhiteboardToolbar({
   isViewMode,
   canManage,
   isFullscreen,
-  listCollapsed,
   shareToken,
   onManualSave,
   onToggleFullscreen,
-  onToggleList,
   onOpenShare,
 }: WhiteboardToolbarProps) {
   const isSaveDisabled =
@@ -110,48 +96,39 @@ export function WhiteboardToolbar({
           <TooltipContent>{isFullscreen ? "Exit fullscreen" : "Fullscreen"}</TooltipContent>
         </Tooltip>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8 active:scale-[0.98]"
-              aria-label="More options"
-            >
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            {canManage && (
-              <DropdownMenuItem onClick={onOpenShare}>
-                <Share2 className="h-3.5 w-3.5 mr-2" />
-                Share…
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuItem onClick={onToggleList}>
-              {listCollapsed ? (
-                <>
-                  <PanelLeftOpen className="h-3.5 w-3.5 mr-2" />
-                  Show boards
-                </>
-              ) : (
-                <>
-                  <PanelLeftClose className="h-3.5 w-3.5 mr-2" />
-                  Hide boards
-                </>
-              )}
-            </DropdownMenuItem>
-            {shareToken !== null && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleOpenPublicLink}>
-                  <ExternalLink className="h-3.5 w-3.5 mr-2" />
-                  Open public link
-                </DropdownMenuItem>
-              </>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {canManage && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 active:scale-[0.98]"
+                onClick={onOpenShare}
+                aria-label="Share board"
+              >
+                <Share2 className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Share</TooltipContent>
+          </Tooltip>
+        )}
+
+        {shareToken !== null && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 active:scale-[0.98]"
+                onClick={handleOpenPublicLink}
+                aria-label="Open public link"
+              >
+                <ExternalLink className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Open public link</TooltipContent>
+          </Tooltip>
+        )}
       </div>
     </TooltipProvider>
   );
