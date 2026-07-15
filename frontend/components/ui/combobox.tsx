@@ -27,7 +27,7 @@ export interface ComboboxOption {
 interface ComboboxProps {
   options: ComboboxOption[];
   value: string;
-  onChange: (value: string) => void;
+  onChange: (value: string, label?: string) => void;
   placeholder?: string;
   searchPlaceholder?: string;
   emptyText?: string;
@@ -61,12 +61,13 @@ export function Combobox({
 
   const handleSelect = useCallback(
     (v: string) => {
-      onChange(v);
+      const option = options.find((o) => o.value === v);
+      onChange(v, option?.label);
       setOpen(false);
       setSearch("");
       onSearchChange?.("");
     },
-    [onChange, onSearchChange],
+    [onChange, onSearchChange, options],
   );
 
   const handleOpenChange = useCallback(

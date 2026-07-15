@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Shield, ShieldOff } from "lucide-react";
+import { StateIllustration } from "@/components/illustrations";
 import { useCan } from "@/hooks/api/access";
 import { useLegalHolds, useReleaseLegalHold, useDeleteLegalHold, type LegalHold } from "../hooks/use-legal-holds";
 import { LegalHoldSheet } from "./legal-hold-sheet";
@@ -120,8 +121,8 @@ export function LegalHoldsTable() {
 
   if (isError) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <Shield className="h-10 w-10 text-muted-foreground mb-3" />
+      <div className="flex flex-1 flex-col items-center justify-center gap-3 py-16 text-center">
+        <StateIllustration preset="security" className="h-24 w-24" />
         <p className="text-sm text-muted-foreground">Failed to load legal holds.</p>
       </div>
     );
@@ -145,9 +146,18 @@ export function LegalHoldsTable() {
         data={data?.data ?? []}
         getRowKey={(row) => row.id}
         emptyState={
-          <div className="flex flex-col items-center py-12">
-            <Shield className="h-8 w-8 text-muted-foreground mb-2" />
-            <p className="text-sm text-muted-foreground">No legal holds found.</p>
+          <div className="flex flex-col items-center justify-center gap-3 py-12">
+            <StateIllustration preset="security" className="h-28 w-28" />
+            <div className="text-center space-y-1">
+              <p className="text-sm font-medium text-foreground">No legal holds</p>
+              <p className="text-xs text-muted-foreground">Place a legal hold to preserve records during an investigation or legal proceeding.</p>
+            </div>
+            {canManage && (
+              <Button onClick={handleOpenCreate} size="sm" className="mt-1 bg-primary hover:bg-primary/90 text-primary-foreground">
+                <Shield className="h-4 w-4 mr-1.5" />
+                Place Hold
+              </Button>
+            )}
           </div>
         }
         pagination={{

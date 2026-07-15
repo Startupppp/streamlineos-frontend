@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { memo, useState, useCallback } from "react";
 import { ChevronDown, Tag as TagIcon, Link2, GitMerge, Split, X, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,12 +23,60 @@ import {
   useAddTicketLink,
   useMergeTicket,
   type TicketLinkRelation,
+  type SupportTicketLink,
 } from "@/hooks/api/support/links";
 import { useSplitTicket } from "@/hooks/api/support/productivity";
 
 interface TicketDetailRelationsProps {
   ticketId: number;
 }
+
+interface LinkedTicketRowProps {
+  link: SupportTicketLink;
+}
+
+const LinkedTicketRow = memo(function LinkedTicketRow({ link }: LinkedTicketRowProps) {
+  return (
+    <li className="text-[12px] flex items-center gap-1.5">
+      <Badge variant="outline" className="text-[9px] px-1 py-0">
+        {link.relation}
+      </Badge>
+      <span className="truncate">
+        #{link.linkedTicketId} {link.linkedTicket?.title ?? ""}
+      </span>
+    </li>
+  );
+});
+
+interface TicketTagBadgeProps {
+  name: string;
+  tagId: number;
+  onDetach: (tagId: number) => void;
+}
+
+const TicketTagBadge = memo(function TicketTagBadge({
+  name,
+  tagId,
+  onDetach,
+}: TicketTagBadgeProps) {
+  const handleDetach = useCallback(() => {
+    onDetach(tagId);
+  }, [onDetach, tagId]);
+
+  return (
+    <Badge variant="outline" className="text-[10px] gap-1 pr-1">
+      {name}
+      <button
+        type="button"
+        onClick={handleDetach}
+        aria-label={`Remove ${name}`}
+        className="text-muted-foreground hover:text-foreground"
+      >
+        <X className="h-2.5 w-2.5" />
+      </button>
+    </Badge>
+  );
+});
 
 export function TicketDetailRelations({ ticketId }: TicketDetailRelationsProps) {
   const [open, setOpen] = useState(false);
@@ -86,7 +134,7 @@ export function TicketDetailRelations({ ticketId }: TicketDetailRelationsProps) 
   const handleAddLink = useCallback(() => {
     const parsed = Number(linkedTicketId);
     if (!parsed || parsed <= 0) {
-      toast.error("Enter a valid ticket ID");
+      toast.error("Select a ticket to link");
       return;
     }
     addLink.mutate(
@@ -104,7 +152,7 @@ export function TicketDetailRelations({ ticketId }: TicketDetailRelationsProps) 
   const handleMerge = useCallback(() => {
     const parsed = Number(mergeTargetId);
     if (!parsed || parsed <= 0) {
-      toast.error("Enter a valid ticket ID to merge into");
+      toast.error("Select a target ticket to merge into");
       return;
     }
     mergeTicket.mutate(
@@ -158,17 +206,12 @@ export function TicketDetailRelations({ ticketId }: TicketDetailRelationsProps) 
             <p className="text-[11px] font-semibold text-foreground/80 mb-1.5">Tags</p>
             <div className="flex flex-wrap gap-1.5 mb-2">
               {(ticketTags ?? []).map((tag) => (
-                <Badge key={tag.id} variant="outline" className="text-[10px] gap-1 pr-1">
-                  {tag.name}
-                  <button
-                    type="button"
-                    onClick={() => handleDetachTag(tag.id)}
-                    aria-label={`Remove ${tag.name}`}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    <X className="h-2.5 w-2.5" />
-                  </button>
-                </Badge>
+                <TicketTagBadge
+                  key={tag.id}
+                  tagId={tag.id}
+                  name={tag.name}
+                  onDetach={handleDetachTag}
+                />
               ))}
             </div>
             <div className="flex items-center gap-2">
@@ -205,14 +248,7 @@ export function TicketDetailRelations({ ticketId }: TicketDetailRelationsProps) 
             {(links ?? []).length > 0 && (
               <ul className="space-y-1 mb-2">
                 {(links ?? []).map((link) => (
-                  <li key={link.id} className="text-[12px] flex items-center gap-1.5">
-                    <Badge variant="outline" className="text-[9px] px-1 py-0">
-                      {link.relation}
-                    </Badge>
-                    <span className="truncate">
-                      #{link.linkedTicketId} {link.linkedTicket?.title ?? ""}
-                    </span>
-                  </li>
+                  <LinkedTicketRow key={link.id} link={link} />
                 ))}
               </ul>
             )}

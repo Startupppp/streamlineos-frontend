@@ -4,14 +4,14 @@ import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import { Shield, Clock, Globe, Monitor } from "lucide-react";
 import { useOrgSettings, useUpdateOrgSecuritySettings } from "@/hooks/api/organization";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
@@ -82,7 +82,7 @@ export default function SecurityPage() {
       { mfaEnforced, passwordExpiryDays, allowedEmailDomains, maxConcurrentSessions },
       {
         onSuccess: () => toast.success("Security policy saved"),
-        onError: (err) => toast.error(getApiError(err)),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }, [expiryDays, mfaEnforced, allowedDomains, maxSessions, updateSecurity]);
@@ -233,9 +233,13 @@ export default function SecurityPage() {
         <Separator />
 
         <div className="flex justify-end">
-          <Button onClick={handleSave} disabled={updateSecurity.isPending}>
-            {updateSecurity.isPending ? "Saving…" : "Save Policy"}
-          </Button>
+          <LoadingButton
+            onClick={handleSave}
+            isPending={updateSecurity.isPending}
+            loadingText="Saving…"
+          >
+            Save Policy
+          </LoadingButton>
         </div>
       </div>
     </PageWrapper>

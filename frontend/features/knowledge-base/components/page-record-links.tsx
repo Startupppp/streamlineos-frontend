@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,8 +20,12 @@ import {
   type KbPageRecordLink,
 } from "@/hooks/api/kb/record-links";
 import { KbXIcon } from "@/features/knowledge-base/lib/kb-icons";
+import {
+  KbRecordTargetCombobox,
+  type KbRecordTargetType,
+} from "./kb-record-target-combobox";
 
-const TARGET_TYPE_LABELS: Record<string, string> = {
+const TARGET_TYPE_LABELS: Record<KbRecordTargetType, string> = {
   crm_lead: "CRM Lead",
   crm_deal: "CRM Deal",
   crm_contact: "CRM Contact",
@@ -36,7 +40,7 @@ const ACTION_BTN_CLASS =
   "h-8 w-full text-[13px] bg-card border border-input shadow-xs hover:bg-muted/50";
 
 const TARGET_TYPE_OPTIONS = Object.entries(TARGET_TYPE_LABELS).map(([value, label]) => ({
-  value,
+  value: value as KbRecordTargetType,
   label,
 }));
 
@@ -48,15 +52,21 @@ interface RecordLinkRowProps {
   onRemove: (linkId: number, pageId: number) => void;
 }
 
-function RecordLinkRow({ link, pageId, canUpdate, isRemoving, onRemove }: RecordLinkRowProps) {
-  function handleRemove() {
+const RecordLinkRow = memo(function RecordLinkRow({
+  link,
+  pageId,
+  canUpdate,
+  isRemoving,
+  onRemove,
+}: RecordLinkRowProps) {
+  const handleRemove = useCallback(() => {
     onRemove(link.id, pageId);
-  }
+  }, [link.id, onRemove, pageId]);
 
   return (
     <div className="flex items-center gap-2 py-1">
       <Badge variant="secondary" className="text-[10px] h-4 px-1.5 shrink-0">
-        {TARGET_TYPE_LABELS[link.targetType] ?? link.targetType}
+        {TARGET_TYPE_LABELS[link.targetType as KbRecordTargetType] ?? link.targetType}
       </Badge>
       <span className="text-[12px] text-foreground truncate flex-1">
         {link.label ?? link.targetId ?? "—"}
@@ -75,7 +85,7 @@ function RecordLinkRow({ link, pageId, canUpdate, isRemoving, onRemove }: Record
       )}
     </div>
   );
-}
+});
 
 interface PageRecordLinksProps {
   pageId: number;
@@ -83,7 +93,7 @@ interface PageRecordLinksProps {
 
 export function PageRecordLinks({ pageId }: PageRecordLinksProps) {
   const canUpdate = useCan("kb:pages:update");
-  const [targetType, setTargetType] = useState("");
+  const [targetType, setTargetType] = useState<KbRecordTargetType | "">("");
   const [targetId, setTargetId] = useState("");
   const [label, setLabel] = useState("");
 
@@ -91,19 +101,23 @@ export function PageRecordLinks({ pageId }: PageRecordLinksProps) {
   const addLink = useAddKbPageRecordLink();
   const removeLink = useRemoveKbPageRecordLink();
 
-  function handleTargetTypeChange(value: string) {
-    setTargetType(value);
-  }
+  const handleTargetTypeChange = useCallback((value: string) => {
+    setTargetType(value as KbRecordTargetType);
+    setTargetId("");
+  }, []);
 
-  function handleTargetIdChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setTargetId(e.target.value);
-  }
+  const handleTargetIdChange = useCallback((value: string, selectedLabel?: string) => {
+    setTargetId(value);
+    if (selectedLabel) {
+      setLabel((current) => (current.trim() === "" ? selectedLabel : current));
+    }
+  }, []);
 
-  function handleLabelChange(e: React.ChangeEvent<HTMLInputElement>) {
+  const handleLabelChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setLabel(e.target.value);
-  }
+  }, []);
 
-  function handleAdd() {
+  const handleAdd = useCallback(() => {
     if (!targetType || !targetId.trim() || !label.trim()) return;
     addLink.mutate(
       { pageId, targetType, targetId: targetId.trim(), label: label.trim() },
@@ -117,11 +131,14 @@ export function PageRecordLinks({ pageId }: PageRecordLinksProps) {
         onError: () => toast.error("Failed to link record"),
       },
     );
-  }
+  }, [addLink, label, pageId, targetId, targetType]);
 
-  function handleRemoveLink(linkId: number, pid: number) {
-    removeLink.mutate({ linkId, pageId: pid }, { onError: () => toast.error("Failed to remove link") });
-  }
+  const handleRemoveLink = useCallback(
+    (linkId: number, pid: number) => {
+      removeLink.mutate({ linkId, pageId: pid }, { onError: () => toast.error("Failed to remove link") });
+    },
+    [removeLink],
+  );
 
   return (
     <div className="space-y-2">
@@ -160,10 +177,12 @@ export function PageRecordLinks({ pageId }: PageRecordLinksProps) {
             onChange={handleLabelChange}
             className={FIELD_CLASS}
           />
-          <Input
-            placeholder="Record ID"
+          <KbRecordTargetCombobox
+            targetType={targetType}
             value={targetId}
             onChange={handleTargetIdChange}
+            placeholder="Search record…"
+            disabled={!targetType}
             className={FIELD_CLASS}
           />
           <Button

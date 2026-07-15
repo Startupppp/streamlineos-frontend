@@ -37,16 +37,15 @@ function DeviceActions({
 
   return (
     <div className="flex items-center gap-1">
-      {!device.trusted && (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleTrustClick}
-          disabled={isTrustPending}
-        >
-          Trust
-        </Button>
-      )}
+      <Button
+        hidden={device.trusted}
+        variant="outline"
+        size="sm"
+        onClick={handleTrustClick}
+        disabled={isTrustPending}
+      >
+        Trust
+      </Button>
       <Button
         variant="ghost"
         size="sm"

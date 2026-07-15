@@ -8,30 +8,13 @@ import { PageWrapper, PageSection } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ErrorState } from "@/components/shared";
-import { DataTableSkeleton } from "@/components/ui/data-table";
-import { Skeleton } from "@/components/ui/skeleton";
+import { InventoryDetailPageLoading } from "@/features/inventory/components/inventory-detail-page-loading";
 import { fadeUp } from "@/lib/motion-variants";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useSerial, useTraceability } from "@/hooks/api/inventory/traceability";
 import { SERIAL_STATUS_LABEL } from "@/features/inventory/lib";
 import { MovementHistoryTable } from "./movement-history-table";
 import { TraceabilityTimeline } from "./traceability-timeline";
-
-function DetailSkeleton() {
-  return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="rounded-lg border border-border bg-card p-3 space-y-2">
-            <Skeleton className="h-3 w-20" />
-            <Skeleton className="h-5 w-28" />
-          </div>
-        ))}
-      </div>
-      <DataTableSkeleton rows={12} columns={6} />
-    </div>
-  );
-}
 
 interface SerialDetailClientProps {
   serialId: number;
@@ -59,12 +42,12 @@ export function SerialDetailClient({ serialId }: SerialDetailClientProps) {
 
   if (isLoading) {
     return (
-      <PageWrapper
-        backHref="/inventory/serials"
+      <InventoryDetailPageLoading
         title="Loading…"
-      >
-        <DetailSkeleton />
-      </PageWrapper>
+        backHref="/inventory/serials"
+        statCount={4}
+        actions={null}
+      />
     );
   }
 

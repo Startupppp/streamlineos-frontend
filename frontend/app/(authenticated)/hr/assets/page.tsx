@@ -710,9 +710,21 @@ export default function HrAssetsPage() {
   }, [assignDialog, assignEmpId, assignAsset]);
 
   const handleUnassign = useCallback(() => {
-    setAssignEmpId("");
-    handleConfirmAssign();
-  }, [handleConfirmAssign]);
+    if (!assignDialog) return;
+    setAssignPending(true);
+    assignAsset.mutate(
+      { assetId: assignDialog.assetId, assignedTo: null },
+      {
+        onSuccess: () => {
+          toast.success("Asset unassigned");
+          setAssignDialog(null);
+          setAssignEmpId("");
+        },
+        onError: (e) => toast.error(getErrorMessage(e)),
+        onSettled: () => setAssignPending(false),
+      },
+    );
+  }, [assignDialog, assignAsset]);
 
   const handleConfirmDelete = useCallback(() => {
     if (deleteAssetId === null) return;

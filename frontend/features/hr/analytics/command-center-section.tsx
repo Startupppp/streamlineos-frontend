@@ -166,23 +166,15 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
   }
 
   function handleLeaveDrilldown() {
-    openDrilldown("leave-trends", "Leave Trends");
+    openDrilldown("leave", "Leave Trends");
   }
 
   function handleEngagementDrilldown() {
-    openDrilldown("engagement", "Engagement");
-  }
-
-  function handlePerformanceDrilldown() {
-    openDrilldown("performance", "Performance Distribution");
+    openDrilldown("attendance", "Attendance Records");
   }
 
   function handleComplianceDrilldown() {
-    openDrilldown("compliance", "Compliance Gaps");
-  }
-
-  function handlePayrollDrilldown() {
-    openDrilldown("payroll-cost", "Payroll Cost");
+    openDrilldown("cases", "Compliance Cases");
   }
 
   if (kpisLoading) return <SectionSkeleton rows={8} />;
@@ -243,7 +235,6 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
             value={kpis?.payrollCostLastMonth !== null && kpis?.payrollCostLastMonth !== undefined ? formatCurrency(kpis.payrollCostLastMonth) : "—"}
             icon={DollarSign}
             tone="blue"
-            onClick={handlePayrollDrilldown}
           />
         ) : null}
       </StatCardGrid>
@@ -380,8 +371,8 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
                 </BarChart>
               </ResponsiveContainer>
               <div className="mt-2 flex justify-end">
-                <Button variant="ghost" size="sm" onClick={handlePerformanceDrilldown}>
-                  View Details
+                <Button variant="ghost" size="sm" onClick={handleAttritionDrilldown}>
+                  View Attrition Details
                 </Button>
               </div>
             </>
@@ -444,8 +435,8 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
                   </LineChart>
                 </ResponsiveContainer>
                 <div className="mt-2 flex justify-end">
-                  <Button variant="ghost" size="sm" onClick={handlePayrollDrilldown}>
-                    View Details
+                  <Button variant="ghost" size="sm" onClick={handleLeaveDrilldown}>
+                    View Leave Details
                   </Button>
                 </div>
               </>

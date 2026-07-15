@@ -7,8 +7,8 @@ import { EmptyWarehouseIllustration } from "@/components/illustrations";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { InventoryDetailPageLoading } from "@/features/inventory/components/inventory-detail-page-loading";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ErrorState } from "@/components/shared";
@@ -120,36 +120,12 @@ export default function WarehouseDetailPage({
 
   if (isLoading) {
     return (
-      <PageWrapper
+      <InventoryDetailPageLoading
         title="Warehouse"
+        subtitle="Loading..."
         backHref="/inventory/warehouses"
-      >
-        <div className="space-y-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="space-y-2">
-                <Skeleton className="h-5 w-48" />
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-4 w-56" />
-              </div>
-            </CardContent>
-          </Card>
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Card key={i}>
-              <CardHeader className="pb-2">
-                <Skeleton className="h-4 w-20" />
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {Array.from({ length: 3 }).map((_, j) => (
-                    <Skeleton key={j} className="h-9 w-full" />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </PageWrapper>
+        actions={null}
+      />
     );
   }
 

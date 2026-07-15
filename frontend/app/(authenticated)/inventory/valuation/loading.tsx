@@ -1,14 +1,14 @@
-import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Skeleton } from "@/components/ui/skeleton";
+import { InventoryListPageLoading } from "@/features/inventory/components/inventory-list-page-loading";
 
 export default function ValuationLoading() {
   return (
-    <PageWrapper title="Inventory Valuation" subtitle="Total stock value by costing method.">
-      <div className="space-y-1">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <Skeleton key={i} className="h-8 w-full rounded" />
-        ))}
-      </div>
-    </PageWrapper>
+    <InventoryListPageLoading
+      title="Inventory Valuation"
+      subtitle="Total stock value by costing method."
+      actions={null}
+      filters={null}
+      showStats
+      statCols={4}
+    />
   );
 }

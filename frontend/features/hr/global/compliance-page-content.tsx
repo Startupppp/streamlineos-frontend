@@ -24,7 +24,8 @@ import {
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Globe, Shield } from "lucide-react";
+import { Plus, Globe } from "lucide-react";
+import { StateIllustration } from "@/components/illustrations";
 import {
   useComplianceRequirements,
   useDeleteComplianceRequirement,
@@ -134,9 +135,16 @@ export function CompliancePageContent() {
           {reqLoading ? (
             <div className="space-y-2">{Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}</div>
           ) : (reqData?.data ?? []).length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-              <Shield className="h-10 w-10 mb-3 opacity-40" />
-              <p className="text-sm">No compliance requirements. Add one or seed a country pack.</p>
+            <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
+              <StateIllustration preset="security" className="h-28 w-28" />
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-foreground">No compliance requirements</p>
+                <p className="text-xs text-muted-foreground">Add a requirement manually or seed a country compliance pack.</p>
+              </div>
+              <Button size="sm" onClick={() => { setEditingReq(undefined); setReqSheetOpen(true); }} className="mt-1 gap-1.5 h-8">
+                <Plus className="h-3.5 w-3.5" />
+                Add requirement
+              </Button>
             </div>
           ) : (
             <div className="space-y-2">
@@ -173,9 +181,16 @@ export function CompliancePageContent() {
           {authLoading ? (
             <div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}</div>
           ) : (authData?.data ?? []).length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-              <Shield className="h-10 w-10 mb-3 opacity-40" />
-              <p className="text-sm">No work authorizations on record.</p>
+            <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
+              <StateIllustration preset="security" className="h-28 w-28" />
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-foreground">No work authorizations on record</p>
+                <p className="text-xs text-muted-foreground">Track visa, work permit, and right-to-work documentation for employees.</p>
+              </div>
+              <Button size="sm" onClick={() => { setEditingAuth(undefined); setAuthSheetOpen(true); }} className="mt-1 gap-1.5 h-8">
+                <Plus className="h-3.5 w-3.5" />
+                Add authorization
+              </Button>
             </div>
           ) : (
             <div className="space-y-2">

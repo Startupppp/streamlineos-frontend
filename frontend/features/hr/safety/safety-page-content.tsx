@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { DataTable } from "@/components/ui/data-table";
 import { Plus, Search } from "lucide-react";
+import { StateIllustration } from "@/components/illustrations";
 import { useCan } from "@/hooks/api/access";
 import { useSafetyIncidents } from "@/hooks/api/hr/safety";
 import type { SafetyIncident, IncidentStatus, IncidentType, IncidentSeverity } from "@/hooks/api/hr/safety";
@@ -187,7 +188,19 @@ export function SafetyPageContent() {
             data={data?.data ?? []}
             isLoading={isLoading}
             getRowKey={(row) => row.id}
-            emptyState={<p className="text-sm text-muted-foreground text-center py-8">No safety incidents reported</p>}
+            emptyState={
+              <div className="flex flex-col items-center justify-center gap-3 py-12">
+                <StateIllustration preset="alert" className="h-28 w-28" />
+                <div className="text-center space-y-1">
+                  <p className="text-sm font-medium text-foreground">No safety incidents reported</p>
+                  <p className="text-xs text-muted-foreground">Report workplace incidents, accidents, near-misses, and hazards here.</p>
+                </div>
+                <Button size="sm" className="mt-1 gap-1.5 h-8 text-sm" onClick={() => setShowReport(true)}>
+                  <Plus className="h-3.5 w-3.5" />
+                  Report Incident
+                </Button>
+              </div>
+            }
           />
         )}
 

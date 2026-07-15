@@ -241,5 +241,6 @@ export function useHrDrilldown(metric: string, page: number, departmentId?: numb
         ...(departmentId ? { departmentId: String(departmentId) } : {}),
       }),
     staleTime: 60_000,
+    enabled: !!metric,
   });
 }

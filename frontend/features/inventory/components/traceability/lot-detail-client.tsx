@@ -8,8 +8,7 @@ import { PageWrapper, PageSection } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ErrorState } from "@/components/shared";
-import { DataTableSkeleton } from "@/components/ui/data-table";
-import { Skeleton } from "@/components/ui/skeleton";
+import { InventoryDetailPageLoading } from "@/features/inventory/components/inventory-detail-page-loading";
 import { fadeUp } from "@/lib/motion-variants";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useCan } from "@/hooks/api/access";
@@ -25,23 +24,6 @@ function getExpiryClass(dateStr: string | null): string {
   if (diff < 0) return "text-red-600 font-semibold";
   if (diff <= 30) return "text-amber-600 font-semibold";
   return "text-foreground";
-}
-
-function DetailSkeleton() {
-  return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-3 gap-3">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="rounded-lg border border-border bg-card p-3 space-y-2">
-            <Skeleton className="h-3 w-20" />
-            <Skeleton className="h-5 w-28" />
-          </div>
-        ))}
-      </div>
-      <DataTableSkeleton rows={12} columns={3} />
-      <DataTableSkeleton rows={12} columns={6} />
-    </div>
-  );
 }
 
 interface LotDetailClientProps {
@@ -78,9 +60,13 @@ export function LotDetailClient({ lotId }: LotDetailClientProps) {
 
   if (isLoading) {
     return (
-      <PageWrapper backHref="/inventory/lots" title="Loading…">
-        <DetailSkeleton />
-      </PageWrapper>
+      <InventoryDetailPageLoading
+        title="Loading…"
+        backHref="/inventory/lots"
+        statCols={3}
+        statCount={3}
+        actions={null}
+      />
     );
   }
 
