@@ -1,6 +1,8 @@
 import { useCallback } from "react";
+import { cn } from "@/lib/utils";
 import { SearchInput } from "@/components/ui/search-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import type { SurveyMode, SurveyStatus } from "@/hooks/api/surveys/forms";
 
 interface SurveyListFiltersProps {
@@ -32,7 +34,7 @@ export function SurveyListFilters({
         className="w-48"
       />
       <Select value={status} onValueChange={handleStatusSelect}>
-        <SelectTrigger className="h-8 w-32"><SelectValue placeholder="Status" /></SelectTrigger>
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-32")}><SelectValue placeholder="Status" /></SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All statuses</SelectItem>
           <SelectItem value="draft">Draft</SelectItem>
@@ -44,7 +46,7 @@ export function SurveyListFilters({
         </SelectContent>
       </Select>
       <Select value={mode} onValueChange={handleModeSelect}>
-        <SelectTrigger className="h-8 w-40"><SelectValue placeholder="Mode" /></SelectTrigger>
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-40")}><SelectValue placeholder="Mode" /></SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All modes</SelectItem>
           <SelectItem value="survey">Survey</SelectItem>

@@ -48,7 +48,7 @@ const STATUS_COLORS: Record<TrainingProgram["status"], string> = {
 
 const TYPE_COLORS: Record<TrainingProgram["type"], string> = {
   MANDATORY: "bg-red-50 text-red-700 border-red-200/70 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
-  OPTIONAL: "bg-violet-50 text-violet-700 border-violet-200/70 dark:bg-violet-500/10 dark:text-violet-300 dark:border-violet-500/30",
+  OPTIONAL: "bg-blue-50 text-blue-700 border-blue-200/70 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
   COMPLIANCE: "bg-orange-50 text-orange-700 border-orange-200/70 dark:bg-orange-500/10 dark:text-orange-300 dark:border-orange-500/30",
 };
 
@@ -206,7 +206,7 @@ export function TrainingList({ canManage, onSelectProgram, selectedProgramId }: 
                       href={program.virtualLink}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-violet-600 dark:text-violet-400 hover:underline truncate"
+                      className="text-blue-600 dark:text-blue-400 hover:underline truncate"
                       onClick={(e) => e.stopPropagation()}
                     >
                       Join link

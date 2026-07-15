@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -22,6 +22,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { cn } from "@/lib/utils";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { useCan } from "@/hooks/api/access";
@@ -209,7 +211,7 @@ export function BillingView() {
         <Button
           variant="outline"
           size="sm"
-          className="h-8 text-xs gap-1.5"
+          className="gap-1.5"
           onClick={handleExportOpen}
           disabled={groups.length === 0 || isLoading}
         >
@@ -220,7 +222,7 @@ export function BillingView() {
       {canInvoice && (
         <Button
           size="sm"
-          className="h-8 text-xs gap-1.5"
+          className="gap-1.5"
           onClick={handleInvoiceOpen}
           disabled={groups.length === 0 || isLoading}
         >
@@ -233,12 +235,12 @@ export function BillingView() {
 
   const pageFilters = (
     <>
-      <DateRangePicker from={startDate} to={endDate} onChange={handleDateRangeChange} className="h-8" />
+      <DateRangePicker from={startDate} to={endDate} onChange={handleDateRangeChange} />
       <Select
         value={parsedProjectId !== null ? String(parsedProjectId) : "ALL"}
         onValueChange={handleProjectChange}
       >
-        <SelectTrigger className="h-8 text-xs w-[160px]" aria-label="Filter by project">
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[160px]")} aria-label="Filter by project">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -372,11 +374,7 @@ export function BillingPageSkeleton() {
       }
     >
       <div className="space-y-4">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-[72px] rounded-lg" />
-          ))}
-        </div>
+        <StatCardGridSkeleton cols={4} />
         <Card>
           <CardContent className="p-0">
             <div className="border-b px-3 py-2 flex gap-2">

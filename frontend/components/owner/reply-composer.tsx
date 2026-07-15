@@ -59,12 +59,12 @@ export function ReplyComposer({
 
   if (done && !body) {
     return (
-      <div className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-5 text-center">
-        <CheckCircle2 className="h-5 w-5 text-emerald-600 mx-auto mb-2" />
-        <p className="text-[13px] font-medium text-slate-800">Reply sent.</p>
+      <div className="rounded-2xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-500/10 p-5 text-center">
+        <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 mx-auto mb-2" />
+        <p className="text-[13px] font-medium text-foreground">Reply sent.</p>
         <button
           onClick={handleSendAnother}
-          className="text-[11px] font-medium text-blue-600 hover:underline mt-3"
+          className="text-[11px] font-medium text-primary hover:underline mt-3"
         >
           Send another →
         </button>
@@ -74,7 +74,7 @@ export function ReplyComposer({
 
   return (
     <div className="rounded-2xl border border-border bg-card p-5">
-      <p className="text-[11px] font-medium text-slate-500 mb-2">Reply</p>
+      <p className="text-[11px] font-medium text-muted-foreground mb-2">Reply</p>
       <Textarea
         value={body}
         onChange={handleBodyChange}
@@ -83,7 +83,7 @@ export function ReplyComposer({
         className="resize-y"
       />
       <div className="flex items-center justify-between mt-3">
-        <p className="text-[11px] font-mono text-slate-400">
+        <p className="text-[11px] font-mono text-muted-foreground/60">
           Sends from no-reply@streamlineos.in · reply-to support@streamlineos.in
         </p>
         <Button onClick={submit} disabled={pending} className="h-9">

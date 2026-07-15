@@ -251,7 +251,7 @@ export function AddCandidateSheet({ open, onOpenChange }: AddCandidateSheetProps
             <SectionHeader
               icon={Briefcase}
               label="Professional Background"
-              colorClass="bg-violet-100 text-violet-600 dark:bg-violet-950/40 dark:text-violet-400"
+              colorClass="bg-blue-100 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400"
             />
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">

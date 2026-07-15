@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { ExpenseExportDialog } from "@/components/expenses/expense-export-dialog";
 import { STATUS_LABELS, type StatusFilter } from "./expense-constants";
 import type {
@@ -136,8 +137,8 @@ export function AdminExpenseFilters({
   }
 
   return (
-    <div className="flex min-w-0 flex-nowrap items-center justify-between gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0 rounded-lg bg-muted/40 px-3 py-2.5">
-      <div className="flex items-center gap-1.5 flex-wrap">
+    <div className={cn(FILTER_TOOLBAR_ROW, "justify-between")}>
+      <div className="flex items-center gap-1.5 flex-nowrap overflow-x-auto [&>*]:shrink-0">
         {[
           { key: "ALL" as StatusFilter, label: "All Claims", count: null },
           {

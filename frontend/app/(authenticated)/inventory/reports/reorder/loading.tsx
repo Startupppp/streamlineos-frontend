@@ -4,9 +4,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function ReorderReportLoading() {
   return (
     <PageWrapper title="Reorder Report">
-      <div className="flex flex-wrap items-center gap-2 mb-4">
-        <Skeleton className="w-64 flex-1" />
-        <Skeleton className="h-4 w-28 ml-auto" />
+      <div className="flex flex-nowrap items-center gap-2 mb-4 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+        <Skeleton className="h-8 w-64 flex-1 max-w-xs" />
+        <Skeleton className="h-8 w-24 ml-auto" />
       </div>
       <div className="grid grid-cols-3 gap-3 mb-4">
         {Array.from({ length: 12 }).map((_, i) => (

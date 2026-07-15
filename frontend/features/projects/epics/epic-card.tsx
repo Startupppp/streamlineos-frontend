@@ -10,8 +10,9 @@ import {
   Trash2,
   Plus,
   Link2,
-  MoreHorizontal,
 } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -93,6 +94,7 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
   const [newStoryTitle, setNewStoryTitle] = useState("");
   const [linkOpen, setLinkOpen] = useState(false);
   const editTriggerRef = useRef<HTMLButtonElement>(null);
+  const { iconRef: actionsIconRef, hoverHandlers: actionsHoverHandlers } = useAnimatedIcon();
 
   const { totalItems, completedItems, inProgressItems, todoItems, totalPoints, completedPoints } = useMemo(() => {
     let done = 0, inProgress = 0, totalPts = 0, completedPts = 0;
@@ -226,8 +228,8 @@ export const EpicCard = memo(function EpicCard({ epic, stories, projectId, proje
               />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="More actions">
-                    <MoreHorizontal className="h-3.5 w-3.5" />
+                  <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="More actions" {...actionsHoverHandlers}>
+                    <EllipsisIcon ref={actionsIconRef} size={14} />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">

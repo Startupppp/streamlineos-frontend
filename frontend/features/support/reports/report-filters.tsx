@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { useSupportQueues } from "@/hooks/api/support/queues";
 import type { SupportReportFilters } from "@/hooks/api/support/reports";
@@ -61,7 +62,7 @@ export function ReportFiltersBar({ filters, onChange }: ReportFiltersBarProps) {
   );
 
   return (
-    <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+    <div className={FILTER_TOOLBAR_ROW}>
       <DateRangePicker
         from={filters.dateFrom}
         to={filters.dateTo}
@@ -70,7 +71,7 @@ export function ReportFiltersBar({ filters, onChange }: ReportFiltersBarProps) {
         className="max-w-[220px]"
       />
       <Select value={filters.agentId ?? ALL_VALUE} onValueChange={handleAgentChange}>
-        <SelectTrigger className="h-8 w-40 text-xs">
+        <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-40`}>
           <SelectValue placeholder="Agent" />
         </SelectTrigger>
         <SelectContent>
@@ -86,7 +87,7 @@ export function ReportFiltersBar({ filters, onChange }: ReportFiltersBarProps) {
         value={filters.queueId ? String(filters.queueId) : ALL_VALUE}
         onValueChange={handleQueueChange}
       >
-        <SelectTrigger className="h-8 w-40 text-xs">
+        <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-40`}>
           <SelectValue placeholder="Queue" />
         </SelectTrigger>
         <SelectContent>
@@ -99,7 +100,7 @@ export function ReportFiltersBar({ filters, onChange }: ReportFiltersBarProps) {
         </SelectContent>
       </Select>
       <Select value={filters.channel ?? ALL_VALUE} onValueChange={handleChannelChange}>
-        <SelectTrigger className="h-8 w-36 text-xs">
+        <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-36`}>
           <SelectValue placeholder="Channel" />
         </SelectTrigger>
         <SelectContent>

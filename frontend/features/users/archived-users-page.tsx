@@ -225,11 +225,10 @@ export function ArchivedUsersPage() {
       <PageWrapper
         title="Archived Users"
         subtitle="Archived members no longer have access."
-        badge={pagination?.total !== undefined ? String(pagination.total) : undefined}
         filters={
           <div className="min-w-0 flex-1 min-w-[180px] max-w-sm">
-          <SearchInput placeholder="Search archived users..." value={search} onValueChange={handleSearchChange} />
-        </div>
+            <SearchInput placeholder="Search archived users..." value={search} onValueChange={handleSearchChange} />
+          </div>
         }
       >
         <div className="flex flex-1 min-h-0 flex-col space-y-3">

@@ -91,7 +91,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
   }, [currentDate, view]);
 
   return (
-    <div className="flex items-center justify-between flex-wrap gap-2 shrink-0 select-none pb-2 border-b border-border">
+    <div className="flex items-center justify-between flex-nowrap gap-2 shrink-0 select-none pb-2 border-b border-border overflow-x-auto scrollbar-hide">
       <div className="flex items-center gap-2 min-w-0">
         <Button
           variant="outline"

@@ -240,11 +240,10 @@ export function SuspendedUsersPage() {
       <PageWrapper
         title="Suspended Users"
         subtitle="Users whose access has been temporarily suspended."
-        badge={pagination?.total !== undefined ? String(pagination.total) : undefined}
         filters={
           <div className="min-w-0 flex-1 min-w-[180px] max-w-sm">
-          <SearchInput placeholder="Search suspended users..." value={search} onValueChange={handleSearchChange} />
-        </div>
+            <SearchInput placeholder="Search suspended users..." value={search} onValueChange={handleSearchChange} />
+          </div>
         }
       >
         <div className="flex flex-1 min-h-0 flex-col space-y-3">

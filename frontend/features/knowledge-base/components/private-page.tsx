@@ -15,13 +15,8 @@ export default function PrivatePage() {
     ? []
     : filterTreeWithAncestors(treeNodes, (n) => n.visibility === "private");
 
-  const subtitle =
-    !isLoading && !isError && privateNodes.length > 0
-      ? `${privateNodes.length} page${privateNodes.length === 1 ? "" : "s"}`
-      : undefined;
-
   return (
-    <PageWrapper title="Private pages" subtitle={subtitle}>
+    <PageWrapper title="Private pages" subtitle="Pages visible only to you">
       {isLoading && <PageTree nodes={[]} isLoading={true} />}
 
       {!isLoading && isError && (

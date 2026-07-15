@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 
 export const DOCUMENT_TYPES = [
@@ -66,22 +66,18 @@ export function DocumentFilters({
   onCategoryChange,
   categoryTabs,
 }: DocumentFiltersProps) {
-  const handleSearchChange = (value: string) => {
-    onSearchChange(value);
-  };
-
   return (
-    <div className={cn("bg-muted/40 rounded-lg px-3 py-2", FILTER_TOOLBAR_ROW)}>
+    <div className={FILTER_TOOLBAR_ROW}>
       <SearchInput
         placeholder="Search documents..."
         value={searchTerm}
-        onValueChange={handleSearchChange}
+        onValueChange={onSearchChange}
         className="w-48"
         aria-label="Search documents"
       />
 
       <Select value={selectedType} onValueChange={onTypeChange}>
-        <SelectTrigger className="text-xs w-36 border-border">
+        <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)}>
           <SelectValue placeholder="All types" />
         </SelectTrigger>
         <SelectContent>
@@ -94,7 +90,7 @@ export function DocumentFilters({
         </SelectContent>
       </Select>
 
-      <div className="flex items-center gap-1 flex-wrap ml-1">
+      <div className="flex items-center gap-1 ml-1 overflow-x-auto scrollbar-hide flex-nowrap [&>*]:shrink-0">
         {categoryTabs.map((cat) => (
           <CategoryFilterButton
             key={cat}

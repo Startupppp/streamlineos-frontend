@@ -414,10 +414,7 @@ export default function SpacesPage() {
     });
   }
 
-  const subtitle =
-    !isLoading && !isError
-      ? `${spaces.length} space${spaces.length === 1 ? "" : "s"}`
-      : undefined;
+  const subtitle = "Organize your wiki pages into spaces";
 
   return (
     <PageWrapper

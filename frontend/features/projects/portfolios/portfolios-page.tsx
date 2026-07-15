@@ -1,9 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { MoreHorizontal } from "lucide-react";
-import { PlusIcon } from "@animateicons/react/lucide";
+import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import Link from "next/link";
 import {
@@ -65,6 +64,33 @@ function NewPortfolioButton({ onClick }: { onClick: () => void }) {
     <Button size="sm" className="gap-1.5 text-xs" onClick={onClick} {...hoverHandlers}>
       <PlusIcon ref={iconRef} size={14} /> New Portfolio
     </Button>
+  );
+}
+
+function PortfolioRowActions({
+  portfolio,
+  onEdit,
+  onDelete,
+}: {
+  portfolio: Portfolio;
+  onEdit: (p: Portfolio) => void;
+  onDelete: (p: Portfolio) => void;
+}) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  const handleEdit = useCallback(() => onEdit(portfolio), [portfolio, onEdit]);
+  const handleDelete = useCallback(() => onDelete(portfolio), [portfolio, onDelete]);
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="w-7" aria-label="Portfolio actions" {...hoverHandlers}>
+          <EllipsisIcon ref={iconRef} size={14} />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
+        <DropdownMenuItem variant="destructive" onClick={handleDelete}>Delete</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -234,24 +260,10 @@ export function PortfoliosPage() {
       key: "actions",
       header: "",
       className: "w-10",
-      cell: (row) => {
-        if (!canManage) return null;
-        return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="w-7">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => handleEditRow(row)}>Edit</DropdownMenuItem>
-              <DropdownMenuItem variant="destructive" onClick={() => handleDeleteRow(row)}>
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        );
-      },
+      cell: (row) =>
+        canManage ? (
+          <PortfolioRowActions portfolio={row} onEdit={handleEditRow} onDelete={handleDeleteRow} />
+        ) : null,
     },
   ];
 

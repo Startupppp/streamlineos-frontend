@@ -13,6 +13,7 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
@@ -255,38 +256,38 @@ export function ApprovalDetailSheet({
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-8 text-xs"
                     onClick={handleCancelReject}
                     disabled={isPending}
                   >
                     Cancel
                   </Button>
-                  <Button
+                  <LoadingButton
                     size="sm"
                     variant="destructive"
-                    className="h-8 text-xs"
                     onClick={handleReject}
-                    disabled={!rejectReason.trim() || isPending}
+                    isPending={isPending}
+                    loadingText="Rejecting…"
+                    disabled={!rejectReason.trim()}
                   >
-                    {isPending ? "Rejecting…" : "Confirm reject"}
-                  </Button>
+                    Confirm reject
+                  </LoadingButton>
                 </div>
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <Button
+                <LoadingButton
                   size="sm"
-                  className="h-8 text-xs gap-1.5 flex-1"
+                  className="gap-1.5 flex-1"
                   onClick={handleApprove}
-                  disabled={isPending}
+                  isPending={isPending}
                 >
                   <CheckCircle className="h-3.5 w-3.5" />
                   Approve
-                </Button>
+                </LoadingButton>
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-8 text-xs gap-1.5 flex-1 border-destructive/40 text-destructive hover:bg-destructive/5"
+                  className="gap-1.5 flex-1 border-destructive/40 text-destructive hover:bg-destructive/5"
                   onClick={handleEnterRejectMode}
                   disabled={isPending}
                 >

@@ -2,7 +2,9 @@
 
 import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
-import { Siren, Plus, MoreHorizontal } from "lucide-react";
+import { Siren, Plus } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
 import { useIncidents, useDeleteIncident } from "@/hooks/api/projects/incidents";
 import { useCan } from "@/hooks/api/access";
@@ -60,6 +62,33 @@ const STATUS_LABELS: Record<IncidentStatus, string> = {
 
 const SEVERITIES: IncidentSeverity[] = ["critical", "high", "medium", "low"];
 const STATUSES: IncidentStatus[] = ["detected", "investigating", "mitigating", "resolved", "postmortem", "closed"];
+
+function IncidentRowActions({
+  incident,
+  onEdit,
+  onDelete,
+}: {
+  incident: Incident;
+  onEdit: (i: Incident) => void;
+  onDelete: (i: Incident) => void;
+}) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  const handleEdit = useCallback(() => onEdit(incident), [incident, onEdit]);
+  const handleDelete = useCallback(() => onDelete(incident), [incident, onDelete]);
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="Incident actions" {...hoverHandlers}>
+          <EllipsisIcon ref={iconRef} size={14} />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onSelect={handleEdit}>Edit</DropdownMenuItem>
+        <DropdownMenuItem variant="destructive" onSelect={handleDelete}>Delete</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 interface IncidentsPageProps { projectId: number }
 
@@ -183,17 +212,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
       key: "actions",
       header: "",
       cell: (row) => canManage ? (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-6 w-6">
-              <MoreHorizontal className="h-3.5 w-3.5" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onSelect={() => handleEdit(row)}>Edit</DropdownMenuItem>
-            <DropdownMenuItem variant="destructive" onSelect={() => setDeleteTarget(row)}>Delete</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <IncidentRowActions incident={row} onEdit={handleEdit} onDelete={setDeleteTarget} />
       ) : null,
       className: "w-[40px]",
     },

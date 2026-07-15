@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -117,10 +117,10 @@ export default function WorkflowTemplatesPage() {
   }
 
   const filtersBar = (
-    <div className="flex items-center gap-3 flex-wrap w-full">
+    <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
       <div className="min-w-0 flex-1 min-w-[200px] max-w-xs">
-          <SearchInput placeholder="Search templates..." value={search} onValueChange={handleSearchChange} />
-        </div>
+        <SearchInput placeholder="Search templates..." value={search} onValueChange={handleSearchChange} />
+      </div>
       <div className="flex items-center gap-1">
         <button
           onClick={() => handleCategoryChange("all")}

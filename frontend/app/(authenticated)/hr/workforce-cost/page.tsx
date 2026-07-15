@@ -56,7 +56,7 @@ export default function WorkforceCostPage() {
             <StatCardGrid cols={3}>
               <StatCard label="Total Headcount" value={String(summary?.total_headcount ?? "—")} hint="Active employees" icon={Users} tone="blue" />
               <StatCard label="Monthly Cost" value={formatCents(summary?.total_monthly_cost_cents)} hint="All active employees" icon={DollarSign} tone="emerald" />
-              <StatCard label="Annual CTC" value={formatCents(summary?.total_annual_ctc_cents)} hint="Total compensation" icon={Calendar} tone="violet" />
+              <StatCard label="Annual CTC" value={formatCents(summary?.total_annual_ctc_cents)} hint="Total compensation" icon={Calendar} tone="blue" />
             </StatCardGrid>
           )}
 

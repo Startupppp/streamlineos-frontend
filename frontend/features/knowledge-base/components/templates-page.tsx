@@ -243,13 +243,8 @@ export default function TemplatesPage() {
     [createPage, updatePage, router],
   );
 
-  const subtitle =
-    templates.length > 0
-      ? `${templates.length} saved template${templates.length === 1 ? "" : "s"}`
-      : undefined;
-
   return (
-    <PageWrapper title="Templates" subtitle={subtitle}>
+    <PageWrapper title="Templates" subtitle="Starter skeletons and your saved page templates">
       <div className="space-y-8">
         <PageSection
           title="Starter templates"

@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback } from "react";
-import { Button } from "@/components/ui/button";
-import { Globe, Hash, Loader2, Users } from "lucide-react";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { Globe, Hash, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { PublicChannel } from "@/types/chat";
 
@@ -52,24 +52,26 @@ export function PublicChannelRow({
       </div>
       <div className="shrink-0">
         {channel.isMember ? (
-          <Button
+          <LoadingButton
             variant="outline"
             size="sm"
             className="text-[12px]"
             onClick={(e) => { e.stopPropagation(); handleLeave(); }}
-            disabled={leavingId === channel.id}
+            isPending={leavingId === channel.id}
+            loadingText="Leaving…"
           >
-            {leavingId === channel.id ? <Loader2 className="h-3 w-3 animate-spin" /> : "Leave"}
-          </Button>
+            Leave
+          </LoadingButton>
         ) : (
-          <Button
+          <LoadingButton
             size="sm"
             className="text-[12px]"
             onClick={(e) => { e.stopPropagation(); handleJoin(); }}
-            disabled={joiningId === channel.id}
+            isPending={joiningId === channel.id}
+            loadingText="Joining…"
           >
-            {joiningId === channel.id ? <Loader2 className="h-3 w-3 animate-spin" /> : "Join"}
-          </Button>
+            Join
+          </LoadingButton>
         )}
       </div>
     </div>

@@ -62,13 +62,8 @@ function RecentSkeleton() {
 export default function RecentPage() {
   const { data: pages = [], isLoading, isError } = useKbPagesRecent();
 
-  const subtitle =
-    pages.length > 0
-      ? `${pages.length} page${pages.length === 1 ? "" : "s"}`
-      : undefined;
-
   return (
-    <PageWrapper title="Recent" subtitle={subtitle}>
+    <PageWrapper title="Recent" subtitle="Pages you have visited recently">
       {isLoading && <RecentSkeleton />}
 
       {!isLoading && isError && (

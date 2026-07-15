@@ -76,7 +76,7 @@ export function AttendanceSection({ year, month }: AttendanceSectionProps) {
           label="Active Days"
           value={data.daily.length}
           icon={CalendarCheck}
-          color="violet"
+          color="blue"
           index={2}
         />
       </StatCardGrid>

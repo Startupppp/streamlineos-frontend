@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, ExternalLink } from "lucide-react";
+import { ExternalLinkIcon, PlusIcon } from "@animateicons/react/lucide";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,11 +10,44 @@ import { ErrorState } from "@/components/shared/error-state";
 import { IllustrationImage } from "@/components/illustrations/illustration-image";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useSignEnvelopes } from "@/hooks/api/sign/envelopes";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { EnvelopeStatusBadge } from "../components/envelope-status-badge";
 import { CreateEnvelopeDialog } from "../components/create-envelope-dialog";
 import type { SignEnvelope } from "@/types/sign";
 import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
+
+function EnvelopeOpenButton({ id, onNavigate }: { id: number; onNavigate: (id: number) => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+
+  function handleClick(e: React.MouseEvent) {
+    e.stopPropagation();
+    onNavigate(id);
+  }
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="size-8"
+      aria-label="Open envelope"
+      onClick={handleClick}
+      {...hoverHandlers}
+    >
+      <ExternalLinkIcon ref={iconRef} className="size-4" />
+    </Button>
+  );
+}
+
+function NewEnvelopeButton({ onClick }: { onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button onClick={onClick} {...hoverHandlers}>
+      <PlusIcon ref={iconRef} className="size-4" />
+      New envelope
+    </Button>
+  );
+}
 
 const STATUS_FILTERS = [
   { value: "all", label: "All" },
@@ -46,10 +79,8 @@ export function EnvelopeList() {
     router.push(`/sign/envelopes/${envelope.id}`);
   }
 
-  function makeOpenHandler(id: number) {
-    return function handleOpenClick() {
-      router.push(`/sign/envelopes/${id}`);
-    };
+  function handleRowNavigate(id: number) {
+    router.push(`/sign/envelopes/${id}`);
   }
 
   const emptyState = (
@@ -61,10 +92,7 @@ export function EnvelopeList() {
           Upload a PDF and send it for signature to get started.
         </p>
       </div>
-      <Button onClick={handleCreateOpen}>
-        <Plus className="size-4" />
-        New envelope
-      </Button>
+      <NewEnvelopeButton onClick={handleCreateOpen} />
     </div>
   );
 
@@ -107,17 +135,7 @@ export function EnvelopeList() {
       header: "",
       headerClassName: "w-10",
       cell: (envelope) => (
-        <div onClick={(e) => e.stopPropagation()}>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-8"
-            aria-label="Open envelope"
-            onClick={makeOpenHandler(envelope.id)}
-          >
-            <ExternalLink className="size-4" />
-          </Button>
-        </div>
+        <EnvelopeOpenButton id={envelope.id} onNavigate={handleRowNavigate} />
       ),
     },
   ];
@@ -126,12 +144,7 @@ export function EnvelopeList() {
     <PageWrapper
       title="Envelopes"
       subtitle="Every signing request you've sent, organized by status"
-      actions={
-        <Button onClick={handleCreateOpen}>
-          <Plus className="size-4" />
-          New envelope
-        </Button>
-      }
+      actions={<NewEnvelopeButton onClick={handleCreateOpen} />}
     >
       <div className="flex min-h-0 flex-1 flex-col gap-4">
         <Tabs value={status} onValueChange={setStatus}>

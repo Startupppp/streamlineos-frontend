@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { EmptyTransferIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { usePayrollRuns } from "@/hooks/api/payroll";
 import { useRunPublications, usePublishPayslips, downloadPayslipPdf } from "@/hooks/api/payroll";
@@ -212,13 +213,13 @@ export function PublicationsTab({ canManage }: PublicationsTabProps) {
 
   return (
     <div className="flex flex-1 min-h-0 flex-col space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
+      <div className="flex items-center justify-between gap-3">
         <Select
           value={String(activeRunId || "")}
           onValueChange={handleRunChange}
           disabled={runsLoading || eligibleRuns.length === 0}
         >
-          <SelectTrigger className="w-64 h-8 text-xs">
+          <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-64")}>
             <SelectValue placeholder="Select a payroll run" />
           </SelectTrigger>
           <SelectContent>

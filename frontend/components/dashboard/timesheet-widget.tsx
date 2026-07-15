@@ -27,7 +27,7 @@ export function TimesheetWidget() {
               <p
                 className={cn(
                   "text-[11px] font-semibold uppercase tracking-wide",
-                  ts.submitted ? "text-emerald-600" : "text-red-600",
+                  ts.submitted ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400",
                 )}
               >
                 {ts.submitted ? "Submitted" : "Hours Missing"}
@@ -47,7 +47,7 @@ export function TimesheetWidget() {
             >
               {ts.submitted ? (
                 <CheckCircle2
-                  className="h-4 w-4 text-emerald-600"
+                  className="h-4 w-4 text-emerald-600 dark:text-emerald-400"
                   aria-hidden="true"
                 />
               ) : (

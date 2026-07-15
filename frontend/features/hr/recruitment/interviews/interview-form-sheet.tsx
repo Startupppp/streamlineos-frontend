@@ -350,7 +350,7 @@ export function InterviewFormSheet({
           <FieldGroup
             icon={Briefcase}
             label="Job Position"
-            colorClass="bg-violet-100 text-violet-600 dark:bg-violet-950/40 dark:text-violet-400"
+            colorClass="bg-blue-100 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400"
           >
             <Select value={jobPostingId} onValueChange={setJobPostingId}>
               <SelectTrigger className="">

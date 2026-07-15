@@ -2,7 +2,9 @@
 
 import { memo, useCallback, useMemo } from "react";
 import { format, differenceInDays } from "date-fns";
-import { Target, Play, Square, MoreHorizontal, Pencil, ArrowLeftRight } from "lucide-react";
+import { Target, Play, Square, Pencil, ArrowLeftRight } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -102,6 +104,7 @@ export const SprintCard = memo(function SprintCard({ sprint, projectId, onStart,
 
   const statusStyle = STATUS_STYLES[sprint.status ?? "PLANNED"] ?? STATUS_STYLES["PLANNED"];
 
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
   const handleStart = useCallback(() => onStart?.(sprint.id), [sprint.id, onStart]);
   const handleComplete = useCallback(() => onComplete?.(sprint.id), [sprint.id, onComplete]);
   const handlePlan = useCallback(() => onPlan?.(sprint.id), [sprint.id, onPlan]);
@@ -173,8 +176,9 @@ export const SprintCard = memo(function SprintCard({ sprint, projectId, onStart,
               size="icon-sm"
               className="h-6 w-6 shrink-0 opacity-100 transition-opacity focus:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
               aria-label={`Sprint actions for ${sprint.name}`}
+              {...hoverHandlers}
             >
-              <MoreHorizontal className="h-3.5 w-3.5" />
+              <EllipsisIcon ref={iconRef} size={14} />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">

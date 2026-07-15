@@ -13,6 +13,7 @@ import { SearchInput } from "@/components/ui/search-input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Check, Copy, Loader2, RefreshCw } from "lucide-react";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -247,17 +248,15 @@ export function AddChannelMembersDialog({
           >
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             onClick={handleAdd}
-            disabled={selectedIds.size === 0 || addMember.isPending}
+            disabled={selectedIds.size === 0}
+            isPending={addMember.isPending}
+            loadingText="Adding…"
             className="flex-1 h-9"
           >
-            {addMember.isPending ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              `Add${selectedIds.size > 0 ? ` (${selectedIds.size})` : ""}`
-            )}
-          </Button>
+            {`Add${selectedIds.size > 0 ? ` (${selectedIds.size})` : ""}`}
+          </LoadingButton>
         </div>
       </DialogContent>
     </Dialog>

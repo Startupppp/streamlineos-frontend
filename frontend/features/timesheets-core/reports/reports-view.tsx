@@ -19,6 +19,8 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyReportIllustration } from "@/components/illustrations";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { cn } from "@/lib/utils";
 import { useCan } from "@/hooks/api/access";
 import { useReportsOverview } from "@/hooks/api/timesheets-core/reports";
 import { OverviewReport } from "./overview-report";
@@ -123,10 +125,9 @@ export function ReportsView() {
         from={startDate}
         to={endDate}
         onChange={handleDateRangeChange}
-        className="h-8"
       />
       <Select value={userId ?? "ALL"} onValueChange={handleUserChange}>
-        <SelectTrigger className="h-8 text-xs w-[160px]" aria-label="Filter by member">
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[160px]")} aria-label="Filter by member">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -152,20 +153,17 @@ export function ReportsView() {
     <PageWrapper
       title="Reports"
       subtitle={subtitle}
+      filters={pageFilters}
     >
       <motion.div {...motionProps} className="flex flex-1 min-h-0 flex-col gap-4">
         <Tabs value={activeTab} onValueChange={handleTabChange} className="flex min-h-0 flex-1 flex-col gap-4">
-          <TabsList className="flex-wrap">
+          <TabsList className="overflow-x-auto scrollbar-hide">
             {REPORT_TABS.map((tab) => (
               <TabsTrigger key={tab.value} value={tab.value}>
                 {tab.label}
               </TabsTrigger>
             ))}
           </TabsList>
-
-          <div className="flex flex-wrap items-center gap-3">
-            {pageFilters}
-          </div>
 
           <TabsContent value="overview" className="mt-0">
             {isError ? (

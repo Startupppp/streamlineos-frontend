@@ -2,9 +2,10 @@
 import { useCallback, useMemo, useState } from "react";
 import { format, parseISO } from "date-fns";
 import { motion, useReducedMotion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Send, RotateCcw, Loader2, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
@@ -77,42 +78,41 @@ export function MyTimeView() {
   const weekNavActions = (
     <div className="flex items-center gap-2">
       <div className="flex items-center rounded-md border border-border overflow-hidden">
-        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-none border-r border-border" onClick={goToPrev}>
+        <Button variant="ghost" size="icon" className="rounded-none border-r border-border" onClick={goToPrev}>
           <ChevronLeft className="h-4 w-4" />
         </Button>
         <Button
           variant="ghost"
-          className={cn("h-8 px-3 text-xs rounded-none", isCurrentWeek && "text-blue-600 font-medium")}
+          className={cn("px-3 rounded-none", isCurrentWeek && "text-primary font-medium")}
           onClick={goToCurrent}
         >
           This week
         </Button>
-        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-none border-l border-border" onClick={goToNext}>
+        <Button variant="ghost" size="icon" className="rounded-none border-l border-border" onClick={goToNext}>
           <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
 
       {canRecall ? (
-        <Button
+        <LoadingButton
           variant="outline"
           size="sm"
-          className="h-8 text-xs gap-1.5"
+          className="gap-1.5"
           onClick={handleRecall}
-          disabled={recallPeriod.isPending}
+          isPending={recallPeriod.isPending}
         >
-          {recallPeriod.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5" />}
           Recall
-        </Button>
+        </LoadingButton>
       ) : (
-        <Button
+        <LoadingButton
           size="sm"
-          className="h-8 text-xs gap-1.5"
+          className="gap-1.5"
           onClick={handleSubmit}
-          disabled={!canSubmit || submitPeriod.isPending}
+          isPending={submitPeriod.isPending}
+          disabled={!canSubmit}
         >
-          {submitPeriod.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
           Submit week
-        </Button>
+        </LoadingButton>
       )}
     </div>
   );
@@ -162,9 +162,9 @@ export function MyTimeView() {
         ) : (
           <Tabs defaultValue="week">
             <TabsList>
-              <TabsTrigger value="timer" className="text-xs">Timer</TabsTrigger>
-              <TabsTrigger value="week" className="text-xs">Week</TabsTrigger>
-              <TabsTrigger value="day" className="text-xs">Day</TabsTrigger>
+              <TabsTrigger value="timer">Timer</TabsTrigger>
+              <TabsTrigger value="week">Week</TabsTrigger>
+              <TabsTrigger value="day">Day</TabsTrigger>
             </TabsList>
 
             <TabsContent value="timer" className="mt-4">

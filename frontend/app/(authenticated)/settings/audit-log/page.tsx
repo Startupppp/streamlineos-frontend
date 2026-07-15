@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/shared/error-state";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
+import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -351,45 +352,33 @@ export default function AuditLogPage() {
   const hasActiveFilters = actionFilter !== "all" || targetTypeFilter !== "all" || !!dateFrom || !!dateTo || !!userSearch;
 
   const filtersBar = (
-    <div className="flex flex-wrap gap-2 items-end">
-      <div className="flex flex-col gap-1 min-w-[160px] flex-1">
-        <p className="text-[11px] font-medium text-muted-foreground">Action</p>
-        <Select value={actionFilter} onValueChange={handleActionFilter}>
-          <SelectTrigger className="text-sm w-full">
-            <SelectValue placeholder="All actions" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Actions</SelectItem>
-            {actions?.map((a) => (
-              <SelectItem key={a} value={a}>{a}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="flex flex-col gap-1 min-w-[130px] flex-1">
-        <p className="text-[11px] font-medium text-muted-foreground">Entity Type</p>
-        <Select value={targetTypeFilter} onValueChange={handleTargetTypeFilter}>
-          <SelectTrigger className="text-sm w-full">
-            <SelectValue placeholder="All types" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            {targetTypes?.map((t) => (
-              <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="flex flex-col gap-1 min-w-[140px] flex-1">
-        <p className="text-[11px] font-medium text-muted-foreground">From</p>
-        <DatePicker value={dateFrom} onChange={handleDateFrom} placeholder="From date" className="w-full" />
-      </div>
-      <div className="flex flex-col gap-1 min-w-[140px] flex-1">
-        <p className="text-[11px] font-medium text-muted-foreground">To</p>
-        <DatePicker value={dateTo} onChange={handleDateTo} placeholder="To date" className="w-full" />
-      </div>
+    <div className={FILTER_TOOLBAR_ROW}>
+      <Select value={actionFilter} onValueChange={handleActionFilter}>
+        <SelectTrigger className={`w-[160px] ${FILTER_SELECT_TRIGGER}`}>
+          <SelectValue placeholder="All actions" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Actions</SelectItem>
+          {actions?.map((a) => (
+            <SelectItem key={a} value={a}>{a}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select value={targetTypeFilter} onValueChange={handleTargetTypeFilter}>
+        <SelectTrigger className={`w-[130px] ${FILTER_SELECT_TRIGGER}`}>
+          <SelectValue placeholder="All types" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Types</SelectItem>
+          {targetTypes?.map((t) => (
+            <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <DatePicker value={dateFrom} onChange={handleDateFrom} placeholder="From date" className="w-[140px]" />
+      <DatePicker value={dateTo} onChange={handleDateTo} placeholder="To date" className="w-[140px]" />
       {hasActiveFilters && (
-        <Button variant="ghost" size="sm" onClick={resetFilters} className="text-sm self-end">
+        <Button variant="ghost" size="sm" onClick={resetFilters} className="text-sm">
           Clear
         </Button>
       )}

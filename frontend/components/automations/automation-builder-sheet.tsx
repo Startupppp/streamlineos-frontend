@@ -627,7 +627,7 @@ export function AutomationBuilderSheet({
                     {testResult.actionResults.map((r, i) => (
                       <div key={i} className="flex items-start gap-2 text-xs">
                         {r.ok ? (
-                          <CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-0.5 text-emerald-600" />
+                          <CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-0.5 text-emerald-600 dark:text-emerald-400" />
                         ) : (
                           <XCircle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-destructive" />
                         )}

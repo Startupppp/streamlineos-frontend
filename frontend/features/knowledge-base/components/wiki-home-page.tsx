@@ -78,7 +78,6 @@ export default function WikiHomePage() {
     (n: KbPageTreeNode) => n.parentPageId === null
   );
   const isLoading = recentLoading || treeLoading;
-  const pageCount = treeNodes.length;
 
   const itemVariants = shouldReduceMotion
     ? { hidden: { opacity: 0 }, visible: { opacity: 1 } }
@@ -125,10 +124,8 @@ export default function WikiHomePage() {
     );
   }
 
-  const subtitle = pageCount > 0 ? `${pageCount} page${pageCount === 1 ? "" : "s"}` : undefined;
-
   return (
-    <PageWrapper title="Wiki" subtitle={subtitle} actions={newPageAction}>
+    <PageWrapper title="Wiki" subtitle="Your team knowledge base" actions={newPageAction}>
       {recentPages.length > 0 && (
         <section className="mb-6">
           <div className="flex items-center gap-2 mb-3">

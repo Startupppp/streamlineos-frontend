@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { useCan } from "@/hooks/api/access";
 import {
@@ -144,25 +145,23 @@ export function ApprovalsView() {
 
   const pageFilters = (
     <>
-      <div className="flex items-center gap-1 overflow-x-auto scrollbar-thin max-w-full">
-        {ALL_APPROVAL_TABS.map((tab) => (
-          <button
-            key={tab}
-            type="button"
-            onClick={() => handleTabSelect(tab)}
-            className={cn(
-              "shrink-0 px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
-              activeTab === tab
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted",
-            )}
-          >
-            {APPROVAL_TAB_LABEL[tab]}
-          </button>
-        ))}
-      </div>
+      {ALL_APPROVAL_TABS.map((tab) => (
+        <button
+          key={tab}
+          type="button"
+          onClick={() => handleTabSelect(tab)}
+          className={cn(
+            "shrink-0 px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
+            activeTab === tab
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted",
+          )}
+        >
+          {APPROVAL_TAB_LABEL[tab]}
+        </button>
+      ))}
       <Select value={memberFilter} onValueChange={setMemberFilter}>
-        <SelectTrigger className="h-8 text-xs w-full sm:w-44">
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-full sm:w-44")}>
           <SelectValue placeholder="All members" />
         </SelectTrigger>
         <SelectContent>

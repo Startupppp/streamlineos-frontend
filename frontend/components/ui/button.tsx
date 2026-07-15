@@ -4,20 +4,6 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "../../lib/utils";
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Button variants — single source of truth, reads from CSS design tokens
-   defined in globals.css. NEVER pass ad-hoc bg-* / text-* / hover:* via
-   className unless you genuinely need a one-off variant. Add a new variant
-   here instead — that keeps hover states correct across the app.
-
-     default      Ink CTA       slate-900 bg, white text, subtle lift on hover
-     outline      Secondary     white bg, slate-700 text, slate-50 hover
-     ghost        Tertiary      transparent, slate-100 hover
-     destructive  Danger        red bg
-     secondary    Subtle fill   slate-100 bg
-     link         Inline        theme-accent text, underline on hover
-     brand        Gradient CTA  brand gradient (use sparingly — top of funnel)
-   ───────────────────────────────────────────────────────────────────────── */
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors press-scale disabled:pointer-events-none disabled:opacity-60 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring aria-invalid:ring-destructive/20 aria-invalid:border-destructive",
   {

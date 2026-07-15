@@ -111,7 +111,7 @@ export function LeaveBalanceWidget() {
   return (
     <WidgetCard
       icon={Clock}
-      iconClassName="text-violet-500"
+      iconClassName="text-primary"
       title="My Leave Balance"
       isLoading={isLoading}
       loadingRows={2}
@@ -141,7 +141,7 @@ export function LeaveBalanceWidget() {
               </div>
               <div className="mt-1.5 h-1.5 rounded-full bg-muted overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-violet-500 transition-all"
+                  className="h-full rounded-full bg-primary transition-all"
                   style={{ width: `${Math.min(pct, 100)}%` }}
                 />
               </div>

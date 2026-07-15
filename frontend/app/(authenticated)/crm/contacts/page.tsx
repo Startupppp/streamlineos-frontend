@@ -25,6 +25,8 @@ import { ContactCardView } from "@/features/crm/contacts/contact-card-view";
 import { ContactDeleteDialog } from "@/features/crm/contacts/contact-delete-dialog";
 import { ContactMergeDialog } from "@/features/crm/contacts/detail/contact-merge-dialog";
 import type { Contact, DuplicateContactPair } from "@/types/crm";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import { cn } from "@/lib/utils";
 
 export default function ContactsPage() {
   const searchParams = useSearchParams();

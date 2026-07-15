@@ -250,27 +250,29 @@ export function UserInvitationsPanel() {
     <>
       <PageWrapper
         title="Invitations"
-        subtitle={pagination ? `${pagination.total} invitation${pagination.total === 1 ? "" : "s"}` : undefined}
+        subtitle="Manage and track team invitations."
         actions={
           <Button size="sm" onClick={handleOpenInvite}>
             <Mail className="h-3.5 w-3.5 mr-1.5" />
             Invite User
           </Button>
         }
-        filters={<>
-          <div className="min-w-0 w-[200px]">
-          <SearchInput value={localSearch} onValueChange={handleSearchChange} placeholder="Search by email…" />
-        </div>
-          <Select value={status} onValueChange={handleStatusChange}>
-            <SelectTrigger className="h-8 text-xs w-[140px]"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All statuses</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="accepted">Accepted</SelectItem>
-              <SelectItem value="expired">Expired</SelectItem>
-            </SelectContent>
-          </Select>
-        </>}
+        filters={
+          <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+            <div className="min-w-0 flex-1 min-w-[180px] max-w-xs">
+              <SearchInput value={localSearch} onValueChange={handleSearchChange} placeholder="Search by email…" />
+            </div>
+            <Select value={status} onValueChange={handleStatusChange}>
+              <SelectTrigger className="w-[140px] border-input bg-card text-foreground [&_svg:not([class*='text-'])]:text-muted-foreground"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="accepted">Accepted</SelectItem>
+                <SelectItem value="expired">Expired</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        }
       >
         {isError ? (
           <ErrorState

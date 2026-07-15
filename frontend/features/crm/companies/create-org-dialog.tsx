@@ -138,7 +138,7 @@ export function CreateOrgDialog({ open, onOpenChange }: CreateOrgDialogProps) {
                   <FormLabel>Company size</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <SelectTrigger className="w-full h-8">
+                      <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select size" />
                       </SelectTrigger>
                     </FormControl>

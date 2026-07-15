@@ -207,8 +207,8 @@ export function CalibrationTab({ candidateId }: CalibrationTabProps) {
                 <div className="p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-2">
-                      <div className="w-7 rounded-lg bg-violet-100 dark:bg-violet-950/40 flex items-center justify-center shrink-0">
-                        <TrendingUp className="h-3.5 w-3.5 text-violet-600 dark:text-violet-400" />
+                      <div className="w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center shrink-0">
+                        <TrendingUp className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                       </div>
                       <div>
                         <p className="text-sm font-semibold text-foreground">

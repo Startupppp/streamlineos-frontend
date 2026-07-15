@@ -15,7 +15,7 @@ const CATEGORY_META: Record<
   life: { label: "Life", icon: <Shield className="h-4 w-4" />, className: "text-blue-600 bg-blue-50 border-blue-100 dark:text-blue-400 dark:bg-blue-500/10 dark:border-blue-500/30" },
   accident: { label: "Accident", icon: <Umbrella className="h-4 w-4" />, className: "text-orange-600 bg-orange-50 border-orange-100 dark:text-orange-400 dark:bg-orange-500/10 dark:border-orange-500/30" },
   retirement: { label: "Retirement", icon: <PiggyBank className="h-4 w-4" />, className: "text-emerald-600 bg-emerald-50 border-emerald-100 dark:text-emerald-400 dark:bg-emerald-500/10 dark:border-emerald-500/30" },
-  wellness: { label: "Wellness", icon: <Smile className="h-4 w-4" />, className: "text-purple-600 bg-purple-50 border-purple-100 dark:text-purple-400 dark:bg-purple-500/10 dark:border-purple-500/30" },
+  wellness: { label: "Wellness", icon: <Smile className="h-4 w-4" />, className: "text-blue-600 bg-blue-50 border-blue-100 dark:text-blue-400 dark:bg-blue-500/10 dark:border-blue-500/30" },
   perk: { label: "Perk", icon: <Star className="h-4 w-4" />, className: "text-amber-600 bg-amber-50 border-amber-100 dark:text-amber-400 dark:bg-amber-500/10 dark:border-amber-500/30" },
   other: { label: "Other", icon: <Package className="h-4 w-4" />, className: "text-muted-foreground bg-muted border-border" },
 };

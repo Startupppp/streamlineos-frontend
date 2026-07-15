@@ -22,7 +22,7 @@ const TYPE_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
 const TYPE_COLOR: Record<string, string> = {
   AUDIT: "bg-muted text-muted-foreground dark:bg-slate-800 dark:text-slate-300",
   INTERVIEW:
-    "bg-violet-100 text-violet-600 dark:bg-violet-950/40 dark:text-violet-300",
+    "bg-blue-100 text-blue-600 dark:bg-blue-950/40 dark:text-blue-300",
   MESSAGE: "bg-blue-100 text-blue-600 dark:bg-blue-950/40 dark:text-blue-300",
   DOCUMENT:
     "bg-amber-100 text-amber-600 dark:bg-amber-950/40 dark:text-amber-300",

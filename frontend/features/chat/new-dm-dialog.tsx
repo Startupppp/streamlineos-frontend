@@ -20,7 +20,7 @@ import {
   useChatOnlineUsers,
   useCreateDMChannel,
 } from "@/hooks/api";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { resolveImageUrl } from "@/lib/utils";
 import { getInitials } from "./chat-helpers";
 
@@ -107,7 +107,7 @@ export function NewDMDialog({
         onOpenChange(false);
         setSearch("");
       } catch (error) {
-        toast.error(getApiError(error) || "Failed to create conversation");
+        toast.error(getErrorMessage(error));
       }
     },
     [createDM, onCreated, onOpenChange],

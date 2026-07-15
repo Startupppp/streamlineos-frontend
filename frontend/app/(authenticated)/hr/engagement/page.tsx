@@ -168,7 +168,7 @@ function OverviewTab() {
               }
               hint="Last 7 days"
               icon={Star}
-              tone="violet"
+              tone="blue"
               isLoading={moodLoading}
             />
           </StatCardGrid>

@@ -34,7 +34,7 @@ import {
   EmptySearchIllustration,
 } from "@/components/illustrations";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
-import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
+import { CONTENT_FILL_PANEL, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { CandidateComparisonDialog } from "@/components/hr/recruitment/candidate-comparison-dialog";
 import { AddCandidateSheet } from "@/features/hr/recruitment/candidates-list/add-candidate-sheet";
 import { EditCandidateSheet } from "@/features/hr/recruitment/candidates-list/edit-candidate-sheet";
@@ -225,14 +225,13 @@ export default function CandidatesPage() {
     <>
       <PageWrapper
         title="Candidates"
-        subtitle={`${filteredCandidates.length} in pipeline`}
-        backHref="/hr/recruitment"
+        subtitle="Manage and track your recruiting pipeline"
         filters={
-          <div className="flex flex-col sm:flex-row gap-2 w-full">
-            <div className="min-w-0 flex-1 max-w-xs">
-          <SearchInput placeholder="Search candidates…" value={searchQuery} onValueChange={handleSearchChange} />
-        </div>
-            <div className="flex items-center gap-1.5 flex-wrap">
+          <div className={FILTER_TOOLBAR_ROW}>
+            <div className="min-w-0 w-[200px]">
+              <SearchInput placeholder="Search candidates…" value={searchQuery} onValueChange={handleSearchChange} />
+            </div>
+            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide flex-nowrap [&>*]:shrink-0">
               <button
                 onClick={handleClearStatusFilter}
                 className={cn(

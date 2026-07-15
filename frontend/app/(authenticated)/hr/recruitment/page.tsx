@@ -243,7 +243,7 @@ export default function RecruitmentCommandCenterPage() {
                 >
                   {interviewsToday.slice(0, 5).map((interview) => (
                     <div key={interview.id} className="flex items-center gap-3 px-5 py-3">
-                      <div className="w-8 rounded-full bg-violet-100 dark:bg-violet-950/30 flex items-center justify-center shrink-0 text-[11px] font-bold text-violet-700 dark:text-violet-300">
+                      <div className="w-8 rounded-full bg-blue-100 dark:bg-blue-950/30 flex items-center justify-center shrink-0 text-[11px] font-bold text-blue-700 dark:text-blue-300">
                         {interview.candidate?.firstName?.[0]}
                         {interview.candidate?.lastName?.[0]}
                       </div>

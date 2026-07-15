@@ -16,13 +16,13 @@ export default function DocumentsLoading() {
       }
       filters={
         <div className="w-full space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
             <Skeleton className="h-8 w-full max-w-[240px] rounded-md" />
             {["All Files", "Contracts", "Policies", "Tax Forms", "Templates", "Payroll"].map((tab) => (
               <Skeleton key={tab} className="h-7 rounded-full" style={{ width: `${tab.length * 8 + 24}px` }} />
             ))}
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
             <Skeleton className="h-6 w-12 rounded-md" />
             {Array.from({ length: 12 }).map((_, i) => (
               <Skeleton key={i} className="h-6 w-16 rounded-md" />

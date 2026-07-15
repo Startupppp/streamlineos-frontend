@@ -17,7 +17,7 @@ import { SearchInput } from "@/components/ui/search-input";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
+import { CONTENT_FILL_PANEL, FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { ErrorState } from "@/components/shared/error-state";
 import {
   Sheet,
@@ -566,15 +566,15 @@ export default function NotificationEventsPage() {
   }, []);
 
   const filters = (
-    <>
+    <div className={FILTER_TOOLBAR_ROW}>
       <SearchInput
         placeholder="Search events…"
         value={search}
         onValueChange={handleSearchChange}
-         className="w-56"
-       />
+        className="min-w-0 flex-1 min-w-[180px] max-w-xs"
+      />
       <Select value={moduleFilter} onValueChange={handleModuleChange}>
-        <SelectTrigger className="w-44 text-xs">
+        <SelectTrigger className={`w-44 ${FILTER_SELECT_TRIGGER}`}>
           <SelectValue placeholder="All modules" />
         </SelectTrigger>
         <SelectContent>
@@ -584,7 +584,7 @@ export default function NotificationEventsPage() {
           ))}
         </SelectContent>
       </Select>
-    </>
+    </div>
   );
 
   return (

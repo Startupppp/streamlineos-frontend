@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import type { ExpenseStatus } from "@/features/accounting/shared";
 
 export type StatusFilter = "ALL" | ExpenseStatus;
@@ -84,7 +84,7 @@ export function ExpenseFiltersBar({
           <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search merchant or description" />
         </div>
       <Select value={status} onValueChange={handleStatusChange}>
-        <SelectTrigger className="w-[170px] text-xs">
+        <SelectTrigger className={`w-[170px] text-xs ${FILTER_SELECT_TRIGGER}`}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

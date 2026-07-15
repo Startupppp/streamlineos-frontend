@@ -378,14 +378,11 @@ export function UsersPage() {
       <PageWrapper
         title="Users"
         subtitle="Manage members, roles, and access."
-        badge={
-          pagination?.total !== undefined ? String(pagination.total) : undefined
-        }
         actions={
           <>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="h-8 text-xs">
+                <Button variant="outline" size="sm">
                   <MoreHorizontal className="h-3.5 w-3.5 mr-1.5" />
                   More
                 </Button>
@@ -410,7 +407,7 @@ export function UsersPage() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button size="sm" className="h-8 text-xs" onClick={handleOpenInvite}>
+            <Button size="sm" onClick={handleOpenInvite}>
               <UserPlus className="h-3.5 w-3.5 mr-1.5" />
               Invite User
             </Button>
@@ -419,10 +416,10 @@ export function UsersPage() {
         filters={
           <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
             <div className="min-w-0 flex-1 min-w-[160px] max-w-xs">
-          <SearchInput placeholder="Search users..." value={search} onValueChange={handleSearchChange} />
-        </div>
+              <SearchInput placeholder="Search users..." value={search} onValueChange={handleSearchChange} />
+            </div>
             <Select value={status} onValueChange={handleStatusChange}>
-              <SelectTrigger className="h-8 w-32 text-xs">
+              <SelectTrigger className="w-32 border-input bg-card text-foreground [&_svg:not([class*='text-'])]:text-muted-foreground">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -433,7 +430,7 @@ export function UsersPage() {
               </SelectContent>
             </Select>
             <Select value={role} onValueChange={handleRoleChange}>
-              <SelectTrigger className="h-8 w-32 text-xs">
+              <SelectTrigger className="w-32 border-input bg-card text-foreground [&_svg:not([class*='text-'])]:text-muted-foreground">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -446,7 +443,7 @@ export function UsersPage() {
               </SelectContent>
             </Select>
             <Select value={departmentId} onValueChange={handleDeptChange}>
-              <SelectTrigger className="h-8 w-36 text-xs">
+              <SelectTrigger className="w-36 border-input bg-card text-foreground [&_svg:not([class*='text-'])]:text-muted-foreground">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -459,7 +456,7 @@ export function UsersPage() {
               </SelectContent>
             </Select>
             <Select value={branchId} onValueChange={handleBranchChange}>
-              <SelectTrigger className="h-8 w-32 text-xs">
+              <SelectTrigger className="w-32 border-input bg-card text-foreground [&_svg:not([class*='text-'])]:text-muted-foreground">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

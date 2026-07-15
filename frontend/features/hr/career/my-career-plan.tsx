@@ -314,17 +314,17 @@ export function MyCareerPlan() {
                   <div
                     className={`rounded-xl border px-3 py-2 text-center min-w-[96px] transition-all ${
                       isCurrent
-                        ? "border-violet-500 dark:border-violet-400 bg-violet-50 dark:bg-violet-500/10 shadow-sm shadow-violet-100 dark:shadow-violet-500/10"
+                        ? "border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-500/10 shadow-sm shadow-blue-100 dark:shadow-blue-500/10"
                         : "border-border bg-muted/30"
                     }`}
                   >
                     <div
-                      className={`text-[10px] font-bold mb-0.5 ${isCurrent ? "text-violet-600 dark:text-violet-400" : "text-muted-foreground"}`}
+                      className={`text-[10px] font-bold mb-0.5 ${isCurrent ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground"}`}
                     >
                       Level {level.level}
                     </div>
                     <div
-                      className={`text-xs font-semibold ${isCurrent ? "text-violet-900 dark:text-violet-300" : "text-foreground"}`}
+                      className={`text-xs font-semibold ${isCurrent ? "text-blue-900 dark:text-blue-300" : "text-foreground"}`}
                     >
                       {level.title}
                     </div>

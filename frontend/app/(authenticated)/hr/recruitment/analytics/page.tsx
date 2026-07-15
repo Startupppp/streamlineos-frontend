@@ -121,7 +121,7 @@ export default function RecruitmentAnalyticsPage() {
               value={stats?.avgTimeToHireDays ?? 0}
               hint="from application to hired"
               icon={Clock}
-              tone="violet"
+              tone="blue"
             />
             <StatCard
               label="Hire Rate"

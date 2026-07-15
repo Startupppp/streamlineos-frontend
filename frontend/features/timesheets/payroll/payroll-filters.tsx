@@ -12,6 +12,8 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { cn } from "@/lib/utils";
 import type { PayPeriod, PayrollSummaryRow } from "./types";
 import type { PeriodPreset } from "./lib/period-presets";
 import { getPresetRange } from "./lib/period-presets";
@@ -86,7 +88,7 @@ export function PayrollFilters({ payPeriod, rows }: PayrollFiltersProps) {
   return (
     <>
       <Select value={preset} onValueChange={handlePresetChange}>
-        <SelectTrigger className="h-8 text-xs w-[140px]" aria-label="Period preset">
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[140px]")} aria-label="Period preset">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -103,11 +105,10 @@ export function PayrollFilters({ payPeriod, rows }: PayrollFiltersProps) {
         to={end}
         onChange={handleDateRangeChange}
         placeholder="Select dates"
-        className="h-8"
       />
 
       <Select value={userId} onValueChange={handleUserChange}>
-        <SelectTrigger className="h-8 text-xs w-[160px]" aria-label="Filter by person">
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[160px]")} aria-label="Filter by person">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

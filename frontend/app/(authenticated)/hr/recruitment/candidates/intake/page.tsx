@@ -17,7 +17,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
-import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
+import { CONTENT_FILL_PANEL, FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { cn } from "@/lib/utils";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -111,11 +112,10 @@ export default function IntakeInboxPage() {
       <PageWrapper
         title="Intake Inbox"
         subtitle="Triage new applicants before they enter the pipeline"
-        badge={candidates ? `${candidates.length}` : undefined}
         filters={
-          <div className="flex items-center gap-2">
+          <div className={FILTER_TOOLBAR_ROW}>
             <Select value={sourceFilter} onValueChange={setSourceFilter}>
-              <SelectTrigger className="w-[150px] h-8 text-sm">
+              <SelectTrigger className={cn("w-[150px]", FILTER_SELECT_TRIGGER)}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -125,7 +125,7 @@ export default function IntakeInboxPage() {
               </SelectContent>
             </Select>
             <Select value={jobFilter} onValueChange={setJobFilter}>
-              <SelectTrigger className="w-[180px] h-8 text-sm">
+              <SelectTrigger className={cn("w-[180px]", FILTER_SELECT_TRIGGER)}>
                 <SelectValue placeholder="All jobs" />
               </SelectTrigger>
               <SelectContent>

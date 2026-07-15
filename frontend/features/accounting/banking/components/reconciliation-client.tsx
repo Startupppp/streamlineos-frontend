@@ -15,6 +15,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Money } from "@/features/accounting/shared";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { BankTxnStatusBadge } from "./bank-txn-status-badge";
 import { ReconciliationMatchPanel } from "./reconciliation-match-panel";
 import { ReconciliationRulesSheet } from "./reconciliation-rules-sheet";
@@ -23,6 +24,49 @@ import { useCan } from "@/hooks/api/access";
 import type { ReconciliationTxn } from "@/hooks/api/accounting/banking";
 
 type TabValue = "unmatched" | "suggested";
+
+interface TxnRowProps {
+  txn: ReconciliationTxn;
+  isSelected: boolean;
+  onSelect: (txn: ReconciliationTxn) => void;
+}
+
+function TxnRow({ txn, isSelected, onSelect }: TxnRowProps) {
+  const amount = parseFloat(txn.amount);
+
+  function handleClick() {
+    onSelect(txn);
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className={[
+        "w-full text-left px-3 py-2.5 border-b border-border/50 transition-colors",
+        isSelected ? "bg-primary/5 border-l-2 border-l-primary" : "hover:bg-muted/30",
+      ].join(" ")}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-[11px] text-muted-foreground tabular-nums">{txn.txnDate}</p>
+          <p className="text-xs font-medium text-foreground truncate mt-0.5">
+            {txn.description.length > 38 ? `${txn.description.slice(0, 38)}…` : txn.description}
+          </p>
+        </div>
+        <div className="shrink-0 flex flex-col items-end gap-1">
+          <Money value={amount} compact className={amount >= 0 ? "text-emerald-600" : "text-red-600"} />
+          <BankTxnStatusBadge status={txn.status} />
+        </div>
+      </div>
+      {txn.suggestedMatches && txn.suggestedMatches.length > 0 && (
+        <p className="text-[10px] text-primary mt-1">
+          {txn.suggestedMatches.length} suggestion{txn.suggestedMatches.length > 1 ? "s" : ""}
+        </p>
+      )}
+    </button>
+  );
+}
 
 export function ReconciliationClient() {
   const searchParams = useSearchParams();
@@ -79,6 +123,14 @@ export function ReconciliationClient() {
     setRulesOpen(true);
   }
 
+  function handleTabUnmatched() {
+    setTab("unmatched");
+  }
+
+  function handleTabSuggested() {
+    setTab("suggested");
+  }
+
   return (
     <PageWrapper
       title="Reconciliation"
@@ -99,7 +151,7 @@ export function ReconciliationClient() {
             value={selectedAccountId ? String(selectedAccountId) : ""}
             onValueChange={handleAccountChange}
           >
-            <SelectTrigger className="w-[220px] text-sm">
+            <SelectTrigger className={`w-[220px] text-sm ${FILTER_SELECT_TRIGGER}`}>
               <SelectValue placeholder="Select account" />
             </SelectTrigger>
             <SelectContent>
@@ -160,7 +212,7 @@ export function ReconciliationClient() {
               <div className="flex border-b border-border">
                 <button
                   type="button"
-                  onClick={() => setTab("unmatched")}
+                  onClick={handleTabUnmatched}
                   className={[
                     "flex-1 py-2 px-3 text-xs font-medium transition-colors",
                     tab === "unmatched"
@@ -172,7 +224,7 @@ export function ReconciliationClient() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setTab("suggested")}
+                  onClick={handleTabSuggested}
                   className={[
                     "flex-1 py-2 px-3 text-xs font-medium transition-colors",
                     tab === "suggested"
@@ -190,50 +242,14 @@ export function ReconciliationClient() {
                     {tab === "unmatched" ? "All transactions matched!" : "No suggested matches."}
                   </div>
                 ) : (
-                  displayedTxns.map((txn) => {
-                    const amount = parseFloat(txn.amount);
-                    const isSelected = txn.id === selectedTxnId;
-                    return (
-                      <button
-                        key={txn.id}
-                        type="button"
-                        onClick={() => handleTxnSelect(txn)}
-                        className={[
-                          "w-full text-left px-3 py-2.5 border-b border-border/50 transition-colors",
-                          isSelected
-                            ? "bg-primary/5 border-l-2 border-l-primary"
-                            : "hover:bg-muted/30",
-                        ].join(" ")}
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <p className="text-[11px] text-muted-foreground tabular-nums">
-                              {txn.txnDate}
-                            </p>
-                            <p className="text-xs font-medium text-foreground truncate mt-0.5">
-                              {txn.description.length > 38
-                                ? `${txn.description.slice(0, 38)}…`
-                                : txn.description}
-                            </p>
-                          </div>
-                          <div className="shrink-0 flex flex-col items-end gap-1">
-                            <Money
-                              value={amount}
-                              compact
-                              className={amount >= 0 ? "text-emerald-600" : "text-red-600"}
-                            />
-                            <BankTxnStatusBadge status={txn.status} />
-                          </div>
-                        </div>
-                        {txn.suggestedMatches && txn.suggestedMatches.length > 0 && (
-                          <p className="text-[10px] text-primary mt-1">
-                            {txn.suggestedMatches.length} suggestion
-                            {txn.suggestedMatches.length > 1 ? "s" : ""}
-                          </p>
-                        )}
-                      </button>
-                    );
-                  })
+                  displayedTxns.map((txn) => (
+                    <TxnRow
+                      key={txn.id}
+                      txn={txn}
+                      isSelected={txn.id === selectedTxnId}
+                      onSelect={handleTxnSelect}
+                    />
+                  ))
                 )}
               </ScrollArea>
             </div>

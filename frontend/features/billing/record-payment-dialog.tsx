@@ -1,8 +1,9 @@
 "use client";
 
 import { format } from "date-fns";
-import { Loader2, Check } from "lucide-react";
+import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -224,18 +225,15 @@ export function RecordPaymentDialog({
           <Button variant="outline" size="sm" onClick={handleCancel}>
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             size="sm"
             onClick={handleSubmit}
-            disabled={recordPayment.isPending}
+            isPending={recordPayment.isPending}
+            loadingText="Recording…"
           >
-            {recordPayment.isPending ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
-            ) : (
-              <Check className="h-3.5 w-3.5 mr-1" />
-            )}
+            <Check className="h-3.5 w-3.5 mr-1" />
             Record Payment
-          </Button>
+          </LoadingButton>
         </div>
       </DialogContent>
     </Dialog>

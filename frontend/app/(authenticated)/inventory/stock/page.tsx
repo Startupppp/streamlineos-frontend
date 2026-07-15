@@ -7,6 +7,7 @@ import { AlertTriangle, TrendingDown, CheckCircle2 } from "lucide-react";
 import { EmptyWarehouseIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { SearchInput } from "@/components/ui/search-input";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { DataTableSkeleton } from "@/components/ui/data-table";
@@ -229,7 +230,7 @@ export default function StockLevelsPage() {
       />
       <div className="flex min-w-0 flex-row flex-nowrap items-center gap-2">
         <Select value={warehouseParam} onValueChange={handleWarehouseChange}>
-          <SelectTrigger className="text-xs w-[160px]">
+          <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "text-xs w-[160px]")}>
             <SelectValue placeholder="All warehouses" />
           </SelectTrigger>
           <SelectContent>
@@ -243,7 +244,7 @@ export default function StockLevelsPage() {
         </Select>
         {warehouseId && locationsData.length > 0 && (
           <Select value={locationParam} onValueChange={handleLocationChange}>
-            <SelectTrigger className="text-xs w-[160px]">
+            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "text-xs w-[160px]")}>
               <SelectValue placeholder="All locations" />
             </SelectTrigger>
             <SelectContent>
@@ -257,7 +258,7 @@ export default function StockLevelsPage() {
           </Select>
         )}
         <Select value={stockStatusParam} onValueChange={handleStockStatusChange}>
-          <SelectTrigger className="text-xs w-[160px]">
+          <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "text-xs w-[160px]")}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

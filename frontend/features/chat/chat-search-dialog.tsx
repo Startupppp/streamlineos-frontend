@@ -114,7 +114,7 @@ export function ChatSearchDialog({ open, onOpenChange, onSelectChannel }: ChatSe
                     <p className="text-[13px] font-semibold text-foreground">{ch.name}</p>
                     {ch.description && <p className="text-[11px] text-muted-foreground truncate">{ch.description}</p>}
                   </div>
-                  <span className={cn("text-[11px] font-medium px-2 py-0.5 rounded-full", ch.isMember ? "bg-green-500/10 text-green-600" : "bg-muted text-muted-foreground")}>
+                  <span className={cn("text-[11px] font-medium px-2 py-0.5 rounded-full", ch.isMember ? "bg-green-500/10 text-green-600 dark:text-green-400" : "bg-muted text-muted-foreground")}>
                     {ch.isMember ? "Joined" : "Join"}
                   </span>
                 </button>

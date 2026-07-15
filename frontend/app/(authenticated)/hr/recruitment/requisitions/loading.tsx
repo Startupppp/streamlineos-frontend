@@ -11,7 +11,7 @@ function RequisitionCardSkeleton() {
         </div>
         <Skeleton className="h-6 w-20 rounded-full" />
       </div>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-nowrap gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
         <Skeleton className="h-5 w-16 rounded-full" />
         <Skeleton className="h-5 w-20 rounded-full" />
         <Skeleton className="h-5 w-14 rounded-full" />
@@ -34,7 +34,7 @@ export default function RequisitionsLoading() {
       subtitle="Manage headcount requests and approvals"
       actions={<Skeleton className="h-8 w-36 rounded-md" />}
       filters={
-        <div className="flex gap-2">
+        <div className="flex flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
           {Array.from({ length: 12 }).map((_, i) => (
             <Skeleton key={i} className="h-8 w-24 rounded-md" />
           ))}

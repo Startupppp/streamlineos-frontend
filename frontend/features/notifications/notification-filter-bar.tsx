@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -112,9 +113,6 @@ export function NotificationFilterBar({
   const activeFilterCount =
     (activeSection !== "ALL" ? 1 : 0) + (activeCategory ? 1 : 0) + (activePriority ? 1 : 0);
 
-  const filterControlClassName =
-    "h-9 border-input bg-card text-xs font-normal";
-
   return (
     <div className="flex w-full min-w-0 items-center gap-2">
       <SearchInput
@@ -129,7 +127,7 @@ export function NotificationFilterBar({
         <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
-            className={cn(filterControlClassName, "shrink-0 gap-1.5 sm:hidden max-w-[160px]")}
+            className={cn(FILTER_SELECT_TRIGGER, "shrink-0 h-9 gap-1.5 sm:hidden max-w-[160px]")}
           >
             <SlidersHorizontal className="h-3.5 w-3.5 shrink-0" />
             <span className="truncate">{mobileFilterLabel}</span>
@@ -186,7 +184,7 @@ export function NotificationFilterBar({
       </DropdownMenu>
 
       <Select value={activeSection} onValueChange={handleSectionSelect}>
-        <SelectTrigger className={cn("hidden sm:flex w-[160px] shrink-0", filterControlClassName)}>
+        <SelectTrigger className={cn("hidden sm:flex w-[160px] shrink-0", FILTER_SELECT_TRIGGER)}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -206,7 +204,7 @@ export function NotificationFilterBar({
       </Select>
 
       <Select value={activeCategory ?? "ALL"} onValueChange={handleCategorySelect}>
-        <SelectTrigger className={cn("hidden sm:flex w-[140px] shrink-0", filterControlClassName)}>
+        <SelectTrigger className={cn("hidden sm:flex w-[140px] shrink-0", FILTER_SELECT_TRIGGER)}>
           <SelectValue placeholder="Category" />
         </SelectTrigger>
         <SelectContent>
@@ -220,7 +218,7 @@ export function NotificationFilterBar({
       </Select>
 
       <Select value={activePriority ?? "ALL"} onValueChange={handlePrioritySelect}>
-        <SelectTrigger className={cn("hidden sm:flex w-[130px] shrink-0", filterControlClassName)}>
+        <SelectTrigger className={cn("hidden sm:flex w-[130px] shrink-0", FILTER_SELECT_TRIGGER)}>
           <SelectValue placeholder="Priority" />
         </SelectTrigger>
         <SelectContent>

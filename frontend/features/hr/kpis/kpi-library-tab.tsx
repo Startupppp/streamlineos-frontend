@@ -19,12 +19,13 @@ import {
   SheetBody,
 } from "@/components/ui/sheet";
 import { useKpis, useCreateKpi, useUpdateKpi, useDeleteKpi } from "@/hooks/api/hr";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 const CATEGORY_COLORS: Record<string, string> = {
   Sales: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
   Finance: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
   Operations: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
-  HR: "bg-violet-100 text-violet-700 dark:bg-violet-500/10 dark:text-violet-300",
+  HR: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
   Customer: "bg-pink-100 text-pink-700 dark:bg-pink-500/10 dark:text-pink-300",
 };
 
@@ -80,8 +81,8 @@ export function KpiLibraryTab() {
       toast.success("KPI created");
       setSheetOpen(false);
       setForm({ name: "", category: "", description: "", unit: "", target: "", weight: "1" });
-    } catch {
-      toast.error("Failed to create KPI");
+    } catch (e) {
+      toast.error(getErrorMessage(e));
     }
   }
 
@@ -89,8 +90,8 @@ export function KpiLibraryTab() {
     try {
       await updateKpi.mutateAsync({ id, isActive: !current });
       toast.success(current ? "KPI deactivated" : "KPI activated");
-    } catch {
-      toast.error("Failed to update KPI");
+    } catch (e) {
+      toast.error(getErrorMessage(e));
     }
   }
 
@@ -99,8 +100,8 @@ export function KpiLibraryTab() {
     try {
       await deleteKpi.mutateAsync(id);
       toast.success("KPI deleted");
-    } catch {
-      toast.error("Failed to delete KPI");
+    } catch (e) {
+      toast.error(getErrorMessage(e));
     }
   }
 
@@ -142,8 +143,8 @@ export function KpiLibraryTab() {
                 onClick={() => setCategoryFilter(cat)}
                 className={`px-3 py-1 rounded-full text-xs font-medium border transition-all duration-150 ${
                   categoryFilter === cat
-                    ? "bg-violet-600 text-white border-violet-600"
-                    : "border-border text-muted-foreground hover:border-violet-300 hover:text-violet-600 dark:hover:border-violet-500/50 dark:hover:text-violet-400"
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "border-border text-muted-foreground hover:border-primary/30 hover:text-foreground dark:hover:border-primary/50"
                 }`}
               >
                 {cat}

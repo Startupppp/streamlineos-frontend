@@ -45,12 +45,12 @@ const STATUS_COLORS: Record<Course["status"], string> = {
 };
 
 const GRADIENT_COLORS = [
-  "from-violet-500 to-indigo-600",
+  "from-blue-600 to-cyan-600",
   "from-blue-500 to-cyan-600",
   "from-emerald-500 to-teal-600",
   "from-rose-500 to-pink-600",
   "from-amber-500 to-orange-600",
-  "from-purple-500 to-violet-600",
+  "from-blue-500 to-indigo-600",
 ];
 
 function CourseCardSkeleton() {

@@ -28,6 +28,7 @@ import { TicketPickerDialog } from "./ticket-picker-dialog";
 import { Input } from "@/components/ui/input";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Ticket, X, Link as LinkIcon, MapPin } from "lucide-react";
+import { LoadingButton } from "@/components/ui/loading-button";
 
 type EventCategory = "general" | "meeting" | "deadline" | "reminder" | "leave" | "project" | "other";
 
@@ -611,8 +612,8 @@ export function EventCreateDialog({
                   <p className="text-xs font-semibold text-muted-foreground">Linked work item</p>
                   {displayLinkedKey ? (
                     <div className="flex items-center gap-2 rounded-lg border bg-muted/30 px-3 py-1.5">
-                      <Ticket className="h-3.5 w-3.5 text-violet-600 shrink-0" />
-                      <span className="font-mono text-[11px] text-violet-600 shrink-0">
+                      <Ticket className="h-3.5 w-3.5 text-primary shrink-0" />
+                      <span className="font-mono text-[11px] text-primary shrink-0">
                         {displayLinkedKey}
                       </span>
                       {displayLinkedTitle && (
@@ -631,7 +632,7 @@ export function EventCreateDialog({
                     <button
                       type="button"
                       onClick={handleOpenTicketPicker}
-                      className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground border border-dashed rounded-lg px-3 py-1.5 w-full transition-colors hover:border-violet-400"
+                      className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground border border-dashed rounded-lg px-3 py-1.5 w-full transition-colors hover:border-primary/50"
                     >
                       <Ticket className="h-3.5 w-3.5" />
                       Link a ticket…
@@ -652,18 +653,16 @@ export function EventCreateDialog({
             >
               Discard
             </Button>
-            <Button
+            <LoadingButton
               size="sm"
               className="text-xs px-4 font-medium"
               onClick={handleSave}
-              disabled={isPending || !form.title.trim()}
+              disabled={!form.title.trim()}
+              isPending={isPending}
+              loadingText={isEdit ? "Saving…" : "Creating…"}
             >
-              {isPending
-                ? isEdit
-                  ? "Saving..."
-                  : "Creating..."
-                : "Save"}
-            </Button>
+              Save
+            </LoadingButton>
           </div>
         </DrawerContent>
       </Drawer>

@@ -15,7 +15,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import { useFindExpert, useHrDepartments, type ExpertResult } from "@/hooks/api/hr";
 import { Search, X } from "lucide-react";
-import { resolveImageUrl } from "@/lib/utils";
+import { resolveImageUrl, cn } from "@/lib/utils";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import Link from "next/link";
 
 const PROFICIENCY_LABELS: Record<number, string> = {
@@ -123,7 +124,7 @@ export default function FindExpertPage() {
 
         <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
           <Select value={department} onValueChange={setDepartment}>
-            <SelectTrigger className="w-[160px] h-8 text-xs">
+            <SelectTrigger className={cn("w-[160px]", FILTER_SELECT_TRIGGER)}>
               <SelectValue placeholder="All Departments" />
             </SelectTrigger>
             <SelectContent className="w-[var(--radix-select-trigger-width)]">
@@ -135,7 +136,7 @@ export default function FindExpertPage() {
           </Select>
 
           <Select value={role} onValueChange={setRole}>
-            <SelectTrigger className="w-[150px] h-8 text-xs">
+            <SelectTrigger className={cn("w-[150px]", FILTER_SELECT_TRIGGER)}>
               <SelectValue placeholder="All Roles" />
             </SelectTrigger>
             <SelectContent className="w-[var(--radix-select-trigger-width)]">

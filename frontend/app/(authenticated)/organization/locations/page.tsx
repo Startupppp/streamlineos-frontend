@@ -45,6 +45,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
+import { LoadingButton } from "@/components/ui/loading-button";
 import type { OrgLocation, LocationType } from "@/types/org-hierarchy";
 import { RequireModule } from "@/components/auth/require-module";
 
@@ -134,7 +135,7 @@ function TypeBadge({ type }: { type: LocationType }) {
   const colors: Record<LocationType, string> = {
     OFFICE: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400",
     WAREHOUSE: "bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400",
-    STORE: "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400",
+    STORE: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
     FACTORY: "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400",
     REMOTE: "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400",
   };
@@ -363,9 +364,7 @@ export default function OrgLocationsPage() {
       }
       filters={
         <>
-          <div className="min-w-0 max-w-[240px]">
           <SearchInput placeholder="Search locations…" value={search} onValueChange={handleSearchInputChange} />
-        </div>
           {archived.length > 0 && (
             <Button variant="outline" size="sm" className="text-xs" onClick={handleToggleArchived}>
               <Archive className="h-4 w-4 mr-1.5" />
@@ -399,9 +398,7 @@ export default function OrgLocationsPage() {
               <SheetClose asChild>
                 <Button variant="outline" size="sm" className="w-full">Cancel</Button>
               </SheetClose>
-              <Button size="sm" type="submit" form="location-form" disabled={create.isPending} className="w-full">
-                {create.isPending ? "Saving…" : "Save"}
-              </Button>
+              <LoadingButton size="sm" type="submit" form="location-form" isPending={create.isPending} loadingText="Saving…" className="w-full">Save</LoadingButton>
             </div>
           </div>
         </SheetContent>
@@ -430,9 +427,7 @@ export default function OrgLocationsPage() {
               <SheetClose asChild>
                 <Button variant="outline" size="sm" className="w-full">Cancel</Button>
               </SheetClose>
-              <Button size="sm" type="submit" form="location-form" disabled={update.isPending} className="w-full">
-                {update.isPending ? "Saving…" : "Save"}
-              </Button>
+              <LoadingButton size="sm" type="submit" form="location-form" isPending={update.isPending} loadingText="Saving…" className="w-full">Save</LoadingButton>
             </div>
           </div>
         </SheetContent>

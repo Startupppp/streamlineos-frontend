@@ -2,7 +2,9 @@
 
 import { memo, useState, useCallback } from "react";
 import { toast } from "sonner";
-import { Plus, MoreHorizontal, ArrowRightCircle } from "lucide-react";
+import { Plus, ArrowRightCircle } from "lucide-react";
+import { EllipsisIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import {
   useCreateActionItem, useUpdateActionItem, useDeleteActionItem, useConvertActionItemToTask,
 } from "@/hooks/api/projects";
@@ -50,6 +52,7 @@ const ActionItemRow = memo(function ActionItemRow({
   const handleConvertClick = useCallback(() => onConvert(item), [item, onConvert]);
   const handleEditClick = useCallback(() => onEdit(item), [item, onEdit]);
   const handleDeleteClick = useCallback(() => onDelete(item), [item, onDelete]);
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
 
   return (
     <div className={cn(PM_ROW, "items-start py-2.5")}>
@@ -93,8 +96,8 @@ const ActionItemRow = memo(function ActionItemRow({
           ) : null}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="w-7" aria-label="Action item menu">
-                <MoreHorizontal className="h-4 w-4" />
+              <Button variant="ghost" size="icon" className="w-7" aria-label="Action item menu" {...hoverHandlers}>
+                <EllipsisIcon ref={iconRef} size={14} />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">

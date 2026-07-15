@@ -98,9 +98,9 @@ export function WfhTabContent() {
         <CardHeader className="pb-3 pt-4 px-4">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <div className="w-7 rounded-lg bg-violet-100 dark:bg-violet-950/40 flex items-center justify-center">
+              <div className="w-7 rounded-lg bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center">
                 <Home
-                  className="h-3.5 w-3.5 text-violet-600 dark:text-violet-400"
+                  className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400"
                   aria-hidden="true"
                 />
               </div>

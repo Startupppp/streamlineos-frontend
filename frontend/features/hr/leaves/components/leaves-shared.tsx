@@ -285,7 +285,7 @@ export const WfhRequestItem = React.memo(function WfhRequestItem({
       ? "border-l-emerald-500"
       : status === "REJECTED"
         ? "border-l-rose-500"
-        : "border-l-violet-500";
+        : "border-l-blue-500";
 
   return (
     <div
@@ -299,7 +299,7 @@ export const WfhRequestItem = React.memo(function WfhRequestItem({
         {showUser && request.user && (
           <Avatar className="w-8 shrink-0">
             <AvatarImage src={resolveImageUrl(request.user.image)} />
-            <AvatarFallback className="text-xs bg-violet-100 text-violet-700 dark:bg-violet-950/40 dark:text-violet-400">
+            <AvatarFallback className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400">
               {request.user.firstName?.[0]}
               {request.user.lastName?.[0]}
             </AvatarFallback>

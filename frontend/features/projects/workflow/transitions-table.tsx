@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { MoreHorizontal } from "lucide-react";
-import { PlusIcon } from "@animateicons/react/lucide";
+import { useCallback, useState } from "react";
+import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
 import {
@@ -47,6 +46,33 @@ function AddTransitionButton({ onClick }: { onClick: () => void }) {
       <PlusIcon ref={iconRef} size={14} />
       Add
     </Button>
+  );
+}
+
+function TransitionRowActions({
+  transition,
+  onEdit,
+  onDelete,
+}: {
+  transition: WorkflowTransition;
+  onEdit: (t: WorkflowTransition) => void;
+  onDelete: (t: WorkflowTransition) => void;
+}) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  const handleEdit = useCallback(() => onEdit(transition), [transition, onEdit]);
+  const handleDelete = useCallback(() => onDelete(transition), [transition, onDelete]);
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Transition actions" {...hoverHandlers}>
+          <EllipsisIcon ref={iconRef} size={14} />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={handleEdit}>Edit</DropdownMenuItem>
+        <DropdownMenuItem variant="destructive" onClick={handleDelete}>Delete</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -192,21 +218,11 @@ export function TransitionsTable({ projectId, statuses }: TransitionsTableProps)
             header: "",
             className: "w-10",
             cell: (row: WorkflowTransition) => (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-7 w-7">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => handleEditClick(row)}>Edit</DropdownMenuItem>
-                  <DropdownMenuItem variant="destructive"
-                    onClick={() => setDeleteTarget(row)}
-                  >
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <TransitionRowActions
+                transition={row}
+                onEdit={handleEditClick}
+                onDelete={setDeleteTarget}
+              />
             ),
           },
         ]

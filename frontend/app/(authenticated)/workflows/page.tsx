@@ -405,12 +405,12 @@ export default function WorkflowsPage() {
         </Button>
       }
       filters={
-        <div className="flex items-center gap-3 w-full flex-wrap">
+        <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
           <div className="min-w-0 flex-1 min-w-[180px] max-w-xs">
-          <SearchInput placeholder="Search workflows…" value={search} onValueChange={handleSearchChange} />
-        </div>
+            <SearchInput placeholder="Search workflows…" value={search} onValueChange={handleSearchChange} />
+          </div>
           <Select value={statusFilter} onValueChange={handleStatusChange}>
-            <SelectTrigger className="w-[140px] text-sm">
+            <SelectTrigger className="w-[140px] border-input bg-card text-foreground [&_svg:not([class*='text-'])]:text-muted-foreground">
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>

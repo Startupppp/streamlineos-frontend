@@ -33,6 +33,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient, getApiError } from "@/lib/api-client";
 import { toast } from "sonner";
 import { Plus, ArrowLeftRight, X, Loader2 } from "lucide-react";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { formatRelative } from "date-fns";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { useOrgMembers } from "@/hooks/api/organization";
@@ -123,6 +124,8 @@ function DelegationsContent() {
     },
     [revokeMutation],
   );
+
+  const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
 
   const handleGrantSuccess = useCallback(() => {
     setSheetOpen(false);

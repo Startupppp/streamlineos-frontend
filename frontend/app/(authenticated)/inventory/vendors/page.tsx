@@ -239,9 +239,7 @@ export default function VendorsListPage() {
 
   const filterBar = (
     <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide lg:gap-3 [&>*]:shrink-0">
-      <div className="w-full max-w-md min-w-[200px]">
-          <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search vendors…" />
-        </div>
+      <SearchInput className="min-w-0 flex-1 lg:max-w-md" value={search} onValueChange={handleSearchChange} placeholder="Search vendors…" />
       <Select value={activeParam} onValueChange={handleActiveChange}>
         <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[140px] text-xs")}>
           <SelectValue placeholder="All vendors" />

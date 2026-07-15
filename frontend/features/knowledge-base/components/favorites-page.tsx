@@ -73,13 +73,8 @@ function FavoritesSkeleton() {
 export default function FavoritesPage() {
   const { data: pages = [], isLoading, isError } = useKbPagesFavorites();
 
-  const subtitle =
-    pages.length > 0
-      ? `${pages.length} page${pages.length === 1 ? "" : "s"}`
-      : undefined;
-
   return (
-    <PageWrapper title="Favorites" subtitle={subtitle}>
+    <PageWrapper title="Favorites" subtitle="Pages you have starred">
       {isLoading && <FavoritesSkeleton />}
 
       {!isLoading && isError && (

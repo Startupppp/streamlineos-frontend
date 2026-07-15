@@ -5,6 +5,7 @@ import { format, parseISO } from "date-fns";
 import { useAuditEvents } from "@/hooks/api/timesheets-core/audit";
 import { useCan } from "@/hooks/api/access";
 import type { AuditEvent } from "@/features/timesheets-core/types";
+import { cn } from "@/lib/utils";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   Select,
@@ -15,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { AuditDetailSheet } from "./audit-detail-sheet";
 
 const SELECT_ALL = "__all__";
@@ -144,9 +146,9 @@ export function AuditTab() {
   }
 
   const toolbar = (
-    <div className="flex items-center gap-2">
+    <div className={FILTER_TOOLBAR_ROW}>
       <Select value={entityType} onValueChange={handleEntityTypeChange}>
-        <SelectTrigger className="h-8 text-xs w-44">
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-44")}>
           <SelectValue placeholder="All entity types" />
         </SelectTrigger>
         <SelectContent>
@@ -162,7 +164,7 @@ export function AuditTab() {
       </Select>
 
       <Select value={action} onValueChange={handleActionChange}>
-        <SelectTrigger className="h-8 text-xs w-36">
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-36")}>
           <SelectValue placeholder="All actions" />
         </SelectTrigger>
         <SelectContent>

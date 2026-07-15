@@ -35,7 +35,7 @@ export function CompOffPanel() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
       {[
-        { label: "Earned Days", value: balance.earnedDays, color: "text-violet-600" },
+        { label: "Earned Days", value: balance.earnedDays, color: "text-blue-600" },
         { label: "Used Days", value: balance.usedDays, color: "text-amber-600" },
         { label: "Remaining", value: remaining, color: "text-emerald-600" },
       ].map((stat) => (

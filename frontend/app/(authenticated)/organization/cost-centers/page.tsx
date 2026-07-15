@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Textarea } from "@/components/ui/textarea";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import type { OrgCostCenter } from "@/types/org-hierarchy";
@@ -343,9 +344,7 @@ export default function OrgCostCentersPage() {
       }
       filters={
         <>
-          <div className="min-w-0 max-w-[240px]">
           <SearchInput placeholder="Search cost centers…" value={search} onValueChange={handleSearchInputChange} />
-        </div>
           {archived.length > 0 && (
             <Button variant="outline" size="sm" className="text-xs" onClick={handleToggleArchived}>
               <Archive className="h-4 w-4 mr-1.5" />

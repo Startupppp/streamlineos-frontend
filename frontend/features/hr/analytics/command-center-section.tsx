@@ -55,7 +55,7 @@ interface DrillableStatCardProps {
   value: string;
   hint?: string;
   icon: ComponentType<{ className?: string }>;
-  tone?: "default" | "blue" | "emerald" | "amber" | "red" | "violet";
+  tone?: "default" | "blue" | "emerald" | "amber" | "red";
   onClick?: () => void;
 }
 
@@ -226,7 +226,7 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
           value={kpis?.avgMood !== null && kpis?.avgMood !== undefined ? kpis.avgMood.toFixed(1) : "—"}
           hint="out of 5"
           icon={Shield}
-          tone="violet"
+          tone="blue"
           onClick={handleEngagementDrilldown}
         />
         {canViewPayroll && kpis?.payrollCostLastMonth !== null ? (

@@ -28,6 +28,7 @@ import {
   SheetBody,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -137,7 +138,7 @@ export function CreateLeadSheet({
                       name="email"
                       type="email"
                       placeholder="john@example.com"
-                      className="pl-9 h-8"
+                      className="pl-9"
                       value={emailInput}
                       onChange={handleEmailChange}
                     />
@@ -172,7 +173,7 @@ export function CreateLeadSheet({
                       id="company"
                       name="company"
                       placeholder="Acme Corp"
-                      className="pl-9 h-8"
+                      className="pl-9"
                     />
                   </div>
                 </div>
@@ -189,7 +190,7 @@ export function CreateLeadSheet({
                       id="city"
                       name="city"
                       placeholder="Mumbai"
-                      className="pl-9 h-8"
+                      className="pl-9"
                     />
                   </div>
                 </div>
@@ -249,7 +250,7 @@ export function CreateLeadSheet({
                     type="priority"
                     value={priority}
                     onChange={setPriority}
-                    className="w-full h-8"
+                    className="w-full"
                   />
                 </div>
                 <div>
@@ -260,7 +261,7 @@ export function CreateLeadSheet({
                     type="source"
                     value={source}
                     onChange={setSource}
-                    className="w-full h-8"
+                    className="w-full"
                   />
                 </div>
 
@@ -279,7 +280,7 @@ export function CreateLeadSheet({
                         name="referredBy"
                         required
                         placeholder="Name of person who referred this lead"
-                        className="pl-9 h-8"
+                        className="pl-9"
                       />
                     </div>
                   </div>
@@ -309,7 +310,7 @@ export function CreateLeadSheet({
                       min="0"
                       step="1"
                       placeholder="5,00,000"
-                      className="pl-9 h-8"
+                      className="pl-9"
                     />
                   </div>
                 </div>
@@ -329,7 +330,7 @@ export function CreateLeadSheet({
                       min="0"
                       step="1"
                       placeholder="10,00,000"
-                      className="pl-9 h-8"
+                      className="pl-9"
                     />
                   </div>
                 </div>
@@ -356,19 +357,20 @@ export function CreateLeadSheet({
           <Button
             type="button"
             variant="outline"
-            className="flex-1 h-8"
+            className="flex-1"
             onClick={handleCancel}
           >
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             type="submit"
             form="create-lead-form"
-            className="flex-1 h-8"
-            disabled={isPending}
+            className="flex-1"
+            isPending={isPending}
+            loadingText="Creating..."
           >
-            {isPending ? "Creating..." : "Create Lead"}
-          </Button>
+            Create Lead
+          </LoadingButton>
         </SheetFooter>
       </SheetContent>
     </Sheet>

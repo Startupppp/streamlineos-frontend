@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { EmptyTicketIllustration } from "@/components/illustrations";
@@ -157,7 +158,7 @@ function InboxContent() {
         filters={
           <>
             <Select value={statusFilter} onValueChange={handleStatusFilter}>
-              <SelectTrigger className="w-full sm:w-[130px] h-8 text-xs">
+              <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-full sm:w-[130px]`}>
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -170,7 +171,7 @@ function InboxContent() {
               </SelectContent>
             </Select>
             <Select value={priorityFilter} onValueChange={handlePriorityFilter}>
-              <SelectTrigger className="w-full sm:w-[120px] h-8 text-xs">
+              <SelectTrigger className={`${FILTER_SELECT_TRIGGER} w-full sm:w-[120px]`}>
                 <SelectValue placeholder="Priority" />
               </SelectTrigger>
               <SelectContent>

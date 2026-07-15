@@ -22,13 +22,13 @@ interface TreeNode {
 
 const ROLE_DOT: Record<string, string> = {
   Ceo: "bg-amber-500",
-  Hr: "bg-violet-500",
+  Hr: "bg-blue-500",
   Admin: "bg-blue-500",
 };
 
 const ROLE_ACCENT: Record<string, string> = {
   Ceo: "border-l-amber-500",
-  Hr: "border-l-violet-500",
+  Hr: "border-l-blue-500",
   Admin: "border-l-blue-500",
 };
 

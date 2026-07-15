@@ -11,6 +11,8 @@ import {
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
+import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { cn } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -104,7 +106,7 @@ export default function QuestionBankPage() {
     <PageWrapper
       title="Interview Question Bank"
       subtitle="Curated questions per role and round for interviewers"
-      badge={`${questions?.length ?? 0} questions`}
+
       actions={
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="sm" asChild>
@@ -127,12 +129,12 @@ export default function QuestionBankPage() {
         </div>
       }
       filters={
-        <div className="flex items-center gap-2">
+        <div className={FILTER_TOOLBAR_ROW}>
           <div className="min-w-0 w-[200px]">
-          <SearchInput placeholder="Search questions..." value={search} onValueChange={handleSearchChange} />
-        </div>
+            <SearchInput placeholder="Search questions..." value={search} onValueChange={handleSearchChange} />
+          </div>
           <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger className="w-[150px] h-8 text-sm">
+            <SelectTrigger className={cn("w-[150px]", FILTER_SELECT_TRIGGER)}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="w-[var(--radix-select-trigger-width)]">
@@ -145,7 +147,7 @@ export default function QuestionBankPage() {
             </SelectContent>
           </Select>
           <Select value={difficulty} onValueChange={setDifficulty}>
-            <SelectTrigger className="w-[120px] h-8 text-sm">
+            <SelectTrigger className={cn("w-[120px]", FILTER_SELECT_TRIGGER)}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="w-[var(--radix-select-trigger-width)]">

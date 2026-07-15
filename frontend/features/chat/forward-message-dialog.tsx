@@ -3,7 +3,8 @@
 import { useState, useCallback, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Hash, Loader2, MessageSquare, Search, Users } from "lucide-react";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { Hash, MessageSquare, Search, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -169,14 +170,15 @@ export function ForwardMessageDialog({ message, open, onOpenChange }: ForwardMes
 
         <DialogFooter>
           <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button
+          <LoadingButton
             size="sm"
-            disabled={!selectedChannelId || sendMessage.isPending}
+            disabled={!selectedChannelId}
+            isPending={sendMessage.isPending}
+            loadingText="Forwarding…"
             onClick={handleForward}
           >
-            {sendMessage.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : null}
             Forward
-          </Button>
+          </LoadingButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

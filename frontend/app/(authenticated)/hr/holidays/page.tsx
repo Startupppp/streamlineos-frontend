@@ -561,7 +561,7 @@ export default function HolidaysPage() {
       title="Holiday Calendar"
       subtitle="Manage organization holidays across the year"
       actions={
-        <div className="flex gap-2 flex-wrap items-center">
+        <div className="flex gap-2 items-center flex-nowrap">
           {showYearFilter && (
             <Select value={String(yearFilter)} onValueChange={handleYearFilterChange}>
               <SelectTrigger className="text-xs w-28">

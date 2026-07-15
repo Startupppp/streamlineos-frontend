@@ -17,7 +17,7 @@ const LEVEL_COLORS: Record<number, string> = {
   2: "bg-primary/10 text-primary",
   3: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
   4: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-  5: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+  5: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
 };
 
 const LEVEL_SHORT: Record<number, string> = { 1: "B", 2: "E", 3: "I", 4: "A", 5: "X" };

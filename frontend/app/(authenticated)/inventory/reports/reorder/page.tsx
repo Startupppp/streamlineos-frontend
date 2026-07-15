@@ -189,10 +189,8 @@ function ReorderReportContent() {
           : "Products below their reorder points"
       }
       filters={
-        <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 lg:gap-3">
-          <div className="min-w-0 flex-1 lg:max-w-md w-full">
-          <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search products, SKU, category…" />
-        </div>
+        <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0 lg:gap-3">
+          <SearchInput className="min-w-0 flex-1 lg:max-w-md" value={search} onValueChange={handleSearchChange} placeholder="Search products, SKU, category…" />
           <Button
             variant="outline"
             size="sm"

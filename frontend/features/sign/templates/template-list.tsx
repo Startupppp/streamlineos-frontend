@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { MoreHorizontal, Send, Copy, Archive, CheckCircle2 } from "lucide-react";
+import { Archive, CheckCircle2 } from "lucide-react";
+import { EllipsisIcon, SendIcon, CopyIcon } from "@animateicons/react/lucide";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import { IllustrationImage } from "@/components/illustrations/illustration-image
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useDuplicateSignTemplate, useSignTemplates, useUpdateSignTemplate } from "@/hooks/api/sign/templates";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import type { SignTemplate, SignTemplateStatus } from "@/types/sign";
 import { CreateEnvelopeFromTemplateDialog } from "./create-envelope-from-template-dialog";
 
@@ -25,6 +27,8 @@ function TemplateRow({ template }: { template: SignTemplate }) {
   const [createOpen, setCreateOpen] = useState(false);
   const duplicate = useDuplicateSignTemplate();
   const update = useUpdateSignTemplate(template.id);
+  const { iconRef: sendRef, hoverHandlers: sendHover } = useAnimatedIcon();
+  const { iconRef: ellipsisRef, hoverHandlers: ellipsisHover } = useAnimatedIcon();
 
   async function handleDuplicate() {
     try {
@@ -44,6 +48,18 @@ function TemplateRow({ template }: { template: SignTemplate }) {
     }
   }
 
+  function handleCreateOpen() {
+    setCreateOpen(true);
+  }
+
+  function handlePublish() {
+    void handleStatusChange("published");
+  }
+
+  function handleArchive() {
+    void handleStatusChange("archived");
+  }
+
   return (
     <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-4">
       <div className="min-w-0 flex-1">
@@ -56,30 +72,30 @@ function TemplateRow({ template }: { template: SignTemplate }) {
       </div>
       <div className="flex items-center gap-2 shrink-0">
         {template.status === "published" && (
-          <Button size="sm" onClick={() => setCreateOpen(true)}>
-            <Send className="size-4" />
+          <Button size="sm" onClick={handleCreateOpen} {...sendHover}>
+            <SendIcon ref={sendRef} className="size-4" />
             New envelope
           </Button>
         )}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="size-8">
-              <MoreHorizontal className="size-4" />
+            <Button variant="ghost" size="icon" className="size-8" {...ellipsisHover}>
+              <EllipsisIcon ref={ellipsisRef} className="size-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={handleDuplicate}>
-              <Copy className="size-4" />
+              <CopyIcon className="size-4" />
               Duplicate
             </DropdownMenuItem>
             {template.status !== "published" && (
-              <DropdownMenuItem onClick={() => handleStatusChange("published")}>
+              <DropdownMenuItem onClick={handlePublish}>
                 <CheckCircle2 className="size-4" />
                 Publish
               </DropdownMenuItem>
             )}
             {template.status !== "archived" && (
-              <DropdownMenuItem onClick={() => handleStatusChange("archived")} variant="destructive">
+              <DropdownMenuItem onClick={handleArchive} variant="destructive">
                 <Archive className="size-4" />
                 Archive
               </DropdownMenuItem>

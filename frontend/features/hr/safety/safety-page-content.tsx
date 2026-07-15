@@ -15,6 +15,8 @@ import {
 import { DataTable } from "@/components/ui/data-table";
 import { Plus } from "lucide-react";
 import { StateIllustration } from "@/components/illustrations";
+import { cn } from "@/lib/utils";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { useCan } from "@/hooks/api/access";
 import { useSafetyIncidents } from "@/hooks/api/hr/safety";
 import type { SafetyIncident, IncidentStatus, IncidentType, IncidentSeverity } from "@/hooks/api/hr/safety";
@@ -120,7 +122,7 @@ export function SafetyPageContent() {
         value={status || SENTINEL}
         onValueChange={(v) => { setStatus(v === SENTINEL ? "" : (v as IncidentStatus)); setPage(1); }}
       >
-        <SelectTrigger className="w-40 text-sm">
+        <SelectTrigger className={cn("w-40", FILTER_SELECT_TRIGGER)}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -133,7 +135,7 @@ export function SafetyPageContent() {
         value={type || SENTINEL}
         onValueChange={(v) => { setType(v === SENTINEL ? "" : (v as IncidentType)); setPage(1); }}
       >
-        <SelectTrigger className="w-36 text-sm">
+        <SelectTrigger className={cn("w-36", FILTER_SELECT_TRIGGER)}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

@@ -3,11 +3,12 @@
 import { Controller, useFieldArray, useForm, type UseFormRegister } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { FileText, Loader2, Plus, Trash2 } from "lucide-react";
+import { FileText, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useCreateInvoice } from "@/hooks/api/invoice";
 import { formatCurrencyFull } from "@/lib/format-utils";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -328,14 +329,10 @@ export function CreateInvoiceDialog({
             <Button type="button" variant="outline" onClick={handleCancel}>
               Cancel
             </Button>
-            <Button type="submit" disabled={createInvoice.isPending}>
-              {createInvoice.isPending ? (
-                <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-              ) : (
-                <FileText className="mr-1 h-4 w-4" />
-              )}
+            <LoadingButton type="submit" isPending={createInvoice.isPending} loadingText="Creating…">
+              <FileText className="mr-1 h-4 w-4" />
               Create Invoice
-            </Button>
+            </LoadingButton>
           </DialogFooter>
         </form>
       </DialogContent>

@@ -26,7 +26,7 @@ import type { Department } from "@/types/hr";
 const GENDER_COLORS: Record<string, string> = {
   MALE: "bg-blue-500",
   FEMALE: "bg-pink-500",
-  OTHER: "bg-purple-500",
+  OTHER: "bg-blue-500",
   PREFER_NOT_TO_SAY: "bg-slate-400",
   Unknown: "bg-slate-300",
 };

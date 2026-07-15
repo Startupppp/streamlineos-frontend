@@ -41,8 +41,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { UploadIcon } from "@animateicons/react/lucide";
-import { Bookmark, X, Download, SearchX } from "lucide-react";
+import { UploadIcon, DownloadIcon, BookmarkIcon } from "@animateicons/react/lucide";
+import { X, SearchX } from "lucide-react";
 import { exportToCsv } from "@/lib/export-csv";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -92,6 +92,41 @@ function AnimatedToolbarIconButton({ onClick, ariaLabel, Icon }: AnimatedToolbar
       {...hoverHandlers}
     >
       <Icon ref={iconRef} size={14} />
+    </Button>
+  );
+}
+
+function ExportDropdownTrigger() {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button
+      variant="outline"
+      size="icon"
+      className="w-8 shrink-0 border-border/70 bg-background/60 backdrop-blur-sm"
+      aria-label="Export tickets"
+      {...hoverHandlers}
+    >
+      <DownloadIcon ref={iconRef} size={14} />
+    </Button>
+  );
+}
+
+interface SaveViewButtonProps {
+  onClick: () => void;
+}
+
+function SaveViewButton({ onClick }: SaveViewButtonProps) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button
+      variant="outline"
+      size="icon"
+      onClick={onClick}
+      className="w-8 shrink-0 border-border/70 bg-background/60 backdrop-blur-sm"
+      aria-label="Save view"
+      {...hoverHandlers}
+    >
+      <BookmarkIcon ref={iconRef} size={14} />
     </Button>
   );
 }
@@ -556,14 +591,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
             <div className="flex items-center gap-1.5">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="w-8 shrink-0 border-border/70 bg-background/60 backdrop-blur-sm"
-                    aria-label="Export tickets"
-                  >
-                    <Download className="h-3.5 w-3.5" />
-                  </Button>
+                  <ExportDropdownTrigger />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-48">
                   <DropdownMenuItem onClick={handleExportCurrentView}>
@@ -580,18 +608,12 @@ export default function ProjectBoardPage({ params }: PageProps) {
                 ariaLabel="Import tickets"
                 Icon={UploadIcon}
               />
-              <Button
-                variant="outline"
-                size="icon"
+              <SaveViewButton
                 onClick={() => {
                   setSaveViewName("");
                   setSaveViewOpen(true);
                 }}
-                className="w-8 shrink-0 border-border/70 bg-background/60 backdrop-blur-sm"
-                aria-label="Save view"
-              >
-                <Bookmark className="h-3.5 w-3.5" />
-              </Button>
+              />
             </div>
             {activeView && (
               <Badge

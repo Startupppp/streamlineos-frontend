@@ -82,7 +82,7 @@ export default function VersionHistoryPage() {
       subtitle="Browse version lineage and rollback policies, templates, and workflows"
     >
       <div className="px-4 sm:px-6 py-4 space-y-4">
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
           <Select value={entity} onValueChange={(v) => { setEntity(v as VersionEntity); setQueriedId(null); }}>
             <SelectTrigger className="text-xs w-36">
               <SelectValue />

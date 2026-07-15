@@ -20,6 +20,7 @@ import { useHrCases, useDisciplinaryActions } from "@/hooks/api/hr/cases";
 import type { HrCase, CaseCategory, CaseStatus, CaseSeverity } from "@/hooks/api/hr/cases";
 import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { CaseStatusBadge, CaseSeverityBadge, CaseCategoryLabel } from "./case-badges";
 import { CaseDetailSheet } from "./case-detail-sheet";
@@ -140,7 +141,7 @@ export function CasesPageContent() {
         value={status || SENTINEL}
         onValueChange={(v) => { setStatus(v === SENTINEL ? "" : (v as CaseStatus)); setPage(1); }}
       >
-        <SelectTrigger className="w-44 text-sm">
+        <SelectTrigger className={cn("w-44", FILTER_SELECT_TRIGGER)}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -153,7 +154,7 @@ export function CasesPageContent() {
         value={category || SENTINEL}
         onValueChange={(v) => { setCategory(v === SENTINEL ? "" : (v as CaseCategory)); setPage(1); }}
       >
-        <SelectTrigger className="w-44 text-sm">
+        <SelectTrigger className={cn("w-44", FILTER_SELECT_TRIGGER)}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

@@ -336,7 +336,7 @@ export default function DocumentsPage() {
             icon={HardDrive}
             color={storagePercent > 80 ? "red" : storagePercent > 50 ? "gold" : "green"}
           />
-          <StatCard label="Public Documents" value={documents.filter((d) => d.isPublic).length} icon={Star} color="purple" />
+          <StatCard label="Public Documents" value={documents.filter((d) => d.isPublic).length} icon={Star} color="blue" />
         </StatCardGrid>
 
         <DocumentTable

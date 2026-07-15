@@ -24,7 +24,7 @@ import {
   useRemoveVipClient,
 } from "@/hooks/api/support/macros";
 import { useSimpleClientsList } from "@/hooks/api/crm/clients";
-import { getApiError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 
 interface VipClientRowProps {
@@ -74,7 +74,7 @@ export function VipClientsCard() {
   const handleRemove = useCallback(
     (clientId: number) => {
       removeVip.mutate(clientId, {
-        onError: (error) => toast.error(getApiError(error)),
+        onError: (error) => toast.error(getErrorMessage(error)),
       });
     },
     [removeVip],
@@ -84,7 +84,7 @@ export function VipClientsCard() {
     (clientId: number) => {
       addVip.mutate(clientId, {
         onSuccess: () => setPickerOpen(false),
-        onError: (error) => toast.error(getApiError(error)),
+        onError: (error) => toast.error(getErrorMessage(error)),
       });
     },
     [addVip],

@@ -57,6 +57,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { cn, resolveImageUrl } from "@/lib/utils";
+import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { EmptyDevicesIllustration } from "@/components/illustrations";
 import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
 import type { Asset, Employee } from "@/types/hr";
@@ -846,12 +847,12 @@ export default function HrAssetsPage() {
         </div>
       }
       filters={
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className={FILTER_TOOLBAR_ROW}>
           <Select
             value={statusFilter ?? "all"}
             onValueChange={handleStatusFilterChange}
           >
-            <SelectTrigger className="w-[148px] h-8 text-xs">
+            <SelectTrigger className={cn("w-[148px]", FILTER_SELECT_TRIGGER)}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -866,7 +867,7 @@ export default function HrAssetsPage() {
             value={categoryFilter ?? "all"}
             onValueChange={handleCategoryFilterChange}
           >
-            <SelectTrigger className="w-[140px] h-8 text-xs">
+            <SelectTrigger className={cn("w-[140px]", FILTER_SELECT_TRIGGER)}>
               <SelectValue placeholder="All types" />
             </SelectTrigger>
             <SelectContent>
@@ -882,7 +883,7 @@ export default function HrAssetsPage() {
             value={assignmentFilter ?? "all"}
             onValueChange={handleAssignmentFilterChange}
           >
-            <SelectTrigger className="w-[148px] h-8 text-xs">
+            <SelectTrigger className={cn("w-[148px]", FILTER_SELECT_TRIGGER)}>
               <SelectValue placeholder="All assignments" />
             </SelectTrigger>
             <SelectContent>

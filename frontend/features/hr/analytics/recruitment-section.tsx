@@ -83,7 +83,7 @@ export function RecruitmentSection({ isLoading }: RecruitmentSectionProps) {
           label="Avg Time-to-Hire"
           value={`${stats.avgTimeToHireDays}d`}
           icon={Clock}
-          color="violet"
+          color="blue"
           index={3}
         />
       </StatCardGrid>

@@ -38,7 +38,7 @@ export const WfhBalancesCard = memo(function WfhBalancesCard() {
 
   if (isLoading) {
     return (
-      <Card className="rounded-2xl border border-border border-l-4 border-l-violet-500 bg-card shadow-sm overflow-hidden">
+      <Card className="rounded-2xl border border-border border-l-4 border-l-primary bg-card shadow-sm overflow-hidden">
         <CardContent className="p-6 space-y-4">
           <Skeleton className="h-5 w-32" />
           <Skeleton className="h-2.5 w-full rounded-full" />
@@ -56,11 +56,11 @@ export const WfhBalancesCard = memo(function WfhBalancesCard() {
   const usedPercent = (stats.approved / wfhQuota) * 100;
 
   return (
-    <Card className="rounded-2xl border border-border border-l-4 border-l-violet-500 bg-card shadow-sm overflow-hidden">
+    <Card className="rounded-2xl border border-border border-l-4 border-l-primary bg-card shadow-sm overflow-hidden">
       <CardHeader className="pb-3 pt-5">
         <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-          <div className="w-7 rounded-lg bg-violet-100 dark:bg-violet-950/40 flex items-center justify-center">
-            <Home className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+          <div className="w-7 rounded-lg bg-primary/10 flex items-center justify-center">
+            <Home className="h-4 w-4 text-primary" />
           </div>
           WFH Balance
         </CardTitle>
@@ -89,8 +89,8 @@ export const WfhBalancesCard = memo(function WfhBalancesCard() {
               Left
             </p>
           </div>
-          <div className="rounded-xl bg-violet-100 dark:bg-violet-500/10 p-3 text-center">
-            <p className="text-3xl font-bold tabular-nums text-violet-700 dark:text-violet-400 leading-none mb-1">
+          <div className="rounded-xl bg-blue-100 dark:bg-blue-500/10 p-3 text-center">
+            <p className="text-3xl font-bold tabular-nums text-blue-700 dark:text-blue-400 leading-none mb-1">
               {stats.approved}
             </p>
             <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">

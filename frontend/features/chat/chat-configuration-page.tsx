@@ -4,14 +4,14 @@ import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { HardDrive, Loader2, Mic, ShieldAlert, Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { HardDrive, Mic, ShieldAlert, Users } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { useChatOrgSettings, useUpdateChatOrgSettings } from "@/hooks/api";
 import type { ChatOrgSettings } from "@/types/chat";
 
@@ -134,7 +134,7 @@ export function ChatConfigurationPage() {
                 onChange={(e) =>
                   setDraft({ ...draft, maxAttachmentSizeMb: Number(e.target.value) })
                 }
-                className="max-w-xs h-8"
+                className="max-w-xs"
               />
               <p className="text-[11px] text-muted-foreground/70">
                 Files larger than this are rejected when sent in a message.
@@ -175,10 +175,15 @@ export function ChatConfigurationPage() {
 
         {canManage && draft && (
           <div className="mt-8 pt-4 border-t border-border/30">
-            <Button onClick={handleSave} disabled={!isDirty || updateSettings.isPending} className="h-9">
-              {updateSettings.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
+            <LoadingButton
+              onClick={handleSave}
+              disabled={!isDirty}
+              isPending={updateSettings.isPending}
+              loadingText="Saving…"
+              className="h-9"
+            >
               Save changes
-            </Button>
+            </LoadingButton>
           </div>
         )}
         </div>

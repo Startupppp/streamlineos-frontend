@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
+import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { Unlock } from "lucide-react";
 import { useReservations, useReleaseReservation } from "@/hooks/api/inventory/stock";
 import { useCan } from "@/hooks/api/access";
@@ -187,9 +188,9 @@ export function ReservationsPanel() {
 
   return (
     <>
-      <div className="flex flex-wrap items-center gap-2 mb-3">
+      <div className={`${FILTER_TOOLBAR_ROW} mb-3`}>
         <Select value={statusFilter} onValueChange={handleStatusChange}>
-          <SelectTrigger className="text-xs w-[160px]">
+          <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "text-xs w-[160px]")}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

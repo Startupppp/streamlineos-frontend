@@ -275,7 +275,7 @@ export function WorkLogFilterActions({
             <SlidersHorizontal className="h-3 w-3" />
             <span className="hidden sm:inline">Filters</span>
             {activeFilterCount > 0 && (
-              <Badge className="absolute -top-1.5 -right-1.5 h-4 w-4 p-0 flex items-center justify-center text-[9px] bg-blue-500 text-white border-0 font-bold">
+              <Badge className="absolute -top-1.5 -right-1.5 h-4 w-4 p-0 flex items-center justify-center text-[9px] bg-primary text-primary-foreground border-0 font-bold">
                 {activeFilterCount}
               </Badge>
             )}
@@ -291,7 +291,7 @@ export function WorkLogFilterActions({
             <div className="space-y-1.5">
               <Label className="text-[11px] font-semibold text-foreground/80 uppercase tracking-wider">Year</Label>
               <Select value={draftFilters.year.toString()} onValueChange={handleDraftYearChange}>
-                <SelectTrigger className="w-full h-8 text-sm"><SelectValue placeholder="Select year" /></SelectTrigger>
+                <SelectTrigger className="w-full text-sm"><SelectValue placeholder="Select year" /></SelectTrigger>
                 <SelectContent className="w-[var(--radix-select-trigger-width)]">
                   {availableYears.map((y) => (
                     <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
@@ -303,7 +303,7 @@ export function WorkLogFilterActions({
             <div className="space-y-1.5">
               <Label className="text-[11px] font-semibold text-foreground/80 uppercase tracking-wider">Quarter</Label>
               <Select value={draftFilters.quarter.toString()} onValueChange={handleDraftQuarterChange}>
-                <SelectTrigger className="w-full h-8 text-sm"><SelectValue placeholder="Select quarter" /></SelectTrigger>
+                <SelectTrigger className="w-full text-sm"><SelectValue placeholder="Select quarter" /></SelectTrigger>
                 <SelectContent className="w-[var(--radix-select-trigger-width)]">
                   <SelectItem value="1">Q1 (Jan – Mar)</SelectItem>
                   <SelectItem value="2">Q2 (Apr – Jun)</SelectItem>
@@ -319,7 +319,7 @@ export function WorkLogFilterActions({
                 value={draftFilters.month !== undefined ? draftFilters.month.toString() : "all"}
                 onValueChange={handleDraftMonthChange}
               >
-                <SelectTrigger className="w-full h-8 text-sm">
+                <SelectTrigger className="w-full text-sm">
                   <CalendarDays className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
                   <SelectValue placeholder="All months" />
                 </SelectTrigger>
@@ -360,7 +360,7 @@ export function WorkLogFilterActions({
               <div className="space-y-1.5">
                 <Label className="text-[11px] font-semibold text-foreground/80 uppercase tracking-wider">Department</Label>
                 <Select value={draftFilters.departmentId || "all"} onValueChange={handleDraftDepartmentChange}>
-                  <SelectTrigger className="w-full h-8 text-sm"><SelectValue placeholder="All departments" /></SelectTrigger>
+                  <SelectTrigger className="w-full text-sm"><SelectValue placeholder="All departments" /></SelectTrigger>
                   <SelectContent className="max-h-[200px] overflow-y-auto">
                     <SelectItem value="all">All Departments</SelectItem>
                     {departments.map((dept) => (

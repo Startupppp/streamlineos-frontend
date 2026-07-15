@@ -5,7 +5,7 @@ import { LayoutGrid, TableIcon, X, GitBranch } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 import { useCrmOptions } from "@/hooks/api/crm";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
@@ -87,31 +87,31 @@ export function LeadsToolbar({
       </div>
 
       <Select value={statusFilter || "all"} onValueChange={handleStatusFilter}>
-        <SelectTrigger className="w-[110px] h-8 text-[11px]"><SelectValue placeholder="Status" /></SelectTrigger>
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[110px] text-xs")}><SelectValue placeholder="Status" /></SelectTrigger>
         <SelectContent>
-          <SelectItem value="all" className="text-[11px]">All Status</SelectItem>
+          <SelectItem value="all" className="text-xs">All Status</SelectItem>
           {statuses.map((s) => (
-            <SelectItem key={s.key} value={s.key} className="text-[11px]">{s.label}</SelectItem>
+            <SelectItem key={s.key} value={s.key} className="text-xs">{s.label}</SelectItem>
           ))}
         </SelectContent>
       </Select>
 
       <Select value={priorityFilter || "all"} onValueChange={handlePriorityFilter}>
-        <SelectTrigger className="w-[100px] h-8 text-[11px]"><SelectValue placeholder="Priority" /></SelectTrigger>
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[100px] text-xs")}><SelectValue placeholder="Priority" /></SelectTrigger>
         <SelectContent>
-          <SelectItem value="all" className="text-[11px]">All Priority</SelectItem>
+          <SelectItem value="all" className="text-xs">All Priority</SelectItem>
           {priorities.map((p) => (
-            <SelectItem key={p.key} value={p.key} className="text-[11px]">{p.label}</SelectItem>
+            <SelectItem key={p.key} value={p.key} className="text-xs">{p.label}</SelectItem>
           ))}
         </SelectContent>
       </Select>
 
       <Select value={sourceFilter || "all"} onValueChange={handleSourceFilter}>
-        <SelectTrigger className="w-[110px] h-8 text-[11px]"><SelectValue placeholder="Source" /></SelectTrigger>
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[110px] text-xs")}><SelectValue placeholder="Source" /></SelectTrigger>
         <SelectContent>
-          <SelectItem value="all" className="text-[11px]">All Sources</SelectItem>
+          <SelectItem value="all" className="text-xs">All Sources</SelectItem>
           {sources.map((s) => (
-            <SelectItem key={s.key} value={s.key} className="text-[11px]">{s.label}</SelectItem>
+            <SelectItem key={s.key} value={s.key} className="text-xs">{s.label}</SelectItem>
           ))}
         </SelectContent>
       </Select>

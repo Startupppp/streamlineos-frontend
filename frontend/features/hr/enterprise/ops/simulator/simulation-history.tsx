@@ -17,7 +17,7 @@ const TYPE_COLORS: Record<SimulationType, string> = {
   policy: "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
   leave: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
   attendance: "bg-yellow-50 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-300",
-  approval: "bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:text-purple-300",
+  approval: "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
   payroll: "bg-muted text-muted-foreground",
 };
 

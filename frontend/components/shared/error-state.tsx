@@ -13,10 +13,6 @@ interface ErrorStateProps {
   compact?: boolean;
 }
 
-/**
- * ErrorState — standardised error display with optional retry button.
- * Use inside any page or card section when a query returns an error.
- */
 export function ErrorState({
   title = "Something went wrong",
   description = "An error occurred while loading this data. Please try again.",

@@ -192,7 +192,7 @@ export function InterviewFeedbackForm({ interview, open, onOpenChange }: Intervi
       <div className="space-y-2">
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-2">
-            <div className="w-7 rounded-lg bg-violet-100 text-violet-600 dark:bg-violet-950/40 dark:text-violet-400 flex items-center justify-center shrink-0">
+            <div className="w-7 rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 flex items-center justify-center shrink-0">
               <BarChart3 className="h-3.5 w-3.5" />
             </div>
             <span className="text-sm font-semibold text-foreground">Scoring Rubric</span>
@@ -217,7 +217,7 @@ export function InterviewFeedbackForm({ interview, open, onOpenChange }: Intervi
           {rubric.map((entry, index) => (
             <div
               key={index}
-              className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 border-l-violet-400"
+              className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 border-l-blue-400"
             >
               <div className="p-3 space-y-2.5">
                 <div className="flex items-center gap-2">

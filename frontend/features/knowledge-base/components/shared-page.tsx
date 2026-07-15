@@ -73,13 +73,8 @@ export default function SharedPage() {
     ? treeNodes.filter((n) => n.createdById !== null && n.createdById !== myId)
     : [];
 
-  const subtitle =
-    !isLoading && !isError && sharedNodes.length > 0
-      ? `${sharedNodes.length} page${sharedNodes.length === 1 ? "" : "s"}`
-      : undefined;
-
   return (
-    <PageWrapper title="Shared with me" subtitle={subtitle}>
+    <PageWrapper title="Shared with me" subtitle="Pages teammates have shared with you">
       {isLoading && <SharedSkeleton />}
 
       {!isLoading && isError && (

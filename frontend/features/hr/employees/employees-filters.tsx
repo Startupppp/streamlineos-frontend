@@ -11,7 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { cn } from "@/lib/utils";
 
 export interface Department {
   id: number;
@@ -41,15 +42,13 @@ export function EmployeesFilters({
   onStatusChange,
   onClear,
 }: EmployeesFiltersProps) {
-  function handleSearchChange(value: string) { onSearchChange(value); }
-
   return (
     <div className={FILTER_TOOLBAR_ROW}>
       <div className="w-60 max-w-[min(15rem,70vw)]">
-          <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search name, email, ID…" />
+          <SearchInput value={search} onValueChange={onSearchChange} placeholder="Search name, email, ID…" />
         </div>
       <Select value={filterDept} onValueChange={onDeptChange}>
-        <SelectTrigger className="w-44 text-xs">
+        <SelectTrigger className={cn("w-44", FILTER_SELECT_TRIGGER)}>
           <SelectValue placeholder="Department" />
         </SelectTrigger>
         <SelectContent className="w-[var(--radix-select-trigger-width)]">
@@ -64,7 +63,7 @@ export function EmployeesFilters({
         </SelectContent>
       </Select>
       <Select value={filterStatus} onValueChange={onStatusChange}>
-        <SelectTrigger className="w-32 text-xs">
+        <SelectTrigger className={cn("w-32", FILTER_SELECT_TRIGGER)}>
           <SelectValue placeholder="Status" />
         </SelectTrigger>
         <SelectContent className="w-[var(--radix-select-trigger-width)]">

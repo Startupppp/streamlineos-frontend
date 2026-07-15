@@ -77,7 +77,7 @@ export function CareerPathsList({ canManage: _canManage }: Props) {
             )}
 
             <div className="flex items-center justify-between mt-auto">
-              <span className="text-xs bg-violet-50 text-violet-700 rounded-full px-2 py-0.5 font-medium dark:bg-violet-500/10 dark:text-violet-300">
+              <span className="text-xs bg-blue-50 text-blue-700 rounded-full px-2 py-0.5 font-medium dark:bg-blue-500/10 dark:text-blue-300">
                 {path.levels.length} {path.levels.length === 1 ? "level" : "levels"}
               </span>
               <Button
@@ -114,7 +114,7 @@ export function CareerPathsList({ canManage: _canManage }: Props) {
                     className="rounded-xl border border-border bg-muted/30 p-3 flex flex-col gap-1.5"
                   >
                     <div className="flex items-center gap-2">
-                      <span className="h-5 w-5 rounded-full bg-violet-100 text-violet-700 text-[10px] font-bold flex items-center justify-center shrink-0 dark:bg-violet-500/10 dark:text-violet-300">
+                      <span className="h-5 w-5 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold flex items-center justify-center shrink-0 dark:bg-blue-500/10 dark:text-blue-300">
                         {level.level}
                       </span>
                       <span className="text-xs font-semibold text-foreground">{level.title}</span>
@@ -124,7 +124,7 @@ export function CareerPathsList({ canManage: _canManage }: Props) {
                         {level.skills.map((skill) => (
                           <span
                             key={skill}
-                            className="text-[10px] bg-violet-50 text-violet-700 rounded-full px-1.5 py-0.5 dark:bg-violet-500/10 dark:text-violet-300"
+                            className="text-[10px] bg-blue-50 text-blue-700 rounded-full px-1.5 py-0.5 dark:bg-blue-500/10 dark:text-blue-300"
                           >
                             {skill}
                           </span>

@@ -39,6 +39,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DatePicker } from "@/components/ui/date-picker";
 import { FinanceStatusBadge, Money } from "@/features/accounting/shared";
+import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { RecordPaymentDialog } from "@/features/accounting/sales/record-payment-dialog";
 import { CollectionsTab } from "@/features/accounting/sales/collections-tab";
 import { getErrorMessage } from "@/lib/get-error-message";

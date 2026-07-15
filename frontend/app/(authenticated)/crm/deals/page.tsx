@@ -33,6 +33,8 @@ import { StageSkipDialog } from "@/features/crm/deals/stage-skip-dialog";
 import { useDealsExport } from "@/features/crm/deals/use-deals-export";
 import { DealsCsvImportDialog } from "@/features/crm/deals/deals-csv-import-dialog";
 import { ErrorState } from "@/components/shared/error-state";
+import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import { cn } from "@/lib/utils";
 
 export default function DealsPage() {
   const searchParams = useSearchParams();
@@ -309,41 +311,39 @@ export default function DealsPage() {
   const subtitle = `${allDeals?.length ?? 0} deal${(allDeals?.length ?? 0) !== 1 ? "s" : ""}`;
 
   const filterBar = (
-    <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 lg:gap-3">
-      <div className="min-w-0 flex-1 lg:max-w-[240px] w-full">
-          <SearchInput value={searchInput} onValueChange={handleSearchChange} placeholder="Search deals..." aria-label="Search deals" />
-        </div>
-      <div className="hidden sm:flex items-center gap-2">
-        <Select value={stageFromUrl ?? "all"} onValueChange={handleStageFilterChange}>
-          <SelectTrigger className="w-[140px] text-xs">
-            <SelectValue placeholder="All stages" />
+    <div className={FILTER_TOOLBAR_ROW}>
+      <div className="w-[200px] max-w-[min(200px,70vw)]">
+        <SearchInput value={searchInput} onValueChange={handleSearchChange} placeholder="Search deals..." aria-label="Search deals" />
+      </div>
+      <Select value={stageFromUrl ?? "all"} onValueChange={handleStageFilterChange}>
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[140px] text-xs")}>
+          <SelectValue placeholder="All stages" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All stages</SelectItem>
+          {dealStages.map((s) => (
+            <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {assigneeOptions.length > 0 && (
+        <Select value={assigneeFilter ?? "all"} onValueChange={handleAssigneeFilterChange}>
+          <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[140px] text-xs")}>
+            <SelectValue placeholder="All assignees" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All stages</SelectItem>
-            {dealStages.map((s) => (
-              <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>
+            <SelectItem value="all">All assignees</SelectItem>
+            {assigneeOptions.map((a) => (
+              <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
             ))}
           </SelectContent>
         </Select>
-        {assigneeOptions.length > 0 && (
-          <Select value={assigneeFilter ?? "all"} onValueChange={handleAssigneeFilterChange}>
-            <SelectTrigger className="w-[140px] text-xs">
-              <SelectValue placeholder="All assignees" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All assignees</SelectItem>
-              {assigneeOptions.map((a) => (
-                <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-      </div>
+      )}
       <div className="ml-auto flex items-center gap-px border border-border rounded-md shrink-0">
         <Button
           variant={view === "table" ? "secondary" : "ghost"}
           size="icon"
-          className="w-8 rounded-r-none border-r border-border"
+          className="h-9 w-9 rounded-r-none border-r border-border"
           onClick={handleViewTable}
           aria-label="Table view"
         >
@@ -352,7 +352,7 @@ export default function DealsPage() {
         <Button
           variant={view === "kanban" ? "secondary" : "ghost"}
           size="icon"
-          className="w-8 rounded-l-none"
+          className="h-9 w-9 rounded-l-none"
           onClick={handleViewKanban}
           aria-label="Kanban view"
         >

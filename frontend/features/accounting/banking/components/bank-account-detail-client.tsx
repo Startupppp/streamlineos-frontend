@@ -17,6 +17,7 @@ import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Money } from "@/features/accounting/shared";
+import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { BankTxnStatusBadge } from "./bank-txn-status-badge";
 import { useBankAccount, useBankTransactions } from "@/hooks/api/accounting/banking";
 import type { BankTransaction, BankTxnStatus } from "@/hooks/api/accounting/banking";
@@ -198,9 +199,9 @@ export function BankAccountDetailClient({ bankAccountId }: Props) {
         </>
       }
       filters={
-        <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+        <div className={FILTER_TOOLBAR_ROW}>
           <Select value={statusFilter} onValueChange={handleStatusChange}>
-            <SelectTrigger className="w-[160px] text-xs">
+            <SelectTrigger className={`w-[160px] text-xs ${FILTER_SELECT_TRIGGER}`}>
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>

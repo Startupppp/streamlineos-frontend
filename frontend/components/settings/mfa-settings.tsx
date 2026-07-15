@@ -89,7 +89,7 @@ export function MfaSettings() {
         <CardHeader className="px-4 py-3">
           <div className="flex items-center gap-2">
             {isEnabled ? (
-              <ShieldCheck className="h-4 w-4 text-green-500" />
+              <ShieldCheck className="h-4 w-4 text-green-500 dark:text-green-400" />
             ) : (
               <Shield className="h-4 w-4 text-muted-foreground" />
             )}

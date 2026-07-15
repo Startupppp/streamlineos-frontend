@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { useCan } from "@/hooks/api/access";
@@ -193,7 +194,6 @@ export function TeamView() {
       <Button
         variant="outline"
         size="icon"
-        className="h-8 w-8"
         onClick={handlePrevWeek}
         aria-label="Previous week"
       >
@@ -203,7 +203,6 @@ export function TeamView() {
         <Button
           variant="outline"
           size="sm"
-          className="h-8 text-xs"
           onClick={handleThisWeek}
         >
           This week
@@ -212,7 +211,6 @@ export function TeamView() {
       <Button
         variant="outline"
         size="icon"
-        className="h-8 w-8"
         onClick={handleNextWeek}
         aria-label="Next week"
       >
@@ -224,7 +222,7 @@ export function TeamView() {
   const pageFilters = (
     <>
       <Select value={memberFilter} onValueChange={setMemberFilter}>
-        <SelectTrigger className="h-8 text-xs w-44">
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-44")}>
           <SelectValue placeholder="All members" />
         </SelectTrigger>
         <SelectContent>
@@ -237,7 +235,7 @@ export function TeamView() {
         </SelectContent>
       </Select>
       <Select value={statusFilter} onValueChange={setStatusFilter}>
-        <SelectTrigger className="h-8 text-xs w-40">
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-40")}>
           <SelectValue placeholder="All statuses" />
         </SelectTrigger>
         <SelectContent>

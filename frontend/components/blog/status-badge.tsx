@@ -2,9 +2,9 @@ import { cn } from "@/lib/utils";
 import type { BlogPostStatus } from "@/types/blog";
 
 const STYLES: Record<BlogPostStatus, string> = {
-  published: "border-transparent bg-emerald-500/10 text-emerald-600",
+  published: "border-transparent bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
   draft: "border-border bg-muted text-muted-foreground",
-  archived: "border-transparent bg-amber-500/10 text-amber-600",
+  archived: "border-transparent bg-amber-500/10 text-amber-600 dark:text-amber-400",
 };
 
 const LABELS: Record<BlogPostStatus, string> = {

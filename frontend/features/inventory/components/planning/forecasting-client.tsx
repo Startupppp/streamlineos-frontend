@@ -5,6 +5,7 @@ import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { Card, CardContent } from "@/components/ui/card";
 import { ErrorState } from "@/components/shared";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -117,8 +118,8 @@ export function ForecastingClient() {
       title="Demand Forecasting"
       subtitle="SMA-based demand projections and stockout risk assessment."
       filters={
-        <div className="min-w-0 w-64">
-          <SearchInput placeholder="Search products..." value={search} onValueChange={handleSearchChange} />
+        <div className={FILTER_TOOLBAR_ROW}>
+          <SearchInput className="min-w-0 flex-1 lg:max-w-xs" placeholder="Search products..." value={search} onValueChange={handleSearchChange} />
         </div>
       }
     >

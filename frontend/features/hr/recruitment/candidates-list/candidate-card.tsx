@@ -59,10 +59,10 @@ export const STAGE_CONFIG: {
   {
     value: "OFFER",
     label: "Offer",
-    accent: "border-l-violet-500",
-    pill: "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
-    dot: "bg-violet-500",
-    activePill: "bg-violet-600 text-white",
+    accent: "border-l-blue-500",
+    pill: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
+    dot: "bg-blue-500",
+    activePill: "bg-blue-600 text-white",
   },
   {
     value: "HIRED",

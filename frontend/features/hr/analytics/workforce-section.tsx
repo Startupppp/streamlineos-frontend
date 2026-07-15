@@ -85,7 +85,7 @@ export function WorkforceSection({ data, isLoading }: WorkforceSectionProps) {
           label="New Joins (Month)"
           value={data.headcount.newThisMonth}
           icon={UserPlus}
-          color="violet"
+          color="blue"
           index={3}
         />
       </StatCardGrid>

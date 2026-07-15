@@ -82,7 +82,6 @@ export function WorkLogFiltersPanel({
         placeholder="Search by date or keyword..."
         value={searchTerm}
         onValueChange={handleSearchChange}
-        inputClassName="border-border bg-muted/50 focus-visible:bg-background"
         aria-label="Search work logs"
       />
 
@@ -110,7 +109,7 @@ export function WorkLogFiltersPanel({
           {filters.selectedUserId && employees && (
             <Badge
               variant="secondary"
-              className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-violet-200 bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300 dark:border-violet-800 pr-1"
+              className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-blue-200 bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-800 pr-1"
             >
               {(() => {
                 const e = employees.find(
@@ -123,7 +122,7 @@ export function WorkLogFiltersPanel({
               })()}
               <button
                 onClick={handleClearEmployee}
-                className="ml-0.5 hover:text-violet-900 dark:hover:text-violet-100 rounded-full"
+                className="ml-0.5 hover:text-foreground rounded-full"
                 aria-label="Remove employee filter"
               >
                 <X className="h-2.5 w-2.5" />
