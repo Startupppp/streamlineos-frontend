@@ -2,6 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   useHrDashboardMetrics,
@@ -70,7 +71,7 @@ function LeaveCalendarWidget() {
         </Link>
       </div>
 
-      <div className="flex-1 overflow-y-auto max-h-52">
+      <ScrollArea hideScrollbar className="flex-1 max-h-52">
         {isLoading ? (
           <div className="px-5 py-2 divide-y divide-border/40">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -125,7 +126,7 @@ function LeaveCalendarWidget() {
             ))}
           </div>
         )}
-      </div>
+      </ScrollArea>
     </div>
   );
 }

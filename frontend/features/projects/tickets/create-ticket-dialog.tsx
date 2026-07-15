@@ -5,6 +5,7 @@ import { useRef, useCallback, useEffect, useState, useMemo } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Dialog,
   DialogContent,
@@ -479,7 +480,11 @@ export function CreateTicketDialog({
                 />
               </div>
 
-              <div className="min-h-[120px] flex-1 overflow-y-auto overscroll-contain px-5 py-3 scrollbar-thin">
+              <ScrollArea
+                hideScrollbar
+                className="min-h-[120px] flex-1"
+                viewportClassName="overscroll-contain px-5 py-3"
+              >
                 <FormField
                   control={form.control}
                   name="description"
@@ -535,7 +540,7 @@ export function CreateTicketDialog({
                     {fileError}
                   </p>
                 )}
-              </div>
+              </ScrollArea>
 
               <div className="relative z-10 shrink-0 border-t border-border bg-background px-5 py-3">
                 <TicketCreateProperties

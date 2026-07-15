@@ -86,7 +86,7 @@ export function CompliancePageContent() {
       }
     >
       <Tabs defaultValue="calendar" className="space-y-4">
-        <TabsList className="h-8">
+        <TabsList>
           <TabsTrigger value="calendar" className="text-xs">Calendar</TabsTrigger>
           <TabsTrigger value="requirements" className="text-xs">Requirements</TabsTrigger>
           <TabsTrigger value="work-auth" className="text-xs">Work Authorizations</TabsTrigger>

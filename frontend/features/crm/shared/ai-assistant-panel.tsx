@@ -410,7 +410,7 @@ export function AiAssistantPanel({ entityType, entityId, entityName, onOpenEmail
           >
             <div className="px-4 pb-4">
               <Tabs defaultValue="email">
-                <TabsList className="w-full h-8 text-xs mb-3">
+                <TabsList className="w-full text-xs mb-3">
                   <TabsTrigger value="email" className="flex-1 text-xs">Email Draft</TabsTrigger>
                   <TabsTrigger value="notes" className="flex-1 text-xs">Notes Summary</TabsTrigger>
                   <TabsTrigger value="objection" className="flex-1 text-xs">Objection Help</TabsTrigger>

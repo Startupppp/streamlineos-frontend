@@ -29,6 +29,7 @@ import { SaveViewDialog, type SaveViewMeta } from "@/features/projects/views/sav
 import { buildTicketDetailUrl } from "@/features/projects/ticket-details/build-ticket-detail-url";
 import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -695,57 +696,65 @@ export default function ProjectBoardPage({ params }: PageProps) {
             {view === "list" ? (
               <motion.div
                 key="list"
-                className="min-h-0 flex-1 overflow-y-auto px-3 pb-1"
+                className="min-h-0 flex-1 flex flex-col overflow-hidden px-3 pb-1"
                 variants={viewVariants}
                 initial="initial"
                 animate="animate"
                 exit="exit"
                 transition={pmSnappy}
               >
-                <ListView
-                  tickets={filteredTickets}
-                  onTicketClick={handleTicketSelect}
-                  groupBy={displayOptions.groupBy !== "none" ? displayOptions.groupBy : undefined}
-                  rowBy={displayOptions.rowBy !== "none" ? displayOptions.rowBy : undefined}
-                  projectKey={data.key}
-                  projectStatuses={statuses}
-                  displayOptions={displayOptions}
-                  showEmptyColumns={displayOptions.showEmptyColumns}
-                  showEmptyRows={displayOptions.showEmptyRows}
-                  projectId={projectId}
-                />
+                <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
+                  <div className="overscroll-contain">
+                    <ListView
+                      tickets={filteredTickets}
+                      onTicketClick={handleTicketSelect}
+                      groupBy={displayOptions.groupBy !== "none" ? displayOptions.groupBy : undefined}
+                      rowBy={displayOptions.rowBy !== "none" ? displayOptions.rowBy : undefined}
+                      projectKey={data.key}
+                      projectStatuses={statuses}
+                      displayOptions={displayOptions}
+                      showEmptyColumns={displayOptions.showEmptyColumns}
+                      showEmptyRows={displayOptions.showEmptyRows}
+                      projectId={projectId}
+                    />
+                  </div>
+                </ScrollArea>
               </motion.div>
             ) : null}
             {view === "table" ? (
               <motion.div
                 key="table"
-                className="min-h-0 flex-1 overflow-y-auto px-3 pb-1"
+                className="min-h-0 flex-1 flex flex-col overflow-hidden px-3 pb-1"
                 variants={viewVariants}
                 initial="initial"
                 animate="animate"
                 exit="exit"
                 transition={pmSnappy}
               >
-                {selectedIds.size > 0 && (
-                  <BulkActionBar
-                    selectedCount={selectedIds.size}
-                    members={members}
-                    sprints={sprints ?? []}
-                    onBulkStatus={handleBulkStatus}
-                    onBulkPriority={handleBulkPriority}
-                    onBulkAssignee={handleBulkAssignee}
-                    onBulkSprint={handleBulkSprint}
-                    onClear={handleClearSelection}
-                  />
-                )}
-                <TableView
-                  tickets={filteredTickets}
-                  onTicketClick={handleTicketSelect}
-                  projectKey={data.key}
-                  projectId={projectId}
-                  projectStatuses={statuses}
-                  selection={{ selected: selectedIds, onChange: handleSelectionChange }}
-                />
+                <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
+                  <div className="overscroll-contain">
+                    {selectedIds.size > 0 && (
+                      <BulkActionBar
+                        selectedCount={selectedIds.size}
+                        members={members}
+                        sprints={sprints ?? []}
+                        onBulkStatus={handleBulkStatus}
+                        onBulkPriority={handleBulkPriority}
+                        onBulkAssignee={handleBulkAssignee}
+                        onBulkSprint={handleBulkSprint}
+                        onClear={handleClearSelection}
+                      />
+                    )}
+                    <TableView
+                      tickets={filteredTickets}
+                      onTicketClick={handleTicketSelect}
+                      projectKey={data.key}
+                      projectId={projectId}
+                      projectStatuses={statuses}
+                      selection={{ selected: selectedIds, onChange: handleSelectionChange }}
+                    />
+                  </div>
+                </ScrollArea>
               </motion.div>
             ) : null}
             {view === "calendar" ? (

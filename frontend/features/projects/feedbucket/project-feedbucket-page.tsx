@@ -25,6 +25,7 @@ import { ErrorState } from "@/components/shared";
 import { EmptyInboxIllustration, EmptyTicketIllustration } from "@/components/illustrations";
 import {
   Sheet,
+  SheetBody,
   SheetContent,
   SheetHeader,
   SheetTitle,
@@ -141,8 +142,8 @@ function CreateWidgetSheet({ open, projectId, onClose }: CreateWidgetSheetProps)
         <SheetHeader className="px-6 py-4 border-b shrink-0">
           <SheetTitle>Create Feedback Widget</SheetTitle>
         </SheetHeader>
-        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-y-auto">
-          <div className="flex-1 px-6 py-5 space-y-4">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+          <SheetBody className="px-6 py-5 space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="widget-name">Widget name</Label>
               <Input
@@ -169,7 +170,7 @@ function CreateWidgetSheet({ open, projectId, onClose }: CreateWidgetSheetProps)
                 className="shrink-0 mt-0.5"
               />
             </div>
-          </div>
+          </SheetBody>
           <SheetFooter className="px-6 py-4 border-t shrink-0">
             <div className="grid w-full grid-cols-2 gap-2">
               <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>

@@ -155,7 +155,7 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
             <div className="space-y-2">
               <Label className="text-[11px]">Test Selection</Label>
               <Tabs value={mode} onValueChange={handleModeChange}>
-                <TabsList className="h-8">
+                <TabsList>
                   <TabsTrigger value="suite" className="text-[10px]">
                     By Suite
                   </TabsTrigger>

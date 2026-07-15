@@ -170,7 +170,7 @@ export default function OnboardingPage() {
         </Tabs>
       ) : (
         <Tabs defaultValue="checklist" className="flex flex-col flex-1 min-h-0">
-          <TabsList className="h-8 shrink-0 rounded-lg border p-1 bg-muted/40">
+          <TabsList className="shrink-0 rounded-lg border p-1 bg-muted/40">
             <TabsTrigger
               value="checklist"
               className="text-xs h-8 px-3 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"

@@ -143,7 +143,7 @@ export function RunDetailContent({ runId }: RunDetailContentProps) {
         </StatCardGrid>
 
         <Tabs value={activeTab} onValueChange={handleTabChange}>
-          <TabsList className="h-8">
+          <TabsList>
             <TabsTrigger value="employees" className="text-xs">
               Employees
             </TabsTrigger>

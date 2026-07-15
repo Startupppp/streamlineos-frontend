@@ -6,6 +6,7 @@ import type { InboundMessage } from "ably";
 import { useSession } from "next-auth/react";
 import { MessageSquare, Send, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
 
 interface HuddleChatMessage {
@@ -133,7 +134,8 @@ export function HuddleChatPanel({
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto py-3 px-3 space-y-2">
+      <ScrollArea hideScrollbar className="min-h-0 flex-1">
+        <div className="overscroll-contain space-y-2 py-3 px-3">
         {messages.map((msg) => (
           <div
             key={msg.id}
@@ -156,7 +158,8 @@ export function HuddleChatPanel({
           </div>
         ))}
         <div ref={bottomRef} />
-      </div>
+        </div>
+      </ScrollArea>
 
       <div className="shrink-0 p-3 border-t border-white/10">
         <div className="flex items-center gap-2 bg-white/10 rounded-xl px-3 py-2">

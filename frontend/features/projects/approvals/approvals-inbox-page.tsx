@@ -8,7 +8,7 @@ import { useApprovalInbox, useDecideApproval } from "@/hooks/api/projects";
 import { useCan } from "@/hooks/api/access";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -193,10 +193,7 @@ export function ApprovalsInboxPage() {
     return (
       <PageWrapper title="Approvals" subtitle="Approvals waiting for your decision across all projects">
         <PmPageShell>
-          <div className="grid grid-cols-2 gap-2">
-            <Skeleton className={cn("h-16 rounded-xl", PM_PANEL)} />
-            <Skeleton className={cn("h-16 rounded-xl", PM_PANEL)} />
-          </div>
+          <StatCardGridSkeleton cols={2} />
           <Skeleton className={cn("h-48 rounded-xl", PM_PANEL)} />
         </PmPageShell>
       </PageWrapper>

@@ -129,7 +129,7 @@ export default function MilestonesPage({ params }: { params: Promise<{ projectId
                 tone="emerald"
                 index={1}
               />
-              <StatCard label="Pending" value={pending} icon={Clock} tone="blue" index={2} />
+              <StatCard label="Pending" value={pending} icon={Clock} tone="amber" index={2} />
               <StatCard label="Overdue" value={overdue} icon={AlertCircle} tone="red" index={3} />
             </StatCardGrid>
           </PmSection>

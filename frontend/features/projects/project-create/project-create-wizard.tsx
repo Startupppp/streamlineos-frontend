@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   Sheet,
+  SheetBody,
   SheetContent,
   SheetDescription,
   SheetHeader,
@@ -111,7 +112,7 @@ export function ProjectCreateWizard({
           </SheetDescription>
         </SheetHeader>
 
-        <div className="flex-1 overflow-y-auto">
+        <SheetBody className="px-6">
           <AnimatePresence mode="wait" custom={direction}>
             <motion.div
               key={step}
@@ -121,7 +122,6 @@ export function ProjectCreateWizard({
               animate="animate"
               exit="exit"
               transition={{ duration: 0.22, ease: "easeOut" }}
-              className="px-6"
             >
               {step === 1 && <StepBasics ref={basicsRef} {...sharedProps} />}
               {step === 2 && <StepType {...sharedProps} />}
@@ -132,7 +132,7 @@ export function ProjectCreateWizard({
               {step === 7 && <StepReview draft={draft} />}
             </motion.div>
           </AnimatePresence>
-        </div>
+        </SheetBody>
 
         <div className="shrink-0 border-t px-6 py-4 flex gap-2 bg-background">
           {step === 1 && (

@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { formatDistanceToNow } from "date-fns";
 import { CheckCircle2, FileText, Image as ImageIcon } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { ErrorState } from "@/components/shared/error-state";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -98,7 +99,8 @@ export function PortalTicketDetailPage({ portalTicketId }: PortalTicketDetailPag
           </div>
         )}
 
-        <div className="flex-1 min-h-0 overflow-y-auto py-3 space-y-3">
+        <ScrollArea hideScrollbar className="min-h-0 flex-1">
+          <div className="overscroll-contain space-y-3 py-3">
           {ticket.description && (
             <div className="bg-muted/30 rounded-lg p-3 text-sm whitespace-pre-wrap">{ticket.description}</div>
           )}
@@ -142,7 +144,8 @@ export function PortalTicketDetailPage({ portalTicketId }: PortalTicketDetailPag
               </div>
             );
           })}
-        </div>
+          </div>
+        </ScrollArea>
 
         <PortalReplyComposer ticketId={ticket.id} />
       </div>

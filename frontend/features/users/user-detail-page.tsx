@@ -285,7 +285,7 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
 
           <div className="min-w-0">
             <Tabs defaultValue="sessions">
-              <TabsList className="w-full justify-start h-8 bg-muted/50 rounded-md p-0.5 gap-0.5 flex-wrap">
+              <TabsList className="w-full justify-start bg-muted/50 rounded-md p-0.5 gap-0.5 flex-wrap">
                 {TAB_ITEMS.map(({ value, label }) => (
                   <TabsTrigger
                     key={value}

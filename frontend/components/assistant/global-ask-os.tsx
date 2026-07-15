@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { AnimatedLogo } from "@/features/landing/components/animated-logo";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import {
   useAskAI,
@@ -469,10 +470,12 @@ export function GlobalAskOs() {
               ) : (
                 <>
                   <div className="relative flex-1 overflow-hidden">
-                    <div
-                      ref={scrollRef}
-                      onScroll={handleScroll}
-                      className="absolute inset-0 overflow-y-auto scrollbar-hide p-4"
+                    <ScrollArea
+                      hideScrollbar
+                      className="absolute inset-0"
+                      viewportRef={scrollRef}
+                      onViewportScroll={handleScroll}
+                      viewportClassName="p-4"
                     >
                       {isLoading ? (
                         <div className="flex h-full items-center justify-center">
@@ -548,7 +551,7 @@ export function GlobalAskOs() {
                           )}
                         </div>
                       )}
-                    </div>
+                    </ScrollArea>
                     <AnimatePresence>
                       {showJump && (
                         <motion.button

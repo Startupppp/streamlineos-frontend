@@ -1,6 +1,7 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import type { SignDocument, SignRecipient } from "@/types/sign";
 import { DocumentPanel } from "./document-panel";
 import { RecipientsPanel } from "./recipients-panel";
@@ -25,7 +26,8 @@ export function BuilderLeftPanel({ envelopeId, documents, recipients, editable }
           <TabsTrigger value="recipients">Signers</TabsTrigger>
           <TabsTrigger value="fields">Fields</TabsTrigger>
         </TabsList>
-        <div className="flex-1 min-h-0 overflow-y-auto p-3">
+        <ScrollArea hideScrollbar className="flex-1 min-h-0">
+          <div className="p-3">
           <TabsContent value="documents" className="mt-0">
             <DocumentPanel envelopeId={envelopeId} documents={documents} editable={editable} />
           </TabsContent>
@@ -35,7 +37,8 @@ export function BuilderLeftPanel({ envelopeId, documents, recipients, editable }
           <TabsContent value="fields" className="mt-0">
             <FieldPalette hasRecipient={selectedRecipientId !== null} />
           </TabsContent>
-        </div>
+          </div>
+        </ScrollArea>
       </Tabs>
     </div>
   );

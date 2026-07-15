@@ -10,7 +10,9 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
+  SheetBody,
 } from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Accordion,
   AccordionItem,
@@ -172,13 +174,13 @@ export function AiToolsMobileSheet({
             AI Tools
           </SheetTitle>
         </SheetHeader>
-        <div className="min-h-0 flex-1 overflow-y-auto bg-card scrollbar-hide">
+        <SheetBody className="bg-card">
           <ToolAccordion
             sections={sections}
             triggerClassName={cn(TRIGGER_CLASS, "px-4")}
             contentClassName="px-4 pb-3 pt-1"
           />
-        </div>
+        </SheetBody>
       </SheetContent>
     </Sheet>
   );
@@ -211,9 +213,11 @@ export function AiToolsRail({
             className="flex h-full w-64 shrink-0 flex-col overflow-hidden border-l border-border bg-card lg:w-72 xl:w-80"
           >
             <ToolsHeader onClose={handleClose} showClose />
-            <div className="min-h-0 flex-1 overflow-y-auto bg-card scrollbar-hide">
-              <ToolAccordion sections={sections} />
-            </div>
+            <ScrollArea hideScrollbar className="min-h-0 flex-1 bg-card">
+              <div className="overscroll-contain">
+                <ToolAccordion sections={sections} />
+              </div>
+            </ScrollArea>
           </motion.aside>
         )}
       </AnimatePresence>

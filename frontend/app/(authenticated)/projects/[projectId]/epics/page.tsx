@@ -131,13 +131,13 @@ export default function EpicsPage({ params }: PageProps) {
           <PmSection index={0} className="shrink-0">
             <StatCardGrid cols={4}>
               <StatCard label="Epics" value={epics.length} icon={Layers} tone="default" index={0} />
-              <StatCard label="Stories" value={stories.length} icon={BookOpen} color="blue" index={1} />
-              <StatCard label="Tasks" value={tasks.length} icon={Wrench} color="cyan" index={2} />
+              <StatCard label="Stories" value={stories.length} icon={BookOpen} tone="default" index={1} />
+              <StatCard label="Tasks" value={tasks.length} icon={Wrench} tone="default" index={2} />
               <StatCard
                 label="Completed"
                 value={tickets.filter((t) => t.status === "DONE").length}
                 icon={CheckCircle2}
-                color="green"
+                tone="emerald"
                 index={3}
               />
             </StatCardGrid>

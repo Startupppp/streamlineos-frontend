@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { KanbanBoard } from "@/features/projects/views/kanban-board";
 import { ListView } from "@/features/projects/views/list-view";
 import { TableView } from "@/features/projects/views/table-view";
@@ -66,40 +67,48 @@ export function MyTicketsViewBody({
       {view === "list" ? (
         <motion.div
           key="list"
-          className="min-h-0 flex-1 overflow-y-auto px-3 pb-1"
+          className="min-h-0 flex-1"
           variants={swapVariants}
           initial="initial"
           animate="animate"
           exit="exit"
           transition={pmSnappy}
         >
-          <ListView
-            tickets={tickets}
-            onTicketClick={onTicketSelect}
-            projectKey={projectKey}
-            projectStatuses={statuses}
-            displayOptions={DEFAULT_DISPLAY_OPTIONS}
-            projectId={projectId}
-          />
+          <ScrollArea fill hideScrollbar className="h-full min-h-0">
+            <div className="overscroll-contain px-3 pb-1">
+              <ListView
+                tickets={tickets}
+                onTicketClick={onTicketSelect}
+                projectKey={projectKey}
+                projectStatuses={statuses}
+                displayOptions={DEFAULT_DISPLAY_OPTIONS}
+                projectId={projectId}
+              />
+            </div>
+          </ScrollArea>
         </motion.div>
       ) : null}
       {view === "table" ? (
         <motion.div
           key="table"
-          className="min-h-0 flex-1 overflow-y-auto px-3 pb-1"
+          className="min-h-0 flex-1"
           variants={swapVariants}
           initial="initial"
           animate="animate"
           exit="exit"
           transition={pmSnappy}
         >
-          <TableView
-            tickets={tickets}
-            onTicketClick={onTicketSelect}
-            projectKey={projectKey}
-            projectId={projectId}
-            projectStatuses={statuses}
-          />
+          <ScrollArea fill hideScrollbar className="h-full min-h-0">
+            <div className="overscroll-contain px-3 pb-1">
+              <TableView
+                tickets={tickets}
+                onTicketClick={onTicketSelect}
+                projectKey={projectKey}
+                projectId={projectId}
+                projectStatuses={statuses}
+              />
+            </div>
+          </ScrollArea>
         </motion.div>
       ) : null}
     </AnimatePresence>

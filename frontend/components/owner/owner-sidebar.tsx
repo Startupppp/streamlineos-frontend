@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -119,7 +120,8 @@ export function OwnerSidebar({
         )}
       </div>
 
-      <nav className="flex-1 px-2 py-2 space-y-0.5 overflow-y-auto scrollbar-hide">
+      <ScrollArea hideScrollbar className="min-h-0 flex-1">
+        <nav className="overscroll-contain space-y-0.5 px-2 py-2">
         {NAV.map((item) => {
           const Icon = item.icon;
           const active =
@@ -165,7 +167,8 @@ export function OwnerSidebar({
             </Link>
           );
         })}
-      </nav>
+        </nav>
+      </ScrollArea>
 
       <div className="shrink-0 border-t border-border px-2 py-1.5">
         <div

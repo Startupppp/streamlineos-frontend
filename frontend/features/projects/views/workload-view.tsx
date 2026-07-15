@@ -81,10 +81,10 @@ function isTicketOverdue(ticket: KanbanTicket): boolean {
 }
 
 const STATS = [
-  { id: "all" as StatFilter, label: "Total Tickets", icon: TrendingUp, color: "text-primary" },
-  { id: "assigned" as StatFilter, label: "Assigned", icon: CheckCircle2, color: "text-emerald-600 dark:text-emerald-400" },
-  { id: "unassigned" as StatFilter, label: "Unassigned", icon: Users, color: "text-amber-600 dark:text-amber-400" },
-  { id: "over-capacity" as StatFilter, label: "Over Capacity", icon: AlertTriangle, color: "text-red-600 dark:text-red-400" },
+  { id: "all" as StatFilter, label: "Total Tickets", icon: TrendingUp, bg: "bg-primary/10", text: "text-primary" },
+  { id: "assigned" as StatFilter, label: "Assigned", icon: CheckCircle2, bg: "bg-emerald-50 dark:bg-emerald-500/10", text: "text-emerald-600 dark:text-emerald-400" },
+  { id: "unassigned" as StatFilter, label: "Unassigned", icon: Users, bg: "bg-amber-50 dark:bg-amber-500/10", text: "text-amber-600 dark:text-amber-400" },
+  { id: "over-capacity" as StatFilter, label: "Over Capacity", icon: AlertTriangle, bg: "bg-red-50 dark:bg-red-500/10", text: "text-red-600 dark:text-red-400" },
 ] as const;
 
 export const WorkloadView = memo(function WorkloadView({
@@ -179,8 +179,8 @@ export const WorkloadView = memo(function WorkloadView({
               filters.statCard === stat.id && stat.id !== "all" && "ring-2 ring-primary/30 bg-primary/5",
             )}
           >
-            <div className={cn("h-8 w-8 rounded-md bg-muted flex items-center justify-center shrink-0", stat.color)}>
-              <stat.icon className="h-4 w-4" />
+            <div className={cn("h-8 w-8 rounded-md flex items-center justify-center shrink-0", stat.bg)}>
+              <stat.icon className={cn("h-4 w-4", stat.text)} />
             </div>
             <div>
               <p className="text-lg font-semibold text-foreground tabular-nums">{statValues[stat.id]}</p>

@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function PipelineLoading() {
   return (
@@ -23,7 +24,8 @@ export default function PipelineLoading() {
               </div>
               <Skeleton className="h-5 w-6 rounded-md" />
             </div>
-            <div className="flex-1 overflow-y-auto p-2 space-y-2">
+            <ScrollArea hideScrollbar className="min-h-0 flex-1">
+              <div className="overscroll-contain space-y-2 p-2">
               {Array.from({ length: 12 }).map((_, j) => (
                 <Card key={j} className="p-3 shadow-sm">
                   <CardContent className="p-0 space-y-2">
@@ -36,7 +38,8 @@ export default function PipelineLoading() {
                   </CardContent>
                 </Card>
               ))}
-            </div>
+              </div>
+            </ScrollArea>
           </div>
         ))}
       </div>

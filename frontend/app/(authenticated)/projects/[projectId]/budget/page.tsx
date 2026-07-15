@@ -215,14 +215,14 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
               value={fmt(budget?.plannedBudget ?? 0)}
               icon={IndianRupee}
               hint={budget?.plannedBudget ? "Project budget" : "Not set"}
-              tone="blue"
+              tone="default"
             />
             <StatCard
               label="Actual Cost"
               value={fmt(budget?.actualCost ?? 0)}
               icon={TrendingUp}
               hint={`${(budget?.totalHours ?? 0).toFixed(1)} billable hours`}
-              tone={overBudget ? "red" : "blue"}
+              tone={overBudget ? "red" : "default"}
             />
             <StatCard
               label="Remaining"

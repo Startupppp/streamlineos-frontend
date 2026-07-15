@@ -4,7 +4,7 @@ import { useEffect, useMemo } from "react";
 import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetBody } from "@/components/ui/sheet";
 import { isApiError, getApiErrorCode } from "@/lib/api-client";
 import { TicketHeader } from "./ticket-header";
 import { TicketSidebar } from "./ticket-sidebar";
@@ -75,7 +75,7 @@ export function TicketDetailsDialog({
           onDelete={handleDelete}
         />
 
-        <div className="flex-1 min-h-0 overflow-y-auto">
+        <SheetBody>
           {isLoading ? (
             <div className="p-6 space-y-4">
               <Skeleton className="h-6 w-2/3" />
@@ -144,7 +144,7 @@ export function TicketDetailsDialog({
               <p className="text-destructive font-medium">Ticket not found</p>
             </div>
           )}
-        </div>
+        </SheetBody>
       </SheetContent>
     </Sheet>
   );

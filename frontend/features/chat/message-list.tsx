@@ -3,6 +3,7 @@
 import { Fragment, useCallback, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { ArrowDown, Loader2, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Message } from "./chat-types";
@@ -188,15 +189,20 @@ export function MessageList({
 
   return (
     <div className="flex-1 min-h-0 min-w-0 relative flex flex-col overflow-hidden">
-      <div
-        className="flex-1 min-h-0 min-w-0 overflow-y-auto overscroll-contain scrollbar-hide"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at 50% 50%, hsl(var(--muted) / 0.3) 0%, transparent 70%)",
-        }}
-        ref={scrollContainerRef}
-        onScroll={onScroll}
+      <ScrollArea
+        hideScrollbar
+        className="flex-1 min-h-0 min-w-0"
+        viewportRef={scrollContainerRef}
+        onViewportScroll={onScroll}
+        viewportClassName="overscroll-contain"
       >
+        <div
+          className="min-h-full"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 50% 50%, hsl(var(--muted) / 0.3) 0%, transparent 70%)",
+          }}
+        >
         {isLoading ? (
           <div className="py-4 px-3 sm:px-5 max-w-[900px] mx-auto w-full min-w-0 space-y-5">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -319,7 +325,8 @@ export function MessageList({
           <div ref={messagesEndRef} className="h-px shrink-0" aria-hidden="true" />
         </div>
       )}
-      </div>
+        </div>
+      </ScrollArea>
 
       <AnimatePresence>
         {showScrollBtn && (

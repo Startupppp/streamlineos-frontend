@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { AnimatedLogo } from "@/features/landing/components/animated-logo";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -281,8 +282,12 @@ export function AiChatPanel({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-background">
+      <ScrollArea
+        hideScrollbar
+        className="min-h-0 flex-1 bg-background"
+        viewportClassName="overscroll-contain"
+      >
       <div
-        className="min-h-0 flex-1 overflow-y-auto bg-background scrollbar-hide"
         role="log"
         aria-label="Conversation thread"
         aria-live="polite"
@@ -340,6 +345,7 @@ export function AiChatPanel({
           )}
         </div>
       </div>
+      </ScrollArea>
 
       <div className="shrink-0 border-t border-border bg-card">
         <div className="mx-auto w-full max-w-[52rem] space-y-2.5 px-3 py-3 sm:px-6">

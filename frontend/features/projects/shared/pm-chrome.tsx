@@ -13,6 +13,8 @@ export const PM_PANEL_SOLID =
 
 export { CONTENT_FILL_PANEL as PM_FILL_PANEL } from "@/components/ui/content-fill-panel";
 
+export const PM_FILL_SECTION = "flex min-h-0 flex-1 flex-col overflow-hidden";
+
 export const PM_TOOLBAR =
   "flex w-full min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between";
 
@@ -35,7 +37,7 @@ interface PmPageShellProps {
 
 export function PmPageShell({ children, className, withGlow = true }: PmPageShellProps) {
   return (
-    <div className={cn("relative flex min-h-0 flex-1 flex-col gap-4", className)}>
+    <div className={cn("relative flex min-h-0 flex-1 flex-col gap-4 overflow-hidden", className)}>
       {withGlow ? (
         <>
           <div aria-hidden className={PM_GLOW} />

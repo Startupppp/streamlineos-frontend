@@ -406,7 +406,7 @@ export default function BenefitsPage() {
       subtitle="Manage employee benefit plans, enrollments, and insurance claims"
     >
       <Tabs defaultValue="my-benefits" className="space-y-4">
-        <TabsList className="h-8">
+        <TabsList>
           <TabsTrigger value="my-benefits" className="gap-1.5 text-xs">
             <Shield className="h-3.5 w-3.5" />
             My Benefits

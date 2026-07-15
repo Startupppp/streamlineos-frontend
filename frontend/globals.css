@@ -564,6 +564,21 @@
   overflow-x: auto !important;
   overflow-y: auto !important;
 }
+[data-slot="scroll-area"][data-fill="true"] [data-slot="scroll-area-viewport"],
+[data-slot="scroll-area"][data-fill="true"] [data-radix-scroll-area-viewport] {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+}
+[data-slot="scroll-area"][data-fill="true"] [data-slot="scroll-area-viewport"] > div,
+[data-slot="scroll-area"][data-fill="true"] [data-radix-scroll-area-viewport] > div {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 0% !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  min-width: 100% !important;
+}
 [data-radix-scroll-area-viewport] .sticky {
   position: sticky !important;
   z-index: 50 !important;

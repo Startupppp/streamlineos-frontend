@@ -17,6 +17,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogBody,
 } from "@/components/ui/dialog";
 import {
   SidebarAnimatedNavIcon,
@@ -86,7 +87,7 @@ export function ProjectNavCustomizeDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-thin">
+        <DialogBody className="px-3 py-2">
           <Accordion
             type="multiple"
             defaultValue={defaultOpen}
@@ -119,7 +120,7 @@ export function ProjectNavCustomizeDialog({
               </AccordionItem>
             ))}
           </Accordion>
-        </div>
+        </DialogBody>
 
         <DialogFooter className="shrink-0 border-t border-border/60 bg-background/40 px-5 py-3 sm:justify-between">
           <Button

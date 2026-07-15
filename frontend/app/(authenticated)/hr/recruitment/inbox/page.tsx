@@ -4,6 +4,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { useMessageThreads, useCandidateMessages, useSendCandidateMessage } from "@/hooks/api/hr/recruitment";
 import type { MessageThread, CandidateMessage, MessageChannel } from "@/hooks/api/hr/recruitment";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { EmptyInboxIllustration } from "@/components/illustrations";
 import { Button } from "@/components/ui/button";
@@ -223,7 +224,8 @@ function ThreadPane({ thread }: { thread: MessageThread }) {
         <p className="text-sm font-semibold">{candidateName(thread)}</p>
         <p className="text-xs text-muted-foreground">{thread.candidateEmail}</p>
       </div>
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <ScrollArea hideScrollbar className="min-h-0 flex-1">
+        <div className="overscroll-contain space-y-3 p-4">
         {isLoading ? (
           Array.from({ length: 12 }).map((_, i) => (
             <Skeleton key={i} className="h-16 rounded-xl" />
@@ -238,7 +240,8 @@ function ThreadPane({ thread }: { thread: MessageThread }) {
             .map((msg) => <MessageBubble key={msg.id} msg={msg} />)
         )}
         <div ref={bottomRef} />
-      </div>
+        </div>
+      </ScrollArea>
       <ComposeBar
         candidateId={thread.candidateId}
         candidateEmail={thread.candidateEmail}
@@ -291,7 +294,8 @@ export default function InboxPage() {
                 {threads.length} Conversations
               </p>
             </div>
-            <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
+            <ScrollArea hideScrollbar className="min-h-0 flex-1">
+              <div className="overscroll-contain space-y-0.5 p-2">
               {threads.map((t) => (
                 <ThreadItem
                   key={t.candidateId}
@@ -300,7 +304,8 @@ export default function InboxPage() {
                   onSelect={handleSelectThread}
                 />
               ))}
-            </div>
+              </div>
+            </ScrollArea>
           </div>
 
           <div className="flex-1 min-w-0">

@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { KanbanBoard } from "@/features/projects/views/kanban-board";
 import { ListView } from "@/features/projects/views/list-view";
 import { TableView } from "@/features/projects/views/table-view";
@@ -110,57 +111,65 @@ export function ProjectViewRenderer({
         {view === "list" ? (
           <motion.div
             key="list"
-            className="min-h-0 flex-1 overflow-y-auto px-3 pb-1"
+            className="min-h-0 flex-1 flex flex-col overflow-hidden px-3 pb-1"
             variants={viewVariants}
             initial="initial"
             animate="animate"
             exit="exit"
             transition={pmSnappy}
           >
-            <ListView
-              tickets={filteredTickets}
-              onTicketClick={onTicketSelect}
-              groupBy={displayOptions.groupBy !== "none" ? displayOptions.groupBy : undefined}
-              rowBy={displayOptions.rowBy !== "none" ? displayOptions.rowBy : undefined}
-              projectKey={projectKey}
-              projectStatuses={statuses}
-              displayOptions={displayOptions}
-              showEmptyColumns={displayOptions.showEmptyColumns}
-              showEmptyRows={displayOptions.showEmptyRows}
-              projectId={projectId}
-            />
+            <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
+              <div className="overscroll-contain">
+                <ListView
+                  tickets={filteredTickets}
+                  onTicketClick={onTicketSelect}
+                  groupBy={displayOptions.groupBy !== "none" ? displayOptions.groupBy : undefined}
+                  rowBy={displayOptions.rowBy !== "none" ? displayOptions.rowBy : undefined}
+                  projectKey={projectKey}
+                  projectStatuses={statuses}
+                  displayOptions={displayOptions}
+                  showEmptyColumns={displayOptions.showEmptyColumns}
+                  showEmptyRows={displayOptions.showEmptyRows}
+                  projectId={projectId}
+                />
+              </div>
+            </ScrollArea>
           </motion.div>
         ) : null}
         {view === "table" ? (
           <motion.div
             key="table"
-            className="min-h-0 flex-1 overflow-y-auto px-3 pb-1"
+            className="min-h-0 flex-1 flex flex-col overflow-hidden px-3 pb-1"
             variants={viewVariants}
             initial="initial"
             animate="animate"
             exit="exit"
             transition={pmSnappy}
           >
-            {selectedIds.size > 0 && (
-              <BulkActionBar
-                selectedCount={selectedIds.size}
-                members={members}
-                sprints={sprints}
-                onBulkStatus={onBulkStatus}
-                onBulkPriority={onBulkPriority}
-                onBulkAssignee={onBulkAssignee}
-                onBulkSprint={onBulkSprint}
-                onClear={onClearSelection}
-              />
-            )}
-            <TableView
-              tickets={filteredTickets}
-              onTicketClick={onTicketSelect}
-              projectKey={projectKey}
-              projectId={projectId}
-              projectStatuses={statuses}
-              selection={{ selected: selectedIds, onChange: onSelectionChange }}
-            />
+            <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
+              <div className="overscroll-contain">
+                {selectedIds.size > 0 && (
+                  <BulkActionBar
+                    selectedCount={selectedIds.size}
+                    members={members}
+                    sprints={sprints}
+                    onBulkStatus={onBulkStatus}
+                    onBulkPriority={onBulkPriority}
+                    onBulkAssignee={onBulkAssignee}
+                    onBulkSprint={onBulkSprint}
+                    onClear={onClearSelection}
+                  />
+                )}
+                <TableView
+                  tickets={filteredTickets}
+                  onTicketClick={onTicketSelect}
+                  projectKey={projectKey}
+                  projectId={projectId}
+                  projectStatuses={statuses}
+                  selection={{ selected: selectedIds, onChange: onSelectionChange }}
+                />
+              </div>
+            </ScrollArea>
           </motion.div>
         ) : null}
         {view === "calendar" ? (

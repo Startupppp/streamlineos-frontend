@@ -19,7 +19,7 @@ export function ProviderDetail({ provider, environment }: ProviderDetailProps) {
   return (
     <div className="rounded-xl border border-border bg-card p-4">
       <Tabs defaultValue="credentials">
-        <TabsList className="h-8 rounded-lg border p-1 bg-muted/40">
+        <TabsList className="rounded-lg border p-1 bg-muted/40">
           <TabsTrigger value="credentials" className="text-xs px-3 rounded-md">Credentials</TabsTrigger>
           <TabsTrigger value="webhooks" className="text-xs px-3 rounded-md">Webhooks</TabsTrigger>
           <TabsTrigger value="test-payment" className="text-xs px-3 rounded-md">Test Payment</TabsTrigger>

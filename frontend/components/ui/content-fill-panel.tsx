@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-export const CONTENT_FILL_PANEL = "flex min-h-0 w-full flex-1 flex-col";
+export const CONTENT_FILL_PANEL = "flex min-h-full w-full flex-1 flex-col";
 
 export const FILTER_SELECT_TRIGGER = "h-8 border-input bg-card";
 

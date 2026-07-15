@@ -5,24 +5,25 @@ import { memo, type ComponentType, type ReactNode } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
-export type StatTone = "default" | "blue" | "emerald" | "amber" | "red" | "violet";
+export type StatTone = "default" | "accent" | "emerald" | "amber" | "red" | "blue" | "violet";
 
 export type StatColor = StatTone | "cyan" | "green" | "gold" | "purple";
 
 const TONE_MAP: Record<StatTone, { bg: string; text: string }> = {
   default: { bg: "bg-muted", text: "text-muted-foreground" },
-  blue: { bg: "bg-blue-50 dark:bg-blue-500/10", text: "text-blue-600 dark:text-blue-400" },
+  accent: { bg: "bg-primary/10", text: "text-primary" },
+  blue: { bg: "bg-primary/10", text: "text-primary" },
+  violet: { bg: "bg-primary/10", text: "text-primary" },
   emerald: { bg: "bg-emerald-50 dark:bg-emerald-500/10", text: "text-emerald-600 dark:text-emerald-400" },
   amber: { bg: "bg-amber-50 dark:bg-amber-500/10", text: "text-amber-600 dark:text-amber-400" },
   red: { bg: "bg-red-50 dark:bg-red-500/10", text: "text-red-600 dark:text-red-400" },
-  violet: { bg: "bg-violet-50 dark:bg-violet-500/10", text: "text-violet-600 dark:text-violet-400" },
 };
 
 const COLOR_TONE: Partial<Record<StatColor, StatTone>> = {
-  cyan: "blue",
+  cyan: "accent",
   green: "emerald",
   gold: "amber",
-  purple: "violet",
+  purple: "accent",
 };
 
 function resolveTone(tone?: StatTone, color?: StatColor): StatTone {
@@ -48,7 +49,7 @@ function StatSparkLine({ data, color }: { data: number[]; color: string }) {
     .join(" ");
 
   return (
-    <svg width={w} height={h} className="shrink-0" aria-hidden="true">
+    <svg width={w} height={h} className="shrink-0 text-primary" aria-hidden="true">
       <polyline
         points={points}
         fill="none"
@@ -134,7 +135,7 @@ export const StatCard = memo(function StatCard({
   trend,
   subtitle,
   sparkData,
-  sparkColor = "#3b82f6",
+  sparkColor = "var(--primary)",
 }: StatCardProps) {
   const t = TONE_MAP[resolveTone(tone, color)];
   const effectiveHint = hint ?? subtitle;
@@ -151,7 +152,7 @@ export const StatCard = memo(function StatCard({
   const body = (
     <div
       className={cn(
-        "flex h-full items-center gap-2.5 rounded-lg border border-border bg-card px-3 py-2.5 transition-colors",
+        "flex h-full items-center gap-2.5 rounded-lg border border-border bg-card px-3 py-2.5 shadow-sm transition-colors",
         featured && "border-primary bg-primary text-primary-foreground",
         href && "hover:bg-muted/30 cursor-pointer",
         featured && href && "hover:bg-primary/90",

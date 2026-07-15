@@ -50,7 +50,7 @@ export function SettingsView() {
       className="flex-none"
     >
       <Tabs defaultValue="general" onValueChange={handleTabChange}>
-        <TabsList className="h-8 mb-4">
+        <TabsList className="mb-4">
           <TabsTrigger value="general" className="text-xs">
             General
           </TabsTrigger>

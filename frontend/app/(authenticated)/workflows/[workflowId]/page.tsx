@@ -259,7 +259,7 @@ export default function WorkflowDetailPage() {
         transition={{ duration: 0.22, ease: "easeOut" }}
       >
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="h-8">
+          <TabsList>
             <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
             <TabsTrigger value="executions" className="text-xs">Executions</TabsTrigger>
           </TabsList>

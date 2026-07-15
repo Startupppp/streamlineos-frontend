@@ -2,6 +2,7 @@
 
 import { Loader2, PanelRightClose } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { PriorityBadge } from "../shared/priority-badge";
 import { StatusBadge } from "../shared/status-badge";
@@ -110,7 +111,8 @@ export function TicketDetailRightPanel({
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto scrollbar-thin">
+      <ScrollArea hideScrollbar className="min-h-0 flex-1">
+        <div className="overscroll-contain">
         <TicketSidebar
           ticket={ticket}
           ticketId={ticketId}
@@ -130,7 +132,8 @@ export function TicketDetailRightPanel({
           />
           <WatcherList projectId={projectId} ticketId={ticketId} />
         </div>
-      </div>
+        </div>
+      </ScrollArea>
     </div>
   );
 }

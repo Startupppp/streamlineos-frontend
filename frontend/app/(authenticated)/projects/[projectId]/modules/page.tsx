@@ -402,8 +402,8 @@ export default function ModulesPage({
       <PmPageShell>
         <PmSection index={0}>
           <StatCardGrid cols={4}>
-            <StatCard label="Total" value={total} icon={Package} tone="blue" />
-            <StatCard label="In Progress" value={inProgress} icon={Activity} tone="blue" />
+            <StatCard label="Total" value={total} icon={Package} tone="default" />
+            <StatCard label="In Progress" value={inProgress} icon={Activity} tone="default" />
             <StatCard label="Completed" value={completed} icon={CheckCircle2} tone="emerald" />
             <StatCard label="Planned" value={planned} icon={Calendar} tone="amber" />
           </StatCardGrid>

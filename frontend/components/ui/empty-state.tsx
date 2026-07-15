@@ -85,7 +85,7 @@ export function EmptyState({
         "flex flex-col items-center justify-center text-center",
         compact
           ? "py-4 px-2"
-          : "min-h-0 w-full flex-1 py-12 px-6 rounded-xl border border-dashed border-border bg-card",
+          : "min-h-full w-full flex-1 py-12 px-6 rounded-xl border border-dashed border-border bg-card",
         className
       )}
     >

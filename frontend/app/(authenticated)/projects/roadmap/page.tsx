@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
@@ -16,6 +17,7 @@ import { ChangelogTab } from "@/features/projects/roadmap/changelog-tab";
 import {
   PmPageShell,
   PmSection,
+  PM_FILL_SECTION,
 } from "@/features/projects/shared/pm-chrome";
 
 type RoadmapTabValue = "roadmap" | "feedback" | "changelog";
@@ -97,7 +99,7 @@ export default function RoadmapPage() {
           actions={hasActions ? actions : undefined}
         >
           <PmPageShell>
-            <PmSection index={0} className="flex min-h-0 flex-1 flex-col gap-3">
+            <PmSection index={0} className={cn(PM_FILL_SECTION, "gap-3")}>
               <TabsList className="shrink-0">
                 <TabsTrigger value="roadmap" className="gap-1.5">
                   <Sparkles className="h-3.5 w-3.5" />
@@ -124,17 +126,17 @@ export default function RoadmapPage() {
                 </div>
               ) : null}
 
-              <TabsContent value="roadmap" className="mt-0 flex min-h-0 flex-1 flex-col">
+              <TabsContent value="roadmap" className="mt-0">
                 <RoadmapTab
                   search={debouncedSearch}
                   createOpen={roadmapCreateOpen}
                   onCreateOpenChange={handleRoadmapCreateOpenChange}
                 />
               </TabsContent>
-              <TabsContent value="feedback" className="mt-0 flex min-h-0 flex-1 flex-col">
+              <TabsContent value="feedback" className="mt-0">
                 <FeedbackTab search={debouncedSearch} />
               </TabsContent>
-              <TabsContent value="changelog" className="mt-0 flex min-h-0 flex-1 flex-col">
+              <TabsContent value="changelog" className="mt-0">
                 <ChangelogTab
                   createOpen={changelogCreateOpen}
                   onCreateOpenChange={handleChangelogCreateOpenChange}

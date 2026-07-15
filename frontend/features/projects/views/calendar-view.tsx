@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -117,7 +118,8 @@ export function CalendarView({ tickets, onTicketClick, projectId }: CalendarView
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border">
-        <div className="min-h-0 flex-1 overflow-y-auto">
+        <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
+          <div className="overscroll-contain">
           <div className="grid grid-cols-7">
             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
               <div key={day} className="sticky top-0 z-10 border-b bg-muted/50 px-2 py-1.5 text-center text-xs font-medium text-muted-foreground">
@@ -183,7 +185,8 @@ export function CalendarView({ tickets, onTicketClick, projectId }: CalendarView
               );
             })}
           </div>
-        </div>
+          </div>
+        </ScrollArea>
       </div>
     </div>
   );

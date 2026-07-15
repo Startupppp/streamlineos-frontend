@@ -28,7 +28,7 @@ export function BonusesPageContent() {
           Approved bonuses are included in the payroll run for the selected month.
         </div>
         <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-1 min-h-0 flex-col">
-          <TabsList className="h-8">
+          <TabsList>
             <TabsTrigger value="bonuses" className="text-xs">
               Bonuses
             </TabsTrigger>

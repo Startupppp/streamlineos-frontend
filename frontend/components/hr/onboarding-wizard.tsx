@@ -7,6 +7,7 @@ import { z } from "zod";
 import { onboardEmployeeInputSchema } from "@/lib/validation/hr";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Check, ChevronRight, ChevronLeft, Loader2 } from "lucide-react";
@@ -191,7 +192,8 @@ export function OnboardingWizard() {
           }}
           className="flex flex-col flex-1 min-h-0"
         >
-          <div className="flex-1 min-h-0 overflow-y-auto">
+          <ScrollArea hideScrollbar className="min-h-0 flex-1">
+            <div className="overscroll-contain">
             {currentStep === 1 && <StepPersonalInfo form={form} />}
             {currentStep === 2 && (
               <StepEmployment
@@ -202,7 +204,8 @@ export function OnboardingWizard() {
             {currentStep === 3 && <StepSkillsPay form={form} />}
             {currentStep === 4 && <StepBanking form={form} />}
             {currentStep === 5 && <StepReview form={form} allDepartmentOptions={allDepartmentOptions} />}
-          </div>
+            </div>
+          </ScrollArea>
 
           <div className="shrink-0 flex items-center justify-between pt-4 mt-4 border-t">
             <Button

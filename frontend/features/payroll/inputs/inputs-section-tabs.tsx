@@ -424,7 +424,7 @@ export function InputsSectionTabs({ periodId, isLocked, onCreateAdjustment }: In
   return (
     <Tabs defaultValue="attendance">
       <div className="flex items-center justify-between mb-3">
-        <TabsList className="h-8 text-xs">
+        <TabsList className="text-xs">
           <TabsTrigger value="attendance" className="text-xs">Attendance</TabsTrigger>
           <TabsTrigger value="leave" className="text-xs">Leave</TabsTrigger>
           <TabsTrigger value="overtime" className="text-xs">Overtime</TabsTrigger>

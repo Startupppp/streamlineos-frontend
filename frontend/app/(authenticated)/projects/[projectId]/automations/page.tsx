@@ -26,6 +26,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetFooter,
+  SheetBody,
 } from "@/components/ui/sheet";
 import {
   Form,
@@ -480,7 +481,7 @@ export default function AutomationsPage({ params }: PageProps) {
             </SheetTitle>
           </SheetHeader>
 
-          <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3">
+          <SheetBody className="px-4 py-3">
             <Form {...form}>
               <form
                 id="automation-form"
@@ -655,7 +656,7 @@ export default function AutomationsPage({ params }: PageProps) {
                 </div>
               </form>
             </Form>
-          </div>
+          </SheetBody>
 
           <SheetFooter className="px-4 py-3 border-t shrink-0 flex-row gap-2">
             <Button

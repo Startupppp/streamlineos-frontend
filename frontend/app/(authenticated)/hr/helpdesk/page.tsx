@@ -16,7 +16,7 @@ export default function HrHelpdeskPage() {
       subtitle="Submit and track HR support requests"
     >
       <Tabs defaultValue="my-tickets" className="space-y-4">
-        <TabsList className="h-8">
+        <TabsList>
           <TabsTrigger value="my-tickets" className="text-xs">My Tickets</TabsTrigger>
           {canManage && (
             <TabsTrigger value="queue" className="text-xs">Queue</TabsTrigger>

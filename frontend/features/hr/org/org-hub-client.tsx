@@ -2,6 +2,7 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useCan } from "@/hooks/api/access";
 import { OrgCatalogTable } from "./org-catalog-table";
 import { HeadcountStats } from "./headcount-stats";
@@ -64,7 +65,7 @@ export function OrgHubClient() {
     >
       <HeadcountStats groupBy="department" />
       <Tabs defaultValue="departments" className="flex flex-col flex-1 min-h-0">
-        <TabsList className="h-8 shrink-0 rounded-lg border p-1 w-fit">
+        <TabsList className="shrink-0 rounded-lg border p-1 w-fit">
           <TabsTrigger
             value="departments"
             className="text-xs gap-1.5 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
@@ -104,80 +105,100 @@ export function OrgHubClient() {
 
         <TabsContent
           value="departments"
-          className="flex-1 min-h-0 overflow-y-auto mt-3"
+          className="flex-1 min-h-0 mt-3 flex flex-col overflow-hidden"
         >
-          <DepartmentsTab canManage={canManage} />
+          <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
+            <div className="flex min-h-full flex-1 flex-col overscroll-contain">
+              <DepartmentsTab canManage={canManage} />
+            </div>
+          </ScrollArea>
         </TabsContent>
 
         <TabsContent
           value="teams"
-          className="flex-1 min-h-0 overflow-y-auto mt-3"
+          className="flex-1 min-h-0 mt-3 flex flex-col overflow-hidden"
         >
-          <OrgCatalogTable<HrTeam>
-            title="Team"
-            items={teams.data}
-            isLoading={teams.isLoading}
-            canManage={canManage}
-            onCreate={createTeam as CatalogMutation<HrTeam>}
-            onUpdate={updateTeam as CatalogUpdateMutation<HrTeam>}
-            onDelete={deleteTeam as DeleteMutation<{ success: boolean }>}
-          />
+          <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
+            <div className="flex min-h-full flex-1 flex-col overscroll-contain">
+              <OrgCatalogTable<HrTeam>
+                title="Team"
+                items={teams.data}
+                isLoading={teams.isLoading}
+                canManage={canManage}
+                onCreate={createTeam as CatalogMutation<HrTeam>}
+                onUpdate={updateTeam as CatalogUpdateMutation<HrTeam>}
+                onDelete={deleteTeam as DeleteMutation<{ success: boolean }>}
+              />
+            </div>
+          </ScrollArea>
         </TabsContent>
 
         <TabsContent
           value="locations"
-          className="flex-1 min-h-0 overflow-y-auto mt-3"
+          className="flex-1 min-h-0 mt-3 flex flex-col overflow-hidden"
         >
-          <OrgCatalogTable<HrLocation>
-            title="Location"
-            items={locations.data}
-            isLoading={locations.isLoading}
-            canManage={canManage}
-            onCreate={createLocation as CatalogMutation<HrLocation>}
-            onUpdate={updateLocation as CatalogUpdateMutation<HrLocation>}
-            onDelete={deleteLocation as DeleteMutation<{ success: boolean }>}
-            extraColumns={[
-              {
-                label: "Type",
-                render: (item) =>
-                  item.type ? (
-                    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-muted border border-border">
-                      {item.type}
-                    </span>
-                  ) : null,
-              },
-            ]}
-          />
+          <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
+            <div className="flex min-h-full flex-1 flex-col overscroll-contain">
+              <OrgCatalogTable<HrLocation>
+                title="Location"
+                items={locations.data}
+                isLoading={locations.isLoading}
+                canManage={canManage}
+                onCreate={createLocation as CatalogMutation<HrLocation>}
+                onUpdate={updateLocation as CatalogUpdateMutation<HrLocation>}
+                onDelete={deleteLocation as DeleteMutation<{ success: boolean }>}
+                extraColumns={[
+                  {
+                    label: "Type",
+                    render: (item) =>
+                      item.type ? (
+                        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-muted border border-border">
+                          {item.type}
+                        </span>
+                      ) : null,
+                  },
+                ]}
+              />
+            </div>
+          </ScrollArea>
         </TabsContent>
 
         <TabsContent
           value="roles"
-          className="flex-1 min-h-0 overflow-y-auto mt-3"
+          className="flex-1 min-h-0 mt-3 flex flex-col overflow-hidden"
         >
-          <OrgCatalogTable<HrJobRole>
-            title="Job Role"
-            items={roles.data}
-            isLoading={roles.isLoading}
-            canManage={canManage}
-            onCreate={createRole as CatalogMutation<HrJobRole>}
-            onUpdate={updateRole as CatalogUpdateMutation<HrJobRole>}
-            onDelete={deleteRole as DeleteMutation<{ success: boolean }>}
-          />
+          <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
+            <div className="flex min-h-full flex-1 flex-col overscroll-contain">
+              <OrgCatalogTable<HrJobRole>
+                title="Job Role"
+                items={roles.data}
+                isLoading={roles.isLoading}
+                canManage={canManage}
+                onCreate={createRole as CatalogMutation<HrJobRole>}
+                onUpdate={updateRole as CatalogUpdateMutation<HrJobRole>}
+                onDelete={deleteRole as DeleteMutation<{ success: boolean }>}
+              />
+            </div>
+          </ScrollArea>
         </TabsContent>
 
         <TabsContent
           value="levels"
-          className="flex-1 min-h-0 overflow-y-auto mt-3"
+          className="flex-1 min-h-0 mt-3 flex flex-col overflow-hidden"
         >
-          <OrgCatalogTable<HrJobLevel>
-            title="Job Level"
-            items={levels.data}
-            isLoading={levels.isLoading}
-            canManage={canManage}
-            onCreate={createLevel as CatalogMutation<HrJobLevel>}
-            onUpdate={updateLevel as CatalogUpdateMutation<HrJobLevel>}
-            onDelete={deleteLevel as DeleteMutation<{ success: boolean }>}
-          />
+          <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
+            <div className="flex min-h-full flex-1 flex-col overscroll-contain">
+              <OrgCatalogTable<HrJobLevel>
+                title="Job Level"
+                items={levels.data}
+                isLoading={levels.isLoading}
+                canManage={canManage}
+                onCreate={createLevel as CatalogMutation<HrJobLevel>}
+                onUpdate={updateLevel as CatalogUpdateMutation<HrJobLevel>}
+                onDelete={deleteLevel as DeleteMutation<{ success: boolean }>}
+              />
+            </div>
+          </ScrollArea>
         </TabsContent>
       </Tabs>
     </PageWrapper>

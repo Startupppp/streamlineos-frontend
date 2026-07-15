@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogBody,
 } from "@/components/ui/dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -203,7 +204,7 @@ function ImproveDescDialog({
           </p>
         </DialogHeader>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4 scrollbar-thin">
+        <DialogBody className="px-5 py-4">
           {isPending ? (
             <div className="space-y-2">
               <Skeleton className="h-3.5 w-full rounded" />
@@ -218,7 +219,7 @@ function ImproveDescDialog({
               dangerouslySetInnerHTML={{ __html: proposed }}
             />
           )}
-        </div>
+        </DialogBody>
 
         <DialogFooter className="shrink-0 flex-row justify-end gap-2 border-t border-border px-5 pt-3 pb-0">
           <Button variant="outline" size="sm" onClick={onDiscard} disabled={isApplying}>
@@ -272,7 +273,7 @@ function SubtaskSuggestionsDialog({
           </p>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto px-5 py-3 min-h-0">
+        <DialogBody className="px-5 py-3">
           {isPending ? (
             <div className="space-y-2">
               {Array.from({ length: 4 }).map((_, i) => (
@@ -309,7 +310,7 @@ function SubtaskSuggestionsDialog({
               ))}
             </ul>
           )}
-        </div>
+        </DialogBody>
 
         <DialogFooter className="px-5 pt-3 pb-0 border-t border-border shrink-0 flex-row gap-2 justify-end">
           <Button variant="outline" size="sm" onClick={onDiscard} disabled={isCreating}>

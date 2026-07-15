@@ -342,7 +342,7 @@ export function SequenceSheet({ sequence, open, onOpenChange }: Props) {
           <SheetTitle>{isEdit ? "Edit Sequence" : "New Sequence"}</SheetTitle>
         </SheetHeader>
         <Tabs defaultValue="details" className="flex flex-col flex-1 min-h-0">
-          <TabsList className="shrink-0 rounded-none border-b w-full justify-start px-6 h-8 bg-transparent gap-0">
+          <TabsList className="shrink-0 rounded-none border-b w-full justify-start px-6 bg-transparent gap-0">
             <TabsTrigger value="details" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent text-sm">Details</TabsTrigger>
             {isEdit && (
               <>

@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -75,7 +76,8 @@ export function MessagesTab({
 
   return (
     <div className="flex flex-col rounded-xl border bg-card" style={{ minHeight: "400px", maxHeight: "600px" }}>
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <ScrollArea hideScrollbar className="min-h-0 flex-1">
+        <div className="overscroll-contain space-y-3 p-4">
         {isLoading ? (
           Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-14 rounded-xl" />)
         ) : messages.length === 0 ? (
@@ -84,7 +86,8 @@ export function MessagesTab({
           [...messages].reverse().map((msg) => <MessageBubble key={msg.id} msg={msg} />)
         )}
         <div ref={bottomRef} />
-      </div>
+        </div>
+      </ScrollArea>
       <div className="border-t p-3 space-y-2">
         <div className="flex items-center gap-2">
           <div className="flex-1 space-y-1">

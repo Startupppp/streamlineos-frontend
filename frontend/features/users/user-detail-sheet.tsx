@@ -124,7 +124,7 @@ export function UserDetailSheet({ userId, open, onOpenChange }: UserDetailSheetP
               />
             ) : (
               <Tabs defaultValue="profile" className="flex flex-col">
-                <TabsList className="shrink-0 w-full justify-start h-8 bg-muted/50 rounded-md p-0.5 gap-0.5 flex-wrap">
+                <TabsList className="shrink-0 w-full justify-start bg-muted/50 rounded-md p-0.5 gap-0.5 flex-wrap">
                   {[
                     { value: "profile", label: "Profile" },
                     { value: "sessions", label: "Sessions" },

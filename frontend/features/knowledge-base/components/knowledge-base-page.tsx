@@ -8,6 +8,7 @@ import { type InfiniteData, useQueryClient } from "@tanstack/react-query";
 import { BookOpenTextIcon } from "@animateicons/react/lucide";
 import { ChevronUp, Loader2, MessageSquare, Send } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useKbAsk } from "@/hooks/api/kb/ask";
@@ -299,7 +300,13 @@ export default function KnowledgeBasePage() {
             />
           ) : (
             <>
-              <div ref={scrollRef} onScroll={handleScroll} className="flex-1 min-h-0 space-y-4 overflow-y-auto scrollbar-hide p-4">
+              <ScrollArea
+                hideScrollbar
+                className="flex-1 min-h-0"
+                viewportRef={scrollRef}
+                onViewportScroll={handleScroll}
+              >
+                <div className="overscroll-contain space-y-4 p-4">
                 {isLoading ? (
                   <div className="flex h-full items-center justify-center">
                     <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
@@ -339,7 +346,8 @@ export default function KnowledgeBasePage() {
                     {ask.isPending && <TypingBubble reduce={Boolean(reduce)} />}
                   </>
                 )}
-              </div>
+                </div>
+              </ScrollArea>
 
               <div className="shrink-0 border-t border-border bg-background/60 p-3">
                 <div className="flex items-center gap-2">

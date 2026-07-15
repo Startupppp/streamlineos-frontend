@@ -11,7 +11,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -144,9 +144,6 @@ function resolveMyIssuesEmptyActions(params: {
   return { action: { label: "All projects", href: "/projects/all" } };
 }
 
-const STAT_GLASS =
-  "border-border/60 bg-card/50 shadow-sm backdrop-blur-md supports-[backdrop-filter]:bg-card/40 hover:border-primary/20 hover:shadow-md";
-
 function PanelHeader({
   title,
   actions,
@@ -258,11 +255,7 @@ export function CommandCenterPage() {
     return (
       <PageWrapper title="Home">
         <PmPageShell>
-          <div className="grid grid-cols-2 gap-2 lg:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className={cn("h-16 rounded-xl", PM_PANEL)} />
-            ))}
-          </div>
+          <StatCardGridSkeleton cols={3} />
           <Skeleton className={cn("h-14 w-full max-w-xl rounded-xl", PM_PANEL)} />
           <Skeleton className={cn("h-56 rounded-xl", PM_PANEL)} />
           <Skeleton className={cn("h-48 rounded-xl", PM_PANEL)} />
@@ -318,7 +311,6 @@ export function CommandCenterPage() {
                   tone="default"
                   index={0}
                   href="/projects/all"
-                  className={STAT_GLASS}
                 />
               </motion.div>
               <motion.div
@@ -329,10 +321,9 @@ export function CommandCenterPage() {
                   label="Open issues"
                   value={stats.openIssues}
                   icon={CheckSquare}
-                  tone="emerald"
+                  tone="default"
                   index={1}
                   href="/projects/my-work"
-                  className={STAT_GLASS}
                 />
               </motion.div>
               <motion.div
@@ -351,7 +342,6 @@ export function CommandCenterPage() {
                   tone={stats.overdueIssues > 0 ? "red" : "default"}
                   index={2}
                   href="/projects/my-work"
-                  className={STAT_GLASS}
                 />
               </motion.div>
             </StatCardGrid>

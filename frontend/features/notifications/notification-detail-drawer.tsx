@@ -5,7 +5,7 @@ import { Archive, ArchiveRestore, Pin, PinOff, ExternalLink, Clock, Info, Check,
 import { Trash2Icon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetBody, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -147,7 +147,7 @@ export function NotificationDetailDrawer({
           </div>
         </SheetHeader>
 
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+        <SheetBody className="px-4 py-4 space-y-4">
           {notification.message && (
             <p className="text-sm leading-relaxed text-foreground whitespace-pre-wrap">{notification.message}</p>
           )}
@@ -181,7 +181,7 @@ export function NotificationDetailDrawer({
               </div>
             )}
           </dl>
-        </div>
+        </SheetBody>
 
         <div className="border-t border-border px-4 py-3 space-y-2">
           {notification.link && (

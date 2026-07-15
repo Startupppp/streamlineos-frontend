@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import Link from "next/link";
 import { ArrowLeft, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -157,11 +158,15 @@ export function PageWrapper({
           {children}
         </div>
       ) : (
-        <div className={cn("flex-1 min-h-0 overflow-y-auto scrollbar-thin", contentClassName)}>
-          <div className="flex min-h-full flex-col px-4 sm:px-6">
+        <ScrollArea
+          fill
+          hideScrollbar
+          className={cn("flex-1 min-h-0", contentClassName)}
+        >
+          <div className="flex min-h-0 flex-1 flex-col px-4 sm:px-6 overscroll-contain">
             {children}
           </div>
-        </div>
+        </ScrollArea>
       )}
     </div>
   );

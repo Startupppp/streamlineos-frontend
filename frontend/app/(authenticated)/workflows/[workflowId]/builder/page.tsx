@@ -40,6 +40,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -258,7 +259,8 @@ function NodeConfigPanel({ node, onChange, onClose }: NodeConfigPanelProps) {
           <X className="h-3.5 w-3.5 text-muted-foreground" />
         </button>
       </div>
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <ScrollArea hideScrollbar className="min-h-0 flex-1">
+        <div className="overscroll-contain space-y-4 p-4">
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-foreground">Label</label>
           <Input value={node.data.label} onChange={handleLabelChange} className="h-8 text-sm" />
@@ -283,7 +285,8 @@ function NodeConfigPanel({ node, onChange, onClose }: NodeConfigPanelProps) {
           <label className="text-xs font-medium text-foreground">Node ID</label>
           <p className="text-xs font-mono text-muted-foreground break-all">{node.id}</p>
         </div>
-      </div>
+        </div>
+      </ScrollArea>
     </div>
   );
 }
@@ -456,11 +459,13 @@ function BuilderCanvas({ workflow, workflowId }: BuilderCanvasProps) {
           </p>
           <p className="text-[10px] text-muted-foreground">Drag nodes onto canvas</p>
         </div>
-        <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
+        <ScrollArea hideScrollbar className="min-h-0 flex-1">
+          <div className="overscroll-contain space-y-1.5 p-2">
           {NODE_PALETTE.map((item) => (
             <PaletteItem key={item.nodeType} item={item} />
           ))}
-        </div>
+          </div>
+        </ScrollArea>
       </div>
 
       <div className="flex-1 flex flex-col min-w-0">

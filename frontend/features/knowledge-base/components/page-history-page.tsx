@@ -176,7 +176,7 @@ export default function PageHistoryPage({ pageId }: PageHistoryPageProps) {
                   Versions{versions.length > 0 ? ` (${versions.length})` : ""}
                 </p>
               </div>
-              <ScrollArea className="flex-1 min-h-0">
+              <ScrollArea fill className="flex-1 min-h-0">
                 <div className="p-2">
                   {versionsLoading && (
                     <div className="space-y-2 p-2">
@@ -265,7 +265,8 @@ export default function PageHistoryPage({ pageId }: PageHistoryPageProps) {
                   </div>
                 </div>
 
-                <div className="flex-1 min-h-0 overflow-y-auto">
+                <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
+                  <div className="overscroll-contain">
                   {detailLoading ? (
                     <div className="px-6 py-4 space-y-3">
                       <Skeleton className="h-5 w-3/4" />
@@ -287,7 +288,8 @@ export default function PageHistoryPage({ pageId }: PageHistoryPageProps) {
                       )}
                     </div>
                   )}
-                </div>
+                  </div>
+                </ScrollArea>
               </div>
             )}
           </div>

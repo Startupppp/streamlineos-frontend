@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { usePublicChannels, useJoinChannel, useLeaveChannel } from "@/hooks/api";
 import { PublicChannelRow } from "./public-channel-row";
@@ -116,7 +117,8 @@ export function ChannelsDiscoveryPage() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 py-4">
+      <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
+        <div className="overscroll-contain px-6 py-4">
         {isLoading ? (
           <div className="space-y-2">
             {[1, 2, 3, 4].map((i) => (
@@ -192,7 +194,8 @@ export function ChannelsDiscoveryPage() {
             </div>
           </div>
         )}
-      </div>
+        </div>
+      </ScrollArea>
 
       <NewGroupDialog
         open={createOpen}

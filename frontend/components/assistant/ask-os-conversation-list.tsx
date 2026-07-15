@@ -5,6 +5,7 @@ import { MessageCircle, MoreHorizontal, PenLine, Search } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import type { AiConversation } from "@/hooks/api/chat-ai-assistant";
 
 export interface AskOsConversationListProps {
@@ -106,7 +107,8 @@ export function AskOsConversationList({
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto scrollbar-hide py-1">
+      <ScrollArea hideScrollbar className="min-h-0 flex-1">
+        <div className="overscroll-contain py-1">
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
             <MessageCircle className="h-8 w-8 text-muted-foreground/40" />
@@ -162,7 +164,8 @@ export function AskOsConversationList({
             </button>
           </div>
         )}
-      </div>
+        </div>
+      </ScrollArea>
 
       <AlertDialog open={deleteId !== null} onOpenChange={handleAlertOpenChange}>
         <AlertDialogContent>

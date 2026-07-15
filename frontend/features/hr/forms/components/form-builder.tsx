@@ -15,6 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -158,11 +159,12 @@ export function FormBuilder({ form, onSave, isPending }: FormBuilderProps) {
         onSubmit={rhf.handleSubmit(handleSubmit)}
         className="flex h-full min-h-0 gap-4"
       >
-        <div className="hidden md:flex w-44 shrink-0 overflow-y-auto border-r border-border pr-3 flex-col">
+        <ScrollArea hideScrollbar className="hidden md:flex w-44 shrink-0 border-r border-border pr-3">
           <FieldPalette onAddField={handleAddField} />
-        </div>
+        </ScrollArea>
 
-        <div className="flex-1 min-w-0 overflow-y-auto space-y-4 pr-1">
+        <ScrollArea hideScrollbar className="flex-1 min-h-0 min-w-0">
+          <div className="space-y-4 pr-1">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <FormField
               control={rhf.control}
@@ -430,7 +432,8 @@ export function FormBuilder({ form, onSave, isPending }: FormBuilderProps) {
               Save Form
             </LoadingButton>
           </div>
-        </div>
+          </div>
+        </ScrollArea>
       </form>
 
       <Sheet open={paletteOpen} onOpenChange={setPaletteOpen}>

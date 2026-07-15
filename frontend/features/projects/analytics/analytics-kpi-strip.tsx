@@ -55,8 +55,8 @@ export const AnalyticsKpiStrip = memo(function AnalyticsKpiStrip({
       <StatCard label="Total tickets" value={derivedTotal} />
       <StatCard label="Open" value={openCount} />
       <StatCard label="Completed" value={doneCount} tone="emerald" />
-      <StatCard label="Completion rate" value={`${completionPct}%`} tone="blue" />
-      {onTimePct != null && <StatCard label="On-time rate" value={`${onTimePct}%`} tone="blue" />}
+      <StatCard label="Completion rate" value={`${completionPct}%`} tone="default" />
+      {onTimePct != null && <StatCard label="On-time rate" value={`${onTimePct}%`} tone="default" />}
       {overdueTickets > 0 && (
         <StatCard
           label="Overdue"

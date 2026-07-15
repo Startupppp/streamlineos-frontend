@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Money } from "@/features/accounting/shared";
 import { BankTxnStatusBadge } from "./bank-txn-status-badge";
 import { ReconciliationMatchPanel } from "./reconciliation-match-panel";
@@ -183,7 +184,7 @@ export function ReconciliationClient() {
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto">
+              <ScrollArea hideScrollbar className="flex-1 min-h-0">
                 {displayedTxns.length === 0 ? (
                   <div className="flex items-center justify-center h-32 text-xs text-muted-foreground">
                     {tab === "unmatched" ? "All transactions matched!" : "No suggested matches."}
@@ -234,7 +235,7 @@ export function ReconciliationClient() {
                     );
                   })
                 )}
-              </div>
+              </ScrollArea>
             </div>
 
             <div className="border border-border rounded-xl p-4">

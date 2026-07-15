@@ -77,9 +77,6 @@ function NewGoalButton({ onClick }: { onClick: () => void }) {
 
 const LEVEL_ORDER: GoalLevel[] = ["company", "team", "individual"];
 
-const STAT_GLASS =
-  "border-border/60 bg-card/50 shadow-sm backdrop-blur-md transition-shadow duration-150 hover:shadow-md supports-[backdrop-filter]:bg-card/40";
-
 function GoalCard({ goal }: { goal: GoalListItem }) {
   const cfg = STATUS_CONFIG[goal.status];
   const ownerName = goal.owner?.name ?? goal.owner?.email ?? null;
@@ -283,9 +280,8 @@ export default function GoalsPage() {
                   label="Total Goals"
                   value={stats?.total ?? 0}
                   icon={Target}
-                  tone="blue"
+                  tone="default"
                   isLoading={isLoading}
-                  className={STAT_GLASS}
                 />
               </motion.div>
               <motion.div
@@ -299,7 +295,6 @@ export default function GoalsPage() {
                   icon={TrendingUp}
                   tone="emerald"
                   isLoading={isLoading}
-                  className={STAT_GLASS}
                 />
               </motion.div>
               <motion.div
@@ -313,7 +308,6 @@ export default function GoalsPage() {
                   icon={AlertTriangle}
                   tone="amber"
                   isLoading={isLoading}
-                  className={STAT_GLASS}
                 />
               </motion.div>
               <motion.div
@@ -327,7 +321,6 @@ export default function GoalsPage() {
                   icon={TrendingUp}
                   tone="default"
                   isLoading={isLoading}
-                  className={STAT_GLASS}
                 />
               </motion.div>
             </StatCardGrid>

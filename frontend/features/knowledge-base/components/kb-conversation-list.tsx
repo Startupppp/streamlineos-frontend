@@ -4,6 +4,7 @@ import { useMemo, useRef, useState } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import {
   KbChevronUpIcon,
@@ -210,7 +211,8 @@ export function KbConversationList({
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto scrollbar-hide p-2">
+      <ScrollArea hideScrollbar className="min-h-0 flex-1">
+        <div className="overscroll-contain p-2">
         {groups.length === 0 ? (
           <div className="flex h-full items-center justify-center py-8">
             <p className="text-xs text-muted-foreground">No conversations yet</p>
@@ -281,7 +283,8 @@ export function KbConversationList({
             )}
           </>
         )}
-      </div>
+        </div>
+      </ScrollArea>
 
       <AlertDialog open={deleteTargetId !== null} onOpenChange={handleDeleteDialogOpenChange}>
         <AlertDialogContent>

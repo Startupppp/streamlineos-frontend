@@ -20,6 +20,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyUploadIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Plus,
   Trash2,
@@ -358,7 +359,8 @@ export default function WhiteboardPage({
                 <div className="mb-1 flex shrink-0 items-center px-1">
                   <span className="text-xs font-medium text-muted-foreground">Boards</span>
                 </div>
-                <ul className="min-h-0 flex-1 space-y-0.5 overflow-y-auto">
+                <ScrollArea hideScrollbar className="min-h-0 flex-1">
+                  <ul className="space-y-0.5">
                   {boards.map((board) => (
                     <BoardItem
                       key={board.id}
@@ -369,7 +371,8 @@ export default function WhiteboardPage({
                       onDelete={handleBoardDelete}
                     />
                   ))}
-                </ul>
+                  </ul>
+                </ScrollArea>
               </PmPanel>
             ) : null}
 

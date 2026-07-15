@@ -2,6 +2,7 @@
 
 import { Check, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Step {
   number: number;
@@ -46,7 +47,8 @@ export function FormSidebar({ steps, onStepClick }: FormSidebarProps) {
         </div>
       </div>
 
-      <nav className="flex-1 overflow-y-auto py-2">
+      <ScrollArea hideScrollbar className="flex-1 min-h-0">
+        <nav className="py-2">
         {steps.map((step, idx) => (
           <button
             key={idx}
@@ -94,7 +96,8 @@ export function FormSidebar({ steps, onStepClick }: FormSidebarProps) {
             </div>
           </button>
         ))}
-      </nav>
+        </nav>
+      </ScrollArea>
     </aside>
   );
 }

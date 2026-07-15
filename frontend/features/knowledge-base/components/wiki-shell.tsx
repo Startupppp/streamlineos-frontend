@@ -255,7 +255,11 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
           </SheetContent>
         </Sheet>
 
-        <main className="flex-1 min-w-0 overflow-y-auto">{children}</main>
+        <main className="flex-1 min-w-0 flex flex-col overflow-hidden">
+          <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
+            <div className="overscroll-contain">{children}</div>
+          </ScrollArea>
+        </main>
 
         <QuickFindDialog open={quickFindOpen} onOpenChange={handleQuickFindOpenChange} />
       </div>

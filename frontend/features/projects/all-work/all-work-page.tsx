@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { User } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { BulkActionBar } from "@/features/projects/backlog/bulk-action-bar";
@@ -218,7 +219,8 @@ export function AllWorkPage() {
                   onClear={handleClearSelection}
                 />
               ) : null}
-              <div className="min-h-0 flex-1 overflow-y-auto">
+              <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
+                <div className="flex min-h-full flex-1 flex-col overscroll-contain">
                 <AnimatePresence mode="wait" initial={false}>
                   {view === "list" ? (
                     <motion.div
@@ -266,7 +268,8 @@ export function AllWorkPage() {
                     </motion.div>
                   ) : null}
                 </AnimatePresence>
-              </div>
+                </div>
+              </ScrollArea>
 
               <PaginationFooter
                 page={currentPage}

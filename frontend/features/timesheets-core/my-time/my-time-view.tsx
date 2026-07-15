@@ -161,7 +161,7 @@ export function MyTimeView() {
           </div>
         ) : (
           <Tabs defaultValue="week">
-            <TabsList className="h-8">
+            <TabsList>
               <TabsTrigger value="timer" className="text-xs">Timer</TabsTrigger>
               <TabsTrigger value="week" className="text-xs">Week</TabsTrigger>
               <TabsTrigger value="day" className="text-xs">Day</TabsTrigger>

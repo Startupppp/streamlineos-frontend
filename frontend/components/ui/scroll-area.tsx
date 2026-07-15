@@ -9,27 +9,46 @@ function ScrollArea({
   className,
   children,
   hideScrollbar = false,
+  fill = false,
   scrollbarClassName,
+  viewportRef,
+  viewportClassName,
+  onViewportScroll,
   ...props
 }: React.ComponentProps<typeof ScrollAreaPrimitive.Root> & {
   hideScrollbar?: boolean
+  fill?: boolean
   scrollbarClassName?: string
+  viewportRef?: React.Ref<HTMLDivElement>
+  viewportClassName?: string
+  onViewportScroll?: React.UIEventHandler<HTMLDivElement>
 }) {
+  const content = fill ? (
+    <div className="flex h-full min-h-0 w-full flex-1 flex-col">{children}</div>
+  ) : (
+    children
+  )
+
   return (
     <ScrollAreaPrimitive.Root
       data-slot="scroll-area"
-      className={cn("relative overflow-hidden", className)}
+      data-fill={fill ? "true" : undefined}
+      className={cn("relative overflow-hidden", fill && "h-full", className)}
       {...props}
     >
       <ScrollAreaPrimitive.Viewport
+        ref={viewportRef}
         data-slot="scroll-area-viewport"
         style={{ maxHeight: "inherit" }}
+        onScroll={onViewportScroll}
         className={cn(
           "focus-visible:ring-ring/50 size-full rounded-[inherit] transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:outline-1",
+          fill && "h-full",
           hideScrollbar && "scrollbar-hide",
+          viewportClassName,
         )}
       >
-        {children}
+        {content}
       </ScrollAreaPrimitive.Viewport>
       {hideScrollbar ? null : (
         <ScrollBar className={scrollbarClassName} />
@@ -67,3 +86,6 @@ function ScrollBar({
 }
 
 export { ScrollArea, ScrollBar }
+
+/** Use with `fill` on page-body / tab-content ScrollAreas that host empty states. */
+export const SCROLL_AREA_PAGE_BODY_CLASS = "flex-1 min-h-0"

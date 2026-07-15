@@ -184,7 +184,7 @@ export function ReviewsTab() {
     <div className="flex flex-col flex-1 min-h-0 gap-4">
       <div className="flex items-center justify-between gap-2 flex-wrap shrink-0">
         <Tabs value={statusFilter} onValueChange={setStatusFilter}>
-          <TabsList className="h-8 bg-muted/50">
+          <TabsList className="bg-muted/50">
             <TabsTrigger value="all" className="text-[11px] px-3">All ({reviewsList.length})</TabsTrigger>
             <TabsTrigger value="DRAFT" className="text-[11px] px-3">Draft</TabsTrigger>
             <TabsTrigger value="IN_PROGRESS" className="text-[11px] px-3">In Progress</TabsTrigger>

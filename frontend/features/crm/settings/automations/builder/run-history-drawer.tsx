@@ -7,6 +7,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetBody,
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -39,7 +40,7 @@ export const RunHistoryDrawer = memo(function RunHistoryDrawer({ ruleId, open, o
         <SheetHeader className="shrink-0 px-5 py-4 border-b">
           <SheetTitle className="text-base">Run History</SheetTitle>
         </SheetHeader>
-        <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-3">
+        <SheetBody className="px-5 py-4 space-y-3">
           {error ? (
             <p className="text-sm text-destructive">{getErrorMessage(error)}</p>
           ) : isLoading ? (
@@ -95,7 +96,7 @@ export const RunHistoryDrawer = memo(function RunHistoryDrawer({ ruleId, open, o
               );
             })
           )}
-        </div>
+        </SheetBody>
       </SheetContent>
     </Sheet>
   );

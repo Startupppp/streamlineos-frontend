@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -126,7 +127,13 @@ export default function LiveChatWidgetPage() {
             </div>
           ) : (
             <div className="flex flex-col h-[480px]">
-              <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-2">
+              <ScrollArea
+                hideScrollbar
+                className="flex-1 min-h-0"
+                viewportRef={scrollRef}
+                viewportClassName="px-4 py-4"
+              >
+                <div className="space-y-2">
                 {sessionQuery.isLoading && messages.length === 0 ? (
                   <div className="space-y-2">
                     {[0, 1].map((i) => (
@@ -152,7 +159,8 @@ export default function LiveChatWidgetPage() {
                     </div>
                   ))
                 )}
-              </div>
+                </div>
+              </ScrollArea>
               <div className="border-t border-border/60 p-3 flex items-end gap-2">
                 <Textarea
                   rows={1}

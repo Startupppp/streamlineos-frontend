@@ -541,7 +541,7 @@ function DocumentsExtendedSection() {
     <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
       <CardContent className="p-4">
         <Tabs defaultValue="letters">
-          <TabsList className="h-8 mb-4">
+          <TabsList className="mb-4">
             <TabsTrigger value="letters" className="text-xs gap-1.5">
               <Mail className="h-3 w-3" />
               Letters

@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { format, isWithinInterval } from "date-fns";
 import { CalendarDays, History } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import type { CalendarListItem } from "@/hooks/api/calendar";
 
 const EVENT_COLORS: Record<string, string> = {
@@ -68,7 +69,8 @@ export function CalendarEventsPanel({
   const EmptyIcon = mode === "history" ? History : CalendarDays;
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto p-4">
+    <ScrollArea fill hideScrollbar className="min-h-0 flex-1">
+      <div className="overscroll-contain p-4">
       {isEmpty ? (
         <div className="flex flex-col items-center justify-center h-full min-h-[16rem] text-center px-4">
           <EmptyIcon className="h-10 w-10 text-muted-foreground/40 mb-3" />
@@ -134,6 +136,7 @@ export function CalendarEventsPanel({
           ))}
         </div>
       )}
-    </div>
+      </div>
+    </ScrollArea>
   );
 }
