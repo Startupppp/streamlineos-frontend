@@ -64,8 +64,8 @@ export const walkthroughSteps = [
     eyebrow: "Deliver",
     title: "Run sprints without leaving the workspace",
     description:
-      "Kanban boards, sprints, epics, and time tracking live alongside HR and CRM. Velocity, burndown, and work distribution surfaced for managers — not weekly Excel exports.",
-    bullets: ["Drag-and-drop kanban", "Live sprint burndown", "Time tracked to tickets"],
+      "Kanban boards, sprints, epics, and time tracking live alongside HR and CRM. Velocity and work distribution surfaced for managers — not weekly Excel exports.",
+    bullets: ["Drag-and-drop kanban", "Sprint velocity tracking", "Time tracked to tickets"],
   },
   {
     eyebrow: "Close",

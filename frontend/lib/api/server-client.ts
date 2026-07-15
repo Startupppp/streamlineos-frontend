@@ -1,9 +1,94 @@
 import "server-only";
-import axios, { type AxiosRequestConfig } from "axios";
+import axios, { isAxiosError, type AxiosRequestConfig } from "axios";
 import { SignJWT } from "jose";
 import { auth } from "@/lib/auth";
+import { ApiError } from "@/lib/api-client";
 
 const BACKEND = process.env.NEXT_PUBLIC_API_URL;
+
+const NETWORK_ERROR_PATTERN =
+  /ECONNREFUSED|ENOTFOUND|ETIMEDOUT|EHOSTUNREACH|ECONNRESET|socket hang up|Network Error|fetch failed/i;
+
+function backendUnreachableMessage(): string {
+  const target = BACKEND ?? "NEXT_PUBLIC_API_URL";
+  return `Backend API is unreachable at ${target}. Start the NestJS server (pnpm -C backend dev) and confirm NEXT_PUBLIC_API_URL.`;
+}
+
+function extractNestedErrorMessage(error: unknown): string {
+  if (error instanceof AggregateError) {
+    for (const inner of error.errors) {
+      const nested = extractNestedErrorMessage(inner);
+      if (nested) return nested;
+    }
+  }
+  if (error && typeof error === "object" && "errors" in error) {
+    const errors = (error as { errors?: unknown }).errors;
+    if (Array.isArray(errors)) {
+      for (const inner of errors) {
+        const nested = extractNestedErrorMessage(inner);
+        if (nested) return nested;
+      }
+    }
+  }
+  if (error instanceof Error) return error.message.trim();
+  return "";
+}
+
+function hasNetworkErrorCode(error: unknown): boolean {
+  if (!error || typeof error !== "object" || !("code" in error)) return false;
+  const code = (error as { code?: unknown }).code;
+  return (
+    code === "ECONNREFUSED" ||
+    code === "ENOTFOUND" ||
+    code === "ETIMEDOUT" ||
+    code === "EHOSTUNREACH" ||
+    code === "ECONNRESET"
+  );
+}
+
+function isBackendUnreachable(error: unknown): boolean {
+  if (hasNetworkErrorCode(error)) return true;
+  const message = extractNestedErrorMessage(error);
+  return NETWORK_ERROR_PATTERN.test(message);
+}
+
+function parseErrorBody(rawData: unknown): { message?: string; code?: string; details?: unknown } {
+  if (rawData === null || typeof rawData !== "object") return {};
+  const body = rawData as Record<string, unknown>;
+  let message: string | undefined;
+  if (typeof body.message === "string" && body.message) {
+    message = body.message;
+  } else if (Array.isArray(body.message) && body.message.length > 0) {
+    message = body.message.filter((entry): entry is string => typeof entry === "string").join(", ");
+  } else if (typeof body.error === "string" && body.error) {
+    message = body.error;
+  }
+  const code = typeof body.code === "string" ? body.code : undefined;
+  const details = "details" in body ? body.details : undefined;
+  return { message, code, details };
+}
+
+function normalizeRequestError(error: unknown): never {
+  if (error instanceof ApiError) throw error;
+
+  if (isAxiosError(error)) {
+    const { message: bodyMessage, code, details } = parseErrorBody(error.response?.data);
+    const status = error.response?.status;
+    const message = bodyMessage ?? error.message;
+    if (!error.response && isBackendUnreachable(error)) {
+      throw new ApiError(backendUnreachableMessage(), undefined, "BACKEND_UNREACHABLE");
+    }
+    throw new ApiError(message, status, code, details);
+  }
+
+  if (isBackendUnreachable(error)) {
+    throw new ApiError(backendUnreachableMessage(), undefined, "BACKEND_UNREACHABLE");
+  }
+
+  const message = extractNestedErrorMessage(error);
+  if (message) throw new ApiError(message);
+  throw new ApiError("Something went wrong. Please try again.");
+}
 
 async function mintBackendToken(): Promise<string | null> {
   const session = await auth();
@@ -50,15 +135,21 @@ function unwrapResponse<T>(body: unknown): T {
 
 async function request<T>(method: string, path: string, body?: unknown, params?: Record<string, unknown>): Promise<T> {
   const token = await mintBackendToken();
-  if (!token) throw new Error("Unauthorized: no backend session");
+  if (!token) {
+    throw new ApiError("Your session expired. Please sign in again.", 401, "AUTH_NO_SESSION");
+  }
   const config: AxiosRequestConfig = {
     method,
     url: buildUrl(path, params),
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     data: body,
   };
-  const res = await axios(config);
-  return unwrapResponse<T>(res.data);
+  try {
+    const res = await axios(config);
+    return unwrapResponse<T>(res.data);
+  } catch (error: unknown) {
+    normalizeRequestError(error);
+  }
 }
 
 export const serverApiClient = {
@@ -76,8 +167,12 @@ async function publicRequest<T>(method: string, path: string, body?: unknown, pa
     headers: { "Content-Type": "application/json" },
     data: body,
   };
-  const res = await axios(config);
-  return unwrapResponse<T>(res.data);
+  try {
+    const res = await axios(config);
+    return unwrapResponse<T>(res.data);
+  } catch (error: unknown) {
+    normalizeRequestError(error);
+  }
 }
 
 export const serverPublicFetch = {

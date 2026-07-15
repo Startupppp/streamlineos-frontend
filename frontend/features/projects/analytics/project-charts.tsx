@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback } from "react";
+import { memo } from "react";
 import {
   BarChart,
   PieChart,
@@ -18,12 +18,8 @@ import {
   ScatterChart,
   Scatter,
 } from "recharts";
-import type { Sprint } from "@/types/projects";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { STATE_COLORS, PRIORITY_COLORS, CHART_COLORS } from "./project-stats";
-import { PmPanel } from "@/features/projects/shared/pm-chrome";
-import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
-import { cn } from "@/lib/utils";
 
 const TOOLTIP_STYLE = {
   backgroundColor: "hsl(var(--card))",
@@ -33,25 +29,6 @@ const TOOLTIP_STYLE = {
 };
 
 const CHART_H = 220;
-
-interface ChartCardProps {
-  title: string;
-  children: React.ReactNode;
-  colSpan?: "full";
-  actions?: React.ReactNode;
-}
-
-function ChartCard({ title, children, colSpan, actions }: ChartCardProps) {
-  return (
-    <PmPanel className={cn("p-4", colSpan === "full" && "md:col-span-2")}>
-      <div className="mb-3 flex min-w-0 items-center justify-between gap-2">
-        <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>{title}</h3>
-        {actions}
-      </div>
-      {children}
-    </PmPanel>
-  );
-}
 
 export interface StateChartRow {
   state: string;
@@ -268,104 +245,6 @@ export const CycleVelocityChart = memo(function CycleVelocityChart({
   );
 });
 
-export interface BurndownChartRow {
-  date: string;
-  remaining: number;
-  ideal: number;
-}
-
-interface SprintBurndownProps {
-  data: BurndownChartRow[];
-  sprints: Sprint[] | undefined;
-  sprintId: number;
-  onSprintChange: (id: number) => void;
-}
-
-export const SprintBurndownChart = memo(function SprintBurndownChart({
-  data,
-  sprints,
-  sprintId,
-  onSprintChange,
-}: SprintBurndownProps) {
-  const handleSprintChange = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) =>
-      onSprintChange(Number(e.target.value)),
-    [onSprintChange],
-  );
-
-  const sprintSelector =
-    sprints && sprints.length > 0 ? (
-      <select
-        className="text-xs rounded-md border border-border bg-background px-2 py-1 text-foreground h-7"
-        value={sprintId}
-        onChange={handleSprintChange}
-        aria-label="Select sprint"
-      >
-        {sprints.map((s) => (
-          <option key={s.id} value={s.id}>
-            {s.name}
-            {s.status === "ACTIVE" ? " (Active)" : ""}
-          </option>
-        ))}
-      </select>
-    ) : null;
-
-  return (
-    <ChartCard title="Sprint Burndown" colSpan="full" actions={sprintSelector}>
-      {data.length > 0 ? (
-        <ResponsiveContainer width="100%" height={CHART_H}>
-          <AreaChart
-            data={data}
-            margin={{ top: 4, right: 4, left: -16, bottom: 0 }}
-          >
-            <CartesianGrid
-              strokeDasharray="3 3"
-              className="stroke-border"
-              vertical={false}
-            />
-            <XAxis
-              dataKey="date"
-              tick={{ fontSize: 11 }}
-              className="fill-muted-foreground"
-            />
-            <YAxis tick={{ fontSize: 11 }} className="fill-muted-foreground" />
-            <Tooltip contentStyle={TOOLTIP_STYLE} />
-            <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
-            <Area
-              type="monotone"
-              dataKey="ideal"
-              stroke="#94a3b8"
-              fill="#94a3b8"
-              fillOpacity={0.06}
-              strokeWidth={1.5}
-              strokeDasharray="5 5"
-              name="Ideal"
-            />
-            <Area
-              type="monotone"
-              dataKey="remaining"
-              stroke="#1d4ed8"
-              fill="#1d4ed8"
-              fillOpacity={0.12}
-              strokeWidth={2}
-              name="Remaining"
-            />
-          </AreaChart>
-        </ResponsiveContainer>
-      ) : (
-        <ChartEmptyState
-          compact
-          message={
-            sprints && sprints.length === 0
-              ? "No sprints found for this project"
-              : "No burndown data for this sprint"
-          }
-        />
-      )}
-    </ChartCard>
-  );
-});
-
 export interface EstimateChartRow {
   label: string;
   estimate: number;
@@ -424,5 +303,3 @@ export const EstimateVsActualChart = memo(function EstimateVsActualChart({
 });
 
 export { STATE_COLORS, PRIORITY_COLORS, CHART_COLORS };
-
-export { ChartCard };

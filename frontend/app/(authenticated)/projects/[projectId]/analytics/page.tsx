@@ -1,15 +1,10 @@
 "use client";
 
-import { use, useMemo, useState } from "react";
-import {
-  useProjectAnalytics,
-  useSprints,
-  useSprintBurndown,
-} from "@/hooks/api/projects";
+import { use, useMemo } from "react";
+import { useProjectAnalytics } from "@/hooks/api/projects";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import type { Sprint, SprintBurndownPoint } from "@/types/projects";
 import {
   AnalyticsKpiStrip,
   AnalyticsKpiStripSkeleton,
@@ -20,7 +15,6 @@ import {
   VolumeOverTimeChart,
   AssigneeCompletionChart,
   CycleVelocityChart,
-  SprintBurndownChart,
   EstimateVsActualChart,
   STATE_COLORS,
   PRIORITY_COLORS,
@@ -43,17 +37,6 @@ export default function AnalyticsPage({
   const projectId = parseInt(projectIdStr, 10);
 
   const { data: analytics, isLoading } = useProjectAnalytics(projectId);
-  const { data: sprints } = useSprints(projectId);
-  const [selectedSprintId, setSelectedSprintId] = useState<number | null>(null);
-
-  const activeSprint = useMemo(() => {
-    if (!sprints || sprints.length === 0) return null;
-    const active = sprints.find((s: Sprint) => s.status === "ACTIVE");
-    return active ?? sprints[sprints.length - 1];
-  }, [sprints]);
-
-  const sprintId = selectedSprintId ?? activeSprint?.id ?? 0;
-  const { data: burndownData } = useSprintBurndown(projectId, sprintId);
 
   const stateData = useMemo(() => {
     if (!analytics?.stateDistribution) return [];
@@ -107,29 +90,6 @@ export default function AnalyticsPage({
       points: entry.completedPoints,
     }));
   }, [analytics?.cycleVelocity]);
-
-  const burndownChartData = useMemo(() => {
-    if (!burndownData) return [];
-    const idealMap = new Map(
-      burndownData.idealBurndown.map((p: SprintBurndownPoint) => [
-        typeof p.date === "string"
-          ? p.date.slice(0, 10)
-          : new Date(p.date).toISOString().slice(0, 10),
-        p.points,
-      ]),
-    );
-    return burndownData.actualBurndown.map((p: SprintBurndownPoint) => {
-      const dateKey =
-        typeof p.date === "string"
-          ? p.date.slice(0, 10)
-          : new Date(p.date).toISOString().slice(0, 10);
-      return {
-        date: dateKey,
-        remaining: Math.max(0, p.points),
-        ideal: Math.max(0, idealMap.get(dateKey) ?? 0),
-      };
-    });
-  }, [burndownData]);
 
   const estimateData = useMemo(() => {
     if (!analytics?.estimateVsActual) return [];
@@ -211,13 +171,6 @@ export default function AnalyticsPage({
             <ChartShell title="Estimate vs Actual">
               <EstimateVsActualChart data={estimateData} />
             </ChartShell>
-
-            <SprintBurndownChart
-              data={burndownChartData}
-              sprints={sprints}
-              sprintId={sprintId}
-              onSprintChange={setSelectedSprintId}
-            />
           </div>
         </PmSection>
       </PmPageShell>

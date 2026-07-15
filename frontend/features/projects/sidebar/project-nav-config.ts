@@ -204,7 +204,7 @@ export function buildMoreGroups(
 
   const configure: ProjectNavItem[] = [
     { id: "modules", label: "Modules", href: `${baseUrl}/modules`, icon: PackageOpenIcon },
-    { id: "wiki", label: "Wiki", href: `${baseUrl}/pages`, icon: BookOpenTextIcon },
+    { id: "wiki", label: "Wiki", href: "/knowledge", icon: BookOpenTextIcon },
     { id: "whiteboard", label: "Whiteboard", href: `${baseUrl}/whiteboard`, icon: PenTool },
     { id: "views", label: "Saved views", href: `${baseUrl}/views`, icon: LayoutListIcon },
     ...(perms.canForms

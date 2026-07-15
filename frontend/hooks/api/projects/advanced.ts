@@ -8,7 +8,6 @@ import type {
   Epic,
   Cycle,
   Module,
-  ProjectPage,
   ProjectView,
   IntakeRequest,
   ProjectAnalytics,
@@ -16,8 +15,6 @@ import type {
   UpdateCycleInput,
   CreateModuleInput,
   UpdateModuleInput,
-  CreatePageInput,
-  UpdatePageInput,
   CreateViewInput,
   UpdateViewInput,
   CreateWorkspaceViewInput,
@@ -151,49 +148,6 @@ export function useUpdateModule(options?: Parameters<typeof useMutation>[0]) {
       });
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.detail(variables.projectId),
-      });
-    },
-    ...options,
-  });
-}
-
-export function usePages(
-  projectId: number,
-  options?: Omit<UseQueryOptions<ProjectPage[]>, "queryKey" | "queryFn" | "enabled">
-) {
-  return useQuery<ProjectPage[]>({
-    queryKey: queryKeys.projects.pages(projectId),
-    queryFn: () => apiClient.get<ProjectPage[]>(`/projects/${projectId}/pages`),
-    enabled: !!projectId,
-    staleTime: 30_000,
-    ...options,
-  });
-}
-
-export function useCreatePage(options?: Parameters<typeof useMutation>[0]) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationKey: ["projects", "pages", "create"],
-    mutationFn: ({ projectId, ...data }: CreatePageInput) =>
-      apiClient.post<ProjectPage>(`/projects/${projectId}/pages`, data),
-    onSuccess: (_data: unknown, variables: CreatePageInput) => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.pages(variables.projectId),
-      });
-    },
-    ...options,
-  });
-}
-
-export function useUpdatePage(options?: Parameters<typeof useMutation>[0]) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationKey: ["projects", "pages", "update"],
-    mutationFn: ({ id, projectId, ...data }: UpdatePageInput & { projectId: number }) =>
-      apiClient.patch<ProjectPage>(`/projects/${projectId}/pages/${id}`, data),
-    onSuccess: (_data: unknown, variables: UpdatePageInput & { projectId: number }) => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.projects.pages(variables.projectId),
       });
     },
     ...options,

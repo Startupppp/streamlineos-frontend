@@ -17,7 +17,10 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { toast } from "sonner";
 import { TiptapEditor } from "@/components/editor/tiptap-editor";
 import { useCreateBug, useUpdateBug } from "@/hooks/api/projects/bugs";
+import { useProject } from "@/hooks/api/projects/projects";
 import { ProjectMemberSelect } from "@/components/members/project-member-select";
+import { TicketCombobox } from "@/components/ui/ticket-combobox";
+import { ReleaseCombobox } from "@/components/ui/release-combobox";
 import type { Bug, BugSeverity, BugPriority, BugStatus } from "@/types/projects";
 
 const SEVERITIES: BugSeverity[] = ["blocker", "critical", "major", "minor", "trivial"];
@@ -70,6 +73,8 @@ interface BugSheetProps {
 export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: BugSheetProps) {
   const create = useCreateBug();
   const update = useUpdateBug();
+  const { data: project } = useProject(projectId);
+  const projectKey = project?.key ?? "";
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -273,16 +278,38 @@ export function BugSheet({ projectId, open, onOpenChange, editBug, prefill }: Bu
 
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-[11px]">Affected Release ID</Label>
-                <Input {...form.register("affectedReleaseId")} type="number" className="h-8 text-[11px]" placeholder="ID" />
+                <Label className="text-[11px]">Affected Release</Label>
+                <ReleaseCombobox
+                  projectId={projectId}
+                  value={form.watch("affectedReleaseId")}
+                  onChange={(v) => form.setValue("affectedReleaseId", v)}
+                  placeholder="Select release…"
+                  allowClear
+                  className="h-8 text-[11px]"
+                />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[11px]">Fixed Release ID</Label>
-                <Input {...form.register("fixedReleaseId")} type="number" className="h-8 text-[11px]" placeholder="ID" />
+                <Label className="text-[11px]">Fixed Release</Label>
+                <ReleaseCombobox
+                  projectId={projectId}
+                  value={form.watch("fixedReleaseId")}
+                  onChange={(v) => form.setValue("fixedReleaseId", v)}
+                  placeholder="Select release…"
+                  allowClear
+                  className="h-8 text-[11px]"
+                />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[11px]">Linked Ticket ID</Label>
-                <Input {...form.register("linkedTicketId")} type="number" className="h-8 text-[11px]" placeholder="ID" />
+                <Label className="text-[11px]">Linked Ticket</Label>
+                <TicketCombobox
+                  projectId={projectId}
+                  projectKey={projectKey}
+                  value={form.watch("linkedTicketId")}
+                  onChange={(v) => form.setValue("linkedTicketId", v)}
+                  placeholder="Link a ticket…"
+                  allowClear
+                  className="h-8 text-[11px]"
+                />
               </div>
             </div>
           </form>

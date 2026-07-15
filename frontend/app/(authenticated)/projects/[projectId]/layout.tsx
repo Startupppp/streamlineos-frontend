@@ -1,10 +1,19 @@
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
-import { isAxiosError } from "axios";
 import { ProjectSidebar } from "@/components/layout/project-sidebar";
+import { isApiError } from "@/lib/api-client";
 import { serverApiClient } from "@/lib/api/server-client";
 import type { ProjectWithDetails } from "@/types/projects";
 import { AccessDeniedView } from "@/features/projects/project-detail/access-denied-view";
+import { BackendUnavailableView } from "@/features/projects/project-detail/backend-unavailable-view";
+
+function getApiErrorDetails(error: { details?: unknown }): Record<string, unknown> | undefined {
+  const detailsRaw = error.details;
+  if (detailsRaw !== null && typeof detailsRaw === "object") {
+    return detailsRaw as Record<string, unknown>;
+  }
+  return undefined;
+}
 
 export default async function ProjectLayout({
   children,
@@ -24,18 +33,14 @@ export default async function ProjectLayout({
   let project: ProjectWithDetails | null = null;
   try {
     project = await serverApiClient.get<ProjectWithDetails>(`/projects/${numId}`);
-  } catch (err) {
-    if (isAxiosError(err)) {
-      const status = err.response?.status;
-      const rawData: unknown = err.response?.data;
-      const body = rawData !== null && typeof rawData === "object"
-        ? (rawData as Record<string, unknown>)
-        : undefined;
-      const code = typeof body?.code === "string" ? body.code : undefined;
-      const detailsRaw = body?.details;
-      const details = detailsRaw !== null && typeof detailsRaw === "object"
-        ? (detailsRaw as Record<string, unknown>)
-        : undefined;
+  } catch (err: unknown) {
+    if (isApiError(err)) {
+      if (err.code === "BACKEND_UNREACHABLE") {
+        return <BackendUnavailableView />;
+      }
+      const status = err.status;
+      const code = err.code;
+      const details = getApiErrorDetails(err);
       const reason = typeof details?.reason === "string" ? details.reason : undefined;
       if (status === 404 || code === "PROJECTS_NOT_FOUND") {
         return notFound();

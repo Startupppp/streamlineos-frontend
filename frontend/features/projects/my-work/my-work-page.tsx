@@ -120,10 +120,11 @@ export function MyWorkPage() {
     <PageWrapper
       title="My Work"
       subtitle="Your assigned tickets across all projects"
+      noInternalScroll
     >
-      <PmPageShell>
+      <PmPageShell className="min-h-0 flex-1 gap-3 overflow-hidden">
         {activeTab === "assigned" && !isLoading && !isError && data && data.length > 0 ? (
-          <PmSection index={0}>
+          <PmSection index={0} className="shrink-0">
             <StatCardGrid cols={4}>
               <motion.div
                 variants={sectionVariants}
@@ -181,9 +182,13 @@ export function MyWorkPage() {
           </PmSection>
         ) : null}
 
-        <PmSection index={1}>
-          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full gap-3">
-            <TabsList className="mb-0 h-8 min-h-8 gap-0.5 rounded-lg p-0.5">
+        <PmSection index={1} className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <Tabs
+            value={activeTab}
+            onValueChange={handleTabChange}
+            className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden"
+          >
+            <TabsList className="mb-0 h-8 min-h-8 shrink-0 gap-0.5 rounded-lg p-0.5">
               {WORK_TABS.map((tab) => (
                 <TabsTrigger
                   key={tab}
@@ -195,37 +200,39 @@ export function MyWorkPage() {
               ))}
             </TabsList>
 
-            {activeTab === "assigned" ? (
-              isLoading ? (
-                <AllWorkListSkeleton />
-              ) : isError ? (
-                <ErrorState
-                  className="min-h-[14rem]"
-                  title="Failed to load your work"
-                  description="Could not fetch your assigned tickets. Please try again."
-                  onRetry={handleRetry}
-                />
-              ) : !data || data.length === 0 ? (
-                <EmptyState
-                  illustrationPreset="projects"
-                  title="Nothing assigned to you"
-                  description="Tickets assigned to you across all projects will appear here."
-                  className="min-h-[14rem]"
-                />
-              ) : (
-                <div className="flex flex-col gap-3">
-                  {BUCKET_ORDER.map((bucket) => {
-                    const items = grouped?.[bucket] ?? [];
-                    if (items.length === 0) return null;
-                    return <BucketSection key={bucket} bucket={bucket} items={items} />;
-                  })}
-                </div>
-              )
-            ) : null}
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-thin">
+              {activeTab === "assigned" ? (
+                isLoading ? (
+                  <AllWorkListSkeleton />
+                ) : isError ? (
+                  <ErrorState
+                    className="min-h-[14rem]"
+                    title="Failed to load your work"
+                    description="Could not fetch your assigned tickets. Please try again."
+                    onRetry={handleRetry}
+                  />
+                ) : !data || data.length === 0 ? (
+                  <EmptyState
+                    illustrationPreset="projects"
+                    title="Nothing assigned to you"
+                    description="Tickets assigned to you across all projects will appear here."
+                    className="min-h-[14rem]"
+                  />
+                ) : (
+                  <div className="flex flex-col gap-3">
+                    {BUCKET_ORDER.map((bucket) => {
+                      const items = grouped?.[bucket] ?? [];
+                      if (items.length === 0) return null;
+                      return <BucketSection key={bucket} bucket={bucket} items={items} />;
+                    })}
+                  </div>
+                )
+              ) : null}
 
-            {activeTab === "created" ? <CreatedTab /> : null}
-            {activeTab === "subscribed" ? <SubscribedTab /> : null}
-            {activeTab === "recent" ? <RecentTab /> : null}
+              {activeTab === "created" ? <CreatedTab /> : null}
+              {activeTab === "subscribed" ? <SubscribedTab /> : null}
+              {activeTab === "recent" ? <RecentTab /> : null}
+            </div>
           </Tabs>
         </PmSection>
       </PmPageShell>

@@ -137,23 +137,6 @@ export interface Module {
   progress?: number;
 }
 
-export interface ProjectPage {
-  id: number;
-  projectId: number;
-  orgId: string;
-  title: string;
-  content: unknown | null;
-  icon: string | null;
-  coverImage: string | null;
-  isPublic: boolean;
-  isPinned: boolean;
-  parentPageId: number | null;
-  createdBy: string;
-  updatedAt: string | Date | null;
-  createdAt: string | Date | null;
-  children?: ProjectPage[];
-}
-
 export interface ProjectView {
   id: number;
   projectId: number | null;
@@ -299,25 +282,6 @@ export interface UpdateModuleInput {
   leadId?: string | null;
   startDate?: string | null;
   endDate?: string | null;
-}
-
-export interface CreatePageInput {
-  projectId: number;
-  title: string;
-  content?: unknown;
-  icon?: string;
-  parentPageId?: number;
-}
-
-export interface UpdatePageInput {
-  id: number;
-  title?: string;
-  content?: unknown;
-  icon?: string | null;
-  coverImage?: string | null;
-  isPublic?: boolean;
-  isPinned?: boolean;
-  parentPageId?: number | null;
 }
 
 export interface CreateViewInput {

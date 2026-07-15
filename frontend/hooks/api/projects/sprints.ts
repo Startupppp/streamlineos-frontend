@@ -6,7 +6,6 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import type {
   Sprint,
-  SprintBurndown,
   CreateSprintInput,
   UpdateSprintInput,
 } from "@/types/projects";
@@ -114,23 +113,6 @@ export function useCompleteSprint(
         queryKey: queryKeys.projects.sprints(projectId),
       });
     },
-    ...options,
-  });
-}
-
-export function useSprintBurndown(
-  projectId: number,
-  sprintId: number,
-  options?: Omit<UseQueryOptions<SprintBurndown>, "queryKey" | "queryFn" | "enabled">
-) {
-  return useQuery<SprintBurndown>({
-    queryKey: queryKeys.projects.burndown(sprintId),
-    queryFn: () =>
-      apiClient.get<SprintBurndown>(
-        `/projects/${projectId}/sprints/${sprintId}/burndown`
-      ),
-    enabled: !!sprintId && !!projectId,
-    staleTime: 30_000,
     ...options,
   });
 }

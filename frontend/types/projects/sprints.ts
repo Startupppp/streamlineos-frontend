@@ -13,18 +13,6 @@ export interface Sprint {
   tickets?: Ticket[];
 }
 
-export interface SprintBurndownPoint {
-  date: Date | string;
-  points: number;
-}
-
-export interface SprintBurndown {
-  sprint: Sprint;
-  totalPoints: number;
-  idealBurndown: SprintBurndownPoint[];
-  actualBurndown: SprintBurndownPoint[];
-}
-
 export interface CreateSprintInput {
   projectId: number;
   name: string;

@@ -9,7 +9,6 @@ import {
   useProjectBoardTickets,
 } from "@/hooks/api/projects";
 import { CreateSprintDialog } from "@/features/projects/sprints/create-sprint-dialog";
-import { BurndownChart } from "@/features/projects/sprints/burndown-chart";
 import { VelocityChart } from "@/features/projects/sprints/velocity-chart";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptySprintIllustration } from "@/components/illustrations";
@@ -249,7 +248,6 @@ export default function SprintsPage({ params }: PageProps) {
                         onPlan={handleOpenPlanningSheet}
                         isUpdating={updateSprint.isPending}
                       />
-                      <BurndownChart sprintId={sprint.id} projectId={projectId} />
                     </div>
                   ))}
                 </PmStaggerList>

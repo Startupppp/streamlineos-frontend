@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { EllipsisIcon, PlusIcon } from "@animateicons/react/lucide";
+import { ChevronDownIcon, EllipsisIcon, PlusIcon } from "@animateicons/react/lucide";
 import {
   useProjectApprovals,
   useCreateApproval,
@@ -86,13 +86,31 @@ const ENTITY_OPTIONS: { value: string; label: string }[] = [
 
 const DECIDABLE = new Set<ApprovalStatus>(["pending", "requested", "escalated", "changes_requested"]);
 
-function RequestApprovalButton({ onClick }: { onClick: () => void }) {
+function RequestApprovalMenuButton({
+  onRequestTask,
+  onRequestRelease,
+  onRequestMilestone,
+}: {
+  onRequestTask: () => void;
+  onRequestRelease: () => void;
+  onRequestMilestone: () => void;
+}) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
-    <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={onClick} {...hoverHandlers}>
-      <PlusIcon ref={iconRef} size={14} />
-      Request Approval
-    </Button>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button size="sm" className="h-8 gap-1.5 text-xs" {...hoverHandlers}>
+          <PlusIcon ref={iconRef} size={14} />
+          Request approval
+          <ChevronDownIcon size={12} className="ml-0.5 opacity-70" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-52">
+        <DropdownMenuItem onClick={onRequestTask}>Request task approval</DropdownMenuItem>
+        <DropdownMenuItem onClick={onRequestRelease}>Request release approval</DropdownMenuItem>
+        <DropdownMenuItem onClick={onRequestMilestone}>Request milestone approval</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -186,8 +204,16 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
     setRequestOpen(true);
   }, []);
 
-  const handleRequestClick = useCallback(() => {
-    handleOpenRequest();
+  const handleRequestTask = useCallback(() => {
+    handleOpenRequest("task");
+  }, [handleOpenRequest]);
+
+  const handleRequestRelease = useCallback(() => {
+    handleOpenRequest("release");
+  }, [handleOpenRequest]);
+
+  const handleRequestMilestone = useCallback(() => {
+    handleOpenRequest("milestone");
   }, [handleOpenRequest]);
 
   const handleCreate = useCallback((input: CreateApprovalInput) => {
@@ -390,7 +416,15 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
       title="Approvals"
       subtitle="Review and manage approval requests for this project"
       filters={filtersBar}
-      actions={canRequest ? <RequestApprovalButton onClick={handleRequestClick} /> : undefined}
+      actions={
+        canRequest ? (
+          <RequestApprovalMenuButton
+            onRequestTask={handleRequestTask}
+            onRequestRelease={handleRequestRelease}
+            onRequestMilestone={handleRequestMilestone}
+          />
+        ) : undefined
+      }
     >
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
@@ -401,40 +435,19 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
           ) : isError ? (
             <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
           ) : items.length === 0 ? (
-            <div className={cn(PM_FILL_PANEL, "items-center gap-3")}>
-              <EmptyState
-                className="min-h-0 w-full flex-1"
-                illustrationPreset="approval"
-                title={isFiltered ? "No matching approvals" : "No approvals yet"}
-                description={
-                  isFiltered
-                    ? "No approvals match your filters."
-                    : "Use approvals to get sign-off on tasks, milestones, and releases before they ship."
-                }
-                action={
-                  isFiltered
-                    ? { label: "Clear filters", onClick: handleClearFilters }
-                    : canRequest
-                      ? { label: "Request task approval", onClick: () => handleOpenRequest("task") }
-                      : undefined
-                }
-                secondaryAction={
-                  !isFiltered && canRequest
-                    ? { label: "Request release approval", onClick: () => handleOpenRequest("release") }
-                    : undefined
-                }
-              />
-              {!isFiltered && canRequest ? (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="mb-4 h-7 shrink-0 text-xs text-muted-foreground"
-                  onClick={() => handleOpenRequest("milestone")}
-                >
-                  Request milestone approval
-                </Button>
-              ) : null}
-            </div>
+            <EmptyState
+              className={PM_FILL_PANEL}
+              illustrationPreset="approval"
+              title={isFiltered ? "No matching approvals" : "No approvals yet"}
+              description={
+                isFiltered
+                  ? "No approvals match your filters."
+                  : "Use approvals to get sign-off on tasks, milestones, and releases before they ship."
+              }
+              action={
+                isFiltered ? { label: "Clear filters", onClick: handleClearFilters } : undefined
+              }
+            />
           ) : (
             <PmPanel className={PM_FILL_PANEL}>
               <DataTable data={items} columns={columns} getRowKey={(row) => row.id} minWidth="720px" className="min-h-0 flex-1" />

@@ -103,9 +103,6 @@ export function useCreateTicket(
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.sprints(variables.projectId),
       });
-      queryClient.invalidateQueries({
-        queryKey: [...queryKeys.projects.all, "burndown"],
-      });
       queryClient.invalidateQueries({ queryKey: queryKeys.projectReports.all });
       queryClient.invalidateQueries({ queryKey: [...queryKeys.dashboard.all, "myIssues"] });
       options?.onSuccess?.(data, variables, context, mutFnCtx);
@@ -279,7 +276,6 @@ export function useUpdateTicket(
         variables.assigneeId !== undefined || variables.assigneeIds !== undefined;
       if (affectsSprintAggregates) {
         queryClient.invalidateQueries({ queryKey: queryKeys.projects.sprints(projectId) });
-        queryClient.invalidateQueries({ queryKey: [...queryKeys.projects.all, "burndown"] });
         queryClient.invalidateQueries({ queryKey: queryKeys.projectReports.all });
       }
       if (affectsSprintAggregates || affectsAssignment) {
@@ -312,9 +308,6 @@ export function useDeleteTicket(
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.sprints(projectId),
       });
-      queryClient.invalidateQueries({
-        queryKey: [...queryKeys.projects.all, "burndown"],
-      });
       queryClient.invalidateQueries({ queryKey: queryKeys.projectReports.all });
       queryClient.invalidateQueries({ queryKey: [...queryKeys.dashboard.all, "myIssues"] });
       options?.onSuccess?.(data, variables, context, mutFnCtx);
@@ -337,9 +330,6 @@ export function useMoveTicket(
       });
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.detail(variables.projectId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: [...queryKeys.projects.all, "burndown"],
       });
       queryClient.invalidateQueries({ queryKey: queryKeys.projectReports.all });
       options?.onSuccess?.(data, variables, context, mutFnCtx);
