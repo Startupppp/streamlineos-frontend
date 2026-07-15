@@ -36,7 +36,7 @@ export default function CandidateDetailLoading() {
         </Card>
 
         <div className="grid gap-4 md:grid-cols-2">
-          {Array.from({ length: 8 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <Card key={i}>
               <CardHeader>
                 <Skeleton className="h-5 w-32" />

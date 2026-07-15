@@ -119,7 +119,7 @@ export function CreatePathSheet({ open, onOpenChange }: Props) {
                   Name
                 </FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. Engineering Track" className="h-9 text-sm" {...field} />
+                  <Input placeholder="e.g. Engineering Track" className="h-8 text-sm" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -157,7 +157,7 @@ export function CreatePathSheet({ open, onOpenChange }: Props) {
                   <span className="normal-case font-normal text-muted-foreground tracking-normal">(optional)</span>
                 </FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. Engineering" className="h-9 text-sm" {...field} />
+                  <Input placeholder="e.g. Engineering" className="h-8 text-sm" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

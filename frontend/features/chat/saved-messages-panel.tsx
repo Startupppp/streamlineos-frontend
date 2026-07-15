@@ -7,24 +7,30 @@ import { Bookmark, Hash, Loader2, X } from "lucide-react";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useSavedMessages, useUnsaveMessage } from "@/hooks/api";
-import { getInitials, formatMessageTime } from "./chat-helpers";
+import { useSavedMessages, useUnsaveMessage, useChatOrgUsers } from "@/hooks/api";
+import { getInitials, formatMessageTime, buildChatUserMap, resolveChatUserName } from "./chat-helpers";
 import type { SavedMessage } from "@/types/chat";
 
 function SavedMessageCard({
   item,
   onUnsave,
   onJump,
+  resolveUserName,
 }: {
   item: SavedMessage;
   onUnsave: (messageId: number) => void;
   onJump: (channelId: number) => void;
+  resolveUserName: (
+    userId: string,
+    embedded?: { name?: string | null; email?: string | null } | null,
+  ) => string;
 }) {
   const handleJump = useCallback(() => {
     if (item.message.channel) onJump(item.message.channel.id);
   }, [item.message.channel, onJump]);
 
   const handleUnsave = useCallback(() => onUnsave(item.messageId), [item.messageId, onUnsave]);
+  const senderName = resolveUserName(item.message.senderId, item.message.sender);
 
   return (
     <div className="group px-4 py-3 hover:bg-muted/30 transition-colors border-b border-border/20 last:border-0">
@@ -32,12 +38,12 @@ function SavedMessageCard({
         <Avatar className="h-7 w-7 shrink-0 mt-0.5 border border-border/30">
           <AvatarImage src={resolveImageUrl(item.message.sender?.image)} />
           <AvatarFallback className="text-[8px] font-bold bg-muted text-muted-foreground">
-            {getInitials(item.message.sender?.name)}
+            {getInitials(senderName)}
           </AvatarFallback>
         </Avatar>
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-2 mb-0.5">
-            <span className="text-[12px] font-bold text-foreground">{item.message.sender?.name ?? "Unknown"}</span>
+            <span className="text-[12px] font-bold text-foreground">{senderName}</span>
             {item.message.channel && (
               <button
                 onClick={handleJump}
@@ -80,6 +86,15 @@ export function SavedMessagesPanel({
 }) {
   const { data, isLoading, isError, hasNextPage, isFetchingNextPage, fetchNextPage, refetch } = useSavedMessages();
   const unsave = useUnsaveMessage();
+  const { data: orgUsers } = useChatOrgUsers();
+  const chatUserMap = useMemo(() => buildChatUserMap(orgUsers), [orgUsers]);
+  const resolveUserName = useCallback(
+    (
+      userId: string,
+      embedded?: { name?: string | null; email?: string | null } | null,
+    ) => resolveChatUserName(userId, embedded, chatUserMap),
+    [chatUserMap],
+  );
 
   const items = useMemo(
     () => data?.pages.flatMap((p) => p.items).filter((item) => item.message) ?? [],
@@ -142,6 +157,7 @@ export function SavedMessagesPanel({
                 item={item}
                 onUnsave={handleUnsave}
                 onJump={onJumpToChannel}
+                resolveUserName={resolveUserName}
               />
             ))}
             {hasNextPage && (

@@ -25,6 +25,12 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import { useEngagementOverview, useMyMoodHistory, useOrgMoodAggregate } from "@/hooks/api/hr/engagement";
+import { useOrgMembers } from "@/hooks/api/organization";
+import {
+  getUserDisplayName,
+  getUserInitials,
+  type NamedUser,
+} from "@/features/projects/shared/resolve-user-name";
 import { MoodCheckinWidget } from "@/features/hr/engagement/mood-checkin-widget";
 import {
   RecognitionFeed,
@@ -102,10 +108,22 @@ function OverviewTab() {
   const { data: overview, isLoading } = useEngagementOverview();
   const { data: moodData, isLoading: moodLoading } = useOrgMoodAggregate();
   const { data: recognitions, isLoading: recLoading } = useRecognitions();
+  const { data: membersData } = useOrgMembers(1, 200);
   const canManage = useCan("hr:engagement:manage");
+
+  const memberById = useMemo(() => {
+    const map = new Map<string, NamedUser>();
+    for (const member of membersData?.data ?? []) {
+      map.set(member.userId, { name: member.name, email: member.email });
+    }
+    return map;
+  }, [membersData]);
 
   const recentCount = recognitions?.length ?? 0;
   const eom = overview?.employeeOfMonth?.top;
+  const eomMember = eom ? memberById.get(eom.userId) : undefined;
+  const eomName = eomMember ? getUserDisplayName(eomMember) : eom ? "Unknown" : null;
+  const eomInitials = eomMember ? getUserInitials(eomMember) : eom ? "?" : null;
 
   return (
     <div className="space-y-6">
@@ -187,13 +205,13 @@ function OverviewTab() {
                 <Skeleton className="h-3 w-24" />
               </div>
             </div>
-          ) : eom ? (
+          ) : eom && eomName ? (
             <div className="flex items-center gap-3">
               <div className="h-12 w-12 rounded-full bg-amber-100 dark:bg-amber-500/10 flex items-center justify-center text-amber-700 dark:text-amber-300 font-bold text-lg">
-                🏆
+                {eomInitials}
               </div>
               <div>
-                <p className="text-xs font-semibold text-foreground">{eom.userId}</p>
+                <p className="text-xs font-semibold text-foreground">{eomName}</p>
                 <p className="text-[11px] text-muted-foreground">
                   {eom.recognitions} kudos · {eom.points} pts
                 </p>
@@ -280,7 +298,9 @@ function MoodTab() {
         <p className="text-sm font-semibold text-foreground">My Mood History</p>
         {isLoading ? (
           <div className="space-y-2">
-            {[1, 2, 3].map((i) => <Skeleton key={i} className="h-9 rounded-lg" />)}
+            {Array.from({ length: 12 }).map((_, i) => (
+              <Skeleton key={i} className="h-9 rounded-lg" />
+            ))}
           </div>
         ) : !history || history.length === 0 ? (
           <p className="text-xs text-muted-foreground text-center py-6">No mood check-ins yet</p>

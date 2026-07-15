@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import {
   Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetDescription,
+  SheetBody,
 } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -210,7 +211,7 @@ function SequenceSheet({ open, onOpenChange, sequence }: SequenceSheetProps) {
           <SheetDescription>Configure a drip campaign for candidates.</SheetDescription>
         </SheetHeader>
 
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+        <SheetBody className="px-6 py-5 space-y-5">
           <div className="space-y-1.5">
             <Label htmlFor="seq-name">Name</Label>
             <Input id="seq-name" value={name} onChange={handleNameChange} placeholder="e.g. Post-Interview Follow-up" />
@@ -262,8 +263,7 @@ function SequenceSheet({ open, onOpenChange, sequence }: SequenceSheetProps) {
               />
             ))}
           </div>
-        </div>
-
+        </SheetBody>
         <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
           <Button variant="outline" onClick={handleCancelSheet} disabled={isPending}>Cancel</Button>
           <Button onClick={handleSubmit} disabled={isPending}>
@@ -401,7 +401,7 @@ export default function EmailSequencesPage() {
     return (
       <PageWrapper title="Email Sequences" subtitle="Automated drip campaigns for candidates." actions={pageActions}>
         <div className="space-y-3">
-          {Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}
+          {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}
         </div>
       </PageWrapper>
     );

@@ -30,7 +30,7 @@ export default function RecruitmentLoading() {
           ))}
         </div>
         <div className="grid md:grid-cols-2 gap-4">
-          {Array.from({ length: 8 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <Card key={i}>
               <CardContent className="pt-6 space-y-3">
                 <Skeleton className="h-5 w-40 mb-2" />

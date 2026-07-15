@@ -149,7 +149,7 @@ export default function SlaReportPage() {
       {isLoading ? (
         <div className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 10 }).map((_, i) => (
+            {Array.from({ length: 12 }).map((_, i) => (
               <Skeleton key={i} className="h-28 w-full rounded-lg" />
             ))}
           </div>

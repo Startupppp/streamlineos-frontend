@@ -80,7 +80,7 @@ function NumInput({ label, name, form, min, max, float }: NumInputProps) {
               onChange={handleChange}
               min={min}
               max={max}
-              className="h-9 text-sm"
+              className="h-8 text-sm"
             />
             {fieldState.error?.message && (
               <p className="text-xs text-destructive">{fieldState.error.message}</p>
@@ -218,7 +218,7 @@ export function ScenarioFormFields({
         <Input
           {...form.register("name")}
           placeholder="e.g. Base Case Q3"
-          className="h-9 text-sm"
+          className="h-8 text-sm"
         />
         {form.formState.errors.name?.message && (
           <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
@@ -232,7 +232,7 @@ export function ScenarioFormFields({
           <div className="space-y-1">
             <Label className="text-xs font-medium">Kind</Label>
             <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger className="h-9 text-sm">
+              <SelectTrigger className="h-8 text-sm">
                 <SelectValue placeholder="Select kind" />
               </SelectTrigger>
               <SelectContent>

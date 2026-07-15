@@ -15,9 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { EmptySprintIllustration } from "@/components/illustrations";
-import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetBody } from "@/components/ui/sheet";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -282,7 +280,7 @@ function FlowFormSheet({
           <SheetTitle>{editFlow ? "Edit Hiring Flow" : "New Hiring Flow"}</SheetTitle>
         </SheetHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 flex flex-col min-h-0">
-          <div className="flex-1 overflow-y-auto px-6 py-5 flex flex-col gap-4">
+          <SheetBody className="px-6 py-5 flex flex-col gap-4">
             <div>
               <Label className="text-xs font-medium">Flow Name <span className="text-destructive">*</span></Label>
               <Input className="mt-1" placeholder="e.g. Engineering Hiring Flow" {...register("name")} />
@@ -301,7 +299,7 @@ function FlowFormSheet({
                 )}
               />
             </div>
-          </div>
+          </SheetBody>
           <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
             <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>Cancel</Button>
             <Button type="submit" disabled={isPending}>
@@ -400,7 +398,7 @@ function RoundFormSheet({
           <SheetTitle>{editRound ? "Edit Round" : "Add Round"}</SheetTitle>
         </SheetHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 flex flex-col min-h-0">
-          <div className="flex-1 overflow-y-auto px-6 py-5 flex flex-col gap-4">
+          <SheetBody className="px-6 py-5 flex flex-col gap-4">
             <div>
               <Label className="text-xs font-medium">Round Name <span className="text-destructive">*</span></Label>
               <Input className="mt-1" placeholder="e.g. Technical Interview" {...register("name")} />
@@ -438,7 +436,7 @@ function RoundFormSheet({
               <Input className="mt-1" type="number" min={1} max={30} placeholder="e.g. 3" {...register("slaDays", { valueAsNumber: true, setValueAs: (v) => (v === "" || isNaN(Number(v)) ? undefined : Number(v)) })} />
               <p className="text-[10px] text-muted-foreground mt-1">Max days to complete this round</p>
             </div>
-          </div>
+          </SheetBody>
           <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
             <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>Cancel</Button>
             <Button type="submit" disabled={isPending}>
@@ -500,7 +498,7 @@ export default function HiringFlowsPage() {
     if (isLoading) {
       return (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 8 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <Skeleton key={i} className="h-40 rounded-xl" />
           ))}
         </div>

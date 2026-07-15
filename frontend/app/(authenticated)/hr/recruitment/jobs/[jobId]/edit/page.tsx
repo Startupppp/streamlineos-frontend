@@ -17,7 +17,7 @@ function EditJobContent({ jobId }: { jobId: number }) {
   if (isLoading) {
     return (
       <div className="flex-1 flex flex-col gap-4 p-6">
-        {Array.from({ length: 10 }).map((_, i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <Skeleton key={i} className="h-10 w-full" />
         ))}
       </div>

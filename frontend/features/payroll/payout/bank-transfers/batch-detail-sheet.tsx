@@ -1,13 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Sheet, SheetBody, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
 import { usePayoutBatch } from "@/hooks/api/payroll/payout-batches";
+import { useOrgMembers } from "@/hooks/api/organization";
 import { formatMoney } from "@/features/payroll/shared";
 import { ItemActionDialog, RevealCell } from "./batch-item-actions";
 import { cn } from "@/lib/utils";
+import {
+  getUserDisplayName,
+  type NamedUser,
+} from "@/features/projects/shared/resolve-user-name";
 import type { PayoutBatchItem, BankBatchStatus, BankItemStatus } from "@/types/payroll";
 
 const ITEM_STATUS_STYLES: Record<BankItemStatus, string> = {
@@ -36,13 +41,16 @@ interface BatchDetailSheetProps {
 function buildColumns(
   canManage: boolean,
   onAction: (type: "paid" | "failed", item: PayoutBatchItem) => void,
+  resolveMemberName: (userId: string) => string,
 ): DataTableColumn<PayoutBatchItem>[] {
   const cols: DataTableColumn<PayoutBatchItem>[] = [
     {
       key: "userId",
       header: "Employee",
-      className: "font-mono text-xs text-muted-foreground max-w-[120px] truncate",
-      cell: (row) => row.userId,
+      className: "max-w-[180px] truncate",
+      cell: (row) => (
+        <span className="font-medium text-foreground">{resolveMemberName(row.userId)}</span>
+      ),
     },
     {
       key: "account",
@@ -122,10 +130,27 @@ function buildColumns(
 
 export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailSheetProps) {
   const { data, isLoading } = usePayoutBatch(batchId ?? 0);
+  const { data: membersData } = useOrgMembers(1, 200);
   const [actionDialog, setActionDialog] = useState<{
     type: "paid" | "failed";
     item: PayoutBatchItem;
   } | null>(null);
+
+  const memberById = useMemo(() => {
+    const map = new Map<string, NamedUser>();
+    for (const member of membersData?.data ?? []) {
+      map.set(member.userId, { name: member.name, email: member.email });
+    }
+    return map;
+  }, [membersData]);
+
+  const resolveMemberName = useCallback(
+    (userId: string) => {
+      const member = memberById.get(userId);
+      return member ? getUserDisplayName(member) : "Unknown";
+    },
+    [memberById],
+  );
 
   const batch = data?.batch;
   const items = data?.items ?? [];
@@ -138,7 +163,10 @@ export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailShe
     setActionDialog({ type, item });
   }
 
-  const columns = buildColumns(canManage, handleAction);
+  const columns = useMemo(
+    () => buildColumns(canManage, handleAction, resolveMemberName),
+    [canManage, resolveMemberName],
+  );
 
   return (
     <>

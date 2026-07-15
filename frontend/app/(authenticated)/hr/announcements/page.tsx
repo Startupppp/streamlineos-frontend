@@ -537,7 +537,7 @@ function AnnouncementsContent() {
               placeholder="Announcement title"
               value={formData.title}
               onChange={handleTitleChange}
-              className="h-9 text-sm"
+              className="h-8 text-sm"
             />
           </div>
 
@@ -557,7 +557,7 @@ function AnnouncementsContent() {
           <div className="space-y-1.5">
             <Label className="text-xs font-medium">Target Audience</Label>
             <Select value={formData.targetType} onValueChange={handleTargetTypeChange}>
-              <SelectTrigger className="h-9 text-sm">
+              <SelectTrigger className="h-8 text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -572,7 +572,7 @@ function AnnouncementsContent() {
           <div className="space-y-1.5">
             <Label className="text-xs font-medium">Status</Label>
             <Select value={formData.status} onValueChange={handleStatusChange}>
-              <SelectTrigger className="h-9 text-sm">
+              <SelectTrigger className="h-8 text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -592,7 +592,7 @@ function AnnouncementsContent() {
               type="datetime-local"
               value={formData.publishAt ?? ""}
               onChange={handlePublishAtChange}
-              className="h-9 text-sm"
+              className="h-8 text-sm"
             />
           </div>
 
@@ -605,7 +605,7 @@ function AnnouncementsContent() {
               type="datetime-local"
               value={formData.expiresAt ?? ""}
               onChange={handleExpiresAtChange}
-              className="h-9 text-sm"
+              className="h-8 text-sm"
             />
           </div>
 

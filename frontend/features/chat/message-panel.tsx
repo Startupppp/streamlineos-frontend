@@ -43,7 +43,7 @@ import {
 } from "@/hooks/api/chat-huddles";
 import { useHuddleRealtime } from "./huddle-realtime";
 import { HuddlePanel } from "./huddle-panel";
-import { getInitials, getDateLabel } from "./chat-helpers";
+import { getInitials, getDateLabel, buildChatUserMap, resolveChatUserName } from "./chat-helpers";
 import type { Message, TicketEntityRef, MessageMetadata } from "./chat-types";
 import type { TicketSearchResult } from "@/hooks/api/projects";
 import { MessageList } from "./message-list";
@@ -197,6 +197,14 @@ export function MessagePanel({
   >([]);
 
   const { data: orgUsers } = useChatOrgUsers();
+  const chatUserMap = useMemo(() => buildChatUserMap(orgUsers), [orgUsers]);
+  const resolveUserName = useCallback(
+    (
+      userId: string,
+      embedded?: { name?: string | null; email?: string | null } | null,
+    ) => resolveChatUserName(userId, embedded, chatUserMap),
+    [chatUserMap],
+  );
   const [showMentions, setShowMentions] = useState(false);
   const [mentionQuery, setMentionQuery] = useState("");
   const [mentionIndex, setMentionIndex] = useState(0);
@@ -1014,6 +1022,7 @@ export function MessagePanel({
           onSave={handleSave}
           onUnsaveMsg={handleUnsaveMsg}
           onForward={handleForward}
+          resolveUserName={resolveUserName}
           showScrollBtn={showScrollBtn}
           scrollToBottom={() => scrollToBottom("smooth")}
           messagesEndRef={messagesEndRef}

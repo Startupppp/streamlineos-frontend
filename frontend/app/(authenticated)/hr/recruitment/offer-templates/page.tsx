@@ -17,6 +17,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
+  SheetBody,
 } from "@/components/ui/sheet";
 import {
   AlertDialog,
@@ -146,7 +147,7 @@ function TemplateSheet({ open, onOpenChange, template }: TemplateSheetProps) {
           </SheetDescription>
         </SheetHeader>
 
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+        <SheetBody className="px-6 py-5 space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="tpl-name">Template Name</Label>
             <Input
@@ -178,8 +179,7 @@ function TemplateSheet({ open, onOpenChange, template }: TemplateSheetProps) {
               Set as default template
             </Label>
           </div>
-        </div>
-
+        </SheetBody>
         <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
           <Button
             variant="outline"
@@ -251,12 +251,12 @@ function PreviewSheet({ template, onClose }: PreviewSheetProps) {
             time.
           </SheetDescription>
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto px-6 py-5">
+        <SheetBody className="px-6 py-5">
           <div
             className="prose prose-sm max-w-none border rounded-lg p-4 bg-card text-foreground"
             dangerouslySetInnerHTML={{ __html: preview }}
           />
-        </div>
+        </SheetBody>
         <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
           <Button variant="outline" onClick={onClose}>
             Close
@@ -335,7 +335,7 @@ export default function OfferTemplatesPage() {
         actions={pageActions}
       >
         <div className="space-y-3">
-          {Array.from({ length: 8 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <Skeleton key={i} className="h-20 rounded-xl" />
           ))}
         </div>

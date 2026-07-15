@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
   Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetDescription,
+  SheetBody,
 } from "@/components/ui/sheet";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
@@ -72,7 +73,7 @@ function ApplySheet({ job, onClose, onSuccess }: ApplySheetProps) {
           <SheetTitle>Apply Internally — {job.title}</SheetTitle>
           <SheetDescription>Submit your internal application. HR will be notified.</SheetDescription>
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-3">
+        <SheetBody className="px-6 py-5 space-y-3">
           <div className="space-y-1.5">
             <Label htmlFor="cover-letter">Cover Letter (optional)</Label>
             <Textarea
@@ -83,7 +84,7 @@ function ApplySheet({ job, onClose, onSuccess }: ApplySheetProps) {
               placeholder="Why are you interested in this role?"
             />
           </div>
-        </div>
+        </SheetBody>
         <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
           <Button variant="outline" onClick={onClose} disabled={mutation.isPending}>Cancel</Button>
           <Button onClick={handleSubmitApplication} disabled={mutation.isPending}>
@@ -168,7 +169,7 @@ export default function InternalJobsPage() {
     return (
       <PageWrapper title="Internal Openings" subtitle="Open positions available exclusively for employees.">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-48 rounded-xl" />)}
+          {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-48 rounded-xl" />)}
         </div>
       </PageWrapper>
     );

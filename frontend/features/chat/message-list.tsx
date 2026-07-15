@@ -36,6 +36,10 @@ interface MessageItemProps {
   onSave: (messageId: number) => void;
   onUnsaveMsg: (messageId: number) => void;
   onForward: (msg: Message) => void;
+  resolveUserName?: (
+    userId: string,
+    embedded?: { name?: string | null; email?: string | null } | null,
+  ) => string;
 }
 
 const MessageItem = memo(function MessageItem({
@@ -61,6 +65,7 @@ const MessageItem = memo(function MessageItem({
   onSave,
   onUnsaveMsg,
   onForward,
+  resolveUserName,
 }: MessageItemProps) {
   const handleStartEdit = useCallback(() => onStartEdit(msg), [msg, onStartEdit]);
   const handleSaveEdit = useCallback(() => onSaveEdit(msg.id), [msg.id, onSaveEdit]);
@@ -97,6 +102,7 @@ const MessageItem = memo(function MessageItem({
       onSave={handleSave}
       onUnsaveMsg={handleUnsaveMsg}
       onForward={handleForward}
+      resolveUserName={resolveUserName}
     />
   );
 });
@@ -131,6 +137,10 @@ interface MessageListProps {
   onSave: (messageId: number) => void;
   onUnsaveMsg: (messageId: number) => void;
   onForward: (msg: Message) => void;
+  resolveUserName?: (
+    userId: string,
+    embedded?: { name?: string | null; email?: string | null } | null,
+  ) => string;
   showScrollBtn: boolean;
   scrollToBottom: () => void;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
@@ -167,6 +177,7 @@ export function MessageList({
   onSave,
   onUnsaveMsg,
   onForward,
+  resolveUserName,
   showScrollBtn,
   scrollToBottom,
   messagesEndRef,
@@ -281,6 +292,7 @@ export function MessageList({
                       onSave={onSave}
                       onUnsaveMsg={onUnsaveMsg}
                       onForward={onForward}
+                      resolveUserName={resolveUserName}
                     />
                   </Fragment>
                 );

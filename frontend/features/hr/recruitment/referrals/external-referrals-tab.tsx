@@ -113,7 +113,7 @@ function ManageReferrersSheet() {
         </SheetHeader>
         <SheetBody className="px-6 py-4 space-y-2">
           {isLoading ? (
-            Array.from({ length: 9 }).map((_, i) => <Skeleton key={i} className="h-14 rounded-lg" />)
+            Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-14 rounded-lg" />)
           ) : referrers.length === 0 ? (
             <RecruitmentEmptyState
               illustration={<EmptyTeamIllustration />}

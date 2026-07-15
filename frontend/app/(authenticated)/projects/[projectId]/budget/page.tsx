@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState, useMemo, type ChangeEvent } from "react";
+import { use, useState, useMemo, useCallback, memo, type ChangeEvent } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -12,7 +12,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { IndianRupee, TrendingUp, Pencil } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useProjectBudget, useUpdateProjectBudget, useProjectMembers } from "@/hooks/api/projects";
-import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
+import { useOrgMembers } from "@/hooks/api/organization";
+import { getUserDisplayName, getUserInitials, type NamedUser } from "@/features/projects/shared/resolve-user-name";
 import { resolveImageUrl } from "@/lib/utils";
 import { toast } from "sonner";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -28,6 +29,35 @@ import { getErrorMessage } from "@/lib/get-error-message";
 
 type MemberBreakdownRow = { userId: string; hours: number; cost: number };
 
+const MemberBreakdownCell = memo(function MemberBreakdownCell({
+  displayName,
+  initials,
+  email,
+  image,
+}: {
+  displayName: string;
+  initials: string;
+  email: string | null;
+  image?: string | null;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <Avatar className="h-6 w-6 shrink-0">
+        <AvatarImage src={resolveImageUrl(image)} />
+        <AvatarFallback className="text-[9px] bg-primary/10 text-primary font-medium">
+          {initials}
+        </AvatarFallback>
+      </Avatar>
+      <div className="min-w-0">
+        <p className={cn("text-sm font-medium", TEXT_ONE_LINE)}>{displayName}</p>
+        {email ? (
+          <p className={cn("text-[11px] text-muted-foreground", TEXT_ONE_LINE)}>{email}</p>
+        ) : null}
+      </div>
+    </div>
+  );
+});
+
 const fmt = (n: number) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n);
 
@@ -36,7 +66,30 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
   const projectId = Number(projectIdStr);
   const { data: budget, isLoading } = useProjectBudget(projectId);
   const { data: members } = useProjectMembers(projectId);
+  const { data: orgMembersData } = useOrgMembers(1, 200);
   const updateBudget = useUpdateProjectBudget(projectId);
+
+  const orgMemberById = useMemo(() => {
+    const map = new Map<string, NamedUser>();
+    for (const member of orgMembersData?.data ?? []) {
+      map.set(member.userId, { name: member.name, email: member.email });
+    }
+    return map;
+  }, [orgMembersData]);
+
+  const resolveMemberUser = useCallback(
+    (userId: string): NamedUser | null => {
+      const projectMember = members?.find((m) => m.id === userId);
+      if (projectMember) return projectMember;
+      return orgMemberById.get(userId) ?? null;
+    },
+    [members, orgMemberById],
+  );
+
+  const resolveMemberImage = useCallback(
+    (userId: string) => members?.find((m) => m.id === userId)?.image,
+    [members],
+  );
 
   const [editMode, setEditMode] = useState(false);
   const [newBudget, setNewBudget] = useState("");
@@ -63,34 +116,19 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
     });
   }
 
-  function resolveMemberUser(userId: string) {
-    return members?.find((m) => m.id === userId) ?? null;
-  }
-
   const memberColumns = useMemo((): DataTableColumn<MemberBreakdownRow>[] => [
     {
       key: "member",
       header: "Member",
       cell: (row) => {
         const user = resolveMemberUser(row.userId);
-        const displayName = user ? getUserDisplayName(user) : row.userId.substring(0, 8) + "…";
-        const initials = user ? getUserInitials(user) : "?";
-        const email = user?.email ?? null;
         return (
-          <div className="flex items-center gap-2">
-            <Avatar className="h-6 w-6 shrink-0">
-              <AvatarImage src={resolveImageUrl(user?.image)} />
-              <AvatarFallback className="text-[9px] bg-primary/10 text-primary font-medium">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
-            <div className="min-w-0">
-              <p className={cn("text-sm font-medium", TEXT_ONE_LINE)}>{displayName}</p>
-              {email ? (
-                <p className={cn("text-[11px] text-muted-foreground", TEXT_ONE_LINE)}>{email}</p>
-              ) : null}
-            </div>
-          </div>
+          <MemberBreakdownCell
+            displayName={user ? getUserDisplayName(user) : "Unknown"}
+            initials={user ? getUserInitials(user) : "?"}
+            email={user?.email ?? null}
+            image={resolveMemberImage(row.userId)}
+          />
         );
       },
     },
@@ -114,7 +152,7 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
         <span className="font-mono text-sm font-medium whitespace-nowrap">{fmt(row.cost)}</span>
       ),
     },
-  ], [members]);
+  ], [resolveMemberUser, resolveMemberImage]);
 
   const budgetActions = editMode ? (
     <div className="flex items-center gap-2">

@@ -230,7 +230,7 @@ export function PollsTab() {
   if (isLoading) {
     return (
       <div className="space-y-3">
-        {Array.from({ length: 9 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-lg" />)}
+        {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-lg" />)}
       </div>
     );
   }
@@ -276,7 +276,7 @@ export function PollsTab() {
               placeholder="Ask a question..."
               value={question}
               onChange={handleQuestionChange}
-              className="h-9 text-sm"
+              className="h-8 text-sm"
             />
           </div>
           <div className="space-y-2">
@@ -321,7 +321,7 @@ export function PollsTab() {
               type="datetime-local"
               value={closesAt}
               onChange={handleClosesAtChange}
-              className="h-9 text-sm"
+              className="h-8 text-sm"
             />
           </div>
           <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-4 py-3">

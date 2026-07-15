@@ -26,6 +26,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
+  SheetBody,
 } from "@/components/ui/sheet";
 import {
   AlertDialog,
@@ -174,7 +175,7 @@ function ScheduleReportSheet({
             Send this report automatically by email
           </SheetDescription>
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-3">
+        <SheetBody className="px-6 py-5 space-y-3">
           <div className="space-y-1.5">
             <Label>
               Report Name <span className="text-destructive">*</span>
@@ -221,7 +222,7 @@ function ScheduleReportSheet({
               ))}
             </div>
           </div>
-        </div>
+        </SheetBody>
         <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
           <Button
             variant="outline"
@@ -586,7 +587,7 @@ export default function ReportsPage() {
 
           {generate.isPending && (
             <div className="space-y-2">
-              {Array.from({ length: 10 }).map((_, i) => (
+              {Array.from({ length: 12 }).map((_, i) => (
                 <Skeleton key={i} className="h-8 rounded" />
               ))}
             </div>

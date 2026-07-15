@@ -119,7 +119,7 @@ export function EditAssetSheet({ open, onOpenChange, asset, onSuccess }: EditAss
                 value={form.watch("depreciationMethod")}
                 onValueChange={handleDepreciationMethodChange}
               >
-                <SelectTrigger className="h-9 text-sm">
+                <SelectTrigger className="h-8 text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

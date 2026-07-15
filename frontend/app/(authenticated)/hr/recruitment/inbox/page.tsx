@@ -225,7 +225,7 @@ function ThreadPane({ thread }: { thread: MessageThread }) {
       </div>
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {isLoading ? (
-          Array.from({ length: 8 }).map((_, i) => (
+          Array.from({ length: 12 }).map((_, i) => (
             <Skeleton key={i} className="h-16 rounded-xl" />
           ))
         ) : messages.length === 0 ? (
@@ -261,7 +261,7 @@ export default function InboxPage() {
       <PageWrapper title="Candidate Inbox" subtitle="Messages with candidates" noInternalScroll>
         <div className="flex gap-4 h-full">
           <div className="w-72 space-y-2">
-            {Array.from({ length: 10 }).map((_, i) => (
+            {Array.from({ length: 12 }).map((_, i) => (
               <Skeleton key={i} className="h-16 rounded-lg" />
             ))}
           </div>

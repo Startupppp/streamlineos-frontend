@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetDescription,
+  SheetBody,
 } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import {
@@ -255,7 +256,7 @@ export default function RecruitmentAutomationsPage() {
             <SheetTitle className="text-base">New Automation</SheetTitle>
             <SheetDescription className="text-xs">Define a trigger and action for this automation rule.</SheetDescription>
           </SheetHeader>
-          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+          <SheetBody className="px-4 py-4 space-y-4">
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Name</label>
               <Input placeholder="e.g. Notify team on stage change" value={name} onChange={handleNameChange} />
@@ -282,7 +283,7 @@ export default function RecruitmentAutomationsPage() {
                 </SelectContent>
               </Select>
             </div>
-          </div>
+          </SheetBody>
           <SheetFooter className="shrink-0 px-4 py-3 border-t flex-row gap-2">
             <Button variant="outline" className="flex-1" onClick={handleCancelSheet}>Cancel</Button>
             <Button className="flex-1" onClick={handleCreate} disabled={create.isPending}>

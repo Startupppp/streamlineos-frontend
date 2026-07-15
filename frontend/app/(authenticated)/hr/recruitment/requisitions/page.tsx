@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter,
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetBody, SheetFooter,
 } from "@/components/ui/sheet";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
@@ -251,7 +251,7 @@ function CreateRequisitionSheet({ open, onClose }: CreateRequisitionSheetProps) 
         </SheetHeader>
 
         <Form {...form}>
-          <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+          <SheetBody className="px-6 py-5 space-y-4">
             <FormField
               control={form.control}
               name="title"
@@ -424,7 +424,7 @@ function CreateRequisitionSheet({ open, onClose }: CreateRequisitionSheetProps) 
                 </FormItem>
               )}
             />
-          </div>
+          </SheetBody>
         </Form>
 
         <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
@@ -756,7 +756,7 @@ export default function RequisitionsPage() {
       >
         {isLoading ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 10 }).map((_, i) => (
+            {Array.from({ length: 12 }).map((_, i) => (
               <RequisitionCardSkeleton key={i} />
             ))}
           </div>

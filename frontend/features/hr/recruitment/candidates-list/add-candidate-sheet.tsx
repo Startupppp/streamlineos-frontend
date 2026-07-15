@@ -158,7 +158,7 @@ export function AddCandidateSheet({ open, onOpenChange }: AddCandidateSheetProps
                         First Name <span className="text-destructive">*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input {...field} className="h-9" />
+                        <Input {...field} className="h-8" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -173,7 +173,7 @@ export function AddCandidateSheet({ open, onOpenChange }: AddCandidateSheetProps
                         Last Name <span className="text-destructive">*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input {...field} className="h-9" />
+                        <Input {...field} className="h-8" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -190,7 +190,7 @@ export function AddCandidateSheet({ open, onOpenChange }: AddCandidateSheetProps
                       Email <span className="text-destructive">*</span>
                     </FormLabel>
                     <FormControl>
-                      <Input {...field} type="email" className="h-9" />
+                      <Input {...field} type="email" className="h-8" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -223,7 +223,7 @@ export function AddCandidateSheet({ open, onOpenChange }: AddCandidateSheetProps
                       </FormLabel>
                       <Select value={field.value} onValueChange={field.onChange}>
                         <FormControl>
-                          <SelectTrigger className="h-9">
+                          <SelectTrigger className="h-8">
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
@@ -264,7 +264,7 @@ export function AddCandidateSheet({ open, onOpenChange }: AddCandidateSheetProps
                         Current Role
                       </FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="e.g. Software Engineer" className="h-9" />
+                        <Input {...field} placeholder="e.g. Software Engineer" className="h-8" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -280,7 +280,7 @@ export function AddCandidateSheet({ open, onOpenChange }: AddCandidateSheetProps
                         Company
                       </FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="e.g. Acme Corp" className="h-9" />
+                        <Input {...field} placeholder="e.g. Acme Corp" className="h-8" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -304,7 +304,7 @@ export function AddCandidateSheet({ open, onOpenChange }: AddCandidateSheetProps
                           max={50}
                           step={0.5}
                           placeholder="e.g. 3"
-                          className="h-9"
+                          className="h-8"
                           value={field.value ?? ""}
                           onChange={(e) => {
                             const raw = e.target.value;
@@ -326,7 +326,7 @@ export function AddCandidateSheet({ open, onOpenChange }: AddCandidateSheetProps
                         Skills
                       </FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="React, Node.js..." className="h-9" />
+                        <Input {...field} placeholder="React, Node.js..." className="h-8" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -343,7 +343,7 @@ export function AddCandidateSheet({ open, onOpenChange }: AddCandidateSheetProps
                       LinkedIn URL
                     </FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="https://linkedin.com/in/..." className="h-9" />
+                      <Input {...field} placeholder="https://linkedin.com/in/..." className="h-8" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

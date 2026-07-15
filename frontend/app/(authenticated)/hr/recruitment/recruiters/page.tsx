@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
+  SheetBody,
 } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
@@ -59,9 +60,9 @@ function ActivitySheet({ recruiter, onClose }: ActivitySheetProps) {
           <SheetTitle>{recruiter.name ?? recruiter.email} — Activity</SheetTitle>
           <SheetDescription>Recent recruiter activity log</SheetDescription>
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-2">
+        <SheetBody className="px-6 py-5 space-y-2">
           {isLoading ? (
-            Array.from({ length: 10 }).map((_, i) => (
+            Array.from({ length: 12 }).map((_, i) => (
               <Skeleton key={i} className="h-14 w-full rounded-lg" />
             ))
           ) : !activity.length ? (
@@ -74,7 +75,7 @@ function ActivitySheet({ recruiter, onClose }: ActivitySheetProps) {
           ) : (
             activity.map((entry) => <ActivityEntry key={entry.id} entry={entry} />)
           )}
-        </div>
+        </SheetBody>
       </SheetContent>
     </Sheet>
   );
@@ -177,7 +178,7 @@ export default function RecruitersPage() {
     return (
       <PageWrapper title="Recruiters" subtitle="Team members involved in hiring">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-44 rounded-xl" />)}
+          {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-44 rounded-xl" />)}
         </div>
       </PageWrapper>
     );

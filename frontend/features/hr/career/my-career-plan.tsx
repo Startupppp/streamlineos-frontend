@@ -162,7 +162,7 @@ export function MyCareerPlan() {
                       Target Role
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g. Senior Engineer" className="h-9 text-sm" {...field} />
+                      <Input placeholder="e.g. Senior Engineer" className="h-8 text-sm" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -178,7 +178,7 @@ export function MyCareerPlan() {
                       Target Date
                     </FormLabel>
                     <FormControl>
-                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-9 text-sm" />
+                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8 text-sm" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -199,7 +199,7 @@ export function MyCareerPlan() {
                     onValueChange={(v) => field.onChange(v === "none" ? undefined : Number(v))}
                   >
                     <FormControl>
-                      <SelectTrigger className="h-9 text-sm">
+                      <SelectTrigger className="h-8 text-sm">
                         <SelectValue placeholder="Select a path" />
                       </SelectTrigger>
                     </FormControl>
@@ -230,7 +230,7 @@ export function MyCareerPlan() {
                       <Input
                         type="number"
                         min={1}
-                        className="h-9 text-sm"
+                        className="h-8 text-sm"
                         {...field}
                         onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 1)}
                       />
@@ -255,7 +255,7 @@ export function MyCareerPlan() {
                         onChange={field.onChange}
                         placeholder="Select mentor…"
                         allowUnassigned
-                        className="h-9 text-sm"
+                        className="h-8 text-sm"
                       />
                     </FormControl>
                     <FormMessage />

@@ -112,7 +112,7 @@ export function NewCaseSheet({ open, onOpenChange }: Props) {
                 <FormLabel>Category</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger className="h-9">
+                    <SelectTrigger className="h-8">
                       <SelectValue />
                     </SelectTrigger>
                   </FormControl>
@@ -135,7 +135,7 @@ export function NewCaseSheet({ open, onOpenChange }: Props) {
                 <FormLabel>Severity</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger className="h-9">
+                    <SelectTrigger className="h-8">
                       <SelectValue />
                     </SelectTrigger>
                   </FormControl>
@@ -157,7 +157,7 @@ export function NewCaseSheet({ open, onOpenChange }: Props) {
               <FormItem>
                 <FormLabel>Summary</FormLabel>
                 <FormControl>
-                  <Input className="h-9" placeholder="Brief case summary" {...field} />
+                  <Input className="h-8" placeholder="Brief case summary" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

@@ -299,7 +299,7 @@ export function ReconciliationMatchPanel({ txn, bankAccountId, onClose }: Props)
           <div className="space-y-1.5">
             <Label className="text-xs">Counter Account *</Label>
             <Select value={counterAccountId} onValueChange={handleCounterAccountChange}>
-              <SelectTrigger className="h-9 text-sm">
+              <SelectTrigger className="h-8 text-sm">
                 <SelectValue placeholder="Select account" />
               </SelectTrigger>
               <SelectContent>
@@ -317,7 +317,7 @@ export function ReconciliationMatchPanel({ txn, bankAccountId, onClose }: Props)
               placeholder="Add a memo…"
               value={memo}
               onChange={handleMemoChange}
-              className="h-9 text-sm"
+              className="h-8 text-sm"
             />
           </div>
         </div>

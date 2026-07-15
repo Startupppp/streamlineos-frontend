@@ -29,6 +29,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
+  SheetBody,
 } from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -307,7 +308,7 @@ export function ExpenseExportDialog({
             </SheetDescription>
           </SheetHeader>
 
-          <div className="flex-1 overflow-y-auto px-6 py-5">
+          <SheetBody className="px-6 py-5">
           <div className="space-y-5">
             <div className="space-y-3">
               <Label className="text-sm font-medium flex items-center gap-1.5">
@@ -541,8 +542,7 @@ export function ExpenseExportDialog({
               </div>
             )}
           </div>
-
-          </div>
+          </SheetBody>
           <SheetFooter className="shrink-0 px-6 py-4 border-t flex-col gap-3">
             <div className="flex justify-end gap-3">
               <Button variant="outline" onClick={() => setOpen(false)}>

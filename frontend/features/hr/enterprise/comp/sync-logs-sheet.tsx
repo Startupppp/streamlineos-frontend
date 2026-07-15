@@ -32,7 +32,7 @@ export function SyncLogsSheet({ open, onOpenChange, deviceId }: Props) {
 
         <SheetBody className="space-y-2 px-6 py-4">
           {isLoading ? (
-            Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-10 rounded-lg" />)
+            Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-10 rounded-lg" />)
           ) : !logs.length ? (
             <EmptyState
               illustrationPreset="default"

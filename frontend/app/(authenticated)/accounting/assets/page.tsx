@@ -451,7 +451,7 @@ export default function FixedAssetsPage() {
                 value={String(form.watch("categoryId") || "")}
                 onValueChange={(v) => form.setValue("categoryId", Number(v))}
               >
-                <SelectTrigger className="h-9 text-sm">
+                <SelectTrigger className="h-8 text-sm">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -498,7 +498,7 @@ export default function FixedAssetsPage() {
                   value={form.watch("depreciationMethod")}
                   onValueChange={(v) => { if (isDepreciationMethod(v)) form.setValue("depreciationMethod", v); }}
                 >
-                  <SelectTrigger className="h-9 text-sm">
+                  <SelectTrigger className="h-8 text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

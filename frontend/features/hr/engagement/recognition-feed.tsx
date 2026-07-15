@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { memo, useState, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import { Heart, Award, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,8 +18,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useLeaderboard, useEngagementBadges, useAwardBadge } from "@/hooks/api/hr/engagement";
+import { useOrgMembers } from "@/hooks/api/organization";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
+import {
+  getUserDisplayName,
+  getUserInitials,
+  type NamedUser,
+} from "@/features/projects/shared/resolve-user-name";
 
 interface Recognition {
   id: number;
@@ -49,6 +55,98 @@ const CATEGORY_COLORS: Record<string, string> = {
 function displayName(user?: { name?: string; email: string } | null): string {
   return user?.name ?? user?.email ?? "Unknown";
 }
+
+function useMemberLookup() {
+  const { data: membersData } = useOrgMembers(1, 200);
+
+  const memberById = useMemo(() => {
+    const map = new Map<string, NamedUser>();
+    for (const member of membersData?.data ?? []) {
+      map.set(member.userId, { name: member.name, email: member.email });
+    }
+    return map;
+  }, [membersData]);
+
+  const resolveMemberName = useCallback(
+    (userId: string) => {
+      const member = memberById.get(userId);
+      return member ? getUserDisplayName(member) : "Unknown";
+    },
+    [memberById],
+  );
+
+  const resolveMemberInitials = useCallback(
+    (userId: string) => {
+      const member = memberById.get(userId);
+      return member ? getUserInitials(member) : userId.slice(0, 2).toUpperCase();
+    },
+    [memberById],
+  );
+
+  return { resolveMemberName, resolveMemberInitials };
+}
+
+const RecognitionCard = memo(function RecognitionCard({
+  recognition: r,
+}: {
+  recognition: Recognition;
+}) {
+  return (
+    <div className="bg-card border border-border rounded-lg p-4">
+      <div className="flex items-start gap-3">
+        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold shrink-0">
+          {displayName(r.fromUser).slice(0, 2).toUpperCase()}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-semibold text-foreground">{displayName(r.fromUser)}</span>
+            <span className="text-xs text-muted-foreground">recognized</span>
+            <span className="text-xs font-semibold text-foreground">{displayName(r.toUser)}</span>
+            <span
+              className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium border ${
+                CATEGORY_COLORS[r.category] ?? CATEGORY_COLORS.KUDOS
+              }`}
+            >
+              {r.category.replace(/_/g, " ")}
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{r.message}</p>
+        </div>
+      </div>
+    </div>
+  );
+});
+
+const LeaderboardRow = memo(function LeaderboardRow({
+  rank,
+  total,
+  displayLabel,
+  initials,
+}: {
+  rank: number;
+  total: number;
+  displayLabel: string;
+  initials: string;
+}) {
+  const medals = ["🥇", "🥈", "🥉"];
+
+  return (
+    <div className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted/50 transition-colors">
+      <span className="text-sm w-6 text-center shrink-0">
+        {rank < 3 ? medals[rank] : `${rank + 1}`}
+      </span>
+      <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-[10px] font-bold shrink-0">
+        {initials}
+      </div>
+      <span className="text-xs font-medium text-foreground flex-1 min-w-0 truncate">
+        {displayLabel}
+      </span>
+      <span className="text-xs font-semibold text-primary tabular-nums shrink-0">
+        {total} pts
+      </span>
+    </div>
+  );
+});
 
 export function RecognitionFeed({ recognitions, isLoading, onGiveKudos }: RecognitionFeedProps) {
   if (isLoading) {
@@ -86,28 +184,7 @@ export function RecognitionFeed({ recognitions, isLoading, onGiveKudos }: Recogn
   return (
     <div className="space-y-3">
       {recognitions.map((r) => (
-        <div key={r.id} className="bg-card border border-border rounded-lg p-4">
-          <div className="flex items-start gap-3">
-            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold shrink-0">
-              {displayName(r.fromUser).slice(0, 2).toUpperCase()}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs font-semibold text-foreground">{displayName(r.fromUser)}</span>
-                <span className="text-xs text-muted-foreground">recognized</span>
-                <span className="text-xs font-semibold text-foreground">{displayName(r.toUser)}</span>
-                <span
-                  className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium border ${
-                    CATEGORY_COLORS[r.category] ?? CATEGORY_COLORS.KUDOS
-                  }`}
-                >
-                  {r.category.replace(/_/g, " ")}
-                </span>
-              </div>
-              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{r.message}</p>
-            </div>
-          </div>
-        </div>
+        <RecognitionCard key={r.id} recognition={r} />
       ))}
     </div>
   );
@@ -146,7 +223,7 @@ export function BadgesGrid() {
   if (isLoading) {
     return (
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {[1, 2, 3, 4, 5, 6].map((i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <Skeleton key={i} className="h-24 rounded-lg" />
         ))}
       </div>
@@ -227,11 +304,12 @@ export function BadgesGrid() {
 
 export function PointsLeaderboard() {
   const { data: entries, isLoading } = useLeaderboard(20);
+  const { resolveMemberName, resolveMemberInitials } = useMemberLookup();
 
   if (isLoading) {
     return (
       <div className="space-y-2">
-        {[1, 2, 3, 4, 5].map((i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <div key={i} className="flex items-center gap-3 px-3 py-2">
             <Skeleton className="h-4 w-4" />
             <Skeleton className="h-8 w-8 rounded-full" />
@@ -252,28 +330,16 @@ export function PointsLeaderboard() {
     );
   }
 
-  const medals = ["🥇", "🥈", "🥉"];
-
   return (
     <div className="space-y-1">
       {entries.map((entry, idx) => (
-        <div
+        <LeaderboardRow
           key={entry.userId}
-          className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted/50 transition-colors"
-        >
-          <span className="text-sm w-6 text-center shrink-0">
-            {idx < 3 ? medals[idx] : `${idx + 1}`}
-          </span>
-          <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-[10px] font-bold shrink-0">
-            {entry.userId.slice(0, 2).toUpperCase()}
-          </div>
-          <span className="text-xs font-medium text-foreground flex-1 min-w-0 truncate">
-            {entry.userId}
-          </span>
-          <span className="text-xs font-semibold text-primary tabular-nums shrink-0">
-            {entry.total} pts
-          </span>
-        </div>
+          rank={idx}
+          total={entry.total}
+          displayLabel={resolveMemberName(entry.userId)}
+          initials={resolveMemberInitials(entry.userId)}
+        />
       ))}
     </div>
   );
@@ -330,7 +396,7 @@ export function GiveKudosSheet({
         <div className="space-y-1.5">
           <Label className="text-xs font-medium">Category</Label>
           <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger className="h-9 text-sm">
+            <SelectTrigger className="h-8 text-sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

@@ -52,7 +52,7 @@ export default function WorkforceCostPage() {
           {/* Summary */}
           {summaryLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
+              {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
             </div>
           ) : (
             <StatCardGrid cols={3}>
@@ -80,7 +80,7 @@ export default function WorkforceCostPage() {
             <div className="rounded-xl border bg-card p-4">
               <p className="text-sm font-semibold mb-3">Cost by Department</p>
               {deptLoading ? (
-                <div className="space-y-2">{Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-10 rounded-lg" />)}</div>
+                <div className="space-y-2">{Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-10 rounded-lg" />)}</div>
               ) : !byDept?.length ? (
                 <p className="text-sm text-muted-foreground text-center py-8">No department cost data</p>
               ) : (
@@ -102,7 +102,7 @@ export default function WorkforceCostPage() {
             <div className="rounded-xl border bg-card p-4">
               <p className="text-sm font-semibold mb-3">Cost by Location</p>
               {locLoading ? (
-                <div className="space-y-2">{Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-10 rounded-lg" />)}</div>
+                <div className="space-y-2">{Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-10 rounded-lg" />)}</div>
               ) : !byLoc?.length ? (
                 <p className="text-sm text-muted-foreground text-center py-8">No location cost data</p>
               ) : (

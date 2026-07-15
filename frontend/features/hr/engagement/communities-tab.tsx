@@ -137,7 +137,7 @@ export function CommunitiesTab({ currentUserId }: { currentUserId: string }) {
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-36 rounded-xl" />)}
+        {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-36 rounded-xl" />)}
       </div>
     );
   }
@@ -182,7 +182,7 @@ export function CommunitiesTab({ currentUserId }: { currentUserId: string }) {
               placeholder="e.g. Book Club, Running Team"
               value={name}
               onChange={handleNameChange}
-              className="h-9 text-sm"
+              className="h-8 text-sm"
             />
           </div>
           <div className="space-y-1.5">

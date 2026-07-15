@@ -119,7 +119,7 @@ export default function PageHistorySheet({ pageId, open, onOpenChange }: PageHis
             <SheetBody className="px-6 py-4">
                 {isLoading && (
                   <div className="space-y-3">
-                    {Array.from({ length: 5 }).map((_, i) => (
+                    {Array.from({ length: 12 }).map((_, i) => (
                       <Skeleton key={i} className="h-16 w-full rounded-lg" />
                     ))}
                   </div>

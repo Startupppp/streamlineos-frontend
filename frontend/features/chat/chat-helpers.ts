@@ -1,4 +1,35 @@
 import { format, isToday, isYesterday } from "date-fns";
+import {
+  getUserDisplayName,
+  type NamedUser,
+} from "@/features/projects/shared/resolve-user-name";
+
+export type ChatOrgUser = {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+};
+
+export function buildChatUserMap(
+  users: ChatOrgUser[] | undefined,
+): Map<string, NamedUser> {
+  const map = new Map<string, NamedUser>();
+  for (const user of users ?? []) {
+    map.set(user.id, { name: user.name, email: user.email });
+  }
+  return map;
+}
+
+export function resolveChatUserName(
+  userId: string,
+  embedded: { name?: string | null; email?: string | null } | null | undefined,
+  userMap: Map<string, NamedUser>,
+): string {
+  if (embedded?.name?.trim()) return embedded.name.trim();
+  const mapped = userMap.get(userId);
+  if (mapped) return getUserDisplayName(mapped);
+  return "Unknown";
+}
 
 export function getInitials(name: string | null | undefined) {
   if (!name) return "?";

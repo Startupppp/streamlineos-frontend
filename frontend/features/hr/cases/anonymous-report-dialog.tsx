@@ -131,7 +131,7 @@ export function AnonymousReportDialog({ open, onOpenChange }: Props) {
                     <FormLabel>Type of Concern</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger className="h-9">
+                        <SelectTrigger className="h-8">
                           <SelectValue />
                         </SelectTrigger>
                       </FormControl>
@@ -154,7 +154,7 @@ export function AnonymousReportDialog({ open, onOpenChange }: Props) {
                     <FormLabel>Severity</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger className="h-9">
+                        <SelectTrigger className="h-8">
                           <SelectValue />
                         </SelectTrigger>
                       </FormControl>
@@ -176,7 +176,7 @@ export function AnonymousReportDialog({ open, onOpenChange }: Props) {
                   <FormItem>
                     <FormLabel>Brief Summary</FormLabel>
                     <FormControl>
-                      <Input className="h-9" placeholder="One-line description" {...field} />
+                      <Input className="h-8" placeholder="One-line description" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

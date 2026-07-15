@@ -11,9 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
-import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetBody } from "@/components/ui/sheet";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
@@ -181,7 +179,7 @@ function TemplateSheet({ open, onClose, editTemplate }: TemplateSheetProps) {
         <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle>{editTemplate ? "Edit Template" : "New Scorecard Template"}</SheetTitle>
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+        <SheetBody className="px-6 py-5 space-y-4">
           <div>
             <Label className="text-xs font-medium">Template Name <span className="text-destructive">*</span></Label>
             <Input
@@ -220,7 +218,7 @@ function TemplateSheet({ open, onClose, editTemplate }: TemplateSheetProps) {
               Add Criterion
             </Button>
           </div>
-        </div>
+        </SheetBody>
         <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
           <Button variant="outline" onClick={onClose} disabled={isPending} type="button">Cancel</Button>
           <Button onClick={handleSubmit} disabled={isPending} type="button">

@@ -22,7 +22,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetDescription,
+  Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetDescription, SheetBody,
 } from "@/components/ui/sheet";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -141,7 +141,7 @@ function RequestSheet({ initial, onClose }: RequestSheetProps) {
           <SheetTitle>{initial ? "Edit" : "New"} Headcount Request</SheetTitle>
           <SheetDescription>Submit a request to hire for a new or replacement position</SheetDescription>
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-3">
+        <SheetBody className="px-6 py-5 space-y-3">
           <div className="space-y-1.5">
             <Label>Role <span className="text-destructive">*</span></Label>
             <Input value={role} onChange={handleRoleChange} placeholder="e.g. Senior Software Engineer" />
@@ -174,7 +174,7 @@ function RequestSheet({ initial, onClose }: RequestSheetProps) {
               placeholder="Why is this hire needed?"
             />
           </div>
-        </div>
+        </SheetBody>
         <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
           <Button variant="outline" onClick={onClose} disabled={isPending}>Cancel</Button>
           <Button variant="secondary" onClick={handleSaveDraft} disabled={isPending}>
@@ -360,7 +360,7 @@ export default function HeadcountPage() {
     return (
       <PageWrapper title="Headcount Planning" subtitle="Manage hiring requests">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-40 rounded-xl" />)}
+          {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-40 rounded-xl" />)}
         </div>
       </PageWrapper>
     );

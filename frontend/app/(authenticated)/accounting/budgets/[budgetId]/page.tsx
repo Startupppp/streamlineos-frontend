@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ChangeEvent, type ReactNode } from "react";
+import { useState, useMemo, useCallback, type ChangeEvent, type ReactNode } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Copy, GitBranch, CheckCircle, Send } from "lucide-react";
 import { toast } from "sonner";
@@ -31,6 +31,11 @@ import {
 } from "@/hooks/api/accounting/planning";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useOrgMembers } from "@/hooks/api/organization";
+import {
+  getUserDisplayName,
+  type NamedUser,
+} from "@/features/projects/shared/resolve-user-name";
 import type { BudgetStatus, BvaAccountPeriodRow } from "@/types/accounting/planning";
 
 function toBudgetStatus(value: string): BudgetStatus | undefined {
@@ -236,6 +241,23 @@ interface RevisionsSheetProps {
 function RevisionsSheet({ budgetId, open, onOpenChange }: RevisionsSheetProps) {
   const query = useBudgetRevisions(budgetId);
   const revisions = query.data?.items ?? [];
+  const { data: membersData } = useOrgMembers(1, 200);
+
+  const memberById = useMemo(() => {
+    const map = new Map<string, NamedUser>();
+    for (const member of membersData?.data ?? []) {
+      map.set(member.userId, { name: member.name, email: member.email });
+    }
+    return map;
+  }, [membersData]);
+
+  const resolveMemberName = useCallback(
+    (userId: string) => {
+      const member = memberById.get(userId);
+      return member ? getUserDisplayName(member) : userId;
+    },
+    [memberById],
+  );
 
   return (
     <AppSheet
@@ -257,7 +279,7 @@ function RevisionsSheet({ budgetId, open, onOpenChange }: RevisionsSheetProps) {
                   <span className="text-sm font-medium">Rev #{rev.revisionNumber}</span>
                   <span className="text-xs text-muted-foreground">{formatDate(rev.createdAt)}</span>
                 </div>
-                <p className="text-xs text-muted-foreground">By {rev.createdBy} · {rev.lineCount} lines</p>
+                <p className="text-xs text-muted-foreground">By {resolveMemberName(rev.createdBy)} · {rev.lineCount} lines</p>
                 {rev.note && (
                   <p className="text-xs text-foreground mt-1 italic">{rev.note}</p>
                 )}

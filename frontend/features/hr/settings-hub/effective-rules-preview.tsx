@@ -104,9 +104,9 @@ export function EffectiveRulesPreview() {
 
       {isLoading ? (
         <div className="flex flex-col gap-3">
-          <Skeleton className="h-28 w-full rounded-xl" />
-          <Skeleton className="h-28 w-full rounded-xl" />
-          <Skeleton className="h-28 w-full rounded-xl" />
+          {Array.from({ length: 12 }).map((_, i) => (
+            <Skeleton key={i} className="h-28 w-full rounded-xl" />
+          ))}
         </div>
       ) : data && data.length > 0 ? (
         <div className="flex flex-col gap-3">

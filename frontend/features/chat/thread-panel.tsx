@@ -7,8 +7,8 @@ import { Loader2, MessageSquare, Send, X } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn, resolveImageUrl } from "@/lib/utils";
-import { useThreadReplies, useSendThreadReply } from "@/hooks/api";
-import { getInitials, formatMessageTime } from "./chat-helpers";
+import { useThreadReplies, useSendThreadReply, useChatOrgUsers } from "@/hooks/api";
+import { getInitials, formatMessageTime, buildChatUserMap, resolveChatUserName } from "./chat-helpers";
 import { renderFormattedContent } from "./formatted-message-content";
 import type { Message } from "@/types/chat";
 
@@ -16,10 +16,15 @@ interface ThreadMessageProps {
   message: Message;
   currentUserId: string;
   isParent?: boolean;
+  resolveUserName: (
+    userId: string,
+    embedded?: { name?: string | null; email?: string | null } | null,
+  ) => string;
 }
 
-function ThreadMessage({ message, currentUserId, isParent }: ThreadMessageProps) {
+function ThreadMessage({ message, currentUserId, isParent, resolveUserName }: ThreadMessageProps) {
   const isOwn = message.senderId === currentUserId;
+  const senderName = resolveUserName(message.senderId, message.sender);
   if (message.isDeleted) {
     return (
       <div className="px-3 py-1 rounded-xl bg-muted/20 border border-border/15 mx-4">
@@ -32,13 +37,13 @@ function ThreadMessage({ message, currentUserId, isParent }: ThreadMessageProps)
       <Avatar className="h-7 w-7 shrink-0 mt-0.5 border border-border/30 shadow-sm">
         <AvatarImage src={resolveImageUrl(message.sender?.image)} />
         <AvatarFallback className="text-[8px] font-bold bg-muted text-muted-foreground">
-          {getInitials(message.sender?.name)}
+          {getInitials(senderName)}
         </AvatarFallback>
       </Avatar>
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline gap-2 mb-0.5">
           <span className={cn("text-[12px] font-bold", isOwn ? "text-primary" : "text-foreground")}>
-            {message.sender?.name ?? "Unknown"}
+            {senderName}
           </span>
           <span className="text-[10px] text-muted-foreground">
             {formatMessageTime(message.createdAt)}
@@ -99,6 +104,15 @@ export function ThreadPanel({
   } = useThreadReplies(channelId, parentMessageId);
 
   const sendReply = useSendThreadReply(channelId, parentMessageId);
+  const { data: orgUsers } = useChatOrgUsers();
+  const chatUserMap = useMemo(() => buildChatUserMap(orgUsers), [orgUsers]);
+  const resolveUserName = useCallback(
+    (
+      userId: string,
+      embedded?: { name?: string | null; email?: string | null } | null,
+    ) => resolveChatUserName(userId, embedded, chatUserMap),
+    [chatUserMap],
+  );
 
   const parentMessage = data?.pages[0]?.parentMessage ?? null;
   const replies = useMemo(
@@ -171,6 +185,7 @@ export function ThreadPanel({
                   message={parentMessage}
                   currentUserId={currentUserId}
                   isParent
+                  resolveUserName={resolveUserName}
                 />
                 <div className="mx-4 my-2 flex items-center gap-2">
                   <div className="flex-1 h-px bg-border/40" />
@@ -210,6 +225,7 @@ export function ThreadPanel({
                 key={reply.id}
                 message={reply}
                 currentUserId={currentUserId}
+                resolveUserName={resolveUserName}
               />
             ))}
 

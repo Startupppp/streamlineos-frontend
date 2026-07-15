@@ -92,7 +92,7 @@ function QueueSection({
       </div>
       <div className="divide-y divide-border/50">
         {isLoading ? (
-          Array.from({ length: 8 }).map((_, i) => (
+          Array.from({ length: 12 }).map((_, i) => (
             <div key={i} className="px-5 py-3 flex items-center gap-3">
               <Skeleton className="h-8 w-8 rounded-lg" />
               <div className="flex-1 space-y-1.5">
@@ -184,7 +184,7 @@ export default function RecruitmentCommandCenterPage() {
           <>
             <div className="flex items-center gap-2 overflow-x-auto pb-1">
               {statsLoading ? (
-                Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-10 w-28 rounded-lg shrink-0" />)
+                Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-10 w-28 rounded-lg shrink-0" />)
               ) : (
                 <>
                   <HealthChip label="open roles" value={stats?.openJobs ?? 0} />

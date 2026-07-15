@@ -113,7 +113,7 @@ export function IssueWarningSheet({ open, onOpenChange, caseId }: Props) {
                 <FormLabel>Action Type</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger className="h-9">
+                    <SelectTrigger className="h-8">
                       <SelectValue />
                     </SelectTrigger>
                   </FormControl>
@@ -135,7 +135,7 @@ export function IssueWarningSheet({ open, onOpenChange, caseId }: Props) {
               <FormItem>
                 <FormLabel>Effective Date</FormLabel>
                 <FormControl>
-                  <Input type="date" className="h-9" {...field} />
+                  <Input type="date" className="h-8" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

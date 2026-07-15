@@ -171,7 +171,7 @@ export function InterviewFeedbackForm({ interview, open, onOpenChange }: Intervi
           <span className="text-sm font-semibold text-foreground">Decision</span>
         </div>
         <Select value={result} onValueChange={handleResultChange}>
-          <SelectTrigger className="h-9">
+          <SelectTrigger className="h-8">
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="w-[var(--radix-select-trigger-width)]">

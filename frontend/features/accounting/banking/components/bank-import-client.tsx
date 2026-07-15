@@ -267,7 +267,7 @@ export function BankImportClient() {
                 <div className="space-y-1.5">
                   <Label className="text-xs">Bank Account</Label>
                   <Select value={selectedAccountId} onValueChange={handleAccountChange}>
-                    <SelectTrigger className="h-9 text-sm">
+                    <SelectTrigger className="h-8 text-sm">
                       <SelectValue placeholder="Select account" />
                     </SelectTrigger>
                     <SelectContent>

@@ -154,7 +154,7 @@ export default function IntakeInboxPage() {
       >
         {isLoading ? (
           <div className="space-y-2">
-            {Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}
+            {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}
           </div>
         ) : isError ? (
           <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">

@@ -225,6 +225,7 @@ export function ChatBubble({
   onSave,
   onUnsaveMsg,
   onForward,
+  resolveUserName,
 }: {
   message: Message;
   isOwn: boolean;
@@ -248,6 +249,10 @@ export function ChatBubble({
   onSave?: () => void;
   onUnsaveMsg?: () => void;
   onForward?: () => void;
+  resolveUserName?: (
+    userId: string,
+    embedded?: { name?: string | null; email?: string | null } | null,
+  ) => string;
 }) {
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [convertDialogOpen, setConvertDialogOpen] = useState(false);
@@ -255,6 +260,14 @@ export function ChatBubble({
   const [dueDateDialogOpen, setDueDateDialogOpen] = useState(false);
   const canConvertToTask = useCan("projects:tickets:create");
   const canAssignTicket = useCan("projects:tickets:assign");
+  const senderName = resolveUserName
+    ? resolveUserName(message.senderId, message.sender)
+    : (message.sender?.name ?? "Unknown");
+  const replySenderName = message.replyTo
+    ? resolveUserName
+      ? resolveUserName(message.replyTo.sender?.id ?? "", message.replyTo.sender)
+      : (message.replyTo.sender?.name ?? "Unknown")
+    : null;
   const canSetDueDate = useCan("projects:tickets:update");
 
   const handleOpenConvertDialog = useCallback(() => setConvertDialogOpen(true), []);
@@ -325,7 +338,7 @@ export function ChatBubble({
             <Avatar className="h-7 w-7 border border-border/30 shadow-sm">
               <AvatarImage src={resolveImageUrl(message.sender?.image)} />
               <AvatarFallback className="text-[8px] font-bold bg-muted text-muted-foreground">
-                {getInitials(message.sender?.name)}
+                {getInitials(senderName)}
               </AvatarFallback>
             </Avatar>
           ) : <div className="w-7" />}
@@ -335,7 +348,7 @@ export function ChatBubble({
       <div className={cn("min-w-0 max-w-[75%] sm:max-w-[65%] relative flex flex-col", isOwn ? "items-end" : "items-start")}>
         {showSender && !isOwn && (
           <p className="text-[11px] font-bold text-blue mb-1 px-1 ml-1">
-            {message.sender?.name}
+            {senderName}
           </p>
         )}
 
@@ -349,7 +362,7 @@ export function ChatBubble({
             )}
           >
             <p className={cn("font-bold truncate", isOwn ? "text-primary-foreground" : "text-foreground")}>
-              {message.replyTo.sender?.name}
+              {replySenderName}
             </p>
             <p className={cn("truncate", isOwn ? "text-primary-foreground/70" : "text-muted-foreground")}>
               {message.replyTo.content

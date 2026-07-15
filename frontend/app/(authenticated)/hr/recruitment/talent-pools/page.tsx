@@ -21,9 +21,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
-import {
-  Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger, SheetBody } from "@/components/ui/sheet";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -68,7 +66,7 @@ function CreatePoolSheet() {
           <SheetTitle className="text-base font-semibold">New Talent Pool</SheetTitle>
           <SheetDescription className="text-xs">Group candidates for future roles or ongoing sourcing.</SheetDescription>
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+        <SheetBody className="px-4 py-4 space-y-4">
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-foreground/80">
               Name<span className="text-rose-500 ml-0.5">*</span>
@@ -79,7 +77,7 @@ function CreatePoolSheet() {
             <label className="text-xs font-semibold text-foreground/80">Description</label>
             <Textarea placeholder="What's this pool for?" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
           </div>
-        </div>
+        </SheetBody>
         <SheetFooter className="shrink-0 px-4 py-3 border-t flex-row gap-2">
           <Button variant="outline" className="flex-1 h-9" onClick={() => setOpen(false)}>Cancel</Button>
           <Button className="flex-1 h-9" onClick={handleCreate} disabled={createPool.isPending}>
@@ -127,7 +125,7 @@ function AddMemberSheet({ poolId }: { poolId: number }) {
         <SheetHeader className="shrink-0 px-4 pt-4 pb-3 border-b">
           <SheetTitle className="text-base font-semibold">Add Candidate to Pool</SheetTitle>
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+        <SheetBody className="px-4 py-4 space-y-4">
           <Select value={candidateId} onValueChange={setCandidateId}>
             <SelectTrigger>
               <SelectValue placeholder="Select a candidate" />
@@ -138,7 +136,7 @@ function AddMemberSheet({ poolId }: { poolId: number }) {
               ))}
             </SelectContent>
           </Select>
-        </div>
+        </SheetBody>
         <SheetFooter className="shrink-0 px-4 py-3 border-t flex-row gap-2">
           <Button variant="outline" className="flex-1 h-9" onClick={() => setOpen(false)}>Cancel</Button>
           <Button className="flex-1 h-9" onClick={handleAdd} disabled={addMember.isPending}>
@@ -224,7 +222,7 @@ export default function TalentPoolsPage() {
       >
         {isLoading ? (
           <div className="grid gap-4 md:grid-cols-3">
-            {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-32 w-full rounded-2xl" />)}
+            {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-32 w-full rounded-2xl" />)}
           </div>
         ) : isEmpty ? (
           <RecruitmentEmptyState

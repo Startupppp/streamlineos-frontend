@@ -121,7 +121,7 @@ export function CampaignsTab() {
   if (isLoading) {
     return (
       <div className="space-y-3">
-        {Array.from({ length: 9 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-lg" />)}
+        {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-lg" />)}
       </div>
     );
   }
@@ -208,26 +208,26 @@ export function CampaignsTab() {
         <div className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="camp-name" className="text-xs font-medium">Name</Label>
-            <Input id="camp-name" placeholder="Campaign name" value={name} onChange={handleNameChange} className="h-9 text-sm" />
+            <Input id="camp-name" placeholder="Campaign name" value={name} onChange={handleNameChange} className="h-8 text-sm" />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="camp-desc" className="text-xs font-medium">Description</Label>
             <Textarea id="camp-desc" placeholder="What is this campaign about?" value={description} onChange={handleDescChange} className="min-h-[80px] text-sm resize-none" />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="camp-start" className="text-xs font-medium">Starts At</Label>
-              <Input id="camp-start" type="datetime-local" value={startsAt} onChange={handleStartsChange} className="h-9 text-sm" />
+              <Input id="camp-start" type="datetime-local" value={startsAt} onChange={handleStartsChange} className="h-8 text-sm" />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="camp-end" className="text-xs font-medium">Ends At</Label>
-              <Input id="camp-end" type="datetime-local" value={endsAt} onChange={handleEndsChange} className="h-9 text-sm" />
+              <Input id="camp-end" type="datetime-local" value={endsAt} onChange={handleEndsChange} className="h-8 text-sm" />
             </div>
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-medium">Status</Label>
             <Select value={status} onValueChange={(v) => setStatus(v as HrCampaign["status"])}>
-              <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="draft">Draft</SelectItem>
                 <SelectItem value="active">Active</SelectItem>

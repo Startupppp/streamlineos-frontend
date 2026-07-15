@@ -298,7 +298,7 @@ export function InterviewFormSheet({
                   variant="outline"
                   role="combobox"
                   aria-expanded={candidatePickerOpen}
-                  className="w-full justify-between font-normal h-9"
+                  className="w-full justify-between font-normal h-8"
                 >
                   <span className="truncate text-sm">
                     {selectedCandidate
@@ -353,7 +353,7 @@ export function InterviewFormSheet({
             colorClass="bg-violet-100 text-violet-600 dark:bg-violet-950/40 dark:text-violet-400"
           >
             <Select value={jobPostingId} onValueChange={setJobPostingId}>
-              <SelectTrigger className="h-9">
+              <SelectTrigger className="h-8">
                 <SelectValue placeholder="Select position..." />
               </SelectTrigger>
               <SelectContent className="w-[var(--radix-select-trigger-width)] max-h-[200px] overflow-y-auto">
@@ -379,7 +379,7 @@ export function InterviewFormSheet({
                 value={scheduledAt}
                 min={new Date().toISOString().slice(0, 16)}
                 onChange={handleScheduledAtChange}
-                className="h-9"
+                className="h-8"
               />
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
@@ -388,7 +388,7 @@ export function InterviewFormSheet({
                     Format
                   </label>
                   <Select value={format_} onValueChange={handleFormatChange}>
-                    <SelectTrigger className="h-9">
+                    <SelectTrigger className="h-8">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="w-[var(--radix-select-trigger-width)]">
@@ -411,7 +411,7 @@ export function InterviewFormSheet({
                     step={15}
                     value={duration}
                     onChange={handleDurationChange}
-                    className="h-9"
+                    className="h-8"
                   />
                 </div>
               </div>
@@ -426,7 +426,7 @@ export function InterviewFormSheet({
                     placeholder="https://meet.google.com/..."
                     value={meetLink}
                     onChange={handleMeetLinkChange}
-                    className="h-9"
+                    className="h-8"
                   />
                 </div>
               )}
@@ -478,7 +478,7 @@ export function InterviewFormSheet({
                   <Button
                     type="button"
                     variant="outline"
-                    className="w-full justify-start font-normal text-muted-foreground gap-1.5 h-9"
+                    className="w-full justify-start font-normal text-muted-foreground gap-1.5 h-8"
                     size="sm"
                   >
                     <Plus className="h-3.5 w-3.5" />

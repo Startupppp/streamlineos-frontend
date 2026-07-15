@@ -23,9 +23,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { UserCombobox } from "@/components/ui/user-combobox";
 import { useCreateRate, useUpdateRate } from "@/hooks/api/timesheets-core/rates";
 import { useProjects } from "@/hooks/api/projects";
-import { useHrEmployees } from "@/hooks/api/hr";
 import type { TimesheetRate, CreateRateInput, BillingType } from "@/features/timesheets-core/types";
 import { BILLING_TYPE_LABEL } from "@/features/timesheets-core/types";
 
@@ -73,12 +73,8 @@ export function RateFormSheet({ open, onOpenChange, rate }: RateFormSheetProps) 
   const isPending = createRate.isPending || updateRate.isPending;
 
   const { data: projectsData } = useProjects();
-  const { data: employeesData } = useHrEmployees({ limit: 100 });
 
   const projectList = projectsData?.data ?? [];
-  const employeeList = Array.isArray(employeesData)
-    ? employeesData
-    : (employeesData?.data ?? []);
 
   const { control, handleSubmit, reset, register } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -181,21 +177,13 @@ export function RateFormSheet({ open, onOpenChange, rate }: RateFormSheetProps) 
                 control={control}
                 name="userId"
                 render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger className="h-8 text-xs">
-                      <SelectValue placeholder="Any user" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={SELECT_NONE} className="text-xs text-muted-foreground">
-                        Any user
-                      </SelectItem>
-                      {employeeList.map((e) => (
-                        <SelectItem key={e.id} value={e.id} className="text-xs">
-                          {e.name ?? e.email}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <UserCombobox
+                    value={field.value === SELECT_NONE ? "" : field.value}
+                    onChange={(next) => field.onChange(next || SELECT_NONE)}
+                    placeholder="Any user"
+                    allowUnassigned
+                    className="h-8 text-xs"
+                  />
                 )}
               />
             </div>
