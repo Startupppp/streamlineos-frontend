@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { EmptyActivityIllustration } from "@/components/illustrations";
 import {
   Select,
@@ -178,7 +179,7 @@ export default function CrmAuditLogPage() {
         ) : entries.length === 0 ? (
           <motion.div key="empty" variants={itemVariants} initial="hidden" animate="visible" exit={{ opacity: 0 }}>
             <EmptyState
-              className="flex-1 border-0 bg-transparent"
+              className={CONTENT_FILL_PANEL}
               illustration={<EmptyActivityIllustration />}
               title="No audit entries found"
               description={

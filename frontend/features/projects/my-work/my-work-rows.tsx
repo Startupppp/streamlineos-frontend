@@ -4,6 +4,7 @@ import { memo, useCallback, type ComponentType } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { ErrorState } from "@/components/shared/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -203,7 +204,7 @@ function AllWorkList({
         illustrationPreset="projects"
         title={emptyTitle}
         description={emptyDescription}
-        className="min-h-[14rem]"
+        className={CONTENT_FILL_PANEL}
       />
     );
   }

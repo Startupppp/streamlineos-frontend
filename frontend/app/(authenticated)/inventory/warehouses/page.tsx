@@ -18,6 +18,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
+import { CONTENT_FILL_PANEL, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { cn } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -322,7 +324,7 @@ export default function WarehousesPage() {
       </div>
       <div className="hidden min-w-0 items-center gap-2 sm:flex">
         <Select value={statusValue} onValueChange={handleStatusChange}>
-          <SelectTrigger className="h-8 w-[140px] text-xs">
+          <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[140px] text-xs")}>
             <SelectValue placeholder="All statuses" />
           </SelectTrigger>
           <SelectContent>
@@ -395,7 +397,7 @@ export default function WarehousesPage() {
             value={isDefaultFilter ?? "all"}
             onValueChange={handleIsDefaultChange}
           >
-            <SelectTrigger className="h-8 w-[160px] text-xs">
+            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[160px] text-xs")}>
               <SelectValue placeholder="Default status" />
             </SelectTrigger>
             <SelectContent>
@@ -424,6 +426,7 @@ export default function WarehousesPage() {
           title="No warehouses found"
           description="No warehouses match your current filters."
           action={{ label: "Clear filters", onClick: clearFilters }}
+          className={CONTENT_FILL_PANEL}
         />
       ) : (
         <InventoryEmptyState
@@ -431,6 +434,7 @@ export default function WarehousesPage() {
           title="No warehouses yet"
           description="Add your first warehouse to start managing stock locations."
           action={{ label: "New Warehouse", onClick: handleOpenSheet }}
+          className={CONTENT_FILL_PANEL}
         />
       )}
 

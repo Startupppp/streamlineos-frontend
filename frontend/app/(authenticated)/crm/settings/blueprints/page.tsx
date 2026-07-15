@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
@@ -89,14 +90,14 @@ export default function BlueprintsPage() {
             title="Failed to load blueprints"
             description="Something went wrong. Please try again."
             action={{ label: "Retry", onClick: handleRetry }}
-            className="flex-1 border-0 bg-transparent"
+            className={CONTENT_FILL_PANEL}
           />
         ) : !blueprints || blueprints.length === 0 ? (
           <EmptyState
             title="No blueprints"
             description="Blueprints define which stage transitions are allowed and what requirements must be met."
             action={{ label: "New Blueprint", onClick: handleOpenDialog }}
-            className="flex-1 border-0 bg-transparent"
+            className={CONTENT_FILL_PANEL}
           />
         ) : (
           <div className="flex gap-4 items-start">
@@ -182,7 +183,7 @@ export default function BlueprintsPage() {
                 <EmptyState
                   title="Select a blueprint"
                   description="Choose a blueprint from the list to configure its transition rules."
-                  className="flex-1 border-0 bg-transparent"
+                  className={CONTENT_FILL_PANEL}
                 />
               )}
             </div>

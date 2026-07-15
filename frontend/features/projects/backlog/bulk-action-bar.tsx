@@ -59,7 +59,7 @@ export const BulkActionBar = memo(function BulkActionBar({
     <div
       className={cn(
         PM_TOOLBAR,
-        "sticky top-0 z-10 mb-2 gap-2 border-primary/15 bg-card/70 px-2.5 py-1.5 supports-[backdrop-filter]:bg-card/55",
+        "sticky top-0 z-10 mb-2 gap-2 border-b border-border bg-background/95 py-1.5 backdrop-blur supports-[backdrop-filter]:bg-background/80",
       )}
     >
       <span className="shrink-0 rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-primary">

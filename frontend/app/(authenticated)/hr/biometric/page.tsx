@@ -51,7 +51,7 @@ export default function BiometricPage() {
         transition={{ duration: 0.22, ease: "easeOut" }}
       >
         <Tabs defaultValue="devices">
-          <TabsList className="mb-4">
+          <TabsList>
             <TabsTrigger value="devices">Devices</TabsTrigger>
             <TabsTrigger value="logs">Punch Logs</TabsTrigger>
           </TabsList>

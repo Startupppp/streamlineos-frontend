@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { EmptyMailIllustration } from "@/components/illustrations";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
@@ -336,7 +337,7 @@ export default function EmailTemplatesPage() {
             title="Failed to load email templates"
             description="Something went wrong. Please try again."
             action={{ label: "Retry", onClick: handleRetry }}
-            className="flex-1 border-0 bg-transparent"
+            className={CONTENT_FILL_PANEL}
           />
         ) : (
           <div className="space-y-6">
@@ -358,7 +359,7 @@ export default function EmailTemplatesPage() {
                     title="No email templates"
                     description="Create reusable templates with dynamic variables to speed up outreach."
                     action={{ label: "New Template", onClick: handleOpenCreate }}
-                    className="flex-1 border-0 bg-transparent"
+                    className={CONTENT_FILL_PANEL}
                   />
                 </div>
               )}

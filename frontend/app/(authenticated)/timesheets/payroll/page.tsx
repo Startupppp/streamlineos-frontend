@@ -195,9 +195,8 @@ export default function TimesheetPayrollPage() {
       title="Payroll"
       subtitle={subtitle}
       actions={pageActions}
-      filters={pageFilters}
     >
-      <motion.div {...motionProps} className="flex flex-1 min-h-0 flex-col space-y-4">
+      <motion.div {...motionProps} className="flex flex-1 min-h-0 flex-col gap-4">
         {rangeError && (
           <p className="text-xs text-destructive px-1">{rangeError}</p>
         )}
@@ -212,13 +211,19 @@ export default function TimesheetPayrollPage() {
           />
         )}
 
-        <Tabs defaultValue="queue">
-          <TabsList className="h-8">
-            <TabsTrigger value="queue" className="text-xs">Pay Period</TabsTrigger>
-            <TabsTrigger value="history" className="text-xs">Export History</TabsTrigger>
+        <Tabs defaultValue="queue" className="flex min-h-0 flex-1 flex-col gap-4">
+          <TabsList>
+            <TabsTrigger value="queue">Pay Period</TabsTrigger>
+            <TabsTrigger value="history">Export History</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="queue" className="mt-3">
+          {pageFilters ? (
+            <div className="flex flex-wrap items-center gap-3">
+              {pageFilters}
+            </div>
+          ) : null}
+
+          <TabsContent value="queue" className="mt-0">
             {summaryError ? (
               <ErrorState
                 title="Couldn't load the payroll queue"
@@ -242,7 +247,7 @@ export default function TimesheetPayrollPage() {
             )}
           </TabsContent>
 
-          <TabsContent value="history" className="mt-3">
+          <TabsContent value="history" className="mt-0">
             <Card>
               <CardContent className="p-0">
                 <PayrollExportsHistory fallbackMapping={mapping} />

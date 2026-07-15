@@ -29,6 +29,7 @@ import {
 import { LoadingButton } from "@/components/ui/loading-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import {
   useCrmMetadata,
   useCreateOption,
@@ -336,7 +337,7 @@ export default function CrmOptionsPage() {
             title="Failed to load options"
             description="Something went wrong. Please try again."
             action={{ label: "Retry", onClick: handleRetry }}
-            className="flex-1 border-0 bg-transparent"
+            className={CONTENT_FILL_PANEL}
           />
         ) : (
           <div className="flex gap-4">

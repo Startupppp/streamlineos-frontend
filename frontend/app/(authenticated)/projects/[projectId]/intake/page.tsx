@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyInboxIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetBody } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,7 +32,6 @@ import {
   PmPageShell,
   PmSection,
   PmStaggerList,
-  PM_TOOLBAR,
 } from "@/features/projects/shared/pm-chrome";
 import { LoadingButton } from "@/components/ui/loading-button";
 
@@ -246,21 +246,19 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
       <PmPageShell>
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <PmSection index={0}>
-            <div className={PM_TOOLBAR}>
-              <TabsList className="h-auto w-full justify-start bg-transparent p-0 sm:w-auto">
-                <TabsTrigger value="pending">
-                  Pending
-                  {pendingCount > 0 ? (
-                    <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">
-                      {pendingCount}
-                    </Badge>
-                  ) : null}
-                </TabsTrigger>
-                <TabsTrigger value="accepted">Accepted</TabsTrigger>
-                <TabsTrigger value="declined">Declined</TabsTrigger>
-                <TabsTrigger value="all">All</TabsTrigger>
-              </TabsList>
-            </div>
+            <TabsList>
+              <TabsTrigger value="pending">
+                Pending
+                {pendingCount > 0 ? (
+                  <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">
+                    {pendingCount}
+                  </Badge>
+                ) : null}
+              </TabsTrigger>
+              <TabsTrigger value="accepted">Accepted</TabsTrigger>
+              <TabsTrigger value="declined">Declined</TabsTrigger>
+              <TabsTrigger value="all">All</TabsTrigger>
+            </TabsList>
           </PmSection>
 
           <TabsContent value={activeTab} className="mt-4">
@@ -278,7 +276,7 @@ export default function IntakePage({ params }: { params: Promise<{ projectId: st
                     ? { label: "Create First Item", onClick: handleOpenCreate }
                     : undefined
                 }
-                className="min-h-[40vh]"
+                className={CONTENT_FILL_PANEL}
               />
             ) : (
               <PmSection index={1}>

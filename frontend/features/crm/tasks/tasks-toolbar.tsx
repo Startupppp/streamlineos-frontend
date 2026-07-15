@@ -5,6 +5,8 @@ import { Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { cn } from "@/lib/utils";
 
 interface TasksToolbarProps {
   search: string;
@@ -71,7 +73,7 @@ export function TasksToolbar({
       </div>
 
       <Select value={typeFilter || "all"} onValueChange={handleTypeFilter}>
-        <SelectTrigger className="w-[110px] h-8 text-[11px]">
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[110px] text-[11px]")}>
           <SelectValue placeholder="Type" />
         </SelectTrigger>
         <SelectContent>
@@ -84,7 +86,7 @@ export function TasksToolbar({
       </Select>
 
       <Select value={statusFilter || "all"} onValueChange={handleStatusFilter}>
-        <SelectTrigger className="w-[110px] h-8 text-[11px]">
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[110px] text-[11px]")}>
           <SelectValue placeholder="Status" />
         </SelectTrigger>
         <SelectContent>
@@ -96,7 +98,7 @@ export function TasksToolbar({
       </Select>
 
       <Select value={entityTypeFilter || "all"} onValueChange={handleEntityTypeFilter}>
-        <SelectTrigger className="w-[110px] h-8 text-[11px]">
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[110px] text-[11px]")}>
           <SelectValue placeholder="Entity" />
         </SelectTrigger>
         <SelectContent>
@@ -108,7 +110,7 @@ export function TasksToolbar({
       </Select>
 
       <Select value={assigneeFilter || "all"} onValueChange={handleAssigneeFilter}>
-        <SelectTrigger className="w-[130px] h-8 text-[11px]">
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[130px] text-[11px]")}>
           <SelectValue placeholder="Assignee" />
         </SelectTrigger>
         <SelectContent>

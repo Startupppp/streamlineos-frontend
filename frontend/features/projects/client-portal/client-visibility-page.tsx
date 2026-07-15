@@ -22,7 +22,6 @@ import {
   PmSection,
   PM_PANEL,
   PM_ROW,
-  PM_TOOLBAR,
 } from "@/features/projects/shared/pm-chrome";
 import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 import { cn } from "@/lib/utils";
@@ -147,26 +146,24 @@ export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
             <ErrorState className="min-h-[14rem]" onRetry={handleRetry} />
           ) : (
             <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-3">
-              <div className={PM_TOOLBAR}>
-                <TabsList className="h-8 rounded-lg border border-border/50 bg-muted/40 p-0.5">
-                  <TabsTrigger value="tickets" className="px-3 text-xs">
-                    Tickets
-                    {ticketCount > 0 ? (
-                      <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">
-                        {ticketCount}
-                      </Badge>
-                    ) : null}
-                  </TabsTrigger>
-                  <TabsTrigger value="milestones" className="px-3 text-xs">
-                    Milestones
-                    {milestoneCount > 0 ? (
-                      <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">
-                        {milestoneCount}
-                      </Badge>
-                    ) : null}
-                  </TabsTrigger>
-                </TabsList>
-              </div>
+              <TabsList>
+                <TabsTrigger value="tickets">
+                  Tickets
+                  {ticketCount > 0 ? (
+                    <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">
+                      {ticketCount}
+                    </Badge>
+                  ) : null}
+                </TabsTrigger>
+                <TabsTrigger value="milestones">
+                  Milestones
+                  {milestoneCount > 0 ? (
+                    <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">
+                      {milestoneCount}
+                    </Badge>
+                  ) : null}
+                </TabsTrigger>
+              </TabsList>
 
               <TabsContent value="tickets" className="mt-0">
                 {(data?.tickets ?? []).length === 0 ? (

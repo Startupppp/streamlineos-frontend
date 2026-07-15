@@ -46,6 +46,7 @@ import {
 import { cn } from "@/lib/utils";
 import { EmptyApprovalIllustration } from "@/components/illustrations";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 
 const STATUS_TABS = [
   { label: "All", value: undefined },
@@ -780,7 +781,7 @@ export default function RequisitionsPage() {
                 : "Create your first headcount request to get started."
             }
             action={{ label: "New Requisition", onClick: handleOpenSheet }}
-            className="flex-1 border-0 bg-transparent shadow-none"
+            className={CONTENT_FILL_PANEL}
           />
         ) : (
           <AnimatePresence mode="popLayout">

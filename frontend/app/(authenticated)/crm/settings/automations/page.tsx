@@ -7,6 +7,7 @@ import { Plus, MoreHorizontal, Play, Pause, Trash2, History } from "lucide-react
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -261,7 +262,7 @@ export default function AutomationsPage() {
           />
         ) : rules.length === 0 && !isLoading ? (
           <EmptyState
-            className="flex-1 border-0 bg-transparent"
+            className={CONTENT_FILL_PANEL}
             illustration={<AutomationsIllustration />}
             title="No automations yet"
             description="Create your first automation to trigger actions on CRM events automatically."

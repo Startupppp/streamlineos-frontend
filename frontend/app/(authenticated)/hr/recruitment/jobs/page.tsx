@@ -30,6 +30,7 @@ import {
 import type { JobPostingStatus } from "@/types/hr";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
+import { CONTENT_FILL_PANEL, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 
 const STATUS_OPTIONS: { value: string; label: string }[] = [
@@ -226,7 +227,7 @@ export default function JobPostingsPage() {
         filters={
           <div className="flex items-center gap-2">
             <Select value={statusFilter ?? "ALL"} onValueChange={(v) => setFilter("status", v)}>
-              <SelectTrigger className="w-[130px] h-8 text-sm">
+              <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[130px] text-sm")}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="w-[var(--radix-select-trigger-width)]">
@@ -236,7 +237,7 @@ export default function JobPostingsPage() {
               </SelectContent>
             </Select>
             <Select value={visibilityFilter ?? "ALL"} onValueChange={(v) => setFilter("visibility", v)}>
-              <SelectTrigger className="w-[140px] h-8 text-sm">
+              <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[140px] text-sm")}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="w-[var(--radix-select-trigger-width)]">
@@ -264,7 +265,7 @@ export default function JobPostingsPage() {
             title="No job postings yet"
             description="Create your first job posting to start hiring"
             action={{ label: "New Job Posting", href: "/hr/recruitment/jobs/new" }}
-            className="border-0 bg-transparent shadow-none"
+            className={CONTENT_FILL_PANEL}
           />
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

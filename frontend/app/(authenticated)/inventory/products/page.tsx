@@ -42,6 +42,8 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
+import { CONTENT_FILL_PANEL, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { cn } from "@/lib/utils";
 import {
   useProducts,
   useCategories,
@@ -400,7 +402,7 @@ function ProductsPageInner() {
       </div>
       <div className="hidden min-w-0 flex-[2] flex-row flex-nowrap items-center gap-2 sm:flex">
         <Select value={statusParam || "all"} onValueChange={handleStatusChange}>
-          <SelectTrigger className="h-8 min-w-0 flex-1 text-xs">
+          <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "min-w-0 flex-1 text-xs")}>
             <SelectValue placeholder="All statuses" />
           </SelectTrigger>
           <SelectContent>
@@ -410,7 +412,7 @@ function ProductsPageInner() {
           </SelectContent>
         </Select>
         <Select value={categoryIdParam || "all"} onValueChange={handleCategoryChange}>
-          <SelectTrigger className="h-8 min-w-0 flex-1 text-xs">
+          <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "min-w-0 flex-1 text-xs")}>
             <SelectValue placeholder="All categories" />
           </SelectTrigger>
           <SelectContent>
@@ -423,7 +425,7 @@ function ProductsPageInner() {
           </SelectContent>
         </Select>
         <Select value={productTypeParam || "all"} onValueChange={handleProductTypeChange}>
-          <SelectTrigger className="h-8 min-w-0 flex-1 text-xs">
+          <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "min-w-0 flex-1 text-xs")}>
             <SelectValue placeholder="All types" />
           </SelectTrigger>
           <SelectContent>
@@ -470,6 +472,7 @@ function ProductsPageInner() {
           description="Start building your product catalogue. Define SKUs, set pricing, configure stock tracking, and manage variants all in one place."
           action={{ label: "Add Product", href: "/inventory/products/new" }}
           secondaryAction={{ label: "Import Products", href: "/inventory/import" }}
+          className={CONTENT_FILL_PANEL}
         />
       ) : (
         <DataTable

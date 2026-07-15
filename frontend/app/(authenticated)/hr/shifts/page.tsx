@@ -52,7 +52,7 @@ export default function ShiftsPage() {
         transition={{ duration: 0.22, ease: "easeOut" }}
       >
         <Tabs defaultValue="templates">
-          <TabsList className="mb-4">
+          <TabsList>
             <TabsTrigger value="templates">Shift Templates</TabsTrigger>
             <TabsTrigger value="assignments">Assignments</TabsTrigger>
             <TabsTrigger value="swaps">Swap Requests</TabsTrigger>

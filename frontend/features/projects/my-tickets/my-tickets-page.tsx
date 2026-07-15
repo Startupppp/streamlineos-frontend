@@ -206,7 +206,7 @@ export function MyTicketsPage({ params }: PageProps) {
       noInternalScroll
       contentClassName="!p-0"
       filters={
-        <div className={cn(PM_TOOLBAR, "px-2 py-1.5 sm:px-2.5")}>
+        <div className={PM_TOOLBAR}>
           <ViewSwitcher
             activeView={view}
             onViewChange={handleViewChange}

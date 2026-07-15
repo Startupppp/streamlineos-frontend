@@ -152,19 +152,22 @@ export function ReportsView() {
     <PageWrapper
       title="Reports"
       subtitle={subtitle}
-      filters={pageFilters}
     >
-      <motion.div {...motionProps} className="flex flex-1 min-h-0 flex-col space-y-4">
-        <Tabs value={activeTab} onValueChange={handleTabChange}>
-          <TabsList className="h-8 flex-wrap">
+      <motion.div {...motionProps} className="flex flex-1 min-h-0 flex-col gap-4">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="flex min-h-0 flex-1 flex-col gap-4">
+          <TabsList className="flex-wrap">
             {REPORT_TABS.map((tab) => (
-              <TabsTrigger key={tab.value} value={tab.value} className="text-xs">
+              <TabsTrigger key={tab.value} value={tab.value}>
                 {tab.label}
               </TabsTrigger>
             ))}
           </TabsList>
 
-          <TabsContent value="overview" className="mt-3">
+          <div className="flex flex-wrap items-center gap-3">
+            {pageFilters}
+          </div>
+
+          <TabsContent value="overview" className="mt-0">
             {isError ? (
               <ErrorState
                 title="Couldn't load report"
@@ -177,7 +180,7 @@ export function ReportsView() {
           </TabsContent>
 
           {REPORT_TABS.slice(1).map((tab) => (
-            <TabsContent key={tab.value} value={tab.value} className="mt-3">
+            <TabsContent key={tab.value} value={tab.value} className="mt-0">
               {tab.value === "project-budgets" ? (
                 <ProjectBudgetsTab />
               ) : (

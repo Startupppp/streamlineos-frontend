@@ -11,7 +11,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ViewToggle, type ViewOption } from "@/components/ui/view-toggle";
-import { cn } from "@/lib/utils";
 
 type ViewMode = "grid" | "list";
 type StatusFilter = "ALL" | "ACTIVE" | "COMPLETED" | "ARCHIVED";
@@ -63,7 +62,7 @@ export function ProjectFilterBar({
   );
 
   return (
-    <div className="flex w-full min-w-0 flex-wrap items-center gap-1.5 rounded-xl border border-border bg-card/80 px-2.5 py-2 sm:gap-2">
+    <div className="flex w-full min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
       <div className="relative min-w-0 flex-1 sm:max-w-[240px]">
         <Search
           className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground"
@@ -73,10 +72,7 @@ export function ProjectFilterBar({
           placeholder="Search projects…"
           value={search}
           onChange={handleSearchInputChange}
-          className={cn(
-            "h-8 border-border/60 bg-card pl-8 pr-7 text-xs shadow-none",
-            "placeholder:text-muted-foreground/70 focus-visible:bg-card",
-          )}
+          className="h-8 border-input bg-card pl-8 pr-7 text-xs"
           aria-label="Search projects"
         />
         {search ? (
@@ -92,12 +88,7 @@ export function ProjectFilterBar({
       </div>
 
       <Select value={status} onValueChange={handleStatusValueChange}>
-        <SelectTrigger
-          className={cn(
-            "h-8 w-full border-border/60 bg-card text-xs shadow-none sm:w-[132px]",
-            "focus:bg-card",
-          )}
-        >
+        <SelectTrigger className="h-8 w-full border-input bg-card text-xs sm:w-[132px]">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -113,7 +104,7 @@ export function ProjectFilterBar({
         options={VIEW_OPTIONS}
         onChange={onViewModeChange}
         size="sm"
-        className="ml-auto shrink-0 border-border/60 bg-card"
+        className="ml-auto shrink-0"
       />
     </div>
   );

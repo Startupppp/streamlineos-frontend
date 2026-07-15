@@ -6,6 +6,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { ErrorState } from "@/components/shared/error-state";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -188,12 +189,12 @@ export function MyWorkPage() {
             onValueChange={handleTabChange}
             className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden"
           >
-            <TabsList className="mb-0 shrink-0">
+            <TabsList className="mb-0 h-8 min-h-8 shrink-0 gap-0.5 rounded-lg p-0.5">
               {WORK_TABS.map((tab) => (
                 <TabsTrigger
                   key={tab}
                   value={tab}
-                  className="px-2.5 text-[12px] sm:px-3 sm:text-[12px]"
+                  className="h-8 px-2.5 text-[12px] sm:px-3 sm:text-[12px]"
                 >
                   {TAB_CONFIG[tab].label}
                 </TabsTrigger>
@@ -216,7 +217,7 @@ export function MyWorkPage() {
                     illustrationPreset="projects"
                     title="Nothing assigned to you"
                     description="Tickets assigned to you across all projects will appear here."
-                    className="min-h-[14rem]"
+                    className={CONTENT_FILL_PANEL}
                   />
                 ) : (
                   <div className="flex flex-col gap-3">

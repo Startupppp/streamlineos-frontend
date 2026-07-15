@@ -18,6 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { ChevronDown, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Department } from "@/types/hr";
@@ -250,7 +251,7 @@ export default function DiversityReportPage() {
           illustrationPreset="chart"
           title="No applicant data found"
           description="Adjust the filters or wait for candidates to apply."
-          className="flex-1 border-0 bg-transparent shadow-none"
+          className={CONTENT_FILL_PANEL}
         />
       ) : (
         <>

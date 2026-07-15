@@ -137,7 +137,7 @@ export function AllWorkPage() {
       noInternalScroll
       contentClassName="!p-0"
       filters={
-        <div className={cn(PM_TOOLBAR, "px-2 py-1.5 sm:px-2.5")}>
+        <div className={PM_TOOLBAR}>
           <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
             <AllWorkViewSwitcher activeView={view} onViewChange={handleViewChangeWithReset} />
             <AllWorkViewsMenu activeView={view} hasActiveFilters={hasActiveFilters} />
@@ -154,7 +154,7 @@ export function AllWorkPage() {
                 "flex h-8 w-8 shrink-0 items-center justify-center rounded-md border transition-colors duration-150",
                 scopeMine
                   ? "border-primary bg-primary text-primary-foreground shadow-sm"
-                  : "border-border bg-card text-muted-foreground hover:bg-primary/5 hover:text-foreground",
+                  : "border-input bg-card text-muted-foreground hover:bg-primary/5 hover:text-foreground",
               )}
             >
               <User className="h-3.5 w-3.5" />

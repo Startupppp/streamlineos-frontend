@@ -39,7 +39,7 @@ export default function OvertimePage() {
         transition={{ duration: 0.22, ease: "easeOut" }}
       >
         <Tabs defaultValue="requests">
-          <TabsList className="mb-4">
+          <TabsList>
             <TabsTrigger value="requests">Overtime Requests</TabsTrigger>
             <TabsTrigger value="comp-off">Comp-Off Balances</TabsTrigger>
           </TabsList>

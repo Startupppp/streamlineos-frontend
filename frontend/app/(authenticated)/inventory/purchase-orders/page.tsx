@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, Search, MoreHorizontal, Store } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -342,7 +343,7 @@ export default function PurchaseOrdersListPage() {
       </div>
       <div className="hidden min-w-0 flex-[2] flex-row flex-nowrap items-center gap-2 sm:flex lg:gap-3">
         <Select value={statusParam} onValueChange={handleStatusChange}>
-          <SelectTrigger className="h-8 min-w-0 flex-1 text-xs">
+          <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "min-w-0 flex-1 text-xs")}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -354,7 +355,7 @@ export default function PurchaseOrdersListPage() {
           </SelectContent>
         </Select>
         <Select value={vendorParam} onValueChange={handleVendorChange}>
-          <SelectTrigger className="h-8 min-w-0 flex-1 text-xs">
+          <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "min-w-0 flex-1 text-xs")}>
             <SelectValue placeholder="All vendors" />
           </SelectTrigger>
           <SelectContent className="max-h-72">

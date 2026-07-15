@@ -350,10 +350,20 @@ export default function AccountingInvoicesPage() {
           </Link>
         </Button>
       }
-      filters={
-        <div className="flex items-center gap-2 flex-wrap">
+    >
+      <Tabs defaultValue="invoices" className="flex flex-1 min-h-0 flex-col gap-4">
+        <TabsList>
+          <TabsTrigger value="invoices">
+            Invoices
+          </TabsTrigger>
+          <TabsTrigger value="collections">
+            Collections
+          </TabsTrigger>
+        </TabsList>
+
+        <div className="flex flex-wrap items-center gap-3">
           <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
-            <SelectTrigger className="h-8 w-[160px] text-xs">
+            <SelectTrigger className="h-8 w-[160px] border-input bg-card text-xs">
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>
@@ -378,17 +388,6 @@ export default function AccountingInvoicesPage() {
             className="h-8 w-[130px] text-xs"
           />
         </div>
-      }
-    >
-      <Tabs defaultValue="invoices" className="flex flex-1 min-h-0 flex-col space-y-4">
-        <TabsList className="h-8">
-          <TabsTrigger value="invoices" className="text-xs">
-            Invoices
-          </TabsTrigger>
-          <TabsTrigger value="collections" className="text-xs">
-            Collections
-          </TabsTrigger>
-        </TabsList>
 
         <TabsContent value="invoices" className="space-y-4 mt-0">
           <StatCardGrid cols={4}>

@@ -25,6 +25,7 @@ import { computeBarGeometry } from "./gantt/gantt-geometry";
 import { GanttDependencyOverlay } from "./gantt/gantt-dependency-overlay";
 import { GanttMilestoneMarkers } from "./gantt/gantt-milestone-markers";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PmPanel, PM_TOOLBAR } from "@/features/projects/shared/pm-chrome";
 import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
@@ -281,7 +282,7 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
                   ? { label: "Go to Backlog", onClick: handleGoToBacklog }
                   : undefined
               }
-              className="min-h-0 border-0 bg-transparent shadow-none"
+              className={CONTENT_FILL_PANEL}
             />
           </div>
         ) : null}

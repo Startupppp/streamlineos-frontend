@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ErrorState } from "@/components/shared";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import {
   EmptyCompaniesIllustration,
   EmptySearchIllustration,
@@ -249,7 +250,7 @@ export default function VendorsListPage() {
         />
       </div>
       <Select value={activeParam} onValueChange={handleActiveChange}>
-        <SelectTrigger className="h-8 w-[140px] text-xs">
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[140px] text-xs")}>
           <SelectValue placeholder="All vendors" />
         </SelectTrigger>
         <SelectContent>

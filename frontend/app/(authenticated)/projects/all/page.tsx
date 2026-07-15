@@ -22,7 +22,6 @@ import {
   PmStaggerList,
   PmSection,
   PM_FILL_PANEL,
-  PM_TOOLBAR,
   PM_PANEL,
 } from "@/features/projects/shared/pm-chrome";
 import { fadeUp, fadeUpReduced } from "@/features/projects/shared/pm-motion";
@@ -200,16 +199,14 @@ export default function ProjectsPage() {
       >
         <PmPageShell>
           <PmSection index={0}>
-            <div className={PM_TOOLBAR}>
-              <ProjectFilterBar
-                search={search}
-                onSearchChange={handleSearchChange}
-                status={status}
-                onStatusChange={handleStatusChange}
-                viewMode={viewMode}
-                onViewModeChange={handleViewModeChange}
-              />
-            </div>
+            <ProjectFilterBar
+              search={search}
+              onSearchChange={handleSearchChange}
+              status={status}
+              onStatusChange={handleStatusChange}
+              viewMode={viewMode}
+              onViewModeChange={handleViewModeChange}
+            />
           </PmSection>
 
           {isLoading ? (

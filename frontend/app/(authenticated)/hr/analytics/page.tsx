@@ -11,12 +11,17 @@ import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/st
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
+  CONTENT_FILL_PANEL,
+  FILTER_SELECT_TRIGGER,
+} from "@/components/ui/content-fill-panel";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Users,
@@ -32,7 +37,6 @@ import { AttendanceSection } from "@/features/hr/analytics/attendance-section";
 import { LeaveSection } from "@/features/hr/analytics/leave-section";
 import { AttritionSection } from "@/features/hr/analytics/attrition-section";
 import { CommandCenterSection } from "@/features/hr/analytics/command-center-section";
-import { cn } from "@/lib/utils";
 
 type DateRange = "month" | "quarter" | "year";
 type SectionTab = "command-center" | "workforce" | "recruitment" | "attendance" | "leaves" | "attrition";
@@ -147,7 +151,7 @@ function DateRangeSelector({
 
   return (
     <Select value={value} onValueChange={handleChange}>
-      <SelectTrigger className="h-8 w-36 text-xs bg-muted/40 rounded-lg">
+      <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-36 text-xs")}>
         <SelectValue />
       </SelectTrigger>
       <SelectContent className="w-[var(--radix-select-trigger-width)]">
@@ -201,6 +205,7 @@ function AnalyticsContent() {
           title="Failed to load analytics"
           description="Something went wrong. Please try again."
           action={{ label: "Retry", onClick: handleRetry }}
+          className={CONTENT_FILL_PANEL}
         />
       </PageWrapper>
     );
@@ -210,9 +215,8 @@ function AnalyticsContent() {
     <PageWrapper
       title="HR Analytics"
       subtitle="Workforce insights and operational metrics"
-      actions={<DateRangeSelector value={dateRange} onChange={setDateRange} />}
     >
-      <div className="space-y-6">
+      <div className="flex min-h-0 flex-1 flex-col gap-4">
         <ExecutiveKPIs
           totalEmployees={totalEmployees}
           attritionRate={attritionRate}
@@ -221,36 +225,38 @@ function AnalyticsContent() {
           isLoading={isTopLoading}
         />
 
-        <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-          <div className="flex items-center gap-2 px-4 pt-4 pb-3 border-b border-border">
-            <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center">
-              <BarChart3
-                className="h-3.5 w-3.5 text-primary"
-                aria-hidden="true"
-              />
-            </div>
-            <h2 className="text-sm font-semibold text-foreground">
-              Detailed Analytics
-            </h2>
+        <Tabs
+          value={activeSection}
+          onValueChange={handleSectionChange}
+          className="flex min-h-0 flex-1 flex-col gap-4"
+        >
+          <TabsList>
+            {SECTION_TABS.map(({ value, label, icon: Icon }) => (
+              <TabsTrigger key={value} value={value} className="gap-1.5">
+                <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+                {label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <DateRangeSelector value={dateRange} onChange={setDateRange} />
           </div>
 
-          <Tabs value={activeSection} onValueChange={handleSectionChange}>
-            <div className="px-4 pt-3 border-b border-border pb-3">
-              <TabsList className="h-8 rounded-lg border p-1 bg-muted/50 gap-0.5">
-                {SECTION_TABS.map(({ value, label, icon: Icon }) => (
-                  <TabsTrigger
-                    key={value}
-                    value={value}
-                    className="text-[11px] px-3 h-6 rounded-md gap-1.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                  >
-                    <Icon className="h-3 w-3" aria-hidden="true" />
-                    {label}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
+          <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden flex min-h-0 flex-1 flex-col">
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-border shrink-0">
+              <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                <BarChart3
+                  className="h-3.5 w-3.5 text-primary"
+                  aria-hidden="true"
+                />
+              </div>
+              <h2 className="text-sm font-semibold text-foreground">
+                Detailed Analytics
+              </h2>
             </div>
 
-            <div className="p-4">
+            <div className="p-4 flex min-h-0 flex-1 flex-col">
               <TabsContent value="command-center" className="mt-0">
                 <CommandCenterSection />
               </TabsContent>
@@ -278,8 +284,8 @@ function AnalyticsContent() {
                 <AttritionSection isLoading={isAttritionLoading} />
               </TabsContent>
             </div>
-          </Tabs>
-        </div>
+          </div>
+        </Tabs>
       </div>
     </PageWrapper>
   );

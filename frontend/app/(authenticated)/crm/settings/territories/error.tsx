@@ -2,6 +2,7 @@
 
 import { useCallback } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { EmptyTargetIllustration } from "@/components/illustrations";
 
 export default function TerritoriesError({
@@ -20,7 +21,7 @@ export default function TerritoriesError({
         title="Something went wrong"
         description={error.message ?? "Failed to load territories."}
         action={{ label: "Try again", onClick: handleReset }}
-        className="border-0 bg-transparent"
+        className={CONTENT_FILL_PANEL}
       />
     </div>
   );

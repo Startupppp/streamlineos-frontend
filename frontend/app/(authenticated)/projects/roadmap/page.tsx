@@ -16,7 +16,6 @@ import { ChangelogTab } from "@/features/projects/roadmap/changelog-tab";
 import {
   PmPageShell,
   PmSection,
-  PM_TOOLBAR,
 } from "@/features/projects/shared/pm-chrome";
 
 type RoadmapTabValue = "roadmap" | "feedback" | "changelog";
@@ -58,33 +57,6 @@ export default function RoadmapPage() {
 
   const showSearch = activeTab === "roadmap" || activeTab === "feedback";
 
-  const filters = (
-    <div className={PM_TOOLBAR}>
-      <TabsList className="h-8 w-fit shrink-0 rounded-lg border border-border bg-muted/50 p-0.5 text-muted-foreground">
-        <TabsTrigger value="roadmap" className="gap-1.5 rounded-md px-3 text-xs">
-          <Sparkles className="h-3.5 w-3.5" />
-          Roadmap
-        </TabsTrigger>
-        <TabsTrigger value="feedback" className="gap-1.5 rounded-md px-3 text-xs">
-          <MessageSquare className="h-3.5 w-3.5" />
-          Feedback
-        </TabsTrigger>
-        <TabsTrigger value="changelog" className="gap-1.5 rounded-md px-3 text-xs">
-          <Megaphone className="h-3.5 w-3.5" />
-          Changelog
-        </TabsTrigger>
-      </TabsList>
-      {showSearch ? (
-        <Input
-          placeholder="Search…"
-          value={search}
-          onChange={handleSearchChange}
-          className="h-8 w-full text-xs sm:ml-auto sm:w-56"
-        />
-      ) : null}
-    </div>
-  );
-
   const actions = (
     <div className="flex items-center gap-2">
       {orgId ? (
@@ -114,15 +86,44 @@ export default function RoadmapPage() {
 
   return (
     <RequireModule module="PROJECTS">
-      <Tabs value={activeTab} onValueChange={handleTabChange} className="flex min-h-0 flex-1 flex-col">
+      <Tabs
+        value={activeTab}
+        onValueChange={handleTabChange}
+        className="flex min-h-0 flex-1 flex-col"
+      >
         <PageWrapper
           title="Roadmap"
           subtitle="Plan publicly, collect feedback and ship a changelog"
-          filters={filters}
           actions={hasActions ? actions : undefined}
         >
           <PmPageShell>
-            <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
+            <PmSection index={0} className="flex min-h-0 flex-1 flex-col gap-3">
+              <TabsList className="shrink-0">
+                <TabsTrigger value="roadmap" className="gap-1.5">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Roadmap
+                </TabsTrigger>
+                <TabsTrigger value="feedback" className="gap-1.5">
+                  <MessageSquare className="h-3.5 w-3.5" />
+                  Feedback
+                </TabsTrigger>
+                <TabsTrigger value="changelog" className="gap-1.5">
+                  <Megaphone className="h-3.5 w-3.5" />
+                  Changelog
+                </TabsTrigger>
+              </TabsList>
+
+              {showSearch ? (
+                <div className="flex flex-wrap items-center gap-3 shrink-0">
+                  <Input
+                    placeholder="Search…"
+                    value={search}
+                    onChange={handleSearchChange}
+                    className="h-8 w-full text-xs sm:w-56 border-input bg-card"
+                  />
+                </div>
+              ) : null}
+
               <TabsContent value="roadmap" className="mt-0 flex min-h-0 flex-1 flex-col">
                 <RoadmapTab
                   search={debouncedSearch}

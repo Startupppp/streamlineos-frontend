@@ -12,7 +12,6 @@ interface ListToolbarProps {
   filters?: ReactNode;
   actions?: ReactNode;
   className?: string;
-  surface?: boolean;
 }
 
 export function ListToolbar({
@@ -22,7 +21,6 @@ export function ListToolbar({
   filters,
   actions,
   className,
-  surface = false,
 }: ListToolbarProps) {
   const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
     onSearchChange?.(e.target.value);
@@ -32,7 +30,6 @@ export function ListToolbar({
     <div
       className={cn(
         "flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between",
-        surface && "rounded-xl border border-border bg-card/80 px-3 py-2",
         className,
       )}
     >
@@ -44,7 +41,7 @@ export function ListToolbar({
               value={search ?? ""}
               onChange={handleSearchChange}
               placeholder={searchPlaceholder}
-              className="h-8 pl-9 text-sm"
+              className="h-8 border-input bg-card pl-9 text-sm"
             />
           </div>
         )}

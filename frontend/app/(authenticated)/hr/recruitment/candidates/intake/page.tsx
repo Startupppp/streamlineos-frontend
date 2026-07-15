@@ -17,6 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { EmptyPersonIllustration } from "@/components/illustrations";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -166,7 +167,7 @@ export default function IntakeInboxPage() {
             illustration={<EmptyPersonIllustration />}
             title="No new applicants right now"
             description="New applications will show up here for triage before entering the pipeline."
-            className="border-0 bg-transparent shadow-none"
+            className={CONTENT_FILL_PANEL}
           />
         ) : (
           <div className="rounded-2xl border border-border bg-card overflow-hidden">

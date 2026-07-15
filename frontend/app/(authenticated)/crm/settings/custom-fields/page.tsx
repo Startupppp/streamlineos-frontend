@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import {
   Dialog,
@@ -420,7 +421,7 @@ export default function CustomFieldsPage() {
             ) : (
               <EmptyState
                 illustration={<EmptyDocumentsIllustration />}
-                className="flex-1 border-0 bg-transparent"
+                className={CONTENT_FILL_PANEL}
                 title={`No custom fields for ${entityLabel} yet`}
                 description="Add your first field to capture additional data for this entity type."
                 action={{ label: "Add Field", onClick: handleOpenCreate }}

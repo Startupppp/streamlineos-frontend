@@ -11,6 +11,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import {
+  CONTENT_FILL_PANEL,
+  FILTER_SELECT_TRIGGER,
+} from "@/components/ui/content-fill-panel";
+import { cn } from "@/lib/utils";
 import { useCourses, useCourseCategories, useEnrollCourse } from "@/hooks/api/hr/courses";
 import { getErrorMessage } from "@/lib/api-client";
 import type { Course } from "@/hooks/api/hr/courses";
@@ -108,10 +114,10 @@ export function CourseCatalog({ canManage }: Props) {
   void canManage;
 
   return (
-    <div className="space-y-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
       <div className="flex flex-wrap items-center gap-3">
         <Select value={categoryFilter} onValueChange={handleCategoryChange}>
-          <SelectTrigger className="h-8 w-40 text-xs">
+          <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-40 text-xs")}>
             <SelectValue placeholder="Category" />
           </SelectTrigger>
           <SelectContent>
@@ -123,7 +129,7 @@ export function CourseCatalog({ canManage }: Props) {
         </Select>
 
         <Select value={typeFilter} onValueChange={handleTypeChange}>
-          <SelectTrigger className="h-8 w-36 text-xs">
+          <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-36 text-xs")}>
             <SelectValue placeholder="Type" />
           </SelectTrigger>
           <SelectContent>
@@ -135,7 +141,7 @@ export function CourseCatalog({ canManage }: Props) {
         </Select>
 
         <Select value={formatFilter} onValueChange={handleFormatChange}>
-          <SelectTrigger className="h-8 w-40 text-xs">
+          <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-40 text-xs")}>
             <SelectValue placeholder="Format" />
           </SelectTrigger>
           <SelectContent>
@@ -162,13 +168,12 @@ export function CourseCatalog({ canManage }: Props) {
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center h-64 text-center">
-          <div className="p-4 rounded-2xl bg-muted mb-4">
-            <BookOpen className="h-10 w-10 text-muted-foreground" />
-          </div>
-          <p className="text-sm font-medium text-foreground">No courses found</p>
-          <p className="text-xs text-muted-foreground mt-1">Try adjusting your filters</p>
-        </div>
+        <EmptyState
+          illustrationPreset="default"
+          title="No courses found"
+          description="Try adjusting your filters"
+          className={CONTENT_FILL_PANEL}
+        />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((course, idx) => (

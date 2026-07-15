@@ -3,7 +3,7 @@
 import { useState, type ChangeEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { Target, Plus, Calendar, TrendingUp } from "lucide-react";
+import { Plus, Calendar, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -16,9 +16,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { EmptyState } from "@/components/ui/empty-state";
+import {
+  CONTENT_FILL_PANEL,
+  FILTER_SELECT_TRIGGER,
+} from "@/components/ui/content-fill-panel";
 import { UserCombobox } from "@/components/ui/user-combobox";
 import { useHrGoals, useCreateHrGoal, type HrGoal } from "@/hooks/api/hr";
 import { useUpdateGoal } from "@/hooks/api/hr";
+import { cn } from "@/lib/utils";
 
 const STATUS_COLORS: Record<string, string> = {
   IN_PROGRESS: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
@@ -142,11 +148,12 @@ function GoalGrid({
 }) {
   if (goals.length === 0) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center py-20 gap-3 text-muted-foreground">
-        <Target className="w-10 h-10 text-muted-foreground/40" />
-        <p className="text-sm font-medium">No goals yet</p>
-        <p className="text-xs">Create your first goal to start tracking progress</p>
-      </div>
+      <EmptyState
+        illustrationPreset="default"
+        title="No goals yet"
+        description="Create your first goal to start tracking progress"
+        className={CONTENT_FILL_PANEL}
+      />
     );
   }
   return (
@@ -385,36 +392,37 @@ export default function GoalsPage() {
           </SheetContent>
         </Sheet>
       }
-      filters={
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="h-8 w-44 text-sm">
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ALL">All Statuses</SelectItem>
-            <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
-            <SelectItem value="COMPLETED">Completed</SelectItem>
-            <SelectItem value="CANCELLED">Cancelled</SelectItem>
-            <SelectItem value="DRAFT">Draft</SelectItem>
-          </SelectContent>
-        </Select>
-      }
     >
-      <Tabs defaultValue="all">
+      <Tabs defaultValue="all" className="flex min-h-0 flex-1 flex-col gap-4">
         <TabsList>
           <TabsTrigger value="all" className="text-sm font-medium">All Goals ({filtered.length})</TabsTrigger>
           <TabsTrigger value="mine" className="text-sm font-medium">My Goals ({myGoals.length})</TabsTrigger>
           <TabsTrigger value="completed" className="text-sm font-medium">Completed ({completed.length})</TabsTrigger>
         </TabsList>
 
+        <div className="flex flex-wrap items-center gap-3">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-44 text-xs")}>
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">All Statuses</SelectItem>
+              <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+              <SelectItem value="COMPLETED">Completed</SelectItem>
+              <SelectItem value="CANCELLED">Cancelled</SelectItem>
+              <SelectItem value="DRAFT">Draft</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         <AnimatePresence mode="wait">
-          <TabsContent value="all" className="mt-6">
+          <TabsContent value="all" className="mt-0 flex min-h-0 flex-1 flex-col">
             <GoalGrid goals={filtered} onEditProgress={handleOpenProgress} />
           </TabsContent>
-          <TabsContent value="mine" className="mt-6">
+          <TabsContent value="mine" className="mt-0 flex min-h-0 flex-1 flex-col">
             <GoalGrid goals={myGoals} onEditProgress={handleOpenProgress} />
           </TabsContent>
-          <TabsContent value="completed" className="mt-6">
+          <TabsContent value="completed" className="mt-0 flex min-h-0 flex-1 flex-col">
             <GoalGrid goals={completed} onEditProgress={handleOpenProgress} />
           </TabsContent>
         </AnimatePresence>

@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Switch } from "@/components/ui/switch";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { EmptyTargetIllustration } from "@/components/illustrations";
 import {
@@ -376,7 +377,7 @@ export default function AssignmentRulesPage() {
             title="Failed to load assignment rules"
             description="Something went wrong. Please try again."
             action={{ label: "Retry", onClick: handleRetry }}
-            className="flex-1 border-0 bg-transparent"
+            className={CONTENT_FILL_PANEL}
           />
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
@@ -412,7 +413,7 @@ export default function AssignmentRulesPage() {
                   title="No assignment rules"
                   description="Create rules to automatically assign incoming leads to the right people."
                   action={{ label: "New Rule", onClick: handleOpenCreate }}
-                  className="flex-1 border-0 bg-transparent"
+                  className={CONTENT_FILL_PANEL}
                 />
               )}
             </div>

@@ -35,6 +35,7 @@ import {
   EmptySearchIllustration,
 } from "@/components/illustrations";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { CandidateComparisonDialog } from "@/components/hr/recruitment/candidate-comparison-dialog";
 import { AddCandidateSheet } from "@/features/hr/recruitment/candidates-list/add-candidate-sheet";
 import { EditCandidateSheet } from "@/features/hr/recruitment/candidates-list/edit-candidate-sheet";
@@ -364,7 +365,7 @@ export default function CandidatesPage() {
                 ? undefined
                 : { label: "Add Candidate", onClick: handleOpenAddSheet }
             }
-            className="flex-1 border-0 bg-transparent shadow-none"
+            className={CONTENT_FILL_PANEL}
           />
         ) : (
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">

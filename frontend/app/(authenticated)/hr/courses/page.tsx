@@ -53,15 +53,15 @@ export default function CoursesPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.22, ease: "easeOut" }}
       >
-        <Tabs defaultValue="catalog">
-          <TabsList className="mb-4">
+        <Tabs defaultValue="catalog" className="flex min-h-0 flex-1 flex-col gap-4">
+          <TabsList>
             <TabsTrigger value="catalog">Course Catalog</TabsTrigger>
             <TabsTrigger value="my-learning">My Learning</TabsTrigger>
           </TabsList>
-          <TabsContent value="catalog">
+          <TabsContent value="catalog" className="mt-0 flex min-h-0 flex-1 flex-col">
             <CourseCatalog canManage={canManage} />
           </TabsContent>
-          <TabsContent value="my-learning">
+          <TabsContent value="my-learning" className="mt-0 flex min-h-0 flex-1 flex-col">
             <MyLearning />
           </TabsContent>
         </Tabs>

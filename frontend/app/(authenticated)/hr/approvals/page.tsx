@@ -163,7 +163,7 @@ export default function ApprovalsPage() {
         className="flex min-h-0 flex-1 flex-col"
       >
         <Tabs defaultValue="pending" className="flex min-h-0 flex-1 flex-col">
-          <TabsList>
+          <TabsList className="mb-4 shrink-0">
             <TabsTrigger value="pending" className="gap-1.5">
               Pending
               {inbox.length > 0 && (
@@ -173,7 +173,7 @@ export default function ApprovalsPage() {
             <TabsTrigger value="acted">Acted</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="pending" className="mt-2 flex min-h-0 flex-1 flex-col">
+          <TabsContent value="pending" className="flex min-h-0 flex-1 flex-col">
             <InstanceList
               instances={inbox}
               isLoading={inboxLoading}
@@ -184,7 +184,7 @@ export default function ApprovalsPage() {
             />
           </TabsContent>
 
-          <TabsContent value="acted" className="mt-2 flex min-h-0 flex-1 flex-col">
+          <TabsContent value="acted" className="flex min-h-0 flex-1 flex-col">
             <InstanceList
               instances={acted}
               isLoading={actedLoading}

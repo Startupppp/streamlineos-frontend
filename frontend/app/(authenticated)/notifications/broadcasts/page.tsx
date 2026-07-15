@@ -13,6 +13,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import {
   Sheet,
   SheetContent,
@@ -491,51 +492,53 @@ export default function BroadcastsPage() {
           New Broadcast
         </Button>
       }
-      filters={
+    >
+      <div className="flex min-h-0 flex-1 flex-col gap-4">
         <Tabs value={activeStatus} onValueChange={setActiveStatus}>
-          <TabsList className="bg-card border border-border">
+          <TabsList>
             {STATUS_TABS.map((tab) => (
               <TabsTrigger key={tab.value} value={tab.value}>{tab.label}</TabsTrigger>
             ))}
           </TabsList>
         </Tabs>
-      }
-    >
-      {isLoading ? (
-        <div className="rounded-lg border border-border overflow-hidden divide-y divide-border flex-1">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="flex items-start gap-3 px-3 py-2.5">
-              <div className="flex-1 space-y-1.5">
-                <Skeleton className="h-3.5 w-48" />
-                <Skeleton className="h-3 w-full max-w-sm" />
+
+        {isLoading ? (
+          <div className="rounded-lg border border-border overflow-hidden divide-y divide-border flex-1">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-start gap-3 px-3 py-2.5">
+                <div className="flex-1 space-y-1.5">
+                  <Skeleton className="h-3.5 w-48" />
+                  <Skeleton className="h-3 w-full max-w-sm" />
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      ) : isError ? (
-        <ErrorState title="Failed to load broadcasts" description="Could not load broadcasts." onRetry={handleRetry} />
-      ) : items.length === 0 ? (
-        <EmptyState
-          illustrationPreset="mail"
-          title="No broadcasts"
-          description="Send an announcement to your entire team or specific groups."
-          action={{ label: "New Broadcast", onClick: handleCreate }}
-        />
-      ) : (
-        <div className="rounded-lg border border-border overflow-hidden divide-y divide-border">
-          {items.map((b, idx) => (
-            <BroadcastRow
-              key={b.id}
-              broadcast={b}
-              idx={idx}
-              onPublish={setPublishTarget}
-              onCancel={setCancelTarget}
-              onEdit={handleEdit}
-              onDelete={setDeleteTarget}
-            />
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        ) : isError ? (
+          <ErrorState title="Failed to load broadcasts" description="Could not load broadcasts." onRetry={handleRetry} />
+        ) : items.length === 0 ? (
+          <EmptyState
+            illustrationPreset="mail"
+            title="No broadcasts"
+            description="Send an announcement to your entire team or specific groups."
+            action={{ label: "New Broadcast", onClick: handleCreate }}
+            className={CONTENT_FILL_PANEL}
+          />
+        ) : (
+          <div className="rounded-lg border border-border overflow-hidden divide-y divide-border">
+            {items.map((b, idx) => (
+              <BroadcastRow
+                key={b.id}
+                broadcast={b}
+                idx={idx}
+                onPublish={setPublishTarget}
+                onCancel={setCancelTarget}
+                onEdit={handleEdit}
+                onDelete={setDeleteTarget}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
       <BroadcastSheet open={sheetOpen} broadcast={editTarget} onClose={handleSheetClose} />
 

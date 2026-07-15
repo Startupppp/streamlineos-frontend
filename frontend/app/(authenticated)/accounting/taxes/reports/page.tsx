@@ -366,37 +366,36 @@ export default function TaxReportsPage() {
       title="Tax Reports"
       subtitle="Output, input, and net liability across a date range."
       backHref="/accounting/taxes"
-      filters={filters}
+      actions={
+        activeTab === "output" ? (
+          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={handleExportOutput}>
+            <Download className="h-3.5 w-3.5" />
+            Export CSV
+          </Button>
+        ) : activeTab === "input" ? (
+          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={handleExportInput}>
+            <Download className="h-3.5 w-3.5" />
+            Export CSV
+          </Button>
+        ) : undefined
+      }
     >
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
-        <div className="shrink-0 flex items-center justify-between gap-3 px-4 sm:px-6 pb-2">
-          <TabsList className="h-8">
-            <TabsTrigger value="output" className="text-xs px-3">
-              Output
-            </TabsTrigger>
-            <TabsTrigger value="input" className="text-xs px-3">
-              Input
-            </TabsTrigger>
-            <TabsTrigger value="liability" className="text-xs px-3">
-              Liability
-            </TabsTrigger>
-          </TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex min-h-0 flex-1 flex-col gap-4">
+        <TabsList>
+          <TabsTrigger value="output">
+            Output
+          </TabsTrigger>
+          <TabsTrigger value="input">
+            Input
+          </TabsTrigger>
+          <TabsTrigger value="liability">
+            Liability
+          </TabsTrigger>
+        </TabsList>
 
-          {activeTab === "output" && (
-            <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={handleExportOutput}>
-              <Download className="h-3.5 w-3.5" />
-              Export CSV
-            </Button>
-          )}
-          {activeTab === "input" && (
-            <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={handleExportInput}>
-              <Download className="h-3.5 w-3.5" />
-              Export CSV
-            </Button>
-          )}
-        </div>
+        {filters}
 
-        <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 pb-4">
+        <div className="flex min-h-0 flex-1 flex-col">
           <TabsContent value="output" className="mt-0">
             <ReportTable
               data={outputQuery.data?.items ?? []}

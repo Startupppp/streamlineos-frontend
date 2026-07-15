@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { EmptyClientsIllustration } from "@/components/illustrations";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared";
@@ -276,7 +277,7 @@ export default function ClientsPage() {
             />
           </div>
           <Select value={statusParam ?? "all"} onValueChange={handleStatusChange}>
-            <SelectTrigger className="h-8 text-xs w-[160px] min-w-0 shrink-0">
+            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "text-xs w-[160px] min-w-0 shrink-0")}>
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>

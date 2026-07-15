@@ -2,6 +2,7 @@
 
 import { useCallback } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { EmptyProjectsIllustration } from "@/components/illustrations";
 import { useCan } from "@/hooks/api/access";
 
@@ -18,7 +19,7 @@ export function ProjectsEmptyState({ onCreate }: ProjectsEmptyStateProps) {
 
   return (
     <EmptyState
-      className="h-full flex-1 border-0 bg-transparent"
+      className={CONTENT_FILL_PANEL}
       illustration={<EmptyProjectsIllustration />}
       title="No projects yet"
       description="Create your first project to start organizing work."

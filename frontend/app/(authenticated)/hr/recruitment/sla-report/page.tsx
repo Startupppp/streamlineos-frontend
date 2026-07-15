@@ -13,6 +13,7 @@ import { ArrowLeft, AlertTriangle, TrendingUp, AlertCircle } from "lucide-react"
 import { cn } from "@/lib/utils";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -170,7 +171,7 @@ export default function SlaReportPage() {
           title="No SLA tracking data yet"
           description="SLA data is recorded as candidates move through recruitment stages."
           action={{ label: "Configure SLAs", href: "/hr/recruitment/sla" }}
-          className="flex-1 border-0 bg-transparent shadow-none"
+          className={CONTENT_FILL_PANEL}
         />
       ) : (
         <div className="space-y-6">

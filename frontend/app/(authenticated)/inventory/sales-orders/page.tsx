@@ -25,6 +25,7 @@ import {
 } from "@/components/illustrations";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useSalesOrders, type SalesOrderStatus, type SalesOrderListItem } from "@/hooks/api/inventory/sales-orders";
 
@@ -215,7 +216,7 @@ function SalesOrdersContent() {
   const filterBar = (
     <div className="flex w-full min-w-0 flex-wrap items-center gap-2">
       <Select value={statusParam} onValueChange={handleStatusChange}>
-        <SelectTrigger className="h-8 text-xs w-[160px]">
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "text-xs w-[160px]")}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

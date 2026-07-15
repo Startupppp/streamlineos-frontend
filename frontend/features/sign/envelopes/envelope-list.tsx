@@ -132,7 +132,8 @@ export function EnvelopeList() {
           New envelope
         </Button>
       }
-      filters={
+    >
+      <div className="flex min-h-0 flex-1 flex-col gap-4">
         <Tabs value={status} onValueChange={setStatus}>
           <TabsList>
             {STATUS_FILTERS.map((f) => (
@@ -142,21 +143,21 @@ export function EnvelopeList() {
             ))}
           </TabsList>
         </Tabs>
-      }
-    >
-      {isError ? (
-        <ErrorState title="Failed to load envelopes" onRetry={handleRetry} />
-      ) : (
-        <DataTable
-          className="flex-1 min-h-0"
-          data={envelopes ?? []}
-          columns={columns}
-          getRowKey={(envelope) => envelope.id}
-          isLoading={isLoading}
-          emptyState={emptyState}
-          onRowClick={handleRowClick}
-        />
-      )}
+
+        {isError ? (
+          <ErrorState title="Failed to load envelopes" onRetry={handleRetry} />
+        ) : (
+          <DataTable
+            className="flex-1 min-h-0"
+            data={envelopes ?? []}
+            columns={columns}
+            getRowKey={(envelope) => envelope.id}
+            isLoading={isLoading}
+            emptyState={emptyState}
+            onRowClick={handleRowClick}
+          />
+        )}
+      </div>
 
       <CreateEnvelopeDialog open={createOpen} onOpenChange={setCreateOpen} />
     </PageWrapper>

@@ -25,6 +25,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { ErrorState } from "@/components/shared/error-state";
 import { LoadingState } from "@/components/shared/loading-state";
 import {
@@ -315,8 +316,6 @@ export function KbManagerContent() {
           ? "Create and publish help articles for customers and your team"
           : "Manage help articles, categories, and AI-indexed content for your team"
       }
-      mobileFiltersInline
-      filters={filters}
       actions={
         <>
           <Button
@@ -341,15 +340,16 @@ export function KbManagerContent() {
         </>
       }
     >
-      <StatCardGrid cols={3} className="mb-5">
+      <div className="flex min-h-0 flex-1 flex-col gap-4">
+      <StatCardGrid cols={3}>
         <StatCard label="Total articles" value={stats.total} icon={FileText} />
         <StatCard label="Published" value={stats.published} icon={CheckCircle2} tone="emerald" />
         <StatCard label="Public" value={stats.publicCount} icon={Globe} tone="blue" />
       </StatCardGrid>
 
-      <KbAskPanel mode="authed" className="mb-5" />
+      <KbAskPanel mode="authed" />
 
-      <Tabs value={tab} onValueChange={handleTabChange}>
+      <Tabs value={tab} onValueChange={handleTabChange} className="flex min-h-0 flex-1 flex-col gap-4">
         <TabsList>
           <TabsTrigger value="articles">
             <FileText className="h-4 w-4 mr-1.5" /> Articles
@@ -359,7 +359,11 @@ export function KbManagerContent() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="articles" className="mt-4">
+        <div className="flex w-full min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+          {filters}
+        </div>
+
+        <TabsContent value="articles" className="mt-0">
           {articlesQuery.isLoading ? (
             <LoadingState variant="list" />
           ) : articlesQuery.error ? (
@@ -373,6 +377,7 @@ export function KbManagerContent() {
               title="No articles match your filters"
               description="Try adjusting your search or filters."
               action={{ label: "Clear filters", onClick: handleClearFilters }}
+              className={CONTENT_FILL_PANEL}
             />
           ) : articles.length === 0 ? (
             <EmptyState
@@ -380,6 +385,7 @@ export function KbManagerContent() {
               title="No articles yet"
               description="Create your first help center article to get started."
               action={{ label: "New Article", onClick: handleOpenNewArticle }}
+              className={CONTENT_FILL_PANEL}
             />
           ) : (
             <div className="space-y-2">
@@ -398,7 +404,7 @@ export function KbManagerContent() {
           )}
         </TabsContent>
 
-        <TabsContent value="categories" className="mt-4">
+        <TabsContent value="categories" className="mt-0">
           {categoriesQuery.isLoading ? (
             <LoadingState variant="list" />
           ) : categoriesQuery.error ? (
@@ -412,6 +418,7 @@ export function KbManagerContent() {
               title="No categories yet"
               description="Group your articles into categories for the help center."
               action={{ label: "New Category", onClick: handleOpenCategoryDialog }}
+              className={CONTENT_FILL_PANEL}
             />
           ) : (
             <div className="space-y-2">
@@ -427,6 +434,7 @@ export function KbManagerContent() {
           )}
         </TabsContent>
       </Tabs>
+      </div>
 
       {categoryDialogOpen && (
         <KbCategoryDialog onClose={handleCloseCategoryDialog} />

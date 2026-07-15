@@ -11,6 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { cn } from "@/lib/utils";
 import { useCrmOptions } from "@/hooks/api/crm/metadata";
 import type {
   CrmActivityType,
@@ -105,7 +107,7 @@ export function ActivityFilters({
       </div>
 
       <Select value={typeFilter || "all"} onValueChange={handleTypeChange}>
-        <SelectTrigger className="h-8 w-[120px] text-xs">
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[120px] text-xs")}>
           <SelectValue placeholder="All Types" />
         </SelectTrigger>
         <SelectContent>
@@ -119,7 +121,7 @@ export function ActivityFilters({
       </Select>
 
       <Select value={entityTypeFilter || "all"} onValueChange={handleEntityTypeChange}>
-        <SelectTrigger className="h-8 w-[120px] text-xs">
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[120px] text-xs")}>
           <SelectValue placeholder="All Entities" />
         </SelectTrigger>
         <SelectContent>
@@ -133,7 +135,7 @@ export function ActivityFilters({
       </Select>
 
       <Select value={statusFilter || "all"} onValueChange={handleStatusChange}>
-        <SelectTrigger className="h-8 w-[120px] text-xs">
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[120px] text-xs")}>
           <SelectValue placeholder="All Status" />
         </SelectTrigger>
         <SelectContent>

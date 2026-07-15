@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { ErrorState, AppDialog } from "@/components/shared";
 import { ShipmentDetailSheet } from "@/features/inventory/components/shipping/shipment-detail-sheet";
 import {
@@ -195,7 +196,7 @@ function ShipmentsPageInner() {
   const filtersRow = (
     <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
       <Select value={statusParam || "all"} onValueChange={handleStatusChange}>
-        <SelectTrigger className="h-8 min-w-0 w-[180px] text-xs">
+        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "min-w-0 w-[180px] text-xs")}>
           <SelectValue placeholder="All statuses" />
         </SelectTrigger>
         <SelectContent>

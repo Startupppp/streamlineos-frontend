@@ -5,6 +5,8 @@ import { BookOpen, CheckCircle2, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { useMyEnrollments } from "@/hooks/api/hr/courses";
 import type { CourseEnrollment } from "@/hooks/api/hr/courses";
 
@@ -43,18 +45,17 @@ export function MyLearning() {
 
   if (enrollments.length === 0) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center h-64 text-center">
-        <div className="p-4 rounded-2xl bg-muted mb-4">
-          <BookOpen className="h-10 w-10 text-muted-foreground" />
-        </div>
-        <p className="text-sm font-medium text-foreground">No courses yet</p>
-        <p className="text-xs text-muted-foreground mt-1">Enroll in a course from the catalog to get started</p>
-      </div>
+      <EmptyState
+        illustrationPreset="default"
+        title="No courses yet"
+        description="Enroll in a course from the catalog to get started"
+        className={CONTENT_FILL_PANEL}
+      />
     );
   }
 
   return (
-    <div className="space-y-3">
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
       <AnimatePresence>
         {enrollments.map((enrollment, idx) => {
           const config = STATUS_CONFIG[enrollment.status];

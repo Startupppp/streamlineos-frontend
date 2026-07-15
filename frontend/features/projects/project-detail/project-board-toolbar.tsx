@@ -101,7 +101,7 @@ export function ProjectBoardToolbar({
   }, [onOpenSaveView]);
 
   return (
-    <div className="flex w-full min-w-0 flex-row flex-nowrap items-start gap-1.5 rounded-xl border border-border bg-card p-1.5 shadow-sm">
+    <div className="flex w-full min-w-0 flex-row flex-nowrap items-start gap-1.5">
       <ViewSwitcher
         activeView={view}
         onViewChange={onViewChange}
