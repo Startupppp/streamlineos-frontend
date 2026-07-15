@@ -1,6 +1,6 @@
 "use client";
 
-import { useFieldArray, useForm } from "react-hook-form";
+import { useFieldArray, useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Plus, Trash2 } from "lucide-react";
@@ -9,6 +9,7 @@ import { AppSheet } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { InventoryReferenceCombobox } from "@/components/inventory/inventory-reference-combobox";
 import {
   Select,
   SelectContent,
@@ -151,7 +152,7 @@ export function LoadCreateSheet({ open, onOpenChange }: LoadCreateSheetProps) {
           {fields.map((field, index) => (
             <div key={field.id} className="flex items-end gap-2">
               <div className="space-y-1 w-[130px] shrink-0">
-                <Label className="text-[10px] text-muted-foreground">Type</Label>
+                <Label className="text-[10px] font-semibold text-foreground/80">Type</Label>
                 <Select
                   value={form.watch(`members.${index}.type`)}
                   onValueChange={(v) => handleMemberTypeChange(index, v)}
@@ -166,13 +167,18 @@ export function LoadCreateSheet({ open, onOpenChange }: LoadCreateSheetProps) {
                 </Select>
               </div>
               <div className="flex-1 space-y-1 min-w-0">
-                <Label className="text-[10px] text-muted-foreground">Reference ID</Label>
-                <Input
-                  type="number"
-                  min="1"
-                  placeholder="ID"
-                  className="h-8 text-xs"
-                  {...form.register(`members.${index}.referenceId`)}
+                <Label className="text-[10px] font-semibold text-foreground/80">Reference</Label>
+                <Controller
+                  control={form.control}
+                  name={`members.${index}.referenceId`}
+                  render={({ field }) => (
+                    <InventoryReferenceCombobox
+                      type={form.watch(`members.${index}.type`)}
+                      value={field.value}
+                      onChange={field.onChange}
+                      className="h-8 text-xs"
+                    />
+                  )}
                 />
                 {form.formState.errors.members?.[index]?.referenceId && (
                   <p className="text-[10px] text-destructive">

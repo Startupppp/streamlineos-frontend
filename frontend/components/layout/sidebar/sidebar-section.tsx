@@ -47,9 +47,8 @@ function routeIsActive(route: NavRoute, pathname: string): boolean {
 }
 
 function routeContainsActive(route: NavRoute, pathname: string): boolean {
-  if (routeIsActive(route, pathname)) return true;
   if (!route.children) return false;
-  return route.children.some((c) => routeContainsActive(c, pathname));
+  return route.children.some((c) => routeIsActive(c, pathname) || routeContainsActive(c, pathname));
 }
 
 export function SidebarSection({

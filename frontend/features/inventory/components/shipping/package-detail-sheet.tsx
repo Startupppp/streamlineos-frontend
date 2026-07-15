@@ -9,6 +9,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ProductVariantCombobox } from "@/components/inventory/product-variant-combobox";
+import { useLots, useSerials } from "@/hooks/api/inventory/traceability";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertDialog,
@@ -67,17 +76,30 @@ const EditableLineRow = memo(function EditableLineRow({
   onChangeField,
   onRemove,
 }: EditableLineRowProps) {
-  function handleVariantChange(e: React.ChangeEvent<HTMLInputElement>): void {
-    onChangeField(index, "variantId", e.target.value);
+  const numericVariantId = Number(line.variantId);
+  const variantEnabled = Number.isInteger(numericVariantId) && numericVariantId > 0;
+  const { data: lotsData } = useLots(
+    variantEnabled ? { variantId: numericVariantId, status: "ACTIVE", limit: 100 } : undefined,
+  );
+  const { data: serialsData } = useSerials(
+    variantEnabled ? { variantId: numericVariantId, status: "IN_STOCK", limit: 100 } : undefined,
+  );
+  const lots = lotsData?.items ?? [];
+  const serials = serialsData?.items ?? [];
+
+  function handleVariantChange(value: string): void {
+    onChangeField(index, "variantId", value);
+    onChangeField(index, "lotId", "");
+    onChangeField(index, "serialId", "");
   }
   function handleQtyChange(e: React.ChangeEvent<HTMLInputElement>): void {
     onChangeField(index, "qty", e.target.value);
   }
-  function handleLotChange(e: React.ChangeEvent<HTMLInputElement>): void {
-    onChangeField(index, "lotId", e.target.value);
+  function handleLotChange(value: string): void {
+    onChangeField(index, "lotId", value === "none" ? "" : value);
   }
-  function handleSerialChange(e: React.ChangeEvent<HTMLInputElement>): void {
-    onChangeField(index, "serialId", e.target.value);
+  function handleSerialChange(value: string): void {
+    onChangeField(index, "serialId", value === "none" ? "" : value);
   }
   function handleRemove(): void {
     onRemove(index);
@@ -86,17 +108,15 @@ const EditableLineRow = memo(function EditableLineRow({
   return (
     <div className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-1.5 items-end">
       <div className="space-y-0.5">
-        <Label className="text-[10px] text-muted-foreground">Variant ID</Label>
-        <Input
-          type="number"
-          min="1"
+        <Label className="text-[10px] font-semibold text-foreground/80">Variant</Label>
+        <ProductVariantCombobox
           value={line.variantId}
           onChange={handleVariantChange}
           className="h-8 text-xs"
         />
       </div>
       <div className="space-y-0.5">
-        <Label className="text-[10px] text-muted-foreground">Qty</Label>
+        <Label className="text-[10px] font-semibold text-foreground/80">Qty</Label>
         <Input
           type="number"
           min="1"
@@ -106,26 +126,44 @@ const EditableLineRow = memo(function EditableLineRow({
         />
       </div>
       <div className="space-y-0.5">
-        <Label className="text-[10px] text-muted-foreground">Lot ID</Label>
-        <Input
-          type="number"
-          min="1"
-          placeholder="—"
-          value={line.lotId}
-          onChange={handleLotChange}
-          className="h-8 text-xs"
-        />
+        <Label className="text-[10px] font-semibold text-foreground/80">Lot</Label>
+        <Select
+          value={line.lotId || "none"}
+          onValueChange={handleLotChange}
+          disabled={!variantEnabled || lots.length === 0}
+        >
+          <SelectTrigger className="h-8 text-xs">
+            <SelectValue placeholder="—" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">—</SelectItem>
+            {lots.map((lot) => (
+              <SelectItem key={lot.id} value={String(lot.id)}>
+                {lot.lotNumber}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       <div className="space-y-0.5">
-        <Label className="text-[10px] text-muted-foreground">Serial ID</Label>
-        <Input
-          type="number"
-          min="1"
-          placeholder="—"
-          value={line.serialId}
-          onChange={handleSerialChange}
-          className="h-8 text-xs"
-        />
+        <Label className="text-[10px] font-semibold text-foreground/80">Serial</Label>
+        <Select
+          value={line.serialId || "none"}
+          onValueChange={handleSerialChange}
+          disabled={!variantEnabled || serials.length === 0}
+        >
+          <SelectTrigger className="h-8 text-xs">
+            <SelectValue placeholder="—" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">—</SelectItem>
+            {serials.map((serial) => (
+              <SelectItem key={serial.id} value={String(serial.id)}>
+                {serial.serialNumber}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       <Button
         type="button"

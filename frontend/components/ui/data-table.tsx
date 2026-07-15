@@ -44,7 +44,7 @@ export interface DataTableColumn<T> {
   headerClassName?: string;
 }
 
-type ClientPagination = { pageSize?: number };
+type ClientPagination = { pageSize?: number; onPageSizeChange?: (pageSize: number) => void };
 type ServerPagination = {
   mode: "server";
   page: number;
@@ -116,8 +116,8 @@ export function DataTable<T>({
   const isServerPagination =
     pagination !== undefined && "mode" in pagination && pagination.mode === "server";
   const serverPag = isServerPagination ? (pagination as ServerPagination) : null;
-  const clientPageSize =
-    !isServerPagination ? ((pagination as ClientPagination | undefined)?.pageSize ?? 50) : 20;
+  const clientPag = !isServerPagination ? (pagination as ClientPagination | undefined) : null;
+  const clientPageSize = clientPag?.pageSize ?? 50;
 
   const rowSelection = useMemo<RowSelectionState>(() => {
     if (!selection) return localRowSelection;
@@ -418,7 +418,7 @@ export function DataTable<T>({
             total={totalItems}
             limit={pSize}
             onPageChange={handlePageChange}
-            onLimitChange={serverPag?.onPageSizeChange}
+            onLimitChange={serverPag?.onPageSizeChange ?? clientPag?.onPageSizeChange}
           />
         </div>
       )}

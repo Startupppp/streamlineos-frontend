@@ -35,7 +35,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Users, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
+import { StateIllustration } from "@/components/illustrations";
 import { useCan } from "@/hooks/api/access";
 import { useOrgDelegations, useGrantProxy, useRevokeProxy, type ProxyAccess } from "../hooks/use-delegations";
 import { useOrgMembers } from "@/hooks/api/organization";
@@ -161,7 +162,9 @@ export function DelegationSheet() {
   return (
     <>
       <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-muted-foreground">{data?.total ?? 0} proxies</p>
+        <p className="text-sm text-muted-foreground whitespace-nowrap">
+          {data?.total ?? 0} {(data?.total ?? 0) === 1 ? "proxy" : "proxies"}
+        </p>
         {canManage && (
           <Button onClick={handleOpenSheet} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground">
             <Plus className="h-4 w-4 mr-1.5" />
@@ -174,9 +177,18 @@ export function DelegationSheet() {
         data={data?.data ?? []}
         getRowKey={(row) => row.id}
         emptyState={
-          <div className="flex flex-col items-center py-12">
-            <Users className="h-8 w-8 text-muted-foreground mb-2" />
-            <p className="text-sm text-muted-foreground">No proxy delegations configured.</p>
+          <div className="flex flex-col items-center justify-center gap-3 py-12">
+            <StateIllustration preset="team" className="h-28 w-28" />
+            <div className="text-center space-y-1">
+              <p className="text-sm font-medium text-foreground">No proxy delegations configured</p>
+              <p className="text-xs text-muted-foreground">Grant proxy access to let another user act on your behalf during leave or absence.</p>
+            </div>
+            {canManage && (
+              <Button onClick={handleOpenSheet} size="sm" className="mt-1 bg-primary hover:bg-primary/90 text-primary-foreground">
+                <Plus className="h-4 w-4 mr-1.5" />
+                Grant Proxy
+              </Button>
+            )}
           </div>
         }
         pagination={{ mode: "server", page, pageSize: 20, total: data?.total ?? 0, onPageChange: setPage }}

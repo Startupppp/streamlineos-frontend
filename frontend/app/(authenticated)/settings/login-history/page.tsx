@@ -13,7 +13,8 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 type LoginEntry = NonNullable<ReturnType<typeof useLoginHistory>["data"]>["data"][number];
 type SuccessFilter = "all" | "success" | "failure";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE_OPTIONS = [10, 20, 50] as const;
+type PageSize = (typeof PAGE_SIZE_OPTIONS)[number];
 
 const COLUMNS: DataTableColumn<LoginEntry>[] = [
   {
@@ -92,6 +93,7 @@ function FilterButton({
 
 export default function LoginHistoryPage() {
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<PageSize>(20);
   const [filter, setFilter] = useState<SuccessFilter>("all");
 
   const successParam =
@@ -99,6 +101,7 @@ export default function LoginHistoryPage() {
 
   const { data, isLoading, isError, refetch } = useLoginHistory({
     page,
+    limit: pageSize,
     success: successParam,
   });
 
@@ -109,6 +112,11 @@ export default function LoginHistoryPage() {
 
   function handlePageChange(newPage: number) {
     setPage(newPage);
+  }
+
+  function handlePageSizeChange(newSize: number) {
+    setPageSize(newSize as PageSize);
+    setPage(1);
   }
 
   function handleRetry() {
@@ -149,9 +157,10 @@ export default function LoginHistoryPage() {
           pagination={{
             mode: "server",
             page,
-            pageSize: PAGE_SIZE,
+            pageSize,
             total: data?.total ?? 0,
             onPageChange: handlePageChange,
+            onPageSizeChange: handlePageSizeChange,
           }}
           emptyState={
             <EmptyState

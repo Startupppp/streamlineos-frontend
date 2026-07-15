@@ -64,16 +64,17 @@ export function useRemoveDevice() {
   });
 }
 
-export function useLoginHistory(params?: { page?: number; success?: boolean }) {
+export function useLoginHistory(params?: { page?: number; limit?: number; success?: boolean }) {
   return useQuery({
     queryKey: queryKeys.auth.loginHistory(params as Record<string, unknown>),
     queryFn: () =>
       apiClient.get<LoginHistoryPage>("/me/login-history", {
         page: params?.page ?? 1,
-        limit: 20,
+        limit: params?.limit ?? 20,
         ...(params?.success !== undefined && { success: String(params.success) }),
       }),
     staleTime: 30_000,
+    placeholderData: (prev) => prev,
   });
 }
 

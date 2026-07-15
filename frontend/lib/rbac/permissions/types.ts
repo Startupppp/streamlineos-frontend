@@ -479,4 +479,5 @@ export type PermissionKey =
   | "crm:deals:delete"
   | "crm:deals:approve"
   | "crm:deals:forecast"
-  | "crm:deals:manage";
+  | "crm:deals:manage"
+  | "hr:email-templates:manage";

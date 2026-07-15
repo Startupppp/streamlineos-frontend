@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, ShieldCheck } from "lucide-react";
+import { Plus, RefreshCw, AlertTriangle } from "lucide-react";
 import { useCan } from "@/hooks/api/access";
 import {
   useAccessProvisioning,
@@ -22,6 +22,7 @@ import { ProvisioningSheet } from "./provisioning-sheet";
 import { TemplateSheet } from "./template-sheet";
 import { ExitVerificationView } from "./exit-verification-view";
 import { format } from "date-fns";
+import { useQueryClient } from "@tanstack/react-query";
 import { useOrgMembers } from "@/hooks/api/organization";
 import {
   getUserDisplayName,
@@ -48,12 +49,19 @@ export function IdentityPageContent() {
   const [showCreate, setShowCreate] = useState(false);
   const [showTemplate, setShowTemplate] = useState(false);
   const [activeTab, setActiveTab] = useState("provisioning");
-  const [exitUserId, setExitUserId] = useState("");
 
-  const { data, isLoading } = useAccessProvisioning({ page });
-  const { data: templates, isLoading: templatesLoading } = useProvisioningTemplates();
+  const qc = useQueryClient();
+
+  const { data, isLoading, isError: provisioningError } = useAccessProvisioning({ page });
+  const { data: templates, isLoading: templatesLoading, isError: templatesError } = useProvisioningTemplates();
   const deleteTemplate = useDeleteProvisioningTemplate();
   const { data: membersData } = useOrgMembers(1, 200);
+
+  const pageError = provisioningError || templatesError;
+
+  function handleRetry() {
+    void qc.invalidateQueries({ queryKey: ["hr-identity"] });
+  }
 
   const memberById = useMemo(() => {
     const map = new Map<string, NamedUser>();
@@ -155,6 +163,31 @@ export function IdentityPageContent() {
     },
   ];
 
+  if (pageError) {
+    return (
+      <PageWrapper
+        title="Identity Lifecycle"
+        subtitle="Manage system access provisioning for joiners, movers, and leavers"
+      >
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center py-16 gap-4 text-center">
+          <div className="bg-destructive/10 p-4 rounded-full">
+            <AlertTriangle className="h-8 w-8 text-destructive" aria-hidden="true" />
+          </div>
+          <div className="space-y-1">
+            <p className="text-base font-semibold text-foreground">Failed to load identity data</p>
+            <p className="text-sm text-muted-foreground max-w-sm">
+              There was a problem fetching provisioning records. Please try again.
+            </p>
+          </div>
+          <Button variant="outline" size="sm" onClick={handleRetry}>
+            <RefreshCw className="mr-1.5 h-4 w-4" />
+            Retry
+          </Button>
+        </div>
+      </PageWrapper>
+    );
+  }
+
   return (
     <>
       <PageWrapper
@@ -183,34 +216,50 @@ export function IdentityPageContent() {
           </TabsList>
 
           <TabsContent value="provisioning">
-            <DataTable
-              data={data?.data ?? []}
-              columns={provisioningColumns}
-              getRowKey={(r) => r.id}
-              isLoading={isLoading}
-              emptyState={<p className="text-sm text-muted-foreground text-center py-8">No provisioning records</p>}
-              pagination={
-                data
-                  ? {
-                      mode: "server",
-                      page,
-                      pageSize: data.pagination.limit,
-                      total: data.pagination.total,
-                      onPageChange: setPage,
-                    }
-                  : undefined
-              }
-            />
+            {isLoading ? (
+              <div className="space-y-2 animate-pulse">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="h-12 rounded-lg bg-muted" />
+                ))}
+              </div>
+            ) : (
+              <DataTable
+                data={data?.data ?? []}
+                columns={provisioningColumns}
+                getRowKey={(r) => r.id}
+                isLoading={false}
+                emptyState={<p className="text-sm text-muted-foreground text-center py-8">No provisioning records</p>}
+                pagination={
+                  data
+                    ? {
+                        mode: "server",
+                        page,
+                        pageSize: data.pagination.limit,
+                        total: data.pagination.total,
+                        onPageChange: setPage,
+                      }
+                    : undefined
+                }
+              />
+            )}
           </TabsContent>
 
           <TabsContent value="templates">
-            <DataTable
-              data={templates ?? []}
-              columns={templateColumns}
-              getRowKey={(r) => r.id}
-              isLoading={templatesLoading}
-              emptyState={<p className="text-sm text-muted-foreground text-center py-8">No templates. Create one to auto-generate provisioning tasks.</p>}
-            />
+            {templatesLoading ? (
+              <div className="space-y-2 animate-pulse">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="h-12 rounded-lg bg-muted" />
+                ))}
+              </div>
+            ) : (
+              <DataTable
+                data={templates ?? []}
+                columns={templateColumns}
+                getRowKey={(r) => r.id}
+                isLoading={false}
+                emptyState={<p className="text-sm text-muted-foreground text-center py-8">No templates. Create one to auto-generate provisioning tasks.</p>}
+              />
+            )}
           </TabsContent>
 
           <TabsContent value="exit">

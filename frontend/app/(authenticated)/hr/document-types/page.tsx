@@ -1,17 +1,22 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useTransition } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData } from "@tanstack/react-query";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
 import { Plus, AlertCircle } from "lucide-react";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-
+import { DataTablePagination } from "@/components/shared/data-table-pagination";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DocumentTypeList } from "@/features/hr/document-types/document-type-list";
-import { DocumentTypeFormDialog } from "@/features/hr/document-types/document-type-form-dialog";
+import {
+  DocumentTypeFormDialog,
+  type DocumentTypeFormData,
+} from "@/features/hr/document-types/document-type-form-dialog";
 
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
@@ -30,25 +35,43 @@ interface DocumentType {
   createdAt: string | null;
 }
 
-function useDocumentTypes() {
-  return useQuery<DocumentType[]>({
-    queryKey: queryKeys.hr.documentTypes(),
-    queryFn: () => apiClient.get<DocumentType[]>("/hr/document-types"),
+interface PaginatedDocumentTypes {
+  data: DocumentType[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+const LIMIT_OPTIONS = [10, 20, 50] as const;
+type LimitOption = (typeof LIMIT_OPTIONS)[number];
+
+function isValidLimit(n: number): n is LimitOption {
+  return (LIMIT_OPTIONS as readonly number[]).includes(n);
+}
+
+function useDocumentTypes(page: number, limit: number) {
+  return useQuery<PaginatedDocumentTypes>({
+    queryKey: [...queryKeys.hr.documentTypes(), { page, limit }] as const,
+    queryFn: () =>
+      apiClient.get<PaginatedDocumentTypes>("/hr/document-types", { page, limit }),
+    staleTime: 30_000,
+    placeholderData: keepPreviousData,
   });
 }
 
 function useCreateDocumentType() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (body: {
-      name: string;
-      description?: string;
-      isMandatory: boolean;
-      sortOrder?: number;
-      applicableRoles: string[];
-    }) => {
-      return apiClient.post("/hr/document-types", body);
-    },
+    mutationKey: ["hr", "documentTypes", "create"],
+    mutationFn: (body: DocumentTypeFormData) =>
+      apiClient.post("/hr/document-types", {
+        name: body.name,
+        description: body.description,
+        isMandatory: body.isMandatory,
+        sortOrder: body.sortOrder,
+        applicableRoles: body.applicableRoles,
+      }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.documentTypes() });
     },
@@ -58,20 +81,12 @@ function useCreateDocumentType() {
 function useUpdateDocumentType() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({
+    mutationKey: ["hr", "documentTypes", "update"],
+    mutationFn: ({
       id,
       ...body
-    }: {
-      id: number;
-      name?: string;
-      description?: string;
-      isMandatory?: boolean;
-      isActive?: boolean;
-      sortOrder?: number;
-      applicableRoles?: string[];
-    }) => {
-      return apiClient.patch(`/hr/document-types/${id}`, body);
-    },
+    }: { id: number } & Partial<DocumentTypeFormData>) =>
+      apiClient.patch(`/hr/document-types/${id}`, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.documentTypes() });
     },
@@ -81,142 +96,109 @@ function useUpdateDocumentType() {
 function useDeleteDocumentType() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (id: number) => {
-      return apiClient.patch(`/hr/document-types/${id}`, { isActive: false });
-    },
+    mutationKey: ["hr", "documentTypes", "delete"],
+    mutationFn: (id: number) =>
+      apiClient.patch(`/hr/document-types/${id}`, { isActive: false }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.hr.documentTypes() });
     },
   });
 }
 
-interface FormState {
-  name: string;
-  description: string;
-  isMandatory: boolean;
-  isActive: boolean;
-  sortOrder: string;
-  applicableRoles: string[];
-}
-
-function blankForm(): FormState {
-  return {
-    name: "",
-    description: "",
-    isMandatory: false,
-    isActive: true,
-    sortOrder: "",
-    applicableRoles: [],
-  };
-}
-
 export default function DocumentTypesPage() {
   const isHROrCEO = useCan("hr:employees:manage");
 
-  const { data, isLoading, isError, refetch } = useDocumentTypes();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const [, startTransition] = useTransition();
+
+  const page = Number(searchParams.get("page")) || 1;
+  const limitParam = Number(searchParams.get("limit"));
+  const limit: LimitOption = isValidLimit(limitParam) ? limitParam : 20;
+
+  const { data, isLoading, isError, refetch } = useDocumentTypes(page, limit);
   const createMutation = useCreateDocumentType();
   const updateMutation = useUpdateDocumentType();
   const deleteMutation = useDeleteDocumentType();
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<DocumentType | null>(null);
-  const [form, setForm] = useState<FormState>(blankForm());
+  const [deactivateTarget, setDeactivateTarget] = useState<DocumentType | null>(null);
+  const [reactivateTarget, setReactivateTarget] = useState<DocumentType | null>(null);
 
-  const [deactivateTarget, setDeactivateTarget] =
-    useState<DocumentType | null>(null);
-  const [reactivateTarget, setReactivateTarget] =
-    useState<DocumentType | null>(null);
-
-  const setField = useCallback(
-    <K extends keyof FormState>(key: K, value: FormState[K]) => {
-      setForm((prev) => ({ ...prev, [key]: value }));
+  const pushParams = useCallback(
+    (updates: Record<string, string | null>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      for (const [k, v] of Object.entries(updates)) {
+        if (v === null) params.delete(k);
+        else params.set(k, v);
+      }
+      startTransition(() => {
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      });
     },
-    [],
+    [searchParams, router, pathname],
   );
 
-  const handleToggleRole = useCallback((r: string) => {
-    setForm((prev) => ({
-      ...prev,
-      applicableRoles: prev.applicableRoles.includes(r)
-        ? prev.applicableRoles.filter((x) => x !== r)
-        : [...prev.applicableRoles, r],
-    }));
-  }, []);
+  const handlePageChange = useCallback(
+    (p: number) => pushParams({ page: p <= 1 ? null : String(p) }),
+    [pushParams],
+  );
+
+  const handleLimitChange = useCallback(
+    (l: number) => pushParams({ limit: l === 20 ? null : String(l), page: null }),
+    [pushParams],
+  );
 
   const resetAndClose = useCallback(() => {
     setSheetOpen(false);
     setEditTarget(null);
-    setForm(blankForm());
   }, []);
 
   const openCreate = useCallback(() => {
     setEditTarget(null);
-    setForm(blankForm());
     setSheetOpen(true);
   }, []);
 
   const openEdit = useCallback((dt: DocumentType) => {
     setEditTarget(dt);
-    setForm({
-      name: dt.name,
-      description: dt.description ?? "",
-      isMandatory: dt.isMandatory ?? false,
-      isActive: dt.isActive !== false,
-      sortOrder: dt.sortOrder != null ? String(dt.sortOrder) : "",
-      applicableRoles: dt.applicableRoles ?? [],
-    });
     setSheetOpen(true);
   }, []);
 
-  const handleSubmit = useCallback(() => {
-    const trimmedName = form.name.trim();
-    if (!trimmedName) {
-      toast.error("Name is required");
-      return;
-    }
-    if (trimmedName.length < 2) {
-      toast.error("Name must be at least 2 characters");
-      return;
-    }
-    if (trimmedName.length > 100) {
-      toast.error("Name must be at most 100 characters");
-      return;
-    }
-    const trimmedDesc = form.description.trim();
-    if (trimmedDesc.length > 500) {
-      toast.error("Description must be at most 500 characters");
-      return;
-    }
+  const handleSheetOpenChange = useCallback(
+    (open: boolean) => {
+      if (!open) resetAndClose();
+      else setSheetOpen(true);
+    },
+    [resetAndClose],
+  );
 
-    const payload = {
-      name: trimmedName,
-      description: trimmedDesc || undefined,
-      isMandatory: form.isMandatory,
-      sortOrder: form.sortOrder ? Number(form.sortOrder) : undefined,
-      applicableRoles: form.applicableRoles,
-    };
-
-    if (editTarget) {
-      updateMutation.mutate(
-        { id: editTarget.id, ...payload, isActive: form.isActive },
-        {
+  const handleFormSubmit = useCallback(
+    (formData: DocumentTypeFormData) => {
+      if (editTarget) {
+        updateMutation.mutate(
+          { id: editTarget.id, ...formData },
+          {
+            onSuccess: () => {
+              toast.success("Document type updated");
+              resetAndClose();
+            },
+            onError: (e) => toast.error(getErrorMessage(e)),
+          },
+        );
+      } else {
+        createMutation.mutate(formData, {
           onSuccess: () => {
-            toast.success("Document type updated");
+            toast.success("Document type created");
             resetAndClose();
           },
           onError: (e) => toast.error(getErrorMessage(e)),
-        },
-      );
-    } else {
-      createMutation.mutate(payload, {
-        onSuccess: () => {
-          toast.success("Document type created");
-          resetAndClose();
-        },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      });
-    }
-  }, [form, editTarget, createMutation, updateMutation, resetAndClose]);
+        });
+      }
+    },
+    [editTarget, createMutation, updateMutation, resetAndClose],
+  );
 
   const handleDeactivate = useCallback(() => {
     if (!deactivateTarget) return;
@@ -243,14 +225,6 @@ export default function DocumentTypesPage() {
     );
   }, [reactivateTarget, updateMutation]);
 
-  const handleSheetOpenChange = useCallback(
-    (open: boolean) => {
-      if (!open) resetAndClose();
-      else setSheetOpen(true);
-    },
-    [resetAndClose],
-  );
-
   const handleDeactivateDialogChange = useCallback((open: boolean) => {
     if (!open) setDeactivateTarget(null);
   }, []);
@@ -259,9 +233,24 @@ export default function DocumentTypesPage() {
     if (!open) setReactivateTarget(null);
   }, []);
 
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
-  const list = data ?? [];
+  const list = data?.data ?? [];
+  const total = data?.total ?? 0;
+  const totalPages = data?.totalPages ?? 1;
+
+  const editDefaults = editTarget
+    ? {
+        name: editTarget.name,
+        description: editTarget.description ?? "",
+        isMandatory: editTarget.isMandatory ?? false,
+        isActive: editTarget.isActive !== false,
+        sortOrder: editTarget.sortOrder ?? undefined,
+        applicableRoles: editTarget.applicableRoles ?? [],
+      }
+    : undefined;
 
   if (isLoading) {
     return (
@@ -293,7 +282,6 @@ export default function DocumentTypesPage() {
     <PageWrapper
       title="Document Types"
       subtitle="Configure required onboarding documents"
-      badge={`${list.length} types`}
       actions={
         isHROrCEO ? (
           <Button size="sm" onClick={openCreate}>
@@ -312,17 +300,25 @@ export default function DocumentTypesPage() {
           onReactivate={setReactivateTarget}
           onCreateClick={openCreate}
         />
+        {total > 0 && (
+          <DataTablePagination
+            page={page}
+            totalPages={totalPages}
+            total={total}
+            limit={limit}
+            onPageChange={handlePageChange}
+            onLimitChange={handleLimitChange}
+          />
+        )}
       </div>
 
       <DocumentTypeFormDialog
         open={sheetOpen}
         isEditing={!!editTarget}
-        form={form}
+        defaultValues={editDefaults}
         isPending={createMutation.isPending || updateMutation.isPending}
         onOpenChange={handleSheetOpenChange}
-        onSetField={setField}
-        onToggleRole={handleToggleRole}
-        onSubmit={handleSubmit}
+        onSubmit={handleFormSubmit}
       />
 
       <ConfirmDialog

@@ -1,15 +1,16 @@
 "use client";
 
-import { useFieldArray, useForm } from "react-hook-form";
+import { useFieldArray, FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { AppSheet } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCreateInspection } from "@/hooks/api/inventory/quality";
+import { InspectionLineRow } from "@/features/inventory/components/quality/inspection-line-row";
 
 const lineSchema = z.object({
   variantId: z.string().min(1, "Required").refine(
@@ -92,92 +93,44 @@ export function CreateInspectionSheet({ open, onOpenChange }: Props) {
       description="Create a manual quality inspection"
       footer={footer}
     >
-      <form className="space-y-5" onSubmit={form.handleSubmit(handleSubmit)}>
-        <div className="space-y-1.5">
-          <Label className="text-xs">Source <span className="text-muted-foreground">(optional)</span></Label>
-          <Input
-            className="h-8 text-xs"
-            placeholder="e.g. GRN-001, manual"
-            {...form.register("source")}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-medium text-foreground">Lines</p>
-            <Button type="button" size="sm" variant="outline" className="h-6 text-xs px-2" onClick={handleAddLine}>
-              <Plus className="h-3 w-3 mr-1" />Add Line
-            </Button>
+      <FormProvider {...form}>
+        <form className="space-y-5" onSubmit={form.handleSubmit(handleSubmit)}>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold text-foreground/80">
+              Source <span className="font-normal text-muted-foreground">(optional)</span>
+            </Label>
+            <Input
+              className="h-8 text-xs"
+              placeholder="e.g. GRN-001, manual"
+              {...form.register("source")}
+            />
           </div>
 
-          {form.formState.errors.lines?.root && (
-            <p className="text-xs text-destructive">{form.formState.errors.lines.root.message}</p>
-          )}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold text-foreground/80">Lines</p>
+              <Button type="button" size="sm" variant="outline" className="h-6 text-xs px-2" onClick={handleAddLine}>
+                <Plus className="h-3 w-3 mr-1" />Add Line
+              </Button>
+            </div>
 
-          <div className="space-y-3">
-            {fields.map((field, idx) => (
-              <div key={field.id} className="rounded-md border border-border p-3 space-y-2 relative">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-muted-foreground">Line {idx + 1}</span>
-                  {fields.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveLine(idx)}
-                      className="text-muted-foreground hover:text-destructive transition-colors"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  )}
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="space-y-1">
-                    <Label className="text-[11px] text-muted-foreground">Variant ID *</Label>
-                    <Input
-                      className="h-8 text-xs"
-                      type="number"
-                      placeholder="ID"
-                      {...form.register(`lines.${idx}.variantId`)}
-                    />
-                    {form.formState.errors.lines?.[idx]?.variantId && (
-                      <p className="text-[10px] text-destructive">{form.formState.errors.lines[idx]?.variantId?.message}</p>
-                    )}
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-[11px] text-muted-foreground">Qty *</Label>
-                    <Input
-                      className="h-8 text-xs"
-                      type="number"
-                      placeholder="Qty"
-                      {...form.register(`lines.${idx}.qty`)}
-                    />
-                    {form.formState.errors.lines?.[idx]?.qty && (
-                      <p className="text-[10px] text-destructive">{form.formState.errors.lines[idx]?.qty?.message}</p>
-                    )}
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-[11px] text-muted-foreground">Lot ID</Label>
-                    <Input
-                      className="h-8 text-xs"
-                      type="number"
-                      placeholder="Optional"
-                      {...form.register(`lines.${idx}.lotId`)}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-[11px] text-muted-foreground">Serial ID</Label>
-                    <Input
-                      className="h-8 text-xs"
-                      type="number"
-                      placeholder="Optional"
-                      {...form.register(`lines.${idx}.serialId`)}
-                    />
-                  </div>
-                </div>
-              </div>
-            ))}
+            {form.formState.errors.lines?.root && (
+              <p className="text-xs text-destructive">{form.formState.errors.lines.root.message}</p>
+            )}
+
+            <div className="space-y-3">
+              {fields.map((field, idx) => (
+                <InspectionLineRow
+                  key={field.id}
+                  index={idx}
+                  canRemove={fields.length > 1}
+                  onRemove={handleRemoveLine}
+                />
+              ))}
+            </div>
           </div>
-        </div>
-      </form>
+        </form>
+      </FormProvider>
     </AppSheet>
   );
 }

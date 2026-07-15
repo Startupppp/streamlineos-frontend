@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { SupportTicketCombobox } from "@/components/ui/support-ticket-combobox";
 import {
   Select,
   SelectContent,
@@ -49,15 +50,9 @@ export function TicketDetailRelations({ ticketId }: TicketDetailRelationsProps) 
 
   const handleToggle = useCallback(() => setOpen((v) => !v), []);
   const handleTagSelectChange = useCallback((v: string) => setSelectedTagId(v), []);
-  const handleLinkedTicketIdChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setLinkedTicketId(e.target.value),
-    [],
-  );
+  const handleLinkedTicketIdChange = useCallback((v: string) => setLinkedTicketId(v), []);
   const handleLinkRelationChange = useCallback((v: string) => setLinkRelation(v as TicketLinkRelation), []);
-  const handleMergeTargetChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setMergeTargetId(e.target.value),
-    [],
-  );
+  const handleMergeTargetChange = useCallback((v: string) => setMergeTargetId(v), []);
   const handleSplitTitleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => setSplitTitle(e.target.value),
     [],
@@ -160,7 +155,7 @@ export function TicketDetailRelations({ ticketId }: TicketDetailRelationsProps) 
       {open && (
         <div className="mt-2 space-y-3 pb-1">
           <div>
-            <p className="text-[11px] font-medium text-muted-foreground mb-1.5">Tags</p>
+            <p className="text-[11px] font-semibold text-foreground/80 mb-1.5">Tags</p>
             <div className="flex flex-wrap gap-1.5 mb-2">
               {(ticketTags ?? []).map((tag) => (
                 <Badge key={tag.id} variant="outline" className="text-[10px] gap-1 pr-1">
@@ -204,7 +199,7 @@ export function TicketDetailRelations({ ticketId }: TicketDetailRelationsProps) 
           </div>
 
           <div>
-            <p className="text-[11px] font-medium text-muted-foreground mb-1.5 flex items-center gap-1">
+            <p className="text-[11px] font-semibold text-foreground/80 mb-1.5 flex items-center gap-1">
               <Link2 className="h-3 w-3" /> Related tickets
             </p>
             {(links ?? []).length > 0 && (
@@ -222,12 +217,12 @@ export function TicketDetailRelations({ ticketId }: TicketDetailRelationsProps) 
               </ul>
             )}
             <div className="flex items-center gap-2">
-              <Input
+              <SupportTicketCombobox
                 value={linkedTicketId}
                 onChange={handleLinkedTicketIdChange}
-                placeholder="Ticket ID"
-                className="h-8 text-xs w-20"
-                inputMode="numeric"
+                excludeTicketId={ticketId}
+                placeholder="Search ticket…"
+                className="h-8 text-xs flex-1 min-w-0"
               />
               <Select value={linkRelation} onValueChange={handleLinkRelationChange}>
                 <SelectTrigger className="h-8 text-xs w-[110px]">
@@ -252,16 +247,16 @@ export function TicketDetailRelations({ ticketId }: TicketDetailRelationsProps) 
           </div>
 
           <div>
-            <p className="text-[11px] font-medium text-muted-foreground mb-1.5 flex items-center gap-1">
+            <p className="text-[11px] font-semibold text-foreground/80 mb-1.5 flex items-center gap-1">
               <GitMerge className="h-3 w-3" /> Merge into another ticket
             </p>
             <div className="flex items-center gap-2">
-              <Input
+              <SupportTicketCombobox
                 value={mergeTargetId}
                 onChange={handleMergeTargetChange}
-                placeholder="Target ticket ID"
-                className="h-8 text-xs w-28"
-                inputMode="numeric"
+                excludeTicketId={ticketId}
+                placeholder="Search target ticket…"
+                className="h-8 text-xs flex-1 min-w-0"
               />
               <Button
                 type="button"
@@ -277,7 +272,7 @@ export function TicketDetailRelations({ ticketId }: TicketDetailRelationsProps) 
           </div>
 
           <div>
-            <p className="text-[11px] font-medium text-muted-foreground mb-1.5 flex items-center gap-1">
+            <p className="text-[11px] font-semibold text-foreground/80 mb-1.5 flex items-center gap-1">
               <Split className="h-3 w-3" /> Split into a new ticket
             </p>
             <div className="space-y-1.5">

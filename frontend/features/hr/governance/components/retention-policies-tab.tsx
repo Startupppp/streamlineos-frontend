@@ -34,7 +34,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Database, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
+import { StateIllustration } from "@/components/illustrations";
 import { useCan } from "@/hooks/api/access";
 import {
   useRetentionPolicies,
@@ -57,7 +58,7 @@ export function RetentionPoliciesTab() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [page, setPage] = useState(1);
 
-  const { data, isLoading } = useRetentionPolicies({ page, limit: 20 });
+  const { data, isLoading, isError } = useRetentionPolicies({ page, limit: 20 });
   const createPolicy = useCreateRetentionPolicy();
   const deletePolicy = useDeleteRetentionPolicy();
 
@@ -139,6 +140,15 @@ export function RetentionPoliciesTab() {
     );
   }
 
+  if (isError) {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center gap-3 py-16 text-center">
+        <StateIllustration preset="security" className="h-24 w-24" />
+        <p className="text-sm text-muted-foreground">Failed to load retention policies.</p>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="flex items-center justify-between mb-4">
@@ -155,9 +165,18 @@ export function RetentionPoliciesTab() {
         data={data?.data ?? []}
         getRowKey={(row) => row.id}
         emptyState={
-          <div className="flex flex-col items-center py-12">
-            <Database className="h-8 w-8 text-muted-foreground mb-2" />
-            <p className="text-sm text-muted-foreground">No retention policies configured.</p>
+          <div className="flex flex-col items-center justify-center gap-3 py-12">
+            <StateIllustration preset="security" className="h-28 w-28" />
+            <div className="text-center space-y-1">
+              <p className="text-sm font-medium text-foreground">No retention policies configured</p>
+              <p className="text-xs text-muted-foreground">Define how long each record type is kept and what happens at expiry.</p>
+            </div>
+            {canManage && (
+              <Button onClick={handleOpenSheet} size="sm" className="mt-1 bg-primary hover:bg-primary/90 text-primary-foreground">
+                <Plus className="h-4 w-4 mr-1.5" />
+                Add Policy
+              </Button>
+            )}
           </div>
         }
         pagination={{ mode: "server", page, pageSize: 20, total: data?.total ?? 0, onPageChange: setPage }}

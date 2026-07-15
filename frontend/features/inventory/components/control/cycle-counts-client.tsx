@@ -110,7 +110,7 @@ function NewCycleCountSheet({
         </SheetHeader>
         <SheetBody className="space-y-4 px-6 py-4">
           <div className="space-y-1.5">
-            <Label htmlFor="cc-warehouse">Warehouse *</Label>
+            <Label htmlFor="cc-warehouse" className="text-xs font-semibold text-foreground/80">Warehouse *</Label>
             <Select value={warehouseId || "none"} onValueChange={handleWarehouseChange}>
               <SelectTrigger id="cc-warehouse" className="h-8 text-sm">
                 <SelectValue placeholder="Select warehouse" />
@@ -125,7 +125,7 @@ function NewCycleCountSheet({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="cc-location">Location (optional)</Label>
+            <Label htmlFor="cc-location" className="text-xs font-semibold text-foreground/80">Location (optional)</Label>
             <Select
               value={locationId || "none"}
               onValueChange={handleLocationChange}
@@ -144,7 +144,7 @@ function NewCycleCountSheet({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="cc-category">Category (optional)</Label>
+            <Label htmlFor="cc-category" className="text-xs font-semibold text-foreground/80">Category (optional)</Label>
             <Select value={categoryId || "none"} onValueChange={handleCategoryChange}>
               <SelectTrigger id="cc-category" className="h-8 text-sm">
                 <SelectValue placeholder="All categories" />

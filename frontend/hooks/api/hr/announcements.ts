@@ -31,11 +31,12 @@ export function useHrAnnouncements() {
   });
 }
 
-export function useAllHrAnnouncements() {
+export function useAllHrAnnouncements(options?: { enabled?: boolean }) {
   return useQuery<HrAnnouncement[]>({
     queryKey: ["hr", "announcements", "all"],
     queryFn: () => apiClient.get<HrAnnouncement[]>("/hr/announcements/all"),
     staleTime: 30_000,
+    enabled: options?.enabled,
   });
 }
 

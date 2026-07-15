@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -44,6 +44,26 @@ export function useAiCreditsWallet() {
     queryKey: ["billing", "ai-credits"],
     queryFn: () => apiClient.get<AiCreditsWallet>("/billing/ai-credits"),
     staleTime: 60 * 1000,
+  });
+}
+
+export interface AiCreditTransactionsPage {
+  items: AiCreditTransaction[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+export function useAiCreditTransactions(page: number, limit: number) {
+  return useQuery<AiCreditTransactionsPage>({
+    queryKey: ["billing", "ai-credits", "transactions", { page, limit }],
+    queryFn: () =>
+      apiClient.get<AiCreditTransactionsPage>("/billing/ai-credits/transactions", {
+        page: String(page),
+        limit: String(limit),
+      }),
+    staleTime: 30 * 1000,
+    placeholderData: keepPreviousData,
   });
 }
 

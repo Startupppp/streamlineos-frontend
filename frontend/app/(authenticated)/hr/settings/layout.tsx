@@ -28,7 +28,7 @@ export default function HrSettingsLayout({
   return (
     <div className="flex flex-col h-full">
       <div className="shrink-0 border-b bg-background/95 backdrop-blur-sm px-1">
-        <nav className="flex flex-wrap items-center gap-1" aria-label="HR Settings">
+        <nav className="flex items-center gap-1 overflow-x-auto scrollbar-none" aria-label="HR Settings">
           {TABS.map((tab) => {
             const isActive =
               tab.href === "/hr/settings"

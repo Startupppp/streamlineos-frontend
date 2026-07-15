@@ -7,20 +7,28 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Plus, CheckCircle2, Laptop, AlertCircle } from "lucide-react";
 import { useCan } from "@/hooks/api/access";
 import { useHrEmployees, useHrAssets } from "@/hooks/api/hr";
 import { cn } from "@/lib/utils";
+import { EmptyDevicesIllustration } from "@/components/illustrations";
+import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
 import type { Employee, PaginatedEmployees, Asset } from "@/types/hr";
 
 interface AssetReturn {
@@ -71,6 +79,8 @@ const CONDITION_META: Record<string, { badge: string }> = {
     badge: "bg-rose-100 border-rose-200 text-rose-700 dark:bg-rose-900/40 dark:border-rose-800 dark:text-rose-300",
   },
 };
+
+const CONDITIONS = ["Good", "Fair", "Poor"] as const;
 
 function buildAssetReturnColumns(
   isAdmin: boolean,
@@ -179,93 +189,149 @@ export default function AssetReturnsPage() {
     return (employeesRaw as PaginatedEmployees | undefined)?.data ?? [];
   }, [employeesRaw]);
 
-  const employeeOptions = useMemo<ComboboxOption[]>(() =>
-    employees
-      .filter((e) => e.isActive)
-      .map((e) => ({
-        value: e.id,
-        label: e.firstName && e.lastName ? `${e.firstName} ${e.lastName}` : (e.name ?? e.email),
-        sublabel: e.designation ?? e.email,
-      })),
-    [employees],
+  const { data: allAssets } = useHrAssets();
+
+  const allAssignedAssets = useMemo<Asset[]>(() => {
+    if (!allAssets) return [];
+    return allAssets.filter((a) => a.status === "ASSIGNED" && !!a.assignedTo);
+  }, [allAssets]);
+
+  const assetOptions = useMemo<ComboboxOption[]>(
+    () =>
+      allAssignedAssets.map((a) => {
+        const emp = employees.find((e) => e.id === a.assignedTo) ?? null;
+        const empLabel = emp ? getUserDisplayName(emp) : null;
+        return {
+          value: String(a.id),
+          label: a.name,
+          sublabel: [
+            a.type,
+            a.serialNumber ? `S/N: ${a.serialNumber}` : null,
+            empLabel ? `Assigned to ${empLabel}` : null,
+          ]
+            .filter(Boolean)
+            .join(" · "),
+        };
+      }),
+    [allAssignedAssets, employees],
   );
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [returnId, setReturnId] = useState<number | null>(null);
-  const [userId, setUserId] = useState("");
   const [selectedAssetId, setSelectedAssetId] = useState("");
-  const [assetName, setAssetName] = useState("");
+  const [overrideUserId, setOverrideUserId] = useState<string | null>(null);
+  const [condition, setCondition] = useState<string>("");
   const [notes, setNotes] = useState("");
-
-  const { data: allAssets } = useHrAssets();
-  const assignedAssets = useMemo<Asset[]>(() => {
-    if (!allAssets || !userId) return [];
-    return allAssets.filter((a) => a.assignedTo === userId && a.status === "ASSIGNED");
-  }, [allAssets, userId]);
-
-  const assetOptions = useMemo<ComboboxOption[]>(() =>
-    assignedAssets.map((a) => ({
-      value: String(a.id),
-      label: a.name,
-      sublabel: [a.type, a.serialNumber ? `S/N: ${a.serialNumber}` : null].filter(Boolean).join(" · "),
-    })),
-    [assignedAssets],
-  );
+  const [notesError, setNotesError] = useState("");
 
   const selectedAsset = useMemo<Asset | undefined>(
-    () => assignedAssets.find((a) => String(a.id) === selectedAssetId),
-    [assignedAssets, selectedAssetId],
+    () => allAssignedAssets.find((a) => String(a.id) === selectedAssetId),
+    [allAssignedAssets, selectedAssetId],
+  );
+
+  const resolvedUserId = overrideUserId ?? selectedAsset?.assignedTo ?? "";
+
+  const resolvedEmployee = useMemo<Employee | null>(
+    () => employees.find((e) => e.id === resolvedUserId) ?? null,
+    [employees, resolvedUserId],
+  );
+
+  const employeeOptions = useMemo<ComboboxOption[]>(
+    () =>
+      employees
+        .filter((e) => e.isActive)
+        .map((e) => ({
+          value: e.id,
+          label: getUserDisplayName(e),
+          sublabel: e.designation ?? e.email,
+        })),
+    [employees],
   );
 
   const { data: items, isLoading, isError, refetch } = useQuery({
     queryKey: arKeys.list(),
     queryFn: () => apiClient.get<AssetReturn[]>("/hr/asset-returns"),
+    staleTime: 60_000,
   });
 
   const create = useMutation({
-    mutationFn: (data: { userId: string; assetName: string; assetId?: number; notes?: string }) =>
+    mutationFn: (data: { userId: string; assetName: string; assetId?: number; condition?: string; notes?: string }) =>
       apiClient.post<AssetReturn>("/hr/asset-returns", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: arKeys.list() }),
   });
 
   const markReturned = useMutation({
-    mutationFn: ({ id, condition }: { id: number; condition: string }) =>
-      apiClient.patch<{ success: boolean }>(`/hr/asset-returns/${id}`, { status: "RETURNED", condition }),
+    mutationFn: ({ id, condition: cond }: { id: number; condition: string }) =>
+      apiClient.patch<{ success: boolean }>(`/hr/asset-returns/${id}`, { status: "RETURNED", condition: cond }),
     onSuccess: () => qc.invalidateQueries({ queryKey: arKeys.list() }),
   });
 
-  const handleEmployeeChange = useCallback((id: string) => {
-    setUserId(id);
-    setSelectedAssetId("");
-    setAssetName("");
+  const handleAssetChange = useCallback(
+    (id: string) => {
+      setSelectedAssetId(id);
+      setOverrideUserId(null);
+    },
+    [],
+  );
+
+  const handleEmployeeOverrideChange = useCallback((id: string) => {
+    setOverrideUserId(id || null);
   }, []);
 
-  const handleAssetChange = useCallback((id: string) => {
-    setSelectedAssetId(id);
-    const asset = (allAssets ?? []).find((a) => String(a.id) === id);
-    setAssetName(asset ? asset.name : "");
-  }, [allAssets]);
+  const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    setNotes(val);
+    if (val.length > 1000) {
+      setNotesError(`Notes must be at most 1000 characters (${val.length}/1000)`);
+    } else {
+      setNotesError("");
+    }
+  }, []);
 
   const resetSheetState = useCallback(() => {
-    setUserId(""); setSelectedAssetId(""); setAssetName(""); setNotes("");
+    setSelectedAssetId("");
+    setOverrideUserId(null);
+    setCondition("");
+    setNotes("");
+    setNotesError("");
   }, []);
 
-  const handleSheetOpenChange = useCallback((open: boolean) => {
-    if (!open) resetSheetState();
-    setSheetOpen(open);
-  }, [resetSheetState]);
+  const handleSheetOpenChange = useCallback(
+    (open: boolean) => {
+      if (!open) resetSheetState();
+      setSheetOpen(open);
+    },
+    [resetSheetState],
+  );
 
   const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
 
   const handleCreate = useCallback(() => {
-    if (!userId.trim()) { toast.error("Please select an employee"); return; }
-    if (!assetName.trim()) { toast.error("Please select or enter an asset name"); return; }
+    if (!selectedAssetId) {
+      toast.error("Please select an asset to return");
+      return;
+    }
+    if (!resolvedUserId) {
+      toast.error("Please select an employee");
+      return;
+    }
+    if (!condition) {
+      toast.error("Please select the asset condition");
+      return;
+    }
+    if (notes.length > 1000) {
+      toast.error("Notes must be at most 1000 characters");
+      return;
+    }
+    const asset = allAssignedAssets.find((a) => String(a.id) === selectedAssetId);
+    if (!asset) return;
     create.mutate(
       {
-        userId: userId.trim(),
-        assetName: assetName.trim(),
-        assetId: selectedAsset ? selectedAsset.id : undefined,
-        notes: notes || undefined,
+        userId: resolvedUserId,
+        assetName: asset.name,
+        assetId: asset.id,
+        condition,
+        notes: notes.trim() || undefined,
       },
       {
         onSuccess: () => {
@@ -276,21 +342,29 @@ export default function AssetReturnsPage() {
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [userId, assetName, selectedAsset, notes, create, resetSheetState]);
+  }, [selectedAssetId, resolvedUserId, condition, notes, allAssignedAssets, create, resetSheetState]);
 
   const handleMarkReturned = useCallback(() => {
     if (!returnId) return;
-    markReturned.mutate({ id: returnId, condition: "Good" }, {
-      onSuccess: () => { toast.success("Asset marked as returned"); setReturnId(null); },
-      onError: (e) => toast.error(getErrorMessage(e)),
-    });
+    markReturned.mutate(
+      { id: returnId, condition: "Good" },
+      {
+        onSuccess: () => {
+          toast.success("Asset marked as returned");
+          setReturnId(null);
+        },
+        onError: (e) => toast.error(getErrorMessage(e)),
+      },
+    );
   }, [returnId, markReturned]);
 
-  const handleAssetNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setAssetName(e.target.value), []);
-  const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value), []);
   const handleSetReturnId = useCallback((id: number) => setReturnId(id), []);
-  const handleCloseConfirm = useCallback((open: boolean) => { if (!open) setReturnId(null); }, []);
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleCloseConfirm = useCallback((open: boolean) => {
+    if (!open) setReturnId(null);
+  }, []);
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   if (isLoading) {
     return (
@@ -328,6 +402,8 @@ export default function AssetReturnsPage() {
     );
   }
 
+  const employeeAutoFilled = !!selectedAsset?.assignedTo && !overrideUserId;
+
   return (
     <PageWrapper
       title="Asset Returns"
@@ -353,12 +429,23 @@ export default function AssetReturnsPage() {
         }}
         minWidth="640px"
         emptyState={
-          <EmptyState
-            illustrationPreset="devices"
-            title="No asset returns tracked"
-            description="Log an asset return when an employee returns company equipment."
-            action={isAdmin ? { label: "Log Return", onClick: handleOpenSheet } : undefined}
-          />
+          <div className="flex flex-1 min-h-0 w-full flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-border bg-card py-14 px-6 text-center">
+            <div className="h-28 w-28">
+              <EmptyDevicesIllustration />
+            </div>
+            <div>
+              <p className="text-[0.9375rem] font-semibold text-foreground">No asset returns tracked</p>
+              <p className="mt-1 text-sm text-muted-foreground max-w-xs">
+                Log an asset return when an employee returns company equipment.
+              </p>
+            </div>
+            {isAdmin && (
+              <Button size="sm" onClick={handleOpenSheet} className="gap-1.5">
+                <Plus className="h-3.5 w-3.5" />
+                Log Return
+              </Button>
+            )}
+          </div>
         }
       />
 
@@ -366,55 +453,26 @@ export default function AssetReturnsPage() {
         open={sheetOpen}
         onOpenChange={handleSheetOpenChange}
         title="Log Asset Return"
+        description="Select the asset being returned. The employee will be auto-filled from the assignment."
         onSubmit={handleCreate}
         submitLabel="Log Return"
         isPending={create.isPending}
       >
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Employee <span className="text-destructive">*</span></label>
+          <label className="text-sm font-medium">
+            Asset <span className="text-destructive">*</span>
+          </label>
           <Combobox
-            options={employeeOptions}
-            value={userId}
-            onChange={handleEmployeeChange}
-            placeholder="Select employee…"
-            searchPlaceholder="Search by name…"
+            options={assetOptions}
+            value={selectedAssetId}
+            onChange={handleAssetChange}
+            placeholder="Select assigned asset to return…"
+            searchPlaceholder="Search assets…"
           />
+          {allAssignedAssets.length === 0 && (
+            <p className="text-xs text-muted-foreground">No currently assigned assets found.</p>
+          )}
         </div>
-
-        {userId && (
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">Assigned Asset <span className="text-destructive">*</span></label>
-            {assetOptions.length > 0 ? (
-              <Combobox
-                options={assetOptions}
-                value={selectedAssetId}
-                onChange={handleAssetChange}
-                placeholder="Select asset to return…"
-                searchPlaceholder="Search assets…"
-              />
-            ) : (
-              <p className="text-xs text-muted-foreground py-2">
-                No assets currently assigned to this employee. Enter name manually below.
-              </p>
-            )}
-          </div>
-        )}
-
-        {userId && (assetOptions.length === 0 || !selectedAssetId) && (
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">
-              Asset Name <span className="text-destructive">*</span>
-              {assetOptions.length > 0 && (
-                <span className="text-muted-foreground font-normal text-xs ml-1">(or enter manually)</span>
-              )}
-            </label>
-            <Input
-              placeholder="e.g., MacBook Pro 16"
-              value={assetName}
-              onChange={handleAssetNameChange}
-            />
-          </div>
-        )}
 
         {selectedAsset && (
           <div className="rounded-xl bg-muted/50 border border-border p-3 text-xs space-y-1">
@@ -429,14 +487,72 @@ export default function AssetReturnsPage() {
         )}
 
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Notes</label>
+          <label className="text-sm font-medium">
+            Employee <span className="text-destructive">*</span>
+            {employeeAutoFilled && resolvedEmployee && (
+              <span className="ml-1.5 text-xs font-normal text-muted-foreground">(auto-filled from assignment)</span>
+            )}
+          </label>
+          {employeeAutoFilled && resolvedEmployee ? (
+            <div className="flex items-center gap-2">
+              <div className="flex-1 rounded-md border border-border bg-muted/40 px-3 py-2 text-sm text-foreground">
+                {getUserDisplayName(resolvedEmployee)}
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-9 text-xs text-muted-foreground"
+                onClick={() => setOverrideUserId(resolvedEmployee.id)}
+              >
+                Change
+              </Button>
+            </div>
+          ) : (
+            <Combobox
+              options={employeeOptions}
+              value={resolvedUserId}
+              onChange={handleEmployeeOverrideChange}
+              placeholder="Select employee…"
+              searchPlaceholder="Search by name…"
+            />
+          )}
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium">
+            Condition <span className="text-destructive">*</span>
+          </label>
+          <Select value={condition} onValueChange={setCondition}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select condition…" />
+            </SelectTrigger>
+            <SelectContent>
+              {CONDITIONS.map((c) => (
+                <SelectItem key={c} value={c}>
+                  {c}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium">
+            Notes
+            <span className="ml-1 text-xs font-normal text-muted-foreground">
+              ({notes.length}/1000)
+            </span>
+          </label>
           <Textarea
-            placeholder="Any notes about condition or return circumstances…"
+            placeholder="Any notes about the condition or return circumstances…"
             value={notes}
             onChange={handleNotesChange}
-            rows={2}
+            rows={3}
             className="resize-none w-full"
+            maxLength={1000}
           />
+          {notesError && <p className="text-xs text-destructive">{notesError}</p>}
         </div>
       </HrSheet>
 

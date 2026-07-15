@@ -18,6 +18,7 @@ import {
   Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -29,13 +30,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
   Form,
   FormControl,
   FormField,
@@ -44,14 +38,12 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
-import { Loader2 } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { EmptyState } from "@/components/ui/empty-state";
 import { DatePicker } from "@/components/ui/date-picker";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   useHrAssets,
   useCreateAsset,
@@ -64,7 +56,9 @@ import { useCan } from "@/hooks/api/access";
 import { Card, CardContent } from "@/components/ui/card";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { cn, resolveImageUrl } from "@/lib/utils";
+import { EmptyDevicesIllustration } from "@/components/illustrations";
+import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
 import type { Asset, Employee } from "@/types/hr";
 
 function fmtCost(amount: string | number | null) {
@@ -225,22 +219,23 @@ function ASSET_COLUMNS(
       key: "assignedTo",
       header: "Assigned To",
       cell: (asset) => {
-        const assignedEmployee = employees.find((e) => e.id === asset.assignedTo);
-        const assignedName = assignedEmployee
-          ? `${assignedEmployee.firstName ?? ""} ${assignedEmployee.lastName ?? ""}`.trim() || assignedEmployee.email
-          : null;
-        const assignedInitial = assignedName?.[0]?.toUpperCase() ?? "?";
-        return assignedName ? (
+        const assignedEmployee = employees.find((e) => e.id === asset.assignedTo) ?? null;
+        if (!assignedEmployee) {
+          return <span className="text-muted-foreground text-xs">Unassigned</span>;
+        }
+        const displayName = getUserDisplayName(assignedEmployee);
+        const initials = getUserInitials(assignedEmployee);
+        const imageUrl = resolveImageUrl(assignedEmployee.image);
+        return (
           <div className="flex items-center gap-2">
             <Avatar className="h-6 w-6">
+              {imageUrl && <AvatarImage src={imageUrl} alt={displayName} />}
               <AvatarFallback className="text-[9px] bg-primary/10 text-primary">
-                {assignedInitial}
+                {initials}
               </AvatarFallback>
             </Avatar>
-            <span className="text-sm text-foreground truncate max-w-[120px]">{assignedName}</span>
+            <span className="text-sm text-foreground truncate max-w-[120px]">{displayName}</span>
           </div>
-        ) : (
-          <span className="text-muted-foreground text-xs">Unassigned</span>
         );
       },
     },
@@ -510,10 +505,9 @@ function AssetForm({
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full mt-2" disabled={isPending}>
-          {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        <LoadingButton type="submit" className="w-full mt-2" isPending={isPending}>
           {submitLabel}
-        </Button>
+        </LoadingButton>
       </form>
     </Form>
   );
@@ -521,6 +515,8 @@ function AssetForm({
 
 export default function HrAssetsPage() {
   const [statusFilter, setStatusFilter] = useState<string | undefined>();
+  const [categoryFilter, setCategoryFilter] = useState<string | undefined>();
+  const [assignmentFilter, setAssignmentFilter] = useState<string | undefined>();
   const [addOpen, setAddOpen] = useState(false);
   const [editAsset, setEditAsset] = useState<Asset | null>(null);
   const [deleteAssetId, setDeleteAssetId] = useState<number | null>(null);
@@ -544,9 +540,14 @@ export default function HrAssetsPage() {
   const employeeOptions = buildEmployeeOptions(employees);
 
   const items = useMemo<Asset[]>(() => (Array.isArray(data) ? data : []), [data]);
-  const filteredItems = statusFilter
-    ? items.filter((a) => a.status === statusFilter)
-    : items;
+  const filteredItems = useMemo(() => {
+    let result = items;
+    if (statusFilter) result = result.filter((a) => a.status === statusFilter);
+    if (categoryFilter) result = result.filter((a) => a.type === categoryFilter);
+    if (assignmentFilter === "assigned") result = result.filter((a) => !!a.assignedTo);
+    if (assignmentFilter === "unassigned") result = result.filter((a) => !a.assignedTo);
+    return result;
+  }, [items, statusFilter, categoryFilter, assignmentFilter]);
 
   const counts = items.reduce(
     (acc, a) => {
@@ -739,7 +740,34 @@ export default function HrAssetsPage() {
   const handleExport = useCallback(async () => {
     try {
       const { downloadXlsx } = await import("@/lib/export/xlsx-utils");
-      await downloadXlsx("assets-export.xlsx", [
+      const exportRows = filteredItems.map((a) => {
+        const emp = employees.find((e) => e.id === a.assignedTo) ?? null;
+        return {
+          name: a.name,
+          type: a.type,
+          brand: a.brand ?? "",
+          model: a.model ?? "",
+          serialNumber: a.serialNumber ?? "",
+          status: a.status ?? "AVAILABLE",
+          assignedTo: emp ? getUserDisplayName(emp) : "",
+          purchaseCost: a.purchaseCost ?? "",
+          purchaseDate: a.purchaseDate
+            ? format(new Date(a.purchaseDate), "yyyy-MM-dd")
+            : "",
+          location: a.location ?? "",
+        };
+      });
+      const filterLabel = [
+        statusFilter ? `status-${statusFilter.toLowerCase()}` : null,
+        categoryFilter ? `type-${categoryFilter.toLowerCase()}` : null,
+        assignmentFilter ? assignmentFilter : null,
+      ]
+        .filter(Boolean)
+        .join("_");
+      const filename = filterLabel
+        ? `assets-${filterLabel}.xlsx`
+        : "assets-export.xlsx";
+      await downloadXlsx(filename, [
         {
           name: "Assets",
           columns: [
@@ -754,36 +782,29 @@ export default function HrAssetsPage() {
             { header: "Purchase Date", key: "purchaseDate", width: 14 },
             { header: "Location", key: "location", width: 18 },
           ],
-          rows: items.map((a) => {
-            const emp = employees.find((e) => e.id === a.assignedTo);
-            return {
-              name: a.name,
-              type: a.type,
-              brand: a.brand ?? "",
-              model: a.model ?? "",
-              serialNumber: a.serialNumber ?? "",
-              status: a.status ?? "AVAILABLE",
-              assignedTo: emp
-                ? `${emp.firstName ?? ""} ${emp.lastName ?? ""}`.trim() ||
-                  emp.email
-                : "",
-              purchaseCost: a.purchaseCost ?? "",
-              purchaseDate: a.purchaseDate
-                ? format(new Date(a.purchaseDate), "yyyy-MM-dd")
-                : "",
-              location: a.location ?? "",
-            };
-          }),
+          rows: exportRows,
         },
       ]);
-      toast.success("Assets exported");
+      toast.success(
+        filteredItems.length < items.length
+          ? `Exported ${filteredItems.length} filtered assets`
+          : "Assets exported",
+      );
     } catch {
       toast.error("Export failed");
     }
-  }, [items, employees]);
+  }, [filteredItems, items.length, employees, statusFilter, categoryFilter, assignmentFilter]);
 
   const handleStatusFilterChange = useCallback((v: string) => {
     setStatusFilter(v === "all" ? undefined : v);
+  }, []);
+
+  const handleCategoryFilterChange = useCallback((v: string) => {
+    setCategoryFilter(v === "all" ? undefined : v);
+  }, []);
+
+  const handleAssignmentFilterChange = useCallback((v: string) => {
+    setAssignmentFilter(v === "all" ? undefined : v);
   }, []);
 
   function handleRetry() { void refetch(); }
@@ -800,10 +821,11 @@ export default function HrAssetsPage() {
             size="sm"
             className="gap-1.5"
             onClick={handleExport}
-            disabled={!items.length}
+            disabled={!filteredItems.length}
+            title={filteredItems.length < items.length ? `Export ${filteredItems.length} filtered assets` : "Export all assets"}
           >
             <Download className="h-3.5 w-3.5" />
-            Export
+            Export{filteredItems.length < items.length ? ` (${filteredItems.length})` : ""}
           </Button>
           <Button size="sm" className="gap-1.5" onClick={handleOpenAdd}>
             <Plus className="h-3.5 w-3.5" />
@@ -812,21 +834,52 @@ export default function HrAssetsPage() {
         </div>
       }
       filters={
-        <Select
-          value={statusFilter ?? "all"}
-          onValueChange={handleStatusFilterChange}
-        >
-          <SelectTrigger className="w-[160px] h-8 text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
-            <SelectItem value="AVAILABLE">Available</SelectItem>
-            <SelectItem value="ASSIGNED">Assigned</SelectItem>
-            <SelectItem value="MAINTENANCE">Maintenance</SelectItem>
-            <SelectItem value="RETIRED">Retired</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Select
+            value={statusFilter ?? "all"}
+            onValueChange={handleStatusFilterChange}
+          >
+            <SelectTrigger className="w-[148px] h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All statuses</SelectItem>
+              <SelectItem value="AVAILABLE">Available</SelectItem>
+              <SelectItem value="ASSIGNED">Assigned</SelectItem>
+              <SelectItem value="MAINTENANCE">Maintenance</SelectItem>
+              <SelectItem value="RETIRED">Retired</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select
+            value={categoryFilter ?? "all"}
+            onValueChange={handleCategoryFilterChange}
+          >
+            <SelectTrigger className="w-[140px] h-8 text-xs">
+              <SelectValue placeholder="All types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All types</SelectItem>
+              {ASSET_TYPES.map((t) => (
+                <SelectItem key={t} value={t}>
+                  {t}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={assignmentFilter ?? "all"}
+            onValueChange={handleAssignmentFilterChange}
+          >
+            <SelectTrigger className="w-[148px] h-8 text-xs">
+              <SelectValue placeholder="All assignments" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All assignments</SelectItem>
+              <SelectItem value="assigned">Assigned</SelectItem>
+              <SelectItem value="unassigned">Unassigned</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       }
     >
       <div className="flex flex-1 min-h-0 flex-col space-y-4">
@@ -872,21 +925,25 @@ export default function HrAssetsPage() {
             isLoading={isLoading}
             minWidth="900px"
             emptyState={
-              <EmptyState
-                illustration={<Package className="h-8 w-8 text-muted-foreground" />}
-                title="No assets found"
-                description={
-                  statusFilter
-                    ? `No ${statusFilter.toLowerCase()} assets.`
-                    : "Register your first company asset."
-                }
-                action={
-                  !statusFilter
-                    ? { label: "Register Asset", onClick: handleOpenAdd }
-                    : undefined
-                }
-                compact
-              />
+              <div className="flex flex-1 min-h-0 w-full flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-border bg-card py-14 px-6 text-center">
+                <div className="h-28 w-28">
+                  <EmptyDevicesIllustration />
+                </div>
+                <div>
+                  <p className="text-[0.9375rem] font-semibold text-foreground">No assets found</p>
+                  <p className="mt-1 text-sm text-muted-foreground max-w-xs">
+                    {statusFilter
+                      ? `No ${statusFilter.toLowerCase()} assets match your filter.`
+                      : "Register your first company asset to get started."}
+                  </p>
+                </div>
+                {!statusFilter && (
+                  <Button size="sm" onClick={handleOpenAdd} className="gap-1.5">
+                    <Plus className="h-3.5 w-3.5" />
+                    Register Asset
+                  </Button>
+                )}
+              </div>
             }
           />
         )}
@@ -931,71 +988,55 @@ export default function HrAssetsPage() {
         />
       </HrSheet>
 
-      <Dialog open={assignDialog !== null} onOpenChange={handleCloseAssign}>
-        <DialogContent className="sm:max-w-[420px]">
-          <DialogHeader>
-            <DialogTitle>
-              {assignDialog?.currentAssignedTo
-                ? "Reassign Asset"
-                : "Assign Asset"}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="py-2 space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Asset:{" "}
-              <span className="font-medium text-foreground">
-                {assignDialog?.assetName}
-              </span>
-            </p>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">
-                {assignDialog?.currentAssignedTo
-                  ? "Reassign to Employee"
-                  : "Assign to Employee"}
-              </label>
-              <Combobox
-                key={assignDialog?.assetId ?? "closed"}
-                options={employeeOptions}
-                value={assignEmpId}
-                onChange={setAssignEmpId}
-                placeholder="Select employee…"
-                searchPlaceholder="Search by name or email…"
-              />
-            </div>
-            {assignDialog?.currentAssignedTo && (
-              <p className="text-xs text-muted-foreground">
-                Leave selection empty and confirm to unassign the current
-                employee.
-              </p>
-            )}
+      <HrSheet
+        open={assignDialog !== null}
+        onOpenChange={handleCloseAssign}
+        title={assignDialog?.currentAssignedTo ? "Reassign Asset" : "Assign Asset"}
+        description={assignDialog?.assetName ? `Asset: ${assignDialog.assetName}` : undefined}
+        onSubmit={handleConfirmAssign}
+        submitLabel={
+          assignPending
+            ? "Saving…"
+            : assignDialog?.currentAssignedTo && assignEmpId
+              ? "Reassign"
+              : "Assign"
+        }
+        submitDisabled={assignPending || (!assignEmpId && !assignDialog?.currentAssignedTo)}
+        isPending={assignPending}
+      >
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">
+              {assignDialog?.currentAssignedTo ? "Reassign to Employee" : "Assign to Employee"}
+            </label>
+            <Combobox
+              key={assignDialog?.assetId ?? "closed"}
+              options={employeeOptions}
+              value={assignEmpId}
+              onChange={setAssignEmpId}
+              placeholder="Select employee…"
+              searchPlaceholder="Search by name or email…"
+            />
           </div>
-          <DialogFooter className="gap-2">
-            {assignDialog?.currentAssignedTo && (
+          {assignDialog?.currentAssignedTo && (
+            <div className="space-y-3">
+              <p className="text-xs text-muted-foreground">
+                Leave the selection empty and click Assign to unassign the current employee.
+              </p>
               <Button
+                type="button"
                 variant="outline"
+                size="sm"
+                className="w-full"
                 onClick={handleUnassign}
                 disabled={assignPending}
               >
-                Unassign
+                Unassign Employee
               </Button>
-            )}
-            <Button
-              onClick={handleConfirmAssign}
-              disabled={
-                assignPending ||
-                (!assignEmpId && !assignDialog?.currentAssignedTo)
-              }
-            >
-              {assignPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              {assignDialog?.currentAssignedTo && assignEmpId
-                ? "Reassign"
-                : "Assign"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </div>
+          )}
+        </div>
+      </HrSheet>
 
       <ConfirmDialog
         open={deleteAssetId !== null}

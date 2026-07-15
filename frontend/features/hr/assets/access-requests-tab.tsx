@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyState } from "@/components/ui/empty-state";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { Combobox } from "@/components/ui/combobox";
 import { toast } from "sonner";
@@ -19,6 +18,7 @@ import {
 import type { Employee } from "@/types/hr";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { SecurityIllustration } from "@/components/illustrations";
 
 const STATUS_META: Record<string, { label: string; badge: string }> = {
   requested: {
@@ -128,10 +128,10 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-foreground">Software & System Access</p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-sm font-semibold text-foreground whitespace-nowrap">Software &amp; System Access</p>
         {canManage && (
-          <Button size="sm" className="gap-1.5 h-7 text-xs" onClick={handleOpenCreate}>
+          <Button size="sm" className="gap-1.5 h-7 text-xs shrink-0" onClick={handleOpenCreate}>
             <Plus className="h-3.5 w-3.5" />
             Request Access
           </Button>
@@ -139,12 +139,23 @@ export function AccessRequestsTab({ employees, canManage }: AccessRequestsTabPro
       </div>
 
       {requests.length === 0 ? (
-        <EmptyState
-          illustration={<Shield className="h-8 w-8 text-muted-foreground" />}
-          title="No access requests"
-          description="Software and app access requests will appear here."
-          compact
-        />
+        <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-card py-10 px-6 text-center">
+          <div className="h-20 w-20">
+            <SecurityIllustration />
+          </div>
+          <div>
+            <p className="text-[0.875rem] font-semibold text-foreground">No access requests</p>
+            <p className="mt-0.5 text-xs text-muted-foreground max-w-[200px]">
+              Software and app access requests will appear here.
+            </p>
+          </div>
+          {canManage && (
+            <Button size="sm" variant="outline" className="h-7 text-xs gap-1.5" onClick={handleOpenCreate}>
+              <Plus className="h-3 w-3" />
+              Request Access
+            </Button>
+          )}
+        </div>
       ) : (
         <div className="space-y-1.5">
           {requests.map((req) => {

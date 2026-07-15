@@ -1,6 +1,7 @@
 "use client";
 
 import { FlaskConical } from "lucide-react";
+import { StateIllustration } from "@/components/illustrations";
 
 interface Props {
   result: Record<string, unknown> | null;
@@ -10,10 +11,10 @@ interface Props {
 export function SimulationResult({ result, label }: Props) {
   if (!result) {
     return (
-      <div className="rounded-xl border border-dashed border-border bg-card p-6 flex flex-col items-center justify-center text-center text-muted-foreground min-h-[200px]">
-        <FlaskConical className="h-8 w-8 mb-2 opacity-40" />
-        <p className="text-sm">Run a simulation to see results here.</p>
-        {label && <p className="text-xs mt-1 opacity-70">{label}</p>}
+      <div className="rounded-xl border border-dashed border-border bg-card p-6 flex flex-1 flex-col items-center justify-center text-center text-muted-foreground min-h-[200px]">
+        <StateIllustration preset="chart" className="h-24 w-24 mb-3" />
+        <p className="text-sm font-medium text-foreground">Run a simulation to see results</p>
+        {label && <p className="text-xs mt-1 text-muted-foreground">{label}</p>}
       </div>
     );
   }

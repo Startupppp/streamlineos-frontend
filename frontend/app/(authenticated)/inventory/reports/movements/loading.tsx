@@ -13,7 +13,7 @@ export default function MovementsReportLoading() {
       </div>
       <div className="rounded-md border border-border bg-card overflow-hidden">
         <div className="h-8 bg-muted/80" />
-        {Array.from({ length: 10 }).map((_, i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <div key={i} className="h-8 border-t border-border flex items-center px-2 gap-3">
             <Skeleton className="h-3 w-24" />
             <Skeleton className="h-4 w-20 rounded" />

@@ -11,10 +11,15 @@ export const policyFormSchema = z.object({
   rules: z.record(z.string(), z.unknown()),
   scopes: z
     .array(
-      z.object({
-        scopeType: z.enum(HR_SCOPE_TYPES),
-        scopeValue: z.string(),
-      }),
+      z
+        .object({
+          scopeType: z.enum(HR_SCOPE_TYPES),
+          scopeValue: z.string(),
+        })
+        .refine(
+          (s) => s.scopeType === "organization" || s.scopeValue.length > 0,
+          { message: "Scope value is required", path: ["scopeValue"] },
+        ),
     )
     .min(1, "At least one scope is required"),
 });

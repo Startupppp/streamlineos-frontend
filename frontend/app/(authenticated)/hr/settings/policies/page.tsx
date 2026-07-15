@@ -3,7 +3,8 @@
 import React, { useState, useCallback } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { motion } from "framer-motion";
-import { Plus, Eye, Pencil, Archive, Search } from "lucide-react";
+import { Plus, Eye, Pencil, Search } from "lucide-react";
+import { StateIllustration } from "@/components/illustrations";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
@@ -286,19 +287,32 @@ export default function HrPoliciesPage() {
             </Button>
           </div>
         ) : data?.data.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <Archive className="h-10 w-10 text-muted-foreground/40 mb-3" />
-            <p className="text-sm font-medium mb-1">No policies found</p>
-            <p className="text-xs text-muted-foreground mb-4">
-              {search || typeFilter !== "all" || statusFilter !== "all"
-                ? "Try adjusting your filters."
-                : "Create your first policy or seed the defaults."}
-            </p>
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center py-12">
+            <StateIllustration preset="documents" className="h-28 w-28" />
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-foreground">No policies found</p>
+              <p className="text-xs text-muted-foreground">
+                {search || typeFilter !== "all" || statusFilter !== "all"
+                  ? "Try adjusting your filters."
+                  : "Create your first policy or seed the defaults to get started."}
+              </p>
+            </div>
             {canManage && !search && typeFilter === "all" && statusFilter === "all" && (
-              <Button size="sm" className="h-8 text-xs gap-1" onClick={handleOpenCreate}>
-                <Plus className="h-3.5 w-3.5" />
-                New Policy
-              </Button>
+              <div className="flex items-center gap-2 mt-1">
+                <LoadingButton
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs"
+                  isPending={seed.isPending}
+                  onClick={handleSeedDefaults}
+                >
+                  Seed Defaults
+                </LoadingButton>
+                <Button size="sm" className="h-8 text-xs gap-1" onClick={handleOpenCreate}>
+                  <Plus className="h-3.5 w-3.5" />
+                  New Policy
+                </Button>
+              </div>
             )}
           </div>
         ) : (

@@ -3,6 +3,7 @@
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useState, useCallback, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -12,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { LoadingButton } from "@/components/ui/loading-button";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -19,7 +21,7 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { toast } from "sonner";
-import { Plus, Trash2, Copy, Pencil, AlertCircle, Search } from "lucide-react";
+import { Plus, Trash2, Copy, Pencil, AlertCircle, Search, Sparkles } from "lucide-react";
 import { EmptyMailIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 
@@ -29,7 +31,16 @@ interface EmailTemplate {
   createdAt: string | null;
 }
 
-const etKeys = { all: [...queryKeys.hr.all, "email-templates"] as const, list: () => [...etKeys.all, "list"] as const };
+interface AiGenerateResult {
+  subject: string;
+  body: string;
+}
+
+const ET_BASE = [...queryKeys.hr.all, "email-templates"] as const;
+const etKeys = {
+  all: ET_BASE,
+  list: () => [...ET_BASE, "list"] as const,
+};
 
 const CATEGORIES = ["Onboarding", "Offboarding", "Leave", "Performance", "General", "Recruitment"];
 
@@ -97,28 +108,41 @@ function TemplateCard({ template, onCopy, onEdit, onDelete }: TemplateCardProps)
 }
 
 function EmailTemplatesContent() {
+  const { data: session } = useSession();
+  const orgId = session?.orgId ?? "";
   const qc = useQueryClient();
 
   const { data: templates, isLoading, isError, refetch } = useQuery({
     queryKey: etKeys.list(),
     queryFn: () => apiClient.get<EmailTemplate[]>("/hr/email-templates"),
+    enabled: !!orgId,
+    staleTime: 60 * 1000,
   });
 
   const create = useMutation({
+    mutationKey: [...etKeys.all, "create"],
     mutationFn: (data: { name: string; subject: string; body: string; category?: string }) =>
       apiClient.post<EmailTemplate>("/hr/email-templates", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: etKeys.list() }),
   });
 
   const update = useMutation({
+    mutationKey: [...etKeys.all, "update"],
     mutationFn: ({ id, ...data }: { id: number; name: string; subject: string; body: string; category?: string }) =>
       apiClient.patch<EmailTemplate>(`/hr/email-templates/${id}`, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: etKeys.list() }),
   });
 
   const remove = useMutation({
+    mutationKey: [...etKeys.all, "remove"],
     mutationFn: (id: number) => apiClient.delete<{ success: boolean }>(`/hr/email-templates/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: etKeys.list() }),
+  });
+
+  const generateAi = useMutation({
+    mutationKey: [...etKeys.all, "generate-ai"],
+    mutationFn: (data: { name: string; subject?: string; category?: string }) =>
+      apiClient.post<AiGenerateResult>("/hr/email-templates/generate-ai", data),
   });
 
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -221,6 +245,22 @@ function EmailTemplatesContent() {
     setActiveCategory(e.currentTarget.dataset.category ?? "All");
   }, []);
 
+  const handleGenerateAi = useCallback(() => {
+    const trimmedName = name.trim();
+    if (!trimmedName) { toast.error("Enter a template name first so AI knows what to generate"); return; }
+    generateAi.mutate(
+      { name: trimmedName, subject: subject.trim() || undefined, category },
+      {
+        onSuccess: (result) => {
+          setSubject(result.subject);
+          setBody(result.body);
+          toast.success("AI content generated — review and edit before saving");
+        },
+        onError: (e) => toast.error(getErrorMessage(e)),
+      },
+    );
+  }, [generateAi, name, subject, category]);
+
   if (isLoading) {
     return (
       <PageWrapper title="Email Templates" subtitle="Manage HR email templates">
@@ -250,7 +290,6 @@ function EmailTemplatesContent() {
     <PageWrapper
       title="Email Templates"
       subtitle="Manage reusable email templates for HR communications"
-      badge={`${templates?.length ?? 0} templates`}
       actions={
         <Button size="sm" className="h-8 gap-1.5" onClick={handleOpenSheet}>
           <Plus className="h-3.5 w-3.5" />
@@ -351,9 +390,23 @@ function EmailTemplatesContent() {
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Subject Line</label>
-          <Input placeholder="Email subject" value={subject} onChange={handleSubjectChange} />
+        <div className="flex items-end justify-between gap-2">
+          <div className="flex-1 space-y-1.5">
+            <label className="text-sm font-medium">Subject Line</label>
+            <Input placeholder="Email subject" value={subject} onChange={handleSubjectChange} />
+          </div>
+          <LoadingButton
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-9 gap-1.5 shrink-0"
+            onClick={handleGenerateAi}
+            isPending={generateAi.isPending}
+            loadingText="Generating..."
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            Generate with AI
+          </LoadingButton>
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Body</label>
@@ -377,7 +430,7 @@ function EmailTemplatesContent() {
 
 export default function EmailTemplatesPage() {
   return (
-    <DashboardGate permission="hr:documents:manage">
+    <DashboardGate permission="hr:email-templates:manage">
       <EmailTemplatesContent />
     </DashboardGate>
   );

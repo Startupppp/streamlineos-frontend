@@ -128,11 +128,7 @@ export function TicketDetailRightPanel({
             projectId={projectId}
             timeSpent={ticket.timeSpent ?? null}
           />
-          <WatcherList
-            projectId={projectId}
-            ticketId={ticketId}
-            members={members}
-          />
+          <WatcherList projectId={projectId} ticketId={ticketId} />
         </div>
       </div>
     </div>

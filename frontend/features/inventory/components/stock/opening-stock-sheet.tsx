@@ -19,8 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Combobox } from "@/components/ui/combobox";
-import type { ComboboxOption } from "@/components/ui/combobox";
+import { ProductVariantCombobox } from "@/components/inventory/product-variant-combobox";
 import { useOpeningStock } from "@/hooks/api/inventory/stock";
 import { useProductVariants } from "@/hooks/api/inventory/products";
 import { useWarehouses, useLocations } from "@/hooks/api/inventory/warehouses";
@@ -89,7 +88,6 @@ interface LineRowProps {
   errors: ReturnType<typeof useForm<FormValues>>["formState"]["errors"];
   onRemove: (index: number) => void;
   canRemove: boolean;
-  variantOptions: ComboboxOption[];
   warehouses: { id: number; name: string }[];
 }
 
@@ -102,7 +100,6 @@ const LineRow = memo(function LineRow({
   errors,
   onRemove,
   canRemove,
-  variantOptions,
   warehouses,
 }: LineRowProps) {
   const warehouseId = watch(`lines.${index}.warehouseId`);
@@ -152,13 +149,9 @@ const LineRow = memo(function LineRow({
             control={control}
             name={`lines.${index}.variantId`}
             render={({ field }) => (
-              <Combobox
-                options={variantOptions}
+              <ProductVariantCombobox
                 value={field.value}
                 onChange={field.onChange}
-                placeholder="Search variant, SKU…"
-                searchPlaceholder="Search by name or SKU…"
-                emptyText="No variants match your search."
                 className="h-8 text-xs"
               />
             )}
@@ -262,16 +255,6 @@ const LineRow = memo(function LineRow({
 export function OpeningStockSheet({ open, onOpenChange }: OpeningStockSheetProps) {
   const { data: variants = [], isLoading: variantsLoading } = useProductVariants({ activeOnly: true });
   const { data: warehouses = [] } = useWarehouses();
-
-  const variantOptions = useMemo<ComboboxOption[]>(
-    () =>
-      variants.map((v) => ({
-        value: String(v.id),
-        label: `${v.productName} — ${v.name}`,
-        sublabel: `SKU: ${v.sku}`,
-      })),
-    [variants],
-  );
 
   const openingMutation = useOpeningStock();
 
@@ -411,7 +394,6 @@ export function OpeningStockSheet({ open, onOpenChange }: OpeningStockSheetProps
               errors={form.formState.errors}
               onRemove={handleRemoveLine}
               canRemove={fields.length > 1}
-              variantOptions={variantOptions}
               warehouses={warehouses}
             />
           ))}

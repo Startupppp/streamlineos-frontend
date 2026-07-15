@@ -13,7 +13,7 @@ export default function ImportLoading() {
         <Card>
           <CardHeader>
             <div className="flex gap-2">
-              {Array.from({ length: 10 }).map((_, i) => (
+              {Array.from({ length: 12 }).map((_, i) => (
                 <Skeleton key={i} className="h-6 w-28 rounded-full" />
               ))}
             </div>

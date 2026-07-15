@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useCallback, type ChangeEvent } from "react";
+import { memo, useState, useCallback } from "react";
 import { ChevronDown, Boxes, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -12,6 +11,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ProjectCombobox } from "@/components/ui/project-combobox";
+import { InvoiceCombobox } from "@/components/ui/invoice-combobox";
+import { CalendarEventCombobox } from "@/components/ui/calendar-event-combobox";
+import { ChatChannelCombobox } from "@/components/ui/chat-channel-combobox";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -39,7 +42,7 @@ interface ExternalLinkRowProps {
   onRemove: (linkId: number) => void;
 }
 
-function ExternalLinkRow({ link, onRemove }: ExternalLinkRowProps) {
+const ExternalLinkRow = memo(function ExternalLinkRow({ link, onRemove }: ExternalLinkRowProps) {
   const handleRemove = useCallback(() => onRemove(link.id), [link.id, onRemove]);
   return (
     <li className="flex items-center gap-1.5 text-[12px]">
@@ -57,6 +60,60 @@ function ExternalLinkRow({ link, onRemove }: ExternalLinkRowProps) {
       </button>
     </li>
   );
+});
+
+interface ExternalEntityPickerProps {
+  entityType: ExternalEntityType;
+  value: string;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+}
+
+function ExternalEntityPicker({ entityType, value, onChange, disabled }: ExternalEntityPickerProps) {
+  const pickerClassName = "h-8 text-xs flex-1 min-w-0";
+
+  switch (entityType) {
+    case "project":
+      return (
+        <ProjectCombobox
+          value={value}
+          onChange={onChange}
+          placeholder="Search project…"
+          disabled={disabled}
+          className={pickerClassName}
+        />
+      );
+    case "invoice":
+      return (
+        <InvoiceCombobox
+          value={value}
+          onChange={onChange}
+          placeholder="Search invoice…"
+          disabled={disabled}
+          className={pickerClassName}
+        />
+      );
+    case "calendar_event":
+      return (
+        <CalendarEventCombobox
+          value={value}
+          onChange={onChange}
+          placeholder="Search event…"
+          disabled={disabled}
+          className={pickerClassName}
+        />
+      );
+    case "chat_channel":
+      return (
+        <ChatChannelCombobox
+          value={value}
+          onChange={onChange}
+          placeholder="Search channel…"
+          disabled={disabled}
+          className={pickerClassName}
+        />
+      );
+  }
 }
 
 interface TicketExternalLinksSectionProps {
@@ -73,13 +130,16 @@ export function TicketExternalLinksSection({ ticketId }: TicketExternalLinksSect
   const removeLink = useRemoveExternalLink();
 
   const handleToggle = useCallback(() => setOpen((v) => !v), []);
-  const handleEntityTypeChange = useCallback((v: string) => setEntityType(v as ExternalEntityType), []);
-  const handleEntityIdChange = useCallback((e: ChangeEvent<HTMLInputElement>) => setEntityId(e.target.value), []);
+  const handleEntityTypeChange = useCallback((v: string) => {
+    setEntityType(v as ExternalEntityType);
+    setEntityId("");
+  }, []);
+  const handleEntityIdChange = useCallback((v: string) => setEntityId(v), []);
 
   const handleAdd = useCallback(() => {
     const parsed = Number(entityId);
     if (!parsed || parsed <= 0) {
-      toast.error("Enter a valid ID");
+      toast.error("Select an item to link");
       return;
     }
     addLink.mutate(
@@ -138,19 +198,18 @@ export function TicketExternalLinksSection({ ticketId }: TicketExternalLinksSect
                 ))}
               </SelectContent>
             </Select>
-            <Input
+            <ExternalEntityPicker
+              entityType={entityType}
               value={entityId}
               onChange={handleEntityIdChange}
-              placeholder="ID"
-              className="h-8 text-xs w-20"
-              inputMode="numeric"
+              disabled={addLink.isPending}
             />
             <Button
               type="button"
               variant="outline"
               size="sm"
               className="h-7 text-xs shrink-0"
-              disabled={addLink.isPending}
+              disabled={addLink.isPending || !entityId}
               onClick={handleAdd}
             >
               Link

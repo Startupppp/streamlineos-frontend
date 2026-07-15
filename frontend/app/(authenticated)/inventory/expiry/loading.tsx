@@ -19,7 +19,7 @@ export default function ExpiryLoading() {
             <Skeleton key={i} className="h-3 w-16" />
           ))}
         </div>
-        {Array.from({ length: 10 }).map((_, i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <div key={i} className="border-b border-border/50 px-2 py-1 h-8 flex gap-4 items-center">
             {Array.from({ length: 12 }).map((__, j) => (
               <Skeleton key={j} className="h-3 w-16" />

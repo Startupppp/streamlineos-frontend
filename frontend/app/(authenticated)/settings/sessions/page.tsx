@@ -15,12 +15,15 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 
+const PAGE_SIZE_OPTIONS = [10, 20, 50] as const;
+
 export default function SessionsPage() {
   const { data: sessions, isLoading, isError, refetch } = useSessions();
   const revokeOne = useRevokeSession();
   const revokeAll = useRevokeAllSessions();
 
   const [search, setSearch] = useState("");
+  const [pageSize, setPageSize] = useState<number>(PAGE_SIZE_OPTIONS[0]);
   const [revoking, setRevoking] = useState<UserSession | null>(null);
   const [confirmRevokeAll, setConfirmRevokeAll] = useState(false);
 
@@ -79,6 +82,10 @@ export default function SessionsPage() {
 
   function handleRetry() {
     void refetch();
+  }
+
+  function handlePageSizeChange(size: number) {
+    setPageSize(size);
   }
 
   const columns: DataTableColumn<UserSession>[] = [
@@ -196,6 +203,7 @@ export default function SessionsPage() {
         />
       ) : (
         <DataTable
+          key={pageSize}
           data={filtered}
           columns={columns}
           getRowKey={(s) => s.id}
@@ -203,6 +211,10 @@ export default function SessionsPage() {
           emptyState={emptyState}
           minWidth="600px"
           className="flex-1 min-h-0"
+          pagination={{
+            pageSize,
+            onPageSizeChange: handlePageSizeChange,
+          }}
         />
       )}
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState, useCallback, type ReactNode } from "react";
 import Script from "next/script";
 import { addMonths, format } from "date-fns";
 import { Package, RefreshCw, TrendingDown, TrendingUp, Zap } from "lucide-react";
@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Switch } from "@/components/ui/switch";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import {
   useAiCreditsWallet,
+  useAiCreditTransactions,
   useConfigureAutoTopUp,
   usePurchaseAiCredits,
   useVerifyAiCreditPurchase,
@@ -114,11 +115,23 @@ function PackBuyButton({ pack, isPending, onBuy }: { pack: AiCreditPack; isPendi
   );
 }
 
+const TXN_PAGE_SIZES = [10, 20, 50] as const;
+type TxnPageSize = (typeof TXN_PAGE_SIZES)[number];
+
 export default function AiCreditsPage() {
   const { data, isLoading, isError, refetch } = useAiCreditsWallet();
   const configureTopUp = useConfigureAutoTopUp();
   const purchaseMutation = usePurchaseAiCredits();
   const verifyMutation = useVerifyAiCreditPurchase();
+
+  const [txnPage, setTxnPage] = useState(1);
+  const [txnLimit, setTxnLimit] = useState<TxnPageSize>(20);
+  const {
+    data: txnData,
+    isLoading: txnLoading,
+    isError: txnError,
+    refetch: refetchTxns,
+  } = useAiCreditTransactions(txnPage, txnLimit);
 
   const [localAutoTopUp, setLocalAutoTopUp] = useState<boolean | null>(null);
   const [selectedPack, setSelectedPack] = useState<AiCreditPack | null>(null);
@@ -128,7 +141,8 @@ export default function AiCreditsPage() {
   const autoTopUp = localAutoTopUp ?? (data?.wallet.autoTopUpEnabled ?? false);
   const wallet = data?.wallet;
   const packs = data?.packs ?? [];
-  const txns = data?.recentTransactions ?? [];
+  const txns = txnData?.items ?? [];
+  const txnTotal = txnData?.total ?? 0;
 
   function handleAutoTopUpToggle(enabled: boolean) {
     setLocalAutoTopUp(enabled);
@@ -137,6 +151,20 @@ export default function AiCreditsPage() {
 
   function handleRefresh() {
     void refetch();
+    void refetchTxns();
+  }
+
+  const handleTxnPageChange = useCallback((p: number) => {
+    setTxnPage(p);
+  }, []);
+
+  const handleTxnPageSizeChange = useCallback((size: number) => {
+    setTxnLimit(size as TxnPageSize);
+    setTxnPage(1);
+  }, []);
+
+  function handleTxnRetry() {
+    void refetchTxns();
   }
 
   function handleDialogClose(open: boolean) {
@@ -298,7 +326,17 @@ export default function AiCreditsPage() {
                     <RefreshCw className="h-3.5 w-3.5" />
                   </Button>
                 </div>
-                {txns.length === 0 ? (
+                {txnLoading ? (
+                  <DataTableSkeleton rows={txnLimit} columns={6} />
+                ) : txnError ? (
+                  <ErrorState
+                    title="Failed to load transactions"
+                    description="Something went wrong fetching your usage history."
+                    onRetry={handleTxnRetry}
+                    compact
+                    className="border-0 bg-transparent py-8"
+                  />
+                ) : txns.length === 0 && txnPage === 1 ? (
                   <EmptyState
                     illustration={<Zap />}
                     title="No transactions yet"
@@ -312,6 +350,14 @@ export default function AiCreditsPage() {
                     columns={TXN_COLUMNS}
                     getRowKey={getTxnRowKey}
                     className="border-0 rounded-none"
+                    pagination={{
+                      mode: "server",
+                      page: txnPage,
+                      pageSize: txnLimit,
+                      total: txnTotal,
+                      onPageChange: handleTxnPageChange,
+                      onPageSizeChange: handleTxnPageSizeChange,
+                    }}
                   />
                 )}
               </div>

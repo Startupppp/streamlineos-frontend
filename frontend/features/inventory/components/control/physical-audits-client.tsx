@@ -86,7 +86,7 @@ function NewAuditSheet({
         </SheetHeader>
         <SheetBody className="space-y-4 px-6 py-4">
           <div className="space-y-1.5">
-            <Label htmlFor="pa-warehouse">Warehouse *</Label>
+            <Label htmlFor="pa-warehouse" className="text-xs font-semibold text-foreground/80">Warehouse *</Label>
             <Select value={warehouseId || "none"} onValueChange={handleWarehouseChange}>
               <SelectTrigger id="pa-warehouse" className="h-8 text-sm">
                 <SelectValue placeholder="Select warehouse" />

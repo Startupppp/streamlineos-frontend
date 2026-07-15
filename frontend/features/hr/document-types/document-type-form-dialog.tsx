@@ -1,6 +1,9 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -20,20 +23,45 @@ const ALL_ROLES = [
   "CUSTOMER_SUPPORT",
 ];
 
-function slugify(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_|_$/g, "");
-}
+const documentTypeFormSchema = z.object({
+  name: z
+    .string()
+    .min(1, "Name is required")
+    .max(100, "Name must be at most 100 characters")
+    .refine((v) => v.trim().length >= 2, "Name must be at least 2 characters")
+    .refine((v) => /[a-zA-Z0-9]/.test(v.trim()), "Name must contain at least one letter or digit"),
+  description: z
+    .string()
+    .max(500, "Description must be at most 500 characters"),
+  isMandatory: z.boolean(),
+  isActive: z.boolean(),
+  sortOrder: z
+    .string()
+    .refine(
+      (v) => !v || /^\d+$/.test(v.trim()),
+      "Sort order must be a non-negative whole number",
+    ),
+  applicableRoles: z.array(z.string()),
+});
 
-interface FormState {
+type DocumentTypeFormValues = z.infer<typeof documentTypeFormSchema>;
+
+export interface DocumentTypeFormData {
   name: string;
-  description: string;
+  description?: string;
   isMandatory: boolean;
   isActive: boolean;
-  sortOrder: string;
+  sortOrder?: number;
   applicableRoles: string[];
+}
+
+interface DocumentTypeFormDialogProps {
+  open: boolean;
+  isEditing: boolean;
+  defaultValues?: Partial<DocumentTypeFormData>;
+  isPending: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSubmit: (data: DocumentTypeFormData) => void;
 }
 
 interface RoleCheckboxProps {
@@ -62,46 +90,62 @@ function RoleCheckbox({ role, checked, onToggle }: RoleCheckboxProps) {
   );
 }
 
-interface DocumentTypeFormDialogProps {
-  open: boolean;
-  isEditing: boolean;
-  form: FormState;
-  isPending: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSetField: <K extends keyof FormState>(key: K, value: FormState[K]) => void;
-  onToggleRole: (role: string) => void;
-  onSubmit: () => void;
+function slugify(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_|_$/g, "");
 }
 
 export function DocumentTypeFormDialog({
   open,
   isEditing,
-  form,
+  defaultValues,
   isPending,
   onOpenChange,
-  onSetField,
-  onToggleRole,
   onSubmit,
 }: DocumentTypeFormDialogProps) {
-  function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) {
-    onSetField("name", e.target.value);
-  }
+  const form = useForm<DocumentTypeFormValues>({
+    resolver: zodResolver(documentTypeFormSchema),
+    defaultValues: {
+      name: defaultValues?.name ?? "",
+      description: defaultValues?.description ?? "",
+      isMandatory: defaultValues?.isMandatory ?? false,
+      isActive: defaultValues?.isActive ?? true,
+      sortOrder: defaultValues?.sortOrder != null ? String(defaultValues.sortOrder) : "",
+      applicableRoles: defaultValues?.applicableRoles ?? [],
+    },
+  });
 
-  function handleDescriptionChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    onSetField("description", e.target.value);
-  }
+  useEffect(() => {
+    if (open) {
+      form.reset({
+        name: defaultValues?.name ?? "",
+        description: defaultValues?.description ?? "",
+        isMandatory: defaultValues?.isMandatory ?? false,
+        isActive: defaultValues?.isActive ?? true,
+        sortOrder: defaultValues?.sortOrder != null ? String(defaultValues.sortOrder) : "",
+        applicableRoles: defaultValues?.applicableRoles ?? [],
+      });
+    }
+  }, [open, defaultValues, form]);
 
-  function handleSortOrderChange(e: React.ChangeEvent<HTMLInputElement>) {
-    onSetField("sortOrder", e.target.value);
-  }
+  const triggerSubmit = useCallback(() => {
+    void form.handleSubmit((values) => {
+      const trimmedName = values.name.trim().replace(/\s+/g, " ");
+      const trimmedDesc = values.description.trim();
+      onSubmit({
+        name: trimmedName,
+        description: trimmedDesc || undefined,
+        isMandatory: values.isMandatory,
+        isActive: values.isActive,
+        sortOrder: values.sortOrder.trim() ? Number(values.sortOrder.trim()) : undefined,
+        applicableRoles: values.applicableRoles,
+      });
+    })();
+  }, [form, onSubmit]);
 
-  function handleMandatoryChange(v: boolean) {
-    onSetField("isMandatory", v);
-  }
-
-  function handleActiveChange(v: boolean) {
-    onSetField("isActive", v);
-  }
+  const nameValue = form.watch("name");
 
   return (
     <HrSheet
@@ -113,7 +157,7 @@ export function DocumentTypeFormDialog({
           ? "Update the document type configuration."
           : "Define a new document required during employee onboarding."
       }
-      onSubmit={onSubmit}
+      onSubmit={triggerSubmit}
       submitLabel={isEditing ? "Save Changes" : "Create"}
       isPending={isPending}
     >
@@ -123,16 +167,18 @@ export function DocumentTypeFormDialog({
         </Label>
         <Input
           placeholder="e.g. National ID / Aadhaar Card"
-          value={form.name}
-          onChange={handleNameChange}
+          {...form.register("name")}
           className="h-8"
           aria-label="Document type name"
         />
-        {form.name && (
+        {form.formState.errors.name && (
+          <p className="text-[11px] text-destructive">{form.formState.errors.name.message}</p>
+        )}
+        {nameValue && !form.formState.errors.name && (
           <p className="text-[11px] text-muted-foreground">
             Slug:{" "}
             <code className="font-mono bg-muted px-1 rounded text-[10px]">
-              {slugify(form.name)}
+              {slugify(nameValue)}
             </code>
           </p>
         )}
@@ -145,12 +191,14 @@ export function DocumentTypeFormDialog({
         </Label>
         <Textarea
           placeholder="Brief description of what this document is..."
-          value={form.description}
-          onChange={handleDescriptionChange}
+          {...form.register("description")}
           rows={2}
           className="resize-none"
           aria-label="Description"
         />
+        {form.formState.errors.description && (
+          <p className="text-[11px] text-destructive">{form.formState.errors.description.message}</p>
+        )}
       </div>
 
       <Separator />
@@ -167,10 +215,16 @@ export function DocumentTypeFormDialog({
               Employees must submit this before onboarding is complete.
             </p>
           </div>
-          <Switch
-            checked={form.isMandatory}
-            onCheckedChange={handleMandatoryChange}
-            aria-label="Mandatory"
+          <Controller
+            control={form.control}
+            name="isMandatory"
+            render={({ field }) => (
+              <Switch
+                checked={field.value}
+                onCheckedChange={field.onChange}
+                aria-label="Mandatory"
+              />
+            )}
           />
         </div>
 
@@ -182,10 +236,16 @@ export function DocumentTypeFormDialog({
                 Inactive types won&apos;t appear in new onboarding checklists.
               </p>
             </div>
-            <Switch
-              checked={form.isActive}
-              onCheckedChange={handleActiveChange}
-              aria-label="Active"
+            <Controller
+              control={form.control}
+              name="isActive"
+              render={({ field }) => (
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                  aria-label="Active"
+                />
+              )}
             />
           </div>
         )}
@@ -200,14 +260,16 @@ export function DocumentTypeFormDialog({
           type="number"
           min="0"
           step="1"
-          placeholder="e.g. 1"
-          value={form.sortOrder}
-          onChange={handleSortOrderChange}
+          placeholder="Auto-assigned if empty"
+          {...form.register("sortOrder")}
           className="h-8"
           aria-label="Sort order"
         />
+        {form.formState.errors.sortOrder && (
+          <p className="text-[11px] text-destructive">{form.formState.errors.sortOrder.message}</p>
+        )}
         <p className="text-[11px] text-muted-foreground">
-          Lower numbers appear first in the checklist.
+          Lower numbers appear first. Leave empty to auto-assign.
         </p>
       </div>
 
@@ -222,16 +284,30 @@ export function DocumentTypeFormDialog({
             Leave empty to apply to all roles.
           </p>
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          {ALL_ROLES.map((r) => (
-            <RoleCheckbox
-              key={r}
-              role={r}
-              checked={form.applicableRoles.includes(r)}
-              onToggle={onToggleRole}
-            />
-          ))}
-        </div>
+        <Controller
+          control={form.control}
+          name="applicableRoles"
+          render={({ field }) => {
+            function handleToggle(role: string) {
+              const next = field.value.includes(role)
+                ? field.value.filter((x) => x !== role)
+                : [...field.value, role];
+              field.onChange(next);
+            }
+            return (
+              <div className="grid grid-cols-2 gap-2">
+                {ALL_ROLES.map((r) => (
+                  <RoleCheckbox
+                    key={r}
+                    role={r}
+                    checked={field.value.includes(r)}
+                    onToggle={handleToggle}
+                  />
+                ))}
+              </div>
+            );
+          }}
+        />
       </div>
     </HrSheet>
   );

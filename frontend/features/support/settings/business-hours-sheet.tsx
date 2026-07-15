@@ -10,9 +10,8 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter,
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetBody,
 } from "@/components/ui/sheet";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -70,7 +69,7 @@ export function BusinessHoursSheet({ open, onOpenChange, mode, form, onSubmit, i
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="flex flex-col gap-0 p-0 sm:max-w-[560px]">
+      <SheetContent className="flex flex-col gap-0 p-0 sm:max-w-[560px] overflow-hidden">
         <SheetHeader className="px-6 pt-5 pb-3 border-b shrink-0">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-md bg-primary/10 flex items-center justify-center">
@@ -87,12 +86,12 @@ export function BusinessHoursSheet({ open, onOpenChange, mode, form, onSubmit, i
           </div>
         </SheetHeader>
 
-        <ScrollArea className="flex-1 min-h-0">
+        <SheetBody className="px-6 py-4">
           <Form {...form}>
             <form
               id="business-hours-form"
               onSubmit={form.handleSubmit(onSubmit)}
-              className="px-6 py-4 space-y-5"
+              className="space-y-5"
             >
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
@@ -204,7 +203,7 @@ export function BusinessHoursSheet({ open, onOpenChange, mode, form, onSubmit, i
               </div>
             </form>
           </Form>
-        </ScrollArea>
+        </SheetBody>
 
         <SheetFooter className="px-6 py-3 border-t shrink-0">
           <Button type="button" variant="outline" className="flex-1 h-9" onClick={handleCancel}>

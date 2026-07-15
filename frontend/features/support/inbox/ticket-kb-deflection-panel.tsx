@@ -74,7 +74,7 @@ export function KbDeflectionPanel({ ticketId, ticketTitle }: KbDeflectionPanelPr
       {open && (
         <div className="mt-2 space-y-3 pb-1">
           <div>
-            <p className="text-[11px] font-medium text-muted-foreground mb-1.5">Related articles</p>
+            <p className="text-[11px] font-semibold text-foreground/80 mb-1.5">Related articles</p>
             {searchLoading ? (
               <div className="space-y-1.5">
                 {[0, 1, 2].map((i) => (

@@ -1,10 +1,8 @@
 "use client";
 
-import { getErrorMessage } from "@/lib/get-error-message";
 import { useState, useCallback, useMemo } from "react";
 import {
   useBackgroundVerifications,
-  useCreateBackgroundVerification,
   useUpdateBackgroundVerification,
   type BackgroundVerification,
 } from "@/hooks/api/hr";
@@ -13,21 +11,11 @@ import { useBgvComplianceDashboard, type BgvComplianceRow } from "@/hooks/api/hr
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { HrSheet } from "@/features/hr/hr-sheet";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
@@ -42,11 +30,12 @@ import {
   Clock,
   ShieldAlert,
 } from "lucide-react";
-import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
+import type { ComboboxOption } from "@/components/ui/combobox";
 import type { Employee } from "@/types/hr";
 import { cn } from "@/lib/utils";
-
-const BGV_TYPES = ["Identity", "Education", "Employment", "Criminal", "Address", "Credit"];
+import { getErrorMessage } from "@/lib/get-error-message";
+import { InitiateBgvSheet } from "@/features/hr/background-verification/initiate-bgv-sheet";
+import { EditVerificationSheet } from "@/features/hr/background-verification/edit-verification-sheet";
 
 function getStatusConfig(s: string | null) {
   if (s === "PASSED") {
@@ -79,7 +68,12 @@ function getStatusConfig(s: string | null) {
 
 function getInitials(name: string | null | undefined): string {
   if (!name) return "?";
-  return name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 }
 
 function ComplianceDashboard() {
@@ -110,7 +104,10 @@ function ComplianceDashboard() {
   return (
     <div className="space-y-3">
       {rows.map((row: BgvComplianceRow) => (
-        <Card key={row.jobPostingId} className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+        <Card
+          key={row.jobPostingId}
+          className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden"
+        >
           <CardHeader className="pb-2 pt-4 px-4">
             <CardTitle className="text-sm font-semibold text-foreground">{row.jobTitle}</CardTitle>
           </CardHeader>
@@ -196,7 +193,9 @@ function buildBgvColumns(
     {
       key: "reference",
       header: "Reference",
-      cell: (bgv) => <span className="text-xs text-muted-foreground">{bgv.referenceNumber ?? "—"}</span>,
+      cell: (bgv) => (
+        <span className="text-xs text-muted-foreground">{bgv.referenceNumber ?? "—"}</span>
+      ),
     },
     {
       key: "initiated",
@@ -207,7 +206,7 @@ function buildBgvColumns(
         </span>
       ),
       sortable: true,
-      sortValue: (bgv) => bgv.createdAt ? new Date(bgv.createdAt).getTime() : 0,
+      sortValue: (bgv) => (bgv.createdAt ? new Date(bgv.createdAt).getTime() : 0),
     },
     {
       key: "status",
@@ -215,7 +214,12 @@ function buildBgvColumns(
       cell: (bgv) => {
         const statusCfg = getStatusConfig(bgv.status);
         return (
-          <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border", statusCfg.badge)}>
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+              statusCfg.badge,
+            )}
+          >
             {statusCfg.icon}
             {statusCfg.label}
           </span>
@@ -234,7 +238,10 @@ function buildBgvColumns(
               <Button
                 size="sm"
                 className="h-7 gap-1 text-xs"
-                onClick={(e) => { e.stopPropagation(); onUpdateStatus(bgv.id, "PASSED"); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onUpdateStatus(bgv.id, "PASSED");
+                }}
                 disabled={isPending}
               >
                 <CheckCircle2 className="h-3 w-3" />
@@ -244,7 +251,10 @@ function buildBgvColumns(
                 size="sm"
                 variant="outline"
                 className="h-7 gap-1 text-xs"
-                onClick={(e) => { e.stopPropagation(); onUpdateStatus(bgv.id, "FAILED"); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onUpdateStatus(bgv.id, "FAILED");
+                }}
                 disabled={isPending}
               >
                 <XCircle className="h-3 w-3" />
@@ -256,7 +266,10 @@ function buildBgvColumns(
             size="sm"
             variant="ghost"
             className="h-7 w-7 p-0"
-            onClick={(e) => { e.stopPropagation(); onOpenEdit(bgv); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenEdit(bgv);
+            }}
             aria-label="Edit verification"
           >
             <Pencil className="h-3 w-3" />
@@ -269,9 +282,10 @@ function buildBgvColumns(
 
 function BGVContent() {
   const { data: items, isLoading, isError, refetch } = useBackgroundVerifications();
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
   const { data: employeesRaw } = useHrEmployees();
-  const create = useCreateBackgroundVerification();
   const update = useUpdateBackgroundVerification();
 
   const employees = useMemo<Employee[]>(() => {
@@ -287,102 +301,24 @@ function BGVContent() {
         .map((e) => ({
           value: e.id,
           label:
-            e.firstName && e.lastName
-              ? `${e.firstName} ${e.lastName}`
-              : (e.name ?? e.email),
+            e.firstName && e.lastName ? `${e.firstName} ${e.lastName}` : (e.name ?? e.email),
           sublabel: e.designation ?? e.email,
         })),
     [employees],
   );
 
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [userId, setUserId] = useState("");
-  const [type, setType] = useState("Identity");
-  const [provider, setProvider] = useState("");
-  const [refNumber, setRefNumber] = useState("");
-  const [notes, setNotes] = useState("");
-
   const [editBgv, setEditBgv] = useState<BackgroundVerification | null>(null);
-  const [editNotes, setEditNotes] = useState("");
-  const [editResult, setEditResult] = useState("");
-  const [editStatus, setEditStatus] = useState("");
-
-  const resetForm = useCallback(() => {
-    setUserId("");
-    setType("Identity");
-    setProvider("");
-    setRefNumber("");
-    setNotes("");
-  }, []);
 
   const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
 
-  const handleSheetOpenChange = useCallback((open: boolean) => {
-    if (!open) resetForm();
-    setSheetOpen(open);
-  }, [resetForm]);
-
-  const handleProviderChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setProvider(e.target.value), []);
-  const handleRefNumberChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setRefNumber(e.target.value), []);
-  const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value), []);
-  const handleEditResultChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setEditResult(e.target.value), []);
-  const handleEditNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setEditNotes(e.target.value), []);
-
   const handleOpenEdit = useCallback((bgv: BackgroundVerification) => {
     setEditBgv(bgv);
-    setEditNotes(bgv.notes ?? "");
-    setEditResult(bgv.result ?? "");
-    setEditStatus(bgv.status ?? "PENDING");
   }, []);
 
-  const handleCloseEdit = useCallback((open: boolean) => {
-    if (!open) {
-      setEditBgv(null);
-      setEditNotes("");
-      setEditResult("");
-      setEditStatus("");
-    }
+  const handleCloseEdit = useCallback(() => {
+    setEditBgv(null);
   }, []);
-
-  const handleSaveEdit = useCallback(() => {
-    if (!editBgv) return;
-    update.mutate(
-      {
-        id: editBgv.id,
-        status: editStatus || undefined,
-        result: editResult || undefined,
-        notes: editNotes || undefined,
-      },
-      {
-        onSuccess: () => {
-          toast.success("Check updated");
-          setEditBgv(null);
-        },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      },
-    );
-  }, [editBgv, editStatus, editResult, editNotes, update]);
-
-  const handleCreate = useCallback(() => {
-    if (!userId) { toast.error("Employee is required"); return; }
-    create.mutate(
-      {
-        userId,
-        type,
-        provider: provider || undefined,
-        referenceNumber: refNumber || undefined,
-        notes: notes || undefined,
-      },
-      {
-        onSuccess: () => {
-          toast.success("Verification initiated");
-          setSheetOpen(false);
-          resetForm();
-        },
-        onError: (e) => toast.error(getErrorMessage(e)),
-      },
-    );
-  }, [userId, type, provider, refNumber, notes, create, resetForm]);
 
   const handleUpdateStatus = useCallback(
     (id: number, status: string) => {
@@ -484,113 +420,13 @@ function BGVContent() {
         </TabsContent>
       </Tabs>
 
-      <HrSheet
-        open={!!editBgv}
-        onOpenChange={handleCloseEdit}
-        title="Edit Verification"
-        onSubmit={handleSaveEdit}
-        submitLabel="Save"
-        isPending={update.isPending}
-      >
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Status</label>
-          <Select value={editStatus} onValueChange={setEditStatus}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="w-[var(--radix-select-trigger-width)]">
-              <SelectItem value="PENDING">Pending</SelectItem>
-              <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
-              <SelectItem value="PASSED">Passed</SelectItem>
-              <SelectItem value="FAILED">Failed</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Result</label>
-          <Input
-            placeholder="Summary of findings..."
-            value={editResult}
-            onChange={handleEditResultChange}
-            maxLength={500}
-          />
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Notes</label>
-          <Textarea
-            placeholder="Additional notes..."
-            value={editNotes}
-            onChange={handleEditNotesChange}
-            rows={3}
-            maxLength={1000}
-            className="resize-none w-full"
-          />
-        </div>
-      </HrSheet>
-
-      <HrSheet
+      <InitiateBgvSheet
         open={sheetOpen}
-        onOpenChange={handleSheetOpenChange}
-        title="Initiate BGV"
-        onSubmit={handleCreate}
-        submitLabel="Initiate"
-        isPending={create.isPending}
-      >
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">
-            Employee <span className="text-destructive">*</span>
-          </label>
-          <Combobox
-            options={employeeOptions}
-            value={userId}
-            onChange={setUserId}
-            placeholder="Select employee…"
-            searchPlaceholder="Search by name…"
-          />
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">
-            Verification Type <span className="text-destructive">*</span>
-          </label>
-          <Select value={type} onValueChange={setType}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="w-[var(--radix-select-trigger-width)]">
-              {BGV_TYPES.map((t) => (
-                <SelectItem key={t} value={t}>{t}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Provider / Agency</label>
-          <Input
-            placeholder="e.g., AuthBridge"
-            value={provider}
-            onChange={handleProviderChange}
-          />
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Reference Number</label>
-          <Input
-            placeholder="Tracking reference"
-            value={refNumber}
-            onChange={handleRefNumberChange}
-          />
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Notes</label>
-          <Textarea
-            placeholder="Additional notes..."
-            value={notes}
-            onChange={handleNotesChange}
-            rows={2}
-            maxLength={500}
-            className="resize-none w-full"
-          />
-        </div>
-      </HrSheet>
+        onOpenChange={setSheetOpen}
+        employeeOptions={employeeOptions}
+      />
+
+      <EditVerificationSheet bgv={editBgv} onClose={handleCloseEdit} />
     </PageWrapper>
   );
 }

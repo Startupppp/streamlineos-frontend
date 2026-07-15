@@ -19,6 +19,8 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyMailIllustration } from "@/components/illustrations";
 import { toast } from "sonner";
 import {
   Pin,
@@ -31,7 +33,6 @@ import {
   Users,
   Building2,
   Tag,
-  Megaphone,
   AlertTriangle,
   RefreshCw,
 } from "lucide-react";
@@ -223,7 +224,7 @@ function AnnouncementsContent() {
   const canManage = useCan("hr:announcements:manage");
 
   const { data: published, isLoading: loadingPublished, isError: errorPublished, refetch: refetchPublished } = useHrAnnouncements();
-  const { data: all, isLoading: loadingAll, isError: errorAll, refetch: refetchAll } = useAllHrAnnouncements();
+  const { data: all, isLoading: loadingAll, isError: errorAll, refetch: refetchAll } = useAllHrAnnouncements({ enabled: canManage });
 
   const create = useCreateHrAnnouncement();
   const update = useUpdateHrAnnouncement();
@@ -468,29 +469,20 @@ function AnnouncementsContent() {
         )}
 
         {!isLoading && !isError && displayedList.length === 0 && (
-          <div className="flex-1 flex flex-col items-center justify-center gap-4 py-20 rounded-lg border border-dashed border-border bg-muted/20">
-            <div className="h-14 w-14 rounded-lg bg-muted flex items-center justify-center">
-              <Megaphone className="h-7 w-7 text-muted-foreground" />
-            </div>
-            <div className="text-center space-y-1">
-              <p className="text-sm font-semibold text-foreground">No announcements yet</p>
-              <p className="text-xs text-muted-foreground max-w-xs">
-                {canManage
-                  ? "Create your first announcement to keep the team informed."
-                  : "Check back later for company news and updates."}
-              </p>
-            </div>
-            {canManage && (
-              <Button
-                size="sm"
-                className="h-8 gap-1.5 mt-1"
-                onClick={handleNewClick}
-              >
-                <Plus className="h-3.5 w-3.5" />
-                New Announcement
-              </Button>
-            )}
-          </div>
+          <EmptyState
+            illustration={<EmptyMailIllustration className="h-32 w-32" />}
+            title="No announcements yet"
+            description={
+              canManage
+                ? "Create your first announcement to keep the team informed."
+                : "Check back later for company news and updates."
+            }
+            action={
+              canManage
+                ? { label: "New Announcement", onClick: handleNewClick }
+                : undefined
+            }
+          />
         )}
 
         {!isLoading && !isError && displayedList.length > 0 && (

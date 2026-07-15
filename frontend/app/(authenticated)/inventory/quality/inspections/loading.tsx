@@ -15,7 +15,7 @@ export default function InspectionsLoading() {
       }
     >
       <div className="space-y-1">
-        {Array.from({ length: 10 }).map((_, i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <Skeleton key={i} className="h-8 w-full rounded" />
         ))}
       </div>

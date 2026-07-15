@@ -31,16 +31,35 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { useCreateProvisioningTemplate } from "@/hooks/api/hr/enterprise-ops-identity";
+import { getErrorMessage } from "@/lib/get-error-message";
+
+const ALPHANUMERIC_RE = /[a-zA-Z0-9]/;
 
 const schema = z.object({
-  name: z.string().min(1, "Name is required"),
+  name: z
+    .string()
+    .min(1, "Template name is required")
+    .max(200, "Template name must be 200 characters or fewer")
+    .refine((v) => v.trim().length > 0, "Template name cannot be only whitespace")
+    .refine((v) => ALPHANUMERIC_RE.test(v), "Template name must contain at least one letter or digit")
+    .transform((v) => v.trim()),
   triggeredBy: z.enum(["joiner", "mover", "leaver"]),
 });
 
 type FormValues = z.infer<typeof schema>;
 
-interface SystemEntry { systemName: string; action: "grant" | "revoke" | "review" }
+const systemEntrySchema = z.object({
+  systemName: z
+    .string()
+    .min(1, "System name is required")
+    .max(200, "System name must be 200 characters or fewer")
+    .refine((v) => v.trim().length > 0, "System name cannot be only whitespace"),
+  action: z.enum(["grant", "revoke", "review"]),
+});
+
+type SystemEntry = z.infer<typeof systemEntrySchema>;
 
 interface Props {
   open: boolean;
@@ -52,6 +71,7 @@ export function TemplateSheet({ open, onOpenChange }: Props) {
   const [systems, setSystems] = useState<SystemEntry[]>([]);
   const [newSystem, setNewSystem] = useState("");
   const [newAction, setNewAction] = useState<"grant" | "revoke" | "review">("grant");
+  const [systemsError, setSystemsError] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -59,16 +79,28 @@ export function TemplateSheet({ open, onOpenChange }: Props) {
   });
 
   function addSystem() {
-    if (!newSystem.trim()) return;
-    setSystems((s) => [...s, { systemName: newSystem.trim(), action: newAction }]);
+    const trimmed = newSystem.trim();
+    if (!trimmed) return;
+    if (trimmed.length > 200) {
+      setSystemsError("System name must be 200 characters or fewer");
+      return;
+    }
+    setSystems((s) => [...s, { systemName: trimmed, action: newAction }]);
     setNewSystem("");
+    setSystemsError(null);
   }
 
   function removeSystem(i: number) {
     setSystems((s) => s.filter((_, idx) => idx !== i));
+    setSystemsError(null);
   }
 
   function onSubmit(values: FormValues) {
+    if (systems.length === 0) {
+      setSystemsError("Add at least one system to the template");
+      return;
+    }
+    setSystemsError(null);
     create.mutate(
       { ...values, systemsConfig: systems },
       {
@@ -77,6 +109,7 @@ export function TemplateSheet({ open, onOpenChange }: Props) {
           setSystems([]);
           onOpenChange(false);
         },
+        onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
   }
@@ -125,10 +158,11 @@ export function TemplateSheet({ open, onOpenChange }: Props) {
               <p className="text-sm font-medium">Systems</p>
               <div className="flex gap-2">
                 <Input
-                  placeholder="System name"
+                  placeholder="System name (e.g. GitHub, Jira)"
                   value={newSystem}
-                  onChange={(e) => setNewSystem(e.target.value)}
+                  onChange={(e) => { setNewSystem(e.target.value); setSystemsError(null); }}
                   className="flex-1"
+                  maxLength={200}
                 />
                 <Select value={newAction} onValueChange={(v) => setNewAction(v as typeof newAction)}>
                   <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
@@ -142,8 +176,11 @@ export function TemplateSheet({ open, onOpenChange }: Props) {
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
+              {systemsError && (
+                <p className="text-sm font-medium text-destructive">{systemsError}</p>
+              )}
               {systems.map((s, i) => (
-                <div key={i} className="flex items-center justify-between rounded-md border border-border px-3 py-2">
+                <div key={`${s.systemName}-${i}`} className="flex items-center justify-between rounded-md border border-border px-3 py-2">
                   <span className="text-sm text-foreground">{s.systemName}</span>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-muted-foreground capitalize">{s.action}</span>

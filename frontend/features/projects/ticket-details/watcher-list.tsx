@@ -1,28 +1,21 @@
 "use client";
 
+import { useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, Plus, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { resolveImageUrl } from "@/lib/utils";
+import { MemberPicker } from "@/components/members/member-picker";
 import { useWatchers, useToggleWatch, useAddWatcher } from "@/hooks/api/projects";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import type { ProjectMember } from "./types";
 import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
 
 interface WatcherListProps {
   projectId: number;
   ticketId: number;
-  members: ProjectMember[];
 }
 
-export function WatcherList({ projectId, ticketId, members }: WatcherListProps) {
+export function WatcherList({ projectId, ticketId }: WatcherListProps) {
   const { data: session } = useSession();
   const { data: watchers = [], isLoading } = useWatchers(projectId, ticketId);
   const toggleWatch = useToggleWatch(projectId);
@@ -30,16 +23,19 @@ export function WatcherList({ projectId, ticketId, members }: WatcherListProps) 
 
   const currentUserId = session?.user?.id;
   const isWatching = watchers.some((w) => w.userId === currentUserId);
-  const watcherUserIds = new Set(watchers.map((w) => w.userId));
 
-  const handleToggleWatch = () => {
+  const handleToggleWatch = useCallback(() => {
     toggleWatch.mutate({ ticketId, watching: isWatching });
-  };
+  }, [toggleWatch, ticketId, isWatching]);
 
-  const handleAddWatcher = (userId: string) => {
-    if (!userId) return;
-    addWatcher.mutate({ ticketId, userId });
-  };
+  const handleAddWatcher = useCallback(
+    (userId: string | null) => {
+      if (!userId) return;
+      if (watchers.some((w) => w.userId === userId)) return;
+      addWatcher.mutate({ ticketId, userId });
+    },
+    [addWatcher, ticketId, watchers],
+  );
 
   if (isLoading) {
     return (
@@ -88,23 +84,12 @@ export function WatcherList({ projectId, ticketId, members }: WatcherListProps) 
         </div>
       )}
 
-      <Select value="" onValueChange={handleAddWatcher}>
-        <SelectTrigger className="h-8 text-xs border-input bg-card">
-          <SelectValue placeholder="+ Add watcher" />
-        </SelectTrigger>
-        <SelectContent>
-          {members
-            .filter((m) => !watcherUserIds.has(m.id))
-            .map((m) => (
-              <SelectItem key={m.id} value={m.id}>
-                <div className="flex items-center gap-2">
-                  <Plus className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-xs">{getUserDisplayName(m)}</span>
-                </div>
-              </SelectItem>
-            ))}
-        </SelectContent>
-      </Select>
+      <MemberPicker
+        projectId={projectId}
+        value=""
+        onChange={handleAddWatcher}
+        placeholder="+ Add watcher"
+      />
     </div>
   );
 }
