@@ -8,7 +8,7 @@ import {
   SidebarAnimatedNavIcon,
   useAnimatedNavIconHover,
 } from "@/components/layout/sidebar/sidebar-animated-nav";
-import { MenuIcon } from "@animateicons/react/lucide";
+import { MenuIcon, SlidersHorizontalIcon } from "@animateicons/react/lucide";
 import {
   PanelLeftClose,
   PanelLeftOpen,
@@ -480,16 +480,19 @@ function MobileProjectNav({
             <MenuIcon className="h-4 w-4" />
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-72 bg-card/80 p-0">
+        <SheetContent
+          side="left"
+          className="w-72 gap-0 border-r border-border bg-background p-0 shadow-xl"
+        >
           <SheetTitle className="sr-only">Project Navigation</SheetTitle>
-          <div className="flex h-full flex-col">
-            <div className="border-b border-border/80 px-3 py-3">
+          <div className="flex h-full flex-col bg-background">
+            <div className="shrink-0 border-b border-border bg-background px-3 py-3">
               <div className="flex items-center gap-2">
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-[11px] font-bold text-primary">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary text-[11px] font-bold text-primary-foreground">
                   {getProjectInitials(projectKey, projectName)}
                 </div>
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold">
+                  <p className="truncate text-sm font-semibold text-foreground">
                     {projectName ?? "Project"}
                   </p>
                   {projectKey ? (
@@ -499,9 +502,9 @@ function MobileProjectNav({
               </div>
             </div>
 
-            <ScrollArea className="flex-1">
+            <ScrollArea className="flex-1 bg-background">
               <div className="space-y-0.5 px-1.5 py-2">
-                <p className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                <p className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   Workspace
                 </p>
                 {visiblePrimary.map((item) => (
@@ -513,19 +516,34 @@ function MobileProjectNav({
                     onNavigate={handleClose}
                   />
                 ))}
-                <div className="pt-1">
-                  <ProjectMoreMenu
-                    baseUrl={baseUrl}
-                    groups={visibleMoreGroups}
-                    collapsed={false}
-                    onNavigate={handleClose}
-                    onCustomize={handleOpenCustomize}
-                  />
-                </div>
+                {visibleMoreGroups.map((group) => (
+                  <div key={group.id} className="pt-3">
+                    <p className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      {group.label}
+                    </p>
+                    {group.items.map((item) => (
+                      <ProjectNavLink
+                        key={item.id}
+                        item={item}
+                        active={isActive(item.href)}
+                        collapsed={false}
+                        onNavigate={handleClose}
+                      />
+                    ))}
+                  </div>
+                ))}
               </div>
             </ScrollArea>
 
-            <div className="shrink-0 border-t border-border/80 px-1.5 py-1.5">
+            <div className="shrink-0 space-y-0.5 border-t border-border bg-background px-1.5 py-1.5">
+              <button
+                type="button"
+                onClick={handleOpenCustomize}
+                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                <SlidersHorizontalIcon className="h-4 w-4 shrink-0" />
+                <span>Customize sidebar</span>
+              </button>
               <ProjectNavLink
                 item={settings}
                 active={isActive(settings.href)}

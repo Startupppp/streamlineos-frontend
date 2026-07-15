@@ -18,6 +18,7 @@ interface PageWrapperProps {
   filtersClassName?: string;
   filtersCollapseBreakpoint?: "sm" | "md";
   mobileFiltersInline?: boolean;
+  actionsInline?: boolean;
   children: React.ReactNode;
   className?: string;
   contentClassName?: string;
@@ -36,6 +37,7 @@ export function PageWrapper({
   filtersClassName,
   filtersCollapseBreakpoint = "sm",
   mobileFiltersInline = false,
+  actionsInline = false,
   children,
   className,
   contentClassName,
@@ -54,9 +56,25 @@ export function PageWrapper({
 
   return (
     <div className={cn("flex flex-col flex-1 min-h-0", className)}>
-      <div className="shrink-0 px-4 sm:px-6 pt-4 pb-2">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
-          <div className="min-w-0 flex-1 flex items-start gap-1">
+      <div
+        className={cn(
+          "shrink-0 px-4 sm:px-6",
+          actionsInline ? "pt-3 pb-1.5" : "pt-4 pb-2",
+        )}
+      >
+        <div
+          className={cn(
+            actionsInline
+              ? "flex flex-row items-center justify-between gap-2 sm:gap-3"
+              : "flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3",
+          )}
+        >
+          <div
+            className={cn(
+              "min-w-0 flex-1 flex gap-1",
+              actionsInline ? "items-center" : "items-start",
+            )}
+          >
             {leading}
             {!leading && backHref && (
               <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 mt-0.5" aria-label="Back" asChild>
@@ -85,7 +103,13 @@ export function PageWrapper({
           </div>
 
           {actions && (
-            <div className="w-full grid grid-flow-col auto-cols-fr gap-2 sm:w-auto sm:flex sm:items-center sm:shrink-0">
+            <div
+              className={cn(
+                actionsInline
+                  ? "flex shrink-0 items-center gap-2"
+                  : "grid w-full auto-cols-fr grid-flow-col gap-2 sm:flex sm:w-auto sm:shrink-0 sm:items-center",
+              )}
+            >
               {actions}
             </div>
           )}

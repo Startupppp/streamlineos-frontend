@@ -5,6 +5,13 @@ import { ChevronLeft, ChevronRight, Wrench } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import {
   Accordion,
   AccordionItem,
   AccordionTrigger,
@@ -18,12 +25,13 @@ import { ClientUpdateCard } from "./client-update-card";
 import { PlanCard } from "./plan-card";
 import { ExtractTasksCard } from "./extract-tasks-card";
 
-interface AiToolsRailProps {
+interface AiToolsSharedProps {
   projectId: number;
   featureEnabled: boolean;
   requiredPlan: Plan | null;
-  variant?: "sidebar" | "stacked";
 }
+
+interface AiToolsRailProps extends AiToolsSharedProps {}
 
 interface ToolSection {
   id: string;
@@ -33,11 +41,11 @@ interface ToolSection {
 }
 
 const TRIGGER_CLASS =
-  "rounded-none px-3 py-2.5 text-[13px] font-medium hover:no-underline hover:bg-muted/50 data-[state=open]:bg-muted/40 transition-colors";
+  "min-h-10 rounded-none px-3 py-2.5 text-[13px] font-medium hover:no-underline hover:bg-muted/50 data-[state=open]:bg-muted/40 transition-colors";
 
 const CONTENT_CLASS = "px-3 pb-3 pt-1";
 
-function buildSections(sharedProps: Omit<AiToolsRailProps, "variant">): ToolSection[] {
+function buildSections(sharedProps: AiToolsSharedProps): ToolSection[] {
   return [
     {
       id: "summary",
@@ -119,12 +127,60 @@ function ToolsHeader({
           size="icon"
           onClick={onClose}
           aria-label="Collapse AI tools panel"
-          className="h-6 w-6 text-muted-foreground hover:text-foreground"
+          className="h-10 w-10 text-muted-foreground hover:text-foreground"
         >
-          <ChevronRight className="h-3.5 w-3.5" />
+          <ChevronRight className="h-4 w-4" />
         </Button>
       ) : null}
     </div>
+  );
+}
+
+export function AiToolsMobileSheet({
+  projectId,
+  featureEnabled,
+  requiredPlan,
+}: AiToolsSharedProps) {
+  const [open, setOpen] = useState(false);
+  const sharedProps = { projectId, featureEnabled, requiredPlan };
+  const sections = buildSections(sharedProps);
+
+  const handleOpenChange = useCallback((next: boolean) => {
+    setOpen(next);
+  }, []);
+
+  return (
+    <Sheet open={open} onOpenChange={handleOpenChange}>
+      <SheetTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-10 gap-1.5 text-xs md:hidden"
+          aria-label="Open AI tools"
+        >
+          <Wrench className="h-3.5 w-3.5" />
+          Tools
+        </Button>
+      </SheetTrigger>
+      <SheetContent
+        side="bottom"
+        className="flex h-[min(85dvh,100%)] max-h-[85dvh] w-full max-w-none flex-col gap-0 overflow-hidden p-0"
+      >
+        <SheetHeader className="shrink-0 border-b border-border px-4 py-3 pr-12 text-left">
+          <SheetTitle className="flex items-center gap-2 text-sm font-semibold">
+            <Wrench className="h-4 w-4 text-muted-foreground" />
+            AI Tools
+          </SheetTitle>
+        </SheetHeader>
+        <div className="min-h-0 flex-1 overflow-y-auto bg-card scrollbar-hide">
+          <ToolAccordion
+            sections={sections}
+            triggerClassName={cn(TRIGGER_CLASS, "px-4")}
+            contentClassName="px-4 pb-3 pt-1"
+          />
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }
 
@@ -132,7 +188,6 @@ export function AiToolsRail({
   projectId,
   featureEnabled,
   requiredPlan,
-  variant = "sidebar",
 }: AiToolsRailProps) {
   const [isOpen, setIsOpen] = useState(true);
   const prefersReducedMotion = useReducedMotion();
@@ -142,19 +197,6 @@ export function AiToolsRail({
 
   const sharedProps = { projectId, featureEnabled, requiredPlan };
   const sections = buildSections(sharedProps);
-
-  if (variant === "stacked") {
-    return (
-      <div className="border-t border-border bg-card">
-        <ToolsHeader />
-        <ToolAccordion
-          sections={sections}
-          triggerClassName={cn(TRIGGER_CLASS, "px-4")}
-          contentClassName="px-4 pb-3 pt-1"
-        />
-      </div>
-    );
-  }
 
   return (
     <>
@@ -166,10 +208,10 @@ export function AiToolsRail({
             animate={{ opacity: 1, x: 0 }}
             exit={prefersReducedMotion ? undefined : { opacity: 0, x: 24 }}
             transition={prefersReducedMotion ? undefined : { duration: 0.2, ease: "easeOut" }}
-            className="flex h-full w-72 shrink-0 flex-col overflow-hidden border-l border-border bg-card xl:w-80"
+            className="flex h-full w-64 shrink-0 flex-col overflow-hidden border-l border-border bg-card lg:w-72 xl:w-80"
           >
             <ToolsHeader onClose={handleClose} showClose />
-            <div className="min-h-0 flex-1 overflow-y-auto bg-card scrollbar-thin">
+            <div className="min-h-0 flex-1 overflow-y-auto bg-card scrollbar-hide">
               <ToolAccordion sections={sections} />
             </div>
           </motion.aside>
@@ -189,9 +231,9 @@ export function AiToolsRail({
             size="icon"
             onClick={handleOpen}
             aria-label="Expand AI tools panel"
-            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+            className="h-10 w-10 text-muted-foreground hover:text-foreground"
           >
-            <ChevronLeft className="h-3.5 w-3.5" />
+            <ChevronLeft className="h-4 w-4" />
           </Button>
           <Wrench className="h-3 w-3 text-muted-foreground" />
           <span

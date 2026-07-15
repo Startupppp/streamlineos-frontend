@@ -14,7 +14,7 @@ import { TrialBanner } from "@/components/billing/trial-banner"
 import { ProductSwitcherMenu } from "./header/product-switcher-menu"
 import { WorkspaceSwitcher } from "./header/workspace-switcher"
 import { useProductSidebarVisibility } from "./sidebar/use-product-sidebar-visibility"
-import { GlobalAskOs } from "@/components/assistant/global-ask-os"
+import { AskOsProvider } from "@/components/assistant/ask-os-provider"
 import { CommandPaletteProvider } from "@/features/command-palette"
 
 const SuccessChecklist = dynamic(
@@ -108,64 +108,65 @@ export function DashboardShell({
 
       {hasDashboardAccess ? (
         <CommandPaletteProvider>
-          <CommandPalette />
-          <TrialBanner />
+          <AskOsProvider>
+            <CommandPalette />
+            <TrialBanner />
 
-          <GlobalHeader
-            isSidebarCollapsed={isSidebarCollapsed}
-            onToggleSidebar={handleToggleSidebar}
-            showSidebarToggle={!hideSidebar}
-          />
+            <GlobalHeader
+              isSidebarCollapsed={isSidebarCollapsed}
+              onToggleSidebar={handleToggleSidebar}
+              showSidebarToggle={!hideSidebar}
+            />
 
-          <div className="flex-1 flex min-h-0">
-            {!hideSidebar && (
-              <aside
-                aria-label="Sidebar"
-                style={{ width: sidebarW }}
-                className="hidden md:flex flex-col h-full border-r border-sidebar-border bg-sidebar shrink-0 transition-[width] duration-300 ease-in-out overflow-visible relative z-50"
+            <div className="flex-1 flex min-h-0">
+              {!hideSidebar && (
+                <aside
+                  aria-label="Sidebar"
+                  style={{ width: sidebarW }}
+                  className="hidden md:flex flex-col h-full border-r border-sidebar-border bg-sidebar shrink-0 transition-[width] duration-300 ease-in-out overflow-visible relative z-50"
+                >
+                  <AppSidebar isCollapsed={isSidebarCollapsed} />
+                </aside>
+              )}
+
+              <main
+                id="dashboard-content"
+                className="flex-1 min-w-0 flex flex-col overflow-hidden md:pb-6"
               >
-                <AppSidebar isCollapsed={isSidebarCollapsed} />
-              </aside>
+                <div className="flex-1 min-h-0 overflow-auto flex flex-col pb-16 md:pb-0">
+                  {children}
+                  <SuccessChecklist />
+                </div>
+              </main>
+            </div>
+
+            {!hideSidebar && (
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen} modal>
+                <SheetContent side="left" className="z-[100] p-0 w-[17rem] border-r-sidebar-border">
+                  <SheetTitle className="sr-only">Navigation</SheetTitle>
+                  <AppSidebar
+                    isMobile
+                    onNavigate={handleCloseMobileMenu}
+                    onRequestProductSwitcher={handleRequestProductSwitcher}
+                    onRequestWorkspaceSwitcher={handleRequestWorkspaceSwitcher}
+                  />
+                </SheetContent>
+              </Sheet>
             )}
 
-            <main
-              id="dashboard-content"
-              className="flex-1 min-w-0 flex flex-col overflow-hidden md:pb-6"
-            >
-              <div className="flex-1 min-h-0 overflow-auto flex flex-col pb-[5.5rem] md:pb-0">
-                {children}
-                <SuccessChecklist />
-              </div>
-            </main>
-          </div>
+            <ProductSwitcherMenu
+              sheetOnly
+              open={productSwitcherOpen}
+              onOpenChange={setProductSwitcherOpen}
+            />
+            <WorkspaceSwitcher
+              sheetOnly
+              open={workspaceSwitcherOpen}
+              onOpenChange={setWorkspaceSwitcherOpen}
+            />
 
-          {!hideSidebar && (
-            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen} modal>
-              <SheetContent side="left" className="z-[100] p-0 w-[17rem] border-r-sidebar-border">
-                <SheetTitle className="sr-only">Navigation</SheetTitle>
-                <AppSidebar
-                  isMobile
-                  onNavigate={handleCloseMobileMenu}
-                  onRequestProductSwitcher={handleRequestProductSwitcher}
-                  onRequestWorkspaceSwitcher={handleRequestWorkspaceSwitcher}
-                />
-              </SheetContent>
-            </Sheet>
-          )}
-
-          <ProductSwitcherMenu
-            sheetOnly
-            open={productSwitcherOpen}
-            onOpenChange={setProductSwitcherOpen}
-          />
-          <WorkspaceSwitcher
-            sheetOnly
-            open={workspaceSwitcherOpen}
-            onOpenChange={setWorkspaceSwitcherOpen}
-          />
-
-          <MobileBottomNav onOpenMobileMenu={handleOpenMobileMenu} />
-          <GlobalAskOs />
+            <MobileBottomNav onOpenMobileMenu={handleOpenMobileMenu} />
+          </AskOsProvider>
         </CommandPaletteProvider>
       ) : (
         <NotActivatedPage />

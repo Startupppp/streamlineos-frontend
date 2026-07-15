@@ -40,6 +40,8 @@ import {
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useHydrated } from "@/hooks/common/use-hydrated";
+import { useIsMobile } from "@/hooks/common/use-mobile";
+import { useAskOs } from "./ask-os-context";
 import { AskOsConversationList } from "./ask-os-conversation-list";
 import {
   AskOsBubble,
@@ -59,9 +61,9 @@ interface Draft {
 export function GlobalAskOs() {
   const reduce = useReducedMotion();
   const hydrated = useHydrated();
+  const isMobile = useIsMobile();
+  const { open, setOpen, toggle } = useAskOs();
   const qc = useQueryClient();
-
-  const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -277,7 +279,7 @@ export function GlobalAskOs() {
     void send(e.currentTarget.dataset.suggestion ?? "");
   }
   function handleToggle() {
-    setOpen((prev) => !prev);
+    toggle();
   }
   function handleClose() {
     setOpen(false);
@@ -351,10 +353,11 @@ export function GlobalAskOs() {
     "rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted";
   const anchorClassName = cn(
     "fixed right-0 bottom-16 md:bottom-[env(safe-area-inset-bottom,0px)] z-50 flex flex-col items-stretch",
-    open ? "w-[min(100vw,400px)]" : "w-[min(100vw,130px)]",
+    open ? "w-[min(100vw,400px)]" : "hidden w-[min(100vw,130px)] md:flex",
   );
 
   if (!hydrated) return null;
+  if (isMobile && !open) return null;
 
   return createPortal(
     <div
@@ -615,7 +618,7 @@ export function GlobalAskOs() {
         aria-label={
           open ? "Minimize Ask OS assistant" : "Open Ask OS assistant"
         }
-        className={`flex h-6 w-full items-center gap-1 bg-primary px-1.5 py-0 text-primary-foreground shadow-lg ring-1 ring-inset ring-primary/20 transition-colors hover:bg-primary/90 ${open ? "" : "rounded-tl-lg"}`}
+        className={`hidden md:flex h-6 w-full items-center gap-1 bg-primary px-1.5 py-0 text-primary-foreground shadow-lg ring-1 ring-inset ring-primary/20 transition-colors hover:bg-primary/90 ${open ? "" : "rounded-tl-lg"}`}
       >
         <AnimatedLogo size={13} gradient />
         <span className="flex-1 text-left text-[9px] font-semibold leading-none tracking-wide">

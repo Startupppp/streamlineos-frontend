@@ -11,7 +11,7 @@ import { useFeature } from "@/lib/billing/use-feature";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PmPageShell, PM_FILL_PANEL } from "@/features/projects/shared/pm-chrome";
 import { AiChatPanel } from "./ai-chat-panel";
-import { AiToolsRail } from "./ai-tools-rail";
+import { AiToolsRail, AiToolsMobileSheet } from "./ai-tools-rail";
 
 interface AiAssistantPageProps {
   projectId: number;
@@ -33,7 +33,7 @@ function ClearChatAction({
       variant="ghost"
       size="sm"
       onClick={onClear}
-      className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+      className="h-10 gap-1.5 text-xs text-muted-foreground hover:text-foreground sm:h-8"
       aria-label="Clear conversation"
       {...hoverHandlers}
     >
@@ -103,25 +103,26 @@ export function AiAssistantPage({ projectId }: AiAssistantPageProps) {
   return (
     <PageWrapper
       title="AI Assistant"
-      subtitle={SUBTITLE}
+      subtitle={<span className="hidden sm:inline">{SUBTITLE}</span>}
+      actionsInline
       noInternalScroll
       contentClassName="px-0"
-      actions={<ClearChatAction visible={hasMessages} onClear={handleClear} />}
+      actions={
+        <div className="flex items-center justify-end gap-2">
+          <AiToolsMobileSheet {...sharedProps} />
+          <ClearChatAction visible={hasMessages} onClear={handleClear} />
+        </div>
+      }
     >
-      <PmPageShell className="h-full gap-0" withGlow={false}>
-        <div className="relative flex h-full min-h-0 overflow-hidden bg-background">
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-background">
-            <AiChatPanel
-              {...sharedProps}
-              clearSignal={clearSignal}
-              onHasMessagesChange={handleHasMessagesChange}
-            />
-            <div className="shrink-0 md:hidden">
-              <AiToolsRail {...sharedProps} variant="stacked" />
-            </div>
-          </div>
-          <div className="hidden h-full md:flex">
-            <AiToolsRail {...sharedProps} variant="sidebar" />
+      <PmPageShell className="min-h-0 flex-1 gap-0" withGlow={false}>
+        <div className="relative flex min-h-0 flex-1 overflow-hidden bg-background">
+          <AiChatPanel
+            {...sharedProps}
+            clearSignal={clearSignal}
+            onHasMessagesChange={handleHasMessagesChange}
+          />
+          <div className="hidden h-full shrink-0 md:flex">
+            <AiToolsRail {...sharedProps} />
           </div>
         </div>
       </PmPageShell>

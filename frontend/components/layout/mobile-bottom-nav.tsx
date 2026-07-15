@@ -10,6 +10,8 @@ import {
 } from "@animateicons/react/lucide"
 import { cn } from "@/lib/utils"
 import { useUnreadNotificationCount } from "@/hooks/api/notifications"
+import { AnimatedLogo } from "@/features/landing/components/animated-logo"
+import { useAskOs } from "@/components/assistant/ask-os-context"
 import { UserAvatarMenu } from "./header/user-avatar-menu"
 import { MobileQuickCreateSheet } from "./mobile-quick-create-sheet"
 
@@ -19,8 +21,13 @@ interface MobileBottomNavProps {
 
 export function MobileBottomNav({ onOpenMobileMenu }: MobileBottomNavProps) {
   const pathname = usePathname()
+  const { open: askOsOpen, toggle: toggleAskOs } = useAskOs()
   const { data: notifData } = useUnreadNotificationCount()
   const unreadNotifCount = notifData?.count ?? 0
+
+  const handleAskOsClick = useCallback(() => {
+    toggleAskOs()
+  }, [toggleAskOs])
 
   const handleCommandPaletteClick = useCallback(() => {
     const isMac = navigator.userAgent.toLowerCase().includes("mac")
@@ -61,6 +68,22 @@ export function MobileBottomNav({ onOpenMobileMenu }: MobileBottomNavProps) {
         >
           <SearchIcon size={20} />
           <span className="text-[10px] leading-none">Search</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={handleAskOsClick}
+          aria-expanded={askOsOpen}
+          aria-label={askOsOpen ? "Close Ask OS assistant" : "Open Ask OS assistant"}
+          className={cn(
+            "flex flex-col items-center gap-0.5 min-w-[44px] py-1 transition-colors",
+            askOsOpen
+              ? "text-primary"
+              : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <AnimatedLogo size={20} gradient className="rounded-full" />
+          <span className="text-[10px] leading-none">Ask OS</span>
         </button>
 
         <MobileQuickCreateSheet />
