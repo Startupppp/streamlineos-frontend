@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { EmptyActivityIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared";
 import { ActivityCard } from "@/features/crm/activities/activity-card";
@@ -234,7 +235,7 @@ function ActivitiesContent() {
                 ? { label: "Clear filters", onClick: handleClearFilters }
                 : { label: "Log Activity", onClick: handleOpenDialog }
             }
-            className="flex-1 min-h-[40vh] border-0 bg-transparent"
+            className={CONTENT_FILL_PANEL}
           />
         )}
 

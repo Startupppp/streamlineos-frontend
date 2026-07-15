@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { EmptyTasksIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
@@ -307,7 +308,7 @@ function CrmTasksContent() {
             title="No tasks yet"
             description="Create your first task to track follow-ups and action items."
             action={{ label: "Create Task", onClick: handleCreateOpen }}
-            className="flex-1 min-h-[400px] border-0 bg-transparent"
+            className={CONTENT_FILL_PANEL}
           />
         )}
       </div>

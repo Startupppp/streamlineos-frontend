@@ -15,6 +15,7 @@ import type { TimeDevice } from "@/hooks/api/hr/enterprise-comp";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DevicesPage() {
@@ -42,15 +43,16 @@ export default function DevicesPage() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.22, ease: "easeOut" }}
+        className="flex min-h-0 flex-1 flex-col"
       >
-        <Tabs defaultValue="devices">
-          <TabsList className="mb-4">
+        <Tabs defaultValue="devices" className="flex min-h-0 flex-1 flex-col">
+          <TabsList>
             <TabsTrigger value="devices">Devices</TabsTrigger>
             <TabsTrigger value="failed-syncs">Failed Syncs</TabsTrigger>
             <TabsTrigger value="sync-logs">All Sync Logs</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="devices">
+          <TabsContent value="devices" className="mt-2 flex min-h-0 flex-1 flex-col">
             <DevicesTable
               canManage={canManage}
               onAdd={() => setAddOpen(true)}
@@ -58,11 +60,11 @@ export default function DevicesPage() {
             />
           </TabsContent>
 
-          <TabsContent value="failed-syncs">
+          <TabsContent value="failed-syncs" className="mt-2 flex min-h-0 flex-1 flex-col">
             {failedLoading ? (
               <div className="space-y-2">{Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-12 rounded-lg" />)}</div>
             ) : !failedSyncs?.length ? (
-              <EmptyState illustrationPreset="default" title="No failed syncs" description="All device syncs completed successfully" compact className="h-48 border-0 shadow-none" />
+              <EmptyState illustrationPreset="default" title="No failed syncs" description="All device syncs completed successfully" className={CONTENT_FILL_PANEL} />
             ) : (
               <div className="space-y-2">
                 {failedSyncs.map((log) => (

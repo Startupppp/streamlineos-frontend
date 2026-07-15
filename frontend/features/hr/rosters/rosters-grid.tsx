@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -119,8 +120,7 @@ export function RostersGrid({ canManage }: Props) {
         illustrationPreset="calendar"
         title="No rosters yet"
         description="Create your first weekly roster using the button above"
-        className="border-0 bg-transparent shadow-none h-64"
-        compact
+        className={CONTENT_FILL_PANEL}
       />
     );
   }

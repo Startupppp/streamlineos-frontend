@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { useCareerPaths } from "@/hooks/api/hr/career";
 
 interface Props {
@@ -45,8 +46,7 @@ export function CareerPathsList({ canManage: _canManage }: Props) {
         illustrationPreset="learning"
         title="No career paths yet"
         description="Create structured career paths to help employees grow"
-        className="border-0 bg-transparent shadow-none h-64"
-        compact
+        className={CONTENT_FILL_PANEL}
       />
     );
   }

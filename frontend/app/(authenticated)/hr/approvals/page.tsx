@@ -9,6 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import {
+  CONTENT_FILL_PANEL,
+  ContentFillPanel,
+} from "@/components/ui/content-fill-panel";
 import { useWorkflowInbox, useWorkflowActed } from "@/hooks/api/hr/hr-workflows";
 import { InstanceDetailSheet } from "@/features/hr/workflows/instance-detail-sheet";
 import { DelegationSettings } from "@/features/hr/workflows/delegation-settings";
@@ -44,7 +48,7 @@ function InstanceRow({ instance, onOpen, showActions }: { instance: HrWorkflowIn
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.18, ease: "easeOut" }}
-      className="flex items-center gap-3 rounded-lg border bg-card px-4 py-3 hover:bg-muted/30 cursor-pointer group transition-colors"
+      className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 hover:bg-muted/30 cursor-pointer group transition-colors"
       onClick={() => onOpen(instance.id)}
     >
       <div className="flex-1 min-w-0 space-y-1">
@@ -99,11 +103,11 @@ function InstanceList({ instances, isLoading, onOpen, showActions, emptyTitle, e
 }) {
   if (isLoading) {
     return (
-      <div className="space-y-2">
+      <ContentFillPanel className="gap-2 p-3">
         {Array.from({ length: 10 }).map((_, i) => (
           <Skeleton key={i} className="h-16 rounded-lg" />
         ))}
-      </div>
+      </ContentFillPanel>
     );
   }
 
@@ -113,18 +117,17 @@ function InstanceList({ instances, isLoading, onOpen, showActions, emptyTitle, e
         illustrationPreset="approval"
         title={emptyTitle}
         description={emptyDescription}
-        compact
-        className="border-0 bg-transparent shadow-none h-48"
+        className={CONTENT_FILL_PANEL}
       />
     );
   }
 
   return (
-    <div className="space-y-2">
+    <ContentFillPanel className="gap-2 p-3">
       {instances.map((instance) => (
         <InstanceRow key={instance.id} instance={instance} onOpen={onOpen} showActions={showActions} />
       ))}
-    </div>
+    </ContentFillPanel>
   );
 }
 
@@ -157,19 +160,20 @@ export default function ApprovalsPage() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.22, ease: "easeOut" }}
+        className="flex min-h-0 flex-1 flex-col"
       >
-        <Tabs defaultValue="pending">
-          <TabsList className="mb-4">
+        <Tabs defaultValue="pending" className="flex min-h-0 flex-1 flex-col">
+          <TabsList>
             <TabsTrigger value="pending" className="gap-1.5">
               Pending
               {inbox.length > 0 && (
-                <Badge variant="secondary" className="text-[10px] h-4 px-1.5">{inbox.length}</Badge>
+                <Badge variant="secondary" className="text-[10px] h-4 px-1.5 leading-none">{inbox.length}</Badge>
               )}
             </TabsTrigger>
             <TabsTrigger value="acted">Acted</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="pending">
+          <TabsContent value="pending" className="mt-2 flex min-h-0 flex-1 flex-col">
             <InstanceList
               instances={inbox}
               isLoading={inboxLoading}
@@ -180,7 +184,7 @@ export default function ApprovalsPage() {
             />
           </TabsContent>
 
-          <TabsContent value="acted">
+          <TabsContent value="acted" className="mt-2 flex min-h-0 flex-1 flex-col">
             <InstanceList
               instances={acted}
               isLoading={actedLoading}

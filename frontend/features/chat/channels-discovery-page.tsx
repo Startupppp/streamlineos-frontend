@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { usePublicChannels, useJoinChannel, useLeaveChannel } from "@/hooks/api";
 import { PublicChannelRow } from "./public-channel-row";
 import { NewGroupDialog } from "./new-group-dialog";
@@ -141,7 +142,7 @@ export function ChannelsDiscoveryPage() {
             action={
               search ? undefined : { label: "Create Channel", onClick: handleOpenCreate }
             }
-            className="flex-1 h-full border-0 bg-transparent py-16"
+            className={CONTENT_FILL_PANEL}
           />
         ) : (
           <div>

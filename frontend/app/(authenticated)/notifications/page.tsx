@@ -25,6 +25,7 @@ import {
 } from "@/hooks/api/notifications";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -336,8 +337,7 @@ export default function NotificationsPage() {
             illustrationPreset="mail"
             title={emptyTitle}
             description={emptyDescription}
-            className="border-0 bg-transparent shadow-none py-16"
-            compact
+            className={CONTENT_FILL_PANEL}
           />
         ) : (
           <div className="rounded-lg border border-border overflow-hidden divide-y divide-border">

@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { EmptyInboxIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared";
 import { useInbox, useInboxCounts, useSnoozeCrmTask, useCompleteCrmTask } from "@/hooks/api/crm/inbox";
@@ -117,7 +118,7 @@ function InboxContent() {
             illustration={<EmptyInboxIllustration />}
             title="You're all caught up"
             description="Nothing needs your attention right now."
-            className="flex-1 min-h-[400px] border-0 bg-transparent"
+            className={CONTENT_FILL_PANEL}
           />
         )}
 

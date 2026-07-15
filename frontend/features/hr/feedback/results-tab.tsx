@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Button } from "@/components/ui/button";
 import { UserCombobox } from "@/components/ui/user-combobox";
 import { useFeedbackResults } from "@/hooks/api/hr";
@@ -42,7 +44,7 @@ export function ResultsTab() {
           illustrationPreset="search"
           title="Select an employee to view 360° feedback results"
           description="Choose an employee above"
-          className="border-0 bg-transparent shadow-none"
+          className={CONTENT_FILL_PANEL}
         />
       )}
 

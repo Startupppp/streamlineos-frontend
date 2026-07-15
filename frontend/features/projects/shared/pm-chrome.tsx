@@ -11,8 +11,7 @@ export const PM_PANEL =
 export const PM_PANEL_SOLID =
   "rounded-xl border border-border/80 bg-card shadow-sm";
 
-export const PM_FILL_PANEL =
-  "flex min-h-0 w-full flex-1 flex-col";
+export { CONTENT_FILL_PANEL as PM_FILL_PANEL } from "@/components/ui/content-fill-panel";
 
 export const PM_TOOLBAR =
   "flex w-full min-w-0 flex-col gap-2 rounded-xl border border-border bg-card p-1.5 shadow-sm sm:flex-row sm:items-center sm:justify-between";

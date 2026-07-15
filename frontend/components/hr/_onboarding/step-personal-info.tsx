@@ -37,7 +37,7 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
       const res = await apiClient.get<{ exists: boolean }>(`/hr/employees/check-email?email=${encodeURIComponent(email)}`);
       checkedEmailRef.current = email;
       if (res.exists) {
-        form.setError("email", { type: "manual", message: "Email already registered" });
+        form.setError("email", { type: "manual", message: "This email already belongs to an employee in your organization" });
       }
     } catch {
     }
@@ -142,6 +142,7 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
               <DatePicker
                 value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
                 onChange={(v) => field.onChange(v ? new Date(v) : null)}
+                fromYear={1940}
                 toDate={minDob}
                 placeholder="Select DOB"
               />
@@ -188,7 +189,7 @@ export function StepPersonalInfo({ form }: StepPersonalInfoProps) {
             <FormControl>
               <Input type="password" placeholder="Leave blank for invite link" {...field} />
             </FormControl>
-            <FormDescription className="text-xs">Optional. Employee will set their own if left blank.</FormDescription>
+            <FormDescription className="text-xs">Optional. Ignored if the email belongs to an existing account — that user keeps their current password.</FormDescription>
             <FormMessage />
           </FormItem>
         )}

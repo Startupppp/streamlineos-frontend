@@ -16,6 +16,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyApprovalIllustration } from "@/components/illustrations";
@@ -181,14 +182,12 @@ export default function ApprovalsPage() {
           className="flex-1"
         />
       ) : pendingApprovals.length === 0 ? (
-        <div className="flex flex-1 min-h-0">
-          <EmptyState
-            illustration={<EmptyApprovalIllustration />}
-            title="No pending approvals"
-            description="All workflow approval requests have been handled."
-            className="w-full"
-          />
-        </div>
+        <EmptyState
+          illustration={<EmptyApprovalIllustration />}
+          title="No pending approvals"
+          description="All workflow approval requests have been handled."
+          className={CONTENT_FILL_PANEL}
+        />
       ) : (
         <div className="space-y-3">
           {pendingApprovals.map((approval) => (

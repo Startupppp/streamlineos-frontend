@@ -16,19 +16,21 @@ import {
 } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { DepartmentCombobox } from "@/components/hr/department-combobox";
+import { useCan } from "@/hooks/api/access";
 
 type FormValues = z.infer<typeof onboardEmployeeInputSchema>;
 
-interface Department { id: number; name: string }
 interface Role { slug: string; name: string }
 
 interface StepEmploymentProps {
   form: UseFormReturn<FormValues>;
-  departments: Department[] | undefined;
   assignableRoles: Role[];
 }
 
-export function StepEmployment({ form, departments, assignableRoles }: StepEmploymentProps) {
+export function StepEmployment({ form, assignableRoles }: StepEmploymentProps) {
+  const canCreateDept = useCan("hr:employees:manage");
+
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       <FormField
@@ -37,28 +39,17 @@ export function StepEmployment({ form, departments, assignableRoles }: StepEmplo
         render={({ field }) => (
           <FormItem>
             <FormLabel>Department <span className="text-destructive">*</span></FormLabel>
-            <Select
-              value={field.value !== undefined && field.value !== null ? field.value.toString() : ""}
-              onValueChange={(val) => {
-                const num = parseInt(val, 10);
-                field.onChange(isNaN(num) ? undefined : num);
-                form.trigger("departmentId");
-              }}
-            >
-              <FormControl>
-                <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                {departments?.map((dept) => (
-                  <SelectItem key={dept.id} value={dept.id.toString()}>{dept.name}</SelectItem>
-                ))}
-                {(!departments || departments.length === 0) && (
-                  <div className="py-2 px-2 text-xs text-muted-foreground text-center">
-                    No departments yet. Create them in Settings first.
-                  </div>
-                )}
-              </SelectContent>
-            </Select>
+            <FormControl>
+              <DepartmentCombobox
+                value={field.value ?? null}
+                onValueChange={(val) => {
+                  field.onChange(val);
+                  form.trigger("departmentId");
+                }}
+                placeholder="Select department"
+                allowCreate={canCreateDept}
+              />
+            </FormControl>
             <FormMessage />
           </FormItem>
         )}
@@ -115,7 +106,7 @@ export function StepEmployment({ form, departments, assignableRoles }: StepEmplo
         render={({ field }) => (
           <FormItem className="flex flex-col">
             <FormLabel>Joining Date <span className="text-destructive">*</span></FormLabel>
-            <Popover>
+            <Popover modal>
               <PopoverTrigger asChild>
                 <FormControl>
                   <Button
@@ -128,7 +119,14 @@ export function StepEmployment({ form, departments, assignableRoles }: StepEmplo
                 </FormControl>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
-                <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                <Calendar
+                  mode="single"
+                  selected={field.value}
+                  onSelect={field.onChange}
+                  fromYear={new Date().getFullYear() - 5}
+                  toYear={new Date().getFullYear() + 10}
+                  initialFocus
+                />
               </PopoverContent>
             </Popover>
             <FormMessage />

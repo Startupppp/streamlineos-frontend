@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { Plus, X } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -279,7 +280,7 @@ export function CyclesTab() {
         <EmptyState
           illustrationPreset="survey"
           title="No feedback cycles yet"
-          className="border-0 bg-transparent shadow-none"
+          className={CONTENT_FILL_PANEL}
         />
       ) : (
         <div className="space-y-3">

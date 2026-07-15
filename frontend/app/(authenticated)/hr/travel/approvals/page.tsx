@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { staggerContainer, fadeUp } from "@/lib/motion-variants";
 import {
   usePendingTravelApprovals,
@@ -310,6 +311,7 @@ export default function TravelApprovalsPage() {
           illustrationPreset="travel"
           title="No pending approvals"
           description="All travel requests have been reviewed."
+          className={CONTENT_FILL_PANEL}
         />
       ) : (
         <motion.div

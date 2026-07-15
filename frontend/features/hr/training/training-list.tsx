@@ -16,6 +16,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -145,8 +146,7 @@ export function TrainingList({ canManage, onSelectProgram, selectedProgramId }: 
           illustrationPreset="learning"
           title="No training programs"
           description={canManage ? "Create a program to get started" : "No programs available for your filters"}
-          className="border-0 bg-transparent shadow-none h-64"
-          compact
+          className={CONTENT_FILL_PANEL}
         />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -103,8 +103,8 @@ export function OnboardingWizard() {
           const res = await apiClient.get<{ exists: boolean }>(`/hr/employees/check-email?email=${encodeURIComponent(email)}`);
           checkedEmail.current = email;
           if (res.exists) {
-            form.setError("email", { message: "This email address is already registered" });
-            toast.error("This email address is already registered");
+            form.setError("email", { message: "This email already belongs to an employee in your organization" });
+            toast.error("This email already belongs to an employee in your organization");
           } else {
             emailCheckPassed = true;
           }
@@ -196,7 +196,6 @@ export function OnboardingWizard() {
             {currentStep === 2 && (
               <StepEmployment
                 form={form}
-                departments={departments}
                 assignableRoles={assignableRoles}
               />
             )}

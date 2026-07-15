@@ -2,6 +2,7 @@
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { useCompOffBalance } from "@/hooks/api/hr/overtime";
 
 export function CompOffPanel() {
@@ -23,8 +24,7 @@ export function CompOffPanel() {
         illustrationPreset="calendar"
         title="No comp-off balance"
         description="Earn comp-off days by converting approved overtime"
-        className="border-0 bg-transparent shadow-none h-64"
-        compact
+        className={CONTENT_FILL_PANEL}
       />
     );
   }

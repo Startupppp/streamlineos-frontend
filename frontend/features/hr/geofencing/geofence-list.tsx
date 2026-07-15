@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { Edit2, Trash2 } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -42,8 +43,7 @@ export function GeofenceList({ canManage, onEdit }: Props) {
         illustrationPreset="settings"
         title="No geofences configured"
         description="Add your office locations to enable attendance boundary validation"
-        className="border-0 bg-transparent shadow-none h-64"
-        compact
+        className={CONTENT_FILL_PANEL}
       />
     );
   }
