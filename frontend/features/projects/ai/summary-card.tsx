@@ -1,11 +1,13 @@
 "use client";
 
 import { useCallback } from "react";
-import { BarChart2, RotateCcw, Sparkles, AlertTriangle } from "lucide-react";
+import { AlertTriangle, RotateCcw } from "lucide-react";
+import { SparklesIcon } from "@animateicons/react/lucide";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import type { Plan } from "@/lib/billing/feature-gates";
 import { useProjectAiSummary } from "@/hooks/api/projects/ai";
 import { EvidenceStrip } from "./evidence-strip";
@@ -19,6 +21,7 @@ interface SummaryCardProps {
 export function SummaryCard({ projectId, featureEnabled, requiredPlan }: SummaryCardProps) {
   const mutation = useProjectAiSummary(projectId);
   const result = mutation.data;
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
 
   const handleRun = useCallback(() => {
     mutation.mutate(undefined);
@@ -27,84 +30,79 @@ export function SummaryCard({ projectId, featureEnabled, requiredPlan }: Summary
   const isIdle = !result && !mutation.isPending && !mutation.isError;
 
   return (
-    <div className="bg-card border border-border rounded-xl shadow-sm p-4 flex flex-col gap-3 h-full">
-      <div className="flex items-start gap-3">
-        <div className="shrink-0 flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 border border-primary/20">
-          <BarChart2 className="h-4 w-4 text-primary" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <h3 className="text-sm font-semibold text-foreground">Project Summary</h3>
-          <p className="text-[12px] text-muted-foreground mt-0.5">AI-generated status overview</p>
-        </div>
-      </div>
+    <div className="flex flex-col gap-3">
+      {isIdle ? (
+        <LoadingButton
+          size="sm"
+          onClick={handleRun}
+          disabled={!featureEnabled}
+          isPending={mutation.isPending}
+          className="h-8 w-full gap-1.5 text-xs"
+          {...hoverHandlers}
+        >
+          <SparklesIcon ref={iconRef} size={14} />
+          {featureEnabled ? "Generate Summary" : `Requires ${requiredPlan ?? "PROFESSIONAL"} plan`}
+        </LoadingButton>
+      ) : null}
 
-      <div className="flex-1">
-        {isIdle && (
-          <Button
+      {mutation.isPending ? (
+        <div className="space-y-2 py-1">
+          <Skeleton className="h-3.5 w-full rounded" />
+          <Skeleton className="h-3.5 w-4/5 rounded" />
+          <Skeleton className="h-3.5 w-3/5 rounded" />
+          <Skeleton className="h-3.5 w-3/4 rounded" />
+        </div>
+      ) : null}
+
+      {mutation.isError ? (
+        <div className="space-y-2.5">
+          <p className="text-[13px] leading-snug text-destructive">
+            {getErrorMessage(mutation.error)}
+          </p>
+          <LoadingButton
+            variant="outline"
             size="sm"
             onClick={handleRun}
-            disabled={!featureEnabled}
-            className="h-8 gap-1.5 text-xs"
+            className="h-8 w-full gap-1.5 text-xs"
           >
-            <Sparkles className="h-3.5 w-3.5" />
-            {featureEnabled ? "Generate Summary" : `Requires ${requiredPlan ?? "PROFESSIONAL"} plan`}
-          </Button>
-        )}
+            <RotateCcw className="h-3.5 w-3.5" />
+            Retry
+          </LoadingButton>
+        </div>
+      ) : null}
 
-        {mutation.isPending && (
-          <div className="space-y-2 py-1">
-            <Skeleton className="h-3.5 w-full rounded" />
-            <Skeleton className="h-3.5 w-4/5 rounded" />
-            <Skeleton className="h-3.5 w-3/5 rounded" />
-            <Skeleton className="h-3.5 w-3/4 rounded" />
-          </div>
-        )}
-
-        {mutation.isError && (
-          <div className="space-y-2.5">
-            <p className="text-[13px] text-destructive leading-snug">
-              {getErrorMessage(mutation.error)}
-            </p>
-            <Button variant="outline" size="sm" onClick={handleRun} className="h-8 gap-1.5 text-xs">
-              <RotateCcw className="h-3.5 w-3.5" />
-              Retry
-            </Button>
-          </div>
-        )}
-
-        {result && (
-          <div className="space-y-2.5">
-            {result.atRisk && (
-              <Badge variant="destructive" className="text-[11px] gap-1 h-5 px-1.5">
-                <AlertTriangle className="h-2.5 w-2.5" />
-                At risk
-              </Badge>
-            )}
-            <p className="text-[13px] text-foreground leading-relaxed">{result.summary}</p>
-            {result.highlights.length > 0 && (
-              <ul className="space-y-1">
-                {result.highlights.map((h, i) => (
-                  <li key={i} className="text-[12px] text-muted-foreground flex items-start gap-1.5">
-                    <span className="mt-1.5 h-1 w-1 rounded-full bg-primary shrink-0" />
-                    {h}
-                  </li>
-                ))}
-              </ul>
-            )}
-            <EvidenceStrip evidence={result.evidence} />
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleRun}
-              disabled={mutation.isPending}
-              className="h-7 gap-1.5 text-xs text-muted-foreground hover:text-foreground -ml-2"
-            >
-              <RotateCcw className="h-3 w-3" />
-              Regenerate
-            </Button>
-          </div>
-        )}
-      </div>
+      {result ? (
+        <div className="space-y-2.5">
+          {result.atRisk ? (
+            <Badge variant="destructive" className="h-5 gap-1 px-1.5 text-[11px]">
+              <AlertTriangle className="h-2.5 w-2.5" />
+              At risk
+            </Badge>
+          ) : null}
+          <p className="text-[13px] leading-relaxed text-foreground">{result.summary}</p>
+          {result.highlights.length > 0 ? (
+            <ul className="space-y-1">
+              {result.highlights.map((h, i) => (
+                <li key={i} className="flex items-start gap-1.5 text-[12px] text-muted-foreground">
+                  <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary" />
+                  {h}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          <EvidenceStrip evidence={result.evidence} />
+          <LoadingButton
+            variant="ghost"
+            size="sm"
+            onClick={handleRun}
+            isPending={mutation.isPending}
+            className="h-8 w-full gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+          >
+            <RotateCcw className="h-3 w-3" />
+            Regenerate
+          </LoadingButton>
+        </div>
+      ) : null}
     </div>
   );
 }

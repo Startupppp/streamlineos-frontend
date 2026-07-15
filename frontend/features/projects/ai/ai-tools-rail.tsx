@@ -10,6 +10,7 @@ import {
   AccordionTrigger,
   AccordionContent,
 } from "@/components/ui/accordion";
+import { cn } from "@/lib/utils";
 import type { Plan } from "@/lib/billing/feature-gates";
 import { SummaryCard } from "./summary-card";
 import { RisksCard } from "./risks-card";
@@ -30,6 +31,11 @@ interface ToolSection {
   description: string;
   content: React.ReactNode;
 }
+
+const TRIGGER_CLASS =
+  "rounded-none px-3 py-2.5 text-[13px] font-medium hover:no-underline hover:bg-muted/50 data-[state=open]:bg-muted/40 transition-colors";
+
+const CONTENT_CLASS = "px-3 pb-3 pt-1";
 
 function buildSections(sharedProps: Omit<AiToolsRailProps, "variant">): ToolSection[] {
   return [
@@ -76,17 +82,17 @@ function ToolAccordion({ sections, triggerClassName, contentClassName }: ToolAcc
   return (
     <Accordion type="multiple" className="w-full">
       {sections.map(({ id, label, description, content }) => (
-        <AccordionItem key={id} value={id}>
-          <AccordionTrigger
-            className={triggerClassName ?? "px-3 py-3 text-[13px] font-medium hover:no-underline hover:bg-muted/40 transition-colors rounded-none"}
-          >
+        <AccordionItem key={id} value={id} className="border-b border-border last:border-b-0">
+          <AccordionTrigger className={triggerClassName ?? TRIGGER_CLASS}>
             <div className="flex flex-col items-start gap-0.5 text-left">
-              <span>{label}</span>
+              <span className="text-foreground">{label}</span>
               <span className="text-[11px] font-normal text-muted-foreground">{description}</span>
             </div>
           </AccordionTrigger>
-          <AccordionContent className={contentClassName ?? "px-3 pb-3 pt-0"}>
-            {content}
+          <AccordionContent className={contentClassName ?? CONTENT_CLASS}>
+            <div className="rounded-lg border border-border bg-background p-3 shadow-sm">
+              {content}
+            </div>
           </AccordionContent>
         </AccordionItem>
       ))}
@@ -94,7 +100,40 @@ function ToolAccordion({ sections, triggerClassName, contentClassName }: ToolAcc
   );
 }
 
-export function AiToolsRail({ projectId, featureEnabled, requiredPlan, variant = "sidebar" }: AiToolsRailProps) {
+function ToolsHeader({
+  onClose,
+  showClose,
+}: {
+  onClose?: () => void;
+  showClose?: boolean;
+}) {
+  return (
+    <div className="flex shrink-0 items-center justify-between border-b border-border bg-card px-3 py-2.5">
+      <div className="flex items-center gap-2">
+        <Wrench className="h-3.5 w-3.5 text-muted-foreground" />
+        <span className="text-[12px] font-semibold text-foreground">AI Tools</span>
+      </div>
+      {showClose && onClose ? (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onClose}
+          aria-label="Collapse AI tools panel"
+          className="h-6 w-6 text-muted-foreground hover:text-foreground"
+        >
+          <ChevronRight className="h-3.5 w-3.5" />
+        </Button>
+      ) : null}
+    </div>
+  );
+}
+
+export function AiToolsRail({
+  projectId,
+  featureEnabled,
+  requiredPlan,
+  variant = "sidebar",
+}: AiToolsRailProps) {
   const [isOpen, setIsOpen] = useState(true);
   const prefersReducedMotion = useReducedMotion();
 
@@ -106,15 +145,12 @@ export function AiToolsRail({ projectId, featureEnabled, requiredPlan, variant =
 
   if (variant === "stacked") {
     return (
-      <div className="border-t border-border">
-        <div className="flex items-center gap-2 py-3">
-          <Wrench className="h-3.5 w-3.5 text-muted-foreground" />
-          <span className="text-[12px] font-semibold text-foreground">AI Tools</span>
-        </div>
+      <div className="border-t border-border bg-card">
+        <ToolsHeader />
         <ToolAccordion
           sections={sections}
-          triggerClassName="py-3 text-[13px] font-medium hover:no-underline hover:bg-muted/40 transition-colors rounded-none"
-          contentClassName="pb-3 pt-0"
+          triggerClassName={cn(TRIGGER_CLASS, "px-4")}
+          contentClassName="px-4 pb-3 pt-1"
         />
       </div>
     );
@@ -130,24 +166,10 @@ export function AiToolsRail({ projectId, featureEnabled, requiredPlan, variant =
             animate={{ opacity: 1, x: 0 }}
             exit={prefersReducedMotion ? undefined : { opacity: 0, x: 24 }}
             transition={prefersReducedMotion ? undefined : { duration: 0.2, ease: "easeOut" }}
-            className="flex flex-col shrink-0 w-80 xl:w-96 border-l border-border h-full overflow-hidden"
+            className="flex h-full w-72 shrink-0 flex-col overflow-hidden border-l border-border bg-card xl:w-80"
           >
-            <div className="shrink-0 flex items-center justify-between px-3 py-2.5 border-b border-border/60">
-              <div className="flex items-center gap-2">
-                <Wrench className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="text-[12px] font-semibold text-foreground">AI Tools</span>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleClose}
-                aria-label="Collapse AI tools panel"
-                className="h-6 w-6 text-muted-foreground hover:text-foreground"
-              >
-                <ChevronRight className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-            <div className="flex-1 overflow-y-auto scrollbar-thin">
+            <ToolsHeader onClose={handleClose} showClose />
+            <div className="min-h-0 flex-1 overflow-y-auto bg-card scrollbar-thin">
               <ToolAccordion sections={sections} />
             </div>
           </motion.aside>
@@ -160,7 +182,7 @@ export function AiToolsRail({ projectId, featureEnabled, requiredPlan, variant =
           initial={prefersReducedMotion ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={prefersReducedMotion ? undefined : { duration: 0.15 }}
-          className="shrink-0 flex flex-col items-center border-l border-border py-2 px-1 gap-1"
+          className="flex shrink-0 flex-col items-center gap-1 border-l border-border bg-card px-1 py-2"
         >
           <Button
             variant="ghost"
@@ -171,8 +193,9 @@ export function AiToolsRail({ projectId, featureEnabled, requiredPlan, variant =
           >
             <ChevronLeft className="h-3.5 w-3.5" />
           </Button>
+          <Wrench className="h-3 w-3 text-muted-foreground" />
           <span
-            className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest"
+            className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground"
             style={{ writingMode: "vertical-rl", textOrientation: "mixed" }}
           >
             AI Tools

@@ -15,7 +15,7 @@ const chips = [
 
 export function EvidenceStrip({ evidence }: EvidenceStripProps) {
   return (
-    <div className="flex flex-wrap gap-1.5 pt-2 mt-2 border-t border-border/50">
+    <div className="mt-1 flex flex-wrap gap-1.5">
       {chips.map(({ key, label, cls }) => (
         <span
           key={key}
