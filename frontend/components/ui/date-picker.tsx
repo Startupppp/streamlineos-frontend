@@ -58,6 +58,20 @@ export function DatePicker({
 
   const handleOpenChange = useCallback((o: boolean) => setOpen(o), []);
 
+  const handleInteractOutside = useCallback((e: Event) => {
+    const target = e.target as Node | null;
+    if (!target) return;
+    const selectViewport = document.querySelector("[role='listbox']");
+    if (selectViewport) {
+      e.preventDefault();
+      return;
+    }
+    const popperWrapper = (target as Element).closest?.("[data-radix-popper-content-wrapper]");
+    if (popperWrapper && !popperWrapper.contains(document.querySelector("[data-radix-popover-content]"))) {
+      e.preventDefault();
+    }
+  }, []);
+
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
@@ -77,7 +91,11 @@ export function DatePicker({
           </span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
+      <PopoverContent
+        className="w-auto p-0"
+        align="start"
+        onInteractOutside={handleInteractOutside}
+      >
         <Calendar
           mode="single"
           selected={selected}

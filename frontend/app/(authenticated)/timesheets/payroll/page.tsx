@@ -214,8 +214,8 @@ export default function TimesheetPayrollPage() {
 
         <Tabs defaultValue="queue">
           <TabsList className="h-8">
-            <TabsTrigger value="queue" className="text-xs h-8">Pay Period</TabsTrigger>
-            <TabsTrigger value="history" className="text-xs h-8">Export History</TabsTrigger>
+            <TabsTrigger value="queue" className="text-xs">Pay Period</TabsTrigger>
+            <TabsTrigger value="history" className="text-xs">Export History</TabsTrigger>
           </TabsList>
 
           <TabsContent value="queue" className="mt-3">

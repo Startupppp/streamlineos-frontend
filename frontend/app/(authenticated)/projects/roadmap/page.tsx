@@ -61,15 +61,15 @@ export default function RoadmapPage() {
   const filters = (
     <div className={PM_TOOLBAR}>
       <TabsList className="h-8 w-fit shrink-0 rounded-lg border border-border bg-muted/50 p-0.5 text-muted-foreground">
-        <TabsTrigger value="roadmap" className="h-8 gap-1.5 rounded-md px-3 text-xs">
+        <TabsTrigger value="roadmap" className="gap-1.5 rounded-md px-3 text-xs">
           <Sparkles className="h-3.5 w-3.5" />
           Roadmap
         </TabsTrigger>
-        <TabsTrigger value="feedback" className="h-8 gap-1.5 rounded-md px-3 text-xs">
+        <TabsTrigger value="feedback" className="gap-1.5 rounded-md px-3 text-xs">
           <MessageSquare className="h-3.5 w-3.5" />
           Feedback
         </TabsTrigger>
-        <TabsTrigger value="changelog" className="h-8 gap-1.5 rounded-md px-3 text-xs">
+        <TabsTrigger value="changelog" className="gap-1.5 rounded-md px-3 text-xs">
           <Megaphone className="h-3.5 w-3.5" />
           Changelog
         </TabsTrigger>

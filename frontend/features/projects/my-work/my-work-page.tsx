@@ -188,12 +188,12 @@ export function MyWorkPage() {
             onValueChange={handleTabChange}
             className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden"
           >
-            <TabsList className="mb-0 h-8 min-h-8 shrink-0 gap-0.5 rounded-lg p-0.5">
+            <TabsList className="mb-0 shrink-0">
               {WORK_TABS.map((tab) => (
                 <TabsTrigger
                   key={tab}
                   value={tab}
-                  className="h-8 px-2.5 text-[12px] sm:px-3 sm:text-[12px]"
+                  className="px-2.5 text-[12px] sm:px-3 sm:text-[12px]"
                 >
                   {TAB_CONFIG[tab].label}
                 </TabsTrigger>

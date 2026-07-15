@@ -143,7 +143,7 @@ export function ImportWizardSheet({
       },
       {
         onSuccess: (result) => {
-          setJob(result);
+          setJob(result.job);
           setStep(3);
         },
         onError: (err) => toast.error(getErrorMessage(err)),

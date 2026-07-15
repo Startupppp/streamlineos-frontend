@@ -433,7 +433,7 @@ export function ImportClient() {
   }
 
   const tabTriggerClass =
-    "rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 h-9 text-sm";
+    "h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 text-sm";
 
   return (
     <PageWrapper

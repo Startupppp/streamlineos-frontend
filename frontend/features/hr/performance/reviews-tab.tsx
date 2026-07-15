@@ -185,10 +185,10 @@ export function ReviewsTab() {
       <div className="flex items-center justify-between gap-2 flex-wrap shrink-0">
         <Tabs value={statusFilter} onValueChange={setStatusFilter}>
           <TabsList className="h-8 bg-muted/50">
-            <TabsTrigger value="all" className="text-[11px] px-3 h-6">All ({reviewsList.length})</TabsTrigger>
-            <TabsTrigger value="DRAFT" className="text-[11px] px-3 h-6">Draft</TabsTrigger>
-            <TabsTrigger value="IN_PROGRESS" className="text-[11px] px-3 h-6">In Progress</TabsTrigger>
-            <TabsTrigger value="COMPLETED" className="text-[11px] px-3 h-6">Completed</TabsTrigger>
+            <TabsTrigger value="all" className="text-[11px] px-3">All ({reviewsList.length})</TabsTrigger>
+            <TabsTrigger value="DRAFT" className="text-[11px] px-3">Draft</TabsTrigger>
+            <TabsTrigger value="IN_PROGRESS" className="text-[11px] px-3">In Progress</TabsTrigger>
+            <TabsTrigger value="COMPLETED" className="text-[11px] px-3">Completed</TabsTrigger>
           </TabsList>
         </Tabs>
         <Button size="sm" className="h-8 gap-1.5" onClick={handleOpenSheet}>
