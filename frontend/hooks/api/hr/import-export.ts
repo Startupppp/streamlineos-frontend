@@ -63,6 +63,18 @@ export interface CreateImportJobPayload {
   rows: Record<string, unknown>[];
 }
 
+export interface CreateImportJobSummary {
+  total: number;
+  valid: number;
+  errors: number;
+  topErrors: HrImportError[];
+}
+
+export interface CreateImportJobResult {
+  job: HrImportJob;
+  summary: CreateImportJobSummary;
+}
+
 export interface PaginatedJobs {
   data: HrImportJob[];
   pagination: {
@@ -103,9 +115,10 @@ export function useHrImportJob(jobId: string | null) {
 
 export function useCreateImportJob() {
   const qc = useQueryClient();
-  return useMutation<HrImportJob, Error, CreateImportJobPayload>({
+  return useMutation<CreateImportJobResult, Error, CreateImportJobPayload>({
     mutationKey: ["hr", "import", "jobs", "create"],
-    mutationFn: (body) => apiClient.post<HrImportJob>("/hr/import/jobs", body),
+    mutationFn: (body) =>
+      apiClient.post<CreateImportJobResult>("/hr/import/jobs", body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["hr", "import", "jobs"] });
     },
