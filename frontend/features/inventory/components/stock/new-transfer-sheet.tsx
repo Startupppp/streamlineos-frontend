@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetBody } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
@@ -366,8 +366,8 @@ export function NewTransferSheet({ open, onOpenChange }: { open: boolean; onOpen
           <SheetTitle>New Transfer</SheetTitle>
           <SheetDescription>Move stock between warehouse locations.</SheetDescription>
         </SheetHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0 overflow-hidden">
-          <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <SheetBody className="space-y-4 px-6 py-4">
             <div className="grid grid-cols-2 gap-4">
               <WarehouseLocationPicker
                 control={control}
@@ -433,9 +433,9 @@ export function NewTransferSheet({ open, onOpenChange }: { open: boolean; onOpen
                 />
               ))}
             </div>
-          </div>
-          <SheetFooter className="shrink-0 px-6 py-4 border-t">
-            <div className="grid grid-cols-2 gap-2 w-full">
+          </SheetBody>
+          <SheetFooter className="shrink-0 border-t border-border bg-muted/30 px-6 py-4">
+            <div className="grid w-full grid-cols-2 gap-2">
               <Button type="button" variant="outline" onClick={handleClose} disabled={createMutation.isPending}>
                 Cancel
               </Button>

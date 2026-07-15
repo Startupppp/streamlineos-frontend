@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { EntityFormDialog } from "@/components/shared";
+import { EntityFormDialog, MemberPicker } from "@/components/shared";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -205,6 +205,26 @@ export function CreateTaskDialog({ open, onOpenChange, task, defaultEntityType, 
               </p>
             </>
           )}
+
+          <FormField
+            control={form.control}
+            name="assigneeId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Assignee</FormLabel>
+                <FormControl>
+                  <MemberPicker
+                    mode="single"
+                    value={field.value || undefined}
+                    onChange={(id) => field.onChange(id ?? "")}
+                    allowUnassigned
+                    placeholder="Unassigned"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
           <FormField
             control={form.control}

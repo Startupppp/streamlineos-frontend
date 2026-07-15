@@ -11,6 +11,7 @@ import {
   SheetTitle,
   SheetFooter,
   SheetClose,
+  SheetBody,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -131,11 +132,11 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
           <SheetTitle>New Test Run</SheetTitle>
         </SheetHeader>
 
-        <ScrollArea className="flex-1">
+        <SheetBody className="px-5 py-4">
           <form
             id="run-form"
             onSubmit={form.handleSubmit(handleSubmit)}
-            className="px-5 py-4 space-y-4"
+            className="space-y-4"
           >
             <div className="space-y-1.5">
               <Label className="text-[11px]">Name *</Label>
@@ -239,7 +240,7 @@ export function TestRunSheet({ projectId, open, onOpenChange }: TestRunSheetProp
               />
             </div>
           </form>
-        </ScrollArea>
+        </SheetBody>
 
         <SheetFooter className="px-5 py-3 border-t shrink-0 flex gap-2">
           <SheetClose asChild>

@@ -11,7 +11,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle,
+  Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetBody,
 } from "@/components/ui/sheet";
 import {
   Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
@@ -145,17 +145,18 @@ export function RuleSheet({ open, onOpenChange, editing, entityType, rulesCount,
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-[420px] sm:w-[480px] overflow-y-auto">
-        <SheetHeader className="mb-4">
+      <SheetContent className="flex w-[420px] flex-col gap-0 overflow-hidden p-0 sm:w-[480px] sm:max-w-none">
+        <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
           <SheetTitle>{editing ? "Edit Rule" : "Validation Rule"}</SheetTitle>
           <SheetDescription>
             {editing ? "Update this validation rule." : `Define a new validation rule. ${rulesCount} rules exist.`}
           </SheetDescription>
         </SheetHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-5">
+          <form onSubmit={form.handleSubmit(handleFormSubmit)} className="flex min-h-0 flex-1 flex-col">
+            <SheetBody className="space-y-5 px-6 py-5">
             <div className="space-y-3">
-              <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Scope</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Scope</p>
               <FormField
                 control={form.control}
                 name="entityType"
@@ -416,9 +417,10 @@ export function RuleSheet({ open, onOpenChange, editing, entityType, rulesCount,
                 )}
               />
             </div>
+            </SheetBody>
 
-            <SheetFooter>
-              <LoadingButton type="submit" isPending={isPending} loadingText="Saving…" size="sm">
+            <SheetFooter className="shrink-0 border-t border-border bg-muted/30 px-6 py-4">
+              <LoadingButton type="submit" isPending={isPending} loadingText="Saving…" size="sm" className="w-full">
                 {editing ? "Save Changes" : "Create Rule"}
               </LoadingButton>
             </SheetFooter>

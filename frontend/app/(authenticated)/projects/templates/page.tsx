@@ -52,7 +52,7 @@ function NewTemplateButton({ onClick }: { onClick: () => void }) {
 function TemplatesGridSkeleton() {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {[1, 2, 3].map((i) => (
+      {Array.from({ length: 9 }).map((_, i) => (
         <div key={i} className={cn(PM_PANEL, "space-y-3 p-4")}>
           <div className="flex items-start justify-between gap-2">
             <div className="space-y-1.5">

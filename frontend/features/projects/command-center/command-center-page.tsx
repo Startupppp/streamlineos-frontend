@@ -259,13 +259,18 @@ export function CommandCenterPage() {
       <PageWrapper title="Home">
         <PmPageShell>
           <div className="grid grid-cols-2 gap-2 lg:grid-cols-3">
-            {Array.from({ length: 3 }).map((_, i) => (
+            {Array.from({ length: 6 }).map((_, i) => (
               <Skeleton key={i} className={cn("h-16 rounded-xl", PM_PANEL)} />
             ))}
           </div>
           <Skeleton className={cn("h-14 w-full max-w-xl rounded-xl", PM_PANEL)} />
           <Skeleton className={cn("h-56 rounded-xl", PM_PANEL)} />
           <Skeleton className={cn("h-48 rounded-xl", PM_PANEL)} />
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 9 }).map((_, i) => (
+              <Skeleton key={i} className={cn("h-28 rounded-xl", PM_PANEL)} />
+            ))}
+          </div>
         </PmPageShell>
       </PageWrapper>
     );

@@ -11,6 +11,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
+  SheetBody,
 } from "@/components/ui/sheet";
 import {
   Form,
@@ -226,8 +227,8 @@ export function QuoteCreateSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="p-0 flex flex-col gap-0 sm:max-w-2xl">
-        <SheetHeader className="px-6 py-4 border-b shrink-0">
+      <SheetContent className="flex flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
+        <SheetHeader className="shrink-0 border-b border-border px-6 py-4">
           <SheetTitle>{editTarget ? "Edit Quote" : "New Quote"}</SheetTitle>
           <SheetDescription>
             {editTarget
@@ -241,7 +242,7 @@ export function QuoteCreateSheet({
             onSubmit={form.handleSubmit(handleSubmit)}
             className="flex flex-col flex-1 min-h-0"
           >
-            <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-4">
+            <SheetBody className="space-y-4 px-6 py-4">
               <FormField
                 control={form.control}
                 name="subject"
@@ -448,9 +449,9 @@ export function QuoteCreateSheet({
                   </FormItem>
                 )}
               />
-            </div>
+            </SheetBody>
 
-            <div className="border-t shrink-0 px-6 py-4 space-y-2">
+            <div className="shrink-0 space-y-2 border-t border-border bg-muted/30 px-6 py-4">
               <QuoteSheetTotals
                 currency={currency}
                 subtotal={subtotal}
@@ -458,7 +459,7 @@ export function QuoteCreateSheet({
                 taxTotal={taxTotal}
                 grandTotal={grandTotal}
               />
-              <div className="flex gap-3 justify-end pt-2">
+              <div className="flex justify-end gap-3 pt-2">
                 <Button type="button" variant="outline" onClick={handleCancel}>
                   Cancel
                 </Button>

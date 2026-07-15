@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter } from "@/components/ui/dialog";
 
 const dialogLineItemSchema = z.object({
   description: z.string().min(1, "Description required"),
@@ -195,14 +195,15 @@ export function CreateInvoiceDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[85vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
+        <DialogHeader className="shrink-0 border-b border-border px-6 py-4">
           <DialogTitle>Create Invoice</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col">
+          <DialogBody className="space-y-4 px-6 py-4">
           <div>
-            <Label className="text-xs font-medium text-muted-foreground mb-2 block">
+            <Label className="mb-2 block text-xs font-medium text-muted-foreground">
               Line Items
             </Label>
             <div className="space-y-2">
@@ -316,25 +317,26 @@ export function CreateInvoiceDialog({
                 </span>
               </div>
             )}
-            <div className="flex justify-between font-bold text-base pt-1 border-t">
+            <div className="flex justify-between border-t pt-1 text-base font-bold">
               <span>Total</span>
               <span>{formatCurrencyFull(total)}</span>
             </div>
           </div>
+          </DialogBody>
 
-          <div className="flex justify-end gap-2 pt-2">
+          <DialogFooter className="shrink-0 border-t border-border bg-muted/30 px-6 py-4">
             <Button type="button" variant="outline" onClick={handleCancel}>
               Cancel
             </Button>
             <Button type="submit" disabled={createInvoice.isPending}>
               {createInvoice.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                <Loader2 className="mr-1 h-4 w-4 animate-spin" />
               ) : (
-                <FileText className="h-4 w-4 mr-1" />
+                <FileText className="mr-1 h-4 w-4" />
               )}
               Create Invoice
             </Button>
-          </div>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>

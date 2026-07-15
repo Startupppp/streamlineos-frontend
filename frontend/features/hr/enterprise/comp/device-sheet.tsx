@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetBody } from "@/components/ui/sheet";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -69,14 +69,14 @@ export function DeviceSheet({ open, onOpenChange, device }: Props) {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-md flex flex-col gap-0 p-0">
-        <SheetHeader className="px-6 py-4 border-b">
+      <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
+        <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
           <SheetTitle>{isEdit ? "Edit Device" : "Add Time Clock Device"}</SheetTitle>
         </SheetHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-y-auto">
-            <div className="px-6 py-4 space-y-4 flex-1">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col">
+            <SheetBody className="space-y-4 px-6 py-4">
               <FormField control={form.control} name="name" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Device Name</FormLabel>
@@ -125,10 +125,10 @@ export function DeviceSheet({ open, onOpenChange, device }: Props) {
                   </FormItem>
                 )} />
               )}
-            </div>
+            </SheetBody>
 
-            <SheetFooter className="px-6 py-4 border-t">
-              <LoadingButton type="submit" isPending={isPending} className="bg-primary hover:bg-primary/90 text-primary-foreground w-full">
+            <SheetFooter className="shrink-0 border-t border-border bg-muted/30 px-6 py-4">
+              <LoadingButton type="submit" isPending={isPending} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
                 {isEdit ? "Save Changes" : "Add Device"}
               </LoadingButton>
             </SheetFooter>

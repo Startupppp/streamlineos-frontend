@@ -10,6 +10,8 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetBody,
+  SheetFooter,
 } from "@/components/ui/sheet";
 import {
   Form,
@@ -187,15 +189,16 @@ export function TemplateUpsertSheet({ open, onClose, template }: TemplateUpsertS
 
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
-      <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto flex flex-col gap-0 p-0">
-        <SheetHeader className="px-6 py-4 border-b shrink-0">
+      <SheetContent side="right" className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
+        <SheetHeader className="shrink-0 border-b border-border px-6 py-4">
           <SheetTitle className="text-sm">{isEdit ? "Edit Template" : "New Template"}</SheetTitle>
         </SheetHeader>
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(handleSubmit)}
-            className="flex flex-col flex-1 min-h-0 overflow-y-auto px-6 py-4 gap-4"
+            className="flex min-h-0 flex-1 flex-col"
           >
+            <SheetBody className="space-y-4 px-6 py-4">
             <div className="grid grid-cols-2 gap-3">
               <FormField
                 control={form.control}
@@ -355,15 +358,16 @@ export function TemplateUpsertSheet({ open, onClose, template }: TemplateUpsertS
                 </div>
               )}
             </div>
+            </SheetBody>
 
-            <div className="shrink-0 border-t pt-4 flex justify-end gap-2">
+            <SheetFooter className="shrink-0 border-t border-border bg-muted/30 px-6 py-4">
               <LoadingButton type="button" variant="outline" onClick={onClose} disabled={isPending}>
                 Cancel
               </LoadingButton>
               <LoadingButton type="submit" isPending={isPending} loadingText="Saving...">
                 {isEdit ? "Save Changes" : "Create Template"}
               </LoadingButton>
-            </div>
+            </SheetFooter>
           </form>
         </Form>
       </SheetContent>

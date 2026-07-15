@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
+import { UserCombobox } from "@/components/ui/user-combobox";
 import { Button } from "@/components/ui/button";
 import { SimulationResult } from "./simulation-result";
 import { useComparePolicy } from "@/hooks/api/hr/enterprise-ops-simulator";
@@ -36,8 +37,12 @@ export function CompareSimulator() {
         <p className="text-sm font-medium">Compare Policies</p>
         <div className="space-y-3">
           <div>
-            <label className="text-sm font-medium block mb-1.5">Employee ID</label>
-            <Input placeholder="UUID" value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} />
+            <label className="mb-1.5 block text-sm font-medium">Employee</label>
+            <UserCombobox
+              value={employeeId}
+              onChange={setEmployeeId}
+              placeholder="Select employee"
+            />
           </div>
           <div>
             <label className="text-sm font-medium block mb-1.5">Policy Type</label>

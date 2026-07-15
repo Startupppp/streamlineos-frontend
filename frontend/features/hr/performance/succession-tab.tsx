@@ -1,16 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogBody } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { MemberPicker } from "@/components/shared";
 import {
   useSuccessionPlans,
   useCreateSuccessionPlan,
@@ -19,6 +20,11 @@ import {
 } from "@/hooks/api/hr/succession";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyPersonIllustration } from "@/components/illustrations";
+import { useOrgMembers } from "@/hooks/api/organization";
+import {
+  getUserDisplayName,
+  type NamedUser,
+} from "@/features/projects/shared/resolve-user-name";
 
 const READINESS_CONFIG: Record<SuccessionReadiness, { label: string; className: string }> = {
   ready_now: { label: "Ready Now", className: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30" },
@@ -47,8 +53,26 @@ export function SuccessionTab() {
   const [form, setForm] = useState<FormState>(DEFAULT_FORM);
 
   const { data: plans = [], isLoading } = useSuccessionPlans();
+  const { data: membersData } = useOrgMembers(1, 200);
   const create = useCreateSuccessionPlan();
   const remove = useDeleteSuccessionPlan();
+
+  const memberById = useMemo(() => {
+    const map = new Map<string, NamedUser>();
+    for (const member of membersData?.data ?? []) {
+      map.set(member.userId, {
+        name: member.name,
+        email: member.email,
+      });
+    }
+    return map;
+  }, [membersData]);
+
+  function resolveMemberName(userId: string | null) {
+    if (!userId) return null;
+    const member = memberById.get(userId);
+    return member ? getUserDisplayName(member) : null;
+  }
 
   async function handleCreate() {
     if (!form.roleName || !form.successorId) {
@@ -119,8 +143,10 @@ export function SuccessionTab() {
                   <div className="min-w-0">
                     <p className="font-medium text-sm truncate">{plan.roleName}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      Successor: {plan.successorId.slice(0, 8)}…
-                      {plan.incumbentId && <> · Incumbent: {plan.incumbentId.slice(0, 8)}…</>}
+                      Successor: {resolveMemberName(plan.successorId) ?? plan.successorId}
+                      {plan.incumbentId && (
+                        <> · Incumbent: {resolveMemberName(plan.incumbentId) ?? plan.incumbentId}</>
+                      )}
                     </p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
@@ -144,11 +170,11 @@ export function SuccessionTab() {
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader>
+        <DialogContent className="flex max-h-[90dvh] flex-col gap-0 p-0">
+          <DialogHeader className="shrink-0 border-b border-border px-6 py-4">
             <DialogTitle>New Succession Plan</DialogTitle>
           </DialogHeader>
-          <div className="space-y-3">
+          <DialogBody className="space-y-3 px-6 py-4">
             <div className="space-y-1">
               <Label>Role / Position</Label>
               <Input
@@ -158,18 +184,21 @@ export function SuccessionTab() {
               />
             </div>
             <div className="space-y-1">
-              <Label>Successor ID</Label>
-              <Input
-                value={form.successorId}
-                onChange={(e) => setForm((p) => ({ ...p, successorId: e.target.value }))}
-                placeholder="User ID"
+              <Label>Successor</Label>
+              <MemberPicker
+                mode="single"
+                value={form.successorId || undefined}
+                onChange={(id) => setForm((p) => ({ ...p, successorId: id ?? "" }))}
+                placeholder="Select successor"
               />
             </div>
             <div className="space-y-1">
-              <Label>Incumbent ID (optional)</Label>
-              <Input
-                value={form.incumbentId}
-                onChange={(e) => setForm((p) => ({ ...p, incumbentId: e.target.value }))}
+              <Label>Incumbent (optional)</Label>
+              <MemberPicker
+                mode="single"
+                value={form.incumbentId || undefined}
+                onChange={(id) => setForm((p) => ({ ...p, incumbentId: id ?? "" }))}
+                allowUnassigned
                 placeholder="Current holder"
               />
             </div>
@@ -177,7 +206,11 @@ export function SuccessionTab() {
               <Label>Readiness</Label>
               <Select
                 value={form.readiness}
-                onValueChange={(v) => setForm((p) => ({ ...p, readiness: v as SuccessionReadiness }))}
+                onValueChange={(v) => {
+                  if (v === "ready_now" || v === "1_2_years" || v === "3_plus") {
+                    setForm((p) => ({ ...p, readiness: v }));
+                  }
+                }}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -196,8 +229,8 @@ export function SuccessionTab() {
                 onChange={(e) => setForm((p) => ({ ...p, note: e.target.value }))}
               />
             </div>
-          </div>
-          <DialogFooter>
+          </DialogBody>
+          <DialogFooter className="shrink-0 border-t border-border px-6 py-4">
             <Button variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>

@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogBody,
 } from "@/components/ui/dialog";
 import {
   Sheet,
@@ -14,6 +15,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
+  SheetBody,
 } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/common/use-mobile";
 import { cn } from "@/lib/utils";
@@ -59,9 +61,7 @@ export function AppDialog({
             )}
           </SheetHeader>
 
-          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain scrollbar-hide px-5 py-4">
-            {children}
-          </div>
+          <SheetBody className="px-5 py-4">{children}</SheetBody>
 
           {footer && (
             <div className="shrink-0 flex items-center justify-end gap-2 px-5 py-3 border-t border-border/60 bg-muted/30">
@@ -90,9 +90,7 @@ export function AppDialog({
           )}
         </DialogHeader>
 
-        <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hide px-6 py-4">
-          {children}
-        </div>
+        <DialogBody className="px-6 py-4">{children}</DialogBody>
 
         {footer && (
           <div className="shrink-0 flex items-center justify-end gap-2 px-6 py-4 border-t border-border/60 bg-muted/30">

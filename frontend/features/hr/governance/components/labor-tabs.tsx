@@ -16,6 +16,8 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
+  SheetBody,
+  SheetFooter,
 } from "@/components/ui/sheet";
 import {
   Form,
@@ -26,6 +28,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { UserCombobox } from "@/components/ui/user-combobox";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -259,18 +262,25 @@ export function LaborTabs() {
         </>
       )}
 
-      <Sheet open={sheetOpen} onOpenChange={(v) => !v && setSheetOpen(false)}>
-        <SheetContent className="w-full sm:max-w-md overflow-y-auto">
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
           {activeTab === "memberships" && (
             <>
-              <SheetHeader>
+              <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
                 <SheetTitle>Add Union Membership</SheetTitle>
                 <SheetDescription>Record a union membership for an employee.</SheetDescription>
               </SheetHeader>
               <Form {...membershipForm}>
-                <form onSubmit={membershipForm.handleSubmit(handleCreateMembership)} className="mt-4 space-y-4">
+                <form onSubmit={membershipForm.handleSubmit(handleCreateMembership)} className="flex min-h-0 flex-1 flex-col">
+                  <SheetBody className="space-y-4 px-6 py-5">
                   <FormField control={membershipForm.control} name="userId" render={({ field }) => (
-                    <FormItem><FormLabel>User ID</FormLabel><FormControl><Input placeholder="user-uuid" {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem>
+                      <FormLabel>Employee</FormLabel>
+                      <FormControl>
+                        <UserCombobox value={field.value} onChange={field.onChange} placeholder="Select employee" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )} />
                   <FormField control={membershipForm.control} name="unionName" render={({ field }) => (
                     <FormItem><FormLabel>Union Name</FormLabel><FormControl><Input placeholder="Union name" {...field} /></FormControl><FormMessage /></FormItem>
@@ -284,22 +294,26 @@ export function LaborTabs() {
                         <SelectContent><SelectItem value="active">Active</SelectItem><SelectItem value="inactive">Inactive</SelectItem></SelectContent>
                       </Select><FormMessage /></FormItem>
                   )} />
-                  <div className="flex justify-end gap-2 pt-2">
-                    <Button type="button" variant="outline" onClick={() => setSheetOpen(false)}>Cancel</Button>
-                    <LoadingButton type="submit" isPending={createMembership.isPending} className="bg-primary hover:bg-primary/90 text-primary-foreground">Add</LoadingButton>
-                  </div>
+                  </SheetBody>
+                  <SheetFooter className="shrink-0 border-t border-border bg-muted/30 px-6 py-4">
+                    <div className="grid w-full grid-cols-2 gap-2">
+                      <Button type="button" variant="outline" onClick={() => setSheetOpen(false)}>Cancel</Button>
+                      <LoadingButton type="submit" isPending={createMembership.isPending} className="bg-primary hover:bg-primary/90 text-primary-foreground">Add</LoadingButton>
+                    </div>
+                  </SheetFooter>
                 </form>
               </Form>
             </>
           )}
           {activeTab === "agreements" && (
             <>
-              <SheetHeader>
+              <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
                 <SheetTitle>Add Collective Agreement</SheetTitle>
                 <SheetDescription>Record a collective bargaining agreement with a union.</SheetDescription>
               </SheetHeader>
               <Form {...agreementForm}>
-                <form onSubmit={agreementForm.handleSubmit(handleCreateAgreement)} className="mt-4 space-y-4">
+                <form onSubmit={agreementForm.handleSubmit(handleCreateAgreement)} className="flex min-h-0 flex-1 flex-col">
+                  <SheetBody className="space-y-4 px-6 py-5">
                   <FormField control={agreementForm.control} name="unionName" render={({ field }) => (
                     <FormItem><FormLabel>Union Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                   )} />
@@ -318,22 +332,26 @@ export function LaborTabs() {
                         <SelectContent><SelectItem value="active">Active</SelectItem><SelectItem value="negotiating">Negotiating</SelectItem><SelectItem value="expired">Expired</SelectItem></SelectContent>
                       </Select><FormMessage /></FormItem>
                   )} />
-                  <div className="flex justify-end gap-2 pt-2">
-                    <Button type="button" variant="outline" onClick={() => setSheetOpen(false)}>Cancel</Button>
-                    <LoadingButton type="submit" isPending={createAgreement.isPending} className="bg-primary hover:bg-primary/90 text-primary-foreground">Add</LoadingButton>
-                  </div>
+                  </SheetBody>
+                  <SheetFooter className="shrink-0 border-t border-border bg-muted/30 px-6 py-4">
+                    <div className="grid w-full grid-cols-2 gap-2">
+                      <Button type="button" variant="outline" onClick={() => setSheetOpen(false)}>Cancel</Button>
+                      <LoadingButton type="submit" isPending={createAgreement.isPending} className="bg-primary hover:bg-primary/90 text-primary-foreground">Add</LoadingButton>
+                    </div>
+                  </SheetFooter>
                 </form>
               </Form>
             </>
           )}
           {activeTab === "cases" && (
             <>
-              <SheetHeader>
+              <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
                 <SheetTitle>New Labor Case</SheetTitle>
                 <SheetDescription>Log a labor dispute or grievance raised by a union.</SheetDescription>
               </SheetHeader>
               <Form {...caseForm}>
-                <form onSubmit={caseForm.handleSubmit(handleCreateCase)} className="mt-4 space-y-4">
+                <form onSubmit={caseForm.handleSubmit(handleCreateCase)} className="flex min-h-0 flex-1 flex-col">
+                  <SheetBody className="space-y-4 px-6 py-5">
                   <FormField control={caseForm.control} name="unionName" render={({ field }) => (
                     <FormItem><FormLabel>Union Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                   )} />
@@ -343,10 +361,13 @@ export function LaborTabs() {
                   <FormField control={caseForm.control} name="description" render={({ field }) => (
                     <FormItem><FormLabel>Description</FormLabel><FormControl><Textarea rows={4} {...field} /></FormControl><FormMessage /></FormItem>
                   )} />
-                  <div className="flex justify-end gap-2 pt-2">
-                    <Button type="button" variant="outline" onClick={() => setSheetOpen(false)}>Cancel</Button>
-                    <LoadingButton type="submit" isPending={createCase.isPending} className="bg-primary hover:bg-primary/90 text-primary-foreground">Create</LoadingButton>
-                  </div>
+                  </SheetBody>
+                  <SheetFooter className="shrink-0 border-t border-border bg-muted/30 px-6 py-4">
+                    <div className="grid w-full grid-cols-2 gap-2">
+                      <Button type="button" variant="outline" onClick={() => setSheetOpen(false)}>Cancel</Button>
+                      <LoadingButton type="submit" isPending={createCase.isPending} className="bg-primary hover:bg-primary/90 text-primary-foreground">Create</LoadingButton>
+                    </div>
+                  </SheetFooter>
                 </form>
               </Form>
             </>

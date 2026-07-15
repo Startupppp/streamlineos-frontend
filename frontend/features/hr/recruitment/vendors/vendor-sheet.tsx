@@ -9,7 +9,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetDescription,
+  Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetDescription, SheetBody,
 } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -112,7 +112,7 @@ export function VendorSheet({ initial, onClose }: VendorSheetProps) {
           <SheetTitle>{initial ? "Edit Vendor" : "Add Vendor"}</SheetTitle>
           <SheetDescription>Staffing agency or recruitment vendor details</SheetDescription>
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-3">
+        <SheetBody className="space-y-3 px-6 py-5">
           <div className="space-y-1.5">
             <Label>Agency Name <span className="text-destructive">*</span></Label>
             <Input value={name} onChange={handleNameChange} placeholder="e.g. TalentBridge Inc." />
@@ -174,8 +174,8 @@ export function VendorSheet({ initial, onClose }: VendorSheetProps) {
               </Select>
             </div>
           )}
-        </div>
-        <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
+        </SheetBody>
+        <SheetFooter className="shrink-0 flex-row justify-end gap-2 border-t border-border bg-muted/30 px-6 py-4">
           <Button variant="outline" onClick={onClose} disabled={isPending} className="flex-1">Cancel</Button>
           <Button onClick={handleSubmit} disabled={isPending} className="flex-1">
             {isPending ? "Saving..." : initial ? "Save Changes" : "Add Vendor"}

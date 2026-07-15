@@ -7,6 +7,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetFooter,
+  SheetBody,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -21,7 +22,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Target, User, ListChecks, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -285,7 +285,7 @@ export function GoalFormSheet({
           </div>
         </SheetHeader>
 
-        <ScrollArea className="flex-1 min-h-0">
+        <SheetBody>
           <div className="px-6 py-4 space-y-5">
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
@@ -440,7 +440,7 @@ export function GoalFormSheet({
               </div>
             )}
           </div>
-        </ScrollArea>
+        </SheetBody>
 
         <SheetFooter className="px-6 py-3 border-t shrink-0">
           <Button

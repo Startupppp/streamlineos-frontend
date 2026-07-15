@@ -7,7 +7,7 @@ export default function PortalProjectLoading() {
   return (
     <PageWrapper title="Project" backHref="/projects/portal">
       <PmPageShell>
-        {Array.from({ length: 3 }).map((_, i) => (
+        {Array.from({ length: 9 }).map((_, i) => (
           <div key={i} className="space-y-2">
             <Skeleton className="h-5 w-36" />
             <div className={cn(PM_PANEL, "space-y-2 p-2")}>

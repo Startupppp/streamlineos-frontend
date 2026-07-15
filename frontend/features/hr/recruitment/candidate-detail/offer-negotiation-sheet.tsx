@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetBody,
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
@@ -74,9 +74,9 @@ export function OfferNegotiationSheet({ candidateId, offer, onClose }: Props) {
             {offer.offeredDesignation ?? "Offer"} · Currently {formatINR(offer.offeredSalary)}
           </SheetDescription>
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
+        <SheetBody className="space-y-6 px-6 py-4">
           <div className="space-y-2">
-            <p className="text-xs font-semibold text-foreground/80 uppercase">Negotiation Timeline</p>
+            <p className="text-xs font-semibold uppercase text-foreground/80">Negotiation Timeline</p>
             {negotiationsLoading ? (
               <Skeleton className="h-16 rounded-lg" />
             ) : !negotiations?.length ? (
@@ -142,7 +142,7 @@ export function OfferNegotiationSheet({ candidateId, offer, onClose }: Props) {
               </div>
             )}
           </div>
-        </div>
+        </SheetBody>
       </SheetContent>
     </Sheet>
   );

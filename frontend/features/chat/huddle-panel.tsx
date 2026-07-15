@@ -18,6 +18,7 @@ import { useNetworkQuality } from "./use-network-quality";
 import { HuddleChatPanel } from "./huddle-chat-panel";
 import { useAblyConnection } from "./use-ably-connection";
 import { safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
+import { UserCombobox } from "@/components/ui/user-combobox";
 
 interface AudioLevelMap {
   [userId: string]: number;
@@ -128,7 +129,7 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
   const [isDeafened, setIsDeafened] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
-  const [inviteQuery, setInviteQuery] = useState("");
+  const [inviteUserId, setInviteUserId] = useState("");
   const audioElementsRef = useRef<Map<string, HTMLAudioElement>>(new Map());
 
   const leaveHuddle = useLeaveHuddle();
@@ -497,22 +498,33 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
           {showInviteDialog && (
             <div className="mt-3 border border-border/40 rounded-xl p-3 bg-muted/20">
               <p className="text-[11px] font-semibold mb-2">Invite to huddle</p>
-              <input
-                value={inviteQuery}
-                onChange={(e) => setInviteQuery(e.target.value)}
-                placeholder="Enter user ID to invite..."
-                className="w-full text-[12px] bg-background border border-border/50 rounded-lg px-2 py-1.5 focus:outline-none focus:border-primary/40 mb-2"
+              <UserCombobox
+                value={inviteUserId}
+                onChange={setInviteUserId}
+                placeholder="Select member to invite…"
+                excludeUserId={currentUserId}
+                className="h-8 text-[12px] mb-2"
               />
               <Button
                 size="sm"
                 className="h-7 text-[11px]"
+                disabled={!inviteUserId || inviteToHuddle.isPending}
                 onClick={() => {
-                  if (inviteQuery.trim()) {
-                    inviteToHuddle.mutate({ huddleId: huddle.id, userIds: [inviteQuery.trim()] });
-                    toast.success("Invited to the huddle");
-                    setInviteQuery("");
-                    setShowInviteDialog(false);
+                  if (huddle.participants.some((p) => p.userId === inviteUserId)) {
+                    toast.error("Already in the huddle");
+                    return;
                   }
+                  inviteToHuddle.mutate(
+                    { huddleId: huddle.id, userIds: [inviteUserId] },
+                    {
+                      onSuccess: () => {
+                        toast.success("Invited to the huddle");
+                        setInviteUserId("");
+                        setShowInviteDialog(false);
+                      },
+                      onError: () => toast.error("Failed to invite"),
+                    },
+                  );
                 }}
               >
                 Invite

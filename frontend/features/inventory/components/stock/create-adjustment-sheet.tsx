@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetBody } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCreateAdjustment, type AdjustmentReason } from "@/hooks/api/inventory/stock";
 import { useWarehouses, useLocations } from "@/hooks/api/inventory/warehouses";
@@ -96,12 +96,12 @@ export function CreateAdjustmentSheet({ open, onOpenChange }: CreateAdjustmentSh
   return (
     <Sheet open={open} onOpenChange={handleSheetChange}>
       <SheetContent side="right" className="w-full sm:max-w-lg p-0 flex flex-col overflow-hidden">
-        <SheetHeader className="bg-muted/40 p-6 pb-4 pr-12 border-b text-left">
+        <SheetHeader className="shrink-0 border-b border-border bg-muted/40 p-6 pb-4 pr-12 text-left">
           <SheetTitle>New Stock Adjustment</SheetTitle>
           <SheetDescription>Manually adjust stock quantities to correct discrepancies.</SheetDescription>
         </SheetHeader>
 
-        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-4">
+        <SheetBody className="space-y-4 px-6 py-4">
           <div className="space-y-1.5">
             <Label htmlFor="adj-warehouse" className="text-[13px] font-medium">
               Warehouse <span className="text-destructive">*</span>
@@ -255,9 +255,9 @@ export function CreateAdjustmentSheet({ open, onOpenChange }: CreateAdjustmentSh
             />
             {errors.notes && <p className="text-xs text-destructive">{errors.notes.message}</p>}
           </div>
-        </div>
+        </SheetBody>
 
-        <SheetFooter className="border-t px-6 py-4 gap-2">
+        <SheetFooter className="gap-2 border-t border-border bg-muted/30 px-6 py-4">
           <Button variant="outline" className="flex-1" onClick={handleClose} disabled={createMutation.isPending}>
             Cancel
           </Button>

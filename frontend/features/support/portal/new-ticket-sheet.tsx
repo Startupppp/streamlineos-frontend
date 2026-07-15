@@ -9,6 +9,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetBody,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -178,14 +179,14 @@ export function NewTicketSheet({ open, onOpenChange }: NewTicketSheetProps) {
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent className="p-0 flex flex-col gap-0 sm:max-w-lg">
-        <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
+      <SheetContent className="flex flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
+        <SheetHeader className="shrink-0 gap-1 border-b border-border px-6 py-4 text-left">
           <SheetTitle>New Support Ticket</SheetTitle>
           <p className="text-xs text-muted-foreground">Tell us what you need help with and we&apos;ll get back to you.</p>
         </SheetHeader>
 
-        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
-          <div className="flex-1 min-h-0 overflow-y-auto px-6 py-5 space-y-4">
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+          <SheetBody className="space-y-4 px-6 py-5">
             <div className="space-y-1.5">
               <Label className="text-xs">
                 Title <span className="text-destructive">*</span>
@@ -193,7 +194,7 @@ export function NewTicketSheet({ open, onOpenChange }: NewTicketSheetProps) {
               <Input
                 {...form.register("title")}
                 placeholder="Brief description of the issue"
-                className={cn(form.formState.errors.title && "border-destructive")}
+                className={cn("h-8", form.formState.errors.title && "border-destructive")}
                 maxLength={150}
               />
               {form.formState.errors.title && (
@@ -323,9 +324,9 @@ export function NewTicketSheet({ open, onOpenChange }: NewTicketSheetProps) {
                 aria-label="Attach files"
               />
             </div>
-          </div>
+          </SheetBody>
 
-          <div className="shrink-0 border-t px-6 py-4 grid grid-cols-2 gap-2">
+          <div className="grid shrink-0 grid-cols-2 gap-2 border-t border-border bg-muted/30 px-6 py-4">
             <Button
               type="button"
               variant="outline"
@@ -335,7 +336,7 @@ export function NewTicketSheet({ open, onOpenChange }: NewTicketSheetProps) {
               Cancel
             </Button>
             <Button type="submit" disabled={isBusy}>
-              {isBusy && <Loader2 className="h-4 w-4 animate-spin mr-1.5" />}
+              {isBusy && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
               Create Ticket
             </Button>
           </div>

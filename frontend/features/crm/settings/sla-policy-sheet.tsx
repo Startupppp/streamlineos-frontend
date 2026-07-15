@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter,
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetBody,
 } from "@/components/ui/sheet";
 import {
   Form, FormField, FormItem, FormLabel, FormControl, FormMessage,
@@ -118,11 +118,11 @@ export function SlaPolicySheet({
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent className="w-full sm:max-w-lg flex flex-col overflow-hidden">
-        <SheetHeader>
+      <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
+        <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
           <SheetTitle>{editing ? "Edit SLA Policy" : "New SLA Policy"}</SheetTitle>
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto py-4 px-1">
+        <SheetBody className="px-6 py-5">
           <Form {...form}>
             <form id="sla-policy-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
               <FormField
@@ -132,7 +132,7 @@ export function SlaPolicySheet({
                   <FormItem>
                     <FormLabel>Policy Name</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="e.g. Hot Lead SLA" />
+                      <Input {...field} placeholder="e.g. Hot Lead SLA" className="h-8" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -231,19 +231,21 @@ export function SlaPolicySheet({
               />
             </form>
           </Form>
-        </div>
-        <SheetFooter className="border-t pt-4 flex gap-2 justify-end">
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <LoadingButton
-            type="submit"
-            form="sla-policy-form"
-            isPending={isPending}
-            loadingText="Saving..."
-          >
-            {editing ? "Save Changes" : "Create Policy"}
-          </LoadingButton>
+        </SheetBody>
+        <SheetFooter className="shrink-0 border-t border-border bg-muted/30 px-6 py-4">
+          <div className="grid w-full grid-cols-2 gap-2">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <LoadingButton
+              type="submit"
+              form="sla-policy-form"
+              isPending={isPending}
+              loadingText="Saving..."
+            >
+              {editing ? "Save Changes" : "Create Policy"}
+            </LoadingButton>
+          </div>
         </SheetFooter>
       </SheetContent>
     </Sheet>

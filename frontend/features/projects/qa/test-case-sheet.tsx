@@ -11,12 +11,12 @@ import {
   SheetTitle,
   SheetFooter,
   SheetClose,
+  SheetBody,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectTrigger,
@@ -180,7 +180,7 @@ export function TestCaseSheet({
           <SheetTitle>{editCase ? "Edit Test Case" : "New Test Case"}</SheetTitle>
         </SheetHeader>
 
-        <ScrollArea className="flex-1">
+        <SheetBody>
           <form
             id="tc-form"
             onSubmit={form.handleSubmit(handleSubmit)}
@@ -338,7 +338,7 @@ export function TestCaseSheet({
               />
             </div>
           </form>
-        </ScrollArea>
+        </SheetBody>
 
         <SheetFooter className="px-5 py-3 border-t shrink-0 flex gap-2">
           <SheetClose asChild>

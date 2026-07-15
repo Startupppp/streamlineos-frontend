@@ -121,7 +121,7 @@ export function DetailPageSkeleton() {
       </div>
       <div className="space-y-4">
         <div className="rounded-lg border border-border bg-card p-5 space-y-4">
-          {Array.from({ length: 3 }).map((_, i) => (
+          {Array.from({ length: 8 }).map((_, i) => (
             <Skeleton key={i} className="h-12 w-full" />
           ))}
         </div>

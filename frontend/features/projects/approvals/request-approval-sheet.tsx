@@ -11,6 +11,7 @@ import {
   SheetTitle,
   SheetDescription,
   SheetFooter,
+  SheetBody,
 } from "@/components/ui/sheet";
 import {
   Form,
@@ -222,9 +223,9 @@ export function RequestApprovalSheet({
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(handleSubmit)}
-            className="flex flex-col flex-1 overflow-y-auto"
+            className="flex flex-col flex-1 min-h-0"
           >
-            <div className="flex-1 px-6 py-5 space-y-4">
+            <SheetBody className="px-6 py-5 space-y-4">
               <FormField
                 control={form.control}
                 name="entityType"
@@ -380,7 +381,7 @@ export function RequestApprovalSheet({
                   </FormItem>
                 )}
               />
-            </div>
+            </SheetBody>
             <SheetFooter className="px-6 py-4 border-t shrink-0">
               <div className="grid w-full grid-cols-2 gap-2">
                 <Button

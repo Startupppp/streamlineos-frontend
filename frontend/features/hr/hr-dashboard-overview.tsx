@@ -73,7 +73,7 @@ function LeaveCalendarWidget() {
       <div className="flex-1 overflow-y-auto max-h-52">
         {isLoading ? (
           <div className="px-5 py-2 divide-y divide-border/40">
-            {Array.from({ length: 3 }).map((_, i) => (
+            {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="flex items-center gap-3 py-3">
                 <Skeleton className="h-8 w-8 rounded-full shrink-0" />
                 <div className="flex-1 space-y-1.5">

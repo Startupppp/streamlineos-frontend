@@ -13,6 +13,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { UserCombobox } from "@/components/ui/user-combobox";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { SimulationResult } from "./simulation-result";
 import { useSimulateApprovalRouting } from "@/hooks/api/hr/enterprise-ops-simulator";
@@ -48,8 +49,14 @@ export function ApprovalSimulator() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
             <FormField control={form.control} name="employeeId" render={({ field }) => (
               <FormItem>
-                <FormLabel>Employee ID</FormLabel>
-                <FormControl><Input placeholder="UUID" {...field} /></FormControl>
+                <FormLabel>Employee</FormLabel>
+                <FormControl>
+                  <UserCombobox
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder="Select employee"
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )} />

@@ -20,12 +20,13 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { UserCombobox } from "@/components/ui/user-combobox";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { useCreateDisciplinaryAction } from "@/hooks/api/hr/cases";
 import type { DisciplinaryActionType } from "@/hooks/api/hr/cases";
 
 const schema = z.object({
-  employeeId: z.string().min(1, "Employee ID required"),
+  employeeId: z.string().min(1, "Employee is required"),
   actionType: z.enum([
     "verbal_warning", "written_warning", "final_warning",
     "suspension", "termination_recommended",
@@ -91,9 +92,13 @@ export function IssueWarningSheet({ open, onOpenChange, caseId }: Props) {
             name="employeeId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Employee ID</FormLabel>
+                <FormLabel>Employee</FormLabel>
                 <FormControl>
-                  <Input className="h-9" placeholder="Employee user ID" {...field} />
+                  <UserCombobox
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder="Select employee"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

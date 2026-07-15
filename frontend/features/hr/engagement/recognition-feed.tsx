@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { HrSheet } from "@/features/hr/hr-sheet";
-import { Input } from "@/components/ui/input";
+import { MemberPicker } from "@/components/shared";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
@@ -135,8 +135,8 @@ export function BadgesGrid() {
     });
   }, [awardBadgeId, recipientId, reason, award]);
 
-  const handleRecipientChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setRecipientId(e.target.value);
+  const handleRecipientChange = useCallback((id: string | null) => {
+    setRecipientId(id ?? "");
   }, []);
 
   const handleReasonChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -201,13 +201,12 @@ export function BadgesGrid() {
       >
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="award-user" className="text-xs font-medium">Employee User ID</Label>
-            <Input
-              id="award-user"
-              placeholder="Enter user ID"
-              value={recipientId}
+            <Label className="text-xs font-medium">Employee</Label>
+            <MemberPicker
+              mode="single"
+              value={recipientId || undefined}
               onChange={handleRecipientChange}
-              className="h-9 text-sm"
+              placeholder="Select employee"
             />
           </div>
           <div className="space-y-1.5">
@@ -300,8 +299,8 @@ export function GiveKudosSheet({
     onSubmit({ toUserId, message, category });
   }, [toUserId, message, category, onSubmit]);
 
-  const handleToUserIdChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setToUserId(e.target.value);
+  const handleToUserIdChange = useCallback((id: string | null) => {
+    setToUserId(id ?? "");
   }, []);
 
   const handleMessageChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -320,13 +319,12 @@ export function GiveKudosSheet({
     >
       <div className="space-y-4">
         <div className="space-y-1.5">
-          <Label htmlFor="kudos-to" className="text-xs font-medium">Recipient User ID</Label>
-          <Input
-            id="kudos-to"
-            placeholder="Enter user ID"
-            value={toUserId}
+          <Label className="text-xs font-medium">Recipient</Label>
+          <MemberPicker
+            mode="single"
+            value={toUserId || undefined}
             onChange={handleToUserIdChange}
-            className="h-9 text-sm"
+            placeholder="Select colleague"
           />
         </div>
         <div className="space-y-1.5">

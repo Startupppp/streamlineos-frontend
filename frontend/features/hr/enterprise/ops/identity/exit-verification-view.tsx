@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { UserCombobox } from "@/components/ui/user-combobox";
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle, CheckCircle, Search } from "lucide-react";
 import { useExitVerification } from "@/hooks/api/hr/enterprise-ops-identity";
@@ -20,20 +20,20 @@ export function ExitVerificationView() {
   return (
     <div className="space-y-4">
       <div>
-        <p className="text-sm text-muted-foreground mb-3">
+        <p className="mb-3 text-sm text-muted-foreground">
           Verify that all system access has been revoked before completing an employee exit.
           Exit cannot proceed while there are unverified revokes pending.
         </p>
         <div className="flex gap-2">
-          <Input
-            placeholder="Employee UUID"
-            value={userId}
-            onChange={(e) => setUserId(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") handleSearch(); }}
-            className="flex-1"
-          />
+          <div className="min-w-0 flex-1">
+            <UserCombobox
+              value={userId}
+              onChange={setUserId}
+              placeholder="Select employee"
+            />
+          </div>
           <Button onClick={handleSearch} disabled={!userId.trim()} variant="outline" size="sm">
-            <Search className="h-4 w-4 mr-1.5" />
+            <Search className="mr-1.5 h-4 w-4" />
             Check
           </Button>
         </div>

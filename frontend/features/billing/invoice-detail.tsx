@@ -165,7 +165,7 @@ function InvoiceDetailSkeleton() {
             <Skeleton className="col-span-2 h-3" />
           </div>
           <div className="divide-y divide-border">
-            {Array.from({ length: 3 }).map((_, i) => (
+            {Array.from({ length: 8 }).map((_, i) => (
               <div
                 key={i}
                 className="px-4 py-3 grid grid-cols-12 gap-3 items-center"

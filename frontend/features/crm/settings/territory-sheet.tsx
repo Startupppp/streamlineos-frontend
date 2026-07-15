@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { X } from "lucide-react";
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter,
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetBody,
 } from "@/components/ui/sheet";
 import {
   Form, FormField, FormItem, FormLabel, FormControl, FormMessage,
@@ -291,11 +291,11 @@ export function TerritorySheet({
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent className="w-full sm:max-w-lg flex flex-col overflow-hidden">
-        <SheetHeader>
+      <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
+        <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
           <SheetTitle>{editing ? "Edit Territory" : "New Territory"}</SheetTitle>
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto py-4 px-1">
+        <SheetBody className="px-6 py-5">
           <Form {...form}>
             <form id="territory-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
               <FormField
@@ -305,7 +305,7 @@ export function TerritorySheet({
                   <FormItem>
                     <FormLabel>Name</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="e.g. West India" />
+                      <Input {...field} placeholder="e.g. West India" className="h-8" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -375,19 +375,21 @@ export function TerritorySheet({
               </div>
             </form>
           </Form>
-        </div>
-        <SheetFooter className="border-t pt-4 flex gap-2 justify-end">
-          <Button type="button" variant="outline" onClick={handleCancel}>
-            Cancel
-          </Button>
-          <LoadingButton
-            type="submit"
-            form="territory-form"
-            isPending={isPending}
-            loadingText="Saving..."
-          >
-            {editing ? "Save Changes" : "Create Territory"}
-          </LoadingButton>
+        </SheetBody>
+        <SheetFooter className="shrink-0 border-t border-border bg-muted/30 px-6 py-4">
+          <div className="grid w-full grid-cols-2 gap-2">
+            <Button type="button" variant="outline" onClick={handleCancel}>
+              Cancel
+            </Button>
+            <LoadingButton
+              type="submit"
+              form="territory-form"
+              isPending={isPending}
+              loadingText="Saving..."
+            >
+              {editing ? "Save Changes" : "Create Territory"}
+            </LoadingButton>
+          </div>
         </SheetFooter>
       </SheetContent>
     </Sheet>

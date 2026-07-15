@@ -4,12 +4,13 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogBody } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { MemberPicker } from "@/components/shared";
 import { useMentorships, useCreateMentorship, useUpdateMentorship } from "@/hooks/api/hr/mentorship";
 
 const STATUS_CONFIG = {
@@ -92,16 +93,28 @@ export function MentorshipTab() {
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>New Mentorship</DialogTitle></DialogHeader>
-          <div className="space-y-3">
+        <DialogContent className="flex max-h-[90dvh] flex-col gap-0 p-0">
+          <DialogHeader className="shrink-0 border-b border-border px-6 py-4">
+            <DialogTitle>New Mentorship</DialogTitle>
+          </DialogHeader>
+          <DialogBody className="space-y-3 px-6 py-4">
             <div className="space-y-1">
-              <Label>Mentor User ID</Label>
-              <Input value={form.mentorId} onChange={(e) => setForm((p) => ({ ...p, mentorId: e.target.value }))} placeholder="Mentor's user ID" />
+              <Label>Mentor</Label>
+              <MemberPicker
+                mode="single"
+                value={form.mentorId || undefined}
+                onChange={(id) => setForm((p) => ({ ...p, mentorId: id ?? "" }))}
+                placeholder="Select mentor"
+              />
             </div>
             <div className="space-y-1">
-              <Label>Mentee User ID</Label>
-              <Input value={form.menteeId} onChange={(e) => setForm((p) => ({ ...p, menteeId: e.target.value }))} placeholder="Mentee's user ID" />
+              <Label>Mentee</Label>
+              <MemberPicker
+                mode="single"
+                value={form.menteeId || undefined}
+                onChange={(id) => setForm((p) => ({ ...p, menteeId: id ?? "" }))}
+                placeholder="Select mentee"
+              />
             </div>
             <div className="space-y-1">
               <Label>Goal</Label>
@@ -111,8 +124,8 @@ export function MentorshipTab() {
               <Label>Start Date</Label>
               <Input type="date" value={form.startedAt} onChange={(e) => setForm((p) => ({ ...p, startedAt: e.target.value }))} />
             </div>
-          </div>
-          <DialogFooter>
+          </DialogBody>
+          <DialogFooter className="shrink-0 border-t border-border px-6 py-4">
             <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
             <LoadingButton className="bg-primary hover:bg-primary/90 text-primary-foreground" isPending={create.isPending} onClick={handleCreate}>Create</LoadingButton>
           </DialogFooter>

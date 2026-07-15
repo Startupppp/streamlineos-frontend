@@ -17,6 +17,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetBody,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -148,14 +149,17 @@ export function LeadDetailSheet({
     <Sheet open={open} onOpenChange={handleSheetClose}>
       <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-lg overflow-hidden">
         {isLoading || !lead ? (
-          <div className="flex-1 min-h-0 overflow-y-auto space-y-4 px-6 py-5">
+          <SheetBody className="space-y-4 px-6 py-5">
             <Skeleton className="h-8 w-48" />
             <Skeleton className="h-4 w-32" />
             <Skeleton className="h-32 w-full" />
-          </div>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-10 w-full" />
+            ))}
+          </SheetBody>
         ) : (
           <>
-            <div className="px-6 py-4 border-b">
+            <div className="shrink-0 border-b border-border px-6 py-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <SheetHeader className="p-0">
@@ -194,7 +198,7 @@ export function LeadDetailSheet({
               </div>
             </div>
 
-            <div className="flex-1 min-h-0 overflow-y-auto px-6 py-5 space-y-6">
+            <SheetBody className="space-y-6 px-6 py-5">
               <div className="space-y-2.5">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   AI Tools
@@ -413,7 +417,7 @@ export function LeadDetailSheet({
                   </TabsContent>
                 </Tabs>
               </div>
-            </div>
+            </SheetBody>
           </>
         )}
       </SheetContent>

@@ -5,7 +5,7 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter,
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetBody,
 } from "@/components/ui/sheet";
 import {
   Form, FormField, FormItem, FormLabel, FormControl, FormMessage,
@@ -19,6 +19,7 @@ import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Plus, Trash2 } from "lucide-react";
+import { MemberPicker } from "@/components/shared";
 import { CrmOptionSelect } from "@/features/crm/shared/metadata/crm-option-select";
 import { useTerritories } from "@/hooks/api/crm-settings";
 import type {
@@ -58,7 +59,7 @@ const conditionSchema = z.object({
 });
 
 const weightedMemberSchema = z.object({
-  userId: z.string().min(1, "User ID required"),
+  userId: z.string().min(1, "Member required"),
   weight: z.number().min(0).max(100),
 });
 
@@ -210,11 +211,11 @@ export function AssignmentRuleSheet({
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent className="w-full sm:max-w-lg flex flex-col overflow-hidden">
-        <SheetHeader>
+      <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
+        <SheetHeader className="shrink-0 border-b border-border px-6 py-4">
           <SheetTitle>{editing ? "Edit Assignment Rule" : "New Assignment Rule"}</SheetTitle>
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto py-4 px-1">
+        <SheetBody className="px-6 py-4">
           <Form {...form}>
             <form id="rule-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
               <FormField control={form.control} name="name" render={({ field }) => (
@@ -311,9 +312,14 @@ export function AssignmentRuleSheet({
               {assignmentType === "assign_user" && (
                 <FormField control={form.control} name="assignToUserId" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Assign To (User ID)</FormLabel>
+                    <FormLabel>Assign To</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="user-uuid" />
+                      <MemberPicker
+                        mode="single"
+                        value={field.value || undefined}
+                        onChange={(id) => field.onChange(id ?? "")}
+                        placeholder="Select user"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -321,15 +327,31 @@ export function AssignmentRuleSheet({
               )}
 
               {assignmentType === "round_robin" && (
-                <FormField control={form.control} name="roundRobinUserIds" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>User IDs (comma-separated)</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="user-id-1, user-id-2, …" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
+                <FormField control={form.control} name="roundRobinUserIds" render={({ field }) => {
+                  const values = field.value
+                    ? field.value.split(",").map((s) => s.trim()).filter(Boolean)
+                    : [];
+                  function handleToggle(userId: string) {
+                    const next = values.includes(userId)
+                      ? values.filter((id) => id !== userId)
+                      : [...values, userId];
+                    field.onChange(next.join(", "));
+                  }
+                  return (
+                    <FormItem>
+                      <FormLabel>Round-robin members</FormLabel>
+                      <FormControl>
+                        <MemberPicker
+                          mode="multi"
+                          values={values}
+                          onToggle={handleToggle}
+                          placeholder="Add members"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }} />
               )}
 
               {assignmentType === "weighted_round_robin" && (
@@ -339,7 +361,13 @@ export function AssignmentRuleSheet({
                     {memberFields.map((mf, i) => (
                       <div key={mf.id} className="flex items-center gap-3">
                         <FormField control={form.control} name={`weightedMembers.${i}.userId`} render={({ field }) => (
-                          <Input {...field} className="h-8 text-xs w-40 shrink-0" placeholder="User ID" />
+                          <MemberPicker
+                            mode="single"
+                            value={field.value || undefined}
+                            onChange={(id) => field.onChange(id ?? "")}
+                            placeholder="Select user"
+                            className="min-w-0 flex-1"
+                          />
                         )} />
                         <FormField control={form.control} name={`weightedMembers.${i}.weight`} render={({ field }) => (
                           <div className="flex items-center gap-2 flex-1">
@@ -413,8 +441,8 @@ export function AssignmentRuleSheet({
               )}
             </form>
           </Form>
-        </div>
-        <SheetFooter className="border-t pt-4 flex gap-2 justify-end">
+        </SheetBody>
+        <SheetFooter className="shrink-0 border-t border-border bg-muted/30 px-6 py-4 flex gap-2 justify-end">
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>

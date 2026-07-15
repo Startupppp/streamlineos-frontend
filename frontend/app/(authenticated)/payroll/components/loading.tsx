@@ -5,7 +5,7 @@ export function ComponentsPageSkeleton() {
     <PageWrapper title="Component Catalog" subtitle="Loading…">
       <div className="space-y-3">
         <div className="flex gap-2">
-          {Array.from({ length: 3 }).map((_, i) => (
+          {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="h-8 w-32 bg-muted animate-pulse rounded-md" />
           ))}
         </div>

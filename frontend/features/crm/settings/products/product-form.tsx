@@ -28,6 +28,7 @@ import {
   SheetTitle,
   SheetFooter,
   SheetClose,
+  SheetBody,
 } from "@/components/ui/sheet";
 import type { Product } from "@/types/crm/products";
 
@@ -127,7 +128,7 @@ export function ProductFormSheet({
             onSubmit={form.handleSubmit(handleSubmit)}
             className="flex flex-col flex-1 min-h-0"
           >
-            <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-4">
+            <SheetBody className="space-y-4 px-6 py-4">
               <FormField
                 control={form.control}
                 name="name"
@@ -235,8 +236,8 @@ export function ProductFormSheet({
                   </FormItem>
                 )}
               />
-            </div>
-            <SheetFooter className="shrink-0 px-6 py-4 border-t">
+            </SheetBody>
+            <SheetFooter className="shrink-0 border-t border-border bg-muted/30 px-6 py-4">
               <div className="grid w-full grid-cols-2 gap-2">
                 <SheetClose asChild>
                   <Button type="button" variant="outline">

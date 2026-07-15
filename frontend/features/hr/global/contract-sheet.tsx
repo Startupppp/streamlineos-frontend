@@ -9,6 +9,8 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetBody,
+  SheetFooter,
 } from "@/components/ui/sheet";
 import {
   Form,
@@ -130,12 +132,13 @@ export function ContractSheet({ open, onOpenChange, existing, defaultEmploymentI
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-        <SheetHeader>
+      <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
+        <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
           <SheetTitle>{existing ? "Edit Contract" : "New Contract"}</SheetTitle>
         </SheetHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col">
+            <SheetBody className="space-y-4 px-6 py-5">
             {!defaultEmploymentId && (
               <FormField control={form.control} name="employmentId" render={({ field }) => (
                 <FormItem>
@@ -211,11 +214,12 @@ export function ContractSheet({ open, onOpenChange, existing, defaultEmploymentI
                 <FormMessage />
               </FormItem>
             )} />
-            <div className="flex justify-end gap-2 pt-2">
+            </SheetBody>
+            <SheetFooter className="shrink-0 border-t border-border bg-muted/30 px-6 py-4">
               <LoadingButton type="submit" isPending={isPending}>
                 {existing ? "Save changes" : "Create"}
               </LoadingButton>
-            </div>
+            </SheetFooter>
           </form>
         </Form>
       </SheetContent>

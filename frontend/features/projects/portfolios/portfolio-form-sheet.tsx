@@ -5,9 +5,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter,
-} from "@/components/ui/sheet";
-import {
   Form, FormField, FormItem, FormLabel, FormControl, FormMessage,
 } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -15,18 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import type { OrgMember } from "@/types/organization";
+import { FormSheetChrome, MemberPicker } from "@/components/shared";
 import type { Portfolio, CreatePortfolioInput, UpdatePortfolioInput } from "@/types/projects";
-
-const NONE_SENTINEL = "__none__";
-
-function optionalSelectValue(value: string) {
-  return value || NONE_SENTINEL;
-}
-
-function optionalSelectChange(value: string) {
-  return value === NONE_SENTINEL ? "" : value;
-}
 
 const schema = z.object({
   name: z.string().min(1, "Required").max(200),
@@ -62,10 +49,17 @@ interface Props {
   onSubmitCreate: (input: CreatePortfolioInput) => void;
   onSubmitEdit: (input: UpdatePortfolioInput & { id: number }) => void;
   isPending?: boolean;
-  members: OrgMember[];
 }
 
-export function PortfolioFormSheet({ open, onOpenChange, mode, defaultValues, onSubmitCreate, onSubmitEdit, isPending, members }: Props) {
+export function PortfolioFormSheet({
+  open,
+  onOpenChange,
+  mode,
+  defaultValues,
+  onSubmitCreate,
+  onSubmitEdit,
+  isPending,
+}: Props) {
   const form = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: DEFAULTS });
 
   useEffect(() => {
@@ -90,102 +84,155 @@ export function PortfolioFormSheet({ open, onOpenChange, mode, defaultValues, on
     }
   }
 
+  function handleCancel() {
+    onOpenChange(false);
+  }
+
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-md flex flex-col gap-0 p-0">
-        <SheetHeader className="px-6 py-4 border-b">
-          <SheetTitle>{mode === "edit" ? "Edit Portfolio" : "New Portfolio"}</SheetTitle>
-          <SheetDescription>{mode === "edit" ? "Update portfolio details." : "Create a workspace-level portfolio to group projects."}</SheetDescription>
-        </SheetHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col flex-1 overflow-y-auto">
-            <div className="flex-1 px-6 py-5 space-y-4">
-              <FormField control={form.control} name="name" render={({ field }) => (
+    <FormSheetChrome
+      open={open}
+      onOpenChange={onOpenChange}
+      title={mode === "edit" ? "Edit Portfolio" : "New Portfolio"}
+      description={
+        mode === "edit"
+          ? "Update portfolio details."
+          : "Create a workspace-level portfolio to group projects."
+      }
+      footer={
+        <div className="grid w-full grid-cols-2 gap-2">
+          <Button type="button" variant="outline" size="sm" onClick={handleCancel}>
+            Cancel
+          </Button>
+          <LoadingButton
+            type="submit"
+            form="portfolio-form"
+            size="sm"
+            isPending={isPending}
+            loadingText="Saving…"
+          >
+            {mode === "edit" ? "Save Changes" : "Create Portfolio"}
+          </LoadingButton>
+        </div>
+      }
+    >
+      <Form {...form}>
+        <form
+          id="portfolio-form"
+          onSubmit={form.handleSubmit(handleSubmit)}
+          className="space-y-4"
+          noValidate
+        >
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Name</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="Portfolio name" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Description (optional)</FormLabel>
+                <FormControl>
+                  <Textarea {...field} rows={3} placeholder="Describe this portfolio…" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl><Input {...field} placeholder="Portfolio name" /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-              <FormField control={form.control} name="description" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description (optional)</FormLabel>
-                  <FormControl><Textarea {...field} rows={3} placeholder="Describe this portfolio…" /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-              <div className="grid grid-cols-2 gap-4">
-                <FormField control={form.control} name="status" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                      <SelectContent>
-                        <SelectItem value="active">Active</SelectItem>
-                        <SelectItem value="on_hold">On Hold</SelectItem>
-                        <SelectItem value="completed">Completed</SelectItem>
-                        <SelectItem value="archived">Archived</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="health" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Health (optional)</FormLabel>
-                    <Select
-                      value={optionalSelectValue(field.value)}
-                      onValueChange={(v) => field.onChange(optionalSelectChange(v))}
-                    >
-                      <FormControl><SelectTrigger><SelectValue placeholder="None" /></SelectTrigger></FormControl>
-                      <SelectContent>
-                        <SelectItem value={NONE_SENTINEL}>None</SelectItem>
-                        <SelectItem value="on_track">On Track</SelectItem>
-                        <SelectItem value="at_risk">At Risk</SelectItem>
-                        <SelectItem value="off_track">Off Track</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-              </div>
-              <FormField control={form.control} name="ownerId" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Owner (optional)</FormLabel>
-                  <Select
-                    value={optionalSelectValue(field.value)}
-                    onValueChange={(v) => field.onChange(optionalSelectChange(v))}
-                  >
-                    <FormControl><SelectTrigger><SelectValue placeholder="Select owner" /></SelectTrigger></FormControl>
+                  <FormLabel>Status</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
                     <SelectContent>
-                      <SelectItem value={NONE_SENTINEL}>None</SelectItem>
-                      {members.map((m) => (
-                        <SelectItem key={m.userId} value={m.userId}>{m.name ?? m.email}</SelectItem>
-                      ))}
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="on_hold">On Hold</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="archived">Archived</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
                 </FormItem>
-              )} />
-              <FormField control={form.control} name="strategicGoal" render={({ field }) => (
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="health"
+              render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Strategic Goal (optional)</FormLabel>
-                  <FormControl><Textarea {...field} rows={3} placeholder="Describe the strategic objective…" /></FormControl>
+                  <FormLabel>Health (optional)</FormLabel>
+                  <Select
+                    value={field.value || "__none__"}
+                    onValueChange={(v) => field.onChange(v === "__none__" ? "" : v)}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="None" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="__none__">None</SelectItem>
+                      <SelectItem value="on_track">On Track</SelectItem>
+                      <SelectItem value="at_risk">At Risk</SelectItem>
+                      <SelectItem value="off_track">Off Track</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
-              )} />
-            </div>
-            <SheetFooter className="px-6 py-4 border-t shrink-0">
-              <div className="grid w-full grid-cols-2 gap-2">
-                <Button type="button" variant="outline" size="sm" onClick={() => onOpenChange(false)}>Cancel</Button>
-                <LoadingButton type="submit" size="sm" isPending={isPending} loadingText="Saving…">
-                  {mode === "edit" ? "Save Changes" : "Create Portfolio"}
-                </LoadingButton>
-              </div>
-            </SheetFooter>
-          </form>
-        </Form>
-      </SheetContent>
-    </Sheet>
+              )}
+            />
+          </div>
+          <FormField
+            control={form.control}
+            name="ownerId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Owner (optional)</FormLabel>
+                <FormControl>
+                  <MemberPicker
+                    mode="single"
+                    value={field.value || undefined}
+                    onChange={(id) => field.onChange(id ?? "")}
+                    allowUnassigned
+                    placeholder="Select owner"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="strategicGoal"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Strategic Goal (optional)</FormLabel>
+                <FormControl>
+                  <Textarea {...field} rows={3} placeholder="Describe the strategic objective…" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </form>
+      </Form>
+    </FormSheetChrome>
   );
 }

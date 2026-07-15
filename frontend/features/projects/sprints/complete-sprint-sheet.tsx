@@ -4,7 +4,12 @@ import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter,
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+  SheetBody,
 } from "@/components/ui/sheet";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -47,7 +52,7 @@ export function CompleteSprintSheet({
             Complete Sprint: {sprint?.name}
           </SheetTitle>
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto px-6 py-4">
+        <SheetBody className="px-6 py-4">
           <div className="space-y-4">
             {incompleteCount > 0 ? (
               <>
@@ -70,7 +75,7 @@ export function CompleteSprintSheet({
               <p className="text-sm text-muted-foreground">All tickets are done! Ready to complete this sprint.</p>
             )}
           </div>
-        </div>
+        </SheetBody>
         <SheetFooter className="px-6 py-3 border-t shrink-0">
           <div className="grid w-full grid-cols-2 gap-2">
             <Button variant="outline" onClick={onCancel}>Cancel</Button>

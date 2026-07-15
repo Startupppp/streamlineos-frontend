@@ -25,12 +25,12 @@ import {
   SheetTitle,
   SheetFooter,
   SheetTrigger,
+  SheetBody,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { CrmOptionSelect } from "@/features/crm/shared/metadata";
 
 interface CreateLeadSheetProps {
@@ -91,7 +91,7 @@ export function CreateLeadSheet({
           </div>
         </SheetHeader>
 
-        <ScrollArea className="flex-1 min-h-0">
+        <SheetBody className="px-0">
           <form
             id="create-lead-form"
             action={(formData) => {
@@ -350,7 +350,7 @@ export function CreateLeadSheet({
               />
             </div>
           </form>
-        </ScrollArea>
+        </SheetBody>
 
         <SheetFooter className="px-6 py-3 border-t shrink-0">
           <Button

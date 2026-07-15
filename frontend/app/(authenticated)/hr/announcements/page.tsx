@@ -431,7 +431,7 @@ function AnnouncementsContent() {
 
         {isLoading && (
           <div className="space-y-4">
-            {Array.from({ length: 3 }).map((_, i) => (
+            {Array.from({ length: 8 }).map((_, i) => (
               <div
                 key={i}
                 className="bg-card border border-border rounded-lg shadow-sm p-5"

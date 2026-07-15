@@ -14,6 +14,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
+  SheetBody,
 } from "@/components/ui/sheet";
 import {
   Form,
@@ -79,8 +80,8 @@ export function QuoteTemplateFormSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="p-0 flex flex-col gap-0 sm:max-w-lg">
-        <SheetHeader className="px-6 py-4 border-b shrink-0">
+      <SheetContent className="flex flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
+        <SheetHeader className="shrink-0 border-b border-border px-6 py-4">
           <SheetTitle>{editTarget ? "Edit Template" : "Add Template"}</SheetTitle>
           <SheetDescription>
             {editTarget
@@ -89,8 +90,8 @@ export function QuoteTemplateFormSheet({
           </SheetDescription>
         </SheetHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col flex-1 min-h-0">
-            <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-4">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="flex min-h-0 flex-1 flex-col">
+            <SheetBody className="space-y-4 px-6 py-4">
               <FormField
                 control={form.control}
                 name="name"
@@ -98,7 +99,7 @@ export function QuoteTemplateFormSheet({
                   <FormItem>
                     <FormLabel>Name</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="e.g. Standard Quote Template" />
+                      <Input {...field} placeholder="e.g. Standard Quote Template" className="h-8" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -134,8 +135,8 @@ export function QuoteTemplateFormSheet({
                   </FormItem>
                 )}
               />
-            </div>
-            <div className="border-t shrink-0 grid grid-cols-2 px-6 py-4 gap-3">
+            </SheetBody>
+            <div className="grid shrink-0 grid-cols-2 gap-3 border-t border-border bg-muted/30 px-6 py-4">
               <Button type="button" variant="outline" onClick={handleCancel}>
                 Cancel
               </Button>

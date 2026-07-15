@@ -10,6 +10,7 @@ import {
   SheetTitle,
   SheetDescription,
   SheetFooter,
+  SheetBody,
 } from "@/components/ui/sheet";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import type { TransferDetail } from "@/hooks/api/inventory/stock";
@@ -141,7 +142,7 @@ function ReceiveTransferForm({
 
   return (
     <>
-      <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-4">
+      <SheetBody className="space-y-4 px-6 py-4">
         <div className="flex items-center justify-between">
           <span className="text-[13px] font-medium">Line Items</span>
           <Button variant="outline" size="sm" className="h-7 text-xs" onClick={handleReceiveAll}>
@@ -153,9 +154,9 @@ function ReceiveTransferForm({
           columns={columns}
           getRowKey={(ld) => ld.id}
         />
-      </div>
-      <SheetFooter className="shrink-0 px-6 py-4 border-t">
-        <div className="grid grid-cols-2 gap-2 w-full">
+      </SheetBody>
+      <SheetFooter className="shrink-0 border-t border-border bg-muted/30 px-6 py-4">
+        <div className="grid w-full grid-cols-2 gap-2">
           <Button variant="outline" onClick={onClose} disabled={isPending}>
             Cancel
           </Button>

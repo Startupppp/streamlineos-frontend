@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -14,6 +14,8 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
+  SheetBody,
+  SheetFooter,
 } from "@/components/ui/sheet";
 import {
   Form,
@@ -24,6 +26,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { UserCombobox } from "@/components/ui/user-combobox";
 import {
   Select,
   SelectContent,
@@ -35,6 +38,11 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Users, Plus } from "lucide-react";
 import { useCan } from "@/hooks/api/access";
 import { useOrgDelegations, useGrantProxy, useRevokeProxy, type ProxyAccess } from "../hooks/use-delegations";
+import { useOrgMembers } from "@/hooks/api/organization";
+import {
+  getUserDisplayName,
+  type NamedUser,
+} from "@/features/projects/shared/resolve-user-name";
 import { format } from "date-fns";
 
 const proxySchema = z.object({
@@ -57,8 +65,25 @@ export function DelegationSheet() {
   const [page, setPage] = useState(1);
 
   const { data, isLoading } = useOrgDelegations({ page, limit: 20 });
+  const { data: membersData } = useOrgMembers(1, 200);
   const grantProxy = useGrantProxy();
   const revokeProxy = useRevokeProxy();
+
+  const memberById = useMemo(() => {
+    const map = new Map<string, NamedUser>();
+    for (const member of membersData?.data ?? []) {
+      map.set(member.userId, {
+        name: member.name,
+        email: member.email,
+      });
+    }
+    return map;
+  }, [membersData]);
+
+  function resolveMemberName(userId: string) {
+    const member = memberById.get(userId);
+    return member ? getUserDisplayName(member) : userId;
+  }
 
   const form = useForm<ProxyForm>({
     resolver: zodResolver(proxySchema),
@@ -81,12 +106,12 @@ export function DelegationSheet() {
     {
       key: "grantorUserId",
       header: "Grantor",
-      cell: (row) => <span className="text-sm">{row.grantorUserId}</span>,
+      cell: (row) => <span className="text-sm">{resolveMemberName(row.grantorUserId)}</span>,
     },
     {
       key: "proxyUserId",
       header: "Proxy",
-      cell: (row) => <span className="text-sm">{row.proxyUserId}</span>,
+      cell: (row) => <span className="text-sm">{resolveMemberName(row.proxyUserId)}</span>,
     },
     {
       key: "scope",
@@ -156,22 +181,27 @@ export function DelegationSheet() {
         }
         pagination={{ mode: "server", page, pageSize: 20, total: data?.total ?? 0, onPageChange: setPage }}
       />
-      <Sheet open={sheetOpen} onOpenChange={(v) => !v && setSheetOpen(false)}>
-        <SheetContent className="w-full sm:max-w-md overflow-y-auto">
-          <SheetHeader>
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
+          <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
             <SheetTitle>Grant Proxy Access</SheetTitle>
             <SheetDescription>Delegate your HR actions to another user for a defined period.</SheetDescription>
           </SheetHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleGrant)} className="mt-4 space-y-4">
+            <form id="proxy-form" onSubmit={form.handleSubmit(handleGrant)} className="contents">
+              <SheetBody className="space-y-4 px-6 py-5">
               <FormField
                 control={form.control}
                 name="proxyUserId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Proxy User ID</FormLabel>
+                    <FormLabel>Proxy User</FormLabel>
                     <FormControl>
-                      <Input placeholder="user-uuid" {...field} />
+                      <UserCombobox
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Select proxy user"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -238,12 +268,15 @@ export function DelegationSheet() {
                   </FormItem>
                 )}
               />
-              <div className="flex justify-end gap-2 pt-2">
-                <Button type="button" variant="outline" onClick={() => setSheetOpen(false)}>Cancel</Button>
-                <LoadingButton type="submit" isPending={grantProxy.isPending} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                  Grant Access
-                </LoadingButton>
-              </div>
+              <SheetFooter className="shrink-0 border-t border-border bg-muted/30 px-6 py-4">
+                <div className="grid w-full grid-cols-2 gap-2">
+                  <Button type="button" variant="outline" onClick={() => setSheetOpen(false)}>Cancel</Button>
+                  <LoadingButton type="submit" isPending={grantProxy.isPending} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                    Grant Access
+                  </LoadingButton>
+                </div>
+              </SheetFooter>
+              </SheetBody>
             </form>
           </Form>
         </SheetContent>

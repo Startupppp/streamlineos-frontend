@@ -9,6 +9,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetFooter,
+  SheetBody,
 } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -220,7 +221,7 @@ export function CustomFieldUpsertSheet({
             onSubmit={form.handleSubmit(onSubmit)}
             className="flex flex-col flex-1 overflow-hidden"
           >
-            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-5">
+            <SheetBody className="space-y-5 px-6 py-4">
               {!isEdit && (
                 <div className="space-y-1">
                   <Label className="text-xs font-medium">Applies To *</Label>
@@ -601,9 +602,9 @@ export function CustomFieldUpsertSheet({
                   options={form.watch("options")}
                 />
               </div>
-            </div>
+            </SheetBody>
 
-            <SheetFooter>
+            <SheetFooter className="shrink-0 border-t border-border bg-muted/30 px-6 py-4">
               <Button
                 type="button"
                 variant="ghost"

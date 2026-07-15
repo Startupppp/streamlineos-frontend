@@ -6,6 +6,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetBody,
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -63,19 +64,19 @@ export function AccommodationDetailSheet({ id, open, onOpenChange }: Props) {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
-        <SheetHeader>
+      <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-xl">
+        <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
           <SheetTitle className="flex items-center gap-2">
             <span className="capitalize">{request.type.replace(/_/g, " ")}</span>
-            <Badge variant="outline" className="text-xs ml-auto capitalize">
+            <Badge variant="outline" className="ml-auto text-xs capitalize">
               {request.status.replace(/_/g, " ")}
             </Badge>
           </SheetTitle>
         </SheetHeader>
 
-        <div className="mt-6 space-y-4">
+        <SheetBody className="space-y-4 px-6 py-5">
           <div>
-            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Description</p>
+            <p className="mb-1 text-xs uppercase tracking-wide text-muted-foreground">Description</p>
             <p className="text-sm text-foreground">{request.description}</p>
           </div>
 
@@ -155,7 +156,7 @@ export function AccommodationDetailSheet({ id, open, onOpenChange }: Props) {
               </div>
             </>
           )}
-        </div>
+        </SheetBody>
       </SheetContent>
     </Sheet>
   );

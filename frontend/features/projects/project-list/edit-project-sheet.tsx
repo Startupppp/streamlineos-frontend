@@ -3,13 +3,14 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { z } from "zod";
 import {
   Sheet,
   SheetContent,
-  SheetFooter,
   SheetHeader,
   SheetTitle,
+  SheetFooter,
+  SheetBody,
 } from "@/components/ui/sheet";
 import {
   Form,
@@ -107,9 +108,9 @@ export function EditProjectSheet({ open, onOpenChange, project }: EditProjectShe
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(handleSubmit)}
-            className="flex flex-col flex-1 overflow-hidden"
+            className="flex flex-col flex-1 min-h-0"
           >
-            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+            <SheetBody className="px-6 py-4 space-y-4">
               <FormField
                 control={form.control}
                 name="name"
@@ -165,7 +166,7 @@ export function EditProjectSheet({ open, onOpenChange, project }: EditProjectShe
                   </FormItem>
                 )}
               />
-            </div>
+            </SheetBody>
 
             <SheetFooter className="border-t px-6 py-4 gap-2">
               <Button

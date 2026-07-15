@@ -5,14 +5,19 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose,
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+  SheetClose,
+  SheetBody,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TiptapEditor } from "@/components/editor/tiptap-editor";
 import { toast } from "sonner";
@@ -124,7 +129,7 @@ export function ChangeRequestSheet({ projectId, open, onOpenChange, editCr }: Ch
         <SheetHeader className="px-5 py-4 border-b shrink-0">
           <SheetTitle>{editCr ? `Edit CR-${editCr.crNumber}` : "New Change Request"}</SheetTitle>
         </SheetHeader>
-        <ScrollArea className="flex-1">
+        <SheetBody>
           <form id="cr-form" onSubmit={form.handleSubmit(handleSubmit)} className="px-5 py-4 space-y-4">
             <div className="space-y-1.5">
               <Label className="text-[11px]">Title *</Label>
@@ -203,7 +208,7 @@ export function ChangeRequestSheet({ projectId, open, onOpenChange, editCr }: Ch
               </>
             )}
           </form>
-        </ScrollArea>
+        </SheetBody>
         <SheetFooter className="px-5 py-3 border-t shrink-0">
           <div className="grid w-full grid-cols-2 gap-2">
             <SheetClose asChild>

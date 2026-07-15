@@ -13,6 +13,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetBody,
 } from "@/components/ui/sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
@@ -78,7 +79,7 @@ export function CreateViewSheet({ projectId, open, onOpenChange, onCreated }: Cr
         <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle>Create View</SheetTitle>
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto px-6 py-5">
+        <SheetBody className="px-6 py-5">
           <form id="view-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
             <div>
               <Label htmlFor="view-name">Name</Label>
@@ -151,7 +152,7 @@ export function CreateViewSheet({ projectId, open, onOpenChange, onCreated }: Cr
               Filters can be applied from the board view after creation.
             </p>
           </form>
-        </div>
+        </SheetBody>
         <div className="shrink-0 px-6 py-4 border-t">
           <Button
             type="submit"

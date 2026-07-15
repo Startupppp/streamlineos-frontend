@@ -6,11 +6,13 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogBody,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { UserCombobox } from "@/components/ui/user-combobox";
 import { usePolicyPreview } from "@/hooks/api/hr/policies";
 import { SCOPE_TYPE_LABELS } from "@/types/hr/policies";
 
@@ -37,22 +39,21 @@ export function PolicyPreviewDialog({ policyId, open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[90dvh] max-w-lg flex-col gap-0 p-0">
+        <DialogHeader className="shrink-0 border-b border-border px-6 py-4">
           <DialogTitle className="text-base font-semibold">Preview Policy</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <DialogBody className="space-y-4 px-6 py-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Employee ID
+                Employee
               </Label>
-              <Input
-                className="h-8 text-xs"
-                placeholder="User ID"
+              <UserCombobox
                 value={employeeId}
-                onChange={(e) => setEmployeeId(e.target.value)}
+                onChange={setEmployeeId}
+                placeholder="Select employee"
               />
             </div>
             <div className="space-y-1.5">
@@ -132,7 +133,7 @@ export function PolicyPreviewDialog({ policyId, open, onOpenChange }: Props) {
               )}
             </div>
           )}
-        </div>
+        </DialogBody>
       </DialogContent>
     </Dialog>
   );

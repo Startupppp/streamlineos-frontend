@@ -19,6 +19,7 @@ import {
   SheetTitle,
   SheetDescription,
   SheetFooter,
+  SheetBody,
 } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import { useCreateLocation } from "@/hooks/api/inventory/warehouses";
@@ -211,7 +212,7 @@ export function AddLocationSheet({
             Add a zone, aisle, rack, or bin to {warehouseName}.
           </SheetDescription>
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+        <SheetBody className="space-y-4 px-6 py-4">
           <div className="space-y-1.5">
             <Label htmlFor="loc-type">
               Location Type <span className="text-destructive">*</span>
@@ -298,8 +299,8 @@ export function AddLocationSheet({
               </Select>
             </div>
           )}
-        </div>
-        <SheetFooter className="shrink-0 px-6 py-4 border-t">
+        </SheetBody>
+        <SheetFooter className="shrink-0 border-t border-border bg-muted/30 px-6 py-4">
           <div className="grid w-full grid-cols-2 gap-2">
             <Button
               variant="outline"

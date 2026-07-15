@@ -9,7 +9,7 @@ export default function ReorderReportLoading() {
         <Skeleton className="h-8 w-28 ml-auto" />
       </div>
       <div className="grid grid-cols-3 gap-3 mb-4">
-        {Array.from({ length: 3 }).map((_, i) => (
+        {Array.from({ length: 8 }).map((_, i) => (
           <Skeleton key={i} className="h-16 rounded-lg" />
         ))}
       </div>

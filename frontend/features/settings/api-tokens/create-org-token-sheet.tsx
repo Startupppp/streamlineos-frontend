@@ -20,6 +20,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetFooter,
+  SheetBody,
 } from "@/components/ui/sheet";
 import {
   Form,
@@ -80,11 +81,11 @@ export function CreateOrgTokenSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="p-0 flex flex-col gap-0">
-        <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
+      <SheetContent className="flex flex-col gap-0 overflow-hidden p-0">
+        <SheetHeader className="shrink-0 gap-1 border-b border-border px-6 py-4 text-left">
           <SheetTitle>New Organization Token</SheetTitle>
         </SheetHeader>
-        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-5">
+        <SheetBody className="px-6 py-5">
           <Form {...form}>
             <form
               id="org-token-form"
@@ -153,8 +154,8 @@ export function CreateOrgTokenSheet({
               />
             </form>
           </Form>
-        </div>
-        <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
+        </SheetBody>
+        <SheetFooter className="shrink-0 flex-row justify-end gap-2 border-t border-border bg-muted/30 px-6 py-4">
           <Button
             type="submit"
             form="org-token-form"

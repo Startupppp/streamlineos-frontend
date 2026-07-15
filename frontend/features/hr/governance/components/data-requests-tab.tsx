@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -14,6 +14,8 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
+  SheetBody,
+  SheetFooter,
 } from "@/components/ui/sheet";
 import {
   Form,
@@ -23,7 +25,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { UserCombobox } from "@/components/ui/user-combobox";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -43,6 +45,11 @@ import {
   useProcessDataRequest,
   type DataRequest,
 } from "../hooks/use-retention";
+import { useOrgMembers } from "@/hooks/api/organization";
+import {
+  getUserDisplayName,
+  type NamedUser,
+} from "@/features/projects/shared/resolve-user-name";
 
 const requestSchema = z.object({
   subjectUserId: z.string().min(1, "Subject user is required"),
@@ -67,9 +74,26 @@ export function DataRequestsTab() {
   const [processError, setProcessError] = useState<string | null>(null);
 
   const { data, isLoading } = useDataRequests({ page, limit: 20 });
+  const { data: membersData } = useOrgMembers(1, 200);
   const createRequest = useCreateDataRequest();
   const approveRequest = useApproveDataRequest();
   const processRequest = useProcessDataRequest();
+
+  const memberById = useMemo(() => {
+    const map = new Map<string, NamedUser>();
+    for (const member of membersData?.data ?? []) {
+      map.set(member.userId, {
+        name: member.name,
+        email: member.email,
+      });
+    }
+    return map;
+  }, [membersData]);
+
+  function resolveMemberName(userId: string) {
+    const member = memberById.get(userId);
+    return member ? getUserDisplayName(member) : userId;
+  }
 
   const form = useForm<RequestForm>({
     resolver: zodResolver(requestSchema),
@@ -108,7 +132,7 @@ export function DataRequestsTab() {
     {
       key: "subjectUserId",
       header: "Subject",
-      cell: (row) => <span className="text-sm">{row.subjectUserId}</span>,
+      cell: (row) => <span className="text-sm">{resolveMemberName(row.subjectUserId)}</span>,
     },
     {
       key: "type",
@@ -193,22 +217,27 @@ export function DataRequestsTab() {
         }
         pagination={{ mode: "server", page, pageSize: 20, total: data?.total ?? 0, onPageChange: setPage }}
       />
-      <Sheet open={sheetOpen} onOpenChange={(v) => !v && setSheetOpen(false)}>
-        <SheetContent className="w-full sm:max-w-md overflow-y-auto">
-          <SheetHeader>
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
+          <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
             <SheetTitle>New Data Request</SheetTitle>
             <SheetDescription>Submit a GDPR-style data export, anonymization, or deletion request.</SheetDescription>
           </SheetHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleCreate)} className="mt-4 space-y-4">
+            <form onSubmit={form.handleSubmit(handleCreate)} className="flex min-h-0 flex-1 flex-col">
+              <SheetBody className="space-y-4 px-6 py-5">
               <FormField
                 control={form.control}
                 name="subjectUserId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Subject User ID</FormLabel>
+                    <FormLabel>Subject</FormLabel>
                     <FormControl>
-                      <Input placeholder="user-uuid" {...field} />
+                      <UserCombobox
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Select employee"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -247,12 +276,15 @@ export function DataRequestsTab() {
                   </FormItem>
                 )}
               />
-              <div className="flex justify-end gap-2 pt-2">
-                <Button type="button" variant="outline" onClick={() => setSheetOpen(false)}>Cancel</Button>
-                <LoadingButton type="submit" isPending={createRequest.isPending} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                  Submit
-                </LoadingButton>
-              </div>
+              </SheetBody>
+              <SheetFooter className="shrink-0 border-t border-border bg-muted/30 px-6 py-4">
+                <div className="grid w-full grid-cols-2 gap-2">
+                  <Button type="button" variant="outline" onClick={() => setSheetOpen(false)}>Cancel</Button>
+                  <LoadingButton type="submit" isPending={createRequest.isPending} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                    Submit
+                  </LoadingButton>
+                </div>
+              </SheetFooter>
             </form>
           </Form>
         </SheetContent>

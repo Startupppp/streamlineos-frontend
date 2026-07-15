@@ -10,6 +10,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetFooter,
+  SheetBody,
 } from "@/components/ui/sheet";
 import {
   Form,
@@ -122,8 +123,8 @@ export function MilestoneUpsertSheet({ projectId, milestone, onClose }: Mileston
         </SheetHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-y-auto">
-            <div className="flex-1 px-6 py-5 space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
+            <SheetBody className="px-6 py-5 space-y-4">
               <FormField
                 control={form.control}
                 name="name"
@@ -195,7 +196,7 @@ export function MilestoneUpsertSheet({ projectId, milestone, onClose }: Mileston
                   )}
                 />
               </div>
-            </div>
+            </SheetBody>
 
             <SheetFooter className="px-6 py-4 border-t shrink-0">
               <div className="grid w-full grid-cols-2 gap-2">

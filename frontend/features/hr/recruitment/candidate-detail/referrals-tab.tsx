@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import {
-  Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger,
+  Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger, SheetBody,
 } from "@/components/ui/sheet";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { toast } from "sonner";
@@ -91,7 +91,7 @@ export function ReferralsTab({ candidateId }: Props) {
               <SheetTitle className="text-base font-semibold">Record Referral</SheetTitle>
               <SheetDescription className="text-xs">Track who referred this candidate.</SheetDescription>
             </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+            <SheetBody className="px-4 py-4 space-y-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-foreground/80">
                   Referred By<span className="text-rose-500 ml-0.5">*</span>
@@ -110,7 +110,7 @@ export function ReferralsTab({ candidateId }: Props) {
                 <label className="text-xs font-semibold text-foreground/80">Notes</label>
                 <Textarea placeholder="Any additional context..." value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} />
               </div>
-            </div>
+            </SheetBody>
             <SheetFooter className="shrink-0 px-4 py-3 border-t flex-row gap-2">
               <Button variant="outline" className="flex-1 h-9" onClick={() => setSheetOpen(false)}>Cancel</Button>
               <Button className="flex-1 h-9" onClick={handleCreate} disabled={createReferral.isPending}>

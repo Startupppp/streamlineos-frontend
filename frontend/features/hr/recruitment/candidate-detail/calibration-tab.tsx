@@ -15,7 +15,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle,
+  Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetBody,
 } from "@/components/ui/sheet";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { toast } from "sonner";
@@ -280,7 +280,7 @@ export function CalibrationTab({ candidateId }: CalibrationTabProps) {
             </SheetTitle>
           </SheetHeader>
 
-          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+          <SheetBody className="px-4 py-4 space-y-4">
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-foreground/80">Scheduled Date &amp; Time</label>
               <Input
@@ -328,7 +328,7 @@ export function CalibrationTab({ candidateId }: CalibrationTabProps) {
                 rows={6}
               />
             </div>
-          </div>
+          </SheetBody>
 
           <SheetFooter className="px-4 py-3 border-t flex-row gap-2">
             <Button variant="outline" className="flex-1 h-9" onClick={handleCancelSheet}>

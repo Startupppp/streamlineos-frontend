@@ -8,6 +8,8 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetBody,
+  SheetFooter,
 } from "@/components/ui/sheet";
 import {
   Form,
@@ -25,8 +27,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { UserCombobox } from "@/components/ui/user-combobox";
 import { useCan } from "@/hooks/api/access";
 import { useCreateAccommodation } from "@/hooks/api/hr/enterprise-ops-accommodations";
 
@@ -78,21 +80,26 @@ export function AccommodationSheet({ open, onOpenChange }: Props) {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-        <SheetHeader>
+      <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
+        <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
           <SheetTitle>New Accommodation Request</SheetTitle>
         </SheetHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col">
+            <SheetBody className="space-y-4 px-6 py-5">
             <FormField
               control={form.control}
               name="userId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Employee ID</FormLabel>
+                  <FormLabel>Employee</FormLabel>
                   <FormControl>
-                    <Input placeholder="Employee UUID" {...field} />
+                    <UserCombobox
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Select employee"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -107,7 +114,7 @@ export function AccommodationSheet({ open, onOpenChange }: Props) {
                   <FormLabel>Type</FormLabel>
                   <Select value={field.value} onValueChange={field.onChange}>
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="h-8">
                         <SelectValue />
                       </SelectTrigger>
                     </FormControl>
@@ -156,12 +163,12 @@ export function AccommodationSheet({ open, onOpenChange }: Props) {
                 )}
               />
             )}
-
-            <div className="flex justify-end gap-2 pt-2">
-              <LoadingButton type="submit" isPending={create.isPending} loadingText="Creating…">
+            </SheetBody>
+            <SheetFooter className="shrink-0 border-t border-border bg-muted/30 px-6 py-4">
+              <LoadingButton type="submit" isPending={create.isPending} loadingText="Creating…" className="w-full">
                 Create Request
               </LoadingButton>
-            </div>
+            </SheetFooter>
           </form>
         </Form>
       </SheetContent>

@@ -2,7 +2,7 @@
 
 import { memo } from "react";
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle,
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetBody,
 } from "@/components/ui/sheet";
 import { CreateDealForm } from "@/features/crm/deals/create-deal-form";
 
@@ -22,12 +22,12 @@ export const DealsCreateSheet = memo(function DealsCreateSheet({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-lg p-0 flex flex-col gap-0 overflow-hidden">
-        <SheetHeader className="shrink-0 px-6 py-4 border-b">
+        <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
           <SheetTitle>Create New Deal</SheetTitle>
         </SheetHeader>
-        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
+        <SheetBody className="px-6 py-4">
           <CreateDealForm employees={employees} onSuccess={onSuccess} />
-        </div>
+        </SheetBody>
       </SheetContent>
     </Sheet>
   );

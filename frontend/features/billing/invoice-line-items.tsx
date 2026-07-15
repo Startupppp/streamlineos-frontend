@@ -12,6 +12,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogBody,
 } from "@/components/ui/dialog";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { toast } from "sonner";
@@ -264,17 +265,17 @@ export function InvoiceLineItems({
       </div>
 
       <Dialog open={editOpen} onOpenChange={onEditOpenChange}>
-        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="flex max-h-[90vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
+          <DialogHeader className="shrink-0 border-b border-border px-6 py-4">
             <DialogTitle className="text-sm">Edit Invoice</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-1">
-            <div className="rounded-lg border border-border overflow-hidden">
-              <div className="px-4 py-2 border-b border-border">
+          <DialogBody className="space-y-4 px-6 py-4">
+            <div className="overflow-hidden rounded-lg border border-border">
+              <div className="border-b border-border bg-muted/40 px-4 py-2">
                 <p className="text-xs font-semibold">Line Items</p>
               </div>
-              <div className="p-3 space-y-2">
-                <div className="grid grid-cols-12 gap-2 text-xs text-muted-foreground px-1">
+              <div className="space-y-2 p-3">
+                <div className="grid grid-cols-12 gap-2 px-1 text-xs text-muted-foreground">
                   <span className="col-span-5">Description</span>
                   <span className="col-span-2 text-right">Qty</span>
                   <span className="col-span-2 text-right">Rate</span>
@@ -374,8 +375,8 @@ export function InvoiceLineItems({
                 placeholder="e.g. Payment due within 30 days"
               />
             </div>
-          </div>
-          <div className="flex justify-end gap-2 pt-1">
+          </DialogBody>
+          <div className="flex shrink-0 justify-end gap-2 border-t border-border bg-muted/30 px-6 py-4">
             <Button variant="outline" size="sm" onClick={handleCancelEdit}>
               Cancel
             </Button>
@@ -385,9 +386,9 @@ export function InvoiceLineItems({
               onClick={handleSaveEdit}
             >
               {updateInvoice.isPending ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+                <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
               ) : (
-                <Check className="h-3.5 w-3.5 mr-1" />
+                <Check className="mr-1 h-3.5 w-3.5" />
               )}
               Save Changes
             </Button>

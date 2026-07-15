@@ -10,6 +10,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetFooter,
+  SheetBody,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -155,8 +156,8 @@ export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormShe
           <SheetTitle>{isEdit ? "Edit Release" : "New Release"}</SheetTitle>
         </SheetHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-y-auto">
-          <div className="flex-1 px-6 py-4 space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
+          <SheetBody className="px-6 py-4 space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Name *</Label>
@@ -216,7 +217,7 @@ export function ReleaseFormSheet({ projectId, release, onClose }: ReleaseFormShe
                 <p className="text-xs text-destructive">{errors.description.message}</p>
               )}
             </div>
-          </div>
+          </SheetBody>
 
           <SheetFooter className="px-6 py-4 border-t">
             <div className="grid w-full grid-cols-2 gap-2">

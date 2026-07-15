@@ -7,6 +7,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
+  SheetBody,
 } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/common/use-mobile";
 import { cn } from "@/lib/utils";
@@ -64,14 +65,13 @@ export function AppSheet({
           )}
         </SheetHeader>
 
-        <div
-          className={cn(
-            "flex-1 min-h-0 overflow-y-auto overscroll-contain scrollbar-hide",
-            resolvedSide === "bottom" ? "px-5 py-4" : "px-6 py-4",
-          )}
+        <SheetBody
+          className={
+            resolvedSide === "bottom" ? "px-5 py-4" : "px-6 py-4"
+          }
         >
           {children}
-        </div>
+        </SheetBody>
 
         {footer && (
           <div

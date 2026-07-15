@@ -341,7 +341,6 @@ export function PortfoliosPage() {
         onSubmitCreate={handleCreate}
         onSubmitEdit={handleEdit}
         isPending={createPortfolio.isPending || updatePortfolio.isPending}
-        members={members}
       />
 
       <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteDialogChange}>

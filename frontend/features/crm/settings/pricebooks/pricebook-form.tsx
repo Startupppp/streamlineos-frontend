@@ -20,6 +20,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
+  SheetBody,
 } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -99,7 +100,7 @@ export function PricebookFormSheet({
             onSubmit={form.handleSubmit(handleSubmit)}
             className="flex flex-col flex-1 min-h-0"
           >
-            <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-4">
+            <SheetBody className="space-y-4 px-6 py-4">
               <FormField
                 control={form.control}
                 name="name"
@@ -107,7 +108,7 @@ export function PricebookFormSheet({
                   <FormItem>
                     <FormLabel>Name</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="e.g. Standard Pricing" />
+                      <Input {...field} placeholder="e.g. Standard Pricing" className="h-8" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -168,8 +169,8 @@ export function PricebookFormSheet({
                   </FormItem>
                 )}
               />
-            </div>
-            <div className="border-t shrink-0 grid grid-cols-2 px-6 py-4 gap-3">
+            </SheetBody>
+            <div className="grid shrink-0 grid-cols-2 gap-3 border-t border-border bg-muted/30 px-6 py-4">
               <Button type="button" variant="outline" onClick={handleCancel}>
                 Cancel
               </Button>

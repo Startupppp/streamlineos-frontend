@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger,
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger, SheetBody,
 } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import { Share2, Copy } from "lucide-react";
@@ -41,7 +41,7 @@ export function InviteReferrersSheet() {
             their own trackable referral link and can submit candidates for open roles.
           </SheetDescription>
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-3">
+        <SheetBody className="space-y-3 px-6 py-5">
           <div className="flex items-center gap-2">
             <Input readOnly value={link} className="text-xs" />
             <Button variant="outline" size="icon" className="shrink-0" onClick={handleCopy}>
@@ -49,7 +49,7 @@ export function InviteReferrersSheet() {
             </Button>
           </div>
           {copied && <p className="text-xs text-green-600">Copied to clipboard.</p>}
-        </div>
+        </SheetBody>
       </SheetContent>
     </Sheet>
   );

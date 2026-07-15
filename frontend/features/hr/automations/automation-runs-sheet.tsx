@@ -8,6 +8,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
+  SheetBody,
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -101,13 +102,13 @@ export function AutomationRunsSheet({ ruleId, ruleName, onClose }: Props) {
 
   return (
     <Sheet open onOpenChange={(o) => { if (!o) onClose(); }}>
-      <SheetContent className="w-full sm:max-w-2xl overflow-y-auto flex flex-col gap-0 p-0">
-        <SheetHeader className="px-6 py-4 border-b">
+      <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
+        <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
           <SheetTitle>Run History</SheetTitle>
           <SheetDescription className="truncate">{ruleName}</SheetDescription>
         </SheetHeader>
 
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-2">
+        <SheetBody className="space-y-2 px-6 py-4">
           {isLoading && Array.from({ length: 8 }).map((_, i) => (
             <Skeleton key={i} className="h-10 w-full rounded-lg" />
           ))}
@@ -115,7 +116,7 @@ export function AutomationRunsSheet({ ruleId, ruleName, onClose }: Props) {
             <p className="text-sm text-muted-foreground text-center py-12">No runs yet for this rule.</p>
           )}
           {runs?.map((run) => <RunRow key={run.id} run={run} />)}
-        </div>
+        </SheetBody>
       </SheetContent>
     </Sheet>
   );

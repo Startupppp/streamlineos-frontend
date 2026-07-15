@@ -307,7 +307,7 @@ export function BugsPage({ projectId }: BugsPageProps) {
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
           {isLoading ? (
-            <DataTableSkeleton rows={8} columns={6} className="flex-1" />
+            <DataTableSkeleton rows={12} columns={6} className="flex-1" />
           ) : isError ? (
             <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
           ) : (bugs ?? []).length === 0 ? (

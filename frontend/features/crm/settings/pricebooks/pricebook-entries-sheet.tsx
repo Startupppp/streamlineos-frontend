@@ -21,6 +21,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
+  SheetBody,
 } from "@/components/ui/sheet";
 import { LoadingButton } from "@/components/ui/loading-button";
 import {
@@ -114,7 +115,7 @@ export function PricebookEntriesSheet({
           </SheetDescription>
         </SheetHeader>
 
-        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-4">
+        <SheetBody className="space-y-4 px-6 py-4">
           {isLoading ? (
             <p className="text-sm text-muted-foreground">Loading entries...</p>
           ) : entryList.length === 0 ? (
@@ -225,9 +226,9 @@ export function PricebookEntriesSheet({
               </form>
             </Form>
           </div>
-        </div>
+        </SheetBody>
 
-        <div className="border-t shrink-0 px-6 py-4">
+        <div className="shrink-0 border-t border-border bg-muted/30 px-6 py-4">
           <Button variant="outline" className="w-full" onClick={handleClose}>
             Close
           </Button>

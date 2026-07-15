@@ -12,7 +12,7 @@ export default function IncidentsLoading() {
           <Skeleton className="h-7 w-24 rounded-md ml-auto" />
         </div>
         <div className="grid grid-cols-3 gap-2">
-          {Array.from({ length: 3 }).map((_, i) => (
+          {Array.from({ length: 9 }).map((_, i) => (
             <Skeleton key={i} className="h-[60px] rounded-lg" />
           ))}
         </div>

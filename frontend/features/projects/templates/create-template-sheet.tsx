@@ -21,6 +21,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetClose,
+  SheetBody,
 } from "@/components/ui/sheet";
 import { useCreateProjectTemplate } from "@/hooks/api/projects";
 import { TicketRow, type TicketDraft } from "./ticket-row";
@@ -109,7 +110,7 @@ export function CreateTemplateSheet({ open, onClose }: CreateTemplateSheetProps)
         <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle>New Project Template</SheetTitle>
         </SheetHeader>
-        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-5 space-y-4">
+        <SheetBody className="px-6 py-5 space-y-4">
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="sm:col-span-2 space-y-1">
               <Label>Template Name *</Label>
@@ -167,7 +168,7 @@ export function CreateTemplateSheet({ open, onClose }: CreateTemplateSheetProps)
               />
             ))}
           </div>
-        </div>
+        </SheetBody>
         <div className="shrink-0 px-6 py-4 border-t">
           <div className="grid grid-cols-2 gap-2">
             <SheetClose asChild>

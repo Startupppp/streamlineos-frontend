@@ -1,7 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetBody } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -25,12 +25,12 @@ export function SyncLogsSheet({ open, onOpenChange, deviceId }: Props) {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-lg flex flex-col gap-0 p-0">
-        <SheetHeader className="px-6 py-4 border-b">
+      <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
+        <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
           <SheetTitle>Sync Logs</SheetTitle>
         </SheetHeader>
 
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-2">
+        <SheetBody className="space-y-2 px-6 py-4">
           {isLoading ? (
             Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-10 rounded-lg" />)
           ) : !logs.length ? (
@@ -43,19 +43,19 @@ export function SyncLogsSheet({ open, onOpenChange, deviceId }: Props) {
             />
           ) : (
             logs.map((log) => (
-              <div key={log.id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
-                <div className="flex items-center gap-3 min-w-0">
-                  <Badge variant={STATUS_VARIANT[log.status]} className="capitalize shrink-0">{log.status}</Badge>
+              <div key={log.id} className="flex items-center justify-between rounded-lg border bg-card p-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <Badge variant={STATUS_VARIANT[log.status]} className="shrink-0 capitalize">{log.status}</Badge>
                   <div className="min-w-0">
                     <p className="text-sm text-foreground">{log.recordsCount} records</p>
-                    {log.error && <p className="text-xs text-red-500 truncate max-w-xs">{log.error}</p>}
+                    {log.error && <p className="max-w-xs truncate text-xs text-red-500">{log.error}</p>}
                   </div>
                 </div>
-                <span className="text-xs text-muted-foreground shrink-0">{format(new Date(log.syncedAt), "dd MMM HH:mm")}</span>
+                <span className="shrink-0 text-xs text-muted-foreground">{format(new Date(log.syncedAt), "dd MMM HH:mm")}</span>
               </div>
             ))
           )}
-        </div>
+        </SheetBody>
       </SheetContent>
     </Sheet>
   );

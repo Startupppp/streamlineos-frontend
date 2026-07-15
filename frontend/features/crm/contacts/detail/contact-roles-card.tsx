@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { useContactRoles, useAddContactRole, useRemoveContactRole } from "@/hooks/api/crm";
+import { useContactRoles, useAddContactRole, useRemoveContactRole, useDeals, useCrmOrganizations } from "@/hooks/api/crm";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { CONTACT_ROLE_DEFAULTS } from "@/types/crm";
@@ -56,6 +56,11 @@ export function ContactRolesCard({ contactId }: ContactRolesCardProps) {
     resolver: zodResolver(addRoleSchema),
     defaultValues: { entityType: "deal", entityId: "", roleKey: "", isPrimary: false },
   });
+
+  const entityType = form.watch("entityType");
+  const { data: deals = [] } = useDeals({ limit: 100 });
+  const { data: orgsData } = useCrmOrganizations({ page: 1, limit: 100 });
+  const companies = orgsData?.organizations ?? [];
 
   const handleSubmit = useCallback(
     (values: AddRoleFormValues) => {
@@ -115,13 +120,28 @@ export function ContactRolesCard({ contactId }: ContactRolesCardProps) {
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Entity ID</Label>
-                <Input
-                  type="number"
-                  className="h-8 text-xs"
-                  {...form.register("entityId")}
-                  placeholder="Enter ID"
-                />
+                <Label className="text-xs">{entityType === "deal" ? "Deal" : "Company"}</Label>
+                <Select
+                  value={form.watch("entityId")}
+                  onValueChange={(v) => form.setValue("entityId", v)}
+                >
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder={entityType === "deal" ? "Select deal" : "Select company"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {entityType === "deal"
+                      ? deals.map((deal) => (
+                          <SelectItem key={deal.id} value={String(deal.id)}>
+                            {deal.name}
+                          </SelectItem>
+                        ))
+                      : companies.map((company) => (
+                          <SelectItem key={company.id} value={String(company.id)}>
+                            {company.name}
+                          </SelectItem>
+                        ))}
+                  </SelectContent>
+                </Select>
                 {form.formState.errors.entityId && (
                   <p className="text-[10px] text-destructive">{form.formState.errors.entityId.message}</p>
                 )}

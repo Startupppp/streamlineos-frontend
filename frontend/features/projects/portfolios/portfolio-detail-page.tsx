@@ -389,7 +389,6 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
         onSubmitCreate={() => undefined}
         onSubmitEdit={handleEdit}
         isPending={updatePortfolio.isPending}
-        members={members}
       />
 
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>

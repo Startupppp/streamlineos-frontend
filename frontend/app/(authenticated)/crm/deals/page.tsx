@@ -402,7 +402,7 @@ export default function DealsPage() {
           initial="hidden"
           animate="visible"
         >
-          <motion.div variants={itemVariants} className="sticky top-0 z-10 bg-background pb-2 shrink-0">
+          <motion.div variants={itemVariants} className="sticky top-0 z-10 shrink-0 border-b border-border bg-muted/40 pb-2 backdrop-blur-sm">
             <DealsStatsBar {...stats} />
           </motion.div>
 

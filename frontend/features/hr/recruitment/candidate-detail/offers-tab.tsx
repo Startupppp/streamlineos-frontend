@@ -14,7 +14,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetDescription,
+  Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetDescription, SheetBody,
 } from "@/components/ui/sheet";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -97,7 +97,7 @@ function ApprovalSheet({ offer, action, candidateId, onClose }: ApprovalSheetPro
               : "Rejecting will return the offer to Approval Rejected status."}
           </SheetDescription>
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+        <SheetBody className="px-4 py-4 space-y-4">
           <div className="rounded-lg border px-4 py-3 space-y-1 bg-muted/40">
             <p className="text-xs text-muted-foreground">Offer for</p>
             <p className="text-sm font-medium">{offer.offeredDesignation ?? "—"}</p>
@@ -112,7 +112,7 @@ function ApprovalSheet({ offer, action, candidateId, onClose }: ApprovalSheetPro
               onChange={(e) => setRemarks(e.target.value)}
             />
           </div>
-        </div>
+        </SheetBody>
         <SheetFooter className="shrink-0 px-4 py-3 border-t flex-row gap-2">
           <Button variant="outline" className="flex-1" onClick={onClose} disabled={isPending}>Cancel</Button>
           <Button
@@ -400,7 +400,7 @@ export function OffersTab({ candidateId }: Props) {
             <SheetTitle className="text-base">Create Offer</SheetTitle>
             <SheetDescription className="text-xs">Create an offer for this candidate.</SheetDescription>
           </SheetHeader>
-          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+          <SheetBody className="px-4 py-4 space-y-4">
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Offered Designation</label>
               <Input placeholder="e.g. Senior Developer" value={offeredDesignation} onChange={(e) => setOfferedDesignation(e.target.value)} />
@@ -427,7 +427,7 @@ export function OffersTab({ candidateId }: Props) {
               <label className="text-sm font-medium">Notes</label>
               <Textarea placeholder="Any additional notes..." rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} />
             </div>
-          </div>
+          </SheetBody>
           <SheetFooter className="shrink-0 px-4 py-3 border-t flex-row gap-2">
             <Button variant="outline" className="flex-1" onClick={() => setSheetOpen(false)}>Cancel</Button>
             <Button className="flex-1" onClick={handleCreate} disabled={createOffer.isPending}>

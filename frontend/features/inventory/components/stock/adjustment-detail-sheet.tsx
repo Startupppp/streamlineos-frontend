@@ -11,6 +11,7 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
+  SheetBody,
 } from "@/components/ui/sheet";
 import {
   AlertDialog,
@@ -167,10 +168,10 @@ export function AdjustmentDetailSheet({ adjustmentId, open, onOpenChange }: Adju
           )}
         </SheetHeader>
 
-        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-4">
+        <SheetBody className="space-y-4 px-6 py-4">
           {isLoading ? (
             <div className="space-y-2">
-              {[0, 1, 2].map((i) => <Skeleton key={i} className="h-8 w-full" />)}
+              {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
             </div>
           ) : detail ? (
             <>
@@ -199,8 +200,7 @@ export function AdjustmentDetailSheet({ adjustmentId, open, onOpenChange }: Adju
               )}
             </>
           ) : null}
-        </div>
-
+        </SheetBody>
         <SheetFooter className="shrink-0 px-6 py-4 border-t">
           <div className="flex items-center gap-2 w-full justify-between">
             <div className="flex items-center gap-2">

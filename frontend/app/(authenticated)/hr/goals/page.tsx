@@ -10,12 +10,13 @@ import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetBody } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { UserCombobox } from "@/components/ui/user-combobox";
 import { useHrGoals, useCreateHrGoal, type HrGoal } from "@/hooks/api/hr";
 import { useUpdateGoal } from "@/hooks/api/hr";
 
@@ -209,8 +210,8 @@ export default function GoalsPage() {
   function handleUnitChange(e: ChangeEvent<HTMLInputElement>) {
     handleFormChange("unit", e.target.value);
   }
-  function handleUserIdChange(e: ChangeEvent<HTMLInputElement>) {
-    handleFormChange("userId", e.target.value);
+  function handleUserIdChange(value: string) {
+    handleFormChange("userId", value);
   }
 
   async function handleCreate() {
@@ -301,11 +302,11 @@ export default function GoalsPage() {
               New Goal
             </Button>
           </SheetTrigger>
-          <SheetContent className="w-[420px] p-0 flex flex-col gap-0">
-            <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
+          <SheetContent className="flex w-[420px] flex-col gap-0 overflow-hidden p-0">
+            <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left gap-1">
               <SheetTitle>Create Goal</SheetTitle>
             </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+            <SheetBody className="space-y-4 px-6 py-5">
               <div className="space-y-1.5">
                 <Label className="text-sm font-medium">Title *</Label>
                 <Input
@@ -366,12 +367,11 @@ export default function GoalsPage() {
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-sm font-medium">Assignee User ID</Label>
-                <Input
-                  className="h-8 text-sm"
+                <Label className="text-sm font-medium">Assignee</Label>
+                <UserCombobox
                   value={form.userId}
                   onChange={handleUserIdChange}
-                  placeholder="User ID"
+                  placeholder="Select assignee"
                 />
               </div>
               <Button
@@ -381,7 +381,7 @@ export default function GoalsPage() {
               >
                 {createGoal.isPending ? "Creating…" : "Create Goal"}
               </Button>
-            </div>
+            </SheetBody>
           </SheetContent>
         </Sheet>
       }

@@ -327,9 +327,6 @@ export default function CrmTasksPage() {
             {Array.from({ length: 10 }).map((_, i) => (
               <Skeleton key={i} className="h-[52px] rounded-lg" />
             ))}
-            {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-16 w-full rounded-lg mt-3" />
-            ))}
           </div>
         </PageWrapper>
       }

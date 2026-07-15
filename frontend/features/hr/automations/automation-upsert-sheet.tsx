@@ -12,6 +12,7 @@ import {
   SheetTitle,
   SheetDescription,
   SheetFooter,
+  SheetBody,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -210,14 +211,14 @@ export function AutomationUpsertSheet({ rule, onClose }: Props) {
 
   return (
     <Sheet open onOpenChange={(o) => { if (!o) onClose(); }}>
-      <SheetContent className="w-full sm:max-w-2xl overflow-y-auto flex flex-col gap-0 p-0">
-        <SheetHeader className="px-6 py-4 border-b">
+      <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
+        <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
           <SheetTitle>{isEditing ? "Edit Automation" : "New Automation Rule"}</SheetTitle>
           <SheetDescription>Configure when this automation fires and what actions it runs.</SheetDescription>
         </SheetHeader>
 
-        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-y-auto">
-          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col">
+          <SheetBody className="space-y-6 px-6 py-4">
             <div className="space-y-4">
               <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">General</h3>
               <div className="space-y-3">
@@ -378,9 +379,9 @@ export function AutomationUpsertSheet({ rule, onClose }: Props) {
                 <p className="text-xs text-destructive">At least one action is required.</p>
               )}
             </div>
-          </div>
+          </SheetBody>
 
-          <SheetFooter className="px-6 py-4 border-t bg-background">
+          <SheetFooter className="shrink-0 border-t border-border bg-muted/30 px-6 py-4">
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
             <LoadingButton type="submit" isPending={isPending} loadingText={isEditing ? "Saving…" : "Creating…"}>
               {isEditing ? "Save Changes" : "Create Rule"}

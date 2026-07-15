@@ -7,8 +7,8 @@ import {
   SheetTitle,
   SheetDescription,
   SheetFooter,
+  SheetBody,
 } from "@/components/ui/sheet";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 
@@ -43,38 +43,34 @@ export function HrSheet({
   side = "right",
   showSubmit = true,
 }: HrSheetProps) {
-  const handleSubmit = () => {
+  function handleSubmit() {
     if (onSubmit) onSubmit();
-  };
+  }
 
-  const handleCancel = () => {
+  function handleCancel() {
     if (onCancel) {
       onCancel();
     } else {
       onOpenChange(false);
     }
-  };
+  }
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side={side} className="flex flex-col p-0 gap-0 sm:max-w-md">
-        <SheetHeader className="shrink-0 px-5 pt-5 pb-4 border-b">
+      <SheetContent side={side} className="flex flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
+        <SheetHeader className="shrink-0 border-b border-border px-5 pb-4 pt-5 text-left">
           <SheetTitle className="text-base font-semibold">{title}</SheetTitle>
           {description && (
             <SheetDescription className="text-xs text-muted-foreground">{description}</SheetDescription>
           )}
         </SheetHeader>
 
-        <ScrollArea className="flex-1 min-h-0">
-          <div className="px-5 py-5 space-y-5">
-            {children}
-          </div>
-        </ScrollArea>
+        <SheetBody className="space-y-5 px-5 py-5">{children}</SheetBody>
 
         {showSubmit && (
-          <SheetFooter className="shrink-0 px-5 py-4 border-t flex-col gap-2">
+          <SheetFooter className="shrink-0 flex-col gap-2 border-t border-border bg-muted/30 px-5 py-4">
             <Button
-              className="w-full h-9 gap-1.5 transition-colors duration-200"
+              className="h-9 w-full gap-1.5 transition-colors duration-200"
               onClick={handleSubmit}
               disabled={isPending || !onSubmit || submitDisabled}
             >
@@ -83,7 +79,7 @@ export function HrSheet({
             </Button>
             <Button
               variant="outline"
-              className="w-full h-9 transition-colors duration-200"
+              className="h-9 w-full transition-colors duration-200"
               onClick={handleCancel}
               disabled={isPending}
             >

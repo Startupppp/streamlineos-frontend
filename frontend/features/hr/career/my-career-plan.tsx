@@ -37,6 +37,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { UserCombobox } from "@/components/ui/user-combobox";
 
 const schema = z.object({
   pathId: z.number().optional(),
@@ -245,11 +246,17 @@ export function MyCareerPlan() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs font-semibold text-foreground/80 uppercase tracking-wider">
-                      Mentor ID{" "}
+                      Mentor{" "}
                       <span className="normal-case font-normal text-muted-foreground tracking-normal">(optional)</span>
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="Mentor user ID" className="h-9 text-sm font-mono" {...field} />
+                      <UserCombobox
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
+                        placeholder="Select mentor…"
+                        allowUnassigned
+                        className="h-9 text-sm"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

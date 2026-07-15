@@ -8,6 +8,8 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetBody,
+  SheetFooter,
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -84,17 +86,20 @@ export function TicketDetailSheet({ ticketId, isAdmin, onClose }: Props) {
 
   return (
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
-      <SheetContent className="w-full sm:max-w-xl overflow-y-auto flex flex-col gap-0 p-0">
+      <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-xl">
         {isLoading || !ticket ? (
-          <div className="p-6 space-y-4">
+          <div className="space-y-4 p-6">
             <Skeleton className="h-6 w-3/4" />
             <Skeleton className="h-4 w-1/2" />
             <Skeleton className="h-24 w-full" />
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
           </div>
         ) : (
           <>
-            <SheetHeader className="px-6 pt-6 pb-4 border-b border-border">
-              <div className="flex items-start gap-2 flex-wrap">
+            <SheetHeader className="shrink-0 border-b border-border px-6 pb-4 pt-6 text-left">
+              <div className="flex flex-wrap items-start gap-2">
                 <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${STATUS_COLORS[ticket.status]}`}>
                   {STATUS_LABELS[ticket.status]}
                 </span>
@@ -105,23 +110,23 @@ export function TicketDetailSheet({ ticketId, isAdmin, onClose }: Props) {
                   {ticket.category ? (HELPDESK_CATEGORY_LABELS[ticket.category as keyof typeof HELPDESK_CATEGORY_LABELS] ?? ticket.category) : "Other"}
                 </Badge>
               </div>
-              <SheetTitle className="text-base mt-2 leading-snug">{ticket.title}</SheetTitle>
-              <p className="text-xs text-muted-foreground mt-1">
+              <SheetTitle className="mt-2 text-base leading-snug">{ticket.title}</SheetTitle>
+              <p className="mt-1 text-xs text-muted-foreground">
                 Opened by {ticket.authorName ?? "Employee"} · {format(new Date(ticket.createdAt), "MMM d, yyyy")}
               </p>
             </SheetHeader>
 
-            <div className="flex-1 overflow-y-auto divide-y divide-border">
+            <SheetBody className="divide-y divide-border p-0">
               {ticket.description && (
                 <div className="px-6 py-4">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Description</p>
-                  <p className="text-sm text-foreground whitespace-pre-wrap">{ticket.description}</p>
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Description</p>
+                  <p className="whitespace-pre-wrap text-sm text-foreground">{ticket.description}</p>
                 </div>
               )}
 
               {isAdmin && (
                 <div className="px-6 py-4">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Admin Actions</p>
+                  <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Admin Actions</p>
                   <div className="flex items-center gap-3">
                     <Select value={ticket.status} onValueChange={handleStatusChange}>
                       <SelectTrigger className="h-8 w-40 text-xs">
@@ -139,7 +144,7 @@ export function TicketDetailSheet({ ticketId, isAdmin, onClose }: Props) {
               )}
 
               <div className="px-6 py-4">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Comments ({ticket.comments.length})
                 </p>
                 <div className="space-y-4">
@@ -156,22 +161,22 @@ export function TicketDetailSheet({ ticketId, isAdmin, onClose }: Props) {
                           <span className="text-xs font-semibold text-foreground">{c.authorName ?? "Team"}</span>
                           <span className="text-[10px] text-muted-foreground">{format(new Date(c.createdAt), "MMM d, h:mm a")}</span>
                         </div>
-                        <p className="text-sm text-foreground mt-0.5 whitespace-pre-wrap">{c.body}</p>
+                        <p className="mt-0.5 whitespace-pre-wrap text-sm text-foreground">{c.body}</p>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
-            </div>
+            </SheetBody>
 
-            <div className="px-6 py-4 border-t border-border">
+            <SheetFooter className="shrink-0 border-t border-border bg-muted/30 px-6 py-4 sm:flex-col">
               <Textarea
                 ref={commentRef}
                 value={commentBody}
                 onChange={(e) => setCommentBody(e.target.value)}
                 placeholder="Add a comment…"
                 rows={3}
-                className="resize-none mb-2"
+                className="mb-2 resize-none"
               />
               <LoadingButton
                 size="sm"
@@ -182,7 +187,7 @@ export function TicketDetailSheet({ ticketId, isAdmin, onClose }: Props) {
               >
                 Post Comment
               </LoadingButton>
-            </div>
+            </SheetFooter>
           </>
         )}
       </SheetContent>

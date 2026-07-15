@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { UserCombobox } from "@/components/ui/user-combobox";
 import { useCreatePayrollAdjustment } from "@/hooks/api/payroll/payroll-inputs";
 
 const schema = z.object({
@@ -103,9 +104,13 @@ export function CreateAdjustmentDialog({ open, onOpenChange, periodId }: CreateA
               name="userId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Employee User ID</FormLabel>
+                  <FormLabel>Employee</FormLabel>
                   <FormControl>
-                    <Input placeholder="user_..." {...field} />
+                    <UserCombobox
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Select employee"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

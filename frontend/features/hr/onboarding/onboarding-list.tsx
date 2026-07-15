@@ -48,7 +48,7 @@ export function OnboardingList() {
   if (isLoading) {
     return (
       <div className="space-y-2 pt-2">
-        {Array.from({ length: 3 }).map((_, i) => (
+        {Array.from({ length: 8 }).map((_, i) => (
           <Skeleton key={i} className="h-[60px] rounded-2xl" />
         ))}
       </div>

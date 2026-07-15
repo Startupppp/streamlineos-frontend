@@ -21,6 +21,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetFooter,
+  SheetBody,
 } from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
 import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
@@ -83,11 +84,11 @@ function NewAuditSheet({
         <SheetHeader className="bg-muted/40 p-6 pb-4 pr-12 border-b text-left">
           <SheetTitle>New Physical Audit</SheetTitle>
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+        <SheetBody className="space-y-4 px-6 py-4">
           <div className="space-y-1.5">
             <Label htmlFor="pa-warehouse">Warehouse *</Label>
             <Select value={warehouseId || "none"} onValueChange={handleWarehouseChange}>
-              <SelectTrigger id="pa-warehouse" className="h-9 text-sm">
+              <SelectTrigger id="pa-warehouse" className="h-8 text-sm">
                 <SelectValue placeholder="Select warehouse" />
               </SelectTrigger>
               <SelectContent>
@@ -98,8 +99,8 @@ function NewAuditSheet({
               </SelectContent>
             </Select>
           </div>
-        </div>
-        <SheetFooter className="border-t px-6 py-4 gap-2 flex-row">
+        </SheetBody>
+        <SheetFooter className="shrink-0 flex-row gap-2 border-t border-border bg-muted/30 px-6 py-4">
           <Button variant="outline" className="flex-1" onClick={handleClose} disabled={createMutation.isPending}>
             Cancel
           </Button>

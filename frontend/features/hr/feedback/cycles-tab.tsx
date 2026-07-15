@@ -16,6 +16,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
+  SheetBody,
 } from "@/components/ui/sheet";
 import {
   Select,
@@ -170,11 +171,11 @@ export function CyclesTab() {
               </Button>
             </motion.div>
           </SheetTrigger>
-          <SheetContent className="w-[480px] p-0 flex flex-col gap-0">
-            <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
+          <SheetContent className="flex w-[480px] flex-col gap-0 overflow-hidden p-0">
+            <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left gap-1">
               <SheetTitle>Create Feedback Cycle</SheetTitle>
             </SheetHeader>
-            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+            <SheetBody className="space-y-4 px-6 py-5">
               <div className="space-y-1.5">
                 <Label>Name *</Label>
                 <Input
@@ -269,7 +270,7 @@ export function CyclesTab() {
                   {createCycle.isPending ? "Creating…" : "Create Cycle"}
                 </Button>
               </motion.div>
-            </div>
+            </SheetBody>
           </SheetContent>
         </Sheet>
       </div>

@@ -14,6 +14,8 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
+  SheetBody,
+  SheetFooter,
 } from "@/components/ui/sheet";
 import {
   Form,
@@ -160,14 +162,15 @@ export function RetentionPoliciesTab() {
         }
         pagination={{ mode: "server", page, pageSize: 20, total: data?.total ?? 0, onPageChange: setPage }}
       />
-      <Sheet open={sheetOpen} onOpenChange={(v) => !v && setSheetOpen(false)}>
-        <SheetContent className="w-full sm:max-w-md overflow-y-auto">
-          <SheetHeader>
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
+          <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
             <SheetTitle>Add Retention Policy</SheetTitle>
             <SheetDescription>Define how long a record type is retained and what happens at expiry.</SheetDescription>
           </SheetHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleCreate)} className="mt-4 space-y-4">
+            <form onSubmit={form.handleSubmit(handleCreate)} className="flex min-h-0 flex-1 flex-col">
+              <SheetBody className="space-y-4 px-6 py-5">
               <FormField
                 control={form.control}
                 name="recordType"
@@ -233,12 +236,15 @@ export function RetentionPoliciesTab() {
                   </FormItem>
                 )}
               />
-              <div className="flex justify-end gap-2 pt-2">
-                <Button type="button" variant="outline" onClick={() => setSheetOpen(false)}>Cancel</Button>
-                <LoadingButton type="submit" isPending={createPolicy.isPending} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                  Create
-                </LoadingButton>
-              </div>
+              </SheetBody>
+              <SheetFooter className="shrink-0 border-t border-border bg-muted/30 px-6 py-4">
+                <div className="grid w-full grid-cols-2 gap-2">
+                  <Button type="button" variant="outline" onClick={() => setSheetOpen(false)}>Cancel</Button>
+                  <LoadingButton type="submit" isPending={createPolicy.isPending} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                    Create
+                  </LoadingButton>
+                </div>
+              </SheetFooter>
             </form>
           </Form>
         </SheetContent>

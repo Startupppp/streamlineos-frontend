@@ -9,6 +9,8 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetBody,
+  SheetFooter,
 } from "@/components/ui/sheet";
 import {
   Form,
@@ -81,13 +83,14 @@ export function TemplateSheet({ open, onOpenChange }: Props) {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
-        <SheetHeader>
+      <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
+        <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
           <SheetTitle>New Provisioning Template</SheetTitle>
         </SheetHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col">
+            <SheetBody className="space-y-4 px-6 py-5">
             <FormField
               control={form.control}
               name="name"
@@ -151,12 +154,12 @@ export function TemplateSheet({ open, onOpenChange }: Props) {
                 </div>
               ))}
             </div>
-
-            <div className="flex justify-end pt-2">
+            </SheetBody>
+            <SheetFooter className="shrink-0 border-t border-border bg-muted/30 px-6 py-4">
               <LoadingButton type="submit" isPending={create.isPending} loadingText="Creating…">
                 Create Template
               </LoadingButton>
-            </div>
+            </SheetFooter>
           </form>
         </Form>
       </SheetContent>

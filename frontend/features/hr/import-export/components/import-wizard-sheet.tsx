@@ -7,6 +7,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetFooter,
+  SheetBody,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -209,7 +210,7 @@ export function ImportWizardSheet({
           </div>
         </SheetHeader>
 
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+        <SheetBody className="space-y-4 px-6 py-4">
           {step === 1 && (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
@@ -310,9 +311,9 @@ export function ImportWizardSheet({
               )}
             </div>
           )}
-        </div>
+        </SheetBody>
 
-        <SheetFooter className="px-6 py-4 border-t border-border shrink-0 flex gap-2">
+        <SheetFooter className="flex shrink-0 gap-2 border-t border-border bg-muted/30 px-6 py-4">
           {step === 1 && (
             <Button variant="outline" onClick={() => handleOpenChange(false)}>
               Cancel

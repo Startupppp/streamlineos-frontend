@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetBody } from "@/components/ui/sheet";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useHrDrilldown } from "@/hooks/api/hr/analytics";
 
@@ -61,12 +61,12 @@ export function DrilldownSheet({ open, onClose, metric, title, departmentId }: D
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent side="right" className="flex w-full flex-col sm:max-w-2xl">
-        <SheetHeader className="border-b border-border/50 pb-3">
+      <SheetContent side="right" className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
+        <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
           <SheetTitle>{title} — Details</SheetTitle>
         </SheetHeader>
 
-        <div className="flex-1 overflow-y-auto py-4">
+        <SheetBody className="px-6 py-4">
           <DataTable
             data={indexedRows}
             columns={tableColumns}
@@ -85,7 +85,7 @@ export function DrilldownSheet({ open, onClose, metric, title, departmentId }: D
               onPageChange: setPage,
             }}
           />
-        </div>
+        </SheetBody>
       </SheetContent>
     </Sheet>
   );

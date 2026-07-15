@@ -5,6 +5,7 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { XIcon } from "lucide-react";
 
 import { cn } from "../../lib/utils";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 function Dialog({
   ...props
@@ -101,16 +102,17 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-function DialogBody({ className, ...props }: React.ComponentProps<"div">) {
+function DialogBody({ className, children, ...props }: React.ComponentProps<"div">) {
   return (
-    <div
+    <ScrollArea
       data-slot="dialog-body"
-      className={cn(
-        "flex-1 min-h-0 overflow-y-auto overscroll-contain scrollbar-hide",
-        className
-      )}
-      {...props}
-    />
+      hideScrollbar
+      className="flex-1 min-h-0"
+    >
+      <div className={cn(className)} {...props}>
+        {children}
+      </div>
+    </ScrollArea>
   );
 }
 

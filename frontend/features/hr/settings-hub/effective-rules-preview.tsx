@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { UserCombobox } from "@/components/ui/user-combobox";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -82,20 +83,22 @@ export function EffectiveRulesPreview() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-2">
-        <Input
-          placeholder="Employee ID"
-          value={employeeId}
-          onChange={(e) => setEmployeeId(e.target.value)}
-          className="h-8 text-xs w-56"
-        />
+        <div className="w-56">
+          <UserCombobox
+            value={employeeId}
+            onChange={setEmployeeId}
+            placeholder="Select employee"
+            className="h-8 text-xs"
+          />
+        </div>
         <Input
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="h-8 text-xs w-40"
+          className="h-8 w-40 text-xs"
         />
         <span className="text-xs text-muted-foreground">
-          {params ? "Showing effective rules" : "Enter an employee ID to preview"}
+          {params ? "Showing effective rules" : "Select an employee to preview"}
         </span>
       </div>
 

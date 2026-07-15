@@ -2,10 +2,9 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Search } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { UserCombobox } from "@/components/ui/user-combobox";
 import { useFeedbackResults } from "@/hooks/api/hr";
 
 export function ResultsTab() {
@@ -26,14 +25,11 @@ export function ResultsTab() {
   return (
     <div className="space-y-4">
       <div className="flex gap-2">
-        <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            className="pl-9"
-            placeholder="Enter employee ID…"
+        <div className="max-w-xs min-w-0 flex-1">
+          <UserCombobox
             value={subjectId}
-            onChange={(e) => setSubjectId(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+            onChange={setSubjectId}
+            placeholder="Select employee"
           />
         </div>
         <Button onClick={handleSearch} variant="outline">
@@ -45,7 +41,7 @@ export function ResultsTab() {
         <EmptyState
           illustrationPreset="search"
           title="Select an employee to view 360° feedback results"
-          description="Enter an employee ID above"
+          description="Choose an employee above"
           className="border-0 bg-transparent shadow-none"
         />
       )}

@@ -33,7 +33,7 @@ export default function CyclesLoading() {
         <section>
           <Skeleton className="h-3.5 w-24 mb-3" />
           <div className="space-y-3">
-            {Array.from({ length: 3 }).map((_, i) => (
+            {Array.from({ length: 9 }).map((_, i) => (
               <Card key={i}>
                 <CardContent className="py-4 flex items-center justify-between">
                   <div className="space-y-1.5">

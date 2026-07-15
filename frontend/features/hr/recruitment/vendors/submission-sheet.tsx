@@ -9,7 +9,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription,
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetBody,
 } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -162,7 +162,7 @@ export function SubmissionSheet({ vendor, onClose }: SubmissionSheetProps) {
             </Button>
           </div>
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-3">
+        <SheetBody className="space-y-3 px-6 py-5">
           {showAddForm && <AddSubmissionForm vendorId={vendor.id} onDone={handleAddDone} />}
           {isLoading ? (
             Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-16 rounded-lg" />)
@@ -211,7 +211,7 @@ export function SubmissionSheet({ vendor, onClose }: SubmissionSheetProps) {
               );
             })
           )}
-        </div>
+        </SheetBody>
       </SheetContent>
     </Sheet>
   );

@@ -29,6 +29,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
+  SheetBody,
 } from "@/components/ui/sheet";
 import { useUpdateCategory } from "@/hooks/api/inventory";
 import type { InventoryCategory } from "@/types/inventory";
@@ -126,7 +127,7 @@ export function CategoryEditSheet({
             onSubmit={form.handleSubmit(onSubmit)}
             className="flex flex-col flex-1 min-h-0"
           >
-            <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-4">
+            <SheetBody className="space-y-4 px-6 py-4">
               <FormField
                 control={form.control}
                 name="name"
@@ -139,7 +140,7 @@ export function CategoryEditSheet({
                       </span>
                     </div>
                     <FormControl>
-                      <Input placeholder="e.g. Electronics" maxLength={CATEGORY_NAME_MAX} {...field} />
+                      <Input className="h-8" placeholder="e.g. Electronics" maxLength={CATEGORY_NAME_MAX} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -195,8 +196,8 @@ export function CategoryEditSheet({
                   </FormItem>
                 )}
               />
-            </div>
-            <div className="shrink-0 px-6 py-4 border-t">
+            </SheetBody>
+            <div className="shrink-0 border-t border-border bg-muted/30 px-6 py-4">
               <div className="grid grid-cols-2 gap-2">
                 <Button
                   type="button"

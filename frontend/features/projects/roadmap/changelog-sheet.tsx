@@ -13,6 +13,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetFooter,
+  SheetBody,
 } from "@/components/ui/sheet";
 import {
   Select,
@@ -94,7 +95,7 @@ export function ChangelogSheet({ entry, onClose }: ChangelogSheetProps) {
         <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle>{isEdit ? "Edit Changelog Entry" : "New Changelog Entry"}</SheetTitle>
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+        <SheetBody className="px-6 py-5 space-y-4">
           <div className="space-y-1">
             <Label>Title *</Label>
             <Input
@@ -135,7 +136,7 @@ export function ChangelogSheet({ entry, onClose }: ChangelogSheetProps) {
               className="border border-border data-[state=unchecked]:bg-input"
             />
           </div>
-        </div>
+        </SheetBody>
         <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
           <Button variant="outline" className="flex-1" onClick={onClose}>Cancel</Button>
           <LoadingButton className="flex-1" onClick={handleSave} disabled={!title.trim()} isPending={isPending} loadingText="Saving…">

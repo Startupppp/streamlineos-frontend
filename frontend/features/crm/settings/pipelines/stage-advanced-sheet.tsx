@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter,
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetBody,
 } from "@/components/ui/sheet";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -137,13 +137,14 @@ export function StageAdvancedSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full max-w-md overflow-y-auto" side="right">
-        <SheetHeader>
+      <SheetContent className="flex w-full max-w-md flex-col gap-0 overflow-hidden p-0" side="right">
+        <SheetHeader className="shrink-0 border-b border-border px-6 py-4 text-left">
           <SheetTitle className="text-sm">Edit Stage</SheetTitle>
-          {stage && <p className="text-[11px] font-mono text-muted-foreground">{stage.key}</p>}
+          {stage && <p className="font-mono text-[11px] text-muted-foreground">{stage.key}</p>}
         </SheetHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 mt-4 pb-6">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="flex min-h-0 flex-1 flex-col">
+            <SheetBody className="space-y-4 px-6 py-5">
             <FormField control={form.control} name="label" render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-xs">Label</FormLabel>
@@ -260,8 +261,9 @@ export function StageAdvancedSheet({
                 </div>
               </FormItem>
             )} />
-            <SheetFooter>
-              <LoadingButton type="submit" size="sm" isPending={updateStage.isPending} loadingText="Saving...">
+            </SheetBody>
+            <SheetFooter className="shrink-0 border-t border-border bg-muted/30 px-6 py-4">
+              <LoadingButton type="submit" size="sm" isPending={updateStage.isPending} loadingText="Saving..." className="w-full">
                 Save Changes
               </LoadingButton>
             </SheetFooter>

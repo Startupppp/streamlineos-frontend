@@ -12,6 +12,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { UserCombobox } from "@/components/ui/user-combobox";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import {
@@ -211,9 +212,13 @@ function CreateBonusDialog({ open, onOpenChange }: CreateBonusDialogProps) {
               name="userId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Employee ID</FormLabel>
+                  <FormLabel>Employee</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter employee user ID" {...field} />
+                    <UserCombobox
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Select employee"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

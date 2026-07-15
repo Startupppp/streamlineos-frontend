@@ -18,6 +18,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetFooter,
+  SheetBody,
 } from "@/components/ui/sheet";
 import {
   Select,
@@ -259,9 +260,9 @@ export function PoEditSheet({ open, onOpenChange, po }: PoEditSheetProps) {
         <SheetHeader className="bg-muted/40 p-6 pb-4 pr-12 border-b text-left">
           <SheetTitle>Edit Purchase Order</SheetTitle>
         </SheetHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
-          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <SheetBody className="space-y-4 px-6 py-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label className="text-[13px] font-medium">
                   Vendor <span className="text-destructive">*</span>
@@ -340,8 +341,8 @@ export function PoEditSheet({ open, onOpenChange, po }: PoEditSheetProps) {
                 }
               />
             </div>
-          </div>
-          <SheetFooter className="border-t px-6 py-4 gap-2">
+          </SheetBody>
+          <SheetFooter className="shrink-0 gap-2 border-t border-border bg-muted/30 px-6 py-4">
             <Button type="button" variant="outline" className="flex-1" onClick={handleClose}>
               Cancel
             </Button>

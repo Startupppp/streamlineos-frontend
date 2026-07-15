@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetDescription,
+  Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetDescription, SheetBody,
 } from "@/components/ui/sheet";
 import { RecruitmentEmptyState } from "@/features/hr/recruitment/components/recruitment-empty-state";
 import { EmptyTeamIllustration } from "@/components/illustrations";
@@ -62,7 +62,7 @@ function BonusSheet({ referral, onClose }: BonusSheetProps) {
             Referral by {referral.referrer?.name ?? "Unknown"} for {referral.candidate?.firstName} {referral.candidate?.lastName}
           </SheetDescription>
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-3">
+        <SheetBody className="px-6 py-5 space-y-3">
           <div className="space-y-1.5">
             <Label htmlFor="bonus-amount">Bonus Amount (₹)</Label>
             <Input
@@ -74,7 +74,7 @@ function BonusSheet({ referral, onClose }: BonusSheetProps) {
               placeholder="e.g. 25000"
             />
           </div>
-        </div>
+        </SheetBody>
         <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
           <Button variant="outline" onClick={onClose}>Cancel</Button>
           <Button onClick={handleMarkPaid} disabled={updateMutation.isPending}>

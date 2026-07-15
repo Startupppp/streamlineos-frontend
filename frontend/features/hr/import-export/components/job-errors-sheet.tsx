@@ -7,6 +7,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetFooter,
+  SheetBody,
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -66,10 +67,10 @@ export function JobErrorsSheet({ jobId, open, onOpenChange }: JobErrorsSheetProp
           )}
         </SheetHeader>
 
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+        <SheetBody className="space-y-4 px-6 py-4">
           {isLoading && (
             <div className="space-y-2">
-              {[1, 2, 3].map((i) => (
+              {Array.from({ length: 8 }).map((_, i) => (
                 <Skeleton key={i} className="h-10 w-full rounded-lg" />
               ))}
             </div>
@@ -126,10 +127,10 @@ export function JobErrorsSheet({ jobId, open, onOpenChange }: JobErrorsSheetProp
               </div>
             </>
           )}
-        </div>
+        </SheetBody>
 
         {job?.status === "committed" && (
-          <SheetFooter className="px-6 py-4 border-t border-border shrink-0">
+          <SheetFooter className="shrink-0 border-t border-border bg-muted/30 px-6 py-4">
             <LoadingButton
               variant="destructive"
               isPending={rollback.isPending}

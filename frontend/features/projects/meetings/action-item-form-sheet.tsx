@@ -5,7 +5,13 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter,
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+  SheetBody,
 } from "@/components/ui/sheet";
 import {
   Form, FormField, FormItem, FormLabel, FormControl, FormMessage,
@@ -102,8 +108,8 @@ export function ActionItemFormSheet({
           </SheetDescription>
         </SheetHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col flex-1 overflow-y-auto">
-            <div className="flex-1 px-6 py-5 space-y-4">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col flex-1 min-h-0">
+            <SheetBody className="px-6 py-5 space-y-4">
               <FormField control={form.control} name="title" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Title</FormLabel>
@@ -159,7 +165,7 @@ export function ActionItemFormSheet({
                   <FormMessage />
                 </FormItem>
               )} />
-            </div>
+            </SheetBody>
             <SheetFooter className="shrink-0 px-6 py-4 border-t">
               <div className="grid w-full grid-cols-2 gap-2">
                 <Button

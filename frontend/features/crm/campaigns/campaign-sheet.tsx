@@ -12,6 +12,7 @@ import {
   SheetTitle,
   SheetDescription,
   SheetFooter,
+  SheetBody,
 } from "@/components/ui/sheet";
 import {
   Form,
@@ -148,8 +149,8 @@ export function CampaignSheet({ open, onOpenChange, campaign }: CampaignSheetPro
         </SheetHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col flex-1 overflow-y-auto">
-            <div className="flex-1 px-6 py-5 space-y-4">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="flex min-h-0 flex-1 flex-col">
+            <SheetBody className="space-y-4 px-6 py-5">
               <FormField
                 control={form.control}
                 name="name"
@@ -273,9 +274,9 @@ export function CampaignSheet({ open, onOpenChange, campaign }: CampaignSheetPro
                   </FormItem>
                 )}
               />
-            </div>
+            </SheetBody>
 
-            <SheetFooter className="px-6 py-4 border-t shrink-0">
+            <SheetFooter className="shrink-0 border-t border-border bg-muted/30 px-6 py-4">
               <div className="grid w-full grid-cols-2 gap-2">
                 <Button type="button" variant="outline" size="sm" onClick={() => onOpenChange(false)} disabled={isPending}>
                   Cancel

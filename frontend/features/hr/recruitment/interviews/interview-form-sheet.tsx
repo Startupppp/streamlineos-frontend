@@ -36,6 +36,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
+  SheetBody,
 } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import {
@@ -281,7 +282,7 @@ export function InterviewFormSheet({
           </SheetDescription>
         </SheetHeader>
 
-        <div className="flex-1 overflow-y-auto overscroll-contain px-6 py-5 space-y-5">
+        <SheetBody className="space-y-5 px-6 py-5">
           <FieldGroup
             icon={User}
             label="Candidate"
@@ -567,9 +568,9 @@ export function InterviewFormSheet({
               </div>
             </div>
           </div>
-        </div>
+        </SheetBody>
 
-        <SheetFooter className="shrink-0 px-6 py-4 border-t border-border/60 bg-muted/30 flex-row gap-2">
+        <SheetFooter className="shrink-0 flex-row gap-2 border-t border-border bg-muted/30 px-6 py-4">
           <Button
             variant="outline"
             className="flex-1 h-9"

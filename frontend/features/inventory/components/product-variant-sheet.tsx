@@ -14,6 +14,8 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
+  SheetBody,
+  SheetFooter,
 } from "@/components/ui/sheet";
 import {
   Form,
@@ -59,7 +61,7 @@ interface VariantFormBodyProps {
 function VariantFormBody({ form, isPending, onCancel }: VariantFormBodyProps) {
   return (
     <>
-      <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-4">
+      <SheetBody className="space-y-4 px-6 py-4">
         <FormField
           control={form.control}
           name="name"
@@ -151,9 +153,9 @@ function VariantFormBody({ form, isPending, onCancel }: VariantFormBodyProps) {
             </FormItem>
           )}
         />
-      </div>
-      <div className="shrink-0 px-6 py-4 border-t">
-        <div className="grid grid-cols-2 gap-2">
+      </SheetBody>
+      <SheetFooter className="shrink-0 border-t border-border bg-muted/30 px-6 py-4">
+        <div className="grid w-full grid-cols-2 gap-2">
           <Button
             type="button"
             variant="outline"
@@ -166,7 +168,7 @@ function VariantFormBody({ form, isPending, onCancel }: VariantFormBodyProps) {
             {isPending ? "Saving…" : "Save"}
           </Button>
         </div>
-      </div>
+      </SheetFooter>
     </>
   );
 }

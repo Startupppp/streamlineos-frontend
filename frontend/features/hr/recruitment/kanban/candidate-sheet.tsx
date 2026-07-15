@@ -7,6 +7,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetBody,
 } from "@/components/ui/sheet";
 import {
   Briefcase,
@@ -132,8 +133,8 @@ export const CandidateSheet = memo(function CandidateSheet({
         </div>
 
         {activeTab === "overview" && (
-          <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-4 space-y-3">
-            <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden border-l-4 border-l-blue-400">
+          <SheetBody className="space-y-3 overscroll-contain px-5 py-4">
+            <div className="overflow-hidden rounded-2xl border border-border border-l-4 border-l-blue-400 bg-card shadow-sm">
               <div className="px-4 py-3">
                 <div className="flex items-center gap-2 mb-3">
                   <div className="h-7 w-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
@@ -248,7 +249,7 @@ export const CandidateSheet = memo(function CandidateSheet({
                 </div>
               </div>
             )}
-          </div>
+          </SheetBody>
         )}
 
         {activeTab === "resume" && (
