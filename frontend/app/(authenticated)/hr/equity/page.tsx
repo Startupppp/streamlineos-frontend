@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { Plus } from "lucide-react";
@@ -16,6 +16,11 @@ import { EquityGrantSheet } from "@/features/hr/enterprise/comp/equity-grant-she
 import { VestingTimeline } from "@/features/hr/enterprise/comp/vesting-timeline";
 import { ExerciseDialog } from "@/features/hr/enterprise/comp/exercise-dialog";
 import { useEquityGrants, type EquityGrant } from "@/hooks/api/hr/enterprise-comp";
+import { useOrgMembers } from "@/hooks/api/organization";
+import {
+  getUserDisplayName,
+  type NamedUser,
+} from "@/features/projects/shared/resolve-user-name";
 
 const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   active: "default",
@@ -31,7 +36,44 @@ export default function EquityPage() {
   const [exerciseOpen, setExerciseOpen] = useState(false);
 
   const { data, isLoading } = useEquityGrants();
+  const { data: membersData } = useOrgMembers(1, 200);
   const grants = data?.data ?? [];
+
+  const memberById = useMemo(() => {
+    const map = new Map<string, NamedUser>();
+    for (const member of membersData?.data ?? []) {
+      map.set(member.userId, { name: member.name, email: member.email });
+    }
+    return map;
+  }, [membersData]);
+
+  const resolveMemberName = (userId: string) => {
+    const member = memberById.get(userId);
+    return member ? getUserDisplayName(member) : userId;
+  };
+
+  const grantColumns = useMemo(() => [
+    { key: "employee", header: "Employee", cell: (r: EquityGrant) => <span className="font-medium text-sm">{resolveMemberName(r.userId)}</span> },
+    { key: "type", header: "Type", cell: (r: EquityGrant) => <Badge variant="secondary">{r.grantType}</Badge> },
+    { key: "units", header: "Units", cell: (r: EquityGrant) => r.units.toLocaleString() },
+    { key: "date", header: "Grant Date", cell: (r: EquityGrant) => format(new Date(r.grantDate), "dd MMM yyyy") },
+    { key: "cliff", header: "Cliff", cell: (r: EquityGrant) => `${r.cliffMonths}m` },
+    { key: "vesting", header: "Vesting", cell: (r: EquityGrant) => `${r.vestingMonths}m` },
+    {
+      key: "status",
+      header: "Status",
+      cell: (r: EquityGrant) => <Badge variant={STATUS_VARIANT[r.status]} className="capitalize text-[11px]">{r.status}</Badge>,
+    },
+    {
+      key: "board",
+      header: "Board Approved",
+      cell: (r: EquityGrant) => r.boardApprovedAt ? (
+        <span className="text-xs text-emerald-600 dark:text-emerald-400">✓ {format(new Date(r.boardApprovedAt), "dd MMM yyyy")}</span>
+      ) : (
+        <span className="text-xs text-muted-foreground">Pending</span>
+      ),
+    },
+  ], [memberById]);
 
   return (
     <PageWrapper
@@ -69,28 +111,7 @@ export default function EquityPage() {
                 getRowKey={(r) => r.id}
                 onRowClick={setSelectedGrant}
                 data={grants}
-                columns={[
-                  { key: "employee", header: "Employee", cell: (r) => <span className="font-medium text-sm">{r.userId}</span> },
-                  { key: "type", header: "Type", cell: (r) => <Badge variant="secondary">{r.grantType}</Badge> },
-                  { key: "units", header: "Units", cell: (r) => r.units.toLocaleString() },
-                  { key: "date", header: "Grant Date", cell: (r) => format(new Date(r.grantDate), "dd MMM yyyy") },
-                  { key: "cliff", header: "Cliff", cell: (r) => `${r.cliffMonths}m` },
-                  { key: "vesting", header: "Vesting", cell: (r) => `${r.vestingMonths}m` },
-                  {
-                    key: "status",
-                    header: "Status",
-                    cell: (r) => <Badge variant={STATUS_VARIANT[r.status]} className="capitalize text-[11px]">{r.status}</Badge>,
-                  },
-                  {
-                    key: "board",
-                    header: "Board Approved",
-                    cell: (r) => r.boardApprovedAt ? (
-                      <span className="text-xs text-emerald-600 dark:text-emerald-400">✓ {format(new Date(r.boardApprovedAt), "dd MMM yyyy")}</span>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">Pending</span>
-                    ),
-                  },
-                ]}
+                columns={grantColumns}
               />
             )}
           </div>

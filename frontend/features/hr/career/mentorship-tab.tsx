@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,11 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { MemberPicker } from "@/components/shared";
 import { useMentorships, useCreateMentorship, useUpdateMentorship } from "@/hooks/api/hr/mentorship";
+import { useOrgMembers } from "@/hooks/api/organization";
+import {
+  getUserDisplayName,
+  type NamedUser,
+} from "@/features/projects/shared/resolve-user-name";
 
 const STATUS_CONFIG = {
   active: { label: "Active", className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" },
@@ -19,13 +24,65 @@ const STATUS_CONFIG = {
   paused: { label: "Paused", className: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300" },
 };
 
+const MentorshipRow = memo(function MentorshipRow({
+  mentorLabel,
+  menteeLabel,
+  goal,
+  status,
+  statusClassName,
+  statusLabel,
+  onComplete,
+}: {
+  mentorLabel: string;
+  menteeLabel: string;
+  goal?: string | null;
+  status: string;
+  statusClassName: string;
+  statusLabel: string;
+  onComplete: () => void;
+}) {
+  return (
+    <Card>
+      <CardContent className="py-3 px-4 flex items-center justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-sm font-medium">{mentorLabel} → {menteeLabel}</p>
+          {goal && <p className="text-xs text-muted-foreground mt-0.5 truncate">{goal}</p>}
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <Badge variant="outline" className={`text-xs ${statusClassName}`}>{statusLabel}</Badge>
+          {status === "active" && (
+            <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={onComplete}>Complete</Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+});
+
 export function MentorshipTab() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ mentorId: "", menteeId: "", goal: "", startedAt: "" });
 
   const { data: mentorships = [], isLoading } = useMentorships();
+  const { data: membersData } = useOrgMembers(1, 200);
   const create = useCreateMentorship();
   const update = useUpdateMentorship();
+
+  const memberById = useMemo(() => {
+    const map = new Map<string, NamedUser>();
+    for (const member of membersData?.data ?? []) {
+      map.set(member.userId, { name: member.name, email: member.email });
+    }
+    return map;
+  }, [membersData]);
+
+  const resolveMemberName = useCallback(
+    (userId: string) => {
+      const member = memberById.get(userId);
+      return member ? getUserDisplayName(member) : userId;
+    },
+    [memberById],
+  );
 
   async function handleCreate() {
     if (!form.mentorId || !form.menteeId) { toast.error("Mentor and mentee are required"); return; }
@@ -73,20 +130,16 @@ export function MentorshipTab() {
           {mentorships.map((m) => {
             const cfg = STATUS_CONFIG[m.status] ?? STATUS_CONFIG.active;
             return (
-              <Card key={m.id}>
-                <CardContent className="py-3 px-4 flex items-center justify-between gap-4">
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium">{m.mentorId.slice(0, 8)}… → {m.menteeId.slice(0, 8)}…</p>
-                    {m.goal && <p className="text-xs text-muted-foreground mt-0.5 truncate">{m.goal}</p>}
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Badge variant="outline" className={`text-xs ${cfg.className}`}>{cfg.label}</Badge>
-                    {m.status === "active" && (
-                      <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => handleComplete(m.id)}>Complete</Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+              <MentorshipRow
+                key={m.id}
+                mentorLabel={resolveMemberName(m.mentorId)}
+                menteeLabel={resolveMemberName(m.menteeId)}
+                goal={m.goal}
+                status={m.status}
+                statusClassName={cfg.className}
+                statusLabel={cfg.label}
+                onComplete={() => handleComplete(m.id)}
+              />
             );
           })}
         </div>

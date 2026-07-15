@@ -144,7 +144,7 @@ export function OrgHolidayCalendarSection({ canEdit }: OrgHolidayCalendarSection
 
         {isLoading ? (
           <div className="space-y-2">
-            {Array.from({ length: 9 }).map((_, i) => <Skeleton key={i} className="h-9 w-full" />)}
+            {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-9 w-full" />)}
           </div>
         ) : !holidays || holidays.length === 0 ? (
           <p className="text-sm text-muted-foreground py-4 text-center">No holidays added yet.</p>

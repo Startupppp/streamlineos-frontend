@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +22,11 @@ import { ProvisioningSheet } from "./provisioning-sheet";
 import { TemplateSheet } from "./template-sheet";
 import { ExitVerificationView } from "./exit-verification-view";
 import { format } from "date-fns";
+import { useOrgMembers } from "@/hooks/api/organization";
+import {
+  getUserDisplayName,
+  type NamedUser,
+} from "@/features/projects/shared/resolve-user-name";
 
 const STATUS_COLORS: Record<ProvisioningStatus, string> = {
   pending: "bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-500/10 dark:text-yellow-300 dark:border-yellow-500/30",
@@ -48,12 +53,26 @@ export function IdentityPageContent() {
   const { data, isLoading } = useAccessProvisioning({ page });
   const { data: templates, isLoading: templatesLoading } = useProvisioningTemplates();
   const deleteTemplate = useDeleteProvisioningTemplate();
+  const { data: membersData } = useOrgMembers(1, 200);
 
-  const provisioningColumns: DataTableColumn<AccessProvisioningRecord>[] = [
+  const memberById = useMemo(() => {
+    const map = new Map<string, NamedUser>();
+    for (const member of membersData?.data ?? []) {
+      map.set(member.userId, { name: member.name, email: member.email });
+    }
+    return map;
+  }, [membersData]);
+
+  const resolveMemberName = (userId: string) => {
+    const member = memberById.get(userId);
+    return member ? getUserDisplayName(member) : userId;
+  };
+
+  const provisioningColumns: DataTableColumn<AccessProvisioningRecord>[] = useMemo(() => [
     {
       key: "userId",
       header: "Employee",
-      cell: (r) => <span className="font-mono text-xs text-muted-foreground">{r.userId.slice(0, 8)}…</span>,
+      cell: (r) => <span className="text-sm text-foreground">{resolveMemberName(r.userId)}</span>,
     },
     {
       key: "systemName",
@@ -96,7 +115,7 @@ export function IdentityPageContent() {
         </span>
       ),
     },
-  ];
+  ], [memberById]);
 
   const templateColumns: DataTableColumn<ProvisioningTemplate>[] = [
     {

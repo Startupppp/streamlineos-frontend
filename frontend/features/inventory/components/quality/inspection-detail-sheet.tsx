@@ -69,7 +69,7 @@ const LineDispositionRow = memo(function LineDispositionRow({
       <span className="flex-1 text-xs truncate">{line.variantName}</span>
       <span className="text-xs text-muted-foreground w-12 text-right tabular-nums">{line.qty}</span>
       <Select value={value} onValueChange={handleChange}>
-        <SelectTrigger className="h-7 w-44 text-xs">
+        <SelectTrigger className="h-8 w-44 text-xs">
           <SelectValue placeholder="Choose..." />
         </SelectTrigger>
         <SelectContent>

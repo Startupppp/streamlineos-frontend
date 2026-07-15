@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +16,11 @@ import {
 import { AccommodationSheet } from "./accommodation-sheet";
 import { AccommodationDetailSheet } from "./accommodation-detail-sheet";
 import { format } from "date-fns";
+import { useOrgMembers } from "@/hooks/api/organization";
+import {
+  getUserDisplayName,
+  type NamedUser,
+} from "@/features/projects/shared/resolve-user-name";
 
 const STATUS_COLORS: Record<AccommodationStatus, string> = {
   requested: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
@@ -40,8 +45,22 @@ export function AccommodationsPageContent() {
   const [showCreate, setShowCreate] = useState(false);
 
   const { data, isLoading } = useAccommodations({ page });
+  const { data: membersData } = useOrgMembers(1, 200);
 
-  const columns: DataTableColumn<AccommodationRequest>[] = [
+  const memberById = useMemo(() => {
+    const map = new Map<string, NamedUser>();
+    for (const member of membersData?.data ?? []) {
+      map.set(member.userId, { name: member.name, email: member.email });
+    }
+    return map;
+  }, [membersData]);
+
+  const resolveMemberName = (userId: string) => {
+    const member = memberById.get(userId);
+    return member ? getUserDisplayName(member) : userId;
+  };
+
+  const columns: DataTableColumn<AccommodationRequest>[] = useMemo(() => [
     {
       key: "type",
       header: "Type",
@@ -52,7 +71,7 @@ export function AccommodationsPageContent() {
     {
       key: "userId",
       header: "Employee",
-      cell: (r) => <span className="text-sm text-muted-foreground font-mono text-xs">{r.userId.slice(0, 8)}…</span>,
+      cell: (r) => <span className="text-sm text-foreground">{resolveMemberName(r.userId)}</span>,
     },
     {
       key: "status",
@@ -76,7 +95,7 @@ export function AccommodationsPageContent() {
         </span>
       ),
     },
-  ];
+  ], [memberById]);
 
   return (
     <>

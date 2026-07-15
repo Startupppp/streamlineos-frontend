@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,11 @@ import {
   useCalibrateRecommendation,
   type CompRecommendation,
 } from "@/hooks/api/hr/enterprise-comp";
+import { useOrgMembers } from "@/hooks/api/organization";
+import {
+  getUserDisplayName,
+  type NamedUser,
+} from "@/features/projects/shared/resolve-user-name";
 
 interface Props {
   cycleId: number;
@@ -55,6 +60,25 @@ export function CompCycleDetail({ cycleId, canManage }: Props) {
   const { data: recsData, isLoading: recsLoading } = useCompRecommendations(cycleId);
   const { data: pools, isLoading: poolsLoading } = useBudgetPools(cycleId);
   const calibrateMut = useCalibrateRecommendation();
+  const { data: membersData } = useOrgMembers(1, 200);
+
+  const memberById = useMemo(() => {
+    const map = new Map<string, NamedUser>();
+    for (const member of membersData?.data ?? []) {
+      map.set(member.userId, {
+        name: member.name,
+        firstName: member.firstName,
+        lastName: member.lastName,
+        email: member.email,
+      });
+    }
+    return map;
+  }, [membersData]);
+
+  const resolveMemberName = (userId: string) => {
+    const member = memberById.get(userId);
+    return member ? getUserDisplayName(member) : userId;
+  };
 
   const [calibratingId, setCalibratingId] = useState<number | null>(null);
   const [calibrateValue, setCalibrateValue] = useState<Record<number, string>>({});
@@ -114,7 +138,7 @@ export function CompCycleDetail({ cycleId, canManage }: Props) {
           <DataTable
             getRowKey={(r) => r.id}
             columns={[
-              { key: "user", header: "Employee", cell: (r) => <span className="font-medium text-sm">{r.userId}</span> },
+              { key: "user", header: "Employee", cell: (r) => <span className="font-medium text-sm">{resolveMemberName(r.userId)}</span> },
               { key: "current", header: "Current Salary", cell: (r) => formatCents(r.currentSalaryCents) },
               { key: "increase", header: "Increase", cell: (r) => <span className="text-primary font-medium">{formatCents(r.recommendedIncreaseCents)}</span> },
               { key: "calibrated", header: "Calibrated", cell: (r) => formatCents(r.hrCalibratedCents) },
@@ -130,7 +154,7 @@ export function CompCycleDetail({ cycleId, canManage }: Props) {
                   <div className="flex items-center gap-2">
                     <Input
                       type="number"
-                      className="h-7 w-28 text-xs"
+                      className="h-8 w-28 text-xs"
                       placeholder="Calibrated $"
                       value={calibrateValue[r.id] ?? ""}
                       onChange={(e) => setCalibrateValue((prev) => ({ ...prev, [r.id]: e.target.value }))}

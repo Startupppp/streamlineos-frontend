@@ -138,7 +138,7 @@ export function ShiftFormSheet({ open, onOpenChange, shift }: Props) {
                   Shift Name
                 </FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. Morning Shift" className="h-9 text-sm" {...field} />
+                  <Input placeholder="e.g. Morning Shift" className="h-8 text-sm" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -155,7 +155,7 @@ export function ShiftFormSheet({ open, onOpenChange, shift }: Props) {
                 </FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger className="h-9 text-sm">
+                    <SelectTrigger className="h-8 text-sm">
                       <SelectValue />
                     </SelectTrigger>
                   </FormControl>
@@ -180,7 +180,7 @@ export function ShiftFormSheet({ open, onOpenChange, shift }: Props) {
                     Start Time
                   </FormLabel>
                   <FormControl>
-                    <Input type="time" className="h-9 text-sm" {...field} />
+                    <Input type="time" className="h-8 text-sm" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -195,7 +195,7 @@ export function ShiftFormSheet({ open, onOpenChange, shift }: Props) {
                     End Time
                   </FormLabel>
                   <FormControl>
-                    <Input type="time" className="h-9 text-sm" {...field} />
+                    <Input type="time" className="h-8 text-sm" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -217,7 +217,7 @@ export function ShiftFormSheet({ open, onOpenChange, shift }: Props) {
                       type="number"
                       min={0}
                       max={480}
-                      className="h-9 text-sm"
+                      className="h-8 text-sm"
                       {...field}
                       onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
                     />
@@ -239,7 +239,7 @@ export function ShiftFormSheet({ open, onOpenChange, shift }: Props) {
                       type="number"
                       min={0}
                       max={120}
-                      className="h-9 text-sm"
+                      className="h-8 text-sm"
                       {...field}
                       onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
                     />

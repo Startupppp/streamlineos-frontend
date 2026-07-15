@@ -232,7 +232,7 @@ export function AssignmentRuleSheet({
                     <FormLabel>Type</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {ASSIGNMENT_TYPES.map((t) => (
@@ -427,7 +427,7 @@ export function AssignmentRuleSheet({
                     <FormLabel>Territory</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value ?? ""}>
                       <FormControl>
-                        <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Select territory" /></SelectTrigger>
+                        <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Select territory" /></SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {territories.map((t) => (

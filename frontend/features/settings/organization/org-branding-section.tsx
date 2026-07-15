@@ -52,13 +52,13 @@ function ColorField({
           type="color"
           value={HEX_COLOR.test(value) ? value : "#2563eb"}
           onChange={(e) => onChange(e.target.value)}
-          className="h-9 w-9 rounded border cursor-pointer p-0.5"
+          className="h-8 w-8 rounded border cursor-pointer p-0.5"
         />
         <Input
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder="#2563eb"
-          className="h-9 flex-1 font-mono text-sm"
+          className="h-8 flex-1 font-mono text-sm"
           maxLength={7}
         />
       </div>
@@ -217,8 +217,8 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
               <div className="space-y-1">
                 <Label className="text-sm font-medium">Logo</Label>
                 <div className="flex gap-2">
-                  <Input {...form.register("logo")} placeholder="https://cdn.example.com/logo.png" className="h-9 flex-1 text-sm" />
-                  <Button type="button" variant="outline" size="sm" className="h-9 shrink-0 gap-1" disabled={logoUploading} onClick={() => logoInputRef.current?.click()}>
+                  <Input {...form.register("logo")} placeholder="https://cdn.example.com/logo.png" className="h-8 flex-1 text-sm" />
+                  <Button type="button" variant="outline" size="sm" className="h-8 shrink-0 gap-1" disabled={logoUploading} onClick={() => logoInputRef.current?.click()}>
                     {logoUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
                   </Button>
                   <input ref={logoInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/svg+xml" className="hidden" onChange={handleLogoUpload} />
@@ -229,8 +229,8 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
               <div className="space-y-1">
                 <Label className="text-sm font-medium">Favicon <span className="text-muted-foreground font-normal">(max 256 KB)</span></Label>
                 <div className="flex gap-2">
-                  <Input {...form.register("favicon")} placeholder="https://cdn.example.com/favicon.ico" className="h-9 flex-1 text-sm" />
-                  <Button type="button" variant="outline" size="sm" className="h-9 shrink-0 gap-1" disabled={faviconUploading} onClick={() => faviconInputRef.current?.click()}>
+                  <Input {...form.register("favicon")} placeholder="https://cdn.example.com/favicon.ico" className="h-8 flex-1 text-sm" />
+                  <Button type="button" variant="outline" size="sm" className="h-8 shrink-0 gap-1" disabled={faviconUploading} onClick={() => faviconInputRef.current?.click()}>
                     {faviconUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
                   </Button>
                   <input ref={faviconInputRef} type="file" accept="image/x-icon,image/vnd.microsoft.icon,image/png,image/jpeg" className="hidden" onChange={handleFaviconUpload} />
@@ -257,7 +257,7 @@ export function OrgBrandingSection({ org, canEdit }: OrgBrandingSectionProps) {
 
             <div className="space-y-1">
               <Label className="text-sm font-medium">Login page background URL</Label>
-              <Input {...form.register("loginBgUrl")} placeholder="https://cdn.example.com/bg.jpg" className="h-9 text-sm" />
+              <Input {...form.register("loginBgUrl")} placeholder="https://cdn.example.com/bg.jpg" className="h-8 text-sm" />
               {form.formState.errors.loginBgUrl && <p className="text-[11px] text-destructive">{form.formState.errors.loginBgUrl.message}</p>}
             </div>
 

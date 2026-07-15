@@ -299,7 +299,7 @@ export function GoalFormSheet({
                 <Input
                   id="goal-title"
                   placeholder="e.g. Grow monthly active users"
-                  className="h-9"
+                  className="h-8"
                   value={title}
                   onChange={handleTitleChange}
                 />
@@ -323,7 +323,7 @@ export function GoalFormSheet({
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium">Level</Label>
                   <Select value={level} onValueChange={handleLevelChange}>
-                    <SelectTrigger className="h-9 w-full">
+                    <SelectTrigger className="h-8 w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -338,7 +338,7 @@ export function GoalFormSheet({
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium">Status</Label>
                   <Select value={status} onValueChange={handleGoalStatusChange}>
-                    <SelectTrigger className="h-9 w-full">
+                    <SelectTrigger className="h-8 w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -361,7 +361,7 @@ export function GoalFormSheet({
               <div className="space-y-1.5">
                 <Label className="text-xs font-medium">Owner</Label>
                 <Select value={ownerId} onValueChange={setOwnerId}>
-                  <SelectTrigger className="h-9 w-full">
+                  <SelectTrigger className="h-8 w-full">
                     <SelectValue placeholder="Unassigned" />
                   </SelectTrigger>
                   <SelectContent>
@@ -413,7 +413,7 @@ export function GoalFormSheet({
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="h-7"
+                    className="h-8"
                     onClick={handleAddKeyResult}
                   >
                     <Plus className="h-3.5 w-3.5 mr-1" /> Add

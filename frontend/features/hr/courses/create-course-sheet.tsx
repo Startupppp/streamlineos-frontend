@@ -100,7 +100,7 @@ export function CreateCourseSheet({ open, onOpenChange }: Props) {
                   Title
                 </FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. Introduction to TypeScript" className="h-9 text-sm" {...field} />
+                  <Input placeholder="e.g. Introduction to TypeScript" className="h-8 text-sm" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -139,7 +139,7 @@ export function CreateCourseSheet({ open, onOpenChange }: Props) {
                   </FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <SelectTrigger className="h-9 text-sm">
+                      <SelectTrigger className="h-8 text-sm">
                         <SelectValue />
                       </SelectTrigger>
                     </FormControl>
@@ -164,7 +164,7 @@ export function CreateCourseSheet({ open, onOpenChange }: Props) {
                   </FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <SelectTrigger className="h-9 text-sm">
+                      <SelectTrigger className="h-8 text-sm">
                         <SelectValue />
                       </SelectTrigger>
                     </FormControl>
@@ -196,7 +196,7 @@ export function CreateCourseSheet({ open, onOpenChange }: Props) {
                       min="0"
                       step="0.5"
                       placeholder="e.g. 4.5"
-                      className="h-9 text-sm"
+                      className="h-8 text-sm"
                       {...field}
                     />
                   </FormControl>
@@ -215,7 +215,7 @@ export function CreateCourseSheet({ open, onOpenChange }: Props) {
                   </FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <SelectTrigger className="h-9 text-sm">
+                      <SelectTrigger className="h-8 text-sm">
                         <SelectValue />
                       </SelectTrigger>
                     </FormControl>

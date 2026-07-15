@@ -156,7 +156,7 @@ export function LoadCreateSheet({ open, onOpenChange }: LoadCreateSheetProps) {
                   value={form.watch(`members.${index}.type`)}
                   onValueChange={(v) => handleMemberTypeChange(index, v)}
                 >
-                  <SelectTrigger className="h-7 text-xs">
+                  <SelectTrigger className="h-8 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -171,7 +171,7 @@ export function LoadCreateSheet({ open, onOpenChange }: LoadCreateSheetProps) {
                   type="number"
                   min="1"
                   placeholder="ID"
-                  className="h-7 text-xs"
+                  className="h-8 text-xs"
                   {...form.register(`members.${index}.referenceId`)}
                 />
                 {form.formState.errors.members?.[index]?.referenceId && (

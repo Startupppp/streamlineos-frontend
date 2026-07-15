@@ -26,6 +26,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetBody,
   SheetFooter,
 } from "@/components/ui/sheet";
 import {
@@ -283,7 +284,7 @@ function FeatureFlagsContent() {
           <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
             <SheetTitle>Create Feature Flag</SheetTitle>
           </SheetHeader>
-          <div className="flex-1 overflow-y-auto px-6 py-5">
+          <SheetBody className="px-6 py-5">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleCreate)} id="create-flag-form" className="space-y-4">
               <FormField
@@ -387,7 +388,7 @@ function FeatureFlagsContent() {
 
             </form>
           </Form>
-          </div>
+          </SheetBody>
           <SheetFooter className="shrink-0 px-6 py-4 border-t">
             <div className="grid grid-cols-2 gap-2 w-full">
               <Button type="button" variant="outline" onClick={handleCloseCreate}>

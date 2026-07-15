@@ -567,7 +567,7 @@ export function ReviewSheet({ userId, userName, canReview, onClose }: ReviewShee
                 Document Type <span className="text-destructive">*</span>
               </Label>
               <Select value={uploadDocTypeId} onValueChange={setUploadDocTypeId}>
-                <SelectTrigger className="h-9">
+                <SelectTrigger className="h-8">
                   <SelectValue placeholder="Select document type" />
                 </SelectTrigger>
                 <SelectContent className="w-[var(--radix-select-trigger-width)]">

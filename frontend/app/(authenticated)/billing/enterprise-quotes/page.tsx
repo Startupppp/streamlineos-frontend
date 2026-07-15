@@ -26,6 +26,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetBody,
   SheetFooter,
 } from "@/components/ui/sheet";
 import {
@@ -193,7 +194,7 @@ function NewQuoteSheet({
         <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle>New Enterprise Quote</SheetTitle>
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto px-6 py-5">
+        <SheetBody className="px-6 py-5">
         <Form {...form}>
           <form
             id="new-quote-form"
@@ -385,7 +386,7 @@ function NewQuoteSheet({
 
           </form>
         </Form>
-        </div>
+        </SheetBody>
         <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">
           <Button
             type="button"

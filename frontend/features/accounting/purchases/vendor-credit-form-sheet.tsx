@@ -105,7 +105,7 @@ export function VendorCreditFormSheet({ open, onOpenChange }: VendorCreditFormSh
       cell: (row) => (
         <Input
           {...form.register(`items.${row._index}.description`)}
-          className="h-7 text-xs border-0 shadow-none focus-visible:ring-0 px-0"
+          className="h-8 text-xs border-0 shadow-none focus-visible:ring-0 px-0"
           placeholder="Description"
         />
       ),
@@ -118,7 +118,7 @@ export function VendorCreditFormSheet({ open, onOpenChange }: VendorCreditFormSh
       cell: (row) => (
         <Input
           {...form.register(`items.${row._index}.quantity`)}
-          className="h-7 text-xs text-right border-0 shadow-none focus-visible:ring-0 px-0"
+          className="h-8 text-xs text-right border-0 shadow-none focus-visible:ring-0 px-0"
           placeholder="1"
           type="number"
           min="0"
@@ -134,7 +134,7 @@ export function VendorCreditFormSheet({ open, onOpenChange }: VendorCreditFormSh
       cell: (row) => (
         <Input
           {...form.register(`items.${row._index}.rate`)}
-          className="h-7 text-xs text-right border-0 shadow-none focus-visible:ring-0 px-0"
+          className="h-8 text-xs text-right border-0 shadow-none focus-visible:ring-0 px-0"
           placeholder="0.00"
           type="number"
           min="0"
@@ -153,7 +153,7 @@ export function VendorCreditFormSheet({ open, onOpenChange }: VendorCreditFormSh
           name={`items.${row._index}.gstRate`}
           render={({ field: f }) => (
             <Select value={f.value} onValueChange={f.onChange}>
-              <SelectTrigger className="h-7 text-xs border-0 shadow-none focus:ring-0">
+              <SelectTrigger className="h-8 text-xs border-0 shadow-none focus:ring-0">
                 <SelectValue placeholder="0" />
               </SelectTrigger>
               <SelectContent>

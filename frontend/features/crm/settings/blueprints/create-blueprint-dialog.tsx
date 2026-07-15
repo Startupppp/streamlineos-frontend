@@ -93,7 +93,7 @@ export function CreateBlueprintDialog({
                 <FormItem>
                   <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Blueprint name" className="h-9 text-sm" {...field} />
+                    <Input placeholder="Blueprint name" className="h-8 text-sm" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -106,7 +106,7 @@ export function CreateBlueprintDialog({
                 <FormItem>
                   <FormLabel>Description (optional)</FormLabel>
                   <FormControl>
-                    <Input placeholder="Brief description" className="h-9 text-sm" {...field} />
+                    <Input placeholder="Brief description" className="h-8 text-sm" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -120,7 +120,7 @@ export function CreateBlueprintDialog({
                   <FormLabel>Pipeline</FormLabel>
                   <Select value={field.value} onValueChange={field.onChange}>
                     <FormControl>
-                      <SelectTrigger className="h-9 text-sm">
+                      <SelectTrigger className="h-8 text-sm">
                         <SelectValue placeholder="Select pipeline" />
                       </SelectTrigger>
                     </FormControl>

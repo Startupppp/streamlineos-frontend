@@ -170,7 +170,7 @@ export function DepartmentCombobox({
           aria-expanded={open}
           disabled={disabled}
           className={cn(
-            "w-full justify-between font-normal border-input data-[placeholder]:text-muted-foreground",
+            "h-8 w-full justify-between font-normal border-input bg-card data-[placeholder]:text-muted-foreground",
             !selectedDept && "text-muted-foreground",
             className,
           )}
@@ -192,7 +192,7 @@ export function DepartmentCombobox({
             value={search}
             onChange={handleSearchChange}
             onKeyDown={handleSearchKeyDown}
-            className="h-9"
+            className="h-8"
           />
         </div>
         <ScrollArea className="max-h-[240px]">

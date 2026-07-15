@@ -17,6 +17,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetBody,
   SheetFooter,
 } from "@/components/ui/sheet";
 import {
@@ -153,7 +154,7 @@ function TemplateSheet({
         <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle>{isEdit ? "Edit Template" : "New Template"}</SheetTitle>
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto px-6 py-4">
+        <SheetBody className="px-6 py-4">
           <Form {...form}>
             <form id="template-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
               <FormField
@@ -290,7 +291,7 @@ function TemplateSheet({
               />
             </form>
           </Form>
-        </div>
+        </SheetBody>
         <SheetFooter className="px-6 py-4 justify-end">
           <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>
             Cancel

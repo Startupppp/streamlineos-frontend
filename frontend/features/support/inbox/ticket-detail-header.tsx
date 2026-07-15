@@ -135,7 +135,7 @@ export function TicketDetailHeader({ ticket, onBack }: TicketDetailHeaderProps) 
             </Badge>
           )}
           <Select value={ticket.queueId ? String(ticket.queueId) : "none"} onValueChange={handleQueueValueChange}>
-            <SelectTrigger className="h-7 text-xs w-[130px]">
+            <SelectTrigger className="h-8 text-xs w-[130px]">
               <SelectValue placeholder="Queue" />
             </SelectTrigger>
             <SelectContent>
@@ -148,7 +148,7 @@ export function TicketDetailHeader({ ticket, onBack }: TicketDetailHeaderProps) 
             </SelectContent>
           </Select>
           <Select value={ticket.status} onValueChange={handleStatusValueChange}>
-            <SelectTrigger className="h-7 text-xs w-[120px]">
+            <SelectTrigger className="h-8 text-xs w-[120px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

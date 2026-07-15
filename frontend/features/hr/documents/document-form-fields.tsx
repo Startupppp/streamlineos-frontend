@@ -252,13 +252,13 @@ export function DocumentFormFields({
             value={tagInput}
             onChange={onTagInputChange}
             onKeyDown={onTagKeyDown}
-            className="flex-1 h-9"
+            className="flex-1 h-8"
           />
           <Button
             type="button"
             variant="outline"
             size="icon"
-            className="h-9 w-9 shrink-0"
+            className="h-8 w-8 shrink-0"
             onClick={onAddTag}
             disabled={!tagInput.trim()}
             aria-label="Add tag"

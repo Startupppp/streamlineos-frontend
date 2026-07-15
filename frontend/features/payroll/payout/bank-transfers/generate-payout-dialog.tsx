@@ -108,7 +108,7 @@ export function GeneratePayoutDialog({
                   value={format}
                   onValueChange={(v) => onFormatChange(v as BatchFormat)}
                 >
-                  <SelectTrigger id="batch-format" className="h-9">
+                  <SelectTrigger id="batch-format" className="h-8">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

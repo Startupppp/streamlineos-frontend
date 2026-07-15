@@ -300,7 +300,7 @@ export function QuoteCreateSheet({
                             onValueChange={(v) => field.onChange(v === "none" ? undefined : v)}
                           >
                             <FormControl>
-                              <SelectTrigger className="h-9 text-sm">
+                              <SelectTrigger className="h-8 text-sm">
                                 <SelectValue placeholder="Select pricebook" />
                               </SelectTrigger>
                             </FormControl>
@@ -335,7 +335,7 @@ export function QuoteCreateSheet({
                             onValueChange={(v) => field.onChange(v === "none" ? undefined : v)}
                           >
                             <FormControl>
-                              <SelectTrigger className="h-9 text-sm">
+                              <SelectTrigger className="h-8 text-sm">
                                 <SelectValue placeholder="Select template" />
                               </SelectTrigger>
                             </FormControl>

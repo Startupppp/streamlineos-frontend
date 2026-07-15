@@ -123,7 +123,7 @@ export function AddDeviceSheet({ open, onOpenChange, device }: Props) {
                   Device Name
                 </FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. Reception Entrance" className="h-9 text-sm" {...field} />
+                  <Input placeholder="e.g. Reception Entrance" className="h-8 text-sm" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -141,7 +141,7 @@ export function AddDeviceSheet({ open, onOpenChange, device }: Props) {
                       IP Address
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="192.168.1.100" className="h-9 text-sm font-mono" {...field} />
+                      <Input placeholder="192.168.1.100" className="h-8 text-sm font-mono" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -159,7 +159,7 @@ export function AddDeviceSheet({ open, onOpenChange, device }: Props) {
                   <FormControl>
                     <Input
                       type="number"
-                      className="h-9 text-sm"
+                      className="h-8 text-sm"
                       {...field}
                       onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
                     />
@@ -180,7 +180,7 @@ export function AddDeviceSheet({ open, onOpenChange, device }: Props) {
                 </FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger className="h-9 text-sm">
+                    <SelectTrigger className="h-8 text-sm">
                       <SelectValue />
                     </SelectTrigger>
                   </FormControl>
@@ -205,7 +205,7 @@ export function AddDeviceSheet({ open, onOpenChange, device }: Props) {
                   <span className="normal-case font-normal text-muted-foreground tracking-normal">(optional)</span>
                 </FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. Floor 2, Entrance A" className="h-9 text-sm" {...field} />
+                  <Input placeholder="e.g. Floor 2, Entrance A" className="h-8 text-sm" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { memo, useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { CheckCircle2, XCircle, MapPin, Calendar, DollarSign, Plane, User } from "lucide-react";
@@ -20,6 +20,11 @@ import {
 } from "@/hooks/api/hr";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { format } from "date-fns";
+import { useOrgMembers } from "@/hooks/api/organization";
+import {
+  getUserDisplayName,
+  type NamedUser,
+} from "@/features/projects/shared/resolve-user-name";
 
 function ApprovalsLoading() {
   return (
@@ -136,8 +141,9 @@ function SectionHeader({ title, count }: { title: string; count: number }) {
   );
 }
 
-function TravelApprovalCard({
+const TravelApprovalCard = memo(function TravelApprovalCard({
   request,
+  requesterName,
   section,
   onManagerApprove,
   onFinanceApprove,
@@ -147,6 +153,7 @@ function TravelApprovalCard({
   isRejecting,
 }: {
   request: TravelRequest;
+  requesterName: string;
   section: "manager" | "finance";
   onManagerApprove: (id: number) => void;
   onFinanceApprove: (id: number) => void;
@@ -181,7 +188,7 @@ function TravelApprovalCard({
                 <div className="flex flex-wrap gap-3 mt-2">
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <User className="h-3 w-3" />
-                    <span className="font-mono text-[10px]">{request.userId.slice(0, 8)}…</span>
+                    <span className="text-xs">{requesterName}</span>
                   </div>
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Calendar className="h-3 w-3" />
@@ -228,13 +235,30 @@ function TravelApprovalCard({
       </Card>
     </motion.div>
   );
-}
+});
 
 export default function TravelApprovalsPage() {
   const { data: requests, isLoading } = usePendingTravelApprovals();
+  const { data: membersData } = useOrgMembers(1, 200);
   const managerApprove = useManagerApproveTravelRequest();
   const financeApprove = useFinanceApproveTravelRequest();
   const reject = useRejectTravelRequest();
+
+  const memberById = useMemo(() => {
+    const map = new Map<string, NamedUser>();
+    for (const member of membersData?.data ?? []) {
+      map.set(member.userId, { name: member.name, email: member.email });
+    }
+    return map;
+  }, [membersData]);
+
+  const resolveMemberName = useCallback(
+    (userId: string) => {
+      const member = memberById.get(userId);
+      return member ? getUserDisplayName(member) : userId;
+    },
+    [memberById],
+  );
 
   const handleManagerApprove = useCallback(
     (id: number) => {
@@ -302,6 +326,7 @@ export default function TravelApprovalsPage() {
                   <TravelApprovalCard
                     key={r.id}
                     request={r}
+                    requesterName={resolveMemberName(r.userId)}
                     section="manager"
                     onManagerApprove={handleManagerApprove}
                     onFinanceApprove={handleFinanceApprove}
@@ -322,6 +347,7 @@ export default function TravelApprovalsPage() {
                   <TravelApprovalCard
                     key={r.id}
                     request={r}
+                    requesterName={resolveMemberName(r.userId)}
                     section="finance"
                     onManagerApprove={handleManagerApprove}
                     onFinanceApprove={handleFinanceApprove}

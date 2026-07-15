@@ -343,7 +343,7 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
                         onValueChange={field.onChange}
                       >
                         <FormControl>
-                          <SelectTrigger className="h-9">
+                          <SelectTrigger className="h-8">
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
@@ -371,7 +371,7 @@ export function TemplateEditor({ template }: TemplateEditorProps) {
                         <Input
                           placeholder="e.g. Software Engineer Offer Letter"
                           autoFocus
-                          className="h-9"
+                          className="h-8"
                           {...field}
                         />
                       </FormControl>

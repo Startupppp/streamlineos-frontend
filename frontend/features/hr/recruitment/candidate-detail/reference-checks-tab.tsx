@@ -319,7 +319,7 @@ const ReferenceCheckCard = memo(function ReferenceCheckCard({
 
           <div className="flex items-center gap-1.5 shrink-0">
             <Select value={status} onValueChange={handleStatusChange} disabled={updateCheck.isPending}>
-              <SelectTrigger className="h-7 text-xs w-[118px]">
+              <SelectTrigger className="h-8 text-xs w-[118px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="w-[var(--radix-select-trigger-width)]">

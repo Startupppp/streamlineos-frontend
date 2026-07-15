@@ -100,7 +100,7 @@ export function ReportIncidentSheet({ open, onOpenChange }: Props) {
                 <FormLabel>Incident Type</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger className="h-9">
+                    <SelectTrigger className="h-8">
                       <SelectValue />
                     </SelectTrigger>
                   </FormControl>
@@ -123,7 +123,7 @@ export function ReportIncidentSheet({ open, onOpenChange }: Props) {
                 <FormLabel>Severity</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger className="h-9">
+                    <SelectTrigger className="h-8">
                       <SelectValue />
                     </SelectTrigger>
                   </FormControl>
@@ -145,7 +145,7 @@ export function ReportIncidentSheet({ open, onOpenChange }: Props) {
               <FormItem>
                 <FormLabel>Location</FormLabel>
                 <FormControl>
-                  <Input className="h-9" placeholder="Where did this occur?" {...field} />
+                  <Input className="h-8" placeholder="Where did this occur?" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -159,7 +159,7 @@ export function ReportIncidentSheet({ open, onOpenChange }: Props) {
               <FormItem>
                 <FormLabel>Date & Time</FormLabel>
                 <FormControl>
-                  <Input type="datetime-local" className="h-9" {...field} />
+                  <Input type="datetime-local" className="h-8" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

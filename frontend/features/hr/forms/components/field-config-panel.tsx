@@ -70,18 +70,18 @@ export function FieldConfigPanel({ field, allFields, onChange, onRemove }: Field
       <div className="grid grid-cols-2 gap-2">
         <div className="space-y-1">
           <Label className="text-xs">Label *</Label>
-          <Input value={field.label} onChange={handleLabelChange} className="h-7 text-xs" placeholder="Field label" />
+          <Input value={field.label} onChange={handleLabelChange} className="h-8 text-xs" placeholder="Field label" />
         </div>
         <div className="space-y-1">
           <Label className="text-xs">Key *</Label>
-          <Input value={field.key} onChange={handleKeyChange} className="h-7 text-xs font-mono" placeholder="field_key" />
+          <Input value={field.key} onChange={handleKeyChange} className="h-8 text-xs font-mono" placeholder="field_key" />
         </div>
       </div>
 
       <div className="space-y-1">
         <Label className="text-xs">Type</Label>
         <Select value={field.type} onValueChange={handleTypeChange}>
-          <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
           <SelectContent>
             {Object.entries(HR_FIELD_TYPE_META).map(([t, m]) => (
               <SelectItem key={t} value={t} className="text-xs">{m.label}</SelectItem>
@@ -107,7 +107,7 @@ export function FieldConfigPanel({ field, allFields, onChange, onRemove }: Field
                 value={newOption}
                 onChange={handleNewOptionChange}
                 onKeyDown={handleNewOptionKeyDown}
-                className="h-7 text-xs flex-1"
+                className="h-8 text-xs flex-1"
                 placeholder="Add option…"
               />
               <Button variant="outline" size="icon" className="h-7 w-7" onClick={handleAddOption}>
@@ -138,7 +138,7 @@ export function FieldConfigPanel({ field, allFields, onChange, onRemove }: Field
               value={field.conditional?.fieldKey ?? "none"}
               onValueChange={(v) => update({ conditional: v === "none" ? null : { fieldKey: v, operator: "notEmpty" } })}
             >
-              <SelectTrigger className="h-7 text-xs">
+              <SelectTrigger className="h-8 text-xs">
                 <SelectValue placeholder="Always show" />
               </SelectTrigger>
               <SelectContent>
@@ -155,7 +155,7 @@ export function FieldConfigPanel({ field, allFields, onChange, onRemove }: Field
                   conditional: { ...field.conditional!, operator: v as "eq" | "neq" | "contains" | "notEmpty" }
                 })}
               >
-                <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="notEmpty" className="text-xs">is not empty</SelectItem>
                   <SelectItem value="eq" className="text-xs">equals</SelectItem>
@@ -166,7 +166,7 @@ export function FieldConfigPanel({ field, allFields, onChange, onRemove }: Field
             )}
             {field.conditional?.fieldKey && field.conditional.operator !== "notEmpty" && (
               <Input
-                className="h-7 text-xs"
+                className="h-8 text-xs"
                 placeholder="Value…"
                 value={typeof field.conditional.value === "string" ? field.conditional.value : ""}
                 onChange={(e) => update({ conditional: { ...field.conditional!, value: e.target.value } })}

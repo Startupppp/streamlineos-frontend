@@ -18,6 +18,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetBody,
   SheetFooter,
 } from "@/components/ui/sheet";
 import {
@@ -153,7 +154,7 @@ function BroadcastSheet({
         <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
           <SheetTitle>{isEdit ? "Edit Broadcast" : "New Broadcast"}</SheetTitle>
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto px-6 py-4">
+        <SheetBody className="px-6 py-4">
           <Form {...form}>
             <form id="broadcast-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
               <FormField
@@ -275,7 +276,7 @@ function BroadcastSheet({
                       <input
                         type="datetime-local"
                         {...field}
-                        className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        className="flex h-8 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                       />
                     </FormControl>
                     <p className="text-[11px] text-muted-foreground">Leave empty to send immediately on publish.</p>
@@ -285,7 +286,7 @@ function BroadcastSheet({
               />
             </form>
           </Form>
-        </div>
+        </SheetBody>
         <SheetFooter className="px-6 py-4 justify-end">
           <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>Cancel</Button>
           <LoadingButton

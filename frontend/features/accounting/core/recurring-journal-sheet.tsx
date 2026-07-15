@@ -211,7 +211,7 @@ export function RecurringJournalSheet({
           name={`lines.${row._index}.accountId`}
           render={({ field: f }) => (
             <Select value={f.value} onValueChange={f.onChange}>
-              <SelectTrigger className="h-7 text-xs">
+              <SelectTrigger className="h-8 text-xs">
                 <SelectValue placeholder="Account…" />
               </SelectTrigger>
               <SelectContent>
@@ -238,7 +238,7 @@ export function RecurringJournalSheet({
           render={({ field: f }) => (
             <Input
               {...f}
-              className="h-7 text-xs text-right font-mono"
+              className="h-8 text-xs text-right font-mono"
               placeholder="0.00"
             />
           )}
@@ -257,7 +257,7 @@ export function RecurringJournalSheet({
           render={({ field: f }) => (
             <Input
               {...f}
-              className="h-7 text-xs text-right font-mono"
+              className="h-8 text-xs text-right font-mono"
               placeholder="0.00"
             />
           )}

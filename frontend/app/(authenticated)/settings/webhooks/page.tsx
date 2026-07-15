@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetBody, SheetFooter } from "@/components/ui/sheet";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyDevicesIllustration } from "@/components/illustrations";
@@ -235,7 +235,7 @@ export default function WebhooksPage() {
           <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
             <SheetTitle>Add Webhook</SheetTitle>
           </SheetHeader>
-          <div className="flex-1 overflow-y-auto px-6 py-5">
+          <SheetBody className="px-6 py-5">
             <div className="space-y-5">
               <div className="space-y-1.5">
                 <Label htmlFor="webhook-url">Endpoint URL *</Label>
@@ -273,7 +273,7 @@ export default function WebhooksPage() {
                 </div>
               </div>
             </div>
-          </div>
+          </SheetBody>
           <SheetFooter className="shrink-0 px-6 py-4 border-t">
             <div className="grid grid-cols-2 gap-2 w-full">
               <Button variant="outline" onClick={handleSheetClose}>Cancel</Button>

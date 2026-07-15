@@ -376,7 +376,7 @@ export function ExpenseExportDialog({
                   Status
                 </Label>
                 <Select value={exportStatus} onValueChange={setExportStatus}>
-                  <SelectTrigger className="h-9 text-xs">
+                  <SelectTrigger className="h-8 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -396,7 +396,7 @@ export function ExpenseExportDialog({
                   value={exportCategory}
                   onValueChange={setExportCategory}
                 >
-                  <SelectTrigger className="h-9 text-xs">
+                  <SelectTrigger className="h-8 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -414,7 +414,7 @@ export function ExpenseExportDialog({
                   Payment
                 </Label>
                 <Select value={exportPayment} onValueChange={setExportPayment}>
-                  <SelectTrigger className="h-9 text-xs">
+                  <SelectTrigger className="h-8 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -435,7 +435,7 @@ export function ExpenseExportDialog({
                   Spent By
                 </Label>
                 <Select value={exportUserId} onValueChange={setExportUserId}>
-                  <SelectTrigger className="h-9 text-xs">
+                  <SelectTrigger className="h-8 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -584,7 +584,7 @@ export function ExpenseExportDialog({
                   setEmailTarget(v as "CEO" | "HR" | "BOTH")
                 }
               >
-                <SelectTrigger className="h-9 w-[130px] text-xs shrink-0">
+                <SelectTrigger className="h-8 w-[130px] text-xs shrink-0">
                   <Mail className="h-3.5 w-3.5 mr-1.5 text-primary" />
                   <SelectValue />
                 </SelectTrigger>

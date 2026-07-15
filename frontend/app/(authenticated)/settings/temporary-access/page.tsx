@@ -377,7 +377,7 @@ function GrantTempAccessDialog({
               Employee
             </Label>
             <Select value={userId} onValueChange={handleUserChange}>
-              <SelectTrigger id="ta-user" className="h-9">
+              <SelectTrigger id="ta-user" className="h-8">
                 <SelectValue placeholder="Select employee…" />
               </SelectTrigger>
               <SelectContent>
@@ -398,7 +398,7 @@ function GrantTempAccessDialog({
               Role
             </Label>
             <Select value={roleId} onValueChange={handleRoleChange}>
-              <SelectTrigger id="ta-role" className="h-9">
+              <SelectTrigger id="ta-role" className="h-8">
                 <SelectValue placeholder="Select role…" />
               </SelectTrigger>
               <SelectContent>
@@ -422,7 +422,7 @@ function GrantTempAccessDialog({
               id="ta-expires"
               type="datetime-local"
               min={minDate}
-              className="h-9"
+              className="h-8"
               aria-invalid={Boolean(errors.expiresAt)}
               {...register("expiresAt")}
             />
@@ -442,7 +442,7 @@ function GrantTempAccessDialog({
             </Label>
             <Input
               id="ta-reason"
-              className="h-9"
+              className="h-8"
               placeholder="e.g. Covering annual leave"
               {...register("reason")}
             />

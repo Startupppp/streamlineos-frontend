@@ -146,7 +146,7 @@ function NewCycleCountSheet({
           <div className="space-y-1.5">
             <Label htmlFor="cc-category">Category (optional)</Label>
             <Select value={categoryId || "none"} onValueChange={handleCategoryChange}>
-              <SelectTrigger id="cc-category" className="h-9 text-sm">
+              <SelectTrigger id="cc-category" className="h-8 text-sm">
                 <SelectValue placeholder="All categories" />
               </SelectTrigger>
               <SelectContent>

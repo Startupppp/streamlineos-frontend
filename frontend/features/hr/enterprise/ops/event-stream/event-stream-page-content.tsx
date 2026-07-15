@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DataTable } from "@/components/ui/data-table";
@@ -19,6 +19,11 @@ import {
   type EventCatalogEntry,
 } from "@/hooks/api/hr/enterprise-ops-event-stream";
 import { format } from "date-fns";
+import { useOrgMembers } from "@/hooks/api/organization";
+import {
+  getUserDisplayName,
+  type NamedUser,
+} from "@/features/projects/shared/resolve-user-name";
 
 export function EventStreamPageContent() {
   const canExport = useCan("hr:analytics:read");
@@ -29,8 +34,22 @@ export function EventStreamPageContent() {
   const { data: dictionary } = useHrEventDataDictionary();
   const { data: metrics } = useHrMetricDefinitions();
   const exportMutation = useExportHrEvents();
+  const { data: membersData } = useOrgMembers(1, 200);
 
-  const eventColumns: DataTableColumn<HrEvent>[] = [
+  const memberById = useMemo(() => {
+    const map = new Map<string, NamedUser>();
+    for (const member of membersData?.data ?? []) {
+      map.set(member.userId, { name: member.name, email: member.email });
+    }
+    return map;
+  }, [membersData]);
+
+  const resolveMemberName = (userId: string) => {
+    const member = memberById.get(userId);
+    return member ? getUserDisplayName(member) : userId;
+  };
+
+  const eventColumns: DataTableColumn<HrEvent>[] = useMemo(() => [
     {
       key: "eventType",
       header: "Event",
@@ -58,7 +77,7 @@ export function EventStreamPageContent() {
       key: "actorUserId",
       header: "Actor",
       cell: (r) => r.actorUserId ? (
-        <span className="font-mono text-xs text-muted-foreground">{r.actorUserId.slice(0, 8)}…</span>
+        <span className="text-sm text-foreground">{resolveMemberName(r.actorUserId)}</span>
       ) : (
         <span className="text-xs text-muted-foreground italic">system</span>
       ),
@@ -72,7 +91,7 @@ export function EventStreamPageContent() {
         </span>
       ),
     },
-  ];
+  ], [memberById]);
 
   const catalogColumns: DataTableColumn<EventCatalogEntry>[] = [
     {

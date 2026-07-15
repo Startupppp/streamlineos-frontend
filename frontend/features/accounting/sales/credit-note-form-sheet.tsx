@@ -110,7 +110,7 @@ function CreditNoteItemRow({
           <Label className="text-[10px] text-muted-foreground">Qty</Label>
           <Input
             type="number"
-            className="h-7 text-sm"
+            className="h-8 text-sm"
             placeholder="1"
             {...register(`items.${index}.quantity`)}
           />
@@ -119,7 +119,7 @@ function CreditNoteItemRow({
           <Label className="text-[10px] text-muted-foreground">Rate</Label>
           <Input
             type="number"
-            className="h-7 text-sm"
+            className="h-8 text-sm"
             placeholder="0.00"
             {...register(`items.${index}.rate`)}
           />
@@ -130,7 +130,7 @@ function CreditNoteItemRow({
             value={watch(`items.${index}.gstRate`)}
             onValueChange={handleGstRateChange}
           >
-            <SelectTrigger className="h-7 text-sm">
+            <SelectTrigger className="h-8 text-sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

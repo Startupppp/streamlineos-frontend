@@ -27,6 +27,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetClose,
+  SheetBody,
 } from "@/components/ui/sheet";
 import {
   Form,
@@ -467,9 +468,9 @@ export default function OrgTeamsPage() {
           <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
             <SheetTitle>New Team</SheetTitle>
           </SheetHeader>
-          <div className="flex-1 overflow-y-auto px-6 py-5">
+          <SheetBody className="px-6 py-5">
             <TeamForm departments={departments} onSubmit={handleCreate} isPending={create.isPending} />
-          </div>
+          </SheetBody>
           <div className="shrink-0 px-6 py-4 border-t">
             <div className="grid grid-cols-2 gap-2">
               <SheetClose asChild>
@@ -488,7 +489,7 @@ export default function OrgTeamsPage() {
           <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
             <SheetTitle>Edit Team</SheetTitle>
           </SheetHeader>
-          <div className="flex-1 overflow-y-auto px-6 py-5">
+          <SheetBody className="px-6 py-5">
             {editing && (
               <TeamForm
                 defaultValues={{
@@ -504,7 +505,7 @@ export default function OrgTeamsPage() {
                 isPending={update.isPending}
               />
             )}
-          </div>
+          </SheetBody>
           <div className="shrink-0 px-6 py-4 border-t">
             <div className="grid grid-cols-2 gap-2">
               <SheetClose asChild>

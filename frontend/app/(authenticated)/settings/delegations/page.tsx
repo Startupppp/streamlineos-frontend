@@ -482,7 +482,7 @@ function GrantDelegationSheet({
               Delegate to
             </Label>
             <Select value={delegateeId} onValueChange={handleDelegateeChange}>
-              <SelectTrigger id="del-to" className="h-9">
+              <SelectTrigger id="del-to" className="h-8">
                 <SelectValue placeholder="Select team member…" />
               </SelectTrigger>
               <SelectContent>
@@ -515,7 +515,7 @@ function GrantDelegationSheet({
                   placeholder="Search permissions…"
                   value={permSearch}
                   onChange={(e) => setPermSearch(e.target.value)}
-                  className="h-7 text-xs"
+                  className="h-8 text-xs"
                 />
               </div>
               <ScrollArea className="flex-1">
@@ -552,7 +552,7 @@ function GrantDelegationSheet({
                 id="del-start"
                 type="datetime-local"
                 min={today}
-                className="h-9"
+                className="h-8"
                 aria-invalid={Boolean(errors.startsAt)}
                 {...register("startsAt")}
               />
@@ -570,7 +570,7 @@ function GrantDelegationSheet({
                 id="del-end"
                 type="datetime-local"
                 min={today}
-                className="h-9"
+                className="h-8"
                 aria-invalid={Boolean(errors.endsAt)}
                 {...register("endsAt")}
               />
@@ -591,7 +591,7 @@ function GrantDelegationSheet({
             </Label>
             <Input
               id="del-reason"
-              className="h-9"
+              className="h-8"
               placeholder="e.g. Covering annual leave"
               {...register("reason")}
             />

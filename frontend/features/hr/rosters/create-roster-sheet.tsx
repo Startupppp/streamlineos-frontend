@@ -84,7 +84,7 @@ export function CreateRosterSheet({ open, onOpenChange }: Props) {
                   Roster Name
                 </FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. Week 26 Roster" className="h-9 text-sm" {...field} />
+                  <Input placeholder="e.g. Week 26 Roster" className="h-8 text-sm" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

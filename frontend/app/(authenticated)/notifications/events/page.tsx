@@ -22,6 +22,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetBody,
   SheetFooter,
 } from "@/components/ui/sheet";
 import {
@@ -181,7 +182,7 @@ function PolicySheet({
           <SheetTitle>Configure Event</SheetTitle>
           <p className="text-xs font-mono text-muted-foreground">{event.eventKey}</p>
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto px-6 py-4">
+        <SheetBody className="px-6 py-4">
           <Form {...form}>
             <form id="policy-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5">
               <FormField
@@ -339,7 +340,7 @@ function PolicySheet({
               />
             </form>
           </Form>
-        </div>
+        </SheetBody>
         <SheetFooter className="px-6 py-4 border-t justify-end">
           <Button type="button" variant="outline" onClick={onClose} disabled={updatePolicy.isPending}>
             Cancel

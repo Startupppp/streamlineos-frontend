@@ -121,7 +121,7 @@ export function EventFormFields({
             value={title}
             onChange={onTitleChange}
             placeholder="Add Title"
-            className="h-9 text-sm border-0 border-b border-border rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary placeholder:text-muted-foreground/60 font-medium"
+            className="h-8 text-sm border-0 border-b border-border rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary placeholder:text-muted-foreground/60 font-medium"
             autoFocus
           />
         </div>
@@ -218,7 +218,7 @@ export function EventFormFields({
         <div className="flex flex-1 min-w-0 flex-row gap-2">
           <div className="flex-1 min-w-0">
             <Select value={category} onValueChange={onCategoryChange}>
-              <SelectTrigger className="h-9 w-full text-xs">
+              <SelectTrigger className="h-8 w-full text-xs">
                 <SelectValue placeholder="Select privacy / category" />
               </SelectTrigger>
               <SelectContent>
@@ -232,7 +232,7 @@ export function EventFormFields({
           </div>
           <div className="flex-1 min-w-0">
             <Select value={color} onValueChange={onColorChange}>
-              <SelectTrigger className="h-9 w-full text-xs">
+              <SelectTrigger className="h-8 w-full text-xs">
                 <SelectValue placeholder="Select busy status" />
               </SelectTrigger>
               <SelectContent>
@@ -261,7 +261,7 @@ export function EventFormFields({
             value={description}
             onChange={onDescriptionChange}
             placeholder="Notes"
-            className="h-9 text-xs"
+            className="h-8 text-xs"
           />
         </div>
       </div>
@@ -271,7 +271,7 @@ export function EventFormFields({
           <div className="space-y-1.5">
             <Label className="text-xs font-medium">Sync to calendar account</Label>
             <Select value={syncConnectionId} onValueChange={onSyncConnectionChange}>
-              <SelectTrigger className="h-9">
+              <SelectTrigger className="h-8">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

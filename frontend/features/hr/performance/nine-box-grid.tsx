@@ -1,10 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useReviewCycles } from "@/hooks/api/hr";
 import { useNineBox, type NineBoxEntry } from "@/hooks/api/hr/calibration";
+import { useOrgMembers } from "@/hooks/api/organization";
+import {
+  getUserDisplayName,
+  type NamedUser,
+} from "@/features/projects/shared/resolve-user-name";
 
 const GRID_LABELS: Record<string, { label: string; bg: string }> = {
   "3-3": { label: "Star", bg: "bg-blue-50 border-blue-200 dark:bg-blue-500/10 dark:border-blue-500/30" },
@@ -28,6 +33,23 @@ export function NineBoxGrid() {
   const [selectedCycleId, setSelectedCycleId] = useState<number>(0);
   const { data: cycles = [] } = useReviewCycles();
   const { data: entries = [] } = useNineBox(selectedCycleId);
+  const { data: membersData } = useOrgMembers(1, 200);
+
+  const memberById = useMemo(() => {
+    const map = new Map<string, NamedUser>();
+    for (const member of membersData?.data ?? []) {
+      map.set(member.userId, { name: member.name, email: member.email });
+    }
+    return map;
+  }, [membersData]);
+
+  const resolveMemberName = useCallback(
+    (userId: string) => {
+      const member = memberById.get(userId);
+      return member ? getUserDisplayName(member) : userId;
+    },
+    [memberById],
+  );
 
   const grouped = new Map<string, NineBoxEntry[]>();
   for (const entry of entries) {
@@ -63,7 +85,7 @@ export function NineBoxGrid() {
                 <div className="flex flex-wrap gap-1">
                   {cellEntries.map((e) => (
                     <Badge key={e.employeeId} variant="secondary" className="text-xs bg-card border border-border text-foreground">
-                      {e.employeeId.slice(0, 8)}…
+                      {resolveMemberName(e.employeeId)}
                     </Badge>
                   ))}
                 </div>

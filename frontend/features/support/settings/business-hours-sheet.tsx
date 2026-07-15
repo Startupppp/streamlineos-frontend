@@ -189,7 +189,7 @@ export function BusinessHoursSheet({ open, onOpenChange, mode, form, onSubmit, i
                   <span>Holidays</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <DatePicker value={holidayInput ?? ""} onChange={handleHolidayInputChange} placeholder="Pick a date" className="h-9" />
+                  <DatePicker value={holidayInput ?? ""} onChange={handleHolidayInputChange} placeholder="Pick a date" className="h-8" />
                   <Button type="button" variant="outline" size="sm" onClick={handleAddHoliday}>
                     <Plus className="h-3.5 w-3.5" />
                   </Button>

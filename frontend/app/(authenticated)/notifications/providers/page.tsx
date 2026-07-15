@@ -16,6 +16,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetBody,
   SheetFooter,
 } from "@/components/ui/sheet";
 import {
@@ -255,7 +256,7 @@ function ProviderSheet({
             {isEdit ? "Edit Provider" : "New Provider"}
           </SheetTitle>
         </SheetHeader>
-        <div className="flex-1 overflow-y-auto px-6 py-4">
+        <SheetBody className="px-6 py-4">
           <Form {...form}>
             <form
               id="provider-form"
@@ -440,7 +441,7 @@ function ProviderSheet({
               />
             </form>
           </Form>
-        </div>
+        </SheetBody>
         <SheetFooter className="px-6 py-4 justify-end">
           <Button
             type="button"

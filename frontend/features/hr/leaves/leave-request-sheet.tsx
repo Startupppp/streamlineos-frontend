@@ -272,7 +272,7 @@ export function LeaveRequestSheet({
                 </FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger className="text-sm h-9">
+                    <SelectTrigger className="text-sm h-8">
                       <SelectValue placeholder="Select leave type" />
                     </SelectTrigger>
                   </FormControl>
@@ -375,7 +375,7 @@ export function LeaveRequestSheet({
                     </FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger className="text-sm h-9">
+                        <SelectTrigger className="text-sm h-8">
                           <SelectValue />
                         </SelectTrigger>
                       </FormControl>
@@ -405,7 +405,7 @@ export function LeaveRequestSheet({
                 </FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger className="text-sm h-9">
+                    <SelectTrigger className="text-sm h-8">
                       <SelectValue placeholder="Select priority" />
                     </SelectTrigger>
                   </FormControl>
@@ -446,7 +446,7 @@ export function LeaveRequestSheet({
                   </FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <SelectTrigger className="text-sm h-9">
+                      <SelectTrigger className="text-sm h-8">
                         <SelectValue placeholder="Select approver" />
                       </SelectTrigger>
                     </FormControl>

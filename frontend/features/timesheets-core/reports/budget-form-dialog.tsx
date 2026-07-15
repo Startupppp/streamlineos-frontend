@@ -124,7 +124,7 @@ export function BudgetFormDialog({ open, onOpenChange, budget }: BudgetFormDialo
                   <FormLabel className="text-[13px]">Project</FormLabel>
                   <Select value={field.value} onValueChange={field.onChange}>
                     <FormControl>
-                      <SelectTrigger className="h-9">
+                      <SelectTrigger className="h-8">
                         <SelectValue placeholder="Select a project" />
                       </SelectTrigger>
                     </FormControl>
@@ -150,7 +150,7 @@ export function BudgetFormDialog({ open, onOpenChange, budget }: BudgetFormDialo
                     <FormLabel className="text-[13px]">Type</FormLabel>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
-                        <SelectTrigger className="h-9">
+                        <SelectTrigger className="h-8">
                           <SelectValue />
                         </SelectTrigger>
                       </FormControl>
@@ -172,7 +172,7 @@ export function BudgetFormDialog({ open, onOpenChange, budget }: BudgetFormDialo
                       {budgetType === "AMOUNT" ? "Amount" : "Hours"}
                     </FormLabel>
                     <FormControl>
-                      <Input type="number" min="0" step="0.01" className="h-9" {...field} />
+                      <Input type="number" min="0" step="0.01" className="h-8" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -188,7 +188,7 @@ export function BudgetFormDialog({ open, onOpenChange, budget }: BudgetFormDialo
                   <FormItem>
                     <FormLabel className="text-[13px]">Currency</FormLabel>
                     <FormControl>
-                      <Input className="h-9" maxLength={3} {...field} />
+                      <Input className="h-8" maxLength={3} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -204,7 +204,7 @@ export function BudgetFormDialog({ open, onOpenChange, budget }: BudgetFormDialo
                   <FormItem>
                     <FormLabel className="text-[13px]">Starts (optional)</FormLabel>
                     <FormControl>
-                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-9" />
+                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8" />
                     </FormControl>
                   </FormItem>
                 )}
@@ -216,7 +216,7 @@ export function BudgetFormDialog({ open, onOpenChange, budget }: BudgetFormDialo
                   <FormItem>
                     <FormLabel className="text-[13px]">Ends (optional)</FormLabel>
                     <FormControl>
-                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-9" />
+                      <DatePicker value={field.value ?? ""} onChange={field.onChange} placeholder="Pick a date" className="h-8" />
                     </FormControl>
                   </FormItem>
                 )}

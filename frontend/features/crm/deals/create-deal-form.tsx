@@ -164,7 +164,7 @@ export function CreateDealForm({ employees, onSuccess }: CreateDealFormProps) {
                 <FormLabel>Stage</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger className="w-full h-9">
+                    <SelectTrigger className="w-full h-8">
                       <SelectValue />
                     </SelectTrigger>
                   </FormControl>
@@ -269,7 +269,7 @@ export function CreateDealForm({ employees, onSuccess }: CreateDealFormProps) {
                 <FormLabel>Assigned To</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger className="w-full h-9">
+                    <SelectTrigger className="w-full h-8">
                       <SelectValue placeholder="Select..." />
                     </SelectTrigger>
                   </FormControl>

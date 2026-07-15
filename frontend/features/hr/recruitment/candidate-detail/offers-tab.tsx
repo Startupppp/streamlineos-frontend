@@ -373,7 +373,7 @@ export function OffersTab({ candidateId }: Props) {
                           value={offer.offerStatus}
                           onValueChange={(v) => handleStatusChange(offer.id, v as CandidateOffer["offerStatus"])}
                         >
-                          <SelectTrigger className="h-7 text-xs w-36">
+                          <SelectTrigger className="h-8 text-xs w-36">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent className="w-[var(--radix-select-trigger-width)]">

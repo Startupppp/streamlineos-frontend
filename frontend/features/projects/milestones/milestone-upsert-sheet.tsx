@@ -165,7 +165,7 @@ export function MilestoneUpsertSheet({ projectId, milestone, onClose }: Mileston
                           value={targetDateValue}
                           onChange={handleTargetDateChange}
                           placeholder="Pick a date"
-                          className="h-9 text-sm"
+                          className="h-8 text-sm"
                         />
                       </FormControl>
                       <FormMessage />

@@ -1,12 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { FlaskConical } from "lucide-react";
 import { useSimulationHistory, type SimulationRecord, type SimulationType } from "@/hooks/api/hr/enterprise-ops-simulator";
 import { format } from "date-fns";
+import { useOrgMembers } from "@/hooks/api/organization";
+import {
+  getUserDisplayName,
+  type NamedUser,
+} from "@/features/projects/shared/resolve-user-name";
 
 const TYPE_COLORS: Record<SimulationType, string> = {
   policy: "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
@@ -19,8 +24,22 @@ const TYPE_COLORS: Record<SimulationType, string> = {
 export function SimulationHistory() {
   const [page, setPage] = useState(1);
   const { data, isLoading } = useSimulationHistory({ page });
+  const { data: membersData } = useOrgMembers(1, 200);
 
-  const columns: DataTableColumn<SimulationRecord>[] = [
+  const memberById = useMemo(() => {
+    const map = new Map<string, NamedUser>();
+    for (const member of membersData?.data ?? []) {
+      map.set(member.userId, { name: member.name, email: member.email });
+    }
+    return map;
+  }, [membersData]);
+
+  const resolveMemberName = (userId: string) => {
+    const member = memberById.get(userId);
+    return member ? getUserDisplayName(member) : userId;
+  };
+
+  const columns: DataTableColumn<SimulationRecord>[] = useMemo(() => [
     {
       key: "type",
       header: "Type",
@@ -34,7 +53,7 @@ export function SimulationHistory() {
     {
       key: "createdBy",
       header: "Run By",
-      cell: (r) => <span className="font-mono text-xs text-muted-foreground">{r.createdBy.slice(0, 8)}…</span>,
+      cell: (r) => <span className="text-sm text-foreground">{resolveMemberName(r.createdBy)}</span>,
     },
     {
       key: "createdAt",
@@ -54,7 +73,7 @@ export function SimulationHistory() {
         </span>
       ),
     },
-  ];
+  ], [memberById]);
 
   return (
     <DataTable

@@ -127,7 +127,7 @@ export function OpeningBalancesEditor({ onSuccess }: OpeningBalancesEditorProps)
           value={row.accountId}
           onValueChange={(v) => handleAccountChange(row.id, v)}
         >
-          <SelectTrigger className="h-7 text-xs">
+          <SelectTrigger className="h-8 text-xs">
             <SelectValue placeholder="Select account…" />
           </SelectTrigger>
           <SelectContent>
@@ -147,7 +147,7 @@ export function OpeningBalancesEditor({ onSuccess }: OpeningBalancesEditorProps)
       className: "w-[160px]",
       cell: (row) => (
         <Input
-          className="h-7 text-xs text-right font-mono"
+          className="h-8 text-xs text-right font-mono"
           placeholder="0.00"
           value={row.debit}
           onChange={(e) => handleDebitChange(row.id, e.target.value)}
@@ -161,7 +161,7 @@ export function OpeningBalancesEditor({ onSuccess }: OpeningBalancesEditorProps)
       className: "w-[160px]",
       cell: (row) => (
         <Input
-          className="h-7 text-xs text-right font-mono"
+          className="h-8 text-xs text-right font-mono"
           placeholder="0.00"
           value={row.credit}
           onChange={(e) => handleCreditChange(row.id, e.target.value)}
