@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, type ComponentType } from "react";
 import {
   AreaChart,
   Area,
@@ -44,42 +44,50 @@ import {
   chartAxisTick,
   CHART_SEMANTIC,
 } from "@/features/hr/analytics/shared";
-import { Card, CardContent } from "@/components/ui/card";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { DrilldownSheet } from "./drilldown-sheet";
 
-interface StatCardProps {
+interface DrillableStatCardProps {
   label: string;
   value: string;
-  subtitle?: string;
-  icon: React.ElementType;
-  iconBg: string;
-  iconColor: string;
+  hint?: string;
+  icon: ComponentType<{ className?: string }>;
+  tone?: "default" | "blue" | "emerald" | "amber" | "red" | "violet";
   onClick?: () => void;
 }
 
-function StatCard({ label, value, subtitle, icon: Icon, iconBg, iconColor, onClick }: StatCardProps) {
+function DrillableStatCard({ label, value, hint, icon, tone = "default", onClick }: DrillableStatCardProps) {
+  const card = (
+    <StatCard
+      label={label}
+      value={value}
+      hint={hint}
+      icon={icon}
+      tone={tone}
+      className={onClick ? "hover:bg-muted/30 cursor-pointer" : undefined}
+    />
+  );
+
+  if (!onClick) return card;
+
   return (
-    <Card
-      className={cn(
-        "border-border/80 shadow-sm transition-shadow",
-        onClick && "cursor-pointer hover:shadow-md",
-      )}
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      className="cursor-pointer"
     >
-      <CardContent className="flex items-start gap-3 p-4">
-        <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg", iconBg)}>
-          <Icon className={cn("h-4 w-4", iconColor)} />
-        </div>
-        <div className="min-w-0">
-          <p className="text-xs text-muted-foreground">{label}</p>
-          <p className="mt-0.5 text-xl font-semibold tabular-nums text-foreground">{value}</p>
-          {subtitle ? <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p> : null}
-        </div>
-      </CardContent>
-    </Card>
+      {card}
+    </div>
   );
 }
 
@@ -181,73 +189,64 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard
+      <StatCardGrid cols={4}>
+        <DrillableStatCard
           label="Active Employees"
           value={String(kpis?.headcount.active ?? 0)}
-          subtitle={`${kpis?.headcount.probation ?? 0} probation · ${kpis?.headcount.notice ?? 0} notice`}
+          hint={`${kpis?.headcount.probation ?? 0} probation · ${kpis?.headcount.notice ?? 0} notice`}
           icon={Users}
-          iconBg="bg-primary/10"
-          iconColor="text-primary"
+          tone="blue"
         />
-        <StatCard
+        <DrillableStatCard
           label="12-Mo Attrition"
           value={formatPct(kpis?.attritionRate12mo ?? 0)}
           icon={TrendingDown}
-          iconBg="bg-red-50 dark:bg-red-500/10"
-          iconColor="text-red-500 dark:text-red-400"
+          tone="red"
           onClick={handleAttritionDrilldown}
         />
-        <StatCard
+        <DrillableStatCard
           label="Avg Tenure"
           value={formatTenure(kpis?.avgTenureMonths ?? 0)}
           icon={Clock}
-          iconBg="bg-muted"
-          iconColor="text-muted-foreground"
         />
-        <StatCard
+        <DrillableStatCard
           label="Leave Utilization"
           value={formatPct(kpis?.leaveUtilizationPct ?? 0)}
           icon={Target}
-          iconBg="bg-cyan-50 dark:bg-cyan-500/10"
-          iconColor="text-cyan-600 dark:text-cyan-400"
+          tone="blue"
           onClick={handleLeaveDrilldown}
         />
-        <StatCard
+        <DrillableStatCard
           label="Attendance Rate"
           value={formatPct(kpis?.attendanceRatePct ?? 0)}
           icon={CheckCircle}
-          iconBg="bg-emerald-50 dark:bg-emerald-500/10"
-          iconColor="text-emerald-600 dark:text-emerald-400"
+          tone="emerald"
         />
-        <StatCard
+        <DrillableStatCard
           label="Open Cases"
           value={String(kpis?.openCasesCount ?? 0)}
           icon={AlertTriangle}
-          iconBg="bg-amber-50 dark:bg-amber-500/10"
-          iconColor="text-amber-600 dark:text-amber-400"
+          tone="amber"
           onClick={handleComplianceDrilldown}
         />
-        <StatCard
+        <DrillableStatCard
           label="Avg Mood Score"
           value={kpis?.avgMood !== null && kpis?.avgMood !== undefined ? kpis.avgMood.toFixed(1) : "—"}
-          subtitle="out of 5"
+          hint="out of 5"
           icon={Shield}
-          iconBg="bg-violet-50 dark:bg-violet-500/10"
-          iconColor="text-violet-600 dark:text-violet-400"
+          tone="violet"
           onClick={handleEngagementDrilldown}
         />
         {canViewPayroll && kpis?.payrollCostLastMonth !== null ? (
-          <StatCard
+          <DrillableStatCard
             label="Payroll Last Month"
             value={kpis?.payrollCostLastMonth !== null && kpis?.payrollCostLastMonth !== undefined ? formatCurrency(kpis.payrollCostLastMonth) : "—"}
             icon={DollarSign}
-            iconBg="bg-primary/10"
-            iconColor="text-primary"
+            tone="blue"
             onClick={handlePayrollDrilldown}
           />
         ) : null}
-      </div>
+      </StatCardGrid>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <AnalyticsChartCard title="Joins vs Exits (24 months)">

@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Download } from "lucide-react";
+import { Download, Users, FileCheck, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -34,22 +34,6 @@ function getFYOptions(): string[] {
 
 function calcTotal(d: TaxDeclarationAdmin): number {
   return d.hra + d.lta + d.section80c + d.section80d + d.section80g + d.homeLoanInterest;
-}
-
-interface SummaryCardProps {
-  label: string;
-  value: number | string;
-}
-
-function SummaryCard({ label, value }: SummaryCardProps) {
-  return (
-    <Card className="py-0">
-      <CardContent className="px-4 py-3">
-        <p className="text-[11px] text-muted-foreground mb-1">{label}</p>
-        <p className="text-xl font-semibold tabular-nums">{value}</p>
-      </CardContent>
-    </Card>
-  );
 }
 
 export function TaxReportTab() {
@@ -136,12 +120,12 @@ export function TaxReportTab() {
         )}
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <SummaryCard label="Total Declarations" value={declarations.length} />
-        <SummaryCard label="Submitted" value={submitted} />
-        <SummaryCard label="Verified" value={verified} />
-        <SummaryCard label="Pending (Draft)" value={pending} />
-      </div>
+      <StatCardGrid cols={4}>
+        <StatCard label="Total Declarations" value={declarations.length} icon={Users} />
+        <StatCard label="Submitted" value={submitted} icon={FileCheck} tone="blue" />
+        <StatCard label="Verified" value={verified} icon={FileCheck} tone="emerald" />
+        <StatCard label="Pending (Draft)" value={pending} icon={Clock} tone="amber" />
+      </StatCardGrid>
 
       <DataTable
         data={declarations}

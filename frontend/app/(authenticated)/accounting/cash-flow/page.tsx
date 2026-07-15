@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, memo } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DatePicker } from "@/components/ui/date-picker";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { useCashFlow, type CashFlowSection } from "@/hooks/api/accounting";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -36,30 +37,23 @@ function today(): string {
   return `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
 }
 
-interface SummaryCardProps {
-  label: string;
-  value: string;
-  emphasis?: boolean;
-}
-
-function SummaryCard({ label, value, emphasis = false }: SummaryCardProps) {
+const CashFlowSummaryStrip = memo(function CashFlowSummaryStrip({
+  openingCash,
+  netChange,
+  closingCash,
+}: {
+  openingCash: string;
+  netChange: string;
+  closingCash: string;
+}) {
   return (
-    <div className="rounded-lg border border-border bg-card px-4 py-3">
-      <p className="text-[11px] font-medium text-muted-foreground leading-none">
-        {label}
-      </p>
-      <p
-        className={
-          emphasis
-            ? "mt-1.5 font-mono tabular-nums text-base font-semibold text-foreground"
-            : "mt-1.5 font-mono tabular-nums text-sm font-medium text-foreground"
-        }
-      >
-        {formatInr(value)}
-      </p>
-    </div>
+    <StatCardGrid cols={3}>
+      <StatCard label="Opening Cash" value={formatInr(openingCash)} />
+      <StatCard label="Net Change" value={formatInr(netChange)} />
+      <StatCard label="Closing Cash" value={formatInr(closingCash)} featured />
+    </StatCardGrid>
   );
-}
+});
 
 type CashFlowItem = CashFlowSection["items"][number];
 
@@ -191,15 +185,11 @@ export default function CashFlowPage() {
           />
         ) : (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              <SummaryCard label="Opening Cash" value={report.openingCash} />
-              <SummaryCard label="Net Change" value={report.netChange} />
-              <SummaryCard
-                label="Closing Cash"
-                value={report.closingCash}
-                emphasis
-              />
-            </div>
+            <CashFlowSummaryStrip
+              openingCash={report.openingCash}
+              netChange={report.netChange}
+              closingCash={report.closingCash}
+            />
 
             <div className="space-y-4">
               {report.sections.map((section) => (

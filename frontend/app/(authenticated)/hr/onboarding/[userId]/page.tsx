@@ -10,8 +10,9 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTasksIllustration } from "@/components/illustrations";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 
 import {
@@ -45,18 +46,6 @@ function formatDate(dateStr: string | null): string {
     day: "numeric",
     year: "numeric",
   });
-}
-
-function StatCard({ label, value, icon }: { label: string; value: number; icon: React.ReactNode }) {
-  return (
-    <div className="flex flex-col gap-1 rounded-lg border bg-card px-4 py-3 text-card-foreground">
-      <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
-        {icon}
-        {label}
-      </div>
-      <p className="text-2xl font-semibold">{value}</p>
-    </div>
-  );
 }
 
 function TaskCard({
@@ -274,28 +263,12 @@ export default function UserOnboardingPage({
             <Progress value={percent} className="h-2" />
           </div>
 
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <StatCard
-              label="Total"
-              value={total}
-              icon={<ListTodo className="h-3.5 w-3.5" />}
-            />
-            <StatCard
-              label="Completed"
-              value={completedCount}
-              icon={<CheckCheck className="h-3.5 w-3.5 text-green-600" />}
-            />
-            <StatCard
-              label="Pending"
-              value={pendingCount}
-              icon={<Timer className="h-3.5 w-3.5 text-amber-500" />}
-            />
-            <StatCard
-              label="Overdue"
-              value={overdueCount}
-              icon={<AlertCircle className="h-3.5 w-3.5 text-destructive" />}
-            />
-          </div>
+          <StatCardGrid cols={4}>
+            <StatCard label="Total" value={total} icon={ListTodo} />
+            <StatCard label="Completed" value={completedCount} icon={CheckCheck} tone="emerald" />
+            <StatCard label="Pending" value={pendingCount} icon={Timer} tone="amber" />
+            <StatCard label="Overdue" value={overdueCount} icon={AlertCircle} tone="red" />
+          </StatCardGrid>
 
           {pendingTasks.length > 0 && (
             <div className="space-y-2">

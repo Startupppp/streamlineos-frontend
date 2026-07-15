@@ -2,10 +2,11 @@
 
 import * as React from "react";
 import { toast } from "sonner";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Activity, Clock, Webhook, Server } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -56,35 +57,37 @@ export function SettingsHealthCard() {
               })}
             </div>
           ) : health ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="rounded-lg border border-border bg-card px-3 py-2.5">
-                <p className="text-xs text-muted-foreground mb-0.5">Reconciliation Sample</p>
-                <p className="text-sm font-medium truncate">
-                  {health.reconciliationSampleResult ?? "—"}
-                </p>
-              </div>
-              <div className="rounded-lg border border-border bg-card px-3 py-2.5">
-                <p className="text-xs text-muted-foreground mb-0.5">Expired Reservations</p>
-                <p className="text-sm font-medium">{health.expiredReservationsCount}</p>
-                {health.expiredReservationsCount > 0 && (
-                  <p className="text-[10px] text-muted-foreground mt-0.5">
-                    These reservations have passed their expiry
-                  </p>
-                )}
-              </div>
-              <div className="rounded-lg border border-border bg-card px-3 py-2.5">
-                <p className="text-xs text-muted-foreground mb-0.5">Failed Jobs</p>
-                <p className={`text-sm font-medium ${health.failedJobsCount > 0 ? "text-red-600" : ""}`}>
-                  {health.failedJobsCount}
-                </p>
-              </div>
-              <div className="rounded-lg border border-border bg-card px-3 py-2.5">
-                <p className="text-xs text-muted-foreground mb-0.5">Failed Webhooks</p>
-                <p className={`text-sm font-medium ${health.failedWebhooksCount > 0 ? "text-red-600" : ""}`}>
-                  {health.failedWebhooksCount}
-                </p>
-              </div>
-            </div>
+            <StatCardGrid cols={2}>
+              <StatCard
+                label="Reconciliation Sample"
+                value={health.reconciliationSampleResult ?? "—"}
+                icon={Activity}
+                tone="blue"
+              />
+              <StatCard
+                label="Expired Reservations"
+                value={health.expiredReservationsCount}
+                icon={Clock}
+                tone="amber"
+                hint={
+                  health.expiredReservationsCount > 0
+                    ? "These reservations have passed their expiry"
+                    : undefined
+                }
+              />
+              <StatCard
+                label="Failed Jobs"
+                value={health.failedJobsCount}
+                icon={Server}
+                tone={health.failedJobsCount > 0 ? "red" : "default"}
+              />
+              <StatCard
+                label="Failed Webhooks"
+                value={health.failedWebhooksCount}
+                icon={Webhook}
+                tone={health.failedWebhooksCount > 0 ? "red" : "default"}
+              />
+            </StatCardGrid>
           ) : null}
 
           <div className="pt-1">

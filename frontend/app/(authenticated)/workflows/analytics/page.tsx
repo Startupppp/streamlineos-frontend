@@ -14,42 +14,8 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
-import { cn } from "@/lib/utils";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { useWorkflowAnalytics } from "@/hooks/api/workflows";
-
-interface StatCardProps {
-  label: string;
-  value: string | number;
-  icon: React.ReactNode;
-  iconBg: string;
-  index: number;
-  sub?: string;
-}
-
-function StatCard({ label, value, icon, iconBg, index, sub }: StatCardProps) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.22, ease: "easeOut", delay: index * 0.06 }}
-    >
-      <Card className="bg-card rounded-xl border border-border shadow-sm hover:shadow-md transition-shadow duration-200">
-        <CardContent className="p-5">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-xs font-medium text-muted-foreground mb-2">{label}</p>
-              <p className="text-2xl font-bold text-foreground tabular-nums">{value}</p>
-              {sub && <p className="text-xs text-muted-foreground mt-1">{sub}</p>}
-            </div>
-            <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center shrink-0", iconBg)}>
-              {icon}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </motion.div>
-  );
-}
 
 function TrendBar({ count, max, successCount }: { count: number; max: number; successCount: number }) {
   const pct = max > 0 ? (count / max) * 100 : 0;
@@ -98,51 +64,8 @@ export default function WorkflowAnalyticsPage() {
       ? `${Math.round(data.avgDuration / 1000)}s`
       : `${Math.floor(data.avgDuration / 60_000)}m ${Math.round((data.avgDuration % 60_000) / 1000)}s`;
 
-  const stats: StatCardProps[] = [
-    {
-      label: "Total Workflows",
-      value: data.totalWorkflows,
-      icon: <GitBranch className="h-5 w-5 text-violet-600 dark:text-violet-400" />,
-      iconBg: "bg-violet-50 dark:bg-violet-500/10",
-      index: 0,
-    },
-    {
-      label: "Active Workflows",
-      value: data.activeWorkflows,
-      icon: <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />,
-      iconBg: "bg-green-50 dark:bg-green-500/10",
-      index: 1,
-      sub: `${data.totalWorkflows > 0 ? Math.round((data.activeWorkflows / data.totalWorkflows) * 100) : 0}% of total`,
-    },
-    {
-      label: "Total Executions",
-      value: data.totalExecutions.toLocaleString(),
-      icon: <Activity className="h-5 w-5 text-blue-600 dark:text-blue-400" />,
-      iconBg: "bg-blue-50 dark:bg-blue-500/10",
-      index: 2,
-    },
-    {
-      label: "Success Rate",
-      value: `${data.successRate.toFixed(1)}%`,
-      icon: <TrendingUp className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />,
-      iconBg: "bg-emerald-50 dark:bg-emerald-500/10",
-      index: 3,
-    },
-    {
-      label: "Avg Duration",
-      value: avgDurationLabel,
-      icon: <Clock className="h-5 w-5 text-amber-600 dark:text-amber-400" />,
-      iconBg: "bg-amber-50 dark:bg-amber-500/10",
-      index: 4,
-    },
-    {
-      label: "Pending Approvals",
-      value: data.pendingApprovals,
-      icon: <AlertCircle className="h-5 w-5 text-orange-600 dark:text-orange-400" />,
-      iconBg: "bg-orange-50 dark:bg-orange-500/10",
-      index: 5,
-    },
-  ];
+  const activeShare =
+    data.totalWorkflows > 0 ? Math.round((data.activeWorkflows / data.totalWorkflows) * 100) : 0;
 
   const maxCount = Math.max(...(data.executionTrend?.map((t) => t.count) ?? [0]), 1);
 
@@ -152,11 +75,20 @@ export default function WorkflowAnalyticsPage() {
       subtitle="Execution trends and workflow performance metrics"
     >
       <div className="flex flex-1 min-h-0 flex-col space-y-6">
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {stats.map((s) => (
-            <StatCard key={s.label} {...s} />
-          ))}
-        </div>
+        <StatCardGrid cols={3}>
+          <StatCard label="Total Workflows" value={data.totalWorkflows} icon={GitBranch} tone="violet" />
+          <StatCard
+            label="Active Workflows"
+            value={data.activeWorkflows}
+            icon={CheckCircle2}
+            tone="emerald"
+            hint={`${activeShare}% of total`}
+          />
+          <StatCard label="Total Executions" value={data.totalExecutions.toLocaleString()} icon={Activity} tone="blue" />
+          <StatCard label="Success Rate" value={`${data.successRate.toFixed(1)}%`} icon={TrendingUp} tone="emerald" />
+          <StatCard label="Avg Duration" value={avgDurationLabel} icon={Clock} tone="amber" />
+          <StatCard label="Pending Approvals" value={data.pendingApprovals} icon={AlertCircle} tone="amber" />
+        </StatCardGrid>
 
         {data.executionTrend && data.executionTrend.length > 0 && (
           <motion.div

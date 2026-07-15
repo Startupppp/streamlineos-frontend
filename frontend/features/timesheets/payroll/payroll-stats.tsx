@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { Clock, Users, AlertTriangle, CheckCircle2, Timer } from "lucide-react";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import type { PayrollPeriodTotals } from "./types";
@@ -9,7 +10,7 @@ interface PayrollStatsProps {
   isLoading: boolean;
 }
 
-export function PayrollStats({ totals, isLoading }: PayrollStatsProps) {
+export const PayrollStats = memo(function PayrollStats({ totals, isLoading }: PayrollStatsProps) {
   return (
     <StatCardGrid cols={5}>
       <StatCard
@@ -50,4 +51,4 @@ export function PayrollStats({ totals, isLoading }: PayrollStatsProps) {
       />
     </StatCardGrid>
   );
-}
+});

@@ -1,7 +1,7 @@
 "use client";
 
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
-import { useMemo } from "react";
+import { useMemo, memo } from "react";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -22,6 +22,7 @@ import { ExternalLink, BarChart2, CheckCircle, Star, Target } from "lucide-react
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { useReviewCycles } from "@/hooks/api/hr";
 import { useHrPerformanceReviews } from "@/hooks/api/hr";
 import type { ReviewCycle } from "@/types/hr";
@@ -69,32 +70,22 @@ const REVIEW_CYCLE_COLUMNS: DataTableColumn<ReviewCycle>[] = [
   },
 ];
 
-interface StatCardProps {
-  label: string;
-  value: string | number;
-  icon: React.ReactNode;
-  color: string;
-  delay?: number;
-}
-
-function StatCard({ label, value, icon, color, delay = 0 }: StatCardProps) {
+const PerformanceAnalyticsStats = memo(function PerformanceAnalyticsStats({
+  totalCycles,
+  activeCycles,
+}: {
+  totalCycles: number;
+  activeCycles: number;
+}) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.22, ease: "easeOut", delay }}
-      className="bg-card border border-border rounded-lg shadow-sm p-5"
-    >
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-sm text-muted-foreground">{label}</p>
-        <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${color}`}>
-          {icon}
-        </div>
-      </div>
-      <p className="text-3xl font-bold text-foreground">{value}</p>
-    </motion.div>
+    <StatCardGrid cols={4}>
+      <StatCard label="Review Cycles" value={totalCycles} icon={BarChart2} tone="blue" />
+      <StatCard label="Active Cycles" value={activeCycles} icon={CheckCircle} tone="emerald" />
+      <StatCard label="Avg Rating" value="—" icon={Star} tone="amber" />
+      <StatCard label="OKR Progress" value="—" icon={Target} tone="default" />
+    </StatCardGrid>
   );
-}
+});
 
 export default function PerformanceAnalyticsPage() {
   const { data: cycles = [], isLoading } = useReviewCycles();
@@ -147,14 +138,7 @@ export default function PerformanceAnalyticsPage() {
     >
       {isLoading ? (
         <div className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="bg-card rounded-lg border border-border p-5 animate-pulse space-y-3">
-                <div className="h-4 w-28 bg-muted rounded" />
-                <div className="h-8 w-16 bg-muted rounded" />
-              </div>
-            ))}
-          </div>
+          <StatCardGridSkeleton cols={4} count={4} />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-card rounded-lg border border-border p-6 h-72 animate-pulse" />
             <div className="bg-card rounded-lg border border-border p-6 h-72 animate-pulse" />
@@ -162,36 +146,7 @@ export default function PerformanceAnalyticsPage() {
         </div>
       ) : (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-            <StatCard
-              label="Review Cycles"
-              value={cycles.length}
-              icon={<BarChart2 className="w-4 h-4 text-foreground" />}
-              color="bg-muted"
-              delay={0.05}
-            />
-            <StatCard
-              label="Active Cycles"
-              value={activeCycles}
-              icon={<CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />}
-              color="bg-green-100 dark:bg-green-500/10"
-              delay={0.1}
-            />
-            <StatCard
-              label="Avg Rating"
-              value="—"
-              icon={<Star className="w-4 h-4 text-amber-500 dark:text-amber-400" />}
-              color="bg-amber-100 dark:bg-amber-500/10"
-              delay={0.15}
-            />
-            <StatCard
-              label="OKR Progress"
-              value="—"
-              icon={<Target className="w-4 h-4 text-foreground" />}
-              color="bg-muted"
-              delay={0.2}
-            />
-          </div>
+          <PerformanceAnalyticsStats totalCycles={cycles.length} activeCycles={activeCycles} />
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <motion.div

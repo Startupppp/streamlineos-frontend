@@ -16,6 +16,7 @@ import {
   Trophy,
 } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -75,37 +76,6 @@ function useCreateRecognition() {
   });
 }
 
-function StatCard({
-  title,
-  value,
-  sub,
-  icon,
-  isLoading,
-}: {
-  title: string;
-  value: string | number;
-  sub?: string;
-  icon: React.ReactNode;
-  isLoading?: boolean;
-}) {
-  return (
-    <div className="bg-card border border-border rounded-xl p-4 flex items-start gap-3">
-      <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-        <span className="text-primary">{icon}</span>
-      </div>
-      <div className="min-w-0">
-        <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">{title}</p>
-        {isLoading ? (
-          <Skeleton className="h-5 w-12 mt-1" />
-        ) : (
-          <p className="text-xl font-bold text-foreground tabular-nums">{value}</p>
-        )}
-        {sub && <p className="text-[11px] text-muted-foreground mt-0.5">{sub}</p>}
-      </div>
-    </div>
-  );
-}
-
 function MoodSparkline({ data }: { data: { date: string; avgMood: number }[] }) {
   if (data.length === 0) return null;
   const last14 = data.slice(-14);
@@ -143,47 +113,47 @@ function OverviewTab() {
         variants={staggerContainer}
         initial="hidden"
         animate="visible"
-        className="grid grid-cols-2 sm:grid-cols-4 gap-3"
+        className="space-y-6"
       >
         <motion.div variants={fadeUp}>
-          <StatCard
-            title="Recognitions"
-            value={recentCount}
-            sub="All time"
-            icon={<Heart className="h-4 w-4" />}
-            isLoading={recLoading}
-          />
-        </motion.div>
-        <motion.div variants={fadeUp}>
-          <StatCard
-            title="Top Points"
-            value={overview?.topLeaderboard?.[0]?.total ?? "—"}
-            sub="This period"
-            icon={<Trophy className="h-4 w-4" />}
-            isLoading={isLoading}
-          />
-        </motion.div>
-        <motion.div variants={fadeUp}>
-          <StatCard
-            title="Mood Responses"
-            value={moodData?.reduce((acc, d) => acc + d.count, 0) ?? "—"}
-            sub="Aggregated"
-            icon={<Smile className="h-4 w-4" />}
-            isLoading={moodLoading}
-          />
-        </motion.div>
-        <motion.div variants={fadeUp}>
-          <StatCard
-            title="Avg Mood"
-            value={
-              moodData && moodData.length > 0
-                ? (moodData.slice(-7).reduce((s, d) => s + d.avgMood, 0) / Math.min(moodData.slice(-7).length, 7)).toFixed(1)
-                : "—"
-            }
-            sub="Last 7 days"
-            icon={<Star className="h-4 w-4" />}
-            isLoading={moodLoading}
-          />
+          <StatCardGrid cols={4}>
+            <StatCard
+              label="Recognitions"
+              value={recentCount}
+              hint="All time"
+              icon={Heart}
+              tone="red"
+              isLoading={recLoading}
+            />
+            <StatCard
+              label="Top Points"
+              value={overview?.topLeaderboard?.[0]?.total ?? "—"}
+              hint="This period"
+              icon={Trophy}
+              tone="amber"
+              isLoading={isLoading}
+            />
+            <StatCard
+              label="Mood Responses"
+              value={moodData?.reduce((acc, d) => acc + d.count, 0) ?? "—"}
+              hint="Aggregated"
+              icon={Smile}
+              tone="blue"
+              isLoading={moodLoading}
+            />
+            <StatCard
+              label="Avg Mood"
+              value={
+                moodData && moodData.length > 0
+                  ? (moodData.slice(-7).reduce((s, d) => s + d.avgMood, 0) / Math.min(moodData.slice(-7).length, 7)).toFixed(1)
+                  : "—"
+              }
+              hint="Last 7 days"
+              icon={Star}
+              tone="violet"
+              isLoading={moodLoading}
+            />
+          </StatCardGrid>
         </motion.div>
       </motion.div>
 

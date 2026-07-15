@@ -6,7 +6,7 @@ export function ReportsPageSkeleton() {
     <PageWrapper title="Payroll Reports">
       <div className="flex flex-col gap-3 lg:flex-row lg:gap-6">
         <div className="hidden lg:flex w-52 shrink-0 flex-col gap-1">
-          {Array.from({ length: 11 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <Skeleton key={i} className="h-8 w-full rounded" />
           ))}
         </div>

@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { StatCard } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Users, Home, CalendarCheck, Clock3, BadgeCheck } from "lucide-react";
 import { resolveImageUrl } from "@/lib/utils";
@@ -27,6 +27,24 @@ import { WfhRequestSheet } from "@/features/hr/leaves/wfh-request-sheet";
 import type {
   LeaveBalance, LeaveType, Approver, LeaveRequest, ApprovedLeave,
 } from "./leaves-shared";
+
+const LeavesSummaryStrip = React.memo(function LeavesSummaryStrip({
+  totalAvailable,
+  pendingCount,
+  approvedCount,
+}: {
+  totalAvailable: number;
+  pendingCount: number;
+  approvedCount: number;
+}) {
+  return (
+    <StatCardGrid cols={3}>
+      <StatCard label="Available Days" value={totalAvailable} icon={CalendarCheck} color="green" />
+      <StatCard label="Pending Requests" value={pendingCount} icon={Clock3} tone="amber" />
+      <StatCard label="Approved (YTD)" value={approvedCount} icon={BadgeCheck} color="blue" />
+    </StatCardGrid>
+  );
+});
 import { LeavesTabContent } from "./leaves-tab-content";
 import { WfhTabContent } from "./wfh-tab-content";
 import { LeaveApprovalsContent } from "./leave-approvals";
@@ -69,9 +87,7 @@ export function LeavesWfhContent() {
     return (
       <PageWrapper title="Leaves & Time Off" subtitle="Manage your leave requests, work from home, and approvals.">
         <div className="space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {[1, 2, 3].map((i) => <Skeleton key={i} className="h-24" />)}
-          </div>
+          <StatCardGridSkeleton cols={3} count={3} />
           <Skeleton className="h-64" />
         </div>
       </PageWrapper>
@@ -106,26 +122,11 @@ export function LeavesWfhContent() {
         }
       >
         <div className="space-y-5">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            <StatCard
-              label="Available Days"
-              value={totalAvailable}
-              icon={CalendarCheck}
-              color="green"
-            />
-            <StatCard
-              label="Pending Requests"
-              value={pendingCount}
-              icon={Clock3}
-              color="amber"
-            />
-            <StatCard
-              label="Approved (YTD)"
-              value={approvedCount}
-              icon={BadgeCheck}
-              color="blue"
-            />
-          </div>
+          <LeavesSummaryStrip
+            totalAvailable={totalAvailable}
+            pendingCount={pendingCount}
+            approvedCount={approvedCount}
+          />
 
           {approvedLeavesThisWeek.length > 0 && (
             <Card className="rounded-2xl border border-amber-200/50 dark:border-amber-800/30 bg-amber-50/50 dark:bg-amber-950/10 shadow-sm overflow-hidden">

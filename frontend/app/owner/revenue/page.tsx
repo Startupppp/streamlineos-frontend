@@ -1,6 +1,6 @@
 import { Wallet, AlertCircle } from "lucide-react";
 import { OwnerPage } from "@/components/owner/owner-page";
-import { MetricCard } from "@/components/owner/metric-card";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 
 export const dynamic = "force-dynamic";
 
@@ -33,18 +33,18 @@ export default function RevenuePage() {
         </div>
       )}
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mb-1.5">
-        <MetricCard
+      <StatCardGrid cols={4} className="mb-1.5">
+        <StatCard
           label="Captured"
           value="₹0"
           hint="0 txn"
-          accent="emerald"
-          icon={<Wallet className="h-3.5 w-3.5" />}
+          icon={Wallet}
+          tone="emerald"
         />
-        <MetricCard label="Refunded" value="₹0" hint="0 txn" accent="violet" />
-        <MetricCard label="Failed" value={0} hint="transactions" />
-        <MetricCard label="Months tracked" value={0} accent="cyan" />
-      </div>
+        <StatCard label="Refunded" value="₹0" hint="0 txn" tone="violet" />
+        <StatCard label="Failed" value={0} hint="transactions" />
+        <StatCard label="Months tracked" value={0} color="cyan" />
+      </StatCardGrid>
 
       <div className="rounded-2xl border border-border bg-card overflow-hidden">
         <div className="px-4 py-3 border-b border-slate-100">

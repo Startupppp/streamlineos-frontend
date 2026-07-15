@@ -33,7 +33,7 @@ export default function ProjectsLoading() {
             <Skeleton className="hidden h-3 w-12 lg:block" />
             <Skeleton className="hidden h-3 w-14 sm:block" />
           </div>
-          {Array.from({ length: 10 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <div
               key={i}
               className="flex items-center gap-2.5 border-b border-border/40 px-3 py-1.5 last:border-0"

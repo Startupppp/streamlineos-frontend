@@ -342,49 +342,6 @@ export const WfhRequestItem = React.memo(function WfhRequestItem({
   );
 });
 
-export const StatsCard = React.memo(function StatsCard({
-  title,
-  value,
-  subtitle,
-  icon: Icon,
-  accent,
-}: {
-  title: string;
-  value: string | number;
-  subtitle: string;
-  icon: React.ComponentType<{ className?: string }>;
-  accent: string;
-}) {
-  return (
-    <Card
-      className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden"
-      role="listitem"
-    >
-      <CardContent className="p-3">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-              {title}
-            </p>
-            <p className="text-3xl font-bold tabular-nums text-foreground leading-none">
-              {value}
-            </p>
-            <p className="text-[11px] text-muted-foreground mt-1.5">{subtitle}</p>
-          </div>
-          <div
-            className={cn(
-              "h-7 w-7 rounded-lg flex items-center justify-center shrink-0",
-              accent,
-            )}
-          >
-            <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-});
-
 export const RequestHistoryRow = React.memo(function RequestHistoryRow({
   request,
   isAdmin = false,

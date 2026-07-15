@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Clock, TrendingUp, CheckSquare, UserX } from "lucide-react";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 
@@ -9,7 +10,7 @@ interface TeamStatsProps {
   isLoading: boolean;
 }
 
-export function TeamStats({
+export const TeamStats = memo(function TeamStats({
   totalHours,
   billablePercent,
   submittedCount,
@@ -48,4 +49,4 @@ export function TeamStats({
       />
     </StatCardGrid>
   );
-}
+});

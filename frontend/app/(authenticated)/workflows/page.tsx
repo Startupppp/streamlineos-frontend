@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, memo } from "react";
 import { useRouter } from "next/navigation";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import Link from "next/link";
@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -97,51 +98,15 @@ const createWorkflowSchema = z.object({
 
 type CreateWorkflowValues = z.infer<typeof createWorkflowSchema>;
 
-interface StatCardProps {
-  label: string;
-  value: number | undefined;
-  icon: React.ReactNode;
-  loading: boolean;
-  index: number;
-}
-
-function StatCard({ label, value, icon, loading, index }: StatCardProps) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.22, ease: "easeOut", delay: index * 0.06 }}
-    >
-      <Card className="bg-card rounded-xl border border-border shadow-sm">
-        <CardContent className="p-4">
-          <div className="flex items-start justify-between gap-2">
-            <p className="text-xs font-medium text-muted-foreground">{label}</p>
-            <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
-              {icon}
-            </div>
-          </div>
-          <div className="mt-2">
-            {loading ? (
-              <div className="h-7 w-14 rounded bg-muted animate-pulse" />
-            ) : (
-              <p className="text-2xl font-bold text-foreground tabular-nums">
-                {value ?? 0}
-              </p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    </motion.div>
-  );
-}
-
-interface WorkflowCardProps {
+const WorkflowCard = memo(function WorkflowCard({
+  workflow,
+  onDuplicate,
+  onDelete,
+}: {
   workflow: Workflow;
   onDuplicate: () => void;
   onDelete: () => void;
-}
-
-function WorkflowCard({ workflow, onDuplicate, onDelete }: WorkflowCardProps) {
+}) {
   return (
     <Card
       className={cn(
@@ -218,7 +183,7 @@ function WorkflowCard({ workflow, onDuplicate, onDelete }: WorkflowCardProps) {
       </CardContent>
     </Card>
   );
-}
+});
 
 interface WorkflowCardItemProps {
   workflow: Workflow;
@@ -465,36 +430,36 @@ export default function WorkflowsPage() {
       }
     >
       <div className="flex flex-1 min-h-0 flex-col space-y-5">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <StatCardGrid cols={4}>
           <StatCard
             label="Total Workflows"
-            value={analytics?.totalWorkflows}
-            icon={<GitBranch className="h-4 w-4 text-violet-600 dark:text-violet-400" />}
-            loading={analyticsLoading}
-            index={0}
+            value={analytics?.totalWorkflows ?? 0}
+            icon={GitBranch}
+            tone="violet"
+            isLoading={analyticsLoading}
           />
           <StatCard
             label="Active Workflows"
-            value={analytics?.activeWorkflows}
-            icon={<CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />}
-            loading={analyticsLoading}
-            index={1}
+            value={analytics?.activeWorkflows ?? 0}
+            icon={CheckCircle2}
+            tone="emerald"
+            isLoading={analyticsLoading}
           />
           <StatCard
             label="Total Executions"
-            value={analytics?.totalExecutions}
-            icon={<Activity className="h-4 w-4 text-blue-600 dark:text-blue-400" />}
-            loading={analyticsLoading}
-            index={2}
+            value={analytics?.totalExecutions ?? 0}
+            icon={Activity}
+            tone="blue"
+            isLoading={analyticsLoading}
           />
           <StatCard
             label="Pending Approvals"
-            value={analytics?.pendingApprovals}
-            icon={<Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />}
-            loading={analyticsLoading}
-            index={3}
+            value={analytics?.pendingApprovals ?? 0}
+            icon={Clock}
+            tone="amber"
+            isLoading={analyticsLoading}
           />
-        </div>
+        </StatCardGrid>
 
         {isLoading ? (
           <LoadingState variant="cards" rows={9} />

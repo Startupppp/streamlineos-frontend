@@ -6,7 +6,7 @@ export default function CommandCenterLoading() {
     <PageWrapper title="Command Center" subtitle="Overview of your projects and active work">
       <div className="space-y-6">
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-          {Array.from({ length: 9 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <Skeleton key={i} className="h-20 rounded-xl" />
           ))}
         </div>

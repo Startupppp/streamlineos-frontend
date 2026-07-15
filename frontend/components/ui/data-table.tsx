@@ -244,9 +244,9 @@ export function DataTable<T>({
   }
 
   return (
-    <div className={cn("border border-border rounded-md flex flex-col bg-card", className)}>
+    <div className={cn("border border-border rounded-md flex flex-col", className)}>
       {(search !== undefined || toolbar !== undefined) && (
-        <div className="shrink-0 flex items-center justify-between gap-2 border-b border-border bg-muted/40 px-2 py-1.5">
+        <div className="shrink-0 flex items-center justify-between gap-2 border-b border-border px-2 py-1.5">
           {search !== undefined ? (
             <div className="relative">
               <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -268,10 +268,10 @@ export function DataTable<T>({
         {isLoading ? (
           <div
             style={minWidth ? { minWidth } : undefined}
-            className="w-full min-w-0 overflow-x-auto"
+            className={cn(!minWidth && "min-w-max")}
           >
-            <Table className="table-fixed">
-              <TableHeader className="sticky top-0 z-10 bg-card border-b border-border">
+            <Table>
+              <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
                 {table.getHeaderGroups().map((hg) => (
                   <TableRow
                     key={hg.id}
@@ -286,7 +286,6 @@ export function DataTable<T>({
                           className={cn(
                             "text-[10px] uppercase tracking-wider font-bold px-2 py-1.5",
                             header.column.columnDef.meta?.headerClassName,
-                            header.column.columnDef.meta?.className,
                           )}
                         >
                           {header.isPlaceholder ? null : canSort ? (
@@ -308,7 +307,7 @@ export function DataTable<T>({
                 ))}
               </TableHeader>
               <TableBody>
-                {Array.from({ length: 12 }).map((_, i) => (
+                {Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i} className="h-8 hover:bg-transparent">
                     {columnDefs.map((_, j) => (
                       <TableCell key={j} className="px-2 py-1">
@@ -329,10 +328,10 @@ export function DataTable<T>({
         ) : (
           <div
             style={minWidth ? { minWidth } : undefined}
-            className="w-full min-w-0 overflow-x-auto"
+            className={cn(!minWidth && "min-w-max")}
           >
-            <Table className="table-fixed">
-              <TableHeader className="sticky top-0 z-10 bg-card border-b border-border">
+            <Table>
+              <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
                 {table.getHeaderGroups().map((hg) => (
                   <TableRow
                     key={hg.id}
@@ -347,7 +346,6 @@ export function DataTable<T>({
                           className={cn(
                             "text-[10px] uppercase tracking-wider font-bold px-2 py-1.5",
                             header.column.columnDef.meta?.headerClassName,
-                            header.column.columnDef.meta?.className,
                           )}
                           aria-sort={
                             sorted === "asc"
@@ -439,8 +437,8 @@ export function DataTableSkeleton({
 }) {
   return (
     <div className={cn("border border-border rounded-md overflow-hidden", className)}>
-      <Table className="table-fixed">
-        <TableHeader className="bg-muted/80">
+      <Table>
+        <TableHeader className="bg-muted/40 border-b border-border">
           <TableRow className="border-b-2 border-border hover:bg-transparent">
             {Array.from({ length: columns }).map((_, colIdx) => (
               <TableHead key={colIdx} className="px-2 py-1.5">

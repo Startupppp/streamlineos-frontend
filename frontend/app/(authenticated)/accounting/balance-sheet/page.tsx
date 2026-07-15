@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, type ChangeEvent } from "react";
+import { useState, memo } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import {
   Table,
   TableBody,
@@ -18,10 +18,35 @@ import { ErrorState } from "@/components/shared/error-state";
 import { useBalanceSheet } from "@/hooks/api/accounting";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { BalanceSheetRow } from "@/types/accounting";
+import { Landmark, Scale, PiggyBank } from "lucide-react";
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
 }
+
+function formatBalance(value: string): string {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return value;
+  return n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+const BalanceSheetSummaryStrip = memo(function BalanceSheetSummaryStrip({
+  totalAssets,
+  totalLiabilities,
+  totalEquity,
+}: {
+  totalAssets: string;
+  totalLiabilities: string;
+  totalEquity: string;
+}) {
+  return (
+    <StatCardGrid cols={3}>
+      <StatCard label="Total Assets" value={formatBalance(totalAssets)} icon={Landmark} tone="blue" />
+      <StatCard label="Total Liabilities" value={formatBalance(totalLiabilities)} icon={Scale} tone="red" />
+      <StatCard label="Total Equity" value={formatBalance(totalEquity)} icon={PiggyBank} tone="emerald" />
+    </StatCardGrid>
+  );
+});
 
 type SectionProps = {
   title: string;
@@ -135,7 +160,13 @@ export default function BalanceSheetPage() {
       )}
 
       {report && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="space-y-4">
+          <BalanceSheetSummaryStrip
+            totalAssets={report.totalAssets}
+            totalLiabilities={report.totalLiabilities}
+            totalEquity={report.totalEquity}
+          />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <Section
             title="Assets"
             rows={report.assets}
@@ -158,6 +189,7 @@ export default function BalanceSheetPage() {
               value: report.retainedEarnings,
             }}
           />
+        </div>
         </div>
       )}
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { parseISO } from "date-fns";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo, memo } from "react";
 import {
   useReviewCycles,
   useCreateReviewCycle,
@@ -22,7 +22,8 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { Plus, MoreHorizontal, Trash2, Pencil } from "lucide-react";
+import { Plus, MoreHorizontal, Trash2, Pencil, Calendar, CheckCircle, Archive } from "lucide-react";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -39,6 +40,24 @@ function getCycleProgress(cycle: ReviewCycle): number {
   if (now >= end) return 100;
   return Math.round(((now - start) / (end - start)) * 100);
 }
+
+const CycleHeaderStats = memo(function CycleHeaderStats({
+  total,
+  active,
+  completed,
+}: {
+  total: number;
+  active: number;
+  completed: number;
+}) {
+  return (
+    <StatCardGrid cols={3} className="flex-1 min-w-0">
+      <StatCard label="Total Cycles" value={total} icon={Calendar} tone="blue" />
+      <StatCard label="Active" value={active} icon={CheckCircle} tone="emerald" />
+      <StatCard label="Completed" value={completed} icon={Archive} tone="default" />
+    </StatCardGrid>
+  );
+});
 
 export function CyclesTab() {
   const { data: cycles, isLoading } = useReviewCycles();
@@ -124,18 +143,28 @@ export function CyclesTab() {
   const handlePeriodEndChange = useCallback((value: string) => setPeriodEnd(value), []);
   const handleDeadlineChange = useCallback((value: string) => setDeadline(value), []);
 
+  const cycleStats = useMemo(() => {
+    const list = cycles ?? [];
+    return {
+      total: list.length,
+      active: list.filter((c: ReviewCycle) => c.status === "ACTIVE").length,
+      completed: list.filter((c: ReviewCycle) => c.status === "COMPLETED").length,
+    };
+  }, [cycles]);
+
   if (isLoading) {
     return <LoadingState variant="list" rows={12} />;
   }
 
   return (
     <div className="flex flex-col flex-1 min-h-0 gap-4">
-      <div className="flex items-center justify-between shrink-0">
-        <div>
-          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Total Cycles</p>
-          <p className="text-3xl font-bold tabular-nums text-foreground">{cycles?.length ?? 0}</p>
-        </div>
-        <Button size="sm" className="h-8 gap-1.5" onClick={openCreate}>
+      <div className="flex items-center justify-between shrink-0 gap-3 flex-wrap">
+        <CycleHeaderStats
+          total={cycleStats.total}
+          active={cycleStats.active}
+          completed={cycleStats.completed}
+        />
+        <Button size="sm" className="h-8 gap-1.5 shrink-0" onClick={openCreate}>
           <Plus className="h-3.5 w-3.5" />New Cycle
         </Button>
       </div>

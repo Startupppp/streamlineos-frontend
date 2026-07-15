@@ -3,8 +3,7 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ErrorState } from "@/components/shared/error-state";
-import { MetricCard, MetricCardGrid } from "@/components/charts/metric-card";
-import { StatCardGridSkeleton } from "@/components/ui/stat-card";
+import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { CheckCircle2, XCircle, Clock, ShieldAlert } from "lucide-react";
 import { useSignSummary } from "@/hooks/api/sign/reports";
 import { ENVELOPE_STATUS_LABEL } from "../lib/status";
@@ -48,18 +47,20 @@ export function ReportsPage() {
       subtitle="Envelope activity, completion rates, and usage across SignOS"
     >
       <div className="space-y-6">
-        <MetricCardGrid cols={4}>
-          <MetricCard
+        <StatCardGrid cols={4}>
+          <StatCard
             label="Completion rate"
             value={formatPercent(data.completionRate)}
             icon={CheckCircle2}
+            tone="emerald"
           />
-          <MetricCard
+          <StatCard
             label="Decline rate"
             value={formatPercent(data.declineRate)}
             icon={XCircle}
+            tone="red"
           />
-          <MetricCard
+          <StatCard
             label="Avg. time to sign"
             value={
               data.avgTimeToSignHours !== null
@@ -67,13 +68,15 @@ export function ReportsPage() {
                 : "—"
             }
             icon={Clock}
+            tone="blue"
           />
-          <MetricCard
+          <StatCard
             label="Auth failures"
             value={data.authFailures}
             icon={ShieldAlert}
+            tone="amber"
           />
-        </MetricCardGrid>
+        </StatCardGrid>
 
         <div className="grid gap-6 lg:grid-cols-2">
           <Card className="border-border bg-card">

@@ -156,7 +156,7 @@ function ComposeBar({
   }
 
   return (
-    <div className="border-t p-3 space-y-2 bg-background">
+    <div className="border-t p-3 space-y-2 bg-card border-border">
       <div className="flex items-center gap-2">
         <div className="flex-1 space-y-1">
           <Label className="text-xs text-muted-foreground">Channel</Label>
@@ -219,7 +219,7 @@ function ThreadPane({ thread }: { thread: MessageThread }) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="border-b px-4 py-3 bg-background">
+      <div className="border-b px-4 py-3 bg-card border-border">
         <p className="text-sm font-semibold">{candidateName(thread)}</p>
         <p className="text-xs text-muted-foreground">{thread.candidateEmail}</p>
       </div>

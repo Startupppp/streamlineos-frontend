@@ -6,6 +6,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -79,25 +80,6 @@ const leadColumns: DataTableColumn<CampaignLeadItem & { _idx: number }>[] = [
     ),
   },
 ];
-
-interface StatCardProps {
-  label: string;
-  value: string | number;
-  subValue?: string;
-  className?: string;
-}
-
-function StatCard({ label, value, subValue, className }: StatCardProps) {
-  return (
-    <Card className={cn("rounded-xl border border-border", className)}>
-      <CardContent className="pt-5 pb-4 px-5">
-        <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium mb-1">{label}</p>
-        <p className="text-2xl font-semibold tabular-nums">{value}</p>
-        {subValue && <p className="text-xs text-muted-foreground mt-0.5">{subValue}</p>}
-      </CardContent>
-    </Card>
-  );
-}
 
 function AttributionChart({ data }: { data: CampaignAttribution[] }) {
   if (!data.length) {
@@ -181,7 +163,6 @@ export function CampaignDetailPage({ campaignId }: CampaignDetailPageProps) {
 
   const roiValue = roi?.roi ?? parseFloat(campaign?.roi ?? "0");
   const roiDisplay = isNaN(roiValue) ? "—" : `${roiValue.toFixed(1)}%`;
-  const roiClass = roiValue > 0 ? "text-emerald-600" : roiValue < 0 ? "text-red-600" : "";
 
   const attributionData = attributionTab === "first-touch" ? (firstTouch ?? []) : (lastTouch ?? []);
   const attributionLoading = attributionTab === "first-touch" ? firstLoading : lastLoading;
@@ -212,24 +193,27 @@ export function CampaignDetailPage({ campaignId }: CampaignDetailPageProps) {
         animate="visible"
         className="space-y-4"
       >
-        <motion.div variants={fadeUp} className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {roiLoading ? (
-            Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)
-          ) : (
-            <>
-              <StatCard label="Total Leads" value={roi?.leads ?? campaign?.leads ?? 0} />
-              <StatCard label="Converted" value={roi?.converted ?? "—"} />
-              <StatCard
-                label="Revenue"
-                value={roi?.revenueCents ? formatCurrency(Math.round(roi.revenueCents / 100)) : "—"}
-              />
-              <StatCard
-                label="ROI"
-                value={roiDisplay}
-                className={roiClass}
-              />
-            </>
-          )}
+        <motion.div variants={fadeUp}>
+          <StatCardGrid cols={4}>
+            {roiLoading ? (
+              Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)
+            ) : (
+              <>
+                <StatCard label="Total Leads" value={roi?.leads ?? campaign?.leads ?? 0} tone="blue" />
+                <StatCard label="Converted" value={roi?.converted ?? "—"} tone="emerald" />
+                <StatCard
+                  label="Revenue"
+                  value={roi?.revenueCents ? formatCurrency(Math.round(roi.revenueCents / 100)) : "—"}
+                  tone="amber"
+                />
+                <StatCard
+                  label="ROI"
+                  value={roiDisplay}
+                  tone={roiValue > 0 ? "emerald" : roiValue < 0 ? "red" : "default"}
+                />
+              </>
+            )}
+          </StatCardGrid>
         </motion.div>
 
         <motion.div variants={fadeUp}>

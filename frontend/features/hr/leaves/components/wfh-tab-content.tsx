@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, memo } from "react";
 import { isBefore, isAfter, format } from "date-fns";
 import { motion } from "framer-motion";
 import { useHrWfhRequests } from "@/hooks/api/hr";
@@ -16,11 +16,41 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyWfhIllustration } from "@/components/illustrations";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Home, TrendingUp, Clock } from "lucide-react";
 
 import { staggerContainer, fadeIn } from "@/lib/motion-variants";
 import type { WfhRequest } from "./leaves-shared";
-import { WfhRequestItem, StatsCard } from "./leaves-shared";
+import { WfhRequestItem } from "./leaves-shared";
+
+const WfhStatsStrip = memo(function WfhStatsStrip({
+  thisMonth,
+  pending,
+  currentMonth,
+}: {
+  thisMonth: number;
+  pending: number;
+  currentMonth: string;
+}) {
+  return (
+    <StatCardGrid cols={2} aria-label="WFH statistics">
+      <StatCard
+        label="Monthly WFH"
+        value={thisMonth}
+        hint={currentMonth}
+        icon={TrendingUp}
+        tone="emerald"
+      />
+      <StatCard
+        label="Pending"
+        value={pending}
+        hint="Awaiting approval"
+        icon={Clock}
+        tone="amber"
+      />
+    </StatCardGrid>
+  );
+});
 
 export function WfhTabContent() {
   const [wfhStatusFilter, setWfhStatusFilter] = useState<string>("ALL");
@@ -58,26 +88,11 @@ export function WfhTabContent() {
 
   return (
     <div className="space-y-4">
-      <div
-        className="grid grid-cols-2 md:grid-cols-4 gap-3"
-        role="list"
-        aria-label="WFH statistics"
-      >
-        <StatsCard
-          title="Monthly WFH"
-          value={wfhStats.thisMonth}
-          subtitle={currentMonth}
-          icon={TrendingUp}
-          accent="bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400"
-        />
-        <StatsCard
-          title="Pending"
-          value={wfhStats.pending}
-          subtitle="Awaiting approval"
-          icon={Clock}
-          accent="bg-amber-100 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400"
-        />
-      </div>
+      <WfhStatsStrip
+        thisMonth={wfhStats.thisMonth}
+        pending={wfhStats.pending}
+        currentMonth={currentMonth}
+      />
 
       <Card className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
         <CardHeader className="pb-3 pt-4 px-4">

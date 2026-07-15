@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { Users, DollarSign, Calendar } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -17,16 +19,6 @@ function formatCents(v: unknown): string {
   const n = Number(v);
   if (isNaN(n)) return "—";
   return `$${(n / 100).toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
-}
-
-function SummaryCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
-  return (
-    <div className="p-4 rounded-xl border bg-card">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="text-xl font-bold text-primary mt-1">{value}</p>
-      {sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}
-    </div>
-  );
 }
 
 export default function WorkforceCostPage() {
@@ -63,11 +55,11 @@ export default function WorkforceCostPage() {
               {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <SummaryCard label="Total Headcount" value={String(summary?.total_headcount ?? "—")} sub="Active employees" />
-              <SummaryCard label="Monthly Cost" value={formatCents(summary?.total_monthly_cost_cents)} sub="All active employees" />
-              <SummaryCard label="Annual CTC" value={formatCents(summary?.total_annual_ctc_cents)} sub="Total compensation" />
-            </div>
+            <StatCardGrid cols={3}>
+              <StatCard label="Total Headcount" value={String(summary?.total_headcount ?? "—")} hint="Active employees" icon={Users} tone="blue" />
+              <StatCard label="Monthly Cost" value={formatCents(summary?.total_monthly_cost_cents)} hint="All active employees" icon={DollarSign} tone="emerald" />
+              <StatCard label="Annual CTC" value={formatCents(summary?.total_annual_ctc_cents)} hint="Total compensation" icon={Calendar} tone="violet" />
+            </StatCardGrid>
           )}
 
           {/* Period selector */}
