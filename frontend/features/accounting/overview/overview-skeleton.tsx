@@ -39,7 +39,7 @@ export function OverviewSkeleton() {
           <div className="rounded-xl border border-border bg-card p-4">
             <Skeleton className="h-4 w-32 mb-3" />
             <div className="space-y-2.5">
-              {Array.from({ length: 3 }).map((_, i) => (
+              {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="flex items-center gap-2">
                   <Skeleton className="h-7 w-7 rounded-md" />
                   <Skeleton className="h-4 flex-1" />

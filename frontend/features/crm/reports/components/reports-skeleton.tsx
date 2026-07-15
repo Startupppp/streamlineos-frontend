@@ -17,7 +17,7 @@ export function ReportsSkeleton() {
             <StatCard label="Won Revenue" value="" isLoading />
           </StatCardGrid>
         </div>
-        {Array.from({ length: 3 }).map((_, i) => (
+        {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="bg-card rounded-lg border border-border shadow-sm p-4 space-y-3">
             <Skeleton className="h-4 w-40" />
             <Skeleton className="h-48 w-full" />

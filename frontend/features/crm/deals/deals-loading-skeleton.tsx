@@ -25,7 +25,7 @@ export function DealsLoadingSkeleton() {
           <div className="border-b border-border px-2 py-1.5 flex gap-4 bg-muted/80">
             {[1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-3 flex-1" />)}
           </div>
-          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((i) => (
             <div key={i} className="h-8 flex gap-4 px-2 py-1 border-b border-border last:border-0">
               {[1, 2, 3, 4, 5].map((j) => <Skeleton key={j} className="h-3 flex-1" />)}
             </div>

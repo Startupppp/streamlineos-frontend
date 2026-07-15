@@ -8,7 +8,7 @@ export default function NotificationPreferencesLoading() {
         <div className="space-y-2">
           <Skeleton className="h-3 w-16 rounded" />
           <div className="border border-border rounded-lg divide-y divide-border">
-            {Array.from({ length: 6 }).map((_, i) => (
+            {Array.from({ length: 12 }).map((_, i) => (
               <div key={i} className="flex items-center justify-between px-3 py-3 gap-3">
                 <div className="flex items-center gap-2.5">
                   <Skeleton className="h-7 w-7 rounded-md" />
@@ -29,7 +29,7 @@ export default function NotificationPreferencesLoading() {
         <div className="space-y-2">
           <Skeleton className="h-3 w-20 rounded" />
           <div className="grid grid-cols-2 gap-2">
-            {Array.from({ length: 9 }).map((_, i) => (
+            {Array.from({ length: 12 }).map((_, i) => (
               <div key={i} className="flex items-center justify-between px-3 py-2.5 rounded-lg border border-border">
                 <div className="flex items-center gap-2">
                   <Skeleton className="h-6 w-6 rounded-md" />

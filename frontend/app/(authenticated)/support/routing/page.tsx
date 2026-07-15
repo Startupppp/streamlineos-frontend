@@ -803,7 +803,7 @@ export default function SupportRoutingPage() {
       }
     >
       {isLoading ? (
-        <LoadingState variant="list" rows={5} />
+        <LoadingState variant="list" rows={12} />
       ) : isError ? (
         <ErrorState onRetry={handleRetry} />
       ) : orderedRules.length > 0 ? (

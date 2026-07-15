@@ -497,7 +497,7 @@ export default function WorkflowsPage() {
         </div>
 
         {isLoading ? (
-          <LoadingState variant="cards" rows={6} />
+          <LoadingState variant="cards" rows={9} />
         ) : isError ? (
           <ErrorState
             title="Couldn't load workflows"

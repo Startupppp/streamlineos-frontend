@@ -314,7 +314,7 @@ export default function StockLevelsPage() {
         {viewParam === "reservations" ? (
           <ReservationsPanel />
         ) : stockLoading ? (
-          <DataTableSkeleton rows={8} columns={8} className="flex-1" />
+          <DataTableSkeleton rows={12} columns={8} className="flex-1" />
         ) : stockError ? (
           <ErrorState
             title="Failed to load stock levels"

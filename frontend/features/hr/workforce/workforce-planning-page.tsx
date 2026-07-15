@@ -331,7 +331,7 @@ function SuccessionTab() {
     );
   }
 
-  if (isLoading) return <SectionSkeleton rows={4} />;
+  if (isLoading) return <SectionSkeleton rows={8} />;
   if (!roles.length) return <EmptyChart label="No succession risks identified" />;
 
   return (
@@ -370,7 +370,7 @@ function AttritionForecastCard() {
   return (
     <AnalyticsChartCard title="Attrition Forecast (Trend-Based Estimate — Not a Prediction)">
       {isLoading ? (
-        <SectionSkeleton rows={3} />
+        <SectionSkeleton rows={8} />
       ) : !combined.length ? (
         <EmptyChart label="No forecast data" />
       ) : (

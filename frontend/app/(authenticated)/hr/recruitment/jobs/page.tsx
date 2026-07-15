@@ -250,7 +250,7 @@ export default function JobPostingsPage() {
       >
         {isLoading ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, i) => <JobCardSkeleton key={i} />)}
+            {Array.from({ length: 10 }).map((_, i) => <JobCardSkeleton key={i} />)}
           </div>
         ) : isError ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">

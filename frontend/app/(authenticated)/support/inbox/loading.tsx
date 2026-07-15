@@ -18,7 +18,7 @@ export default function SupportInboxLoading() {
     >
       <div className="w-full md:w-[360px] border-r border-border/40 flex flex-col overflow-hidden">
         <div className="flex-1 divide-y divide-border/30">
-          {Array.from({ length: 8 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <div key={i} className="px-4 py-3 space-y-2">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 space-y-2">
@@ -55,7 +55,7 @@ export default function SupportInboxLoading() {
 
         <div className="flex-1 px-4 py-3 space-y-4 overflow-hidden">
           <Skeleton className="h-16 w-full rounded-lg" />
-          {Array.from({ length: 4 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <div key={i} className="flex gap-2.5">
               <Skeleton className="h-7 w-7 rounded-full shrink-0" />
               <div className="flex-1 space-y-2">

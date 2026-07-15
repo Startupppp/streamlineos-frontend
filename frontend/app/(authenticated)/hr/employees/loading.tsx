@@ -19,7 +19,7 @@ export default function EmployeesLoading() {
             <Skeleton className="h-4 w-16" />
           </div>
 
-          {Array.from({ length: 7 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <div key={i} className="flex items-center gap-4 px-6 py-4 border-b last:border-b-0">
               <div className="flex items-center gap-3">
                 <Skeleton className="h-9 w-9 rounded-full shrink-0" />
@@ -38,7 +38,7 @@ export default function EmployeesLoading() {
           <div className="flex items-center justify-between px-6 py-4 border-t">
             <Skeleton className="h-9 w-[90px] rounded-md" />
             <div className="flex gap-1">
-              {Array.from({ length: 3 }).map((_, i) => (
+              {Array.from({ length: 9 }).map((_, i) => (
                 <Skeleton key={i} className="h-9 w-9 rounded-md" />
               ))}
             </div>

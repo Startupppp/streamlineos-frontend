@@ -59,7 +59,7 @@ export function CompCycleDetail({ cycleId, canManage }: Props) {
   const [calibratingId, setCalibratingId] = useState<number | null>(null);
   const [calibrateValue, setCalibrateValue] = useState<Record<number, string>>({});
 
-  if (cycleLoading) return <div className="space-y-3">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-12 rounded-xl" />)}</div>;
+  if (cycleLoading) return <div className="space-y-3">{Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-12 rounded-xl" />)}</div>;
 
   const recs = recsData?.data ?? [];
 
@@ -107,7 +107,7 @@ export function CompCycleDetail({ cycleId, canManage }: Props) {
       <div>
         <p className="text-sm font-semibold mb-3">Recommendations ({recs.length})</p>
         {recsLoading ? (
-          Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-12 mb-2 rounded-lg" />)
+          Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-12 mb-2 rounded-lg" />)
         ) : !recs.length ? (
           <EmptyState illustrationPreset="default" title="No recommendations yet" compact className="h-40 border-0 shadow-none" />
         ) : (

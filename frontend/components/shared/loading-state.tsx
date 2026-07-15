@@ -3,23 +3,19 @@ import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface LoadingStateProps {
-  /** Variant controls the skeleton layout shown */
   variant?: "table" | "cards" | "list" | "form" | "page";
   className?: string;
-  /** Number of skeleton rows/cards to render */
   rows?: number;
 }
 
-function TableSkeleton({ rows = 6 }: { rows: number }) {
+function TableSkeleton({ rows = 12 }: { rows: number }) {
   return (
     <div className="space-y-2">
-      {/* Header */}
       <div className="flex gap-4 px-3 py-2 border-b border-border/60">
         {[40, 25, 20, 15].map((w, i) => (
           <Skeleton key={i} className="h-3" style={{ width: `${w}%` }} />
         ))}
       </div>
-      {/* Rows */}
       {Array.from({ length: rows }).map((_, i) => (
         <div key={i} className="flex gap-4 px-3 py-3">
           {[40, 25, 20, 15].map((w, j) => (
@@ -31,7 +27,7 @@ function TableSkeleton({ rows = 6 }: { rows: number }) {
   );
 }
 
-function CardsSkeleton({ rows = 6 }: { rows: number }) {
+function CardsSkeleton({ rows = 9 }: { rows: number }) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: rows }).map((_, i) => (
@@ -51,7 +47,7 @@ function CardsSkeleton({ rows = 6 }: { rows: number }) {
   );
 }
 
-function ListSkeleton({ rows = 8 }: { rows: number }) {
+function ListSkeleton({ rows = 12 }: { rows: number }) {
   return (
     <div className="space-y-2">
       {Array.from({ length: rows }).map((_, i) => (
@@ -68,7 +64,7 @@ function ListSkeleton({ rows = 8 }: { rows: number }) {
   );
 }
 
-function FormSkeleton({ rows = 6 }: { rows: number }) {
+function FormSkeleton({ rows = 8 }: { rows: number }) {
   return (
     <div className="space-y-5">
       {Array.from({ length: rows }).map((_, i) => (
@@ -99,7 +95,7 @@ function PageSkeleton() {
           </div>
         ))}
       </div>
-      <TableSkeleton rows={6} />
+      <TableSkeleton rows={12} />
     </div>
   );
 }
@@ -107,14 +103,18 @@ function PageSkeleton() {
 export function LoadingState({
   variant = "table",
   className,
-  rows = 6,
+  rows,
 }: LoadingStateProps) {
+  const resolvedRows =
+    rows ??
+    (variant === "cards" ? 9 : variant === "form" ? 8 : 12);
+
   return (
     <div className={cn("p-4", className)} aria-label="Loading..." aria-busy="true">
-      {variant === "table" && <TableSkeleton rows={rows} />}
-      {variant === "cards" && <CardsSkeleton rows={rows} />}
-      {variant === "list" && <ListSkeleton rows={rows} />}
-      {variant === "form" && <FormSkeleton rows={rows} />}
+      {variant === "table" && <TableSkeleton rows={resolvedRows} />}
+      {variant === "cards" && <CardsSkeleton rows={resolvedRows} />}
+      {variant === "list" && <ListSkeleton rows={resolvedRows} />}
+      {variant === "form" && <FormSkeleton rows={resolvedRows} />}
       {variant === "page" && <PageSkeleton />}
     </div>
   );

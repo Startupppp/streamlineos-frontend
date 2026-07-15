@@ -11,7 +11,7 @@ export default function PortalProjectLoading() {
           <div key={i} className="space-y-2">
             <Skeleton className="h-5 w-36" />
             <div className={cn(PM_PANEL, "space-y-2 p-2")}>
-              {Array.from({ length: 3 }).map((_, j) => (
+              {Array.from({ length: 9 }).map((_, j) => (
                 <Skeleton key={j} className="h-10 w-full rounded-lg" />
               ))}
             </div>

@@ -58,7 +58,7 @@ export function SupportActivityLog({ supportTicketId }: SupportActivityLogProps)
   const activityQuery = useSupportActivity(supportTicketId);
 
   if (activityQuery.isLoading) {
-    return <LoadingState variant="list" rows={3} />;
+    return <LoadingState variant="list" rows={8} />;
   }
 
   if (activityQuery.error) {

@@ -55,7 +55,7 @@ export function PostFeed({
           <BlogCard key={post.id} post={post} />
         ))}
         {loading &&
-          Array.from({ length: 3 }).map((_, i) => (
+          Array.from({ length: 6 }).map((_, i) => (
             <BlogCardSkeleton key={`s-${i}`} />
           ))}
       </div>

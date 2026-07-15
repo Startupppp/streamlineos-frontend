@@ -10,7 +10,7 @@ export function ComponentsPageSkeleton() {
           ))}
         </div>
         <div className="rounded-lg border border-border overflow-hidden">
-          {Array.from({ length: 8 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <div
               key={i}
               className="flex items-center gap-4 px-4 py-3 border-b border-border last:border-0"

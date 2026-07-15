@@ -61,7 +61,7 @@ function ActivitySheet({ recruiter, onClose }: ActivitySheetProps) {
         </SheetHeader>
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-2">
           {isLoading ? (
-            Array.from({ length: 5 }).map((_, i) => (
+            Array.from({ length: 10 }).map((_, i) => (
               <Skeleton key={i} className="h-14 w-full rounded-lg" />
             ))
           ) : !activity.length ? (
@@ -177,7 +177,7 @@ export default function RecruitersPage() {
     return (
       <PageWrapper title="Recruiters" subtitle="Team members involved in hiring">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-44 rounded-xl" />)}
+          {Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-44 rounded-xl" />)}
         </div>
       </PageWrapper>
     );

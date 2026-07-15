@@ -30,7 +30,7 @@ export default function ModulesLoading() {
       <div className="flex-1 min-h-0 overflow-y-auto scrollbar-thin">
         <div className="px-4 sm:px-6 pt-3 pb-6">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 8 }).map((_, i) => (
+            {Array.from({ length: 12 }).map((_, i) => (
               <ModuleCardSkeleton key={i} />
             ))}
           </div>

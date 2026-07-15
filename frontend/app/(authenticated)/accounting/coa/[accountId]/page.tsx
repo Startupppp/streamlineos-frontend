@@ -289,7 +289,7 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
     >
       <div className="space-y-4">
         {accountsQuery.isLoading ? (
-          <LoadingState variant="form" rows={5} />
+          <LoadingState variant="form" rows={8} />
         ) : accountsQuery.error ? (
           <ErrorState
             title="Failed to load account"
@@ -402,7 +402,7 @@ export default function AccountDetailPage({ params }: AccountDetailPageProps) {
               <CardContent className="p-0 pt-3">
                 {journalQuery.isLoading ? (
                   <div className="px-5 pb-5">
-                    <LoadingState variant="table" rows={5} />
+                    <LoadingState variant="table" rows={12} />
                   </div>
                 ) : journalQuery.error ? (
                   <div className="px-5 pb-5">

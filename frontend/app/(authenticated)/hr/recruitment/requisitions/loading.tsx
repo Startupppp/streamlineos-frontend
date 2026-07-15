@@ -35,14 +35,14 @@ export default function RequisitionsLoading() {
       actions={<Skeleton className="h-8 w-36 rounded-md" />}
       filters={
         <div className="flex gap-2">
-          {Array.from({ length: 5 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <Skeleton key={i} className="h-8 w-24 rounded-md" />
           ))}
         </div>
       }
     >
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <RequisitionCardSkeleton key={i} />
         ))}
       </div>

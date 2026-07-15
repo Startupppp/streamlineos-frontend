@@ -261,7 +261,7 @@ export function EssReimbursementsSection() {
 
       <div className="rounded-xl border border-border bg-card overflow-hidden">
         {isLoading ? (
-          <div>{Array.from({ length: 3 }).map((_, i) => <RowSkeleton key={i} />)}</div>
+          <div>{Array.from({ length: 8 }).map((_, i) => <RowSkeleton key={i} />)}</div>
         ) : !reimbursements || reimbursements.length === 0 ? (
           <EmptyState
             illustration={<EmptyExpensesIllustration />}

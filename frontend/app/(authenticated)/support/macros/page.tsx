@@ -496,7 +496,7 @@ export default function SupportMacrosPage() {
         </div>
 
         {isLoading ? (
-          <LoadingState variant="cards" rows={6} />
+          <LoadingState variant="cards" rows={9} />
         ) : isError ? (
           <ErrorState onRetry={handleRetry} />
         ) : macros && macros.length > 0 ? (

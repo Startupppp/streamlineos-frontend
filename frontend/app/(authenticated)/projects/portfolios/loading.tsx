@@ -23,7 +23,7 @@ export default function PortfoliosLoading() {
     >
       <PmPageShell>
         <div className={cn(PM_PANEL, "space-y-2 p-3")}>
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <div key={i} className="flex items-center gap-4 border-b border-border/40 py-2.5 last:border-0">
               <Skeleton className="h-4 w-48" />
               <Skeleton className="h-5 w-16 rounded-full" />

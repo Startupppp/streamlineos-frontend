@@ -6,7 +6,7 @@ export default function ContingentLoading() {
       <Skeleton className="h-8 w-56" />
       <Skeleton className="h-6 w-96" />
       <div className="space-y-2">
-        {Array.from({ length: 5 }).map((_, i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <Skeleton key={i} className="h-16 w-full rounded-lg" />
         ))}
       </div>

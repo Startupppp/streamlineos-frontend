@@ -160,7 +160,7 @@ export function PeriodChecklistPanel({
       </CardHeader>
       <CardContent className="px-4 py-3">
         {isLoading ? (
-          <LoadingState variant="form" rows={4} />
+          <LoadingState variant="form" rows={8} />
         ) : checklist ? (
           <div className="space-y-1">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">

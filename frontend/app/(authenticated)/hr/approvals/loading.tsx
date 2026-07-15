@@ -10,7 +10,7 @@ export default function ApprovalsLoading() {
         <Skeleton className="h-8 w-20 rounded-full" />
       </div>
       <div className="space-y-2 mt-4">
-        {Array.from({ length: 6 }).map((_, i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <Skeleton key={i} className="h-16 rounded-lg" />
         ))}
       </div>

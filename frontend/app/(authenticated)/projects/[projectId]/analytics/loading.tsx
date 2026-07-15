@@ -6,7 +6,7 @@ export default function AnalyticsLoading() {
   return (
     <PageWrapper title="Analytics" eyebrow="Project" subtitle="Project health, velocity, and performance charts">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {Array.from({ length: 6 }).map((_, i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <Card key={i}>
             <CardHeader>
               <Skeleton className="h-5 w-40" />

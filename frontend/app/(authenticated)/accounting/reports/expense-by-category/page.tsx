@@ -4,7 +4,7 @@ import { ExpenseByCategoryReport } from "@/features/accounting/reports/expense-b
 
 export default function ExpenseByCategoryPage() {
   return (
-    <Suspense fallback={<LoadingState variant="table" rows={8} />}>
+    <Suspense fallback={<LoadingState variant="table" rows={12} />}>
       <ExpenseByCategoryReport />
     </Suspense>
   );

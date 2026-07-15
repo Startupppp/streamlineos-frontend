@@ -4,7 +4,7 @@ import { SalesByItemReport } from "@/features/accounting/reports/sales-by-item-r
 
 export default function SalesByItemPage() {
   return (
-    <Suspense fallback={<LoadingState variant="table" rows={8} />}>
+    <Suspense fallback={<LoadingState variant="table" rows={12} />}>
       <SalesByItemReport />
     </Suspense>
   );

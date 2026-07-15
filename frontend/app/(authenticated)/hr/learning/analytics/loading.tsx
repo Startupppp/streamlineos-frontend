@@ -11,7 +11,7 @@ export default function LearningAnalyticsLoading() {
     >
       <div className="space-y-5">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {Array.from({ length: 4 }).map((_, i) => (
+          {Array.from({ length: 10 }).map((_, i) => (
             <Card
               key={i}
               className="bg-card/90 backdrop-blur-sm rounded-2xl border border-border shadow-xl overflow-hidden"
@@ -47,7 +47,7 @@ export default function LearningAnalyticsLoading() {
                 <Skeleton className="h-4 w-40" />
               </div>
               <div className="space-y-3">
-                {Array.from({ length: 5 }).map((_, i) => (
+                {Array.from({ length: 12 }).map((_, i) => (
                   <div key={i} className="flex items-center justify-between gap-3">
                     <Skeleton className="h-3.5 w-48" />
                     <Skeleton className="h-5 w-7 rounded-md" />

@@ -164,7 +164,7 @@ export default function WorkflowTemplatesPage() {
       filters={filtersBar}
     >
       {isLoading ? (
-        <LoadingState variant="cards" rows={6} />
+        <LoadingState variant="cards" rows={9} />
       ) : isError ? (
         <ErrorState title="Failed to load templates" onRetry={handleRetry} className="flex-1" />
       ) : filtered.length === 0 ? (

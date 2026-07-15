@@ -9,7 +9,7 @@ export default function TerminationLoading() {
       actions={<Skeleton className="h-8 w-36 rounded-md" />}
     >
       <div className="space-y-2">
-        {Array.from({ length: 5 }).map((_, i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <div key={i} className="flex items-center gap-4 p-4 rounded-lg border bg-card">
             <Skeleton className="h-9 w-9 rounded-full shrink-0" />
             <div className="flex-1 space-y-1.5">

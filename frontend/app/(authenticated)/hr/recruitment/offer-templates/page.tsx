@@ -335,7 +335,7 @@ export default function OfferTemplatesPage() {
         actions={pageActions}
       >
         <div className="space-y-3">
-          {Array.from({ length: 3 }).map((_, i) => (
+          {Array.from({ length: 8 }).map((_, i) => (
             <Skeleton key={i} className="h-20 rounded-xl" />
           ))}
         </div>

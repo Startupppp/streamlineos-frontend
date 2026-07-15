@@ -8,7 +8,7 @@ export default function OnboardingLoading() {
       <div className="space-y-6">
 
         <div className="flex items-center justify-center gap-2">
-          {Array.from({ length: 4 }).map((_, i) => (
+          {Array.from({ length: 10 }).map((_, i) => (
             <div key={i} className="flex items-center gap-2">
               <Skeleton className="h-8 w-8 rounded-full" />
               {i < 3 && <Skeleton className="h-0.5 w-12" />}
@@ -23,7 +23,7 @@ export default function OnboardingLoading() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
-              {Array.from({ length: 6 }).map((_, i) => (
+              {Array.from({ length: 12 }).map((_, i) => (
                 <div key={i} className="space-y-2">
                   <Skeleton className="h-4 w-24" />
                   <Skeleton className="h-10 w-full" />

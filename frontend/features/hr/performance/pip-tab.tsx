@@ -180,7 +180,7 @@ export function PIPTab() {
   const handleNotesChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value), []);
 
   if (isLoading) {
-    return <LoadingState variant="list" rows={3} />;
+    return <LoadingState variant="list" rows={12} />;
   }
 
   return (

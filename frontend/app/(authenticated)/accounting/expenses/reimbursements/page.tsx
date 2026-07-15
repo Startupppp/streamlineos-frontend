@@ -43,7 +43,7 @@ export default function ReimbursementsPage() {
         ) : undefined
       }
     >
-      {query.isLoading && <LoadingState variant="table" rows={6} />}
+      {query.isLoading && <LoadingState variant="table" rows={12} />}
 
       {query.error && (
         <ErrorState

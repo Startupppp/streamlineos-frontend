@@ -78,7 +78,7 @@ export function BulkSendList() {
     >
       {isLoading ? (
         <div className="space-y-3">
-          {Array.from({ length: 3 }).map((_, i) => (
+          {Array.from({ length: 9 }).map((_, i) => (
             <Skeleton key={i} className="h-16 w-full" />
           ))}
         </div>

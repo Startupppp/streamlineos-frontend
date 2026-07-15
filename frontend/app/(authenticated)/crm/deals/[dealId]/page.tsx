@@ -267,7 +267,7 @@ export default function DealDetailPage({
       <PageWrapper title={`Deal #${dealIdStr}`} backHref="/crm/deals">
         <div className="space-y-6">
           <div className="flex flex-wrap gap-1 p-2 rounded-lg bg-muted/30 border border-border">
-            {Array.from({ length: 6 }).map((_, i) => (
+            {Array.from({ length: 10 }).map((_, i) => (
               <Skeleton key={i} className="h-7 w-20 rounded-lg" />
             ))}
           </div>

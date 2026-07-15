@@ -11,7 +11,7 @@ export default function ProjectChatLoading() {
         </div>
       </div>
       <div className="flex-1 px-4 py-3 space-y-3">
-        {Array.from({ length: 5 }).map((_, i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <div key={i} className="flex gap-2 items-end">
             <Skeleton className="h-7 w-7 rounded-full shrink-0" />
             <Skeleton className="h-12 w-48 rounded-2xl" />

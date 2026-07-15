@@ -236,7 +236,7 @@ export default function ScenariosPage() {
         ) : undefined
       }
     >
-      {scenariosQuery.isLoading && <LoadingState variant="cards" rows={3} />}
+      {scenariosQuery.isLoading && <LoadingState variant="cards" rows={9} />}
       {scenariosQuery.error && (
         <ErrorState
           title="Failed to load scenarios"

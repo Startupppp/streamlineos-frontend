@@ -107,7 +107,7 @@ export default function CrmHubPage() {
           </StatCardGrid>
 
           <div className="flex items-center gap-4 flex-wrap px-1">
-            {Array.from({ length: 5 }).map((_, i) => (
+            {Array.from({ length: 10 }).map((_, i) => (
               <Skeleton key={i} className="h-3.5 w-24" />
             ))}
           </div>

@@ -10,7 +10,7 @@ export default function LearningPathsLoading() {
       actions={<Skeleton className="h-8 w-32 rounded-md" />}
     >
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <Card key={i}>
             <CardContent className="p-4 space-y-3">
               <div className="flex items-start justify-between gap-2">

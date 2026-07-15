@@ -18,7 +18,7 @@ export default function ChatLoading() {
         </div>
 
         <div className="flex-1 overflow-hidden p-2 space-y-1">
-          {Array.from({ length: 8 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <div key={i} className="flex items-center gap-3 p-2 rounded-md">
               <Skeleton className="h-9 w-9 rounded-full shrink-0" />
               <div className="flex-1 min-w-0 space-y-1.5">

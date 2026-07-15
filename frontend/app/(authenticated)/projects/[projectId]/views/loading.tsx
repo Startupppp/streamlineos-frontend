@@ -37,7 +37,7 @@ export default function ViewsLoading() {
         <section>
           <Skeleton className="h-3.5 w-24 mb-3" />
           <div className="space-y-2">
-            {Array.from({ length: 4 }).map((_, i) => (
+            {Array.from({ length: 12 }).map((_, i) => (
               <Card key={i}>
                 <CardContent className="py-3 flex items-center justify-between">
                   <div className="flex items-center gap-3 min-w-0">

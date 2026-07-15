@@ -12,7 +12,7 @@ export default function PortalLoading() {
     >
       <PmPageShell>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 4 }).map((_, i) => (
+          {Array.from({ length: 9 }).map((_, i) => (
             <div key={i} className={cn(PM_PANEL, "space-y-3 p-5")}>
               <div className="flex items-center gap-2">
                 <Skeleton className="h-9 w-9 rounded-lg" />

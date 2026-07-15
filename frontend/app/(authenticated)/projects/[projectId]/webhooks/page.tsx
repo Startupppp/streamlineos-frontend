@@ -5,7 +5,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Trash2, Zap, Clock, ChevronDown, Send } from "lucide-react";
+import { Trash2, Zap, Clock } from "lucide-react";
+import { PlusIcon, ChevronDownIcon, SendIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -129,10 +131,12 @@ function WebhookCard({
     expanded,
   );
   const sendTest = useSendTestWebhook(projectId);
+  const { iconRef: sendIconRef, hoverHandlers: sendHoverHandlers } = useAnimatedIcon();
+  const { iconRef: chevronIconRef, hoverHandlers: chevronHoverHandlers } = useAnimatedIcon();
 
-  function handleToggle() {
+  const handleToggle = useCallback(() => {
     setExpanded((v) => !v);
-  }
+  }, []);
 
   const handleConfirmDelete = useCallback(() => onDelete(webhook.id), [onDelete, webhook.id]);
 
@@ -184,17 +188,19 @@ function WebhookCard({
           disabled={sendTest.isPending}
           aria-label="Send test webhook"
           className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
+          {...sendHoverHandlers}
         >
-          <Send className="h-3.5 w-3.5 text-muted-foreground" />
+          <SendIcon ref={sendIconRef} size={14} className="text-muted-foreground" />
         </button>
         <button
           type="button"
           onClick={handleToggle}
           aria-label={expanded ? "Hide deliveries" : "Show deliveries"}
           className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-muted transition-colors"
+          {...chevronHoverHandlers}
         >
           <motion.div animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            <ChevronDownIcon ref={chevronIconRef} size={16} className="text-muted-foreground" />
           </motion.div>
         </button>
         <AlertDialog>
@@ -262,6 +268,16 @@ function WebhookCard({
   );
 }
 
+function AddWebhookButton({ onClick }: { onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button size="sm" onClick={onClick} {...hoverHandlers}>
+      <PlusIcon ref={iconRef} size={14} className="mr-1" />
+      Add Webhook
+    </Button>
+  );
+}
+
 interface PageProps {
   params: Promise<{ projectId: string }>;
 }
@@ -307,7 +323,9 @@ export default function WebhooksPage({ params }: PageProps) {
     [deleteWebhook],
   );
 
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleRetry = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   const handleCancelForm = useCallback(() => {
     setSheetOpen(false);
@@ -321,53 +339,51 @@ export default function WebhooksPage({ params }: PageProps) {
       eyebrow="Project"
       title="Webhooks"
       subtitle="Receive HTTP POST notifications when project events occur"
-      actions={
-        <Button size="sm" onClick={handleShowForm}>
-          <Plus className="h-3.5 w-3.5 mr-1" />
-          Add Webhook
-        </Button>
-      }
+      actions={<AddWebhookButton onClick={handleShowForm} />}
     >
       <PmPageShell>
-        <div className="space-y-3 pb-8">
-          {isLoading ? (
-            <div className="space-y-3">
-              {Array.from({ length: 2 }).map((_, i) => (
-                <Skeleton key={i} className="h-20 w-full rounded-xl" />
-              ))}
-            </div>
-          ) : isError ? (
+        {isLoading ? (
+          <PmSection index={0} className="flex min-h-0 flex-1 flex-col gap-3">
+            {Array.from({ length: 2 }).map((_, i) => (
+              <Skeleton key={i} className="h-20 w-full rounded-xl" />
+            ))}
+          </PmSection>
+        ) : isError ? (
+          <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
             <ErrorState
               title="Could not load webhooks"
               description="Failed to load webhooks."
               onRetry={handleRetry}
-              className="min-h-[40vh] flex-1"
+              className="flex-1"
             />
-          ) : webhooks.length === 0 ? (
+          </PmSection>
+        ) : webhooks.length === 0 ? (
+          <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
             <EmptyState
               illustrationPreset="automations"
               title="No webhooks configured"
               description="Get notified in real-time when tickets, sprints, or members change."
               action={{ label: "Create Webhook", onClick: handleShowForm }}
-              className="min-h-[40vh]"
+              className="flex-1"
             />
-          ) : (
-            <PmSection index={0}>
-              <PmStaggerList className="space-y-2.5" role="list" aria-label="Webhooks">
-                <AnimatePresence initial={false}>
-                  {webhooks.map((wh) => (
-                    <WebhookCard
-                      key={wh.id}
-                      webhook={wh}
-                      projectId={projectId}
-                      onDelete={handleDelete}
-                    />
-                  ))}
-                </AnimatePresence>
-              </PmStaggerList>
-            </PmSection>
-          )}
-        </div>
+          </PmSection>
+        ) : (
+          <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
+            <PmStaggerList className="space-y-2.5" role="list" aria-label="Webhooks">
+              <AnimatePresence initial={false}>
+                {webhooks.map((wh) => (
+                  <WebhookCard
+                    key={wh.id}
+                    webhook={wh}
+                    projectId={projectId}
+                    onDelete={handleDelete}
+                  />
+                ))}
+              </AnimatePresence>
+            </PmStaggerList>
+          </PmSection>
+        )}
+      </PmPageShell>
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent className="p-0 flex flex-col gap-0 w-full sm:max-w-md overflow-hidden">
@@ -472,7 +488,6 @@ export default function WebhooksPage({ params }: PageProps) {
           </div>
         </SheetContent>
       </Sheet>
-      </PmPageShell>
     </PageWrapper>
   );
 }

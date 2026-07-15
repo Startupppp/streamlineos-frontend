@@ -59,7 +59,7 @@ export default function OffersPage() {
     return (
       <PageWrapper title="Offers" subtitle="Track every offer across all candidates.">
         <div className="space-y-3">
-          {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
+          {Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
         </div>
       </PageWrapper>
     );

@@ -10,7 +10,7 @@ export default function MyWorkLoading() {
         ))}
       </div>
       <div className="space-y-3">
-        {Array.from({ length: 8 }).map((_, i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <Skeleton key={i} className="h-12 w-full rounded-md" />
         ))}
       </div>

@@ -12,7 +12,7 @@ export default function FeedbackLoading() {
           <Skeleton className="h-9 w-24 rounded-lg" />
         </div>
         <div className="space-y-3">
-          {Array.from({ length: 3 }).map((_, i) => (
+          {Array.from({ length: 9 }).map((_, i) => (
             <Card key={i} className="bg-card border border-border rounded-xl shadow-sm">
               <CardContent className="p-5 space-y-3">
                 <div className="flex justify-between items-start">

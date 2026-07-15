@@ -163,7 +163,7 @@ export default function ExecutionsPage() {
       filters={statusFilters}
     >
       {isLoading ? (
-        <LoadingState variant="list" rows={8} />
+        <LoadingState variant="list" rows={12} />
       ) : isError ? (
         <ErrorState title="Failed to load executions" onRetry={handleRetry} className="flex-1" />
       ) : !data || data.data.length === 0 ? (

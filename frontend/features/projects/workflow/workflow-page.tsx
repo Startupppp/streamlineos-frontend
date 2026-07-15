@@ -40,8 +40,8 @@ export function WorkflowPage({ projectId }: WorkflowPageProps) {
       <PmPageShell>
         {isLoading ? (
           <div className="flex min-h-0 flex-1 flex-col space-y-4">
-            <DataTableSkeleton rows={4} columns={2} className="flex-1" />
-            <DataTableSkeleton rows={5} columns={6} className="flex-1" />
+            <DataTableSkeleton rows={12} columns={2} className="flex-1" />
+            <DataTableSkeleton rows={12} columns={6} className="flex-1" />
           </div>
         ) : isError ? (
           <ErrorState className="flex-1" onRetry={() => void refetch()} />

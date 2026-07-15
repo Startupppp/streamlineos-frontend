@@ -15,7 +15,7 @@ export default function HolidaysLoading() {
       </div>
       <Skeleton className="h-72 rounded-2xl" />
       <div className="space-y-2">
-        {Array.from({ length: 4 }).map((_, i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <Skeleton key={i} className="h-16 rounded-xl" />
         ))}
       </div>

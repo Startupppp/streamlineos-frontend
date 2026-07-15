@@ -276,7 +276,7 @@ export function ModuleAutomationsSettings({ config }: { config: ModuleAutomation
   return (
     <PageWrapper title="Automations" subtitle={subtitle}>
       {isLoading ? (
-        <LoadingState variant="list" rows={5} />
+        <LoadingState variant="list" rows={12} />
       ) : isError ? (
         <ErrorState
           title="Couldn't load automations"

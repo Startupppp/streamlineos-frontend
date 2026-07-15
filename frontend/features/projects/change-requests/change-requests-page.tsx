@@ -226,7 +226,7 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
           {isLoading ? (
-            <DataTableSkeleton rows={6} columns={7} className="flex-1" />
+            <DataTableSkeleton rows={12} columns={7} className="flex-1" />
           ) : isError ? (
             <ErrorState onRetry={refetch} />
           ) : filtered.length === 0 ? (

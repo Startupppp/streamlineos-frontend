@@ -4,7 +4,7 @@ import { ProjectProfitabilityReport } from "@/features/accounting/reports/projec
 
 export default function ProjectProfitabilityPage() {
   return (
-    <Suspense fallback={<LoadingState variant="table" rows={8} />}>
+    <Suspense fallback={<LoadingState variant="table" rows={12} />}>
       <ProjectProfitabilityReport />
     </Suspense>
   );

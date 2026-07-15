@@ -12,7 +12,7 @@ export default function TravelLoading() {
       <div className="space-y-4">
         <Skeleton className="h-10 w-full rounded-2xl" />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <Card key={i} className="rounded-2xl">
               <CardContent className="p-5">
                 <div className="flex items-start justify-between gap-3 mb-3">

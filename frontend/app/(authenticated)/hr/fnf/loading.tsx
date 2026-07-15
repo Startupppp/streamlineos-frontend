@@ -11,7 +11,7 @@ export default function FnfLoading() {
     >
       <div className="space-y-4">
         <div className="grid gap-3 md:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => (
+          {Array.from({ length: 8 }).map((_, i) => (
             <Card key={i}>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-2">
@@ -24,7 +24,7 @@ export default function FnfLoading() {
           ))}
         </div>
         <div className="space-y-3">
-          {Array.from({ length: 5 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <Card key={i}>
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">

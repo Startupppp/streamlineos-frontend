@@ -54,7 +54,7 @@ export default function EquityPage() {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           <div className={selectedGrant ? "lg:col-span-3" : "lg:col-span-5"}>
             {isLoading ? (
-              <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 rounded-lg" />)}</div>
+              <div className="space-y-2">{Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-12 rounded-lg" />)}</div>
             ) : !grants.length ? (
               <EmptyState
                 illustrationPreset="default"

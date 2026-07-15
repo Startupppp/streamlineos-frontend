@@ -23,7 +23,7 @@ export default function LeadDistributionLoading() {
       }
     >
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-        {Array.from({ length: 3 }).map((_, i) => (
+        {Array.from({ length: 8 }).map((_, i) => (
           <Card key={i}>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -39,12 +39,12 @@ export default function LeadDistributionLoading() {
       <Card>
         <div className="border-b border-border bg-muted/40 px-4 py-2.5 flex items-center gap-3">
           <Skeleton className="h-4 w-4 rounded" />
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <Skeleton key={i} className="h-3 w-20" />
           ))}
         </div>
         <div className="divide-y divide-border">
-          {Array.from({ length: 7 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <div key={i} className="px-4 py-2.5 flex items-center gap-3">
               <Skeleton className="h-4 w-4 rounded" />
               <Skeleton className="h-4 w-32" />

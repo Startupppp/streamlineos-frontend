@@ -31,7 +31,7 @@ export default function LeadDetailLoading() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  {Array.from({ length: 8 }).map((_, i) => (
+                  {Array.from({ length: 12 }).map((_, i) => (
                     <div key={i} className="space-y-1.5">
                       <Skeleton className="h-3 w-20" />
                       <Skeleton className="h-4 w-32" />
@@ -47,7 +47,7 @@ export default function LeadDetailLoading() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {Array.from({ length: 4 }).map((_, i) => (
+                  {Array.from({ length: 12 }).map((_, i) => (
                     <Skeleton key={i} className="h-9 rounded-md" />
                   ))}
                 </div>
@@ -61,7 +61,7 @@ export default function LeadDetailLoading() {
                 <Skeleton className="h-5 w-28" />
               </CardHeader>
               <CardContent className="space-y-3">
-                {Array.from({ length: 3 }).map((_, i) => (
+                {Array.from({ length: 9 }).map((_, i) => (
                   <div key={i} className="flex items-center justify-between">
                     <Skeleton className="h-4 w-24" />
                     <Skeleton className="h-4 w-20" />
@@ -75,7 +75,7 @@ export default function LeadDetailLoading() {
                 <Skeleton className="h-5 w-32" />
               </CardHeader>
               <CardContent className="space-y-3">
-                {Array.from({ length: 5 }).map((_, i) => (
+                {Array.from({ length: 12 }).map((_, i) => (
                   <div key={i} className="flex gap-3">
                     <Skeleton className="h-8 w-8 rounded-full shrink-0" />
                     <div className="flex-1 space-y-1.5">

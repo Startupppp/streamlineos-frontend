@@ -139,7 +139,7 @@ export default function PageHistoryPage({ pageId }: PageHistoryPageProps) {
     return (
       <PageWrapper title="Page history" backHref={backHref}>
         <div className="space-y-3">
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: 10 }).map((_, i) => (
             <Skeleton key={i} className="h-14 w-full rounded-lg" />
           ))}
         </div>

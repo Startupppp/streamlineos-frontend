@@ -70,7 +70,7 @@ export function DepartmentProfitabilityReport() {
       }
     >
       {isLoading ? (
-        <LoadingState variant="table" rows={8} />
+        <LoadingState variant="table" rows={12} />
       ) : error ? (
         <ErrorState
           title="Failed to load report"

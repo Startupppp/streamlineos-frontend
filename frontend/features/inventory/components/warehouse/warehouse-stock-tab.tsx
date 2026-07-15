@@ -90,7 +90,7 @@ export function WarehouseStockTab({ warehouseId }: WarehouseStockTabProps) {
     setPage(newPage);
   }
 
-  if (isLoading) return <DataTableSkeleton rows={6} columns={6} />;
+  if (isLoading) return <DataTableSkeleton rows={8} columns={6} />;
 
   if (isError) {
     return (

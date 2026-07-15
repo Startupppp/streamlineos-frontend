@@ -8,7 +8,7 @@ export default function ProjectFeedbackLoading() {
         <Skeleton className="h-24 w-full rounded-xl" />
         <div className="space-y-2">
           <Skeleton className="h-4 w-24 rounded" />
-          {Array.from({ length: 5 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <Skeleton key={i} className="h-14 w-full rounded-lg" />
           ))}
         </div>

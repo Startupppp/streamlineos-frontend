@@ -152,7 +152,7 @@ function ExecutiveKPIs({
   if (isLoading) {
     return (
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {Array.from({ length: 4 }).map((_, i) => (
+        {Array.from({ length: 10 }).map((_, i) => (
           <div key={i} className="rounded-xl bg-muted/40 p-4">
             <Skeleton className="h-3 w-20 mb-3" />
             <Skeleton className="h-8 w-14" />

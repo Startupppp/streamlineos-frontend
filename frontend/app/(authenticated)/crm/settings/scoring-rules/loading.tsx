@@ -16,12 +16,12 @@ export default function ScoringRulesLoading() {
           </CardHeader>
           <CardContent>
             <div className="border-b border-border pb-2 mb-2 flex items-center gap-3">
-              {Array.from({ length: 5 }).map((_, i) => (
+              {Array.from({ length: 12 }).map((_, i) => (
                 <Skeleton key={i} className="h-3 w-20" />
               ))}
             </div>
             <div className="space-y-2">
-              {Array.from({ length: 6 }).map((_, i) => (
+              {Array.from({ length: 12 }).map((_, i) => (
                 <div key={i} className="flex items-center gap-3 py-2">
                   <Skeleton className="h-4 w-24" />
                   <Skeleton className="h-4 w-24" />
@@ -43,7 +43,7 @@ export default function ScoringRulesLoading() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {Array.from({ length: 8 }).map((_, i) => (
+              {Array.from({ length: 12 }).map((_, i) => (
                 <Skeleton key={i} className="h-4 w-full" />
               ))}
             </div>

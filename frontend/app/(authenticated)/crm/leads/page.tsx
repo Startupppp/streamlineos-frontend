@@ -379,7 +379,7 @@ export default function LeadsPipelinePage() {
               <Skeleton key={i} className="h-[52px] flex-1 rounded-lg" />
             ))}
           </div>
-          <DataTableSkeleton rows={8} columns={6} />
+          <DataTableSkeleton rows={12} columns={6} />
         </div>
       </PageWrapper>
     );

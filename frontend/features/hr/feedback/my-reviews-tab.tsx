@@ -75,7 +75,7 @@ export function MyReviewsTab() {
   if (isLoading) {
     return (
       <div className="space-y-3">
-        {Array.from({ length: 3 }).map((_, i) => (
+        {Array.from({ length: 8 }).map((_, i) => (
           <div key={i} className="bg-card rounded-2xl border border-border p-5 animate-pulse space-y-2">
             <div className="h-4 w-1/2 bg-muted rounded" />
             <div className="h-3 w-1/3 bg-muted rounded" />

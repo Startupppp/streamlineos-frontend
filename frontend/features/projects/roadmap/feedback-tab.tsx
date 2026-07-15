@@ -34,7 +34,7 @@ interface FeedbackTabProps {
 function FeedbackListSkeleton() {
   return (
     <div className="space-y-2">
-      {Array.from({ length: 5 }).map((_, i) => (
+      {Array.from({ length: 10 }).map((_, i) => (
         <div key={i} className={cn(PM_PANEL, "flex gap-3 p-3")}>
           <Skeleton className="h-12 w-10 shrink-0 rounded-md" />
           <div className="min-w-0 flex-1 space-y-2">

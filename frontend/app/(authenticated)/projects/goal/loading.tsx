@@ -31,7 +31,7 @@ export default function GoalsLoading() {
           ))}
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <div key={i} className={cn(PM_PANEL, "space-y-3 p-4")}>
               <Skeleton className="h-4 w-3/4" />
               <Skeleton className="h-1.5 w-full rounded-full" />

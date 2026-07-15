@@ -11,7 +11,7 @@ export default function LeaveAnalyticsLoading() {
         <Skeleton className="h-9 w-28" />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {Array.from({ length: 3 }).map((_, i) => (
+        {Array.from({ length: 9 }).map((_, i) => (
           <Skeleton key={i} className="h-32 rounded-2xl" />
         ))}
       </div>

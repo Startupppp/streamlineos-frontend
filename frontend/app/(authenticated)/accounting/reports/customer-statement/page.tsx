@@ -4,7 +4,7 @@ import { CustomerStatementReport } from "@/features/accounting/reports/customer-
 
 export default function CustomerStatementPage() {
   return (
-    <Suspense fallback={<LoadingState variant="table" rows={8} />}>
+    <Suspense fallback={<LoadingState variant="table" rows={12} />}>
       <CustomerStatementReport />
     </Suspense>
   );

@@ -165,7 +165,7 @@ export function SubmissionSheet({ vendor, onClose }: SubmissionSheetProps) {
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-3">
           {showAddForm && <AddSubmissionForm vendorId={vendor.id} onDone={handleAddDone} />}
           {isLoading ? (
-            Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-16 rounded-lg" />)
+            Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-16 rounded-lg" />)
           ) : submissions.length === 0 ? (
             <RecruitmentEmptyState
               illustrationPreset="person"

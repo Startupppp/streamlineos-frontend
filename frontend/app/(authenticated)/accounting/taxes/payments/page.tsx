@@ -239,7 +239,7 @@ export default function TaxPaymentsPage() {
       actions={actions}
     >
       {isLoading ? (
-        <LoadingState variant="table" rows={8} />
+        <LoadingState variant="table" rows={12} />
       ) : isError ? (
         <ErrorState title="Failed to load tax payments" onRetry={handleRetry} />
       ) : (

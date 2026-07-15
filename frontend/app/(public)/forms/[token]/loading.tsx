@@ -8,7 +8,7 @@ export default function FormLoading() {
           <div className="h-7 bg-white/20 rounded animate-pulse w-1/2 mx-auto" />
         </div>
         <Card className="rounded-t-none border-t-0 px-6 py-6 shadow-noir space-y-5">
-          {Array.from({ length: 3 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <div key={i} className="space-y-1.5">
               <div className="h-3 bg-slate-200 rounded animate-pulse w-24" />
               <div className="h-10 bg-slate-200 rounded animate-pulse" />

@@ -44,8 +44,8 @@ export function WorkforceSection({ data, isLoading }: WorkforceSectionProps) {
   if (isLoading) {
     return (
       <div className="grid gap-3 md:grid-cols-2">
-        <SectionSkeleton rows={5} />
-        <SectionSkeleton rows={4} />
+        <SectionSkeleton rows={8} />
+        <SectionSkeleton rows={8} />
       </div>
     );
   }

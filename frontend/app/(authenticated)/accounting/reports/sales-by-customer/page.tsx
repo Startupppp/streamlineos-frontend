@@ -4,7 +4,7 @@ import { SalesByCustomerReport } from "@/features/accounting/reports/sales-by-cu
 
 export default function SalesByCustomerPage() {
   return (
-    <Suspense fallback={<LoadingState variant="table" rows={8} />}>
+    <Suspense fallback={<LoadingState variant="table" rows={12} />}>
       <SalesByCustomerReport />
     </Suspense>
   );

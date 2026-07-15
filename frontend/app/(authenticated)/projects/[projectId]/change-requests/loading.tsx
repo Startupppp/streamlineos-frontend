@@ -18,7 +18,7 @@ export default function ChangeRequestsLoading() {
       filters={filtersBar}
     >
       <div className="px-4 pb-4">
-        <DataTableSkeleton rows={6} columns={7} />
+        <DataTableSkeleton rows={12} columns={7} />
       </div>
     </PageWrapper>
   );

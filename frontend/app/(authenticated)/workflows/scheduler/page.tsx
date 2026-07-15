@@ -186,7 +186,7 @@ export default function SchedulerPage() {
       }
     >
       {isLoading ? (
-        <LoadingState variant="list" rows={6} />
+        <LoadingState variant="list" rows={12} />
       ) : isError ? (
         <ErrorState title="Failed to load schedules" onRetry={handleRetry} className="flex-1" />
       ) : list.length === 0 ? (

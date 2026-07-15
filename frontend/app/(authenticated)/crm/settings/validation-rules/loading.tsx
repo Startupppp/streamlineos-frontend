@@ -10,17 +10,17 @@ export default function ValidationRulesLoading() {
     >
       <div className="space-y-4">
         <div className="flex gap-1">
-          {Array.from({ length: 5 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <Skeleton key={i} className="h-9 w-16 rounded-md" />
           ))}
         </div>
         <div className="rounded-lg border border-border overflow-hidden">
           <div className="border-b bg-muted/40 px-2 py-2 flex gap-6">
-            {Array.from({ length: 6 }).map((_, i) => (
+            {Array.from({ length: 12 }).map((_, i) => (
               <Skeleton key={i} className="h-3 w-12" />
             ))}
           </div>
-          {Array.from({ length: 5 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <div key={i} className="flex items-center gap-4 px-2 py-2 border-b last:border-0">
               <Skeleton className="h-5 w-20 rounded" />
               <Skeleton className="h-4 w-16 rounded-full" />

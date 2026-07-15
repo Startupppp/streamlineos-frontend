@@ -14,7 +14,7 @@ export default function ClientsLoading() {
         </div>
       }
     >
-      <DataTableSkeleton rows={8} columns={8} />
+      <DataTableSkeleton rows={12} columns={8} />
     </PageWrapper>
   );
 }

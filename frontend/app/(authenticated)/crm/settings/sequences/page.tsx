@@ -201,7 +201,7 @@ export default function SequencesPage() {
         {isError ? (
           <ErrorState title="Failed to load sequences" onRetry={handleRetry} className="flex-1" />
         ) : isLoading ? (
-          <DataTableSkeleton rows={5} columns={5} className="flex-1" />
+          <DataTableSkeleton rows={12} columns={5} className="flex-1" />
         ) : (
           <DataTable
             data={sequences}

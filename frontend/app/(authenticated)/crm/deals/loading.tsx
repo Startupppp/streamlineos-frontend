@@ -17,7 +17,7 @@ export default function DealsLoading() {
     >
       <div className="space-y-6">
         <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
+          {Array.from({ length: 10 }).map((_, i) => (
             <Card key={i}>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
@@ -32,12 +32,12 @@ export default function DealsLoading() {
 
         <div className="border border-border rounded-md">
           <div className="border-b border-border bg-muted/40 px-3 py-2 flex items-center gap-3">
-            {Array.from({ length: 7 }).map((_, i) => (
+            {Array.from({ length: 12 }).map((_, i) => (
               <Skeleton key={i} className="h-3 w-20" />
             ))}
           </div>
           <div className="divide-y divide-border">
-            {Array.from({ length: 8 }).map((_, i) => (
+            {Array.from({ length: 12 }).map((_, i) => (
               <div key={i} className="px-3 py-2.5 flex items-center gap-3">
                 <Skeleton className="h-4 w-32" />
                 <Skeleton className="h-4 w-20" />

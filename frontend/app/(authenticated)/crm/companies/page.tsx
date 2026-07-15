@@ -243,7 +243,7 @@ export default function CompaniesPage() {
   if (isLoading) {
     return (
       <PageWrapper title="Companies" subtitle="Your company directory">
-        <DataTableSkeleton rows={8} columns={6} className="flex-1" />
+        <DataTableSkeleton rows={12} columns={6} className="flex-1" />
       </PageWrapper>
     );
   }

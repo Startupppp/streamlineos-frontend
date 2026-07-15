@@ -145,7 +145,7 @@ export function CyclesTab() {
   if (isLoading) {
     return (
       <div className="space-y-4">
-        {Array.from({ length: 3 }).map((_, i) => (
+        {Array.from({ length: 8 }).map((_, i) => (
           <div key={i} className="bg-card rounded-2xl border border-border p-5 animate-pulse space-y-3">
             <div className="h-5 w-1/3 bg-muted rounded" />
             <div className="flex gap-2">

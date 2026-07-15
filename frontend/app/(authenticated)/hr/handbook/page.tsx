@@ -341,7 +341,7 @@ function HandbookContent() {
             <Skeleton className="h-8 w-16" />
           </div>
           <div className="space-y-2">
-            {Array.from({ length: 4 }).map((_, i) => (
+            {Array.from({ length: 10 }).map((_, i) => (
               <Skeleton key={i} className="h-[72px] rounded-2xl" />
             ))}
           </div>

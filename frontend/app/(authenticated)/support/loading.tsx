@@ -51,7 +51,7 @@ export default function SupportLoading() {
               <Skeleton className="h-5 w-32" />
             </CardHeader>
             <CardContent className="space-y-3">
-              {Array.from({ length: 5 }).map((_, i) => (
+              {Array.from({ length: 12 }).map((_, i) => (
                 <div key={i} className="flex items-start gap-3">
                   <Skeleton className="h-8 w-8 rounded-full shrink-0" />
                   <div className="flex-1 space-y-2">
@@ -67,7 +67,7 @@ export default function SupportLoading() {
               <Skeleton className="h-5 w-28" />
             </CardHeader>
             <CardContent className="space-y-3">
-              {Array.from({ length: 5 }).map((_, i) => (
+              {Array.from({ length: 12 }).map((_, i) => (
                 <div key={i} className="grid grid-cols-4 gap-4 items-center">
                   <div className="flex items-center gap-2">
                     <Skeleton className="h-8 w-8 rounded-full" />
@@ -88,7 +88,7 @@ export default function SupportLoading() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {Array.from({ length: 4 }).map((_, i) => (
+              {Array.from({ length: 12 }).map((_, i) => (
                 <div key={i} className="rounded-xl border border-border p-4 space-y-2">
                   <div className="flex items-center justify-between">
                     <Skeleton className="h-4 w-24" />

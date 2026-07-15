@@ -12,7 +12,7 @@ export default function TeamTimeLoading() {
         </div>
         <div className="space-y-1">
           <Skeleton className="h-8 w-full rounded-t-md" />
-          {Array.from({ length: 8 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <Skeleton key={i} className="h-8 w-full" />
           ))}
         </div>

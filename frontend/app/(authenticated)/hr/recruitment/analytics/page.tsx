@@ -111,7 +111,7 @@ export default function RecruitmentAnalyticsPage() {
       <div className="space-y-6">
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-3">
           {isLoading ? (
-            Array.from({ length: 6 }).map((_, i) => <KpiSkeleton key={i} />)
+            Array.from({ length: 10 }).map((_, i) => <KpiSkeleton key={i} />)
           ) : (
             <>
               <KpiCard

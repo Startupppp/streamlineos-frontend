@@ -274,7 +274,7 @@ function ExpiryReportContent() {
         </div>
       }
     >
-      {query.isLoading && <DataTableSkeleton rows={8} columns={7} />}
+      {query.isLoading && <DataTableSkeleton rows={12} columns={7} />}
       {query.error && (
         <ErrorState description={query.error.message} onRetry={handleRetry} className="flex-1" />
       )}

@@ -337,7 +337,7 @@ export default function ExitManagementPage() {
     return (
       <PageWrapper title="Exit Management" subtitle="Resignations and offboarding">
         <div className="space-y-3">
-          {Array.from({ length: 4 }).map((_, i) => (
+          {Array.from({ length: 10 }).map((_, i) => (
             <Skeleton key={i} className="h-24 rounded-2xl" />
           ))}
         </div>

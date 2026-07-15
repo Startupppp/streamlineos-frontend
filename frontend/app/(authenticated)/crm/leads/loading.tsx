@@ -30,7 +30,7 @@ export default function LeadsPipelineLoading() {
     >
       <div className="flex flex-col h-full min-h-0">
         <div className="shrink-0 grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-6 mb-2">
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <Card key={i}>
               <CardContent className="p-3">
                 <div className="flex items-center justify-between">

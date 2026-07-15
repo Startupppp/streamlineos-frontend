@@ -6,7 +6,7 @@ export default function CompensationPlanningLoading() {
       <Skeleton className="h-8 w-64" />
       <Skeleton className="h-4 w-96" />
       <div className="space-y-3 mt-6">
-        {Array.from({ length: 4 }).map((_, i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <Skeleton key={i} className="h-20 rounded-xl" />
         ))}
       </div>

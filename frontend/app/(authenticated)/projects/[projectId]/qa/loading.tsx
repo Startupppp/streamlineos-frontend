@@ -14,7 +14,7 @@ export default function QaLoading() {
             <Skeleton className="h-7 w-32 rounded-md" />
             <Skeleton className="ml-auto h-7 w-28 rounded-md" />
           </div>
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <div key={i} className="flex h-8 items-center gap-3 border-b border-border/50 px-2 last:border-0">
               <Skeleton className="h-3 w-14" />
               <Skeleton className="h-3 flex-1" />

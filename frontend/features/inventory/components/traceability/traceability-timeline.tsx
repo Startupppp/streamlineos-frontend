@@ -90,7 +90,7 @@ export function TraceabilityTimeline({
   if (isLoading) {
     return (
       <div className="space-y-3">
-        {Array.from({ length: 4 }).map((_, i) => (
+        {Array.from({ length: 8 }).map((_, i) => (
           <div key={i} className="flex gap-3">
             <Skeleton className="h-3 w-3 rounded-full shrink-0 mt-0.5" />
             <div className="flex-1 space-y-1.5">

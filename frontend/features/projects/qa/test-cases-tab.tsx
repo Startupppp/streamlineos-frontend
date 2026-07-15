@@ -224,7 +224,7 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
     },
   ], [canManage, handleEdit]);
 
-  if (isLoading) return <DataTableSkeleton rows={8} columns={5} className="flex-1" />;
+  if (isLoading) return <DataTableSkeleton rows={12} columns={5} className="flex-1" />;
   if (isError) return <ErrorState onRetry={handleRetry} />;
 
   return (

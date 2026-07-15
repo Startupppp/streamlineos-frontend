@@ -100,7 +100,7 @@ function TemplatesPageSkeleton() {
     >
       <div className="space-y-6">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
+          {Array.from({ length: 10 }).map((_, i) => (
             <div
               key={i}
               className="rounded-2xl border bg-card p-4 space-y-3 shadow-sm"
@@ -127,7 +127,7 @@ function TemplatesPageSkeleton() {
               ),
             )}
           </div>
-          {Array.from({ length: 5 }).map((_, i) => (
+          {Array.from({ length: 10 }).map((_, i) => (
             <div
               key={i}
               className="flex items-center gap-4 px-4 py-4 border-b last:border-0"

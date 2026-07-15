@@ -9,14 +9,14 @@ export default function NotificationsLoading() {
       actions={<Skeleton className="h-8 w-32 rounded-md" />}
       filters={
         <div className="flex items-center gap-1">
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <Skeleton key={i} className="h-7 w-14 rounded-md" />
           ))}
         </div>
       }
     >
       <div className="space-y-1.5">
-        {Array.from({ length: 7 }).map((_, i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <div key={i} className="flex items-start gap-3 px-3 py-2.5 rounded-lg border border-border bg-card">
             <Skeleton className="h-8 w-8 rounded-lg shrink-0" />
             <div className="flex-1 space-y-1.5 min-w-0">

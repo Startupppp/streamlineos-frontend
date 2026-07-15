@@ -1,6 +1,6 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-export function NotificationListSkeleton({ count = 5 }: { count?: number }) {
+export function NotificationListSkeleton({ count = 10 }: { count?: number }) {
   return (
     <div className="border border-border rounded-lg divide-y divide-border">
       {Array.from({ length: count }).map((_, i) => (

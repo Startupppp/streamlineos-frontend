@@ -11,7 +11,7 @@ export default function CrmAnalyticsLoading() {
     >
       <div className="space-y-4">
         <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
+          {Array.from({ length: 10 }).map((_, i) => (
             <Card key={i} className="shadow-sm">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
@@ -27,7 +27,7 @@ export default function CrmAnalyticsLoading() {
         </div>
 
         <div className="grid gap-3 md:grid-cols-2">
-          {Array.from({ length: 8 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <Card key={i} className="shadow-sm">
               <CardHeader className="pb-2">
                 <Skeleton className="h-4 w-40" />

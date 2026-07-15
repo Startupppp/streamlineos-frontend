@@ -10,7 +10,7 @@ export default function EmailTemplatesLoading() {
       actions={<Skeleton className="h-9 w-36 rounded-md" />}
     >
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <Card key={i} className="shadow-sm">
             <CardHeader className="pb-2">
               <div className="flex items-start justify-between">

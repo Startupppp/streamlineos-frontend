@@ -191,7 +191,7 @@ function SlowMovingReportContent() {
         </div>
       }
     >
-      {query.isLoading && <DataTableSkeleton rows={8} columns={6} />}
+      {query.isLoading && <DataTableSkeleton rows={12} columns={6} />}
       {query.error && (
         <ErrorState description={query.error.message} onRetry={handleRetry} className="flex-1" />
       )}

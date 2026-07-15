@@ -12,7 +12,7 @@ export default function HrAssetsLoading() {
     >
       <div className="space-y-4">
         <div className="grid gap-3 md:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
+          {Array.from({ length: 9 }).map((_, i) => (
             <Card key={i}>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-2">
@@ -25,7 +25,7 @@ export default function HrAssetsLoading() {
           ))}
         </div>
         <Skeleton className="h-9 w-72 rounded-md" />
-        <DataTableSkeleton rows={6} columns={8} />
+        <DataTableSkeleton rows={12} columns={8} />
       </div>
     </PageWrapper>
   );

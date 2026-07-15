@@ -104,7 +104,7 @@ export function TicketActivityLog({ projectId, ticketId }: TicketActivityLogProp
       </h4>
 
       {isLoading ? (
-        <LoadingState variant="list" rows={3} className="p-0" />
+        <LoadingState variant="list" rows={8} className="p-0" />
       ) : isError ? (
         <p className="py-2 text-center text-[11px] text-muted-foreground">
           Could not load activity history.

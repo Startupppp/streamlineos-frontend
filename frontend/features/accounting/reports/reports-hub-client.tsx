@@ -150,7 +150,7 @@ export function ReportsHubClient() {
       }
     >
       {isLoading ? (
-        <LoadingState variant="cards" rows={6} />
+        <LoadingState variant="cards" rows={9} />
       ) : error ? (
         <ErrorState
           title="Failed to load reports catalog"

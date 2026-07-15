@@ -262,7 +262,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
 
         <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
           {isLoading ? (
-            <DataTableSkeleton rows={8} columns={7} className="flex-1" />
+            <DataTableSkeleton rows={12} columns={7} className="flex-1" />
           ) : isError ? (
             <ErrorState onRetry={refetch} />
           ) : filtered.length === 0 ? (

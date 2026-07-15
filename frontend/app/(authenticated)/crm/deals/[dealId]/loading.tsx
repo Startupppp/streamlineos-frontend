@@ -20,7 +20,7 @@ export default function DealDetailLoading() {
     >
       <div className="space-y-6">
         <div className="flex flex-wrap items-center gap-1 p-2 rounded-xl bg-muted/30 border border-border/50">
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <Skeleton key={i} className="h-7 w-24 rounded-lg" />
           ))}
         </div>
@@ -33,7 +33,7 @@ export default function DealDetailLoading() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {Array.from({ length: 6 }).map((_, i) => (
+                  {Array.from({ length: 12 }).map((_, i) => (
                     <div key={i} className="flex items-start gap-2">
                       <Skeleton className="h-4 w-4 rounded mt-0.5" />
                       <div className="space-y-1.5 flex-1">
@@ -70,7 +70,7 @@ export default function DealDetailLoading() {
                 <Skeleton className="h-5 w-24" />
               </CardHeader>
               <CardContent className="space-y-3">
-                {Array.from({ length: 3 }).map((_, i) => (
+                {Array.from({ length: 9 }).map((_, i) => (
                   <div key={i} className="flex items-center justify-between">
                     <Skeleton className="h-4 w-24" />
                     <Skeleton className="h-4 w-20" />
@@ -85,7 +85,7 @@ export default function DealDetailLoading() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 gap-2">
-                  {Array.from({ length: 4 }).map((_, i) => (
+                  {Array.from({ length: 12 }).map((_, i) => (
                     <Skeleton key={i} className="h-8 w-full rounded-md" />
                   ))}
                 </div>
@@ -97,7 +97,7 @@ export default function DealDetailLoading() {
                 <Skeleton className="h-5 w-32" />
               </CardHeader>
               <CardContent className="space-y-3">
-                {Array.from({ length: 4 }).map((_, i) => (
+                {Array.from({ length: 12 }).map((_, i) => (
                   <Skeleton key={i} className="h-12 w-full" />
                 ))}
               </CardContent>

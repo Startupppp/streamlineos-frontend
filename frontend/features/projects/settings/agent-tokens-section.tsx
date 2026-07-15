@@ -158,7 +158,7 @@ function TokenRow({
 function TokenListSkeleton() {
   return (
     <div className="space-y-0">
-      {Array.from({ length: 3 }).map((_, i) => (
+      {Array.from({ length: 8 }).map((_, i) => (
         <div key={i} className="flex items-center gap-3 py-3 border-b border-border/60 last:border-0">
           <div className="flex-1 space-y-1.5">
             <div className="flex items-center gap-2">

@@ -14,7 +14,7 @@ export default function QuotesLoading() {
         </div>
       }
     >
-      <DataTableSkeleton rows={8} columns={8} className="h-[calc(100dvh-16rem)]" />
+      <DataTableSkeleton rows={12} columns={8} className="h-[calc(100dvh-16rem)]" />
     </PageWrapper>
   );
 }

@@ -316,7 +316,7 @@ export default function ForecastPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="px-2 pb-4">
-                {compareQuery.isLoading && <LoadingState rows={4} />}
+                {compareQuery.isLoading && <LoadingState rows={12} />}
                 {compareQuery.error && (
                   <ErrorState
                     title="Failed to load comparison"

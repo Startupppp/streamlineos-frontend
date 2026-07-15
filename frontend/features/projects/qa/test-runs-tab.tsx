@@ -210,7 +210,7 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
     },
   ], [canManage, projectId]);
 
-  if (isLoading) return <DataTableSkeleton rows={5} columns={5} className="flex-1" />;
+  if (isLoading) return <DataTableSkeleton rows={12} columns={5} className="flex-1" />;
   if (isError) return <ErrorState onRetry={handleRetry} />;
 
   return (

@@ -19,7 +19,7 @@ export default function ReleasesLoading() {
         </PmSection>
         <PmSection index={1}>
           <PmPanel className="space-y-2 p-3">
-            {Array.from({ length: 5 }).map((_, i) => (
+            {Array.from({ length: 12 }).map((_, i) => (
               <Skeleton key={i} className="h-10 w-full rounded-md" />
             ))}
           </PmPanel>

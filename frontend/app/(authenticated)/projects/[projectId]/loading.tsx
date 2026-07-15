@@ -6,7 +6,7 @@ export default function ProjectBoardLoading() {
   const filterBar = (
     <div className="flex items-center gap-2 w-full">
       <div className="flex items-center gap-1">
-        {Array.from({ length: 5 }).map((_, i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <Skeleton key={i} className="h-7 w-7 rounded-md" />
         ))}
       </div>

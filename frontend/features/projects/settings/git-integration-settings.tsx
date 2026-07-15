@@ -2,7 +2,9 @@
 
 import type { ReactNode } from "react";
 import { useState, useCallback } from "react";
-import { Plus, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -200,7 +202,7 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
           <PmSection index={0}>
             {isLoading ? (
               <div className="space-y-3">
-                {Array.from({ length: 3 }).map((_, i) => (
+                {Array.from({ length: 8 }).map((_, i) => (
                   <div key={i} className={cn(PM_PANEL, "space-y-3 p-4")}>
                     <div className="flex items-center gap-3">
                       <Skeleton className="h-9 w-9 rounded-lg" />

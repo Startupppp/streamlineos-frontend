@@ -70,3 +70,7 @@ docs/superpowers/
 # E2E UI audit artifacts + throwaway harnesses (local only)
 /e2e-artifacts/
 /scripts/e2e-*.mjs
+
+
+.claude-flow
+

@@ -168,7 +168,7 @@ export default function InternalJobsPage() {
     return (
       <PageWrapper title="Internal Openings" subtitle="Open positions available exclusively for employees.">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-48 rounded-xl" />)}
+          {Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-48 rounded-xl" />)}
         </div>
       </PageWrapper>
     );

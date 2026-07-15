@@ -5,7 +5,7 @@ export default function NotificationTemplatesLoading() {
   return (
     <PageWrapper title="Notification Templates" subtitle="Manage reusable templates for automated notifications">
       <div className="border border-border rounded-lg divide-y divide-border">
-        {Array.from({ length: 7 }).map((_, i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <div key={i} className="flex items-center gap-3 px-3 py-3">
             <div className="flex-1 flex items-center gap-3">
               <div className="space-y-1.5 flex-1">

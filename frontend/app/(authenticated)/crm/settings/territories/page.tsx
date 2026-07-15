@@ -321,7 +321,7 @@ export default function TerritoriesPage() {
       >
         {isLoading ? (
           <div className="space-y-3">
-            <DataTableSkeleton rows={3} columns={5} />
+            <DataTableSkeleton rows={12} columns={5} />
           </div>
         ) : isError ? (
           <EmptyState

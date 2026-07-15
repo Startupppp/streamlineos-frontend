@@ -204,7 +204,7 @@ export function OrgTokensTab({ showCreate, onShowCreateChange }: OrgTokensTabPro
     <>
       {isLoading ? (
         <div className="space-y-1.5">
-          {Array.from({ length: 3 }).map((_, i) => (
+          {Array.from({ length: 8 }).map((_, i) => (
             <Skeleton key={i} className="h-8 w-full rounded-md" />
           ))}
         </div>

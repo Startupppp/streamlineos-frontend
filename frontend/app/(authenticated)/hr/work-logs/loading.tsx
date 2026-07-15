@@ -6,7 +6,7 @@ export default function WorkLogsLoading() {
   return (
     <PageWrapper title="Work Logs" subtitle="Log and review your daily work activities.">
       <div className="space-y-6">
-        {Array.from({ length: 3 }).map((_, m) => (
+        {Array.from({ length: 8 }).map((_, m) => (
           <Card key={m}>
             <CardHeader className="flex flex-row items-center justify-between">
               <Skeleton className="h-5 w-40" />
@@ -14,7 +14,7 @@ export default function WorkLogsLoading() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {Array.from({ length: 5 }).map((_, d) => (
+                {Array.from({ length: 12 }).map((_, d) => (
                   <div key={d} className="flex items-center gap-4">
                     <Skeleton className="h-5 w-24" />
                     <Skeleton className="h-10 w-full" />

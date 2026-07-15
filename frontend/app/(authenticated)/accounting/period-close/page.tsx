@@ -62,7 +62,7 @@ export default function PeriodClosePage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
         <div className="lg:col-span-1 space-y-2">
           {periodsQuery.isLoading ? (
-            <LoadingState variant="table" rows={6} />
+            <LoadingState variant="table" rows={12} />
           ) : periodsQuery.error ? (
             <ErrorState
               title="Failed to load periods"

@@ -149,7 +149,7 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
       <PageWrapper title="Loading…" backHref={`/projects/${projectId}/qa`}>
         <PmPageShell>
           <div className="space-y-2">
-            {Array.from({ length: 5 }).map((_, i) => (
+            {Array.from({ length: 10 }).map((_, i) => (
               <Skeleton key={i} className={cn("h-20 rounded-xl", PM_PANEL)} />
             ))}
           </div>

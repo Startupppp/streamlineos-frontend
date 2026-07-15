@@ -79,7 +79,7 @@ function TravelLoading() {
       <div className="space-y-4">
         <Skeleton className="h-16 w-full rounded-lg" />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => (
+          {Array.from({ length: 8 }).map((_, i) => (
             <Skeleton key={i} className="h-40 rounded-lg" />
           ))}
         </div>

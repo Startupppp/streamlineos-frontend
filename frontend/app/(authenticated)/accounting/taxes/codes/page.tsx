@@ -253,7 +253,7 @@ export default function TaxCodesPage() {
       }
     >
       {listQuery.isLoading ? (
-        <LoadingState variant="table" rows={8} />
+        <LoadingState variant="table" rows={12} />
       ) : listQuery.error ? (
         <ErrorState
           title="Failed to load tax codes"

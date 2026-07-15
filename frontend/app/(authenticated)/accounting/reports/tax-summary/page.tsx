@@ -4,7 +4,7 @@ import { TaxSummaryReport } from "@/features/accounting/reports/tax-summary-repo
 
 export default function TaxSummaryPage() {
   return (
-    <Suspense fallback={<LoadingState variant="table" rows={8} />}>
+    <Suspense fallback={<LoadingState variant="table" rows={12} />}>
       <TaxSummaryReport />
     </Suspense>
   );

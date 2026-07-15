@@ -152,7 +152,7 @@ export function KbCommentsPanel({ article }: { article: KbArticleDetail }) {
         </div>
 
         {commentsQuery.isLoading ? (
-          <LoadingState variant="list" rows={2} />
+          <LoadingState variant="list" rows={8} />
         ) : commentsQuery.error ? (
           <ErrorState
             compact

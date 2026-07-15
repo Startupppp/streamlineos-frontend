@@ -15,7 +15,7 @@ export default function HoldsLoading() {
       }
     >
       <div className="space-y-1">
-        {Array.from({ length: 8 }).map((_, i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <Skeleton key={i} className="h-8 w-full rounded" />
         ))}
       </div>

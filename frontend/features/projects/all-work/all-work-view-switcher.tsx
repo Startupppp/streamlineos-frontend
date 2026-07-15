@@ -32,10 +32,10 @@ export function AllWorkSkeleton({ view }: { view: AllWorkView }) {
   if (view === "board") {
     return (
       <div className="flex gap-3 px-3 pb-3 sm:px-4">
-        {Array.from({ length: 4 }).map((_, i) => (
+        {Array.from({ length: 8 }).map((_, i) => (
           <div key={i} className="w-64 flex-shrink-0 space-y-2">
             <Skeleton className="h-8 w-full rounded-lg" />
-            {Array.from({ length: 3 }).map((__, j) => (
+            {Array.from({ length: 6 }).map((__, j) => (
               <Skeleton key={j} className="h-24 w-full rounded-xl" />
             ))}
           </div>

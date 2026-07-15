@@ -11,7 +11,7 @@ export default function ProductsLoading() {
     >
       <div className="space-y-4">
         <Skeleton className="h-9 w-64 rounded-md" />
-        <DataTableSkeleton rows={5} columns={6} />
+        <DataTableSkeleton rows={12} columns={6} />
       </div>
     </PageWrapper>
   );

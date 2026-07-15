@@ -29,7 +29,7 @@ export default function IntakeLoading() {
         </div>
 
         <div className="space-y-3 mt-4">
-          {Array.from({ length: 5 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <Card key={i} className="p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 space-y-2">

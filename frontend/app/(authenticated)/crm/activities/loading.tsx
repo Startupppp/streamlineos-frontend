@@ -16,13 +16,13 @@ export default function CrmActivitiesLoading() {
     >
       <div className="space-y-4">
         <div className="flex items-center gap-4 px-1 py-1">
-          {Array.from({ length: 5 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <Skeleton key={i} className="h-4 w-16" />
           ))}
         </div>
 
         <div className="space-y-3">
-          {Array.from({ length: 8 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <div
               key={i}
               className="bg-card rounded-xl border border-border p-4 space-y-2"

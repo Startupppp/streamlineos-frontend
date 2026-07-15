@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Tooltip,
   TooltipContent,
+  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
@@ -322,54 +323,56 @@ export const TimerCard = memo(function TimerCard() {
           </div>
         )}
 
-        <div className={isActive ? "grid grid-cols-2 gap-3" : "flex"}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                onClick={handleCheckIn}
-                disabled={isActive || isPending || isInCooldown || isBlockedDay}
-                variant={isActive ? "secondary" : "default"}
-                className={cn(
-                  "font-semibold flex-1 gap-1.5 h-9 duration-200",
-                  !isActive &&
-                    !isInCooldown &&
-                    !isBlockedDay &&
-                    "bg-emerald-600 hover:bg-emerald-700 text-white",
-                )}
-              >
-                {checkInMutation.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <LogIn className="h-4 w-4" />
-                )}
-                {isInCooldown
-                  ? `Wait ${Math.floor(localCooldown / 60)}:${String(localCooldown % 60).padStart(2, "0")}`
-                  : "Check In"}
-              </Button>
-            </TooltipTrigger>
-            {isBlockedDay && <TooltipContent>{blockedReason}</TooltipContent>}
-          </Tooltip>
-
-          {isActive && (
+        <TooltipProvider>
+          <div className={isActive ? "grid grid-cols-2 gap-3" : "flex"}>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  onClick={handleClockAction}
-                  disabled={isPending || isBlockedDay}
-                  className="font-semibold gap-1.5 h-9 bg-rose-600 hover:bg-rose-700 text-white duration-200"
+                  onClick={handleCheckIn}
+                  disabled={isActive || isPending || isInCooldown || isBlockedDay}
+                  variant={isActive ? "secondary" : "default"}
+                  className={cn(
+                    "font-semibold flex-1 gap-1.5 h-9 duration-200",
+                    !isActive &&
+                      !isInCooldown &&
+                      !isBlockedDay &&
+                      "bg-emerald-600 hover:bg-emerald-700 text-white",
+                  )}
                 >
-                  {checkOutMutation.isPending ? (
+                  {checkInMutation.isPending ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <LogOut className="h-4 w-4" />
+                    <LogIn className="h-4 w-4" />
                   )}
-                  Check Out
+                  {isInCooldown
+                    ? `Wait ${Math.floor(localCooldown / 60)}:${String(localCooldown % 60).padStart(2, "0")}`
+                    : "Check In"}
                 </Button>
               </TooltipTrigger>
               {isBlockedDay && <TooltipContent>{blockedReason}</TooltipContent>}
             </Tooltip>
-          )}
-        </div>
+
+            {isActive && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={handleClockAction}
+                    disabled={isPending || isBlockedDay}
+                    className="font-semibold gap-1.5 h-9 bg-rose-600 hover:bg-rose-700 text-white duration-200"
+                  >
+                    {checkOutMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <LogOut className="h-4 w-4" />
+                    )}
+                    Check Out
+                  </Button>
+                </TooltipTrigger>
+                {isBlockedDay && <TooltipContent>{blockedReason}</TooltipContent>}
+              </Tooltip>
+            )}
+          </div>
+        </TooltipProvider>
 
         {isActive && (
           <Button

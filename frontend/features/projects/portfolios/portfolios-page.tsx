@@ -294,7 +294,7 @@ export function PortfoliosPage() {
         <PmSection index={0}>
           {isLoading ? (
             <PmPanel className="p-2">
-              <DataTableSkeleton rows={5} columns={7} className="flex-1" />
+              <DataTableSkeleton rows={12} columns={7} className="flex-1" />
             </PmPanel>
           ) : isError ? (
             <PmPanel className="flex min-h-[14rem] items-center justify-center p-6">

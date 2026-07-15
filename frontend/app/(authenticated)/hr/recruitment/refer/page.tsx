@@ -156,7 +156,7 @@ export default function ReferPage() {
           <h3 className="font-semibold text-sm">My Referrals</h3>
           {loadingReferrals ? (
             <div className="space-y-3">
-              {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
+              {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
             </div>
           ) : referrals.length === 0 ? (
             <Card className="shadow-sm">

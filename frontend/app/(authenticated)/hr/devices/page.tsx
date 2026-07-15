@@ -60,7 +60,7 @@ export default function DevicesPage() {
 
           <TabsContent value="failed-syncs">
             {failedLoading ? (
-              <div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-12 rounded-lg" />)}</div>
+              <div className="space-y-2">{Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-12 rounded-lg" />)}</div>
             ) : !failedSyncs?.length ? (
               <EmptyState illustrationPreset="default" title="No failed syncs" description="All device syncs completed successfully" compact className="h-48 border-0 shadow-none" />
             ) : (

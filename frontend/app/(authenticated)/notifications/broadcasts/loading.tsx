@@ -5,7 +5,7 @@ export default function BroadcastsLoading() {
   return (
     <PageWrapper title="Broadcast Center" subtitle="Send announcements and mass notifications to your team">
       <div className="border border-border rounded-lg divide-y divide-border">
-        {Array.from({ length: 6 }).map((_, i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <div key={i} className="flex items-center gap-3 px-3 py-3">
             <div className="flex-1 space-y-1.5">
               <div className="flex items-center gap-2">

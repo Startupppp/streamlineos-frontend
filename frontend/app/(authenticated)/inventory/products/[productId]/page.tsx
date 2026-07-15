@@ -433,7 +433,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             <CardContent className="p-0">
               {stockQuery.isLoading ? (
                 <div className="px-4 pb-4">
-                  <LoadingState variant="table" rows={4} />
+                  <LoadingState variant="table" rows={12} />
                 </div>
               ) : stockQuery.error ? (
                 <div className="px-4 pb-4">

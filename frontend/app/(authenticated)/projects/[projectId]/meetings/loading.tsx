@@ -24,7 +24,7 @@ export default function MeetingsLoading() {
       <div className="relative flex min-h-0 flex-1 flex-col gap-4">
         <Skeleton className={cn("h-14 w-full rounded-xl", PM_PANEL)} />
         <div className={cn("space-y-2 p-2", PM_PANEL)}>
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <div key={i} className="flex h-12 items-center gap-3 border-b border-border/50 px-2 last:border-0">
               <Skeleton className="h-3 w-14" />
               <Skeleton className="h-3 max-w-[14rem] flex-1" />

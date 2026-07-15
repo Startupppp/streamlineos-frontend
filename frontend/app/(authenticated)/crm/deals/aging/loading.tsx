@@ -7,7 +7,7 @@ export default function CrmdealsagingLoading() {
     <PageWrapper title="Deal Aging Report" subtitle="Loading...">
       <Card>
         <CardContent className="p-6 space-y-3">
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <Skeleton key={i} className="h-10 w-full" />
           ))}
         </CardContent>

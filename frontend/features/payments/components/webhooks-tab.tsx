@@ -131,7 +131,7 @@ export function WebhooksTab({ providerKey, environment }: { providerKey: string;
       <div>
         <p className="text-[13px] font-medium text-foreground mb-2">Recent events</p>
         {isLoading ? (
-          <DataTableSkeleton rows={3} columns={4} />
+          <DataTableSkeleton rows={8} columns={4} />
         ) : environmentEvents.length === 0 ? (
           <EmptyState title="No webhook events yet" description="Events will appear here as they're received." compact />
         ) : (

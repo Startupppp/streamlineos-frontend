@@ -263,7 +263,7 @@ export default function HrAutomationsPage() {
         </div>
       )}
       {isLoading ? (
-        <LoadingState variant="list" rows={5} />
+        <LoadingState variant="list" rows={12} />
       ) : isError ? (
         <ErrorState
           title="Couldn't load automation rules"

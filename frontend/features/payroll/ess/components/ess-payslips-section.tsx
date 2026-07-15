@@ -122,7 +122,7 @@ export function EssPayslipsSection() {
       <div className="rounded-xl border border-border bg-card overflow-hidden">
         {isLoading ? (
           <div>
-            {Array.from({ length: 4 }).map((_, i) => <PayslipRowSkeleton key={i} />)}
+            {Array.from({ length: 10 }).map((_, i) => <PayslipRowSkeleton key={i} />)}
           </div>
         ) : filtered.length === 0 ? (
           <EmptyState

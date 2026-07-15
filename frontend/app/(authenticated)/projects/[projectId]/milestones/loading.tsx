@@ -19,7 +19,7 @@ export default function MilestonesLoading() {
         </PmSection>
         <PmSection index={1}>
           <div className="space-y-2.5">
-            {Array.from({ length: 3 }).map((_, i) => (
+            {Array.from({ length: 9 }).map((_, i) => (
               <Skeleton key={i} className="h-20 rounded-xl" />
             ))}
           </div>

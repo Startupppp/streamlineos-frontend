@@ -34,7 +34,7 @@ export function MyLearning() {
   if (isLoading) {
     return (
       <div className="space-y-3">
-        {Array.from({ length: 4 }).map((_, i) => (
+        {Array.from({ length: 9 }).map((_, i) => (
           <EnrollmentSkeleton key={i} />
         ))}
       </div>

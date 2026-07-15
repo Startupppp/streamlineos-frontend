@@ -10,7 +10,7 @@ export default function ChannelsLoading() {
       actions={<Skeleton className="h-8 w-28" />}
     >
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 4 }).map((_, i) => (
+        {Array.from({ length: 9 }).map((_, i) => (
           <Card key={i}>
             <CardContent className="p-4 space-y-3">
               <div className="flex items-start justify-between gap-2">

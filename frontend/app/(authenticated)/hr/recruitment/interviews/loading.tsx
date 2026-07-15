@@ -9,7 +9,7 @@ export default function InterviewsLoading() {
       subtitle="Schedule and review candidate interviews"
       actions={<Skeleton className="h-8 w-36 rounded-md" />}
     >
-      <DataTableSkeleton rows={7} columns={6} />
+      <DataTableSkeleton rows={12} columns={6} />
     </PageWrapper>
   );
 }

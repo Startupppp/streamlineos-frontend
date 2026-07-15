@@ -232,7 +232,7 @@ export function BankAccountDetailClient({ bankAccountId }: Props) {
       {accountQuery.isLoading ? (
         <div className="space-y-4">
           <div className="flex gap-3">
-            {Array.from({ length: 3 }).map((_, i) => (
+            {Array.from({ length: 8 }).map((_, i) => (
               <Skeleton key={i} className="h-8 w-32" />
             ))}
           </div>

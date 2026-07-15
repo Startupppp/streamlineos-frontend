@@ -11,7 +11,7 @@ export default function VendorDetailLoading() {
           ))}
         </div>
         <div className="space-y-1">
-          {Array.from({ length: 5 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <Skeleton key={i} className="h-8 w-full rounded" />
           ))}
         </div>

@@ -137,7 +137,7 @@ export default function SkillsPage() {
     return (
       <PageWrapper title="Skills Matrix" subtitle="Track team competencies">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-40 rounded-2xl" />)}
+          {Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-40 rounded-2xl" />)}
         </div>
       </PageWrapper>
     );

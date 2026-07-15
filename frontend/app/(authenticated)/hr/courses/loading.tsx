@@ -22,7 +22,7 @@ export default function CoursesLoading() {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <Card key={i} className="overflow-hidden">
               <Skeleton className="h-36 w-full rounded-none" />
               <CardContent className="p-4 space-y-3">

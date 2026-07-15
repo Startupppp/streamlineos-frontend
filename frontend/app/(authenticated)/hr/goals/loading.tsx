@@ -12,7 +12,7 @@ export default function GoalsLoading() {
           <Skeleton className="h-9 w-28 rounded-lg" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <Card key={i} className="bg-card border border-border rounded-xl shadow-sm">
               <CardContent className="p-5 space-y-4">
                 <div className="flex gap-4 items-start">

@@ -13,7 +13,7 @@ export default function JobsLoading() {
         <div className="flex items-center gap-2">
           <Skeleton className="h-9 w-32 rounded-md" />
         </div>
-        <DataTableSkeleton rows={6} columns={6} />
+        <DataTableSkeleton rows={12} columns={6} />
       </div>
     </PageWrapper>
   );

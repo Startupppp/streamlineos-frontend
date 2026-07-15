@@ -14,7 +14,7 @@ export default function AutomationsLoading() {
           <Skeleton className="h-16 rounded-lg" />
           <Skeleton className="h-16 rounded-lg" />
         </div>
-        {Array.from({ length: 3 }).map((_, i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <Skeleton key={i} className="h-28 w-full rounded-lg" />
         ))}
       </div>

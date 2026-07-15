@@ -28,7 +28,7 @@ function DetailSkeleton() {
           </div>
         ))}
       </div>
-      <DataTableSkeleton rows={5} columns={6} />
+      <DataTableSkeleton rows={12} columns={6} />
     </div>
   );
 }

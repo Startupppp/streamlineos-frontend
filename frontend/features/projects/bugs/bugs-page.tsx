@@ -303,7 +303,7 @@ export function BugsPage({ projectId }: BugsPageProps) {
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
           {isLoading ? (
             <PmPanel className="p-2">
-              <DataTableSkeleton rows={8} columns={6} className="flex-1" />
+              <DataTableSkeleton rows={12} columns={6} className="flex-1" />
             </PmPanel>
           ) : isError ? (
             <PmPanel className="flex flex-1 items-center justify-center p-6">

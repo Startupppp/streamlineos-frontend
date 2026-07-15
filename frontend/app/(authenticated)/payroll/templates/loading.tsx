@@ -5,7 +5,7 @@ export function TemplatesPageSkeleton() {
   return (
     <PageWrapper title="Template Library" subtitle="Loading…">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {Array.from({ length: 6 }).map((_, i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <div key={i} className="rounded-lg border border-border p-4 space-y-3">
             <div className="flex items-start justify-between">
               <Skeleton className="h-4 w-32" />

@@ -6,7 +6,7 @@ export default function TravelApprovalsLoading() {
   return (
     <PageWrapper title="Travel Approvals" subtitle="Review pending travel requests">
       <div className="space-y-6">
-        {Array.from({ length: 2 }).map((_, si) => (
+        {Array.from({ length: 8 }).map((_, si) => (
           <div key={si} className="space-y-3">
             <Skeleton className="h-5 w-48" />
             {Array.from({ length: 2 }).map((_, i) => (

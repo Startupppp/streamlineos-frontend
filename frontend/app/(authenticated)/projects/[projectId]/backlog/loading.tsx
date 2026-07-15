@@ -28,7 +28,7 @@ export default function BacklogLoading() {
           <Skeleton className="h-3.5 w-16" />
         </div>
         <div>
-          {Array.from({ length: 8 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <div key={i} className="flex items-center gap-4 px-4 py-3 border-b last:border-b-0">
               <Skeleton className="h-4 w-12" />
               <Skeleton className="h-4 flex-1" />

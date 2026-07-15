@@ -168,7 +168,7 @@ export function BatchDetailSheet({ batchId, onClose, canManage }: BatchDetailShe
 
           <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
             {isLoading ? (
-              <DataTableSkeleton rows={5} columns={canManage ? 7 : 6} />
+              <DataTableSkeleton rows={8} columns={canManage ? 7 : 6} />
             ) : (
               <DataTable
                 data={items}

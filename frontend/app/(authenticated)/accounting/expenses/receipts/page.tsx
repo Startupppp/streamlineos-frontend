@@ -51,7 +51,7 @@ export default function ReceiptInboxPage() {
     >
       {query.isLoading && (
         <div className="grid gap-3 sm:grid-cols-2">
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: 10 }).map((_, i) => (
             <ReceiptCardSkeleton key={i} />
           ))}
         </div>

@@ -119,7 +119,7 @@ export function MeetingsTab() {
   const handleAgendaChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => setAgenda(e.target.value), []);
 
   if (isLoading) {
-    return <LoadingState variant="list" rows={3} />;
+    return <LoadingState variant="list" rows={12} />;
   }
 
   return (

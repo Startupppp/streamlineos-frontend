@@ -11,7 +11,7 @@ export default function OrgChartLoading() {
             <div className="flex flex-col items-center gap-8">
               <Skeleton className="h-24 w-48 rounded-xl" />
               <div className="flex gap-6">
-                {Array.from({ length: 3 }).map((_, i) => (
+                {Array.from({ length: 9 }).map((_, i) => (
                   <div key={i} className="flex flex-col items-center gap-4">
                     <Skeleton className="h-20 w-40 rounded-xl" />
                     <div className="flex gap-6">

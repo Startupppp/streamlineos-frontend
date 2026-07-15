@@ -43,7 +43,7 @@ export default function RoleEditorLoading() {
           </div>
           <Separator />
           <div className="divide-y divide-border/30">
-            {Array.from({ length: 8 }).map((_, index) => (
+            {Array.from({ length: 12 }).map((_, index) => (
               <div key={index} className="flex items-center justify-between px-3 py-3">
                 <div className="flex items-center gap-2">
                   <Skeleton className="h-3.5 w-3.5 rounded" />

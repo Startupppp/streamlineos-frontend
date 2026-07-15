@@ -10,7 +10,7 @@ export default function HandbookLoading() {
       actions={<Skeleton className="h-8 w-32 rounded-md" />}
     >
       <div className="space-y-3">
-        {Array.from({ length: 5 }).map((_, i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <Card key={i}>
             <CardContent className="p-4">
               <div className="flex items-center gap-4">

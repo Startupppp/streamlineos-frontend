@@ -141,7 +141,7 @@ function TopCoursesSkeleton() {
     <Card className="bg-card border border-border rounded-lg shadow-sm">
       <CardContent className="p-4 space-y-3">
         <Skeleton className="h-4 w-40" />
-        {Array.from({ length: 4 }).map((_, i) => (
+        {Array.from({ length: 10 }).map((_, i) => (
           <div key={i} className="flex items-center justify-between gap-3">
             <Skeleton className="h-3.5 w-48" />
             <Skeleton className="h-5 w-8 rounded-md" />

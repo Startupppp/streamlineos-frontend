@@ -108,7 +108,7 @@ export function AutomationRunsSheet({ ruleId, ruleName, onClose }: Props) {
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-2">
-          {isLoading && Array.from({ length: 5 }).map((_, i) => (
+          {isLoading && Array.from({ length: 8 }).map((_, i) => (
             <Skeleton key={i} className="h-10 w-full rounded-lg" />
           ))}
           {!isLoading && (!runs || runs.length === 0) && (

@@ -125,7 +125,7 @@ export function CyclesTab() {
   const handleDeadlineChange = useCallback((value: string) => setDeadline(value), []);
 
   if (isLoading) {
-    return <LoadingState variant="list" rows={3} />;
+    return <LoadingState variant="list" rows={12} />;
   }
 
   return (

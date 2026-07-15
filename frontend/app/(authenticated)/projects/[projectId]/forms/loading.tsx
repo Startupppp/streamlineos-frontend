@@ -19,7 +19,7 @@ export default function ProjectFormsLoading() {
       actions={<Skeleton className="h-8 w-24 rounded-md" />}
     >
       <div className="px-4 pb-4">
-        <DataTableSkeleton rows={5} columns={6} />
+        <DataTableSkeleton rows={12} columns={6} />
       </div>
     </PageWrapper>
   );

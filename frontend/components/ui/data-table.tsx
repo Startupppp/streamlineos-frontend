@@ -427,7 +427,7 @@ export function DataTable<T>({
 }
 
 export function DataTableSkeleton({
-  rows = 5,
+  rows = 12,
   columns = 4,
   className,
 }: {

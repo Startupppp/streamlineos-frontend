@@ -212,7 +212,7 @@ export function SalaryStructuresPageContent() {
     return (
       <PageWrapper title="Salary Structure Templates" subtitle="Loading…">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: 9 }).map((_, i) => (
             <div key={i} className="h-48 bg-muted animate-pulse rounded-xl border border-border" />
           ))}
         </div>

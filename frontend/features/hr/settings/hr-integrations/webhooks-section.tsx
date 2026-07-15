@@ -166,7 +166,7 @@ export function WebhooksSection() {
       <div className="rounded-lg border divide-y-0">
         {isLoading ? (
           <div className="p-4 space-y-3">
-            {Array.from({ length: 3 }).map((_, i) => (
+            {Array.from({ length: 8 }).map((_, i) => (
               <Skeleton key={i} className="h-14 w-full rounded-md" />
             ))}
           </div>

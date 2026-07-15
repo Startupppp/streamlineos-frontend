@@ -278,7 +278,7 @@ export function GoalsTab() {
   const handleEndDateChange = useCallback((value: string) => setEndDate(value), []);
 
   if (isLoading) {
-    return <LoadingState variant="cards" rows={4} />;
+    return <LoadingState variant="cards" rows={9} />;
   }
 
   const goalsList = Array.isArray(goals) ? goals : [];

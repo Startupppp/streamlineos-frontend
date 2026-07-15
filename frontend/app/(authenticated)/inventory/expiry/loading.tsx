@@ -16,13 +16,13 @@ export default function ExpiryLoading() {
     >
       <div className="rounded-md border border-border bg-card overflow-hidden">
         <div className="border-b border-border bg-muted/80 px-2 py-1.5 flex gap-4">
-          {Array.from({ length: 8 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <Skeleton key={i} className="h-3 w-16" />
           ))}
         </div>
         {Array.from({ length: 10 }).map((_, i) => (
           <div key={i} className="border-b border-border/50 px-2 py-1 h-8 flex gap-4 items-center">
-            {Array.from({ length: 8 }).map((__, j) => (
+            {Array.from({ length: 12 }).map((__, j) => (
               <Skeleton key={j} className="h-3 w-16" />
             ))}
           </div>

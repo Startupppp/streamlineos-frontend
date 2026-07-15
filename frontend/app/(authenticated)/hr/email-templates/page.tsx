@@ -225,7 +225,7 @@ function EmailTemplatesContent() {
     return (
       <PageWrapper title="Email Templates" subtitle="Manage HR email templates">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-36 rounded-xl" />)}
+          {Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-36 rounded-xl" />)}
         </div>
       </PageWrapper>
     );

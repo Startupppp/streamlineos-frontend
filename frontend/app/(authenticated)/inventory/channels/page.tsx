@@ -240,7 +240,7 @@ function ChannelsContent() {
     return (
       <PageWrapper eyebrow="Inventory · Channels" title="Channels" actions={actions}>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 4 }).map((_, i) => (
+          {Array.from({ length: 10 }).map((_, i) => (
             <ChannelCardSkeleton key={i} />
           ))}
         </div>

@@ -13,7 +13,7 @@ export default function PayrollRunDetailLoading() {
         </div>
         <div className="border border-border rounded-md overflow-hidden">
           <div className="h-10 bg-muted/30 border-b" />
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <div key={i} className="h-8 border-b border-border px-3 flex items-center gap-3">
               <Skeleton className="h-3 w-32" />
               <Skeleton className="h-3 w-16" />

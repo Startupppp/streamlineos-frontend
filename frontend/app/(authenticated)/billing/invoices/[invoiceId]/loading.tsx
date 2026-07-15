@@ -17,7 +17,7 @@ export default function InvoiceDetailLoading() {
     >
       <div className="space-y-6">
         <div className="rounded-lg border border-border bg-card p-5 grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {Array.from({ length: 4 }).map((_, i) => (
+          {Array.from({ length: 10 }).map((_, i) => (
             <div key={i} className="space-y-2">
               <Skeleton className="h-3 w-16" />
               <Skeleton className="h-4 w-24" />
@@ -40,7 +40,7 @@ export default function InvoiceDetailLoading() {
             <Skeleton className="col-span-2 h-3" />
           </div>
           <div className="divide-y divide-border">
-            {Array.from({ length: 4 }).map((_, i) => (
+            {Array.from({ length: 12 }).map((_, i) => (
               <div key={i} className="px-4 py-3 grid grid-cols-12 gap-3 items-center">
                 <Skeleton className="col-span-6 h-4" />
                 <Skeleton className="col-span-2 h-4" />

@@ -40,7 +40,7 @@ function InboxSkeleton() {
     <PageWrapper title="Sales Inbox" subtitle="Your daily command center">
       <div className="space-y-3">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
-          {Array.from({ length: 4 }).map((_, i) => (
+          {Array.from({ length: 10 }).map((_, i) => (
             <Skeleton key={i} className="h-[52px] rounded-lg" />
           ))}
         </div>

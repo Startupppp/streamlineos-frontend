@@ -10,7 +10,7 @@ export default function AutomationsLoading() {
       actions={<Skeleton className="h-9 w-36 rounded-md" />}
     >
       <div className="space-y-3">
-        {Array.from({ length: 4 }).map((_, i) => (
+        {Array.from({ length: 9 }).map((_, i) => (
           <Card key={i} className="shadow-sm">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">

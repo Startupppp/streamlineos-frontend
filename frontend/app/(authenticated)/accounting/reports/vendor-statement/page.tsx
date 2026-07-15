@@ -4,7 +4,7 @@ import { VendorStatementReport } from "@/features/accounting/reports/vendor-stat
 
 export default function VendorStatementPage() {
   return (
-    <Suspense fallback={<LoadingState variant="table" rows={8} />}>
+    <Suspense fallback={<LoadingState variant="table" rows={12} />}>
       <VendorStatementReport />
     </Suspense>
   );

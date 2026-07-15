@@ -22,7 +22,7 @@ export default function PagesLoading() {
             </div>
           ))}
           <div className="border-b my-2" />
-          {Array.from({ length: 7 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <div
               key={i}
               className="flex items-center gap-2 py-1.5 px-2"

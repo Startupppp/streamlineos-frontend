@@ -224,7 +224,7 @@ export default function TalentPoolsPage() {
       >
         {isLoading ? (
           <div className="grid gap-4 md:grid-cols-3">
-            {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-32 w-full rounded-2xl" />)}
+            {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-32 w-full rounded-2xl" />)}
           </div>
         ) : isEmpty ? (
           <RecruitmentEmptyState

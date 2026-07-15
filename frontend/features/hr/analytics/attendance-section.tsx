@@ -37,8 +37,8 @@ export function AttendanceSection({ year, month }: AttendanceSectionProps) {
       <section className="space-y-4">
         <div className="h-5 w-44 animate-pulse rounded bg-muted" />
         <div className="grid gap-3 md:grid-cols-2">
-          <SectionSkeleton rows={5} />
-          <SectionSkeleton rows={6} />
+          <SectionSkeleton rows={8} />
+          <SectionSkeleton rows={8} />
         </div>
       </section>
     );

@@ -5,7 +5,7 @@ export default function PhysicalAuditDetailLoading() {
   return (
     <PageWrapper title="Physical Audit" backHref="/inventory/physical-audits">
       <div className="grid grid-cols-3 gap-3 mb-4">
-        {Array.from({ length: 3 }).map((_, i) => (
+        {Array.from({ length: 8 }).map((_, i) => (
           <div key={i} className="rounded-lg border border-border bg-card p-4 space-y-2">
             <Skeleton className="h-3 w-20" />
             <Skeleton className="h-5 w-28" />
@@ -14,7 +14,7 @@ export default function PhysicalAuditDetailLoading() {
       </div>
       <div className="rounded-lg border border-border bg-card overflow-hidden">
         <div className="h-10 bg-muted/30 border-b border-border" />
-        {Array.from({ length: 8 }).map((_, i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <div key={i} className="h-10 border-t border-border flex items-center px-4 gap-3">
             <Skeleton className="h-3 w-32 flex-1" />
             <Skeleton className="h-3 w-20" />

@@ -27,7 +27,7 @@ export default function EpicsLoading() {
         </div>
 
         <div className="space-y-4">
-          {Array.from({ length: 3 }).map((_, i) => (
+          {Array.from({ length: 9 }).map((_, i) => (
             <Card key={i} className="overflow-hidden">
               <CardHeader>
                 <div className="flex items-start justify-between">

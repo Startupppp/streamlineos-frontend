@@ -20,7 +20,7 @@ export default function ProjectRisksLoading() {
           <Skeleton className="h-8 w-40 rounded-md" />
           <Skeleton className="h-8 w-52 rounded-md" />
         </div>
-        <DataTableSkeleton rows={5} columns={8} />
+        <DataTableSkeleton rows={12} columns={8} />
       </div>
     </PageWrapper>
   );

@@ -305,7 +305,7 @@ export function CycleCountsClient() {
             onRetry={handleRetry}
           />
         ) : isLoading ? (
-          <DataTableSkeleton rows={6} columns={8} className="flex-1" />
+          <DataTableSkeleton rows={12} columns={8} className="flex-1" />
         ) : (
           <DataTable
             data={items}

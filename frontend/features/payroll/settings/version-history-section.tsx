@@ -48,7 +48,7 @@ export function VersionHistorySection({ policyId }: VersionHistorySectionProps) 
   if (isLoading) {
     return (
       <PageSection title="Version History">
-        <DataTableSkeleton rows={3} columns={5} />
+        <DataTableSkeleton rows={8} columns={5} />
       </PageSection>
     );
   }

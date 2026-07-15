@@ -172,7 +172,7 @@ export function ReviewsTab() {
   const handlePeriodEndChange = useCallback((value: string) => setPeriodEnd(value), []);
 
   if (isLoading) {
-    return <LoadingState variant="cards" rows={4} />;
+    return <LoadingState variant="cards" rows={9} />;
   }
 
   const reviewsList = Array.isArray(reviews) ? reviews : [];

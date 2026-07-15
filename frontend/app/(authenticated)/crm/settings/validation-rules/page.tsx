@@ -333,7 +333,7 @@ function EntityRulesTab({ entityType, onNewRule }: EntityRulesTabProps) {
 
       <div className="space-y-6">
         {isLoading ? (
-          <DataTableSkeleton rows={3} columns={6} />
+          <DataTableSkeleton rows={12} columns={6} />
         ) : isError ? (
           <EmptyState
             compact

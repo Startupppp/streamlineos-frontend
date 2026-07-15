@@ -333,7 +333,7 @@ export default function PublicRoadmapPage() {
         </header>
 
         {isLoading ? (
-          <LoadingState variant="cards" rows={6} />
+          <LoadingState variant="cards" rows={9} />
         ) : isError ? (
           <ErrorState
             title="Roadmap unavailable"

@@ -157,7 +157,7 @@ export function AllWorkListSkeleton() {
   return (
     <PmPanel className="p-2">
       <div className="space-y-1.5">
-        {Array.from({ length: 6 }).map((_, i) => (
+        {Array.from({ length: 10 }).map((_, i) => (
           <Skeleton key={i} className="h-10 w-full rounded-md" />
         ))}
       </div>

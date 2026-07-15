@@ -16,7 +16,7 @@ export default function PurchaseOrderDetailLoading() {
     >
       <div className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
+          {Array.from({ length: 10 }).map((_, i) => (
             <div key={i} className="rounded-lg border border-border bg-card p-4 space-y-2">
               <Skeleton className="h-3 w-20" />
               <Skeleton className="h-5 w-28" />
@@ -25,13 +25,13 @@ export default function PurchaseOrderDetailLoading() {
         </div>
         <div className="rounded-md border border-border bg-card overflow-hidden">
           <div className="border-b border-border bg-muted/80 px-3 py-2 flex gap-4">
-            {Array.from({ length: 6 }).map((_, i) => (
+            {Array.from({ length: 12 }).map((_, i) => (
               <Skeleton key={i} className="h-3 w-20" />
             ))}
           </div>
-          {Array.from({ length: 5 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <div key={i} className="border-b border-border/50 px-3 py-2 flex gap-4">
-              {Array.from({ length: 6 }).map((__, j) => (
+              {Array.from({ length: 12 }).map((__, j) => (
                 <Skeleton key={j} className="h-3 w-20" />
               ))}
             </div>

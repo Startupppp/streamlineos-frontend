@@ -220,7 +220,7 @@ export function OffersTab({ candidateId }: Props) {
       </div>
 
       {isLoading ? (
-        <LoadingState variant="list" rows={2} />
+        <LoadingState variant="list" rows={8} />
       ) : !offers?.length ? (
         <RecruitmentEmptyState illustration={<EmptyDocumentsIllustration />} title="No offers created yet" compact />
       ) : (

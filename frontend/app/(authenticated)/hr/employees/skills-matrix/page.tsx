@@ -42,7 +42,7 @@ export default function SkillsMatrixPage() {
         <div className="rounded-xl border border-border overflow-hidden">
           <div className="flex border-b bg-muted/40 px-3 py-2 gap-4">
             <Skeleton className="h-4 w-32" />
-            {Array.from({ length: 6 }).map((_, i) => (
+            {Array.from({ length: 10 }).map((_, i) => (
               <Skeleton key={i} className="h-4 w-16" />
             ))}
           </div>
@@ -52,7 +52,7 @@ export default function SkillsMatrixPage() {
                 <Skeleton className="h-6 w-6 rounded-full" />
                 <Skeleton className="h-4 w-24" />
               </div>
-              {Array.from({ length: 6 }).map((_, j) => (
+              {Array.from({ length: 10 }).map((_, j) => (
                 <Skeleton key={j} className="h-5 w-16 rounded" />
               ))}
             </div>

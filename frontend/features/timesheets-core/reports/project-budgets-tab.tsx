@@ -175,7 +175,7 @@ export function ProjectBudgetsTab() {
   if (isLoading) {
     return (
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 3 }).map((_, i) => (
+        {Array.from({ length: 8 }).map((_, i) => (
           <Skeleton key={i} className="h-[120px] rounded-lg" />
         ))}
       </div>

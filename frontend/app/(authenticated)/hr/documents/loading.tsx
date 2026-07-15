@@ -24,7 +24,7 @@ export default function DocumentsLoading() {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Skeleton className="h-6 w-12 rounded-md" />
-            {Array.from({ length: 7 }).map((_, i) => (
+            {Array.from({ length: 12 }).map((_, i) => (
               <Skeleton key={i} className="h-6 w-16 rounded-md" />
             ))}
           </div>
@@ -34,7 +34,7 @@ export default function DocumentsLoading() {
       <div className="flex-1 space-y-6">
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <Card key={i}>
               <CardContent className="pt-5 pb-4">
                 <div className="flex items-center justify-between">
@@ -65,7 +65,7 @@ export default function DocumentsLoading() {
 
             <div className="px-6 pb-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {Array.from({ length: 4 }).map((_, i) => (
+                {Array.from({ length: 12 }).map((_, i) => (
                   <div key={i} className="flex items-center gap-3 p-3 rounded-xl border border-border">
                     <Skeleton className="h-9 w-9 rounded-lg flex-shrink-0" />
                     <div className="min-w-0 space-y-1.5">
@@ -77,7 +77,7 @@ export default function DocumentsLoading() {
               </div>
             </div>
 
-            {Array.from({ length: 5 }).map((_, i) => (
+            {Array.from({ length: 12 }).map((_, i) => (
               <div key={i} className="flex items-center px-6 py-4 border-t">
                 <div className="flex items-center gap-3 flex-1">
                   <Skeleton className="h-9 w-9 rounded-lg flex-shrink-0" />

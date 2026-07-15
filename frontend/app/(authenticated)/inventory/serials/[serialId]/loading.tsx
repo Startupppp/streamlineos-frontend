@@ -16,9 +16,9 @@ export default function SerialDetailLoading() {
         <div className="space-y-2">
           <Skeleton className="h-4 w-40" />
           <div className="rounded-md border border-border bg-card overflow-hidden">
-            {Array.from({ length: 5 }).map((_, i) => (
+            {Array.from({ length: 12 }).map((_, i) => (
               <div key={i} className="border-b border-border/50 px-2 py-1.5 flex gap-4">
-                {Array.from({ length: 6 }).map((__, j) => (
+                {Array.from({ length: 12 }).map((__, j) => (
                   <Skeleton key={j} className="h-3 w-16" />
                 ))}
               </div>

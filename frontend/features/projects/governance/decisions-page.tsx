@@ -228,7 +228,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
           {isLoading ? (
-            <DataTableSkeleton rows={5} columns={7} className="flex-1" />
+            <DataTableSkeleton rows={12} columns={7} className="flex-1" />
           ) : isError ? (
             <ErrorState className="flex-1" onRetry={() => void refetch()} />
           ) : displayed.length === 0 ? (

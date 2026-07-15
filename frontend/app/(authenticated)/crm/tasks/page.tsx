@@ -207,7 +207,7 @@ function CrmTasksContent() {
     return (
       <PageWrapper title="Tasks" subtitle="Follow-ups and action items">
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-4">
-          {Array.from({ length: 5 }).map((_, i) => (
+          {Array.from({ length: 10 }).map((_, i) => (
             <Skeleton key={i} className="h-[52px] rounded-lg" />
           ))}
         </div>
@@ -220,7 +220,7 @@ function CrmTasksContent() {
                 <Skeleton className="h-5 w-8 rounded-full" />
               </div>
               <div className="divide-y divide-border/50">
-                {Array.from({ length: 3 }).map((_, j) => (
+                {Array.from({ length: 8 }).map((_, j) => (
                   <div key={j} className="flex items-center gap-3 px-4 py-3">
                     <Skeleton className="h-4 w-4 rounded" />
                     <Skeleton className="h-4 w-4 rounded" />
@@ -324,7 +324,7 @@ export default function CrmTasksPage() {
       fallback={
         <PageWrapper title="Tasks" subtitle="Follow-ups and action items">
           <div className="space-y-3">
-            {Array.from({ length: 5 }).map((_, i) => (
+            {Array.from({ length: 10 }).map((_, i) => (
               <Skeleton key={i} className="h-[52px] rounded-lg" />
             ))}
             {Array.from({ length: 3 }).map((_, i) => (

@@ -127,7 +127,7 @@ export function EmployeesLoadingSkeleton() {
             <Skeleton className="h-4 w-16 hidden xl:block" />
             <Skeleton className="h-4 w-16 ml-auto" />
           </div>
-          {Array.from({ length: 10 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <div
               key={i}
               className="flex items-center gap-8 px-4 py-3.5 border-b last:border-0"

@@ -99,7 +99,7 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
   if (query.isLoading) {
     return (
       <PageWrapper eyebrow="Accounting · Reimbursements" title="Loading..." backHref="/accounting/expenses/reimbursements">
-        <LoadingState variant="table" rows={6} />
+        <LoadingState variant="table" rows={12} />
       </PageWrapper>
     );
   }

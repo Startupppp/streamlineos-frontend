@@ -272,7 +272,7 @@ export default function GoalsPage() {
   if (isLoading) {
     return (
       <PageWrapper title="Goals & OKRs" subtitle="Track your personal and team goals">
-        <LoadingState variant="cards" rows={6} />
+        <LoadingState variant="cards" rows={9} />
       </PageWrapper>
     );
   }

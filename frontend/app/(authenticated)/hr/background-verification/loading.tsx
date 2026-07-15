@@ -11,7 +11,7 @@ export default function BackgroundVerificationLoading() {
     >
       <div className="space-y-4">
         <div className="grid gap-3 md:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
+          {Array.from({ length: 10 }).map((_, i) => (
             <Card key={i}>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-2">
@@ -24,7 +24,7 @@ export default function BackgroundVerificationLoading() {
           ))}
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <Card key={i}>
               <CardContent className="p-4 space-y-2">
                 <div className="flex items-center justify-between">

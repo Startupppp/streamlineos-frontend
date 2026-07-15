@@ -11,7 +11,7 @@ export default function PipelineLoading() {
       actions={<Skeleton className="h-8 w-20 rounded-md" />}
     >
       <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        {Array.from({ length: 6 }).map((_, i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <div
             key={i}
             className="rounded-xl border border-border flex flex-col bg-muted/30 border-t-2"
@@ -24,7 +24,7 @@ export default function PipelineLoading() {
               <Skeleton className="h-5 w-6 rounded-md" />
             </div>
             <div className="flex-1 overflow-y-auto p-2 space-y-2">
-              {Array.from({ length: 4 }).map((_, j) => (
+              {Array.from({ length: 12 }).map((_, j) => (
                 <Card key={j} className="p-3 shadow-sm">
                   <CardContent className="p-0 space-y-2">
                     <Skeleton className="h-4 w-full" />

@@ -25,7 +25,7 @@ export default function CrmReportsLoading() {
     >
       <div className="space-y-6">
         <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-          {Array.from({ length: 5 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <Card key={i} className="shadow-sm">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
@@ -44,7 +44,7 @@ export default function CrmReportsLoading() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {Array.from({ length: 6 }).map((_, i) => (
+              {Array.from({ length: 12 }).map((_, i) => (
                 <div key={i} className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <Skeleton className="h-4 w-28" />
@@ -63,7 +63,7 @@ export default function CrmReportsLoading() {
           </CardHeader>
           <CardContent>
             <div className="flex flex-col items-center gap-2 py-4">
-              {Array.from({ length: 5 }).map((_, i) => (
+              {Array.from({ length: 12 }).map((_, i) => (
                 <Skeleton key={i} className="h-12 rounded-lg" style={{ width: `${100 - i * 12}%` }} />
               ))}
             </div>

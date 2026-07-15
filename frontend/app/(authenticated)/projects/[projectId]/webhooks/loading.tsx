@@ -10,7 +10,7 @@ export default function WebhooksLoading() {
       actions={<Skeleton className="h-8 w-32 rounded-md" />}
     >
       <div className="space-y-3 pb-8">
-        {Array.from({ length: 3 }).map((_, i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <Skeleton key={i} className="h-20 w-full rounded-lg" />
         ))}
       </div>

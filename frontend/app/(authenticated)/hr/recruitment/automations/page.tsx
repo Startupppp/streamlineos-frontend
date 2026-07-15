@@ -227,7 +227,7 @@ export default function RecruitmentAutomationsPage() {
     >
       <>
         {isLoading ? (
-        <LoadingState variant="list" rows={3} />
+        <LoadingState variant="list" rows={12} />
       ) : !automations?.length ? (
         <RecruitmentEmptyState
           illustration={<EmptyActivityIllustration />}

@@ -50,7 +50,7 @@ export function KbFeedbackPanel({ article }: { article: KbArticleDetail }) {
         </div>
 
         {feedbackQuery.isLoading ? (
-          <LoadingState variant="list" rows={2} />
+          <LoadingState variant="list" rows={8} />
         ) : feedback.length === 0 ? (
           <EmptyState
             illustration={<EmptyMailIllustration />}

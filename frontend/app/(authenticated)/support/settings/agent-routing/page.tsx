@@ -94,7 +94,7 @@ export default function SupportAgentRoutingPage() {
           </CardHeader>
           <CardContent className="space-y-2">
             {isLoading ? (
-              <LoadingState variant="list" rows={4} />
+              <LoadingState variant="list" rows={12} />
             ) : (
               members.map((m) => (
                 <AgentSkillsRow

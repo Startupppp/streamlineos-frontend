@@ -193,7 +193,7 @@ export default function ContactsPage() {
   if (isLoading) {
     return (
       <PageWrapper title="Contacts" subtitle="Loading...">
-        <DataTableSkeleton rows={8} columns={7} className="flex-1" />
+        <DataTableSkeleton rows={12} columns={7} className="flex-1" />
       </PageWrapper>
     );
   }

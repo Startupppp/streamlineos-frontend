@@ -22,7 +22,7 @@ export default function BugsLoading() {
       }
     >
       <div className={cn("space-y-2 p-2", PM_PANEL)}>
-        {Array.from({ length: 8 }).map((_, i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <div key={i} className="flex h-9 items-center gap-3 border-b border-border/50 px-2 last:border-0">
             <Skeleton className="h-3 w-14" />
             <Skeleton className="h-3 max-w-[16rem] flex-1" />

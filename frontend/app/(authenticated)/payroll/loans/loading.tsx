@@ -13,7 +13,7 @@ export function LoansPageSkeleton() {
           <div className="border-b border-border px-2 py-1.5">
             <Skeleton className="h-3 w-24" />
           </div>
-          {Array.from({ length: 8 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <div key={i} className="flex items-center gap-4 px-2 py-1.5 border-b border-border last:border-0">
               <div className="flex flex-col gap-1 flex-1">
                 <Skeleton className="h-3 w-32" />

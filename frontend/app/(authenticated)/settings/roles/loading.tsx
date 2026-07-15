@@ -16,7 +16,7 @@ export default function RolesLoading() {
           </CardHeader>
           <CardContent className="p-0">
             <div className="divide-y divide-border/30">
-              {Array.from({ length: 6 }).map((_, i) => (
+              {Array.from({ length: 12 }).map((_, i) => (
                 <div key={i} className="px-4 py-3 flex items-center justify-between">
                   <div className="space-y-2">
                     <Skeleton className="h-4 w-28" />
@@ -36,7 +36,7 @@ export default function RolesLoading() {
           </CardHeader>
           <CardContent className="p-0">
             <div className="divide-y divide-border/30">
-              {Array.from({ length: 8 }).map((_, i) => (
+              {Array.from({ length: 12 }).map((_, i) => (
                 <div key={i} className="px-4 py-3 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Skeleton className="h-4 w-4 rounded" />

@@ -245,7 +245,7 @@ function RevisionsSheet({ budgetId, open, onOpenChange }: RevisionsSheetProps) {
       description="All saved versions of this budget."
     >
       {query.isLoading ? (
-        <LoadingState variant="table" rows={4} />
+        <LoadingState variant="table" rows={12} />
       ) : revisions.length === 0 ? (
         <p className="text-sm text-muted-foreground py-6 text-center">No revisions yet.</p>
       ) : (

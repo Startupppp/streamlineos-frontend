@@ -13,14 +13,14 @@ export default function ImportLoading() {
         <Card>
           <CardHeader>
             <div className="flex gap-2">
-              {Array.from({ length: 4 }).map((_, i) => (
+              {Array.from({ length: 10 }).map((_, i) => (
                 <Skeleton key={i} className="h-6 w-28 rounded-full" />
               ))}
             </div>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-3 gap-3">
-              {Array.from({ length: 7 }).map((_, i) => (
+              {Array.from({ length: 12 }).map((_, i) => (
                 <Skeleton key={i} className="h-24 rounded-lg" />
               ))}
             </div>

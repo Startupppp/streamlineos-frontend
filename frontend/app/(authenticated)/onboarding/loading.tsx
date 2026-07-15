@@ -33,7 +33,7 @@ export default function OnboardingLoading() {
         <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6">
           <Card className="shadow-sm">
             <CardContent className="pt-6 space-y-4">
-              {Array.from({ length: 5 }).map((_, i) => (
+              {Array.from({ length: 12 }).map((_, i) => (
                 <div key={i} className="space-y-2">
                   <Skeleton className="h-3.5 w-24" />
                   <Skeleton className="h-9 w-full" />

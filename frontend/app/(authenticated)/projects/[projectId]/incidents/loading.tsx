@@ -16,7 +16,7 @@ export default function IncidentsLoading() {
             <Skeleton key={i} className="h-[60px] rounded-lg" />
           ))}
         </div>
-        {Array.from({ length: 8 }).map((_, i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <div key={i} className="flex items-center gap-3 h-8 border-b border-border/50 px-2">
             <Skeleton className="h-3 w-16" />
             <Skeleton className="h-3 flex-1" />

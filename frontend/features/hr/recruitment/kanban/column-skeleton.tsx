@@ -17,7 +17,7 @@ export const ColumnSkeleton = memo(function ColumnSkeleton({ col }: ColumnSkelet
         <Skeleton className="h-5 w-6 ml-auto rounded-full" />
       </div>
       <div className={cn("flex-1 rounded-2xl border p-2.5 space-y-2", col.bg, col.border)}>
-        {Array.from({ length: 4 }).map((_, i) => (
+        {Array.from({ length: 6 }).map((_, i) => (
           <div
             key={i}
             className="rounded-xl border border-border/70 bg-card shadow-sm overflow-hidden p-3 space-y-2"

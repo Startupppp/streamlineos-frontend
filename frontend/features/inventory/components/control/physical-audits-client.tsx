@@ -235,7 +235,7 @@ export function PhysicalAuditsClient() {
             onRetry={handleRetry}
           />
         ) : isLoading ? (
-          <DataTableSkeleton rows={6} columns={6} className="flex-1" />
+          <DataTableSkeleton rows={12} columns={6} className="flex-1" />
         ) : (
           <DataTable
             data={items}

@@ -11,7 +11,7 @@ export default function CompaniesLoading() {
       filters={<Skeleton className="h-9 w-72 rounded-md" />}
     >
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <Card key={i} className="shadow-sm">
             <CardContent className="p-4">
               <div className="flex items-start justify-between">

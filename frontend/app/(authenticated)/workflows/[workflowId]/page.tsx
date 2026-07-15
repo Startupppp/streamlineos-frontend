@@ -137,7 +137,7 @@ function ExecutionsTab({ workflowId }: ExecutionsTabProps) {
     void refetch();
   }
 
-  if (isLoading) return <LoadingState variant="list" rows={5} />;
+  if (isLoading) return <LoadingState variant="list" rows={12} />;
   if (isError) return <ErrorState title="Failed to load executions" onRetry={handleRetry} className="py-8" />;
 
   const executions = data?.data ?? [];

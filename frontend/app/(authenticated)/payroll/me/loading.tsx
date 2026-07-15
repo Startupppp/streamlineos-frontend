@@ -20,11 +20,11 @@ export default function MyPayrollLoading() {
         <Skeleton className="h-9 w-full rounded-none -mx-px" />
 
         <div className="space-y-8">
-          {Array.from({ length: 3 }).map((_, i) => (
+          {Array.from({ length: 9 }).map((_, i) => (
             <div key={i} className="space-y-3">
               <Skeleton className="h-4 w-32" />
               <div className="rounded-xl border border-border bg-card overflow-hidden">
-                {Array.from({ length: 3 }).map((_, j) => (
+                {Array.from({ length: 9 }).map((_, j) => (
                   <div key={j} className="flex items-center justify-between px-4 py-3 border-b border-border last:border-0">
                     <div className="flex items-center gap-3">
                       <Skeleton className="h-8 w-8 rounded-md" />

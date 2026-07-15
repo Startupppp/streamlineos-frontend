@@ -9,7 +9,7 @@ interface SkeletonTableProps {
   className?: string;
 }
 
-export function SkeletonTable({ rows = 5, columns = 4, className }: SkeletonTableProps) {
+export function SkeletonTable({ rows = 12, columns = 4, className }: SkeletonTableProps) {
   return (
     <div className={cn("rounded-lg border bg-card", className)}>
       <div className="border-b px-4 py-3 flex gap-4">

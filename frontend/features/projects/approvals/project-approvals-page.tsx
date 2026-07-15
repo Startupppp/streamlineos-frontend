@@ -395,7 +395,7 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
           {isLoading ? (
             <PmPanel className="p-2">
-              <DataTableSkeleton rows={6} columns={7} className="flex-1" />
+              <DataTableSkeleton rows={12} columns={7} className="flex-1" />
             </PmPanel>
           ) : isError ? (
             <PmPanel className="flex flex-1 items-center justify-center p-6">

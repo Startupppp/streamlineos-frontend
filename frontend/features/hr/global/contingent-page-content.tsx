@@ -108,7 +108,7 @@ export function ContingentPageContent() {
       }
     >
       {isLoading ? (
-        <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-lg" />)}</div>
+        <div className="space-y-2">{Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-lg" />)}</div>
       ) : (data?.data ?? []).length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
           <Users className="h-12 w-12 mb-3 opacity-30" />

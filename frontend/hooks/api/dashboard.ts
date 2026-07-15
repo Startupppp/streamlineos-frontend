@@ -44,9 +44,9 @@ export const useDashboardStats = (
   options?: Omit<UseQueryOptions<DashboardStats, Error>, "queryKey" | "queryFn">
 ) => {
   const { data: session } = useSession();
-  const orgId = session?.orgId;
+  const orgId = session?.orgId ?? "";
   return useQuery<DashboardStats, Error>({
-    queryKey: queryKeys.dashboard.stats(),
+    queryKey: queryKeys.dashboard.stats(orgId),
     queryFn: () => apiClient.get<DashboardStats>("/dashboard/stats"),
     staleTime: 5 * 60 * 1000,
     ...options,
@@ -102,9 +102,9 @@ export const useRecentProjects = (
   >
 ) => {
   const { data: session } = useSession();
-  const orgId = session?.orgId;
+  const orgId = session?.orgId ?? "";
   return useQuery<RecentProject[], Error>({
-    queryKey: queryKeys.dashboard.recentProjects(),
+    queryKey: queryKeys.dashboard.recentProjects(orgId),
     queryFn: () => apiClient.get<RecentProject[]>("/dashboard/recent-projects"),
     staleTime: 5 * 60 * 1000,
     ...options,
@@ -115,12 +115,15 @@ export const useRecentProjects = (
 export const useTeamAvailability = (
   options?: Omit<UseQueryOptions<TeamMember[], Error>, "queryKey" | "queryFn">
 ) => {
+  const { data: session } = useSession();
+  const orgId = session?.orgId ?? "";
   return useQuery<TeamMember[], Error>({
-    queryKey: queryKeys.dashboard.teamAvailability(),
+    queryKey: queryKeys.dashboard.teamAvailability(orgId),
     queryFn: () => apiClient.get<TeamMember[]>("/dashboard/team-availability"),
     refetchInterval: 30_000,
     staleTime: 15_000,
     ...options,
+    enabled: !!orgId,
   });
 };
 
@@ -130,12 +133,15 @@ export const useActiveSprintSummary = (
     "queryKey" | "queryFn"
   >
 ) => {
+  const { data: session } = useSession();
+  const orgId = session?.orgId ?? "";
   return useQuery<SprintSummary | null, Error>({
-    queryKey: queryKeys.dashboard.activeSprintSummary(),
+    queryKey: queryKeys.dashboard.activeSprintSummary(orgId),
     queryFn: () =>
       apiClient.get<SprintSummary | null>("/dashboard/active-sprint"),
     staleTime: 5 * 60 * 1000,
     ...options,
+    enabled: !!orgId,
   });
 };
 
@@ -145,12 +151,15 @@ export const useRecentActivity = (
     "queryKey" | "queryFn"
   >
 ) => {
+  const { data: session } = useSession();
+  const orgId = session?.orgId ?? "";
   return useQuery<RecentActivity[], Error>({
-    queryKey: queryKeys.dashboard.recentActivity(),
+    queryKey: queryKeys.dashboard.recentActivity(orgId),
     queryFn: () =>
       apiClient.get<RecentActivity[]>("/dashboard/recent-activity"),
     staleTime: 5 * 60 * 1000,
     ...options,
+    enabled: !!orgId,
   });
 };
 
@@ -211,14 +220,16 @@ interface TeamAttendance {
   }[];
 }
 
-const hrWidgetKeys = {
-  leavesToday: [...queryKeys.dashboard.all, "leavesToday"] as const,
-  upcomingHolidays: [...queryKeys.dashboard.all, "upcomingHolidays"] as const,
-  myLeaveBalance: [...queryKeys.dashboard.all, "myLeaveBalance"] as const,
-  birthdays: [...queryKeys.dashboard.all, "birthdays"] as const,
-  pendingApprovals: [...queryKeys.dashboard.all, "pendingApprovals"] as const,
-  teamAttendance: [...queryKeys.dashboard.all, "teamAttendance"] as const,
-};
+function hrWidgetKeys(orgId: string) {
+  return {
+    leavesToday: [...queryKeys.dashboard.all, "leavesToday", orgId] as const,
+    upcomingHolidays: [...queryKeys.dashboard.all, "upcomingHolidays", orgId] as const,
+    myLeaveBalance: [...queryKeys.dashboard.all, "myLeaveBalance", orgId] as const,
+    birthdays: [...queryKeys.dashboard.all, "birthdays", orgId] as const,
+    pendingApprovals: [...queryKeys.dashboard.all, "pendingApprovals", orgId] as const,
+    teamAttendance: [...queryKeys.dashboard.all, "teamAttendance", orgId] as const,
+  };
+}
 
 export const useLeavesToday = (
   options?: Omit<UseQueryOptions<LeaveToday[], Error>, "queryKey" | "queryFn">
@@ -307,55 +318,73 @@ interface ExecutiveDashboard {
 
 export const useAnnouncements = (
   options?: Omit<UseQueryOptions<Announcement[], Error>, "queryKey" | "queryFn">
-) =>
-  useQuery<Announcement[], Error>({
-    queryKey: queryKeys.dashboard.announcements(),
+) => {
+  const { data: session } = useSession();
+  const orgId = session?.orgId ?? "";
+  return useQuery<Announcement[], Error>({
+    queryKey: queryKeys.dashboard.announcements(orgId),
     queryFn: () => apiClient.get<Announcement[]>("/dashboard/announcements"),
     staleTime: 60_000,
     ...options,
+    enabled: !!orgId,
   });
+};
 
 export const useCreateAnnouncement = () => {
   const qc = useQueryClient();
+  const { data: session } = useSession();
+  const orgId = session?.orgId ?? "";
   return useMutation({
+    mutationKey: ["dashboard", "announcements", "create"],
     mutationFn: (body: { content: string; isPinned?: boolean; expiresAt?: string }) =>
       apiClient.post<Announcement>("/dashboard/announcements", body),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.dashboard.announcements() });
+      void qc.invalidateQueries({ queryKey: queryKeys.dashboard.announcements(orgId) });
     },
   });
 };
 
 export const useDeleteAnnouncement = () => {
   const qc = useQueryClient();
+  const { data: session } = useSession();
+  const orgId = session?.orgId ?? "";
   return useMutation({
+    mutationKey: ["dashboard", "announcements", "delete"],
     mutationFn: (id: number) =>
       apiClient.delete<{ success: boolean }>(`/dashboard/announcements?id=${id}`),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: queryKeys.dashboard.announcements() });
+      void qc.invalidateQueries({ queryKey: queryKeys.dashboard.announcements(orgId) });
     },
   });
 };
 
 export const usePersonalDashboard = (
   options?: Omit<UseQueryOptions<PersonalDashboard, Error>, "queryKey" | "queryFn">
-) =>
-  useQuery<PersonalDashboard, Error>({
-    queryKey: queryKeys.dashboard.personal(),
+) => {
+  const { data: session } = useSession();
+  const orgId = session?.orgId ?? "";
+  return useQuery<PersonalDashboard, Error>({
+    queryKey: queryKeys.dashboard.personal(orgId),
     queryFn: () => apiClient.get<PersonalDashboard>("/dashboard/personal"),
     staleTime: 2 * 60_000,
     ...options,
+    enabled: !!orgId,
   });
+};
 
 export const useExecutiveDashboard = (
   options?: Omit<UseQueryOptions<ExecutiveDashboard, Error>, "queryKey" | "queryFn">
-) =>
-  useQuery<ExecutiveDashboard, Error>({
-    queryKey: queryKeys.dashboard.executive(),
+) => {
+  const { data: session } = useSession();
+  const orgId = session?.orgId ?? "";
+  return useQuery<ExecutiveDashboard, Error>({
+    queryKey: queryKeys.dashboard.executive(orgId),
     queryFn: () => apiClient.get<ExecutiveDashboard>("/dashboard/executive"),
     staleTime: 5 * 60_000,
     ...options,
+    enabled: !!orgId,
   });
+};
 
 export const usePublicDocuments = (limit = 6) =>
   useQuery<PublicDoc[]>({

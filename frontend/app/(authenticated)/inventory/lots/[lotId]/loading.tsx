@@ -6,7 +6,7 @@ export default function LotDetailLoading() {
     <PageWrapper backHref="/inventory/lots" title="Loading…" eyebrow="Operations · Inventory">
       <div className="space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {Array.from({ length: 3 }).map((_, i) => (
+          {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="rounded-lg border border-border bg-card p-3 space-y-2">
               <Skeleton className="h-3 w-20" />
               <Skeleton className="h-5 w-28" />
@@ -16,9 +16,9 @@ export default function LotDetailLoading() {
         <div className="space-y-2">
           <Skeleton className="h-4 w-32" />
           <div className="rounded-md border border-border bg-card overflow-hidden">
-            {Array.from({ length: 3 }).map((_, i) => (
+            {Array.from({ length: 9 }).map((_, i) => (
               <div key={i} className="border-b border-border/50 px-2 py-1.5 flex gap-4">
-                {Array.from({ length: 4 }).map((__, j) => (
+                {Array.from({ length: 12 }).map((__, j) => (
                   <Skeleton key={j} className="h-3 w-20" />
                 ))}
               </div>
@@ -28,9 +28,9 @@ export default function LotDetailLoading() {
         <div className="space-y-2">
           <Skeleton className="h-4 w-40" />
           <div className="rounded-md border border-border bg-card overflow-hidden">
-            {Array.from({ length: 5 }).map((_, i) => (
+            {Array.from({ length: 12 }).map((_, i) => (
               <div key={i} className="border-b border-border/50 px-2 py-1.5 flex gap-4">
-                {Array.from({ length: 6 }).map((__, j) => (
+                {Array.from({ length: 12 }).map((__, j) => (
                   <Skeleton key={j} className="h-3 w-16" />
                 ))}
               </div>

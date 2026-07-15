@@ -155,7 +155,7 @@ export default function TicketsPage({ params }: PageProps) {
   if (isLoading) {
     return (
       <PageWrapper title="My Tickets" subtitle="Tickets assigned to or reported by you">
-        <DataTableSkeleton rows={8} columns={6} />
+        <DataTableSkeleton rows={12} columns={6} />
       </PageWrapper>
     );
   }

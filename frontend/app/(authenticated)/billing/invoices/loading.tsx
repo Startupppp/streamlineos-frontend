@@ -13,7 +13,7 @@ export default function InvoicesLoading() {
     >
       <div className="space-y-4">
         <div className="grid gap-4 md:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
+          {Array.from({ length: 9 }).map((_, i) => (
             <Card key={i}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <Skeleton className="h-4 w-20" />
@@ -27,7 +27,7 @@ export default function InvoicesLoading() {
           ))}
         </div>
 
-        <DataTableSkeleton rows={8} columns={7} />
+        <DataTableSkeleton rows={12} columns={7} />
       </div>
     </PageWrapper>
   );

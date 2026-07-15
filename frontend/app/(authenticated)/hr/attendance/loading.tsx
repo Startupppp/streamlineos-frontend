@@ -25,7 +25,7 @@ export default function AttendanceLoading() {
           </Card>
 
           <div className="grid grid-cols-2 gap-4 content-start">
-            {Array.from({ length: 4 }).map((_, i) => (
+            {Array.from({ length: 10 }).map((_, i) => (
               <Card key={i}>
                 <CardContent className="pt-4">
                   <Skeleton className="h-4 w-20 mb-2" />
@@ -47,7 +47,7 @@ export default function AttendanceLoading() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-7 gap-2">
-              {Array.from({ length: 7 }).map((_, i) => (
+              {Array.from({ length: 12 }).map((_, i) => (
                 <Skeleton key={`h-${i}`} className="h-4 w-full" />
               ))}
               {Array.from({ length: 35 }).map((_, i) => (
@@ -61,7 +61,7 @@ export default function AttendanceLoading() {
           <CardHeader><Skeleton className="h-5 w-36" /></CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {Array.from({ length: 5 }).map((_, i) => (
+              {Array.from({ length: 12 }).map((_, i) => (
                 <Skeleton key={i} className="h-12 w-full" />
               ))}
             </div>

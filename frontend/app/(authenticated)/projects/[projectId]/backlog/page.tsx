@@ -216,7 +216,7 @@ export default function BacklogPage({ params }: PageProps) {
   if (isLoading) {
     return (
       <PageWrapper title="Backlog" subtitle="Loading...">
-        <DataTableSkeleton rows={8} columns={7} />
+        <DataTableSkeleton rows={12} columns={7} />
       </PageWrapper>
     );
   }

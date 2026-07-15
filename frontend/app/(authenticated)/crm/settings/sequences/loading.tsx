@@ -10,11 +10,11 @@ export default function SequencesLoading() {
     >
       <div className="rounded-lg border border-border overflow-hidden">
         <div className="border-b bg-muted/40 px-4 py-3 flex gap-6">
-          {Array.from({ length: 5 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <Skeleton key={i} className="h-3.5 w-16" />
           ))}
         </div>
-        {Array.from({ length: 6 }).map((_, i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <div key={i} className="flex items-center gap-6 px-4 py-3 border-b last:border-0">
             <Skeleton className="h-4 w-40" />
             <Skeleton className="h-4 w-16 rounded-full" />

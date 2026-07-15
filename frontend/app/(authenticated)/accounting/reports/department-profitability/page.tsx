@@ -4,7 +4,7 @@ import { DepartmentProfitabilityReport } from "@/features/accounting/reports/dep
 
 export default function DepartmentProfitabilityPage() {
   return (
-    <Suspense fallback={<LoadingState variant="table" rows={8} />}>
+    <Suspense fallback={<LoadingState variant="table" rows={12} />}>
       <DepartmentProfitabilityReport />
     </Suspense>
   );

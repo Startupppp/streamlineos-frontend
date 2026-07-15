@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, memo, useCallback, useState } from "react";
+import { useMemo, memo, useCallback, useState, useRef } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,15 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { cn, resolveImageUrl } from "@/lib/utils";
-import { ChevronRight, Plus, X, User } from "lucide-react";
+import { ChevronRight, Plus, X, User, GripVertical } from "lucide-react";
+import {
+  DragDropContext,
+  Droppable,
+  Draggable,
+  type DropResult,
+  type DraggableProvidedDragHandleProps,
+} from "@hello-pangea/dnd";
+import { useQueryClient } from "@tanstack/react-query";
 import { TicketTypeIcon } from "../shared/ticket-type-icon";
 import { getStatusDotClass } from "../shared/status-badge";
 import { formatTicketKey } from "../shared/format-ticket-key";
@@ -21,7 +29,8 @@ import { TicketQuickActions } from "./ticket-quick-actions";
 import { InlineStatus, InlinePriority, InlineAssignee, InlineEstimate } from "./card-inline-fields";
 import { InlineType, InlineLabels } from "./card-inline-extra-fields";
 import { InlineDueDate } from "./card-inline-date-fields";
-import { useCreateTicket } from "@/hooks/api";
+import { useCreateTicket, useUpdateTicket, useUpdateTicketOrder } from "@/hooks/api";
+import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import type { DisplayOptions } from "../shared/types";
@@ -42,6 +51,7 @@ interface Ticket {
   sprintId?: number | null;
   dueDate?: string | null;
   startDate?: string | null;
+  order?: number | null;
   assignee?: { id: string; name?: string | null; firstName?: string | null; lastName?: string | null; email?: string | null; image?: string | null } | null;
   labels?: { label?: { id: number; name: string; color?: string | null } }[];
   cycle?: { id: number; name: string; status: string; startDate: string; endDate: string } | null;
@@ -67,9 +77,20 @@ interface ListViewItemProps {
   projectStatuses?: Array<{ name: string; color: string | null; type?: string | null }>;
   onClick: (id: number) => void;
   displayOptions?: DisplayOptions;
+  dragHandleProps?: DraggableProvidedDragHandleProps | null;
+  isDragging?: boolean;
 }
 
-const ListViewItem = memo(function ListViewItem({ ticket, projectKey, projectId, projectStatuses, onClick, displayOptions }: ListViewItemProps) {
+const ListViewItem = memo(function ListViewItem({
+  ticket,
+  projectKey,
+  projectId,
+  projectStatuses,
+  onClick,
+  displayOptions,
+  dragHandleProps,
+  isDragging,
+}: ListViewItemProps) {
   const handleClick = useCallback(() => onClick(ticket.id), [onClick, ticket.id]);
   const shouldReduceMotion = useReducedMotion();
 
@@ -84,19 +105,32 @@ const ListViewItem = memo(function ListViewItem({ ticket, projectKey, projectId,
     .filter((v): v is number => v != null) ?? [];
 
   const hasProjectId = projectId != null;
+  const hasDragHandle = dragHandleProps != null;
 
   return (
     <motion.div
-      className="group flex items-center border-b border-border/50 bg-card last:border-b-0"
+      className={cn(
+        "group flex items-center border-b border-border/50 bg-card last:border-b-0",
+        isDragging && "shadow-lg ring-1 ring-primary/20 bg-primary/5 rounded-md",
+      )}
       initial={shouldReduceMotion ? false : { opacity: 0, x: -4 }}
       animate={{ opacity: 1, x: 0 }}
       transition={pmSnappy}
       whileHover={
-        shouldReduceMotion
+        isDragging || shouldReduceMotion
           ? undefined
           : { backgroundColor: "color-mix(in srgb, var(--primary) 4%, transparent)", x: 1 }
       }
     >
+      {hasDragHandle && (
+        <div
+          {...dragHandleProps}
+          className="flex-shrink-0 pl-2 pr-0.5 cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground transition-colors opacity-0 group-hover:opacity-100"
+          aria-label="Drag to reorder"
+        >
+          <GripVertical className="h-4 w-4" />
+        </div>
+      )}
       <div className="flex flex-1 min-w-0 items-center gap-2 px-3 py-1.5">
         {hasProjectId ? (
           <InlineStatus
@@ -283,6 +317,25 @@ function encodeNestedAccordionValue(outerKey: string, innerKey: string): string 
   return `${outerKey}||${innerKey}`;
 }
 
+const DROPPABLE_MODES = new Set(["status", "priority", "assignee"]);
+
+function buildGroupFieldPatch(
+  groupBy: string,
+  newGroupKey: string,
+  tickets: Ticket[],
+  ticketId: number,
+): Partial<{ status: string; priority: string; assigneeId: string | null }> | null {
+  if (groupBy === "status") return { status: newGroupKey };
+  if (groupBy === "priority") return newGroupKey === "None" ? { priority: undefined } : { priority: newGroupKey };
+  if (groupBy === "assignee") {
+    if (newGroupKey === "Unassigned") return { assigneeId: null };
+    const match = tickets.find((t) => t.id !== ticketId && getUserDisplayName(t.assignee ?? {}) === newGroupKey);
+    if (!match?.assigneeId && !match?.assignee?.id) return null;
+    return { assigneeId: match?.assigneeId ?? match?.assignee?.id ?? null };
+  }
+  return null;
+}
+
 interface OuterGroupHeaderProps {
   groupKey: string;
   rowBy: string;
@@ -380,22 +433,145 @@ function NestedGroup({
   );
 }
 
-export const ListView = memo(function ListView({ tickets, onTicketClick, groupBy, rowBy, projectKey, projectId, projectStatuses, displayOptions, showEmptyRows }: ListViewProps) {
+interface DroppableGroupProps {
+  groupKey: string;
+  items: Ticket[];
+  groupBy: string;
+  projectKey?: string | null;
+  projectId?: number;
+  projectStatuses?: Array<{ name: string; color: string | null; type?: string | null }>;
+  displayOptions?: DisplayOptions;
+  onTicketClick: (id: number) => void;
+  shouldReduceMotion: boolean | null;
+}
+
+function DroppableGroup({
+  groupKey,
+  items,
+  groupBy,
+  projectKey,
+  projectId,
+  projectStatuses,
+  displayOptions,
+  onTicketClick,
+  shouldReduceMotion,
+}: DroppableGroupProps) {
+  return (
+    <Droppable droppableId={groupKey} type="LIST_TICKET">
+      {(provided, snapshot) => (
+        <motion.div
+          ref={provided.innerRef}
+          {...provided.droppableProps}
+          animate={
+            shouldReduceMotion
+              ? undefined
+              : {
+                  backgroundColor: snapshot.isDraggingOver
+                    ? "color-mix(in srgb, var(--primary) 7%, transparent)"
+                    : "transparent",
+                }
+          }
+          transition={pmSnappy}
+          className={cn(
+            "overflow-hidden rounded-lg border border-border bg-card shadow-sm divide-y divide-border min-h-[40px]",
+            snapshot.isDraggingOver && "ring-1 ring-inset ring-primary/20",
+          )}
+        >
+          {items.map((ticket, index) => (
+            <Draggable key={ticket.id} draggableId={String(ticket.id)} index={index}>
+              {(dragProvided, dragSnapshot) => (
+                <div
+                  ref={dragProvided.innerRef}
+                  {...dragProvided.draggableProps}
+                  style={dragProvided.draggableProps.style}
+                >
+                  <ListViewItem
+                    ticket={ticket}
+                    projectKey={projectKey}
+                    projectId={projectId}
+                    projectStatuses={projectStatuses}
+                    onClick={onTicketClick}
+                    displayOptions={displayOptions}
+                    dragHandleProps={dragProvided.dragHandleProps}
+                    isDragging={dragSnapshot.isDragging}
+                  />
+                </div>
+              )}
+            </Draggable>
+          ))}
+          {provided.placeholder}
+          {items.length === 0 && !snapshot.isDraggingOver && (
+            <div className="py-4 text-center text-xs text-muted-foreground">Drop tickets here</div>
+          )}
+        </motion.div>
+      )}
+    </Droppable>
+  );
+}
+
+type ReorderContext = { previousTickets: Ticket[] };
+
+function isReorderContext(v: unknown): v is ReorderContext {
+  return typeof v === "object" && v !== null && "previousTickets" in v;
+}
+
+export const ListView = memo(function ListView({
+  tickets,
+  onTicketClick,
+  groupBy,
+  rowBy,
+  projectKey,
+  projectId,
+  projectStatuses,
+  displayOptions,
+  showEmptyRows,
+}: ListViewProps) {
   const hasRowBy = !!rowBy && rowBy !== "none";
+  const shouldReduceMotion = useReducedMotion();
+  const queryClient = useQueryClient();
+  const [optimisticTickets, setOptimisticTickets] = useState(tickets);
+  const prevTicketsRef = useRef(tickets);
+  if (prevTicketsRef.current !== tickets) {
+    prevTicketsRef.current = tickets;
+    setOptimisticTickets(tickets);
+  }
+
+  const isDnDMode = !hasRowBy && !!groupBy && groupBy !== "none" && DROPPABLE_MODES.has(groupBy) && projectId != null;
+
+  const updateTicket = useUpdateTicket(projectId ?? 0);
+  const updateOrder = useUpdateTicketOrder({
+    onMutate: async (): Promise<ReorderContext> => {
+      if (projectId == null) return { previousTickets: optimisticTickets };
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.projects.tickets({ projectId }),
+      });
+      return { previousTickets: optimisticTickets };
+    },
+    onError: (error, _vars, context) => {
+      if (isReorderContext(context)) setOptimisticTickets(context.previousTickets);
+      toast.error(getErrorMessage(error));
+    },
+    onSettled: () => {
+      if (projectId == null) return;
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.tickets({ projectId }),
+      });
+    },
+  });
 
   const grouped = useMemo(() => {
-    if (!groupBy || groupBy === "none") return { "All Items": tickets };
-    return tickets.reduce<Record<string, Ticket[]>>((acc, t) => {
+    if (!groupBy || groupBy === "none") return { "All Items": optimisticTickets };
+    return optimisticTickets.reduce<Record<string, Ticket[]>>((acc, t) => {
       const key = getGroupKey(t, groupBy);
       (acc[key] ??= []).push(t);
       return acc;
     }, {});
-  }, [tickets, groupBy]);
+  }, [optimisticTickets, groupBy]);
 
   const nested = useMemo(() => {
     if (!hasRowBy) return null;
-    const outerGrouped = tickets.reduce<Record<string, Ticket[]>>((acc, t) => {
-      const key = getGroupKey(t, rowBy);
+    const outerGrouped = optimisticTickets.reduce<Record<string, Ticket[]>>((acc, t) => {
+      const key = getGroupKey(t, rowBy ?? "");
       (acc[key] ??= []).push(t);
       return acc;
     }, {});
@@ -412,7 +588,7 @@ export const ListView = memo(function ListView({ tickets, onTicketClick, groupBy
       }
     }
     return result;
-  }, [tickets, groupBy, rowBy, hasRowBy]);
+  }, [optimisticTickets, groupBy, rowBy, hasRowBy]);
 
   const visibleOuterKeys = useMemo(() => {
     if (!nested) return [];
@@ -422,6 +598,60 @@ export const ListView = memo(function ListView({ tickets, onTicketClick, groupBy
   }, [nested, showEmptyRows]);
 
   const flatGroupKeys = useMemo(() => Object.keys(grouped), [grouped]);
+
+  const handleDragEnd = useCallback(
+    (result: DropResult) => {
+      const { destination, source, draggableId } = result;
+      if (!destination) return;
+      if (destination.droppableId === source.droppableId && destination.index === source.index) return;
+      if (!groupBy || projectId == null) return;
+
+      const ticketId = parseInt(draggableId, 10);
+      const srcGroup = source.droppableId;
+      const dstGroup = destination.droppableId;
+      const isCrossGroup = srcGroup !== dstGroup;
+
+      const allTickets = [...optimisticTickets];
+
+      if (isCrossGroup) {
+        const patch = buildGroupFieldPatch(groupBy, dstGroup, allTickets, ticketId);
+        if (!patch) return;
+
+        const nextTickets = allTickets.map((t) =>
+          t.id === ticketId ? applyLocalPatch(t, patch, groupBy) : t,
+        );
+        setOptimisticTickets(nextTickets);
+
+        updateTicket.mutate(
+          { ticketId, ...patch },
+          {
+            onError: () => setOptimisticTickets(allTickets),
+          },
+        );
+      } else {
+        const groupTickets = (grouped[srcGroup] ?? []).slice();
+        const [moved] = groupTickets.splice(source.index, 1);
+        if (!moved) return;
+        groupTickets.splice(destination.index, 0, moved);
+
+        const reorderedIds = new Set(groupTickets.map((t) => t.id));
+        const outsideTickets = allTickets.filter((t) => !reorderedIds.has(t.id));
+        const nextTickets = [...outsideTickets];
+        groupTickets.forEach((t, idx) => {
+          nextTickets.push({ ...t, order: idx });
+        });
+        setOptimisticTickets(nextTickets);
+
+        const updates = groupTickets.map((t, idx) => ({
+          id: t.id,
+          status: t.status,
+          order: idx,
+        }));
+        updateOrder.mutate({ projectId, items: updates });
+      }
+    },
+    [groupBy, projectId, optimisticTickets, grouped, updateTicket, updateOrder],
+  );
 
   if (hasRowBy && nested) {
     return (
@@ -444,7 +674,7 @@ export const ListView = memo(function ListView({ tickets, onTicketClick, groupBy
                 <AccordionTrigger className="flex items-center gap-2 px-0 py-1 hover:no-underline font-normal [&>svg]:ml-auto">
                   <OuterGroupHeader
                     groupKey={outerKey}
-                    rowBy={rowBy}
+                    rowBy={rowBy ?? ""}
                     tickets={outerTickets}
                     count={outerTickets.length}
                   />
@@ -486,6 +716,54 @@ export const ListView = memo(function ListView({ tickets, onTicketClick, groupBy
   }
 
   const hasFlatGrouping = !!groupBy && groupBy !== "none";
+
+  if (isDnDMode) {
+    return (
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <div className="flex flex-col gap-4">
+          <Accordion
+            type="multiple"
+            defaultValue={flatGroupKeys}
+            className="flex flex-col gap-1.5"
+          >
+            {Object.entries(grouped).map(([group, items]) => (
+              <AccordionItem key={group} value={group} className="border-b-0">
+                <div className="mb-1.5 flex items-center gap-2">
+                  <AccordionTrigger className="flex flex-1 items-center gap-2 py-0 hover:no-underline font-normal [&>svg]:ml-auto">
+                    <span className="text-sm font-semibold text-foreground">{group}</span>
+                    <span className="text-xs text-muted-foreground tabular-nums">({items.length})</span>
+                  </AccordionTrigger>
+                  {projectId && (
+                    <InlineGroupCreate
+                      groupKey={group}
+                      projectId={projectId}
+                      status={getGroupStatus(groupBy ?? "status", group, items)}
+                    />
+                  )}
+                </div>
+                <AccordionContent className="pb-0">
+                  <DroppableGroup
+                    groupKey={group}
+                    items={items}
+                    groupBy={groupBy ?? "status"}
+                    projectKey={projectKey}
+                    projectId={projectId}
+                    projectStatuses={projectStatuses}
+                    displayOptions={displayOptions}
+                    onTicketClick={onTicketClick}
+                    shouldReduceMotion={shouldReduceMotion}
+                  />
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+          {optimisticTickets.length === 0 && (
+            <div className="text-center py-12 text-muted-foreground text-sm">No work items found</div>
+          )}
+        </div>
+      </DragDropContext>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -530,7 +808,7 @@ export const ListView = memo(function ListView({ tickets, onTicketClick, groupBy
         </Accordion>
       ) : (
         <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm divide-y divide-border">
-          {tickets.map((ticket) => (
+          {optimisticTickets.map((ticket) => (
             <ListViewItem
               key={ticket.id}
               ticket={ticket}
@@ -549,3 +827,18 @@ export const ListView = memo(function ListView({ tickets, onTicketClick, groupBy
     </div>
   );
 });
+
+function applyLocalPatch(
+  ticket: Ticket,
+  patch: Partial<{ status: string; priority: string | undefined; assigneeId: string | null }>,
+  groupBy: string,
+): Ticket {
+  const next = { ...ticket };
+  if (groupBy === "status" && patch.status !== undefined) next.status = patch.status;
+  if (groupBy === "priority") {
+    if (patch.priority !== undefined) next.priority = patch.priority;
+    else next.priority = null;
+  }
+  if (groupBy === "assignee" && "assigneeId" in patch) next.assigneeId = patch.assigneeId ?? null;
+  return next;
+}

@@ -208,7 +208,7 @@ export function KbAttachmentsPanel({ article }: { article: KbArticleDetail }) {
         </p>
 
         {attachmentsQuery.isLoading ? (
-          <LoadingState variant="list" rows={2} />
+          <LoadingState variant="list" rows={8} />
         ) : attachmentsQuery.error ? (
           <ErrorState
             compact

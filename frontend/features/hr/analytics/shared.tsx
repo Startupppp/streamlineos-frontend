@@ -79,7 +79,7 @@ export function AnalyticsChartCard({
   );
 }
 
-export function SectionSkeleton({ rows = 4 }: { rows?: number }) {
+export function SectionSkeleton({ rows = 8 }: { rows?: number }) {
   return (
     <Card>
       <CardContent className="space-y-3 p-4">

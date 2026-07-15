@@ -140,7 +140,7 @@ export default function VariablesManagerPage() {
       subtitle="View and manage variables defined across your workflow versions"
     >
       {isLoading ? (
-        <LoadingState variant="list" rows={5} />
+        <LoadingState variant="list" rows={12} />
       ) : isError ? (
         <ErrorState title="Failed to load variables" onRetry={handleRetry} className="flex-1" />
       ) : list.length === 0 ? (

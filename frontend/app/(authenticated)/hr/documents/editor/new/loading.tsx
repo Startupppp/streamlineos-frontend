@@ -23,7 +23,7 @@ export default function NewDocumentLoading() {
             <div className="space-y-1.5">
               <Skeleton className="h-4 w-24" />
               <div className="grid gap-3 sm:grid-cols-2">
-                {Array.from({ length: 5 }).map((_, i) => (
+                {Array.from({ length: 12 }).map((_, i) => (
                   <Card key={i}>
                     <CardContent className="p-4 flex items-start gap-3">
                       <Skeleton className="h-9 w-9 rounded-lg shrink-0" />

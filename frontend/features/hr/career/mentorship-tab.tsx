@@ -50,7 +50,7 @@ export function MentorshipTab() {
   if (isLoading) {
     return (
       <div className="space-y-2">
-        {Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-14 bg-muted rounded animate-pulse" />)}
+        {Array.from({ length: 8 }).map((_, i) => <div key={i} className="h-14 bg-muted rounded animate-pulse" />)}
       </div>
     );
   }

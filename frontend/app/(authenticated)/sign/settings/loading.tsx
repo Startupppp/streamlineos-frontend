@@ -5,7 +5,7 @@ export default function SignSettingsLoading() {
   return (
     <PageWrapper title="Settings" subtitle="Tenant-wide defaults, branding, and watermark policy for SignOS">
       <div className="space-y-3">
-        {Array.from({ length: 3 }).map((_, i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <Skeleton key={i} className="h-40 w-full" />
         ))}
       </div>

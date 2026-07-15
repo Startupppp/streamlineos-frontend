@@ -20,7 +20,7 @@ export default function ProjectApprovalsLoading() {
       }
     >
       <div className={cn("space-y-2 p-2", PM_PANEL)}>
-        {Array.from({ length: 6 }).map((_, i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <div key={i} className="flex h-10 items-center gap-3 border-b border-border/50 px-2 last:border-0">
             <Skeleton className="h-4 w-16 rounded-full" />
             <Skeleton className="h-3 max-w-[16rem] flex-1" />

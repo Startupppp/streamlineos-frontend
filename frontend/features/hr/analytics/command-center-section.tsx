@@ -177,7 +177,7 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
     openDrilldown("payroll-cost", "Payroll Cost");
   }
 
-  if (kpisLoading) return <SectionSkeleton rows={6} />;
+  if (kpisLoading) return <SectionSkeleton rows={8} />;
 
   return (
     <div className="space-y-6">
@@ -252,7 +252,7 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
       <div className="grid gap-4 lg:grid-cols-2">
         <AnalyticsChartCard title="Joins vs Exits (24 months)">
           {attritionLoading ? (
-            <SectionSkeleton rows={3} />
+            <SectionSkeleton rows={8} />
           ) : !attrition?.joinsVsExits.length ? (
             <EmptyChart label="No attrition data" />
           ) : (
@@ -301,7 +301,7 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
 
         <AnalyticsChartCard title="Leave Trends by Type">
           {leaveLoading ? (
-            <SectionSkeleton rows={3} />
+            <SectionSkeleton rows={8} />
           ) : !leaveStackData.length ? (
             <EmptyChart label="No leave data" />
           ) : (
@@ -334,7 +334,7 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
 
         <AnalyticsChartCard title="Mood Trend">
           {engagementLoading ? (
-            <SectionSkeleton rows={3} />
+            <SectionSkeleton rows={8} />
           ) : !engagement?.moodByMonth.length ? (
             <EmptyChart label="No engagement data" />
           ) : (
@@ -366,7 +366,7 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
 
         <AnalyticsChartCard title="Performance Distribution">
           {perfLoading ? (
-            <SectionSkeleton rows={3} />
+            <SectionSkeleton rows={8} />
           ) : !perfDist?.distribution.length ? (
             <EmptyChart label="No performance data" />
           ) : (
@@ -393,7 +393,7 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
       <div className="grid gap-4 lg:grid-cols-2">
         <AnalyticsChartCard title="Compliance Gaps by Category">
           {complianceLoading ? (
-            <SectionSkeleton rows={4} />
+            <SectionSkeleton rows={8} />
           ) : !complianceGaps?.openCases.length ? (
             <EmptyChart label="No open compliance cases" />
           ) : (
@@ -420,7 +420,7 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
         {canViewPayroll ? (
           <AnalyticsChartCard title="Payroll Cost Trend">
             {payrollLoading ? (
-              <SectionSkeleton rows={3} />
+              <SectionSkeleton rows={8} />
             ) : !payrollCost?.monthly.length ? (
               <EmptyChart label="No payroll data" />
             ) : (

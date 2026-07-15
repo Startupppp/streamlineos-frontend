@@ -244,7 +244,7 @@ export default function Gstr1Page() {
       }
     >
       {query.isLoading ? (
-          <LoadingState variant="table" rows={8} />
+          <LoadingState variant="table" rows={12} />
         ) : query.error ? (
           <ErrorState
             title="Failed to load GSTR-1"

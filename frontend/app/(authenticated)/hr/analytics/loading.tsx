@@ -7,7 +7,7 @@ export default function HrAnalyticsLoading() {
     <PageWrapper title="HR Analytics" subtitle="Workforce insights and metrics">
       <div className="space-y-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {Array.from({ length: 8 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <Card key={i}>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-2">
@@ -21,14 +21,14 @@ export default function HrAnalyticsLoading() {
           ))}
         </div>
         <div className="grid md:grid-cols-2 gap-3">
-          {Array.from({ length: 4 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <Card key={i}>
               <CardHeader className="p-4 pb-2">
                 <Skeleton className="h-4 w-40" />
               </CardHeader>
               <CardContent className="p-4 pt-2">
                 <div className="space-y-2">
-                  {Array.from({ length: 5 }).map((_, j) => (
+                  {Array.from({ length: 12 }).map((_, j) => (
                     <div key={j} className="flex items-center gap-3">
                       <Skeleton className="h-3 w-24 shrink-0" />
                       <Skeleton className="h-5 flex-1 rounded-full" />

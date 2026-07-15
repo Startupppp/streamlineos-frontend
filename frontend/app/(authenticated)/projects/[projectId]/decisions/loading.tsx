@@ -16,7 +16,7 @@ export default function ProjectDecisionsLoading() {
       }
     >
       <div className="px-4 pb-4">
-        <DataTableSkeleton rows={5} columns={7} />
+        <DataTableSkeleton rows={12} columns={7} />
       </div>
     </PageWrapper>
   );

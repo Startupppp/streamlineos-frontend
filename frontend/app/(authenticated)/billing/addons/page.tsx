@@ -70,7 +70,7 @@ export default function AddonsPage() {
     >
       {isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: 10 }).map((_, i) => (
             <AddonCardSkeleton key={i} />
           ))}
         </div>

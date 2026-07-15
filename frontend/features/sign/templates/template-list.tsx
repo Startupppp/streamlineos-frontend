@@ -99,7 +99,7 @@ export function TemplateList() {
     <PageWrapper title="Templates" subtitle="Reusable envelope layouts you can send again and again">
       {isLoading ? (
         <div className="space-y-3">
-          {Array.from({ length: 4 }).map((_, i) => (
+          {Array.from({ length: 9 }).map((_, i) => (
             <Skeleton key={i} className="h-20 w-full" />
           ))}
         </div>

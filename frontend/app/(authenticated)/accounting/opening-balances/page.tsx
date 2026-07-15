@@ -47,7 +47,7 @@ export default function OpeningBalancesPage() {
   if (query.isLoading) {
     return (
       <PageWrapper eyebrow="Accounting" title="Opening Balances" subtitle="Set starting account balances.">
-        <LoadingState variant="form" rows={6} />
+        <LoadingState variant="form" rows={8} />
       </PageWrapper>
     );
   }

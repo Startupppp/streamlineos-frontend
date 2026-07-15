@@ -153,7 +153,7 @@ export default function PoliciesPage() {
         ) : undefined
       }
     >
-      {query.isLoading && <LoadingState variant="table" rows={4} />}
+      {query.isLoading && <LoadingState variant="table" rows={12} />}
 
       {query.error && (
         <ErrorState

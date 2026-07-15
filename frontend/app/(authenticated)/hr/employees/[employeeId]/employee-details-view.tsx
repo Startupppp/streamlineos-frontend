@@ -56,11 +56,11 @@ import { canDeleteEmployee } from "@/features/hr/employees/hr-types";
 
 const EmployeeTimelineTab = dynamic(
   () => import("@/features/hr/employees/detail/timeline-tab").then(m => ({ default: m.EmployeeTimelineTab })),
-  { loading: () => <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}</div> }
+  { loading: () => <div className="space-y-3">{Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}</div> }
 );
 const EmployeeSensitiveTab = dynamic(
   () => import("@/features/hr/employees/detail/sensitive-tab").then(m => ({ default: m.EmployeeSensitiveTab })),
-  { loading: () => <div className="space-y-3">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-xl" />)}</div> }
+  { loading: () => <div className="space-y-3">{Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-xl" />)}</div> }
 );
 
 function getInitials(first?: string | null, last?: string | null) {
@@ -192,7 +192,7 @@ function DirectReportsSection({ employeeId }: { employeeId: string }) {
             </h3>
           </div>
           <div className="space-y-2">
-            {Array.from({ length: 3 }).map((_, i) => (
+            {Array.from({ length: 8 }).map((_, i) => (
               <Skeleton key={i} className="h-10 w-full rounded-lg" />
             ))}
           </div>
@@ -554,7 +554,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
               )}
               {statsLoading && (
                 <div className="flex items-center shrink-0 border-l border-border pl-5 divide-x divide-border">
-                  {Array.from({ length: 3 }).map((_, i) => (
+                  {Array.from({ length: 8 }).map((_, i) => (
                     <div key={i} className="text-center px-4 space-y-1.5">
                       <Skeleton className="h-8 w-10 mx-auto" />
                       <Skeleton className="h-3 w-14" />

@@ -57,7 +57,7 @@ export function AutomationRunsDialog({ ruleId, ruleName, onClose }: AutomationRu
         </DialogHeader>
 
         {isLoading ? (
-          <LoadingState variant="list" rows={5} />
+          <LoadingState variant="list" rows={8} />
         ) : isError ? (
           <ErrorState
             compact

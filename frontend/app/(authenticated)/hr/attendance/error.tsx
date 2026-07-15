@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { AlertCircle, RefreshCw } from "lucide-react";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 interface ErrorPageProps {
   error: Error & { digest?: string };
@@ -16,7 +17,7 @@ export default function AttendanceError({ error, reset }: ErrorPageProps) {
       </div>
       <h2 className="text-xl font-semibold text-foreground">Failed to load Attendance</h2>
       <p className="text-muted-foreground text-center max-w-md">
-        {error.message || "An unexpected error occurred while loading attendance data."}
+        {getErrorMessage(error)}
       </p>
       <Button onClick={reset} variant="outline" className="gap-2">
         <RefreshCw className="h-4 w-4" />

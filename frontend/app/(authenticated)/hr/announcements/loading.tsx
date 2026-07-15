@@ -5,7 +5,7 @@ export default function AnnouncementsLoading() {
   return (
     <PageWrapper title="Announcements" subtitle="Stay updated with company news and updates">
       <div className="space-y-4">
-        {Array.from({ length: 4 }).map((_, i) => (
+        {Array.from({ length: 9 }).map((_, i) => (
           <div
             key={i}
             className="bg-card/90 backdrop-blur-sm rounded-2xl border border-border shadow-sm p-6"

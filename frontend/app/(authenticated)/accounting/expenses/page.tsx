@@ -86,7 +86,7 @@ export default function TeamExpensesPage() {
     >
       <ExpenseStatsGrid stats={query.data?.stats} isLoading={query.isLoading} />
 
-      {query.isLoading && <LoadingState variant="table" rows={8} />}
+      {query.isLoading && <LoadingState variant="table" rows={12} />}
 
       {query.error && (
         <ErrorState

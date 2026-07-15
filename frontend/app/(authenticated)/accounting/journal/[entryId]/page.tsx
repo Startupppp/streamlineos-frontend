@@ -162,7 +162,7 @@ export default function JournalEntryDetailPage({ params }: JournalEntryDetailPag
     >
       <div className="space-y-4">
         {query.isLoading ? (
-          <LoadingState variant="form" rows={5} />
+          <LoadingState variant="form" rows={8} />
         ) : query.error ? (
           <ErrorState
             title="Failed to load journal entry"

@@ -11,7 +11,7 @@ export default function WorkloadLoading() {
           ))}
         </div>
         <div className="space-y-2">
-          {Array.from({ length: 5 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <div key={i} className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3">
               <Skeleton className="h-7 w-7 rounded-full shrink-0" />
               <Skeleton className="h-4 w-32 shrink-0" />

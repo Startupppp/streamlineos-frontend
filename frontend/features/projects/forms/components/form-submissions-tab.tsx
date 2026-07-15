@@ -132,7 +132,7 @@ export function FormSubmissionsTab({ projectId, formId }: FormSubmissionsTabProp
   return (
     <div className="pt-3 space-y-3">
       {isLoading ? (
-        <DataTableSkeleton rows={4} columns={6} />
+        <DataTableSkeleton rows={12} columns={6} />
       ) : isError ? (
         <ErrorState compact onRetry={() => void refetch()} />
       ) : items.length === 0 ? (

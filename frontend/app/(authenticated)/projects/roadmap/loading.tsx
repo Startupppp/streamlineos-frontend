@@ -23,7 +23,7 @@ export default function RoadmapLoading() {
     >
       <PmPageShell>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <div key={i} className={cn(PM_PANEL, "min-h-[140px] space-y-2 p-2")}>
               <Skeleton className="h-4 w-20" />
               <Skeleton className="h-16 w-full rounded-lg" />

@@ -15,7 +15,7 @@ export default function ReorderReportLoading() {
       </div>
       <div className="rounded-md border border-border bg-card overflow-hidden">
         <div className="h-8 bg-muted/80" />
-        {Array.from({ length: 8 }).map((_, i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <div key={i} className="h-8 border-t border-border flex items-center px-2 gap-3">
             <Skeleton className="h-3 w-32 flex-1" />
             <Skeleton className="h-3 w-16" />

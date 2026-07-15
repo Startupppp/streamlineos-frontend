@@ -10,12 +10,12 @@ export default function BlueprintsLoading() {
     >
       <div className="flex gap-4">
         <div className="w-[250px] shrink-0 space-y-1">
-          {Array.from({ length: 4 }).map((_, i) => (
+          {Array.from({ length: 10 }).map((_, i) => (
             <Skeleton key={i} className="h-10 w-full rounded-md" />
           ))}
         </div>
         <div className="flex-1 space-y-3">
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <Skeleton key={i} className="h-12 w-full rounded-md" />
           ))}
         </div>

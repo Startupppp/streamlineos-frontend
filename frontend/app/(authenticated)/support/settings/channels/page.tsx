@@ -409,7 +409,7 @@ export default function SupportChannelsPage() {
       }
     >
       {isLoading ? (
-        <LoadingState variant="list" rows={5} />
+        <LoadingState variant="list" rows={12} />
       ) : isError ? (
         <ErrorState onRetry={handleRetry} />
       ) : channels && channels.length > 0 ? (

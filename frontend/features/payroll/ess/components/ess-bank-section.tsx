@@ -330,7 +330,7 @@ export function EssBankSection() {
       >
         {isLoading ? (
           <div className="p-4 space-y-3">
-            {Array.from({ length: 3 }).map((_, i) => (
+            {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="flex items-center justify-between">
                 <Skeleton className="h-3.5 w-24" />
                 <Skeleton className="h-3.5 w-32" />

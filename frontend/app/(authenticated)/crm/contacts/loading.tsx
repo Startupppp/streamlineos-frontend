@@ -16,13 +16,13 @@ export default function ContactsLoading() {
     >
       <div className="border border-border rounded-md">
         <div className="border-b border-border bg-muted/40 px-3 py-2 flex items-center gap-3">
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <Skeleton key={i} className="h-3 w-20" />
           ))}
           <Skeleton className="h-3 w-8 ml-auto" />
         </div>
         <div className="divide-y divide-border">
-          {Array.from({ length: 8 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <div key={i} className="px-3 py-2 flex items-center gap-3">
               <div className="flex items-center gap-2">
                 <Skeleton className="h-6 w-6 rounded-full" />

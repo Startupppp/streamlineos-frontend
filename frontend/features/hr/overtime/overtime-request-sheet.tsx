@@ -21,9 +21,36 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { DatePicker } from "@/components/ui/date-picker";
 
+const hoursSchema = z
+  .string()
+  .min(1, "Hours worked overtime is required")
+  .refine(
+    (v) => {
+      const trimmed = v.trim();
+      if (!trimmed) return false;
+      const n = Number(trimmed);
+      return !isNaN(n) && isFinite(n);
+    },
+    { message: "Hours must be a valid number" },
+  )
+  .refine(
+    (v) => {
+      const n = parseFloat(v);
+      return n > 0;
+    },
+    { message: "Hours must be greater than 0" },
+  )
+  .refine(
+    (v) => {
+      const n = parseFloat(v);
+      return n <= 24;
+    },
+    { message: "Hours cannot exceed 24 per day" },
+  );
+
 const schema = z.object({
   date: z.string().min(1, "Date is required"),
-  hours: z.string().min(1, "Hours are required"),
+  hours: hoursSchema,
   reason: z.string().optional(),
   convertToCompOff: z.boolean(),
 });
@@ -61,6 +88,8 @@ export function OvertimeRequestSheet({ open, onOpenChange }: Props) {
     [createRequest, form, onOpenChange],
   );
 
+  const { isValid, isDirty } = form.formState;
+
   return (
     <HrSheet
       open={open}
@@ -70,6 +99,7 @@ export function OvertimeRequestSheet({ open, onOpenChange }: Props) {
       onSubmit={form.handleSubmit(onSubmit)}
       submitLabel="Submit Request"
       isPending={createRequest.isPending}
+      submitDisabled={isDirty && !isValid}
     >
       <Form {...form}>
         <div className="space-y-5">
