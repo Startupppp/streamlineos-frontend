@@ -37,7 +37,7 @@ import { TransitionFormSheet } from "./transition-form-sheet";
 import type { CustomState } from "@/hooks/api/projects/custom-states";
 import type { WorkflowTransition, CreateTransitionInput } from "@/types/projects/workflow";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 import { cn } from "@/lib/utils";
 
 function AddTransitionButton({ onClick }: { onClick: () => void }) {
@@ -140,6 +140,7 @@ export function TransitionsTable({ projectId, statuses }: TransitionsTableProps)
     {
       key: "name",
       header: "Label",
+      className: TABLE_TITLE_CELL,
       cell: (row) =>
         row.name ? (
           <span className={cn("text-sm font-medium", TEXT_ONE_LINE)} title={row.name}>

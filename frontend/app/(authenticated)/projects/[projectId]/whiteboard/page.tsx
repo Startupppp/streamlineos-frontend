@@ -48,6 +48,7 @@ import { computeStoredVersion } from "@/features/projects/whiteboard/scene-utils
 import {
   PmPageShell,
   PmPanel,
+  PM_FILL_PANEL,
   PM_ROW,
 } from "@/features/projects/shared/pm-chrome";
 import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
@@ -344,16 +345,14 @@ export default function WhiteboardPage({
             <LoadingState variant="page" />
           </div>
         ) : isError ? (
-          <PmPanel className="flex flex-1 items-center justify-center" solid>
-            <ErrorState onRetry={handleRefetch} />
-          </PmPanel>
+          <ErrorState className={PM_FILL_PANEL} onRetry={handleRefetch} />
         ) : !boards || boards.length === 0 ? (
           <EmptyState
             illustration={<EmptyUploadIllustration />}
             title="Create your first board"
             description="Whiteboards let your team brainstorm visually with sticky notes, shapes, arrows, and freehand drawing."
             action={canManage ? { label: "New Board", onClick: handleOpenCreate } : undefined}
-            className="flex-1 min-h-0"
+            className={PM_FILL_PANEL}
           />
         ) : (
           <div className="flex min-h-0 flex-1 gap-3">
@@ -393,9 +392,7 @@ export default function WhiteboardPage({
                 detailLoading ? (
                   <LoadingState variant="page" />
                 ) : detailError || !detail ? (
-                  <PmPanel className="flex flex-1 items-center justify-center" solid>
-                    <ErrorState onRetry={handleDetailRetry} />
-                  </PmPanel>
+                  <ErrorState onRetry={handleDetailRetry} />
                 ) : (
                   <ExcalidrawCanvas
                     key={selectedBoard.id}

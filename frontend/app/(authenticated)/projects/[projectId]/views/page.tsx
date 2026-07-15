@@ -19,7 +19,9 @@ import {
   PmPanel,
   PmSection,
   PmStaggerList,
+  PM_FILL_PANEL,
 } from "@/features/projects/shared/pm-chrome";
+import { cn } from "@/lib/utils";
 import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 
 export default function ViewsPage({
@@ -104,12 +106,12 @@ export default function ViewsPage({
       <PmPageShell>
         {!views?.length ? (
           <EmptyState
-            illustration={<EmptySearchIllustration />}
-            title="No saved views"
-            description="Create custom views with saved filters and layouts."
-            action={{ label: "Create First View", onClick: handleOpenCreate }}
-            className="min-h-[40vh]"
-          />
+              className={PM_FILL_PANEL}
+              illustration={<EmptySearchIllustration />}
+              title="No saved views"
+              description="Create custom views with saved filters and layouts."
+              action={{ label: "Create First View", onClick: handleOpenCreate }}
+            />
         ) : (
           <div className="space-y-4">
             {pinnedViews.length > 0 ? (

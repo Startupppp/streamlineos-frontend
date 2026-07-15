@@ -49,7 +49,6 @@ import {
 } from "@/features/projects/goals/constants";
 import {
   PmPageShell,
-  PmPanel,
   PmSection,
   PmStaggerList,
   PM_FILL_PANEL,
@@ -339,22 +338,20 @@ export default function GoalsPage() {
             {isLoading ? (
               <GoalsGridSkeleton />
             ) : isError ? (
-              <PmPanel className={cn(PM_FILL_PANEL, "items-center justify-center p-6")}>
-                <ErrorState
-                  title="Failed to load goals"
-                  description="We couldn't load your goals. Please try again."
-                  onRetry={handleRetry}
-                />
-              </PmPanel>
+              <ErrorState
+                className={PM_FILL_PANEL}
+                title="Failed to load goals"
+                description="We couldn't load your goals. Please try again."
+                onRetry={handleRetry}
+              />
             ) : !hasGoals ? (
-              <PmPanel className={cn(PM_FILL_PANEL, "p-6")}>
-                <EmptyState
-                  illustration={<EmptyTargetIllustration />}
-                  title="No goals yet"
-                  description="Create your first objective with measurable key results to start tracking progress."
-                  action={{ label: "New Goal", onClick: handleOpenCreate }}
-                />
-              </PmPanel>
+              <EmptyState
+                className={PM_FILL_PANEL}
+                illustration={<EmptyTargetIllustration />}
+                title="No goals yet"
+                description="Create your first objective with measurable key results to start tracking progress."
+                action={{ label: "New Goal", onClick: handleOpenCreate }}
+              />
             ) : (
               <div className="space-y-8">
                 {LEVEL_ORDER.map((level) => {

@@ -16,6 +16,8 @@ import { Briefcase } from "lucide-react";
 import { useCan } from "@/hooks/api/access";
 import { usePositions, useDeletePosition, type Position } from "../hooks/use-positions";
 import { format } from "date-fns";
+import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
+import { cn } from "@/lib/utils";
 
 const SENTINEL = "__ALL__";
 type StatusFilter = Position["status"] | typeof SENTINEL;
@@ -52,7 +54,12 @@ export function PositionsTable() {
     {
       key: "title",
       header: "Title",
-      cell: (row) => <span className="font-medium text-sm">{row.title}</span>,
+      className: TABLE_TITLE_CELL,
+      cell: (row) => (
+        <span className={cn("font-medium text-sm", TEXT_ONE_LINE)} title={row.title}>
+          {row.title}
+        </span>
+      ),
     },
     {
       key: "status",

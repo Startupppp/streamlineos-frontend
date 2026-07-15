@@ -27,6 +27,7 @@ import {
   PmPanel,
   PmSection,
   PmStaggerList,
+  PM_FILL_PANEL,
   PM_PANEL,
 } from "@/features/projects/shared/pm-chrome";
 import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
@@ -199,11 +200,11 @@ export function RunExecutionPage({ projectId, runId }: RunExecutionPageProps) {
         <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
           {results.length === 0 ? (
             <EmptyState
-              illustrationPreset="ticket"
-              title="No test results"
-              description="No test cases were added to this run."
-              className="min-h-[32vh]"
-            />
+                className={PM_FILL_PANEL}
+                illustrationPreset="ticket"
+                title="No test results"
+                description="No test cases were added to this run."
+              />
           ) : (
             <PmStaggerList className="space-y-2">
               {results.map((result) => (

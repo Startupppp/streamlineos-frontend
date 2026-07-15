@@ -3,7 +3,8 @@
 import { useMemo, useState, useCallback } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Search, Ellipsis } from "lucide-react";
+import { Search } from "lucide-react";
+import { EllipsisIcon, SlidersHorizontalIcon } from "@animateicons/react/lucide";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,10 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  SidebarAnimatedNavIcon,
+  useAnimatedNavIconHover,
+} from "@/components/layout/sidebar/sidebar-animated-nav";
 import type { ProjectNavGroup, ProjectNavItem } from "./project-nav-config";
 
 interface ProjectMoreMenuProps {
@@ -20,6 +25,7 @@ interface ProjectMoreMenuProps {
   groups: ProjectNavGroup[];
   collapsed: boolean;
   onNavigate?: () => void;
+  onCustomize?: () => void;
 }
 
 function useIsMoreItemActive(baseUrl: string) {
@@ -41,10 +47,13 @@ export function ProjectMoreMenu({
   groups,
   collapsed,
   onNavigate,
+  onCustomize,
 }: ProjectMoreMenuProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const isActive = useIsMoreItemActive(baseUrl);
+  const { iconRef, animatedNavHoverHandlers } = useAnimatedNavIconHover();
+  const customizeHover = useAnimatedNavIconHover();
 
   const flat = useMemo(() => groups.flatMap((g) => g.items), [groups]);
 
@@ -79,14 +88,21 @@ export function ProjectMoreMenu({
     onNavigate?.();
   }, [onNavigate]);
 
+  const handleCustomize = useCallback(() => {
+    setOpen(false);
+    setQuery("");
+    onCustomize?.();
+  }, [onCustomize]);
+
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <Button
           variant="ghost"
+          {...animatedNavHoverHandlers}
           className={cn(
             "relative h-8 w-full justify-start gap-2 rounded-md px-2 text-[13px] font-medium",
-            collapsed && "h-8 w-8 justify-center px-0",
+            collapsed && "mx-auto h-8 w-8 justify-center px-0",
             anyActive
               ? "bg-primary/10 text-foreground"
               : "text-muted-foreground hover:bg-muted/80 hover:text-foreground",
@@ -96,7 +112,11 @@ export function ProjectMoreMenu({
           {anyActive ? (
             <span className="absolute left-0 inset-y-1.5 w-0.5 rounded-full bg-primary" />
           ) : null}
-          <Ellipsis className="h-4 w-4 shrink-0" />
+          <SidebarAnimatedNavIcon
+            icon={EllipsisIcon}
+            iconRef={iconRef}
+            className="h-4 w-4 shrink-0"
+          />
           {!collapsed ? <span>More</span> : null}
         </Button>
       </PopoverTrigger>
@@ -149,6 +169,23 @@ export function ProjectMoreMenu({
             </div>
           )}
         </ScrollArea>
+        {onCustomize ? (
+          <div className="border-t border-border/50 p-1.5">
+            <button
+              type="button"
+              onClick={handleCustomize}
+              {...customizeHover.animatedNavHoverHandlers}
+              className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground"
+            >
+              <SidebarAnimatedNavIcon
+                icon={SlidersHorizontalIcon}
+                iconRef={customizeHover.iconRef}
+                className="h-3.5 w-3.5 shrink-0"
+              />
+              <span>Customize sidebar</span>
+            </button>
+          </div>
+        ) : null}
       </PopoverContent>
     </Popover>
   );
@@ -163,11 +200,14 @@ function MoreLink({
   active: boolean;
   onClick: () => void;
 }) {
+  const { iconRef, animatedNavHoverHandlers } = useAnimatedNavIconHover();
   const Icon = item.icon;
+
   return (
     <Link
       href={item.href}
       onClick={onClick}
+      {...animatedNavHoverHandlers}
       className={cn(
         "flex items-center gap-2 rounded-lg px-2 py-1.5 text-[13px] transition-all duration-150",
         active
@@ -175,7 +215,11 @@ function MoreLink({
           : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
       )}
     >
-      <Icon className={cn("h-3.5 w-3.5 shrink-0", active && "text-primary")} />
+      <SidebarAnimatedNavIcon
+        icon={Icon}
+        iconRef={iconRef}
+        className={cn("h-3.5 w-3.5 shrink-0", active && "text-primary")}
+      />
       <span className="truncate tracking-tight">{item.label}</span>
     </Link>
   );

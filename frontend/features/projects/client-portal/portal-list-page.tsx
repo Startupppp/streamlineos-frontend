@@ -14,6 +14,7 @@ import {
   PmPanel,
   PmSection,
   PmStaggerList,
+  PM_FILL_PANEL,
   PM_PANEL,
 } from "@/features/projects/shared/pm-chrome";
 import { listItem, listItemReduced, pmSnappy } from "@/features/projects/shared/pm-motion";
@@ -59,7 +60,7 @@ export function PortalListPage() {
       subtitle="Your projects and their current status"
     >
       <PmPageShell>
-        <PmSection index={0}>
+        <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
           {isLoading ? (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {Array.from({ length: 9 }).map((_, i) => (
@@ -67,18 +68,14 @@ export function PortalListPage() {
               ))}
             </div>
           ) : isError ? (
-            <PmPanel className="flex min-h-[14rem] items-center justify-center p-6">
-              <ErrorState onRetry={handleRetry} className="flex-1" />
-            </PmPanel>
+            <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
           ) : (data ?? []).length === 0 ? (
-            <PmPanel className="flex min-h-[14rem] items-center justify-center p-6">
-              <EmptyState
+            <EmptyState
+                className={PM_FILL_PANEL}
                 illustrationPreset="projects"
                 title="No projects"
                 description="You don't have access to any projects yet. Contact your project manager."
-                className="min-h-[12rem]"
               />
-            </PmPanel>
           ) : (
             <PmStaggerList className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {data?.map((project) => (

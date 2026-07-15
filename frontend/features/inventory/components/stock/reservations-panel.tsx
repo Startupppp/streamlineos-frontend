@@ -22,15 +22,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
-import { MoreHorizontal } from "lucide-react";
+import { Unlock } from "lucide-react";
 import { useReservations, useReleaseReservation } from "@/hooks/api/inventory/stock";
 import { useCan } from "@/hooks/api/access";
 import {
@@ -173,20 +167,19 @@ export function ReservationsPanel() {
       headerClassName: "w-8",
       cell: (row) => {
         if (!canRelease || row.status !== "ACTIVE") return null;
-        function handleSelect(): void {
+        function handleReleaseClick(): void {
           handleRelease(row.id);
         }
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="Actions">
-                <MoreHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onSelect={handleSelect}>Release</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6"
+            aria-label="Release reservation"
+            onClick={handleReleaseClick}
+          >
+            <Unlock className="h-3.5 w-3.5" aria-hidden="true" />
+          </Button>
         );
       },
     },

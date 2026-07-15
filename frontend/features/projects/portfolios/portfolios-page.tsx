@@ -56,7 +56,7 @@ import {
   PM_FILL_PANEL,
   PM_TOOLBAR,
 } from "@/features/projects/shared/pm-chrome";
-import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 import { cn } from "@/lib/utils";
 
 function NewPortfolioButton({ onClick }: { onClick: () => void }) {
@@ -180,13 +180,11 @@ export function PortfoliosPage() {
       header: "Name",
       sortable: true,
       sortValue: (r) => r.name,
+      className: TABLE_TITLE_CELL,
       cell: (row) => (
         <Link
           href={`/projects/portfolios/${row.id}`}
-          className={cn(
-            TEXT_ONE_LINE,
-            "block max-w-[220px] font-medium text-foreground hover:text-primary",
-          )}
+          className={cn("font-medium text-foreground hover:text-primary", TEXT_ONE_LINE)}
           title={row.name}
         >
           {row.name}
@@ -207,7 +205,7 @@ export function PortfoliosPage() {
       key: "ownerId",
       header: "Owner",
       cell: (row) => (
-        <span className={cn(TEXT_ONE_LINE, "block max-w-[140px] text-sm text-muted-foreground")}>
+        <span className={cn("max-w-[140px] text-sm text-muted-foreground", TEXT_ONE_LINE)}>
           {memberName(row.ownerId)}
         </span>
       ),
@@ -225,7 +223,7 @@ export function PortfoliosPage() {
       header: "Strategic Goal",
       cell: (row) => (
         <span
-          className={cn(TEXT_ONE_LINE, "block max-w-[200px] text-sm text-muted-foreground")}
+          className={cn("max-w-[200px] text-sm text-muted-foreground", TEXT_ONE_LINE)}
           title={row.strategicGoal ?? undefined}
         >
           {row.strategicGoal ?? "—"}
@@ -303,12 +301,10 @@ export function PortfoliosPage() {
               <DataTableSkeleton rows={12} columns={7} className="flex-1" />
             </PmPanel>
           ) : isError ? (
-            <PmPanel className={cn(PM_FILL_PANEL, "items-center justify-center p-6")}>
-              <ErrorState className="flex-1" onRetry={handleRetry} />
-            </PmPanel>
+            <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
           ) : displayed.length === 0 ? (
-            <PmPanel className={cn(PM_FILL_PANEL, "p-6")}>
-              <EmptyState
+            <EmptyState
+                className={PM_FILL_PANEL}
                 illustrationPreset="projects"
                 title={isFiltered ? "No matching portfolios" : "No portfolios yet"}
                 description={
@@ -324,7 +320,6 @@ export function PortfoliosPage() {
                       : undefined
                 }
               />
-            </PmPanel>
           ) : (
             <PmPanel className={PM_FILL_PANEL}>
               <DataTable

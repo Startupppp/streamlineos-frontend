@@ -34,7 +34,7 @@ import {
   PM_FILL_PANEL,
   PM_TOOLBAR,
 } from "@/features/projects/shared/pm-chrome";
-import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 import { BugSheet } from "./bug-sheet";
 
 const BUG_STATUSES: readonly BugStatus[] = [
@@ -181,10 +181,11 @@ export function BugsPage({ projectId }: BugsPageProps) {
     {
       key: "title",
       header: "Title",
+      className: TABLE_TITLE_CELL,
       cell: (row) => (
-        <div className="flex min-w-0 items-center gap-1.5">
+        <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
           <span
-            className={cn(TEXT_ONE_LINE, "block max-w-[min(100%,24rem)] text-[11px] font-medium")}
+            className={cn("text-[11px] font-medium", TEXT_ONE_LINE)}
             title={row.title}
           >
             {row.title}
@@ -234,7 +235,7 @@ export function BugsPage({ projectId }: BugsPageProps) {
         const member = members.find((m) => m.id === row.assigneeId);
         const label = member ? getUserDisplayName(member) : "—";
         return (
-          <span className={cn(TEXT_ONE_LINE, "block max-w-[7rem] text-[11px] text-muted-foreground")} title={label}>
+          <span className={cn("max-w-[7rem] text-[11px] text-muted-foreground", TEXT_ONE_LINE)} title={label}>
             {label}
           </span>
         );
@@ -309,10 +310,10 @@ export function BugsPage({ projectId }: BugsPageProps) {
           {isLoading ? (
             <DataTableSkeleton rows={8} columns={6} className="flex-1" />
           ) : isError ? (
-            <ErrorState onRetry={handleRetry} />
+            <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
           ) : (bugs ?? []).length === 0 ? (
-            <PmPanel className={cn(PM_FILL_PANEL, "p-6")}>
-              <EmptyState
+            <EmptyState
+                className={PM_FILL_PANEL}
                 illustrationPreset="ticket"
                 title="No bugs found"
                 description={
@@ -322,7 +323,6 @@ export function BugsPage({ projectId }: BugsPageProps) {
                 }
                 action={canCreate ? { label: "Report Bug", onClick: handleNewBug } : undefined}
               />
-            </PmPanel>
           ) : (
             <PmPanel className={PM_FILL_PANEL} solid>
               <DataTable<Bug>

@@ -1,13 +1,8 @@
-export const TEXT_ONE_LINE =
-  "min-w-0 max-w-full truncate overflow-hidden text-ellipsis whitespace-nowrap";
-
-export const TEXT_TWO_LINES =
-  "min-w-0 max-w-full line-clamp-2 break-words [overflow-wrap:anywhere]";
-
-export const TEXT_THREE_LINES =
-  "min-w-0 max-w-full line-clamp-3 break-words [overflow-wrap:anywhere]";
-
-export const TEXT_BODY =
-  "min-w-0 max-w-full break-words [overflow-wrap:anywhere] [word-break:break-word]";
-
-export const TEXT_FLEX_CHILD = "min-w-0 max-w-full";
+export {
+  TEXT_ONE_LINE,
+  TEXT_TWO_LINES,
+  TEXT_THREE_LINES,
+  TEXT_BODY,
+  TEXT_FLEX_CHILD,
+  TABLE_TITLE_CELL,
+} from "@/lib/text-overflow";

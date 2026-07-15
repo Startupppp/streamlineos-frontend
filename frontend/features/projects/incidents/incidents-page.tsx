@@ -33,7 +33,7 @@ import {
   PM_FILL_PANEL,
   PM_TOOLBAR,
 } from "@/features/projects/shared/pm-chrome";
-import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -120,6 +120,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
     {
       key: "title",
       header: "Title",
+      className: TABLE_TITLE_CELL,
       cell: (row) => (
         <span className={cn("text-[11px] font-medium", TEXT_ONE_LINE)} title={row.title}>
           {row.title}
@@ -265,10 +266,10 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
           {isLoading ? (
             <DataTableSkeleton rows={12} columns={7} className="flex-1" />
           ) : isError ? (
-            <ErrorState onRetry={refetch} />
+            <ErrorState className={PM_FILL_PANEL} onRetry={refetch} />
           ) : filtered.length === 0 ? (
-            <PmPanel className={cn(PM_FILL_PANEL, "p-6")}>
-              <EmptyState
+            <EmptyState
+                className={PM_FILL_PANEL}
                 illustrationPreset="ticket"
                 title="No incidents found"
                 description={
@@ -278,7 +279,6 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
                 }
                 action={canManage ? { label: "New Incident", onClick: handleNew } : undefined}
               />
-            </PmPanel>
           ) : (
             <PmPanel className={PM_FILL_PANEL} solid>
               <DataTable<Incident>

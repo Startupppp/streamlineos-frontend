@@ -139,6 +139,7 @@ function useDuplicateTitleWarning(title: string, projectId: number | null) {
 interface CreateTicketDialogProps {
   projectId?: number;
   defaultStatus?: string;
+  defaultCycleId?: number | null;
   variant?: "default" | "fab";
   hideTrigger?: boolean;
   externalOpen?: boolean;
@@ -148,6 +149,7 @@ interface CreateTicketDialogProps {
 export function CreateTicketDialog({
   projectId: lockedProjectId,
   defaultStatus,
+  defaultCycleId,
   variant = "default",
   hideTrigger = false,
   externalOpen,
@@ -187,6 +189,7 @@ export function CreateTicketDialog({
   } = useCreateTicketForm({
     projectId: selectedProjectId,
     defaultStatus,
+    defaultCycleId,
     onClose: handleExternalClose,
   });
 

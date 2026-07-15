@@ -166,12 +166,11 @@ export default function CycleDetailPage({ params }: PageProps) {
       }
     >
       {cycleTickets.length === 0 ? (
-        <div className="flex h-full items-center justify-center">
+        <div className="flex min-h-0 flex-1 flex-col px-4 sm:px-6">
           <EmptyState
             illustrationPreset="ticket"
             title="No tickets in this cycle"
             description="Add tickets to this cycle to track progress here."
-            className="min-h-[40vh]"
           />
         </div>
       ) : (

@@ -31,9 +31,12 @@ import { isPast, isToday } from "date-fns";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import {
   PmPageShell,
+  PmPanel,
   PmSection,
   PmStaggerList,
+  PM_FILL_PANEL,
 } from "@/features/projects/shared/pm-chrome";
+import { cn } from "@/lib/utils";
 
 function NewMilestoneButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
@@ -116,8 +119,7 @@ export default function MilestonesPage({ params }: { params: Promise<{ projectId
       actions={<NewMilestoneButton onClick={handleOpenCreate} />}
     >
       <PmPageShell>
-        <div className="space-y-4">
-          <PmSection index={0}>
+          <PmSection index={0} className="shrink-0">
             <StatCardGrid cols={4}>
               <StatCard label="Total" value={total} icon={Diamond} tone="default" index={0} />
               <StatCard
@@ -132,7 +134,7 @@ export default function MilestonesPage({ params }: { params: Promise<{ projectId
             </StatCardGrid>
           </PmSection>
 
-          <PmSection index={1}>
+          <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
             {milestones && milestones.length > 0 ? (
               <PmStaggerList className="space-y-2.5" aria-label="Project milestones">
                 {milestones.map((m) => (
@@ -146,15 +148,14 @@ export default function MilestonesPage({ params }: { params: Promise<{ projectId
               </PmStaggerList>
             ) : (
               <EmptyState
-                illustrationPreset="projects"
-                title="No milestones yet"
-                description="Add milestones to track key checkpoints and target dates."
-                action={{ label: "Add Milestone", onClick: handleOpenCreate }}
-                className="min-h-[40vh]"
-              />
+                  className={PM_FILL_PANEL}
+                  illustrationPreset="projects"
+                  title="No milestones yet"
+                  description="Add milestones to track key checkpoints and target dates."
+                  action={{ label: "Add Milestone", onClick: handleOpenCreate }}
+                />
             )}
           </PmSection>
-        </div>
 
         {createOpen ? (
           <MilestoneUpsertSheet projectId={projectId} onClose={handleCloseCreate} />

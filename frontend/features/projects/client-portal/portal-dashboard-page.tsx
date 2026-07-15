@@ -135,9 +135,7 @@ export function PortalDashboardPage({ projectId }: PortalDashboardPageProps) {
     return (
       <PageWrapper title="Project Dashboard" eyebrow="Client Portal" backHref="/projects/portal">
         <PmPageShell withGlow={false}>
-          <PmPanel className="flex min-h-[14rem] items-center justify-center p-6">
-            <ErrorState onRetry={handleRetry} />
-          </PmPanel>
+          <ErrorState className="min-h-[14rem]" onRetry={handleRetry} />
         </PmPageShell>
       </PageWrapper>
     );

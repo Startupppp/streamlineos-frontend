@@ -74,10 +74,7 @@ export const InlineProjectTitle = memo(function InlineProjectTitle({
         <PopoverTrigger asChild>
           <button
             type="button"
-            className={cn(
-              TEXT_ONE_LINE,
-              "block w-full text-left text-[13px] font-semibold text-foreground transition-colors hover:text-primary",
-            )}
+            className={cn("w-full text-left text-[13px] font-semibold text-foreground transition-colors hover:text-primary", TEXT_ONE_LINE)}
             aria-label="Edit project name"
             title={currentName}
           >

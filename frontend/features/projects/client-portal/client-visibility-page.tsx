@@ -145,9 +145,7 @@ export function ClientVisibilityPage({ projectId }: ClientVisibilityPageProps) {
               ))}
             </div>
           ) : isError ? (
-            <PmPanel className="flex min-h-[14rem] items-center justify-center p-6">
-              <ErrorState onRetry={handleRetry} />
-            </PmPanel>
+            <ErrorState className="min-h-[14rem]" onRetry={handleRetry} />
           ) : (
             <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-3">
               <div className={PM_TOOLBAR}>

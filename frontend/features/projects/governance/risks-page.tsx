@@ -36,7 +36,7 @@ import {
   PM_FILL_PANEL,
   PM_TOOLBAR,
 } from "@/features/projects/shared/pm-chrome";
-import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 import { cn } from "@/lib/utils";
 
 const LEVEL_LABEL: Record<"low" | "medium" | "high", string> = { low: "Low", medium: "Medium", high: "High" };
@@ -199,9 +199,10 @@ export function RisksPage({ projectId }: RisksPageProps) {
     },
     {
       key: "title", header: "Title", sortable: true, sortValue: (r) => r.title,
+      className: TABLE_TITLE_CELL,
       cell: (row) => (
         <span
-          className={cn("block max-w-[min(100%,20rem)] font-medium text-foreground", TEXT_ONE_LINE)}
+          className={cn("font-medium text-foreground", TEXT_ONE_LINE)}
           title={row.title}
         >
           {row.title}
@@ -311,10 +312,10 @@ export function RisksPage({ projectId }: RisksPageProps) {
           {isLoading ? (
             <DataTableSkeleton rows={5} columns={8} className="flex-1" />
           ) : isError ? (
-            <ErrorState className="flex-1" onRetry={handleRetry} />
+            <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
           ) : displayed.length === 0 ? (
-            <PmPanel className={cn(PM_FILL_PANEL, "p-6")}>
-              <EmptyState
+            <EmptyState
+                className={PM_FILL_PANEL}
                 illustrationPreset="alert"
                 title={isFiltered ? "No matching risks" : "No risks logged"}
                 description={
@@ -330,7 +331,6 @@ export function RisksPage({ projectId }: RisksPageProps) {
                       : undefined
                 }
               />
-            </PmPanel>
           ) : (
             <PmPanel className={PM_FILL_PANEL} solid>
               <DataTable

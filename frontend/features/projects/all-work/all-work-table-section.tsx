@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { PM_PANEL_SOLID } from "@/features/projects/shared/pm-chrome";
-import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 import { cn } from "@/lib/utils";
 import { toTableTicket, type TableRow } from "./all-work-ticket-utils";
 import type { AllWorkTicket } from "@/types/projects";
@@ -20,15 +20,13 @@ function buildTableColumns(onTicketClick: (id: number) => void): DataTableColumn
     {
       key: "title",
       header: "Title",
+      className: TABLE_TITLE_CELL,
       headerClassName: "text-[10px] uppercase tracking-wider font-bold",
       cell: (row) => (
         <button
           type="button"
           onClick={() => onTicketClick(row.id)}
-          className={cn(
-            TEXT_ONE_LINE,
-            "block max-w-[min(100%,28rem)] text-left text-[13px] font-medium hover:underline underline-offset-2",
-          )}
+          className={cn("text-left text-[13px] font-medium hover:underline underline-offset-2", TEXT_ONE_LINE)}
           title={row.title}
         >
           {row.title}
@@ -63,7 +61,7 @@ function buildTableColumns(onTicketClick: (id: number) => void): DataTableColumn
           .join(" ");
         const name = row.assignee.name ?? (fullName || (row.assignee.email ?? "—"));
         return (
-          <span className={cn(TEXT_ONE_LINE, "block max-w-[8rem] text-[11px]")} title={name}>
+          <span className={cn("max-w-[8rem] text-[11px]", TEXT_ONE_LINE)} title={name}>
             {name}
           </span>
         );

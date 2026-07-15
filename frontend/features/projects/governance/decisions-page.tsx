@@ -29,9 +29,10 @@ import {
   PmPageShell,
   PmPanel,
   PmSection,
+  PM_FILL_PANEL,
   PM_TOOLBAR,
 } from "@/features/projects/shared/pm-chrome";
-import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 import { cn } from "@/lib/utils";
 
 const DEC_STATUS_LABEL: Record<DecisionStatus, string> = {
@@ -175,9 +176,10 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
     },
     {
       key: "title", header: "Title", sortable: true, sortValue: (d) => d.title,
+      className: TABLE_TITLE_CELL,
       cell: (row) => (
         <span
-          className={cn("block max-w-[min(100%,22rem)] font-medium text-foreground", TEXT_ONE_LINE)}
+          className={cn("font-medium text-foreground", TEXT_ONE_LINE)}
           title={row.title}
         >
           {row.title}
@@ -263,27 +265,27 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
           {isLoading ? (
             <DataTableSkeleton rows={5} columns={7} className="flex-1" />
           ) : isError ? (
-            <ErrorState className="flex-1" onRetry={handleRetry} />
+            <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
           ) : displayed.length === 0 ? (
             <EmptyState
-              illustrationPreset="documents"
-              title={isFiltered ? "No matching decisions" : "No decisions recorded"}
-              description={
-                isFiltered
-                  ? "Try adjusting your filters."
-                  : "Record key project decisions to maintain a clear audit trail."
-              }
-              action={
-                isFiltered
-                  ? { label: "Clear filters", onClick: handleClearFilters }
-                  : canManage
-                    ? { label: "Log Decision", onClick: handleNewDecision }
-                    : undefined
-              }
-              className="min-h-[40vh]"
-            />
+                className={PM_FILL_PANEL}
+                illustrationPreset="documents"
+                title={isFiltered ? "No matching decisions" : "No decisions recorded"}
+                description={
+                  isFiltered
+                    ? "Try adjusting your filters."
+                    : "Record key project decisions to maintain a clear audit trail."
+                }
+                action={
+                  isFiltered
+                    ? { label: "Clear filters", onClick: handleClearFilters }
+                    : canManage
+                      ? { label: "Log Decision", onClick: handleNewDecision }
+                      : undefined
+                }
+              />
           ) : (
-            <PmPanel className="flex min-h-0 flex-1 flex-col" solid>
+            <PmPanel className={PM_FILL_PANEL} solid>
               <DataTable
                 data={displayed}
                 columns={columns}

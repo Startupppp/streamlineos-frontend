@@ -113,9 +113,7 @@ export function RoadmapTab({ search, createOpen, onCreateOpenChange }: RoadmapTa
 
   if (isError) {
     return (
-      <PmPanel className={cn(PM_FILL_PANEL, "items-center justify-center p-6")}>
-        <ErrorState onRetry={handleRetry} />
-      </PmPanel>
+      <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
     );
   }
 
@@ -124,14 +122,13 @@ export function RoadmapTab({ search, createOpen, onCreateOpenChange }: RoadmapTa
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
       {total === 0 ? (
-        <PmPanel className={cn(PM_FILL_PANEL, "p-6")}>
-          <EmptyState
-            illustration={<EmptyProjectsIllustration />}
-            title="No roadmap items yet"
-            description="Plan what's coming and share it publicly with your users."
-            action={{ label: "Add roadmap item", onClick: handleOpenSheet }}
-          />
-        </PmPanel>
+        <EmptyState
+          className={PM_FILL_PANEL}
+          illustration={<EmptyProjectsIllustration />}
+          title="No roadmap items yet"
+          description="Plan what's coming and share it publicly with your users."
+          action={{ label: "Add roadmap item", onClick: handleOpenSheet }}
+        />
       ) : (
         <div className="grid min-h-0 flex-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
           {ROADMAP_COLUMNS.map((col) => (

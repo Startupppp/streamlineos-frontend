@@ -24,9 +24,12 @@ import { SprintPlanningPanel, type PlanningTicket } from "@/features/projects/sp
 import { ModuleDisabledState } from "@/features/projects/shared/module-disabled-state";
 import {
   PmPageShell,
+  PmPanel,
   PmSection,
   PmStaggerList,
+  PM_FILL_PANEL,
 } from "@/features/projects/shared/pm-chrome";
+import { cn } from "@/lib/utils";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -305,11 +308,11 @@ export default function SprintsPage({ params }: PageProps) {
 
         {sprints?.length === 0 ? (
           <EmptyState
-            illustration={<EmptySprintIllustration />}
-            title="No sprints yet"
-            description="Create your first sprint to start organizing your work."
-            className="min-h-[40vh]"
-          />
+              className={PM_FILL_PANEL}
+              illustration={<EmptySprintIllustration />}
+              title="No sprints yet"
+              description="Create your first sprint to start organizing your work."
+            />
         ) : null}
 
         <CompleteSprintSheet

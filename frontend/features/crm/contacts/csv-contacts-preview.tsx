@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
+import { cn } from "@/lib/utils";
 
 const VALID_SOURCES = [
   "referral",
@@ -70,7 +72,12 @@ const contactColumns: DataTableColumn<ParsedContactWithIdx>[] = [
   {
     key: "title",
     header: "Title",
-    cell: (row) => <span className="text-xs text-muted-foreground">{row.title ?? "—"}</span>,
+    className: TABLE_TITLE_CELL,
+    cell: (row) => (
+      <span className={cn("text-xs text-muted-foreground", TEXT_ONE_LINE)} title={row.title ?? undefined}>
+        {row.title ?? "—"}
+      </span>
+    ),
   },
   {
     key: "source",

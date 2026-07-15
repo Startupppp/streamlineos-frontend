@@ -28,7 +28,7 @@ import {
   PM_FILL_PANEL,
   PM_PANEL,
 } from "@/features/projects/shared/pm-chrome";
-import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 
 interface DecideTarget {
   approvalId: number;
@@ -97,7 +97,7 @@ export function ApprovalsInboxPage() {
       cell: (row) => (
         <Link
           href={`/projects/${row.projectId}`}
-          className={cn(TEXT_ONE_LINE, "block max-w-[6rem] text-[11px] font-medium text-primary hover:underline")}
+          className={cn("max-w-[6rem] text-[11px] font-medium text-primary hover:underline", TEXT_ONE_LINE)}
           title={row.projectKey}
           onClick={(e) => e.stopPropagation()}
         >
@@ -117,9 +117,10 @@ export function ApprovalsInboxPage() {
     {
       key: "title",
       header: "Title",
+      className: TABLE_TITLE_CELL,
       cell: (row) => (
         <span
-          className={cn(TEXT_ONE_LINE, "block max-w-[min(100%,20rem)] font-medium text-foreground")}
+          className={cn("font-medium text-foreground", TEXT_ONE_LINE)}
           title={row.title}
         >
           {row.title}
@@ -134,7 +135,7 @@ export function ApprovalsInboxPage() {
       cell: (row) => {
         const name = memberName(row.requestedById);
         return (
-          <span className={cn(TEXT_ONE_LINE, "block max-w-[8rem] text-muted-foreground")} title={name}>
+          <span className={cn("max-w-[8rem] text-muted-foreground", TEXT_ONE_LINE)} title={name}>
             {name}
           </span>
         );
@@ -230,16 +231,14 @@ export function ApprovalsInboxPage() {
 
         <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
           {items.length === 0 ? (
-            <PmPanel className={cn(PM_FILL_PANEL, "p-6")}>
-              <EmptyState
+            <EmptyState
+                className={PM_FILL_PANEL}
                 illustrationPreset="approval"
                 title="No approvals waiting"
                 description="You have no pending approvals across your projects."
-                className="min-h-[28vh]"
               />
-            </PmPanel>
           ) : (
-            <PmPanel className="min-h-0 flex-1">
+            <PmPanel className={PM_FILL_PANEL}>
               <DataTable
                 data={items}
                 columns={columns}

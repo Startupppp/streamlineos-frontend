@@ -32,6 +32,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
 
 import {
   useDocumentTemplates,
@@ -173,14 +174,17 @@ function buildTemplateColumns(
     {
       key: "title",
       header: "Title",
+      className: TABLE_TITLE_CELL,
       headerClassName: "w-[220px]",
       cell: (template) => {
         const cfg = getTypeConfig(template.type);
         const TypeIcon = cfg.icon;
         return (
-          <div className="flex items-center gap-2 min-w-0">
+          <div className="flex min-w-0 items-center gap-2 overflow-hidden">
             <TypeIcon className="h-4 w-4 text-muted-foreground shrink-0" />
-            <span className="font-medium text-sm truncate">{template.title}</span>
+            <span className={cn(TEXT_ONE_LINE, "font-medium text-sm")} title={template.title}>
+              {template.title}
+            </span>
             {template.isDefault && (
               <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-700 shrink-0">
                 Default

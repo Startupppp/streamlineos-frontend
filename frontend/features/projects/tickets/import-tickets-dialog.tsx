@@ -15,6 +15,8 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useImportTickets, type ImportTicketRow } from "@/hooks/api/projects/import-export";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { cn } from "@/lib/utils";
 
 const CSV_COLUMNS = ["title", "type", "status", "priority", "points", "assigneeEmail", "dueDate"] as const;
 const TICKET_TYPES = ["TASK", "BUG", "STORY", "EPIC"] as const;
@@ -29,8 +31,12 @@ const previewColumns: DataTableColumn<PreviewRow>[] = [
   {
     key: "title",
     header: "Title",
-    className: "max-w-[140px]",
-    cell: (row) => <span className="truncate max-w-[140px] block">{row.title}</span>,
+    className: TABLE_TITLE_CELL,
+    cell: (row) => (
+      <span className={TEXT_ONE_LINE} title={row.title}>
+        {row.title}
+      </span>
+    ),
   },
   {
     key: "type",
@@ -45,8 +51,12 @@ const previewColumns: DataTableColumn<PreviewRow>[] = [
   {
     key: "assigneeEmail",
     header: "Assignee Email",
-    className: "max-w-[120px]",
-    cell: (row) => <span className="truncate max-w-[120px] block">{row.assigneeEmail ?? "—"}</span>,
+    className: "min-w-0 max-w-[8rem] overflow-hidden whitespace-normal",
+    cell: (row) => (
+      <span className={TEXT_ONE_LINE} title={row.assigneeEmail ?? undefined}>
+        {row.assigneeEmail ?? "—"}
+      </span>
+    ),
   },
 ];
 

@@ -21,6 +21,7 @@ import {
   PmPanel,
   PmStaggerList,
   PmSection,
+  PM_FILL_PANEL,
   PM_TOOLBAR,
   PM_PANEL,
 } from "@/features/projects/shared/pm-chrome";
@@ -223,8 +224,8 @@ export default function ProjectsPage() {
               <ProjectsEmptyState onCreate={handleOpenCreate} />
             </PmPanel>
           ) : projects.length === 0 ? (
-            <PmPanel className="flex flex-1 items-center justify-center">
-              <EmptyState
+            <EmptyState
+                className={PM_FILL_PANEL}
                 illustration={<EmptySearchIllustration className="h-28 w-28" />}
                 title="No projects match your filters"
                 description="Try adjusting the search or status filter."
@@ -233,7 +234,6 @@ export default function ProjectsPage() {
                   onClick: handleClearFilters,
                 }}
               />
-            </PmPanel>
           ) : viewMode === "grid" ? (
             <div role="list" aria-label="Projects grid">
               <PmStaggerList className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">

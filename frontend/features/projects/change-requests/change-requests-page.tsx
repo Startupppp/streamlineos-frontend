@@ -31,7 +31,7 @@ import {
   PM_FILL_PANEL,
   PM_TOOLBAR,
 } from "@/features/projects/shared/pm-chrome";
-import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -140,9 +140,10 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
     {
       key: "title",
       header: "Title",
+      className: TABLE_TITLE_CELL,
       cell: (row) => (
         <span
-          className={cn("block max-w-[min(100%,24rem)] text-[11px] font-medium", TEXT_ONE_LINE)}
+          className={cn("text-[11px] font-medium", TEXT_ONE_LINE)}
           title={row.title}
         >
           {row.title}
@@ -251,10 +252,10 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
           {isLoading ? (
             <DataTableSkeleton rows={12} columns={7} className="flex-1" />
           ) : isError ? (
-            <ErrorState onRetry={() => void refetch()} />
+            <ErrorState className={PM_FILL_PANEL} onRetry={() => void refetch()} />
           ) : filtered.length === 0 ? (
-            <PmPanel className={cn(PM_FILL_PANEL, "p-6")}>
-              <EmptyState
+            <EmptyState
+                className={PM_FILL_PANEL}
                 illustrationPreset="ticket"
                 title="No change requests"
                 description={
@@ -264,7 +265,6 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
                 }
                 action={canCreate ? { label: "New Change Request", onClick: handleNew } : undefined}
               />
-            </PmPanel>
           ) : (
             <PmPanel className={PM_FILL_PANEL} solid>
               <DataTable<ChangeRequest>

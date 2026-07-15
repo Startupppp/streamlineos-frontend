@@ -52,6 +52,33 @@ export interface ProjectNavGroup {
   items: ProjectNavItem[];
 }
 
+export const PINNED_PROJECT_NAV_IDS = new Set<string>(["issues"]);
+
+export function isProjectNavPinned(id: string): boolean {
+  return PINNED_PROJECT_NAV_IDS.has(id);
+}
+
+export function filterVisibleNavItems<T extends { id: string }>(
+  items: T[],
+  hiddenIds: ReadonlySet<string>,
+): T[] {
+  return items.filter(
+    (item) => isProjectNavPinned(item.id) || !hiddenIds.has(item.id),
+  );
+}
+
+export function filterVisibleNavGroups(
+  groups: ProjectNavGroup[],
+  hiddenIds: ReadonlySet<string>,
+): ProjectNavGroup[] {
+  return groups
+    .map((group) => ({
+      ...group,
+      items: filterVisibleNavItems(group.items, hiddenIds),
+    }))
+    .filter((group) => group.items.length > 0);
+}
+
 export interface ProjectNavPermissions {
   canQA: boolean;
   canBugs: boolean;

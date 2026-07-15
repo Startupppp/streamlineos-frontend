@@ -26,9 +26,11 @@ interface ViewSwitcherProps {
   activeView: ViewType;
   onViewChange: (view: ViewType) => void;
   className?: string;
+  allowedViews?: readonly ViewType[];
+  layoutId?: string;
 }
 
-const views = [
+const ALL_VIEWS = [
   { value: "board" as const, icon: LayoutGrid, label: "Board" },
   { value: "list" as const, icon: List, label: "List" },
   { value: "table" as const, icon: Table2, label: "Table" },
@@ -41,8 +43,13 @@ export const ViewSwitcher = memo(function ViewSwitcher({
   activeView,
   onViewChange,
   className,
+  allowedViews,
+  layoutId = "pm-view-pill",
 }: ViewSwitcherProps) {
   const shouldReduceMotion = useReducedMotion();
+  const views = allowedViews
+    ? ALL_VIEWS.filter((v) => allowedViews.includes(v.value))
+    : ALL_VIEWS;
 
   const handleSelectChange = useCallback(
     (value: string) => {
@@ -54,10 +61,11 @@ export const ViewSwitcher = memo(function ViewSwitcher({
         value === "gantt" ||
         value === "workload"
       ) {
+        if (allowedViews && !allowedViews.includes(value)) return;
         onViewChange(value);
       }
     },
-    [onViewChange],
+    [allowedViews, onViewChange],
   );
 
   return (
@@ -70,7 +78,9 @@ export const ViewSwitcher = memo(function ViewSwitcher({
         {views.map((v) => {
           const active = activeView === v.value;
           const Icon = v.icon;
-          const handleClick = () => onViewChange(v.value);
+          function handleClick() {
+            onViewChange(v.value);
+          }
           return (
             <button
               key={v.value}
@@ -88,7 +98,7 @@ export const ViewSwitcher = memo(function ViewSwitcher({
             >
               {active ? (
                 <motion.span
-                  layoutId="pm-view-pill"
+                  layoutId={layoutId}
                   className="absolute inset-0 -z-10 rounded-md border border-primary/20 bg-card shadow-[0_0_12px_-4px] shadow-primary/30"
                   transition={shouldReduceMotion ? { duration: 0 } : pmSpring}
                 />

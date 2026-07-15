@@ -22,7 +22,7 @@ import { StatusBadge } from "@/features/projects/shared/status-badge";
 import { formatTicketKey } from "@/features/projects/shared/format-ticket-key";
 import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
 import { PmPageShell, PM_TOOLBAR, PmPanel } from "@/features/projects/shared/pm-chrome";
-import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { format } from "date-fns";
 
@@ -158,10 +158,10 @@ export default function BacklogPage({ params }: PageProps) {
       {
         key: "title",
         header: "Title",
-        className: "max-w-md min-w-0",
+        className: TABLE_TITLE_CELL,
         cell: (ticket) => (
           <span
-            className={cn(TEXT_ONE_LINE, "text-[11px] font-medium")}
+            className={cn("text-[11px] font-medium", TEXT_ONE_LINE)}
             title={ticket.title ?? undefined}
           >
             {ticket.title}

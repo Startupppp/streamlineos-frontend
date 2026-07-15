@@ -41,7 +41,7 @@ import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
-import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 import { TestCaseSheet } from "./test-case-sheet";
 
 const PRIORITY_STYLES: Record<TestCasePriority, string> = {
@@ -171,8 +171,9 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
     {
       key: "title",
       header: "Title",
+      className: TABLE_TITLE_CELL,
       cell: (row) => (
-        <span className={cn(TEXT_ONE_LINE, "block max-w-[min(100%,24rem)] text-[11px] font-medium")} title={row.title}>
+        <span className={cn("text-[11px] font-medium", TEXT_ONE_LINE)} title={row.title}>
           {row.title}
         </span>
       ),
@@ -204,7 +205,7 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
       key: "component",
       header: "Component",
       cell: (row) => (
-        <span className={cn(TEXT_ONE_LINE, "block max-w-[8rem] text-[11px] text-muted-foreground")}>
+        <span className={cn("max-w-[8rem] text-[11px] text-muted-foreground", TEXT_ONE_LINE)}>
           {row.component ?? "—"}
         </span>
       ),

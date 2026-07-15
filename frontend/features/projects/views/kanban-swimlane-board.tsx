@@ -11,6 +11,10 @@ import { cn } from "@/lib/utils";
 import { KanbanColumnHeader } from "./kanban-column-header";
 import { KanbanColumnTickets } from "./kanban-column-tickets";
 import { SwimlaneRowHeader, getTicketRowKey } from "./kanban-swimlane";
+import {
+  resolveSwimlaneCycleId,
+  SwimlaneCycleCreateButton,
+} from "./kanban-swimlane-create";
 import type { KanbanTicket, KanbanColumn, DisplayOptions } from "../shared/types";
 
 function encodeRowKey(key: string): string {
@@ -68,7 +72,7 @@ export function KanbanSwimlaneBoard({
       <Accordion
         type="multiple"
         defaultValue={visibleSwimlaneRows}
-        className="flex flex-col gap-1.5 h-full min-w-0 overflow-auto pb-1 px-1"
+        className="flex flex-col gap-1.5 h-full min-w-0 overflow-y-auto scrollbar-hide pb-1 px-1"
       >
         {visibleSwimlaneRows.map((rowKey) => {
           const rowTickets = displayTickets.filter(
@@ -77,18 +81,27 @@ export function KanbanSwimlaneBoard({
 
           return (
             <AccordionItem key={rowKey} value={rowKey} className="min-w-0 border-b-0">
-              <AccordionTrigger className="flex items-center gap-2 px-1 py-1 hover:no-underline font-normal [&>svg]:ml-auto">
-                <div className="flex items-center gap-2">
-                  <SwimlaneRowHeader
-                    rowKey={rowKey}
-                    rowBy={rowBy}
-                    tickets={rowTickets}
-                    count={rowTickets.length}
+              <div className="flex items-center gap-1 px-0">
+                <AccordionTrigger className="flex flex-1 items-center gap-2 px-1 py-1 hover:no-underline font-normal [&>svg]:ml-auto">
+                  <div className="flex items-center gap-2">
+                    <SwimlaneRowHeader
+                      rowKey={rowKey}
+                      rowBy={rowBy}
+                      tickets={rowTickets}
+                      count={rowTickets.length}
+                    />
+                  </div>
+                </AccordionTrigger>
+                {rowBy === "cycle" ? (
+                  <SwimlaneCycleCreateButton
+                    projectId={projectId}
+                    cycleId={resolveSwimlaneCycleId(rowKey, rowTickets)}
+                    cycleLabel={rowKey}
                   />
-                </div>
-              </AccordionTrigger>
+                ) : null}
+              </div>
               <AccordionContent className="pb-0">
-                <div className="kanban-scroll-container flex h-[min(480px,calc(100dvh-12rem))] max-h-[min(480px,calc(100dvh-12rem))] items-stretch gap-3 overflow-x-auto overflow-y-hidden pb-2 pt-0.5">
+                <div className="kanban-scroll-container scrollbar-hide flex h-[min(480px,calc(100dvh-12rem))] max-h-[min(480px,calc(100dvh-12rem))] items-stretch gap-3 overflow-x-auto overflow-y-hidden pb-2 pt-0.5">
                   {visibleColumns.map((col) => {
                     const droppableId = `${encodeRowKey(rowKey)}||${col.id}`;
                     const columnTickets = rowTickets

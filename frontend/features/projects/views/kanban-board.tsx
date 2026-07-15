@@ -442,8 +442,8 @@ export function KanbanBoard({
             }
             transition={pmSnappy}
             className={cn(
-              stretchColumn ? "min-h-0 flex-1" : "",
-              "overflow-y-auto scrollbar-thin px-2 pb-2 space-y-1.5 rounded-b-lg",
+              stretchColumn ? "flex-1" : "",
+              "overflow-y-auto scrollbar-hide px-2 pb-2 space-y-1.5 rounded-b-lg",
               minHeight,
               snapshot.isDraggingOver && "ring-1 ring-inset ring-primary/15",
             )}
@@ -527,7 +527,7 @@ export function KanbanBoard({
         <Accordion
           type="multiple"
           defaultValue={visibleSwimlaneRows}
-          className="flex flex-col gap-1.5 h-full min-w-0 overflow-auto pb-1 px-1"
+          className="flex flex-col gap-1.5 h-full min-w-0 overflow-y-auto scrollbar-hide pb-1 px-1"
         >
           {visibleSwimlaneRows.map((rowKey) => {
             const rowTickets = displayTickets.filter(
@@ -547,7 +547,7 @@ export function KanbanBoard({
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="pb-0">
-                  <div className="kanban-scroll-container flex h-[min(480px,calc(100dvh-12rem))] max-h-[min(480px,calc(100dvh-12rem))] items-stretch gap-3 overflow-x-auto overflow-y-hidden pb-2 pt-0.5">
+                  <div className="kanban-scroll-container scrollbar-hide flex items-start gap-3 overflow-x-auto pb-2 pt-0.5">
                     {visibleColumns.map((col) => {
                       const droppableId = `${encodeRowKey(rowKey)}||${col.id}`;
                       const columnTickets = rowTickets
@@ -560,7 +560,7 @@ export function KanbanBoard({
                         <div
                           key={col.id}
                           className={cn(
-                            "flex h-full min-h-0 w-72 min-w-[280px] shrink-0 flex-col rounded-lg border bg-muted/20",
+                            "w-72 min-w-[280px] shrink-0 rounded-lg border bg-muted/20 flex flex-col",
                             overWip && "border-destructive/60",
                           )}
                         >
@@ -574,7 +574,7 @@ export function KanbanBoard({
                             onRename={handleColumnRename}
                             onColorChange={handleColumnColorChange}
                           />
-                          {renderColumnTickets(col, columnTickets, droppableId, "min-h-[60px]", true)}
+                          {renderColumnTickets(col, columnTickets, droppableId, "min-h-[60px]", false)}
                         </div>
                       );
                     })}
@@ -599,7 +599,7 @@ export function KanbanBoard({
           <div
             ref={columnsProvided.innerRef}
             {...columnsProvided.droppableProps}
-            className="flex h-full min-w-0 items-start gap-3 overflow-x-auto pb-1 px-1"
+            className="kanban-scroll-container scrollbar-hide flex h-full min-w-0 items-start gap-3 overflow-x-auto pb-1 px-1"
           >
             {visibleColumns.map((col, index) => {
               const columnTickets = displayTickets

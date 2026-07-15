@@ -10,7 +10,9 @@ import {
   PmPageShell,
   PmPanel,
   PmSection,
+  PM_FILL_PANEL,
 } from "@/features/projects/shared/pm-chrome";
+import { cn } from "@/lib/utils";
 import { TEXT_BODY, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 import { TransitionsTable } from "./transitions-table";
 import { WipRow } from "./wip-row";
@@ -44,15 +46,15 @@ export function WorkflowPage({ projectId }: WorkflowPageProps) {
             <DataTableSkeleton rows={12} columns={6} className="flex-1" />
           </div>
         ) : isError ? (
-          <ErrorState className="flex-1" onRetry={() => void refetch()} />
+          <ErrorState className={PM_FILL_PANEL} onRetry={() => void refetch()} />
         ) : noStatuses ? (
           <EmptyState
-            illustrationPreset="projects"
-            title="No statuses configured"
-            description="Add custom statuses in project settings before setting up workflow transitions."
-            action={{ label: "Go to Settings", href: `/projects/${projectId}/settings` }}
-            className="flex-1"
-          />
+              className={PM_FILL_PANEL}
+              illustrationPreset="projects"
+              title="No statuses configured"
+              description="Add custom statuses in project settings before setting up workflow transitions."
+              action={{ label: "Go to Settings", href: `/projects/${projectId}/settings` }}
+            />
         ) : (
           <div className="space-y-4">
             <PmSection index={0}>

@@ -12,6 +12,7 @@ import {
   PmPageShell,
   PmPanel,
   PmSection,
+  PM_FILL_PANEL,
 } from "@/features/projects/shared/pm-chrome";
 import { TEXT_BODY, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 import { cn } from "@/lib/utils";
@@ -368,12 +369,12 @@ export function ProjectFeedbucketPage({ projectId }: ProjectFeedbucketPageProps)
           <ErrorState description="Failed to load widget." onRetry={refetchWidgets} />
         ) : !projectWidget ? (
           <EmptyState
-            illustration={<EmptyTicketIllustration className="h-24 w-24" />}
-            title="No feedback widget"
-            description="Create a widget to embed on your product and start collecting feedback for this project."
-            action={{ label: "Create feedback widget", onClick: handleOpenCreate }}
-            className="min-h-[40vh] flex-1 py-16"
-          />
+              className={PM_FILL_PANEL}
+              illustration={<EmptyTicketIllustration className="h-24 w-24" />}
+              title="No feedback widget"
+              description="Create a widget to embed on your product and start collecting feedback for this project."
+              action={{ label: "Create feedback widget", onClick: handleOpenCreate }}
+            />
         ) : (
           <div className="space-y-4">
             <PmSection index={0}>

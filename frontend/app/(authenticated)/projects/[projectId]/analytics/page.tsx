@@ -29,8 +29,10 @@ import {
   PmPageShell,
   PmPanel,
   PmSection,
+  PM_FILL_PANEL,
 } from "@/features/projects/shared/pm-chrome";
 import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { cn } from "@/lib/utils";
 
 export default function AnalyticsPage({
   params,
@@ -166,11 +168,11 @@ export default function AnalyticsPage({
       >
         <PmPageShell>
           <EmptyState
-            illustrationPreset="chart"
-            title="No analytics yet"
-            description="Analytics will appear once your project has tickets."
-            className="min-h-[50vh] flex-1"
-          />
+              className={PM_FILL_PANEL}
+              illustrationPreset="chart"
+              title="No analytics yet"
+              description="Analytics will appear once your project has tickets."
+            />
         </PmPageShell>
       </PageWrapper>
     );

@@ -55,8 +55,10 @@ import {
 import { cn } from "@/lib/utils";
 import {
   PmPageShell,
+  PmPanel,
   PmSection,
   PmStaggerList,
+  PM_FILL_PANEL,
   PM_PANEL,
 } from "@/features/projects/shared/pm-chrome";
 import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
@@ -360,12 +362,12 @@ export default function WebhooksPage({ params }: PageProps) {
         ) : webhooks.length === 0 ? (
           <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
             <EmptyState
-              illustrationPreset="automations"
-              title="No webhooks configured"
-              description="Get notified in real-time when tickets, sprints, or members change."
-              action={{ label: "Create Webhook", onClick: handleShowForm }}
-              className="flex-1"
-            />
+                className={PM_FILL_PANEL}
+                illustrationPreset="automations"
+                title="No webhooks configured"
+                description="Get notified in real-time when tickets, sprints, or members change."
+                action={{ label: "Create Webhook", onClick: handleShowForm }}
+              />
           </PmSection>
         ) : (
           <PmSection index={0} className="flex min-h-0 flex-1 flex-col">

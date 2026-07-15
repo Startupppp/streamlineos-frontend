@@ -8,7 +8,7 @@ import type { DataTableColumn } from "@/components/ui/data-table";
 import type { Approval, ApprovalStatus } from "@/types/projects";
 import { ApprovalStatusBadge, entityTypeLabel } from "./approval-status-badge";
 import { ApprovalActions } from "./approval-actions";
-import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 
 const DECIDABLE = new Set<ApprovalStatus>(["pending", "requested", "escalated", "changes_requested"]);
 
@@ -50,10 +50,10 @@ export function useApprovalColumns({
       {
         key: "title",
         header: "Title",
-        className: "min-w-0 w-[40%] max-w-0 overflow-hidden whitespace-normal",
+        className: TABLE_TITLE_CELL,
         cell: (row) => (
           <span
-            className={cn(TEXT_ONE_LINE, "block font-medium text-foreground")}
+            className={cn("font-medium text-foreground", TEXT_ONE_LINE)}
             title={row.title}
           >
             {row.title}
@@ -69,7 +69,7 @@ export function useApprovalColumns({
           const name = memberName(row.approverId);
           return (
             <span
-              className={cn(TEXT_ONE_LINE, "block max-w-[8rem] text-muted-foreground")}
+              className={cn("max-w-[8rem] text-muted-foreground", TEXT_ONE_LINE)}
               title={name}
             >
               {name}

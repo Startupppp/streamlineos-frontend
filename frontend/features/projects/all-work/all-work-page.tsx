@@ -15,6 +15,7 @@ import {
   PmPageShell,
   PmPanel,
   PmSection,
+  PM_FILL_PANEL,
   PM_TOOLBAR,
 } from "@/features/projects/shared/pm-chrome";
 import {
@@ -181,35 +182,28 @@ export function AllWorkPage() {
               </div>
             </PmPanel>
           ) : isError ? (
-            <div className="flex flex-1 items-center justify-center p-6 sm:p-8">
-              <PmPanel className="flex w-full max-w-lg items-center justify-center p-6">
-                <ErrorState
+            <ErrorState
+                  className={cn(PM_FILL_PANEL, "mx-3 mb-0 mt-2 sm:mx-4")}
                   title="Failed to load work items"
                   description="An error occurred while fetching tickets. Please try again."
                   onRetry={handleRetry}
                 />
-              </PmPanel>
-            </div>
           ) : tickets.length === 0 ? (
-            <div className="flex flex-1 items-center justify-center p-6 sm:p-8">
-              <PmPanel className="flex w-full max-w-lg items-center justify-center p-6">
-                <EmptyState
-                  illustrationPreset="projects"
-                  title={hasActiveFilters ? "No tickets match your filters" : "No tickets yet"}
-                  description={
-                    hasActiveFilters
-                      ? "Try adjusting or clearing your filters."
-                      : "Start by creating a ticket in any project."
-                  }
-                  className="min-h-[14rem]"
-                  action={
-                    hasActiveFilters
-                      ? { label: "Clear filters", onClick: handleClearFilters }
-                      : { label: "All Projects", href: "/projects/all" }
-                  }
-                />
-              </PmPanel>
-            </div>
+            <EmptyState
+                className={cn(PM_FILL_PANEL, "mx-3 mb-0 mt-2 sm:mx-4")}
+                illustrationPreset="projects"
+                title={hasActiveFilters ? "No tickets match your filters" : "No tickets yet"}
+                description={
+                  hasActiveFilters
+                    ? "Try adjusting or clearing your filters."
+                    : "Start by creating a ticket in any project."
+                }
+                action={
+                  hasActiveFilters
+                    ? { label: "Clear filters", onClick: handleClearFilters }
+                    : { label: "All Projects", href: "/projects/all" }
+                }
+              />
           ) : (
             <>
               {tableSelection.size > 0 ? (

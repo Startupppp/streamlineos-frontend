@@ -377,7 +377,6 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
           title="No cycles yet"
           description="Create your first cycle to start planning work in time-boxed iterations."
           action={{ label: "Create First Cycle", onClick: handleOpenCreate }}
-          className="min-h-[40vh]"
         />
       )}
     </PageWrapper>

@@ -8,6 +8,7 @@ import { TicketQuickActions } from "./ticket-quick-actions";
 import { InlineStatus, InlinePriority, InlineAssignee, InlineEstimate, InlineFieldWrapper, stopEvent } from "./card-inline-fields";
 import { InlineType, InlineLabels, InlineCycle, InlineSprint } from "./card-inline-extra-fields";
 import { InlineDueDate } from "./card-inline-date-fields";
+import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 
 interface Ticket {
   id: number;
@@ -64,13 +65,14 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
     {
       key: "title",
       header: "Title",
+      className: TABLE_TITLE_CELL,
       cell: (ticket) => {
         function handleClick() { onTicketClick(ticket.id); }
         return (
           <button
             type="button"
             onClick={handleClick}
-            className="block max-w-[min(100%,28rem)] min-w-0 truncate text-left text-[13px] font-medium [overflow-wrap:anywhere] hover:underline underline-offset-2"
+            className={cn("text-left text-[13px] font-medium hover:underline underline-offset-2", TEXT_ONE_LINE)}
             title={ticket.title}
           >
             {ticket.title}

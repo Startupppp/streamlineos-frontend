@@ -484,11 +484,21 @@ export default function ProjectBoardPage({ params }: PageProps) {
   const handleOpenImport = useCallback(() => setImportOpen(true), []);
 
   const createParamOpen = searchParams.get("create") === "1";
+  const createCycleParam = searchParams.get("cycleId");
+  const createDefaultCycleId =
+    createCycleParam === null
+      ? undefined
+      : createCycleParam === "none" || createCycleParam === ""
+        ? null
+        : Number.isFinite(Number(createCycleParam))
+          ? Number(createCycleParam)
+          : undefined;
   const handleCreateOpenChange = useCallback(
     (open: boolean) => {
       if (open) return;
       const next = new URLSearchParams(searchParams.toString());
       next.delete("create");
+      next.delete("cycleId");
       router.replace(`?${next.toString()}`, { scroll: false });
     },
     [router, searchParams],
@@ -514,6 +524,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
       actions={
         <CreateTicketDialog
           projectId={projectId}
+          defaultCycleId={createDefaultCycleId}
           externalOpen={createParamOpen}
           onExternalOpenChange={handleCreateOpenChange}
         />

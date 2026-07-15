@@ -5,7 +5,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useCan } from "@/hooks/api/access";
 import { useFeature } from "@/lib/billing/use-feature";
-import { PmPageShell, PmSection } from "@/features/projects/shared/pm-chrome";
+import { PmPageShell, PmSection, PM_FILL_PANEL } from "@/features/projects/shared/pm-chrome";
 import { AskCard } from "./ask-card";
 import { AiToolsRail } from "./ai-tools-rail";
 
@@ -24,10 +24,10 @@ export function AiAssistantPage({ projectId }: AiAssistantPageProps) {
       <PageWrapper title="AI Assistant" eyebrow="Project" subtitle={SUBTITLE}>
         <PmPageShell>
           <EmptyState
+            className={PM_FILL_PANEL}
             illustration={<ShieldOff className="h-10 w-10 text-muted-foreground/40" />}
             title="Access restricted"
             description="You need the projects:ai:use permission to use the AI Assistant."
-            className="min-h-[40vh]"
           />
         </PmPageShell>
       </PageWrapper>
@@ -39,11 +39,11 @@ export function AiAssistantPage({ projectId }: AiAssistantPageProps) {
       <PageWrapper title="AI Assistant" eyebrow="Project" subtitle={SUBTITLE}>
         <PmPageShell>
           <EmptyState
+            className={PM_FILL_PANEL}
             illustration={<Sparkles className="h-10 w-10 text-primary/40" />}
             title="Upgrade to unlock AI features"
             description={`AI Project Manager is available on the ${feature.requiredPlan ?? "PROFESSIONAL"} plan and above.`}
             action={{ label: "View plans", href: "/billing" }}
-            className="min-h-[40vh]"
           />
         </PmPageShell>
       </PageWrapper>
@@ -62,7 +62,7 @@ export function AiAssistantPage({ projectId }: AiAssistantPageProps) {
       eyebrow="Project"
       subtitle={SUBTITLE}
       noInternalScroll
-      contentClassName="px-0 pb-0"
+      contentClassName="px-0"
     >
       <PmPageShell className="h-full gap-0" withGlow={false}>
         <div className="relative flex h-full min-h-0 overflow-hidden">

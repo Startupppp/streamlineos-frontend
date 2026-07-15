@@ -23,6 +23,7 @@ import type { Recall } from "@/hooks/api/inventory/quality";
 import { RecallDetailSheet } from "@/features/inventory/components/quality/recall-detail-sheet";
 import { RECALL_STATUS_BADGE, RECALL_STATUS_LABEL } from "@/features/inventory/lib";
 import { cn } from "@/lib/utils";
+import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
 
 const PAGE_LIMIT = 20;
 
@@ -171,7 +172,12 @@ function RecallsPageInner() {
     {
       key: "title",
       header: "Title",
-      cell: (r) => <span className="font-medium">{r.title}</span>,
+      className: TABLE_TITLE_CELL,
+      cell: (r) => (
+        <span className={cn("font-medium", TEXT_ONE_LINE)} title={r.title}>
+          {r.title}
+        </span>
+      ),
       sortable: true,
       sortValue: (r) => r.title,
     },

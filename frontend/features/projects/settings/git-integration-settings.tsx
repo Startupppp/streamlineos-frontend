@@ -222,23 +222,21 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
                 ))}
               </div>
             ) : isError ? (
-              <PmPanel className={cn(PM_FILL_PANEL, "items-center justify-center p-6")}>
-                <ErrorState
+              <ErrorState
+                  className={PM_FILL_PANEL}
                   title="Could not load connections"
                   description="There was a problem loading your Git connections."
                   onRetry={handleRetry}
                 />
-              </PmPanel>
             ) : !connections || connections.length === 0 ? (
               <div className="flex min-h-0 flex-1 flex-col gap-4">
-                <PmPanel className={cn(PM_FILL_PANEL, "p-6")}>
-                  <EmptyState
+                <EmptyState
+                    className={PM_FILL_PANEL}
                     illustration={<EmptyDevicesIllustration />}
                     title="No repositories connected"
                     description="Connect GitHub, GitLab, or Bitbucket to link commits and PRs to your tickets."
                     action={{ label: "Add connection", onClick: handleOpenDialog }}
                   />
-                </PmPanel>
                 <div className="shrink-0">
                   <SetupInstructions />
                 </div>

@@ -1,5 +1,7 @@
 # Pages
 
+> **Table title overflow fix (2026-07-15)**: Root cause — `TableCell` `whitespace-nowrap` + auto `table-layout` + `min-w-max` wrapper let long titles paint into the next column; `TEXT_ONE_LINE` used `truncate`/`nowrap` (no real clamp) and title `td`s used circular `max-w-[min(100%,…)]` without `table-fixed`. Fixed shared `TEXT_ONE_LINE` (`line-clamp-1` + break-all), added `TABLE_TITLE_CELL` (`w-[40%] max-w-0 whitespace-normal`), DataTable `table-fixed` + cell `min-w-0 overflow-hidden`, swept bugs/backlog/QA/approvals/governance and other DataTable title columns.
+
 Ordered money-path first. Check off each page after fixing.
 
 > **Visual QA wave (2026-07-02)**: Screenshot-driven QA via Playwright harness (`frontend/scripts/screenshot-pages.mjs`, 375/768/1280, auth-state reuse, `SCREENSHOT_EMAIL/PASSWORD` env override) across all admin groups — ~50 files fixed from real pixels. Root-cause theme repair: `--accent` blue→slate-100 neutral hover pair (fixes invisible dropdown hover icons app-wide), borders full-opacity, header violet leftovers→ink/blue. New primitives: compact `StatCard`+`StatCardGrid` (~56px rows, one-row mobile scroll), generic `DataTable` (sort/pagination/selection/skeleton), PageWrapper v3 (equal-width mobile actions, mobile filters popover, one-line subtitle clamp, `backHref`). virabha reference recipe codified + applied (filters block SEPARATE from table card; sheet anatomy header/body/footer with fixed header+footer). All bespoke error/empty states → shared `ErrorState`/`EmptyState` (dashed container, outline CTA). Rules codified in `UI-UX-SYSTEM.md`: calculated heights (no magic numbers), big-form→Sheet, equal-width sheet footer buttons, no overlapped spacing, per-module identity accents (nav-only). Demo-account seed + failing-API triage: failures were unseeded-org only, wiring correct.
@@ -284,7 +286,7 @@ Ordered money-path first. Check off each page after fixing.
 - [x] `/projects/[projectId]/pages` — Pages
 - [x] `/projects/[projectId]/views` — Views
 - [x] `/projects/[projectId]/intake` — Intake
-- [x] `/projects/[projectId]/my-tickets` — My tickets
+- [x] `/projects/[projectId]/my-tickets` — My tickets (Board/List/Table via `?view=`; reuses KanbanBoard/ListView/TableView + ViewSwitcher subset; default table)
 - [x] `/projects/[projectId]/tickets/[ticketKey]` — Ticket detail (Jira-like 2-column page: title/description/activity left, status/assignees/labels sidebar right; board/backlog/my-tickets navigate here; sheet widened to 3/4 for quick-view fallback)
 - [x] `/projects/[projectId]/analytics` — Analytics (E2E fix: assignee chart now joins users for real names)
 - [x] `/projects/[projectId]/budget` — Budget

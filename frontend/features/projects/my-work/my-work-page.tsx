@@ -200,22 +200,19 @@ export function MyWorkPage() {
               isLoading ? (
                 <AllWorkListSkeleton />
               ) : isError ? (
-                <PmPanel className="flex min-h-[14rem] items-center justify-center p-6">
-                  <ErrorState
-                    title="Failed to load your work"
-                    description="Could not fetch your assigned tickets. Please try again."
-                    onRetry={handleRetry}
-                  />
-                </PmPanel>
+                <ErrorState
+                  className="min-h-[14rem]"
+                  title="Failed to load your work"
+                  description="Could not fetch your assigned tickets. Please try again."
+                  onRetry={handleRetry}
+                />
               ) : !data || data.length === 0 ? (
-                <PmPanel className="flex min-h-[14rem] items-center justify-center p-6">
-                  <EmptyState
-                    illustrationPreset="projects"
-                    title="Nothing assigned to you"
-                    description="Tickets assigned to you across all projects will appear here."
-                    className="min-h-[12rem]"
-                  />
-                </PmPanel>
+                <EmptyState
+                  illustrationPreset="projects"
+                  title="Nothing assigned to you"
+                  description="Tickets assigned to you across all projects will appear here."
+                  className="min-h-[14rem]"
+                />
               ) : (
                 <div className="flex flex-col gap-3">
                   {BUCKET_ORDER.map((bucket) => {

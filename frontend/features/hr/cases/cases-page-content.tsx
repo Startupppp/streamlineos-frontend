@@ -18,6 +18,8 @@ import { Plus, ShieldAlert, Search } from "lucide-react";
 import { useCan } from "@/hooks/api/access";
 import { useHrCases, useDisciplinaryActions } from "@/hooks/api/hr/cases";
 import type { HrCase, CaseCategory, CaseStatus, CaseSeverity } from "@/hooks/api/hr/cases";
+import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
+import { cn } from "@/lib/utils";
 import type { DataTableColumn } from "@/components/ui/data-table";
 import { CaseStatusBadge, CaseSeverityBadge, CaseCategoryLabel } from "./case-badges";
 import { CaseDetailSheet } from "./case-detail-sheet";
@@ -106,10 +108,12 @@ export function CasesPageContent() {
     {
       key: "summary",
       header: "Summary",
-      className: "max-w-[280px]",
+      className: TABLE_TITLE_CELL,
       cell: (row) => (
-        <div className="flex items-center gap-2">
-          <span className="truncate text-sm">{row.summary}</span>
+        <div className="flex min-w-0 items-center gap-2 overflow-hidden">
+          <span className={cn(TEXT_ONE_LINE, "text-sm")} title={row.summary}>
+            {row.summary}
+          </span>
           {row.anonymous && (
             <Badge variant="outline" className="text-xs text-muted-foreground shrink-0">Anon</Badge>
           )}

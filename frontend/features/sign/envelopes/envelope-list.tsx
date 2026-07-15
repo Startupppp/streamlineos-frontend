@@ -2,11 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, MoreHorizontal, ExternalLink } from "lucide-react";
+import { Plus, ExternalLink } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ErrorState } from "@/components/shared/error-state";
 import { IllustrationImage } from "@/components/illustrations/illustration-image";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -14,6 +13,8 @@ import { useSignEnvelopes } from "@/hooks/api/sign/envelopes";
 import { EnvelopeStatusBadge } from "../components/envelope-status-badge";
 import { CreateEnvelopeDialog } from "../components/create-envelope-dialog";
 import type { SignEnvelope } from "@/types/sign";
+import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
+import { cn } from "@/lib/utils";
 
 const STATUS_FILTERS = [
   { value: "all", label: "All" },
@@ -71,7 +72,12 @@ export function EnvelopeList() {
     {
       key: "title",
       header: "Title",
-      cell: (envelope) => <span className="font-medium">{envelope.title}</span>,
+      className: TABLE_TITLE_CELL,
+      cell: (envelope) => (
+        <span className={cn("font-medium", TEXT_ONE_LINE)} title={envelope.title}>
+          {envelope.title}
+        </span>
+      ),
     },
     {
       key: "status",
@@ -102,19 +108,15 @@ export function EnvelopeList() {
       headerClassName: "w-10",
       cell: (envelope) => (
         <div onClick={(e) => e.stopPropagation()}>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="size-8">
-                <MoreHorizontal className="size-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={makeOpenHandler(envelope.id)}>
-                <ExternalLink className="size-4" />
-                Open
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8"
+            aria-label="Open envelope"
+            onClick={makeOpenHandler(envelope.id)}
+          >
+            <ExternalLink className="size-4" />
+          </Button>
         </div>
       ),
     },

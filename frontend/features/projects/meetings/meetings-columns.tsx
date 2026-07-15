@@ -7,7 +7,7 @@ import type { DataTableColumn } from "@/components/ui/data-table";
 import { MeetingTypeBadge, MeetingStatusBadge } from "./meeting-badges";
 import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
 import { cn } from "@/lib/utils";
-import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 import type { Meeting, ProjectMemberRecord } from "@/types/projects";
 
 interface Sprint {
@@ -39,20 +39,20 @@ export function buildMeetingsColumns(
       header: "Title",
       sortable: true,
       sortValue: (row) => row.title,
-      className: "min-w-0 w-[40%] max-w-0 overflow-hidden whitespace-normal",
+      className: TABLE_TITLE_CELL,
       cell: (row) => (
         <div className="flex min-w-0 flex-col gap-0.5 overflow-hidden">
           <Link
             href={`/projects/${projectId}/meetings/${row.id}`}
-            className={cn(TEXT_ONE_LINE, "block font-medium text-foreground hover:text-primary")}
+            className={cn("font-medium text-foreground hover:text-primary", TEXT_ONE_LINE)}
             title={row.title}
           >
             {row.title}
           </Link>
           {row.sprintId != null && sprintMap.has(row.sprintId) ? (
-            <span className={cn(TEXT_ONE_LINE, "flex max-w-full items-center gap-1 text-[11px] text-muted-foreground")}>
+            <span className="flex max-w-full min-w-0 items-center gap-1 text-[11px] text-muted-foreground">
               <Layers className="h-3 w-3 shrink-0" />
-              {sprintMap.get(row.sprintId)?.name}
+              <span className={TEXT_ONE_LINE}>{sprintMap.get(row.sprintId)?.name}</span>
             </span>
           ) : null}
         </div>
@@ -107,7 +107,7 @@ export function buildMeetingsColumns(
         if (!host) return <span className="text-sm text-muted-foreground">—</span>;
         const label = getUserDisplayName(host);
         return (
-          <span className={cn(TEXT_ONE_LINE, "block max-w-[120px] text-sm text-foreground")} title={host.email}>
+          <span className={cn("max-w-[120px] text-sm text-foreground", TEXT_ONE_LINE)} title={host.email}>
             {label}
           </span>
         );

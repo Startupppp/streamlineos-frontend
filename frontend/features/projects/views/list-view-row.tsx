@@ -93,8 +93,8 @@ export const ListViewItem = memo(function ListViewItem({ ticket, projectKey, pro
         <button
           onClick={handleClick}
           className={cn(
-            TEXT_ONE_LINE,
             "flex-1 text-left text-sm text-foreground hover:underline underline-offset-2",
+            TEXT_ONE_LINE,
           )}
           title={ticket.title}
         >

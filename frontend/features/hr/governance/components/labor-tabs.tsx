@@ -8,6 +8,8 @@ import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
+import { cn } from "@/lib/utils";
 import {
   Sheet,
   SheetContent,
@@ -142,7 +144,16 @@ export function LaborTabs() {
   ];
 
   const agreementColumns: DataTableColumn<CollectiveAgreement>[] = [
-    { key: "title", header: "Title", cell: (r) => <span className="font-medium text-sm">{r.title}</span> },
+    {
+      key: "title",
+      header: "Title",
+      className: TABLE_TITLE_CELL,
+      cell: (r) => (
+        <span className={cn("font-medium text-sm", TEXT_ONE_LINE)} title={r.title}>
+          {r.title}
+        </span>
+      ),
+    },
     { key: "unionName", header: "Union", cell: (r) => <span className="text-sm text-muted-foreground">{r.unionName}</span> },
     { key: "status", header: "Status", cell: (r) => <Badge variant={r.status === "active" ? "default" : r.status === "expired" ? "destructive" : "secondary"}>{r.status}</Badge> },
     { key: "expiresAt", header: "Expires", cell: (r) => <span className="text-sm text-muted-foreground">{r.expiresAt ? new Date(r.expiresAt).toLocaleDateString() : "—"}</span> },
@@ -155,7 +166,16 @@ export function LaborTabs() {
   ];
 
   const caseColumns: DataTableColumn<LaborCase>[] = [
-    { key: "subject", header: "Subject", cell: (r) => <span className="font-medium text-sm">{r.subject}</span> },
+    {
+      key: "subject",
+      header: "Subject",
+      className: TABLE_TITLE_CELL,
+      cell: (r) => (
+        <span className={cn("font-medium text-sm", TEXT_ONE_LINE)} title={r.subject}>
+          {r.subject}
+        </span>
+      ),
+    },
     { key: "unionName", header: "Union", cell: (r) => <span className="text-sm text-muted-foreground">{r.unionName}</span> },
     { key: "status", header: "Status", cell: (r) => <Badge variant={r.status === "open" ? "destructive" : r.status === "resolved" ? "secondary" : "outline"}>{r.status}</Badge> },
     { key: "createdAt", header: "Created", cell: (r) => <span className="text-sm text-muted-foreground">{new Date(r.createdAt).toLocaleDateString()}</span> },

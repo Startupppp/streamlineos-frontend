@@ -188,26 +188,23 @@ function AllWorkList({
 
   if (isError) {
     return (
-      <PmPanel className="flex min-h-[14rem] items-center justify-center p-6">
-        <ErrorState
-          title="Failed to load tickets"
-          description="Could not fetch tickets. Please try again."
-          onRetry={onRetry}
-        />
-      </PmPanel>
+      <ErrorState
+        className="min-h-[14rem]"
+        title="Failed to load tickets"
+        description="Could not fetch tickets. Please try again."
+        onRetry={onRetry}
+      />
     );
   }
 
   if (!items || items.length === 0) {
     return (
-      <PmPanel className="flex min-h-[14rem] items-center justify-center p-6">
-        <EmptyState
-          illustrationPreset="projects"
-          title={emptyTitle}
-          description={emptyDescription}
-          className="min-h-[12rem]"
-        />
-      </PmPanel>
+      <EmptyState
+        illustrationPreset="projects"
+        title={emptyTitle}
+        description={emptyDescription}
+        className="min-h-[14rem]"
+      />
     );
   }
 

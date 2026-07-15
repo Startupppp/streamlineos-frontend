@@ -20,9 +20,10 @@ import {
   PmPageShell,
   PmPanel,
   PmSection,
+  PM_FILL_PANEL,
 } from "@/features/projects/shared/pm-chrome";
-import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 import { cn } from "@/lib/utils";
+import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 type MemberBreakdownRow = { userId: string; hours: number; cost: number };
@@ -242,11 +243,11 @@ export default function BudgetPage({ params }: { params: Promise<{ projectId: st
 
         {(budget?.memberBreakdown?.length ?? 0) === 0 && !isLoading ? (
           <EmptyState
-            illustrationPreset="calendar"
-            title="No billable time logged"
-            description="Log billable hours to track costs against this project's budget."
-            className="min-h-[40vh] flex-1"
-          />
+              className={PM_FILL_PANEL}
+              illustrationPreset="calendar"
+              title="No billable time logged"
+              description="Log billable hours to track costs against this project's budget."
+            />
         ) : null}
       </PmPageShell>
     </PageWrapper>

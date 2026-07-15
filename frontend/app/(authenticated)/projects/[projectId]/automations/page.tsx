@@ -57,8 +57,10 @@ import { ErrorState } from "@/components/shared/error-state";
 import { AutomationValueInput } from "@/features/projects/automations/automation-value-input";
 import {
   PmPageShell,
+  PmPanel,
   PmSection,
   PmStaggerList,
+  PM_FILL_PANEL,
   PM_PANEL,
 } from "@/features/projects/shared/pm-chrome";
 import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
@@ -426,16 +428,16 @@ export default function AutomationsPage({ params }: PageProps) {
         ) : automations.length === 0 ? (
           <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
             <EmptyState
-              illustration={<AutomationsIllustration className="h-32 w-32" />}
-              title="No automations yet"
-              description="Automate repetitive work — assign tickets, change statuses, and more with if-then rules."
-              action={{ label: "Create Automation", onClick: handleOpenNew }}
-              className="flex-1"
-            />
+                className={PM_FILL_PANEL}
+                illustration={<AutomationsIllustration className="h-32 w-32" />}
+                title="No automations yet"
+                description="Automate repetitive work — assign tickets, change statuses, and more with if-then rules."
+                action={{ label: "Create Automation", onClick: handleOpenNew }}
+              />
           </PmSection>
         ) : (
           <>
-            <PmSection index={0}>
+            <PmSection index={0} className="shrink-0">
               <StatCardGrid cols={2} className="mb-1">
                 <StatCard
                   label="Active"

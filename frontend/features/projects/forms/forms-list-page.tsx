@@ -21,9 +21,10 @@ import {
   PmPageShell,
   PmPanel,
   PmSection,
+  PM_FILL_PANEL,
   PM_TOOLBAR,
 } from "@/features/projects/shared/pm-chrome";
-import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 import { cn } from "@/lib/utils";
 import { FORM_TYPE_LABELS, FORM_TYPES } from "./field-type-meta";
 import type { ProjectForm } from "@/types/projects/forms";
@@ -108,6 +109,7 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
     {
       key: "name",
       header: "Name",
+      className: TABLE_TITLE_CELL,
       cell: (row) => (
         <Link
           href={`/projects/${projectId}/forms/${row.id}`}
@@ -218,27 +220,27 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
           {isLoading ? (
             <DataTableSkeleton rows={12} columns={6} className="flex-1" />
           ) : isError ? (
-            <ErrorState onRetry={() => void refetch()} />
+            <ErrorState className={PM_FILL_PANEL} onRetry={() => void refetch()} />
           ) : filtered.length === 0 ? (
             <EmptyState
-              illustrationPreset="documents"
-              title={isFiltered ? "No matching forms" : "No forms yet"}
-              description={
-                isFiltered
-                  ? "No forms match your current filters."
-                  : "Create a form to collect structured data from your team or clients."
-              }
-              action={
-                isFiltered
-                  ? { label: "Clear filters", onClick: handleClearFilters }
-                  : canManage
-                    ? { label: "New Form", onClick: handleNewForm }
-                    : undefined
-              }
-              className="min-h-[40vh]"
-            />
+                className={PM_FILL_PANEL}
+                illustrationPreset="documents"
+                title={isFiltered ? "No matching forms" : "No forms yet"}
+                description={
+                  isFiltered
+                    ? "No forms match your current filters."
+                    : "Create a form to collect structured data from your team or clients."
+                }
+                action={
+                  isFiltered
+                    ? { label: "Clear filters", onClick: handleClearFilters }
+                    : canManage
+                      ? { label: "New Form", onClick: handleNewForm }
+                      : undefined
+                }
+              />
           ) : (
-            <PmPanel className="flex min-h-0 flex-1 flex-col" solid>
+            <PmPanel className={PM_FILL_PANEL} solid>
               <DataTable
                 data={filtered}
                 columns={columns}

@@ -59,7 +59,7 @@ import {
   PM_FILL_PANEL,
   PM_TOOLBAR,
 } from "@/features/projects/shared/pm-chrome";
-import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 
 const STATUS_OPTIONS: { value: string; label: string }[] = [
   { value: "all", label: "All statuses" },
@@ -285,9 +285,10 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
     {
       key: "title",
       header: "Title",
+      className: TABLE_TITLE_CELL,
       cell: (row) => (
         <span
-          className={cn(TEXT_ONE_LINE, "block max-w-[min(100%,22rem)] font-medium text-foreground")}
+          className={cn("font-medium text-foreground", TEXT_ONE_LINE)}
           title={row.title}
         >
           {row.title}
@@ -302,7 +303,7 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
       cell: (row) => {
         const name = memberName(row.approverId);
         return (
-          <span className={cn(TEXT_ONE_LINE, "block max-w-[8rem] text-muted-foreground")} title={name}>
+          <span className={cn("max-w-[8rem] text-muted-foreground", TEXT_ONE_LINE)} title={name}>
             {name}
           </span>
         );
@@ -399,12 +400,11 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
               <DataTableSkeleton rows={12} columns={7} className="flex-1" />
             </PmPanel>
           ) : isError ? (
-            <PmPanel className={cn(PM_FILL_PANEL, "items-center justify-center p-6")}>
-              <ErrorState className="flex-1" onRetry={handleRetry} />
-            </PmPanel>
+            <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
           ) : items.length === 0 ? (
-            <PmPanel className={cn(PM_FILL_PANEL, "items-center justify-center gap-3 p-6")}>
+            <div className={cn(PM_FILL_PANEL, "items-center gap-3")}>
               <EmptyState
+                className="min-h-0 w-full flex-1"
                 illustrationPreset="approval"
                 title={isFiltered ? "No matching approvals" : "No approvals yet"}
                 description={
@@ -429,13 +429,13 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-7 text-xs text-muted-foreground"
+                  className="mb-4 h-7 shrink-0 text-xs text-muted-foreground"
                   onClick={() => handleOpenRequest("milestone")}
                 >
                   Request milestone approval
                 </Button>
               ) : null}
-            </PmPanel>
+            </div>
           ) : (
             <PmPanel className={PM_FILL_PANEL}>
               <DataTable data={items} columns={columns} getRowKey={(row) => row.id} minWidth="720px" className="min-h-0 flex-1" />

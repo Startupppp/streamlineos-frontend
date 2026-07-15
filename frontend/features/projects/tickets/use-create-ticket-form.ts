@@ -34,11 +34,26 @@ function findActiveCycle(cycles: Cycle[]): Cycle | null {
 export interface UseCreateTicketFormOptions {
   projectId: number | null;
   defaultStatus?: string;
+  defaultCycleId?: number | null;
   onCreated?: () => void;
   onClose?: () => void;
 }
 
-export function useCreateTicketForm({ projectId, defaultStatus, onCreated, onClose }: UseCreateTicketFormOptions) {
+function resolveDefaultCycleId(
+  defaultCycleId: number | null | undefined,
+  activeCycleId: number | null,
+): number | null {
+  if (defaultCycleId !== undefined) return defaultCycleId;
+  return activeCycleId;
+}
+
+export function useCreateTicketForm({
+  projectId,
+  defaultStatus,
+  defaultCycleId,
+  onCreated,
+  onClose,
+}: UseCreateTicketFormOptions) {
   const [open, setOpen] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [relatedLinks, setRelatedLinks] = useState<RelatedLinkDraft[]>([]);
@@ -46,7 +61,7 @@ export function useCreateTicketForm({ projectId, defaultStatus, onCreated, onClo
   const [createMore, setCreateMore] = useState(false);
   const titleRef = useRef<HTMLInputElement | null>(null);
   const queryClient = useQueryClient();
-  const pendingCycleDefaultRef = useRef(true);
+  const pendingCycleDefaultRef = useRef(defaultCycleId === undefined);
   const queryProjectId = projectId ?? 0;
 
   const { data: projectData } = useProject(queryProjectId);
@@ -72,6 +87,7 @@ export function useCreateTicketForm({ projectId, defaultStatus, onCreated, onClo
   }, [defaultStatus, projectStatuses]);
 
   const activeCycle = useMemo(() => findActiveCycle(cycles), [cycles]);
+  const activeCycleId = activeCycle?.id ?? null;
 
   const [properties, setProperties] = useState<CreateTicketPropertiesValue>({
     status: defaultStatusValue,
@@ -79,7 +95,7 @@ export function useCreateTicketForm({ projectId, defaultStatus, onCreated, onClo
     assigneeId: null,
     points: null,
     labelIds: [],
-    cycleId: activeCycle?.id ?? null,
+    cycleId: resolveDefaultCycleId(defaultCycleId, activeCycleId),
   });
 
   const form = useForm<CreateTicketFormValues>({
@@ -100,47 +116,52 @@ export function useCreateTicketForm({ projectId, defaultStatus, onCreated, onClo
   }, []);
 
   useEffect(() => {
-    pendingCycleDefaultRef.current = true;
+    pendingCycleDefaultRef.current = defaultCycleId === undefined;
     setProperties((prev) => ({
       status: prev.status,
       priority: null,
       assigneeId: null,
       points: null,
       labelIds: [],
-      cycleId: null,
+      cycleId: resolveDefaultCycleId(defaultCycleId, null),
     }));
-  }, [projectId]);
+  }, [projectId, defaultCycleId]);
 
   useEffect(() => {
     setProperties((prev) => ({ ...prev, status: defaultStatusValue }));
   }, [defaultStatusValue]);
 
   useEffect(() => {
-    if (pendingCycleDefaultRef.current && activeCycle?.id != null) {
-      setProperties((prev) => (prev.cycleId === null ? { ...prev, cycleId: activeCycle.id } : prev));
+    if (defaultCycleId !== undefined) {
+      setProperties((prev) => ({ ...prev, cycleId: defaultCycleId }));
+      pendingCycleDefaultRef.current = false;
+      return;
+    }
+    if (pendingCycleDefaultRef.current && activeCycleId != null) {
+      setProperties((prev) => (prev.cycleId === null ? { ...prev, cycleId: activeCycleId } : prev));
       pendingCycleDefaultRef.current = false;
     }
-  }, [activeCycle?.id]);
+  }, [activeCycleId, defaultCycleId]);
 
   const resetForm = useCallback((preserveContext: boolean) => {
     form.reset({ title: "", type: "TASK", description: "" });
     setFiles([]);
     setRelatedLinks([]);
     if (!preserveContext) {
-      pendingCycleDefaultRef.current = true;
+      pendingCycleDefaultRef.current = defaultCycleId === undefined;
       setProperties({
         status: defaultStatusValue,
         priority: null,
         assigneeId: null,
         points: null,
         labelIds: [],
-        cycleId: activeCycle?.id ?? null,
+        cycleId: resolveDefaultCycleId(defaultCycleId, activeCycleId),
       });
     } else {
       setProperties((prev) => ({ ...prev, priority: null, assigneeId: null, points: null, labelIds: [] }));
     }
     setTimeout(() => titleRef.current?.focus(), 50);
-  }, [form, defaultStatusValue, activeCycle]);
+  }, [form, defaultStatusValue, activeCycleId, defaultCycleId]);
 
   const finishCreation = useCallback(() => {
     if (projectId != null) {

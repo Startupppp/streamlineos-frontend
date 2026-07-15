@@ -11,6 +11,8 @@ import { StatusBadge } from "./status-badge";
 import { formatBlogDate } from "@/lib/blog-utils";
 import { useAdminPosts, useDeletePost, useUpdatePost } from "@/hooks/api/blog";
 import type { BlogPostWithRelations } from "@/types/blog";
+import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
+import { cn } from "@/lib/utils";
 
 const emptyState = (
   <div className="flex flex-col items-center gap-3 py-12 text-center">
@@ -71,11 +73,13 @@ export function BlogAdminTable() {
       header: "Title",
       sortable: true,
       sortValue: (p) => p.title,
+      className: TABLE_TITLE_CELL,
       cell: (post) => (
-        <div className="max-w-[280px]">
+        <div className="min-w-0 overflow-hidden">
           <Link
             href={`/blogs/admin/${post.id}/edit`}
-            className="block truncate font-medium hover:text-primary"
+            className={cn("font-medium hover:text-primary", TEXT_ONE_LINE)}
+            title={post.title}
           >
             {post.title}
           </Link>

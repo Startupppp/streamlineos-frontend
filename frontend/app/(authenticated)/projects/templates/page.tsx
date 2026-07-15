@@ -35,6 +35,7 @@ import {
   PmPanel,
   PmSection,
   PmStaggerList,
+  PM_FILL_PANEL,
   PM_PANEL,
 } from "@/features/projects/shared/pm-chrome";
 import { cn } from "@/lib/utils";
@@ -118,9 +119,7 @@ export default function ProjectTemplatesPage() {
             {isLoading ? (
               <TemplatesGridSkeleton />
             ) : isError ? (
-              <PmPanel className="flex flex-1 items-center justify-center p-6">
-                <ErrorState onRetry={handleRetry} className="flex-1" />
-              </PmPanel>
+              <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
             ) : templates && templates.length > 0 ? (
               <PmStaggerList
                 className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
@@ -137,14 +136,13 @@ export default function ProjectTemplatesPage() {
                 ))}
               </PmStaggerList>
             ) : (
-              <PmPanel className="flex flex-1 items-center justify-center p-6">
-                <EmptyState
+              <EmptyState
+                  className={PM_FILL_PANEL}
                   illustration={<EmptyProjectsIllustration className="h-32 w-32" />}
                   title="No templates yet"
                   description="Create a reusable project structure to bootstrap new projects quickly."
                   action={{ label: "Create your first template", onClick: handleOpenCreate }}
                 />
-              </PmPanel>
             )}
           </PmSection>
         </PmPageShell>

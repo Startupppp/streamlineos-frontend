@@ -343,9 +343,7 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
 
         <PmSection index={nextMeeting ? 1 : 0} className="flex min-h-0 flex-1 flex-col">
           {isError ? (
-            <PmPanel className={cn(PM_FILL_PANEL, "items-center justify-center p-6")}>
-              <ErrorState className="flex-1" onRetry={handleRetry} />
-            </PmPanel>
+            <ErrorState className={PM_FILL_PANEL} onRetry={handleRetry} />
           ) : (
             <PmPanel className={PM_FILL_PANEL}>
               <DataTable

@@ -1,16 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Trash2 } from "lucide-react";
-import { EllipsisIcon } from "@animateicons/react/lucide";
+import { Trash2Icon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,7 +32,6 @@ export function TicketQuickActions({
   className,
 }: TicketQuickActionsProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
   const { iconRef, hoverHandlers } = useAnimatedIcon();
 
   const canDelete = useCan("projects:tickets:delete");
@@ -51,7 +43,7 @@ export function TicketQuickActions({
 
   if (!projectId || !canDelete) return null;
 
-  function handleDeleteSelect() {
+  function handleDeleteClick() {
     setDeleteDialogOpen(true);
   }
 
@@ -70,23 +62,20 @@ export function TicketQuickActions({
 
   return (
     <div
-      className={cn("shrink-0", dropdownOpen && "opacity-100", className)}
+      className={cn("shrink-0", className)}
       onMouseDown={handleWrapperMouseDown}
       onClick={handleWrapperClick}
     >
-      <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-6 w-6" {...hoverHandlers}>
-            <EllipsisIcon ref={iconRef} size={14} />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuItem variant="destructive" onSelect={handleDeleteSelect}>
-            <Trash2 className="mr-2 h-4 w-4 shrink-0" />
-            Delete ticket
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-6 w-6 text-muted-foreground hover:text-destructive"
+        aria-label="Delete ticket"
+        onClick={handleDeleteClick}
+        {...hoverHandlers}
+      >
+        <Trash2Icon ref={iconRef} size={14} />
+      </Button>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>

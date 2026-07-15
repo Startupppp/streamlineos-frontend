@@ -34,11 +34,12 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import {
   PmPageShell,
   PmPanel,
+  PM_FILL_PANEL,
   PM_ROW,
 } from "@/features/projects/shared/pm-chrome";
+import { cn } from "@/lib/utils";
 import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { cn } from "@/lib/utils";
 
 const createPageSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -375,12 +376,12 @@ export default function PagesPage({
       <PmPageShell className="h-full gap-0" withGlow={false}>
         {!pages?.length ? (
           <EmptyState
-            illustration={<EmptyDocumentsIllustration />}
-            title="No pages yet"
-            description="Create your first page to start documenting your project."
-            action={{ label: "Create First Page", onClick: handleOpenCreatePage }}
-            className="min-h-[60vh] flex-1"
-          />
+              className={cn(PM_FILL_PANEL, "m-4 sm:m-6")}
+              illustration={<EmptyDocumentsIllustration />}
+              title="No pages yet"
+              description="Create your first page to start documenting your project."
+              action={{ label: "Create First Page", onClick: handleOpenCreatePage }}
+            />
         ) : (
           <div className="flex h-full min-h-0 overflow-hidden">
             <PmPanel className="w-64 shrink-0 space-y-1 overflow-y-auto rounded-none border-y-0 border-l-0 p-2" solid>

@@ -30,17 +30,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
-import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 import { TestRunSheet } from "./test-run-sheet";
 
 const RUN_STATUS_STYLES: Record<TestRunStatus, string> = {
@@ -88,18 +82,16 @@ function NewRunButton({ onClick }: { onClick: () => void }) {
 function RunActions({ onDelete }: { onDelete: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="Run actions" {...hoverHandlers}>
-          <EllipsisIcon ref={iconRef} size={14} />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem variant="destructive" onSelect={onDelete}>
-          Delete
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Button
+      variant="ghost"
+      size="icon"
+      className="h-6 w-6 text-muted-foreground hover:text-destructive"
+      aria-label="Delete test run"
+      onClick={onDelete}
+      {...hoverHandlers}
+    >
+      <Trash2Icon ref={iconRef} size={14} />
+    </Button>
   );
 }
 
@@ -160,10 +152,11 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
     {
       key: "name",
       header: "Name",
+      className: TABLE_TITLE_CELL,
       cell: (row) => (
         <Link
           href={`/projects/${projectId}/qa/runs/${row.id}`}
-          className={cn(TEXT_ONE_LINE, "block max-w-[min(100%,24rem)] text-[11px] font-medium hover:underline")}
+          className={cn("text-[11px] font-medium hover:underline", TEXT_ONE_LINE)}
           title={row.name}
         >
           {row.name}
@@ -187,7 +180,7 @@ export function TestRunsTab({ projectId }: TestRunsTabProps) {
       key: "environment",
       header: "Environment",
       cell: (row) => (
-        <span className={cn(TEXT_ONE_LINE, "block max-w-[7rem] text-[11px] text-muted-foreground")}>
+        <span className={cn("max-w-[7rem] text-[11px] text-muted-foreground", TEXT_ONE_LINE)}>
           {row.environment ?? "—"}
         </span>
       ),

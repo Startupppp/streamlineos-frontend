@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { useClientOpportunities } from "@/hooks/api/crm/clients";
 import { formatAmount, formatDate } from "./utils";
 import type { ClientOpportunity } from "@/types/crm";
+import { TABLE_TITLE_CELL, TEXT_ONE_LINE } from "@/lib/text-overflow";
 
 const OPP_STAGE_LABELS: Record<ClientOpportunity["stage"], string> = {
   identified: "Identified",
@@ -28,7 +29,12 @@ const columns: DataTableColumn<ClientOpportunity>[] = [
   {
     key: "title",
     header: "Title",
-    cell: (row) => <span className="text-[11px] font-medium">{row.title}</span>,
+    className: TABLE_TITLE_CELL,
+    cell: (row) => (
+      <span className={cn("text-[11px] font-medium", TEXT_ONE_LINE)} title={row.title}>
+        {row.title}
+      </span>
+    ),
   },
   {
     key: "type",

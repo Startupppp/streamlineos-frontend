@@ -31,7 +31,7 @@ import {
   projectStatusDisplayLabels,
 } from "@/lib/theme-constants";
 import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
-import { TEXT_ONE_LINE, TEXT_FLEX_CHILD } from "@/features/projects/shared/text-overflow";
+import { TABLE_TITLE_CELL, TEXT_ONE_LINE, TEXT_FLEX_CHILD } from "@/features/projects/shared/text-overflow";
 import { PmPanel } from "@/features/projects/shared/pm-chrome";
 import { useCan } from "@/hooks/api/access";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -192,8 +192,9 @@ export const ProjectTable = React.memo(function ProjectTable({ projects }: Proje
       header: "Name",
       sortable: true,
       sortValue: (p) => p.name,
+      className: TABLE_TITLE_CELL,
       cell: (p) => (
-        <div className={cn(TEXT_FLEX_CHILD, "flex items-center gap-2")}>
+        <div className={cn(TEXT_FLEX_CHILD, "flex min-w-0 items-center gap-2 overflow-hidden")}>
           <span
             className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-[9px] font-bold tracking-tight bg-primary/10 text-primary ring-1 ring-primary/10"
             aria-hidden="true"
@@ -203,7 +204,7 @@ export const ProjectTable = React.memo(function ProjectTable({ projects }: Proje
           <span
             className={cn(
               TEXT_ONE_LINE,
-              "max-w-[min(100%,28rem)] text-[13px] font-medium text-foreground transition-colors group-hover:text-primary",
+              "text-[13px] font-medium text-foreground transition-colors group-hover:text-primary",
             )}
             title={p.name}
           >

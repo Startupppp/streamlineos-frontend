@@ -41,11 +41,15 @@ import { useProjects } from "@/hooks/api/projects/projects";
 import {
   buildMoreGroups,
   buildPrimaryNav,
+  filterVisibleNavGroups,
+  filterVisibleNavItems,
   settingsNavItem,
   type ProjectNavItem,
   type ProjectNavPermissions,
 } from "@/features/projects/sidebar/project-nav-config";
 import { ProjectMoreMenu } from "@/features/projects/sidebar/project-more-menu";
+import { ProjectNavCustomizeDialog } from "@/features/projects/sidebar/project-nav-customize-dialog";
+import { useProjectNavVisibility } from "@/features/projects/sidebar/use-project-nav-visibility";
 
 interface ProjectSidebarProps {
   projectId: string;
@@ -282,12 +286,24 @@ function DesktopSidebar({
   defaultCollapsed = false,
 }: ProjectSidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
+  const [customizeOpen, setCustomizeOpen] = useState(false);
   const baseUrl = `/projects/${projectId}`;
   const perms = useProjectNavPermissions();
   const primary = buildPrimaryNav(baseUrl, perms);
   const moreGroups = buildMoreGroups(baseUrl, perms);
   const settings = settingsNavItem(baseUrl);
   const isActive = useIsActive(baseUrl);
+  const { hiddenIds, isVisible, setVisible, reset, hasCustomizations } =
+    useProjectNavVisibility();
+
+  const visiblePrimary = useMemo(
+    () => filterVisibleNavItems(primary, hiddenIds),
+    [primary, hiddenIds],
+  );
+  const visibleMoreGroups = useMemo(
+    () => filterVisibleNavGroups(moreGroups, hiddenIds),
+    [moreGroups, hiddenIds],
+  );
 
   const handleToggleCollapse = useCallback(() => {
     setIsCollapsed((prev) => {
@@ -295,6 +311,10 @@ function DesktopSidebar({
       document.cookie = `${PROJECT_SIDEBAR_COOKIE}=${next}; path=/; max-age=31536000; SameSite=Lax`;
       return next;
     });
+  }, []);
+
+  const handleOpenCustomize = useCallback(() => {
+    setCustomizeOpen(true);
   }, []);
 
   return (
@@ -361,7 +381,7 @@ function DesktopSidebar({
                 Navigate
               </p>
             ) : null}
-            {primary.map((item) => (
+            {visiblePrimary.map((item) => (
               <ProjectNavLink
                 key={item.id}
                 item={item}
@@ -370,11 +390,12 @@ function DesktopSidebar({
               />
             ))}
 
-            <div className="pt-1.5">
+            <div className={cn("pt-1.5", isCollapsed && "flex justify-center")}>
               <ProjectMoreMenu
                 baseUrl={baseUrl}
-                groups={moreGroups}
+                groups={visibleMoreGroups}
                 collapsed={isCollapsed}
+                onCustomize={handleOpenCustomize}
               />
             </div>
           </div>
@@ -393,6 +414,17 @@ function DesktopSidebar({
           />
         </div>
       </div>
+
+      <ProjectNavCustomizeDialog
+        open={customizeOpen}
+        onOpenChange={setCustomizeOpen}
+        primary={primary}
+        groups={moreGroups}
+        isVisible={isVisible}
+        setVisible={setVisible}
+        reset={reset}
+        hasCustomizations={hasCustomizations}
+      />
     </TooltipProvider>
   );
 }
@@ -403,6 +435,7 @@ function MobileProjectNav({
   projectKey,
 }: ProjectSidebarProps) {
   const [open, setOpen] = useState(false);
+  const [customizeOpen, setCustomizeOpen] = useState(false);
   const baseUrl = `/projects/${projectId}`;
   const perms = useProjectNavPermissions();
   const primary = buildPrimaryNav(baseUrl, perms);
@@ -410,6 +443,17 @@ function MobileProjectNav({
   const settings = settingsNavItem(baseUrl);
   const isActive = useIsActive(baseUrl);
   const pathname = usePathname();
+  const { hiddenIds, isVisible, setVisible, reset, hasCustomizations } =
+    useProjectNavVisibility();
+
+  const visiblePrimary = useMemo(
+    () => filterVisibleNavItems(primary, hiddenIds),
+    [primary, hiddenIds],
+  );
+  const visibleMoreGroups = useMemo(
+    () => filterVisibleNavGroups(moreGroups, hiddenIds),
+    [moreGroups, hiddenIds],
+  );
 
   const current =
     primary.find((i) => isActive(i.href)) ??
@@ -417,6 +461,11 @@ function MobileProjectNav({
     (isActive(settings.href) ? settings : undefined);
 
   const handleClose = useCallback(() => setOpen(false), []);
+
+  const handleOpenCustomize = useCallback(() => {
+    setOpen(false);
+    setCustomizeOpen(true);
+  }, []);
 
   return (
     <div className="flex items-center gap-2 border-b border-border/80 bg-background px-3 py-2">
@@ -455,7 +504,7 @@ function MobileProjectNav({
                 <p className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
                   Workspace
                 </p>
-                {primary.map((item) => (
+                {visiblePrimary.map((item) => (
                   <ProjectNavLink
                     key={item.id}
                     item={item}
@@ -467,9 +516,10 @@ function MobileProjectNav({
                 <div className="pt-1">
                   <ProjectMoreMenu
                     baseUrl={baseUrl}
-                    groups={moreGroups}
+                    groups={visibleMoreGroups}
                     collapsed={false}
                     onNavigate={handleClose}
+                    onCustomize={handleOpenCustomize}
                   />
                 </div>
               </div>
@@ -501,6 +551,17 @@ function MobileProjectNav({
           </>
         ) : null}
       </div>
+
+      <ProjectNavCustomizeDialog
+        open={customizeOpen}
+        onOpenChange={setCustomizeOpen}
+        primary={primary}
+        groups={moreGroups}
+        isVisible={isVisible}
+        setVisible={setVisible}
+        reset={reset}
+        hasCustomizations={hasCustomizations}
+      />
     </div>
   );
 }

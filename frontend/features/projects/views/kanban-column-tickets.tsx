@@ -65,7 +65,7 @@ export function KanbanColumnTickets({
           transition={pmSnappy}
           className={cn(
             stretchColumn ? "min-h-0 flex-1" : "",
-            "overflow-y-auto scrollbar-thin px-2 pb-2 space-y-1.5 rounded-b-lg",
+            "overflow-y-auto scrollbar-hide px-2 pb-2 space-y-1.5 rounded-b-lg",
             minHeight,
             snapshot.isDraggingOver && "ring-1 ring-inset ring-primary/15",
           )}

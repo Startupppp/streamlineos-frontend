@@ -30,7 +30,9 @@ import {
   PmPanel,
   PmSection,
   PmStaggerList,
+  PM_FILL_PANEL,
 } from "@/features/projects/shared/pm-chrome";
+import { cn } from "@/lib/utils";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -121,8 +123,12 @@ export default function EpicsPage({ params }: PageProps) {
       actions={<CreateEpicDialog projectId={projectId} />}
     >
       <PmPageShell>
-        <div className="space-y-4" aria-live="polite" aria-atomic="true">
-          <PmSection index={0}>
+        <div
+          className="flex min-h-0 flex-1 flex-col gap-4"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          <PmSection index={0} className="shrink-0">
             <StatCardGrid cols={4}>
               <StatCard label="Epics" value={epics.length} icon={Layers} tone="default" index={0} />
               <StatCard label="Stories" value={stories.length} icon={BookOpen} color="blue" index={1} />
@@ -137,14 +143,14 @@ export default function EpicsPage({ params }: PageProps) {
             </StatCardGrid>
           </PmSection>
 
-          <PmSection index={1}>
+          <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
             {epics.length === 0 ? (
               <EmptyState
-                illustrationPreset="projects"
-                title="No epics yet"
-                description="Create your first epic to organize related stories and tasks."
-                className="min-h-[40vh]"
-              />
+                  className={PM_FILL_PANEL}
+                  illustrationPreset="projects"
+                  title="No epics yet"
+                  description="Create your first epic to organize related stories and tasks."
+                />
             ) : (
               <PmStaggerList className="space-y-2.5">
                 {epics.map((epic) => (
@@ -167,7 +173,7 @@ export default function EpicsPage({ params }: PageProps) {
           </PmSection>
 
           {unlinkedStories.length > 0 ? (
-            <PmSection index={2}>
+            <PmSection index={2} className="shrink-0">
               <h2 className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-foreground">
                 <AlertCircle className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400" />
                 Stories without Epic

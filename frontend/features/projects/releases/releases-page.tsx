@@ -36,8 +36,9 @@ import {
   PmPageShell,
   PmPanel,
   PmSection,
+  PM_FILL_PANEL,
 } from "@/features/projects/shared/pm-chrome";
-import { TEXT_ONE_LINE, TEXT_FLEX_CHILD } from "@/features/projects/shared/text-overflow";
+import { TABLE_TITLE_CELL, TEXT_ONE_LINE, TEXT_FLEX_CHILD } from "@/features/projects/shared/text-overflow";
 
 const STATUS_CONFIG: Record<Release["status"], { label: string; className: string }> = {
   draft: {
@@ -160,8 +161,9 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
         header: "Name",
         sortable: true,
         sortValue: (r) => r.name,
+        className: TABLE_TITLE_CELL,
         cell: (r) => (
-          <div className={cn(TEXT_FLEX_CHILD, "max-w-[220px] space-y-0.5")}>
+          <div className={cn(TEXT_FLEX_CHILD, "space-y-0.5 overflow-hidden")}>
             <p className={cn(TEXT_ONE_LINE, "text-xs font-medium text-foreground")} title={r.name}>
               {r.name}
             </p>
@@ -265,12 +267,13 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
         <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
           {isError ? (
             <ErrorState
+              className={PM_FILL_PANEL}
               title="Failed to load releases"
               description="Could not fetch release data. Please try again."
               onRetry={handleRetry}
             />
           ) : (
-            <PmPanel className="flex min-h-0 flex-1 flex-col">
+            <PmPanel className={PM_FILL_PANEL}>
               <DataTable
                 className="min-h-0 flex-1 border-0 bg-transparent shadow-none"
                 data={releases ?? []}
@@ -284,7 +287,7 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
                     title="No releases yet"
                     description="Create your first release to track shipped features and versions."
                     action={{ label: "New Release", onClick: handleOpenCreate }}
-                    className="min-h-[36vh]"
+                    className="min-h-0 flex-1 border-0 bg-transparent"
                   />
                 }
               />

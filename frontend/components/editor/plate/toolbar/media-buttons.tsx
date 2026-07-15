@@ -17,12 +17,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ToolbarButton } from './toolbar-button';
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from '@/components/ui/dropdown-menu';
 
 interface MediaButtonsProps {
   uploadFile: (file: File) => Promise<UploadedKbMedia>;
@@ -211,18 +205,13 @@ export function MediaButtons({ uploadFile }: MediaButtonsProps) {
       <ToolbarButton tooltip="Upload file" onClick={handleFileClick} aria-label="Upload file">
         <FileUp className="size-4" />
       </ToolbarButton>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <ToolbarButton tooltip="Embed from URL" aria-label="Embed media from URL">
-            <Link2 className="size-4" />
-          </ToolbarButton>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start">
-          <DropdownMenuItem onClick={openEmbed}>
-            Embed image / video / audio from URL
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <ToolbarButton
+        tooltip="Embed from URL"
+        aria-label="Embed media from URL"
+        onClick={openEmbed}
+      >
+        <Link2 className="size-4" />
+      </ToolbarButton>
       <EmbedDialog
         open={embedOpen}
         onClose={closeEmbed}
