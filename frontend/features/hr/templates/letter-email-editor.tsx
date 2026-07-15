@@ -3,9 +3,10 @@
 import { useCallback, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, Braces } from "lucide-react";
+import { Braces } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useHrTemplateVariables } from "@/hooks/api/hr/hr-templates";
 import type { TemplateVariable } from "@/types/hr/templates";
@@ -75,8 +76,8 @@ export function LetterEmailEditor({
     [bodyHtml, onBodyChange],
   );
 
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
   }, []);
 
   return (
@@ -101,15 +102,9 @@ export function LetterEmailEditor({
           </div>
         </CardHeader>
         <CardContent className="p-3 space-y-2">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" />
-            <Input
-              placeholder="Search tokens..."
-              value={search}
-              onChange={handleSearchChange}
-              className="pl-8 text-xs"
-            />
-          </div>
+          <div className="min-w-0">
+          <SearchInput placeholder="Search tokens..." value={search} onValueChange={handleSearchChange} />
+        </div>
           <div className="max-h-32 overflow-y-auto space-y-1.5">
             {Object.entries(grouped).map(([group, vars]) => (
               <div key={group}>

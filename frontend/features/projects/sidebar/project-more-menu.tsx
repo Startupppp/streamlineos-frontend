@@ -2,12 +2,11 @@
 
 import { useMemo, useState, useCallback } from "react";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
-import { Search } from "lucide-react";
+import { usePathname, useSearchParams } from "next/navigation";
 import { EllipsisIcon, SlidersHorizontalIcon } from "@animateicons/react/lucide";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import {
   Popover,
   PopoverContent,
@@ -78,8 +77,8 @@ export function ProjectMoreMenu({
     if (!next) setQuery("");
   }, []);
 
-  const handleQueryChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setQuery(e.target.value);
+  const handleQueryChange = useCallback((value: string) => {
+    setQuery(value);
   }, []);
 
   const handleItemClick = useCallback(() => {
@@ -131,16 +130,9 @@ export function ProjectMoreMenu({
             aria-hidden
             className="pointer-events-none absolute inset-0 bg-gradient-to-r from-primary/[0.06] to-transparent"
           />
-          <div className="relative">
-            <Search className="absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={query}
-              onChange={handleQueryChange}
-              placeholder="Search tools…"
-              className="border-border/60 bg-background/60 pl-7 text-xs"
-              autoFocus
-            />
-          </div>
+          <div className="min-w-0 border-border/60 bg-background/60">
+          <SearchInput value={query} onValueChange={handleQueryChange} placeholder="Search tools…" autoFocus />
+        </div>
         </div>
         <ScrollArea className="max-h-80">
           {filteredGroups.length === 0 ? (

@@ -8,7 +8,6 @@ import {
   Pencil,
   Archive,
   RotateCcw,
-  Search,
 } from "lucide-react";
 import {
   EmptyProductsIllustration,
@@ -23,6 +22,7 @@ import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -349,8 +349,8 @@ function CategoriesPageInner() {
     router.replace(`?${params.toString()}`, { scroll: false });
   }
 
-  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>): void {
-    setSearchInput(e.target.value);
+  function handleSearchChange(value: string) {
+    setSearchInput(value);
   }
 
   useEffect(() => {
@@ -400,15 +400,9 @@ function CategoriesPageInner() {
 
   const filtersRow = (
     <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
-      <div className="relative min-w-0 flex-1 lg:max-w-sm">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-        <Input
-          value={searchInput}
-          onChange={handleSearchChange}
-          placeholder="Search categories..."
-          className="w-full min-w-0 pl-8 text-xs"
-        />
-      </div>
+      <div className="min-w-0 flex-1 lg:max-w-sm w-full">
+          <SearchInput value={searchInput} onValueChange={handleSearchChange} placeholder="Search categories..." />
+        </div>
       <div className="hidden min-w-0 items-center gap-2 sm:flex">
         <Select value={statusParam} onValueChange={handleStatusChange}>
           <SelectTrigger className="w-[140px] text-xs">

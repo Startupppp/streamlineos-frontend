@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent } from "@/components/ui/card";
@@ -179,8 +179,8 @@ export default function HrAutomationsPage() {
     });
   }
 
-  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setSearch(e.target.value);
+  function handleSearchChange(value: string) {
+    setSearch(value);
   }
 
   function handleTriggerChange(value: string) {
@@ -233,12 +233,12 @@ export default function HrAutomationsPage() {
 
       {!isError && (
         <div className="flex flex-col sm:flex-row gap-2 mb-4">
-          <Input
+          <SearchInput
             placeholder="Search rules…"
             value={search}
-            onChange={handleSearchChange}
-            className="sm:max-w-xs"
-          />
+            onValueChange={handleSearchChange}
+             className="sm:max-w-xs"
+           />
           <Select value={triggerFilter} onValueChange={handleTriggerChange}>
             <SelectTrigger className="sm:w-52">
               <SelectValue placeholder="All triggers" />

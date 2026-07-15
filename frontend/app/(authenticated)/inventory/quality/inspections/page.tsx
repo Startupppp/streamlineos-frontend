@@ -7,7 +7,7 @@ import { format } from "date-fns";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared";
@@ -52,8 +52,8 @@ function InspectionsPageInner() {
     updateParams({ status: value === "all" ? null : value });
   }
 
-  function handleSourceChange(e: React.ChangeEvent<HTMLInputElement>): void {
-    updateParams({ source: e.target.value || null });
+  function handleSourceChange(value: string): void {
+    updateParams({ source: value || null });
   }
 
   function handlePageChange(nextPage: number): void {
@@ -142,11 +142,11 @@ function InspectionsPageInner() {
 
   const filtersRow = (
     <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
-      <Input
+      <SearchInput
         value={sourceParam}
-        onChange={handleSourceChange}
+        onValueChange={handleSourceChange}
         placeholder="Filter by source…"
-        className="text-xs flex-1 max-w-xs"
+        className="flex-1 max-w-xs"
       />
       <Select value={statusParam || "all"} onValueChange={handleStatusChange}>
         <SelectTrigger className="text-xs w-48">

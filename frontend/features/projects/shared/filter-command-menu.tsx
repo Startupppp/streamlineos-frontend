@@ -336,7 +336,7 @@ export function FilterCommandMenu({
         <Button
           variant="outline"
           size="sm"
-          className="relative shrink-0 gap-1.5 bg-card px-2.5 text-xs font-normal shadow-xs data-[state=open]:border-primary data-[state=open]:focus-visible:border-primary"
+          className="relative shrink-0 gap-1.5 px-2.5 text-xs font-normal data-[state=open]:border-primary data-[state=open]:focus-visible:border-primary"
         >
           <ListFilter className="h-3.5 w-3.5 shrink-0" />
           <span>Add filter</span>

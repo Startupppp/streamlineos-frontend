@@ -21,15 +21,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { usePayrollTemplates, usePayrollPolicyCurrent, useDeleteTemplate } from "@/hooks/api/payroll";
 import { TemplateCard } from "@/features/payroll/shared/template-card";
 import { TemplatePreviewSheet } from "@/features/payroll/shared/template-preview-sheet";
 import { DuplicateTemplateDialog } from "@/features/payroll/shared/duplicate-template-dialog";
-import type { TemplateRow } from "@/types/payroll/setup";
-import { Search } from "lucide-react";
+import type { TemplateRow } from "@/types/payroll/setup";
 import { toast } from "sonner";
 
 const CATEGORIES = [
@@ -91,8 +90,8 @@ export function TemplatesPageContent() {
     updateUrl({ search: debouncedSearchInput || undefined });
   }, [debouncedSearchInput]);
 
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchInput(e.target.value);
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchInput(value);
   }, []);
 
   const handleCategoryChange = useCallback((value: string) => {
@@ -164,15 +163,9 @@ export function TemplatesPageContent() {
 
   const filters = (
     <div className="flex items-center gap-2 flex-wrap">
-      <div className="relative">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-        <Input
-          value={searchInput}
-          onChange={handleSearchChange}
-          placeholder="Search templates…"
-          className="pl-8 text-sm w-48"
-        />
-      </div>
+      <div className="min-w-0 w-48">
+          <SearchInput value={searchInput} onValueChange={handleSearchChange} placeholder="Search templates…" />
+        </div>
       <Select value={category} onValueChange={handleCategoryChange}>
         <SelectTrigger className="text-sm w-44">
           <SelectValue placeholder="Category" />

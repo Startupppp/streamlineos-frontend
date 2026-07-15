@@ -3,11 +3,12 @@
 import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Card, CardContent } from "@/components/ui/card";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { MoreHorizontal, Pencil, Trash2, Plus, Search } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash2, Plus } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -170,10 +171,7 @@ export function OrgCatalogTable<T extends CatalogItem>({
   const [upsertOpen, setUpsertOpen] = useState(false);
   const [editing, setEditing] = useState<T | null>(null);
 
-  const handleSearch = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value),
-    [],
-  );
+  const handleSearch = useCallback((value: string) => setSearch(value), []);
   const handleCreate = useCallback(() => {
     setEditing(null);
     setUpsertOpen(true);
@@ -214,15 +212,12 @@ export function OrgCatalogTable<T extends CatalogItem>({
   return (
     <>
       <div className="flex items-center gap-2 mb-3">
-        <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={handleSearch}
-            placeholder={`Search ${title.toLowerCase()}s...`}
-            className="pl-8 text-sm"
-          />
-        </div>
+        <SearchInput
+          className="max-w-xs flex-1"
+          value={search}
+          onValueChange={handleSearch}
+          placeholder={`Search ${title.toLowerCase()}s...`}
+        />
         {canManage && (
           <Button size="sm" className="gap-1.5" onClick={handleCreate}>
             <Plus className="h-3.5 w-3.5" />

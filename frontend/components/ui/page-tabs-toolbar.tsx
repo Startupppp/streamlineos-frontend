@@ -44,8 +44,8 @@ export function PageTabsToolbar({
       className={cn(
         "flex w-full min-w-0 gap-2",
         isLabeled
-          ? "flex-col md:flex-row md:flex-nowrap md:items-center"
-          : "flex-row flex-nowrap items-center",
+          ? "flex-col md:flex-row md:flex-nowrap md:items-center md:justify-between"
+          : "flex-row flex-nowrap items-center justify-between",
         className,
       )}
     >
@@ -61,11 +61,20 @@ export function PageTabsToolbar({
       <div
         className={cn(
           "flex min-w-0 items-center gap-2",
-          isLabeled ? "w-full md:min-w-0 md:flex-1" : "min-w-0 flex-1",
+          isLabeled
+            ? "w-full md:ml-auto md:w-auto md:max-w-full md:justify-end"
+            : "ml-auto min-w-0 shrink-0 justify-end",
         )}
       >
         {search ? (
-          <div className="min-w-0 flex-1 md:max-w-[240px] md:flex-none">
+          <div
+            className={cn(
+              "min-w-0",
+              isLabeled
+                ? "flex-1 md:w-[240px] md:max-w-sm md:flex-none"
+                : "w-[200px] sm:w-[240px]",
+            )}
+          >
             {search}
           </div>
         ) : null}
@@ -81,7 +90,7 @@ export function PageTabsToolbar({
                   type="button"
                   variant="outline"
                   size="icon"
-                  className="shrink-0 border-input bg-card md:hidden"
+                  className="shrink-0 md:hidden"
                   aria-label="Filters"
                 >
                   <ListFilter className="h-4 w-4" />
@@ -95,7 +104,7 @@ export function PageTabsToolbar({
         ) : null}
 
         {actions ? (
-          <div className="ml-auto flex shrink-0 items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             {actions}
           </div>
         ) : null}

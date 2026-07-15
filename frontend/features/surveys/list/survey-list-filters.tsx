@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { SurveyMode, SurveyStatus } from "@/hooks/api/surveys/forms";
 
@@ -20,16 +20,17 @@ export function SurveyListFilters({
   mode,
   onModeChange,
 }: SurveyListFiltersProps) {
-  const handleSearchInput = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => onSearchChange(e.target.value),
-    [onSearchChange],
-  );
   const handleStatusSelect = useCallback((v: string) => onStatusChange(v as SurveyStatus | "all"), [onStatusChange]);
   const handleModeSelect = useCallback((v: string) => onModeChange(v as SurveyMode | "all"), [onModeChange]);
 
   return (
     <div className="flex items-center gap-2">
-      <Input placeholder="Search surveys..." value={search} onChange={handleSearchInput} className="h-8 w-48" />
+      <SearchInput
+        placeholder="Search surveys..."
+        value={search}
+        onValueChange={onSearchChange}
+        className="w-48"
+      />
       <Select value={status} onValueChange={handleStatusSelect}>
         <SelectTrigger className="h-8 w-32"><SelectValue placeholder="Status" /></SelectTrigger>
         <SelectContent>

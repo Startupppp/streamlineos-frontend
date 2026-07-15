@@ -42,7 +42,7 @@ function StatusFilterButton({
         "h-8 px-3 rounded-full text-xs font-medium transition-all duration-200 border inline-flex items-center gap-1.5",
         isActive
           ? "bg-primary text-primary-foreground border-primary"
-          : "bg-card text-muted-foreground border-border hover:border-foreground/20 hover:bg-muted/50",
+          : "border-input bg-card text-muted-foreground hover:border-primary/40 hover:bg-muted/50 hover:text-foreground",
       )}
     >
       {label}

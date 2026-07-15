@@ -6,6 +6,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { User } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
 import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -146,8 +147,10 @@ export function AllWorkPage() {
               <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
                 <AllWorkViewSwitcher activeView={view} onViewChange={handleViewChangeWithReset} />
                 <AllWorkViewsMenu activeView={view} hasActiveFilters={hasActiveFilters} />
-                <button
+                <Button
                   type="button"
+                  variant="outline"
+                  size="icon"
                   onClick={handleScopeToggle}
                   aria-label={
                     scopeMine
@@ -155,15 +158,20 @@ export function AllWorkPage() {
                       : "Show only my tickets"
                   }
                   title={scopeMine ? "Showing my tickets" : "Show only my tickets"}
+                  aria-pressed={scopeMine}
                   className={cn(
-                    "flex h-9 w-9 shrink-0 items-center justify-center rounded-md border transition-colors duration-150",
-                    scopeMine
-                      ? "border-primary bg-primary text-primary-foreground shadow-sm"
-                      : "border-input bg-card text-muted-foreground hover:bg-primary/5 hover:text-foreground",
+                    "shrink-0",
+                    scopeMine &&
+                      "border-primary bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground",
                   )}
                 >
-                  <User className="h-3.5 w-3.5" />
-                </button>
+                  <User
+                    className={cn(
+                      "h-3.5 w-3.5",
+                      scopeMine ? "text-primary-foreground" : undefined,
+                    )}
+                  />
+                </Button>
               </div>
             }
             filters={

@@ -12,13 +12,13 @@ import {
 import { useUploadFile } from "@/hooks/api/use-upload-file";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { toast } from "sonner";
-import { Plus, Search, AlertTriangle, RefreshCw } from "lucide-react";
+import { Plus, AlertTriangle, RefreshCw } from "lucide-react";
 import { EmptyDocumentsIllustration } from "@/components/illustrations";
 import { HandbookVersionCard } from "@/features/hr/handbook/handbook-version-card";
 import {
@@ -311,8 +311,8 @@ function HandbookContent() {
 
   const handleNewVersionClick = useCallback(() => setSheetOpen(true), []);
 
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchQuery(value);
   }, []);
 
   const handleStatusFilterAll = useCallback(() => setStatusFilter("ALL"), []);
@@ -382,15 +382,9 @@ function HandbookContent() {
     >
       <div className="space-y-4">
         <div className="bg-muted/40 rounded-lg px-3 py-2 flex items-center gap-2 flex-wrap">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input
-              placeholder="Search versions..."
-              value={searchQuery}
-              onChange={handleSearchChange}
-              className="pl-8 h-8 text-xs w-48"
-            />
-          </div>
+          <div className="min-w-0 w-48">
+          <SearchInput placeholder="Search versions..." value={searchQuery} onValueChange={handleSearchChange} />
+        </div>
           <div className="flex items-center gap-1">
             {STATUS_FILTERS.map((f) => (
               <button

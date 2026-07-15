@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Search, Check, X, Link2Off } from "lucide-react";
+import { Check, X, Link2Off } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -9,7 +9,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -81,7 +81,7 @@ export function LinkParentDialog({
   );
 
   const handleSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value),
+    (value: string) => setSearch(value),
     [],
   );
   const handleSelectNone = useCallback(() => setSelectedId(null), []);
@@ -110,14 +110,8 @@ export function LinkParentDialog({
           <DialogTitle className="text-base">Link Parent Company</DialogTitle>
         </DialogHeader>
 
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search companies..."
-            value={search}
-            onChange={handleSearchChange}
-            className="pl-9"
-          />
+        <div className="min-w-0">
+          <SearchInput placeholder="Search companies..." value={search} onValueChange={handleSearchChange} />
         </div>
 
         <ScrollArea className="h-56">

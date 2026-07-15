@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -18,7 +18,6 @@ import {
   MessageSquareText,
   Search,
   Star,
-  X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { EmptyMailIllustration } from "@/components/illustrations";
@@ -127,7 +126,7 @@ export function ChannelSidebar({
   const [favoritesCollapsed, setFavoritesCollapsed] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value), []);
+  const handleSearchChange = useCallback((value: string) => setSearch(value), []);
   const handleClearSearch = useCallback(() => setSearch(""), []);
   const handleToggleGroups = useCallback(() => setGroupsCollapsed((p) => !p), []);
   const handleToggleDMs = useCallback(() => setDmsCollapsed((p) => !p), []);
@@ -285,26 +284,14 @@ export function ChannelSidebar({
             </div>
           </div>
 
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/50" />
-            <Input
-              ref={searchInputRef}
-              placeholder={showArchived ? "Search archived chats..." : "Search conversations..."}
-              value={search}
-              onChange={handleSearchChange}
-              className="pl-8 h-8 text-[13px] bg-muted/30 border-border/30 rounded-lg placeholder:text-muted-foreground/40"
-            />
-            {search && (
-              <button
-                type="button"
-                onClick={handleClearSearch}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-foreground"
-                aria-label="Clear search"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            )}
-          </div>
+          <SearchInput
+            ref={searchInputRef}
+            placeholder={showArchived ? "Search archived chats..." : "Search conversations..."}
+            value={search}
+            onValueChange={handleSearchChange}
+            onClear={handleClearSearch}
+            inputClassName="bg-muted/30 border-border/30 rounded-lg placeholder:text-muted-foreground/40"
+          />
         </div>
 
         <div

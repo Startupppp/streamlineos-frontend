@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -74,8 +74,8 @@ export function ComponentsPageContent() {
     router.replace(`?${params.toString()}`, { scroll: false });
   }
 
-  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setSearchInput(e.target.value);
+  function handleSearchChange(value: string) {
+    setSearchInput(value);
   }
   function handleTypeChange(value: string) { updateParams({ type: value === "all" ? "" : value }); }
   function handleActiveChange(value: string) { updateParams({ active: value === "all" ? "" : value }); }
@@ -119,11 +119,11 @@ export function ComponentsPageContent() {
 
   const filters = (
     <>
-      <Input
+      <SearchInput
         value={searchInput}
-        onChange={handleSearchChange}
+        onValueChange={handleSearchChange}
         placeholder="Search components…"
-        className="w-48 text-xs"
+        className="w-48"
       />
       <Select value={typeFilter || "all"} onValueChange={handleTypeChange}>
         <SelectTrigger className="w-44 text-xs">

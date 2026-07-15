@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyLeadsIllustration } from "@/components/illustrations";
@@ -20,7 +20,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { CsvUploadDialog } from "@/features/crm/leads/csv-upload-dialog";
 import { LeadDistributionDialog } from "@/features/crm/leads/lead-distribution-dialog";
-import { Search, Users, ArrowRight, FileSpreadsheet } from "lucide-react";
+import { Users, ArrowRight, FileSpreadsheet } from "lucide-react";
 import { useLeads } from "@/hooks/api/leads";
 import { useQueryClient } from "@tanstack/react-query";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
@@ -133,9 +133,8 @@ export default function LeadDistributionPage() {
     [filteredLeads],
   );
 
-  const handleSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setInputValue(e.target.value);
+  const handleSearchChange = useCallback((value: string) => {
+    setInputValue(value);
     },
     [],
   );
@@ -188,15 +187,9 @@ export default function LeadDistributionPage() {
       subtitle={isLoading ? undefined : `${data?.totalCount ?? 0} leads`}
       filters={
         <>
-          <div className="relative min-w-0 flex-1 lg:max-w-md">
-            <Search className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input
-              placeholder="Search leads..."
-              value={inputValue}
-              onChange={handleSearchChange}
-              className="pl-8 h-8 text-xs w-full"
-            />
-          </div>
+          <div className="min-w-0 flex-1 lg:max-w-md w-full">
+          <SearchInput placeholder="Search leads..." value={inputValue} onValueChange={handleSearchChange} />
+        </div>
           <Select value={statusFilter} onValueChange={handleStatusChange}>
             <SelectTrigger className="text-xs w-[140px]">
               <SelectValue placeholder="All statuses" />

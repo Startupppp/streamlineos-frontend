@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -556,8 +557,8 @@ export default function NotificationEventsPage() {
     void refetch();
   }, [refetch]);
 
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
   }, []);
 
   const handleModuleChange = useCallback((value: string) => {
@@ -566,12 +567,12 @@ export default function NotificationEventsPage() {
 
   const filters = (
     <>
-      <Input
+      <SearchInput
         placeholder="Search events…"
         value={search}
-        onChange={handleSearchChange}
-        className="w-56 text-xs"
-      />
+        onValueChange={handleSearchChange}
+         className="w-56"
+       />
       <Select value={moduleFilter} onValueChange={handleModuleChange}>
         <SelectTrigger className="w-44 text-xs">
           <SelectValue placeholder="All modules" />

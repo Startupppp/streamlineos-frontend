@@ -4,7 +4,7 @@ import { useState, useCallback, useMemo } from "react";
 import { keepPreviousData } from "@tanstack/react-query";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -20,9 +20,7 @@ import type { User } from "@/hooks/api/users";
 import { getApiError } from "@/lib/api-client";
 import { UserDetailSheet } from "./user-detail-sheet";
 import { toast } from "sonner";
-import {
-  Search,
-  RefreshCw,
+import { RefreshCw,
   ShieldCheck,
   Trash2,
   MoreHorizontal,
@@ -111,9 +109,8 @@ export function ArchivedUsersPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  const handleSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setSearch(e.target.value);
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
       setPage(1);
     },
     [],
@@ -230,15 +227,9 @@ export function ArchivedUsersPage() {
         subtitle="Archived members no longer have access."
         badge={pagination?.total !== undefined ? String(pagination.total) : undefined}
         filters={
-          <div className="relative flex-1 min-w-[180px] max-w-sm">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input
-              placeholder="Search archived users..."
-              value={search}
-              onChange={handleSearchChange}
-              className="pl-8 h-8 text-xs"
-            />
-          </div>
+          <div className="min-w-0 flex-1 min-w-[180px] max-w-sm">
+          <SearchInput placeholder="Search archived users..." value={search} onValueChange={handleSearchChange} />
+        </div>
         }
       >
         <div className="flex flex-1 min-h-0 flex-col space-y-3">

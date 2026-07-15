@@ -9,11 +9,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Users } from "lucide-react";
+import { Plus, Users } from "lucide-react";
 import { toast } from "sonner";
 import {
   useChatOrgUsers,
@@ -96,7 +96,7 @@ export function NewDMDialog({
   );
 
   const handleSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value),
+    (value: string) => setSearch(value),
     [],
   );
   const handleSelectUser = useCallback(
@@ -143,16 +143,9 @@ export function NewDMDialog({
           <DialogTitle className="text-[16px]">New Direct Message</DialogTitle>
         </DialogHeader>
         <div className="px-4 pb-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
-            <Input
-              placeholder="Search by name or email..."
-              value={search}
-              onChange={handleSearchChange}
-              className="pl-9 h-8 bg-muted/30 border-border/30"
-              autoFocus
-            />
-          </div>
+          <div className="min-w-0 bg-muted/30 border-border/30">
+          <SearchInput placeholder="Search by name or email..." value={search} onValueChange={handleSearchChange} autoFocus />
+        </div>
         </div>
         <ScrollArea className="h-[340px] border-t border-border/30">
           <div className="p-1">

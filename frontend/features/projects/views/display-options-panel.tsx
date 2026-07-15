@@ -295,7 +295,7 @@ export const DisplayOptionsPanel = memo(function DisplayOptionsPanel({
         <Button
           variant="outline"
           size="sm"
-          className="shrink-0 gap-1.5 bg-card px-2.5 text-xs font-normal"
+          className="shrink-0 gap-1.5 px-2.5 text-xs font-normal"
           aria-label="Display options"
         >
           <Settings2 className="h-3.5 w-3.5 shrink-0" />

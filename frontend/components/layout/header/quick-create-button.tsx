@@ -102,7 +102,7 @@ export function QuickCreateButton() {
         <button
           type="button"
           aria-label="Quick create"
-          className="w-8 rounded-lg flex items-center justify-center bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm hover:shadow transition-all duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+          className="size-8 rounded-lg flex items-center justify-center bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm hover:shadow transition-all duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
         >
           <Plus className="h-4 w-4" />
         </button>

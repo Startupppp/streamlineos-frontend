@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Plus, Database } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import {
   Select,
   SelectContent,
@@ -149,8 +149,8 @@ export default function HrTemplatesPage() {
     });
   }, [seedDefaults]);
 
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
     setPage(1);
   }, []);
 
@@ -198,12 +198,12 @@ export default function HrTemplatesPage() {
         filters={
           <div className="flex items-center gap-2 flex-wrap">
             <div className="relative">
-              <Input
+              <SearchInput
                 placeholder="Search templates..."
                 value={search}
-                onChange={handleSearchChange}
-                className="w-56 pl-3 text-xs"
-              />
+                onValueChange={handleSearchChange}
+                 className="w-56"
+               />
             </div>
             <Select value={kind} onValueChange={(v) => { setKind(v as HrTemplateKind | "all"); setPage(1); }}>
               <SelectTrigger className="w-44 text-xs">

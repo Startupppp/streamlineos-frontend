@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion, useReducedMotion } from "framer-motion";
-import { Plus, Search, X, Filter } from "lucide-react";
+import { Plus, Filter, X } from "lucide-react";
 import {
   EmptyWarehouseIllustration,
   EmptySearchIllustration,
@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -210,12 +211,9 @@ export default function WarehousesPage() {
     [searchParams, router],
   );
 
-  const handleSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setLocalSearch(e.target.value);
-    },
-    [],
-  );
+  const handleSearchChange = useCallback((value: string) => {
+    setLocalSearch(value);
+  }, []);
 
   const handleSearchKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -295,33 +293,18 @@ export default function WarehousesPage() {
 
   const filterBar = (
     <div className="flex w-full min-w-0 flex-wrap items-center gap-2">
-      <div className="relative min-w-0 flex-1 lg:max-w-md">
-        <Search
-          className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none"
-          aria-hidden="true"
-        />
-        <Input
-          className="w-full min-w-0 pl-8 pr-8 text-xs"
-          placeholder="Search by name, code, city, country…"
-          value={localSearch}
-          onChange={handleSearchChange}
-          onKeyDown={handleSearchKeyDown}
-          aria-label="Search warehouses"
-        />
-        {localSearch && (
-          <button
-            type="button"
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            onClick={() => {
-              setLocalSearch("");
-              setParam("q", undefined);
-            }}
-            aria-label="Clear search"
-          >
-            <X className="h-3 w-3" aria-hidden="true" />
-          </button>
-        )}
-      </div>
+      <SearchInput
+        className="min-w-0 flex-1 lg:max-w-md"
+        placeholder="Search by name, code, city, country…"
+        value={localSearch}
+        onValueChange={handleSearchChange}
+        onClear={() => {
+          setLocalSearch("");
+          setParam("q", undefined);
+        }}
+        onKeyDown={handleSearchKeyDown}
+        aria-label="Search warehouses"
+      />
       <div className="hidden min-w-0 items-center gap-2 sm:flex">
         <Select value={statusValue} onValueChange={handleStatusChange}>
           <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[140px] text-xs")}>

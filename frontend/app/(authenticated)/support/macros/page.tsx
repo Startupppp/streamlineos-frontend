@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -37,7 +38,7 @@ import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyMailIllustration } from "@/components/illustrations";
-import { Plus, Copy, Pencil, Trash2, Search } from "lucide-react";
+import { Plus, Copy, Pencil, Trash2 } from "lucide-react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import {
   useSupportMacros,
@@ -442,8 +443,8 @@ export default function SupportMacrosPage() {
     setCreateOpen(true);
   }
 
-  function handleSearchChange(event: ChangeEvent<HTMLInputElement>) {
-    setSearch(event.target.value);
+  function handleSearchChange(value: string) {
+    setSearch(value);
   }
 
   function handleRetry() {
@@ -485,14 +486,8 @@ export default function SupportMacrosPage() {
       }
     >
       <div className="flex flex-1 min-h-0 flex-col space-y-4">
-        <div className="relative max-w-sm">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            className="pl-8"
-            placeholder="Search responses…"
-            value={search}
-            onChange={handleSearchChange}
-          />
+        <div className="min-w-0 max-w-sm">
+          <SearchInput placeholder="Search responses…" value={search} onValueChange={handleSearchChange} />
         </div>
 
         {isLoading ? (

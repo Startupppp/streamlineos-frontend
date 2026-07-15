@@ -9,11 +9,11 @@ import {
 } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
-import { Download, Search } from "lucide-react";
+import { Download } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import {
   Select,
   SelectContent,
@@ -220,8 +220,8 @@ function StockSummaryContent() {
     void query.refetch();
   }
 
-  function handleSearchChange(e: ChangeEvent<HTMLInputElement>): void {
-    setSearch(e.target.value);
+  function handleSearchChange(value: string) {
+    setSearch(value);
   }
 
   function handleClearSearch(): void {
@@ -277,15 +277,9 @@ function StockSummaryContent() {
       }
       filters={
         <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 lg:gap-3">
-          <div className="relative min-w-0 flex-1 lg:max-w-md">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-            <Input
-              value={search}
-              onChange={handleSearchChange}
-              placeholder="Search products, SKU…"
-              className="w-full min-w-0 pl-8 text-xs"
-            />
-          </div>
+          <div className="min-w-0 flex-1 lg:max-w-md w-full">
+          <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search products, SKU…" />
+        </div>
           <Select value={warehouseParam} onValueChange={handleWarehouseChange}>
             <SelectTrigger className="w-[160px] min-w-0 text-xs shrink-0">
               <SelectValue placeholder="All warehouses" />

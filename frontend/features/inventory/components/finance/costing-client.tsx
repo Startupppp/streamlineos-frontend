@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import Link from "next/link";
-import { Lock, Search } from "lucide-react";
+import { Lock } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Tooltip,
@@ -163,8 +163,8 @@ export function CostingClient() {
   const rows = data?.items ?? [];
   const total = data?.total ?? 0;
 
-  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>): void {
-    setSearch(e.target.value);
+  function handleSearchChange(value: string) {
+    setSearch(value);
     setPage(1);
   }
 
@@ -182,14 +182,8 @@ export function CostingClient() {
         </Button>
       }
       filters={
-        <div className="relative w-64">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-          <Input
-            placeholder="Search products..."
-            value={search}
-            onChange={handleSearchChange}
-            className="pl-8 h-8 text-sm"
-          />
+        <div className="min-w-0 w-64">
+          <SearchInput placeholder="Search products..." value={search} onValueChange={handleSearchChange} />
         </div>
       }
     >

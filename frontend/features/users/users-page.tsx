@@ -5,7 +5,7 @@ import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { keepPreviousData } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import {
   Select,
   SelectContent,
@@ -46,9 +46,7 @@ import { UserActionsMenu } from "./user-actions-menu";
 import { UserBulkAssignDialog } from "./user-bulk-assign-dialog";
 import { UserStatsCards } from "./user-stats-cards";
 import { toast } from "sonner";
-import {
-  Search,
-  Users,
+import { Users,
   ShieldOff,
   UserX,
   RefreshCw,
@@ -116,7 +114,7 @@ export function UsersPage() {
   }, [debouncedSearch, q, pushParams]);
 
   const handleSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value),
+    (value: string) => setSearch(value),
     [],
   );
 
@@ -420,15 +418,9 @@ export function UsersPage() {
         }
         filters={
           <div className="flex flex-wrap items-center gap-2 w-full">
-            <div className="relative flex-1 min-w-[160px] max-w-xs">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input
-                placeholder="Search users..."
-                value={search}
-                onChange={handleSearchChange}
-                className="pl-8 h-8 text-xs"
-              />
-            </div>
+            <div className="min-w-0 flex-1 min-w-[160px] max-w-xs">
+          <SearchInput placeholder="Search users..." value={search} onValueChange={handleSearchChange} />
+        </div>
             <Select value={status} onValueChange={handleStatusChange}>
               <SelectTrigger className="h-8 w-32 text-xs">
                 <SelectValue />

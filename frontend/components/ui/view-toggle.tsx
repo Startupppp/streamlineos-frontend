@@ -29,7 +29,7 @@ export function ViewToggle<T extends string = string>({
     <div
       role="group"
       className={cn(
-        "inline-flex h-9 items-center gap-1 rounded-lg border border-border bg-card p-1",
+        "inline-flex h-9 items-center gap-1 rounded-lg border border-input bg-card p-1",
         className,
       )}
     >

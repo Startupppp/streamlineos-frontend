@@ -4,11 +4,12 @@ import { useState, useCallback } from "react";
 import { useHrDepartments, useCreateDepartment } from "@/hooks/api/hr/employees";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Card, CardContent } from "@/components/ui/card";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { Plus, Search, Building2 } from "lucide-react";
+import { Plus, Building2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -31,7 +32,7 @@ export function DepartmentsTab({ canManage }: Props) {
   const [name, setName] = useState("");
 
   const handleSearch = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value),
+    (value: string) => setSearch(value),
     [],
   );
   const handleNameChange = useCallback(
@@ -77,14 +78,8 @@ export function DepartmentsTab({ canManage }: Props) {
   return (
     <>
       <div className="flex items-center gap-2 mb-3">
-        <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={handleSearch}
-            placeholder="Search departments..."
-            className="pl-8 text-sm"
-          />
+        <div className="min-w-0 flex-1 max-w-xs">
+          <SearchInput value={search} onValueChange={handleSearch} placeholder="Search departments..." />
         </div>
         {canManage && (
           <Button size="sm" className="gap-1.5" onClick={handleCreate}>

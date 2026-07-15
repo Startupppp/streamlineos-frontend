@@ -8,6 +8,7 @@ import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Label } from "@/components/ui/label";
 import {
   Sheet,
@@ -128,11 +129,11 @@ export function KpiLibraryTab() {
     <div className="space-y-4">
       <div className="flex flex-wrap gap-3 items-center justify-between">
         <div className="flex gap-3 flex-wrap">
-          <Input
+          <SearchInput
             className="w-60"
             placeholder="Search KPIs…"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onValueChange={setSearch}
           />
           <div className="flex gap-1.5 flex-wrap">
             {categories.map((cat) => (

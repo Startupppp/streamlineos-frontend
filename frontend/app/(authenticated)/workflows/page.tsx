@@ -12,7 +12,6 @@ import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import {
   Plus,
-  Search,
   Copy,
   Trash2,
   Pencil,
@@ -27,6 +26,7 @@ import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -379,8 +379,8 @@ export default function WorkflowsPage() {
     });
   }
 
-  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setSearch(e.target.value);
+  function handleSearchChange(value: string) {
+    setSearch(value);
   }
 
   function handleStatusChange(value: string) {
@@ -406,15 +406,9 @@ export default function WorkflowsPage() {
       }
       filters={
         <div className="flex items-center gap-3 w-full flex-wrap">
-          <div className="relative flex-1 min-w-[180px] max-w-xs">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-            <Input
-              placeholder="Search workflows…"
-              className="pl-8 h-8 text-sm"
-              value={search}
-              onChange={handleSearchChange}
-            />
-          </div>
+          <div className="min-w-0 flex-1 min-w-[180px] max-w-xs">
+          <SearchInput placeholder="Search workflows…" value={search} onValueChange={handleSearchChange} />
+        </div>
           <Select value={statusFilter} onValueChange={handleStatusChange}>
             <SelectTrigger className="w-[140px] text-sm">
               <SelectValue placeholder="All statuses" />

@@ -7,13 +7,14 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Skeleton } from "@/components/ui/skeleton";
 import { HrSheet } from "@/features/hr/hr-sheet";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { format, differenceInDays } from "date-fns";
-import { Plus, Award, Calendar, ExternalLink, AlertTriangle, CheckCircle2, XCircle, User, AlertCircle, Search } from "lucide-react";
+import { Plus, Award, Calendar, ExternalLink, AlertTriangle, CheckCircle2, XCircle, User, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type CertStatus = "VALID" | "EXPIRING_SOON" | "EXPIRED";
@@ -97,7 +98,7 @@ export default function CertificationsPage() {
   const handleExpiryDateChange = useCallback((value: string) => setExpiryDate(value), []);
   const handleCredentialIdChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setCredentialId(e.target.value), []);
   const handleCredentialUrlChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setCredentialUrl(e.target.value), []);
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value), []);
+  const handleSearchChange = useCallback((value: string) => setSearchQuery(value), []);
   const handleSetFilterAll = useCallback(() => setStatusFilter("ALL"), []);
   const handleSetFilterValid = useCallback(() => setStatusFilter("VALID"), []);
   const handleSetFilterExpiring = useCallback(() => setStatusFilter("EXPIRING_SOON"), []);
@@ -195,15 +196,9 @@ export default function CertificationsPage() {
       ) : (
         <div className="space-y-3">
           <div className="bg-muted/40 rounded-lg px-3 py-2 flex items-center gap-2 flex-wrap">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input
-                placeholder="Search certifications..."
-                value={searchQuery}
-                onChange={handleSearchChange}
-                className="pl-8 h-8 text-xs w-48"
-              />
-            </div>
+            <div className="min-w-0 w-48">
+          <SearchInput placeholder="Search certifications..." value={searchQuery} onValueChange={handleSearchChange} />
+        </div>
             <div className="flex items-center gap-1 flex-wrap">
               <button
                 type="button"

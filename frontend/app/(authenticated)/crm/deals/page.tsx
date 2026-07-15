@@ -3,11 +3,11 @@
 import { useState, useMemo, useCallback, useTransition, useEffect } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
-import { Plus, Download, LayoutGrid, TableIcon, Search } from "lucide-react";
+import { Plus, Download, LayoutGrid, TableIcon } from "lucide-react";
 import { ConfettiOverlay } from "@/features/crm/deals/confetti-overlay";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -107,8 +107,8 @@ export default function DealsPage() {
   const handleCreateSuccess = useCallback(() => setCreateOpen(false), []);
   const handleSidePanelClose = useCallback(() => setSidePanelDealId(null), []);
 
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchInput(e.target.value);
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchInput(value);
   }, []);
 
   const handleStageFilterChange = useCallback((value: string) => {
@@ -310,16 +310,9 @@ export default function DealsPage() {
 
   const filterBar = (
     <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 lg:gap-3">
-      <div className="relative min-w-0 flex-1 lg:max-w-[240px]">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-        <Input
-          value={searchInput}
-          onChange={handleSearchChange}
-          placeholder="Search deals..."
-          className="w-full pl-8 text-xs"
-          aria-label="Search deals"
-        />
-      </div>
+      <div className="min-w-0 flex-1 lg:max-w-[240px] w-full">
+          <SearchInput value={searchInput} onValueChange={handleSearchChange} placeholder="Search deals..." aria-label="Search deals" />
+        </div>
       <div className="hidden sm:flex items-center gap-2">
         <Select value={stageFromUrl ?? "all"} onValueChange={handleStageFilterChange}>
           <SelectTrigger className="w-[140px] text-xs">

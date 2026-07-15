@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { Check, ChevronDown, Search, SlidersHorizontal, X } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Check, ChevronDown, SlidersHorizontal, X } from "lucide-react";
+import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -33,7 +33,7 @@ import { cn } from "@/lib/utils";
 
 interface NotificationFilterBarProps {
   search: string;
-  onSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onSearchChange: (value: string) => void;
   onClearSearch: () => void;
   activeSection: NotificationSection;
   onSectionChange: (section: NotificationSection) => void;
@@ -113,28 +113,17 @@ export function NotificationFilterBar({
     (activeSection !== "ALL" ? 1 : 0) + (activeCategory ? 1 : 0) + (activePriority ? 1 : 0);
 
   const filterControlClassName =
-    "h-8 bg-card border-border text-xs font-normal shadow-xs hover:border-ring/50 focus-visible:border-ring focus-visible:ring-ring/30 focus-visible:ring-[3px]";
+    "h-9 border-input bg-card text-xs font-normal";
 
   return (
     <div className="flex w-full min-w-0 items-center gap-2">
-      <div className="relative flex-1 min-w-0">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-        <Input
-          value={search}
-          onChange={onSearchChange}
-          placeholder="Search notifications…"
-          className={cn(filterControlClassName, "pl-8 pr-8")}
-        />
-        {search && (
-          <button
-            type="button"
-            onClick={onClearSearch}
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-          >
-            <X className="h-3 w-3" />
-          </button>
-        )}
-      </div>
+      <SearchInput
+        className="min-w-0 flex-1"
+        value={search}
+        onValueChange={onSearchChange}
+        onClear={onClearSearch}
+        placeholder="Search notifications…"
+      />
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

@@ -18,7 +18,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -171,8 +171,8 @@ export function RisksPage({ projectId }: RisksPageProps) {
     });
   }
 
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
   }, []);
   const handleNewRisk = useCallback(() => setSheetOpen(true), []);
   const handleClearFilters = useCallback(() => {
@@ -292,11 +292,11 @@ export function RisksPage({ projectId }: RisksPageProps) {
                   ))}
                 </SelectContent>
               </Select>
-              <Input
-                className="w-52 text-xs"
+              <SearchInput
+                className="w-52"
                 placeholder="Search risks…"
                 value={search}
-                onChange={handleSearchChange}
+                onValueChange={handleSearchChange}
               />
               {isFiltered ? (
                 <Button size="sm" variant="ghost" className="text-xs" onClick={handleClearFilters}>

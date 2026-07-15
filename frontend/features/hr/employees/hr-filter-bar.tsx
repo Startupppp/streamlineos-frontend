@@ -1,6 +1,6 @@
 "use client";
 
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, X } from "lucide-react";
+import { X } from "lucide-react";
 import type { StatusFilter, RoleFilter } from "./hr-types";
 
 interface HrFilterBarProps {
@@ -40,8 +40,8 @@ export function HrFilterBar({
   const hasActiveFilters =
     !!searchTerm || deptFilter !== "All" || statusFilter !== "Active" || roleFilter !== "All";
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onSearchChange(e.target.value);
+  const handleSearchChange = (value: string) => {
+    onSearchChange(value);
   };
 
   const handleStatusChange = (v: string) => {
@@ -54,16 +54,9 @@ export function HrFilterBar({
 
   return (
     <>
-      <div className="relative">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-        <Input
-          placeholder="Search employees..."
-          value={searchTerm}
-          onChange={handleSearchChange}
-          className="pl-8 h-8 w-[200px] text-xs"
-          aria-label="Search employees"
-        />
-      </div>
+      <div className="min-w-0 w-[200px]">
+          <SearchInput placeholder="Search employees..." value={searchTerm} onValueChange={handleSearchChange} aria-label="Search employees" />
+        </div>
 
       <Select value={deptFilter} onValueChange={onDeptChange}>
         <SelectTrigger className="w-[130px] text-xs">

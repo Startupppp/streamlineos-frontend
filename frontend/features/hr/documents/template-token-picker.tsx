@@ -2,9 +2,9 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Separator } from "@/components/ui/separator";
-import { Search, Braces } from "lucide-react";
+import { Braces } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { COMMON_TOKENS } from "./template-constants";
 
@@ -69,8 +69,8 @@ export function TemplateTokenPicker({
 }: TemplateTokenPickerProps) {
   const [search, setSearch] = useState("");
 
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
   }, []);
 
   const filteredTokens = useMemo(
@@ -97,14 +97,8 @@ export function TemplateTokenPicker({
         </div>
       </CardHeader>
       <CardContent className="p-4 space-y-3">
-        <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-          <Input
-            placeholder="Search tokens..."
-            value={search}
-            onChange={handleSearchChange}
-            className="pl-8 text-xs"
-          />
+        <div className="min-w-0">
+          <SearchInput placeholder="Search tokens..." value={search} onValueChange={handleSearchChange} />
         </div>
 
         <div className="flex flex-wrap gap-1.5">

@@ -9,9 +9,10 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Check, Copy, Loader2, RefreshCw, Search } from "lucide-react";
+import { Check, Copy, Loader2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -129,16 +130,9 @@ export function AddChannelMembersDialog({
         </DialogHeader>
 
         <div className="px-4 pb-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
-            <Input
-              placeholder="Search people..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 h-8 bg-muted/30 border-border/30"
-              autoFocus
-            />
-          </div>
+          <div className="min-w-0 bg-muted/30 border-border/30">
+          <SearchInput placeholder="Search people..." value={search} onValueChange={setSearch} autoFocus />
+        </div>
         </div>
 
         <ScrollArea className="h-[280px] border-t border-border/30">

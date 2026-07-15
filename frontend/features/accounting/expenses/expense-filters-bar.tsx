@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, type ChangeEvent } from "react";
-import { Search } from "lucide-react";
+import { useCallback, type ChangeEvent } from "react";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import {
   Select,
   SelectContent,
@@ -50,8 +50,8 @@ export function ExpenseFiltersBar({
   onEndDateChange,
 }: ExpenseFiltersBarProps) {
   const handleSearchChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
-      onSearchChange(e.target.value);
+    (value: string) => {
+      onSearchChange(value);
     },
     [onSearchChange],
   );
@@ -79,15 +79,9 @@ export function ExpenseFiltersBar({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <div className="relative flex-1 max-w-[220px]">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-        <Input
-          value={search}
-          onChange={handleSearchChange}
-          placeholder="Search merchant or description"
-          className="w-full pl-8 text-xs"
-        />
-      </div>
+      <div className="min-w-0 flex-1 max-w-[220px] w-full">
+          <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search merchant or description" />
+        </div>
       <Select value={status} onValueChange={handleStatusChange}>
         <SelectTrigger className="w-[170px] text-xs">
           <SelectValue />

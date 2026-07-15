@@ -4,7 +4,7 @@ import { useState, useCallback, type ChangeEvent } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, Pencil, Trash2, Archive, RotateCcw, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, Archive, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import {
   useOrgLocations,
@@ -44,6 +44,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import type { OrgLocation, LocationType } from "@/types/org-hierarchy";
 import { RequireModule } from "@/components/auth/require-module";
 
@@ -244,7 +245,7 @@ export default function OrgLocationsPage() {
   const handleToggleArchived = useCallback(() => setShowArchived((v) => !v), []);
   const handleSearchChange = useCallback((v: string) => setSearch(v), []);
 
-  function handleSearchInputChange(e: ChangeEvent<HTMLInputElement>) { handleSearchChange(e.target.value); }
+  function handleSearchInputChange(value: string) { handleSearchChange(value); }
 
   function makeRestoreHandler(loc: OrgLocation) { return () => handleRestore(loc); }
   function makeArchiveHandler(loc: OrgLocation) { return () => handleArchive(loc); }
@@ -362,10 +363,9 @@ export default function OrgLocationsPage() {
       }
       filters={
         <>
-          <div className="relative">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-            <Input className="pl-8 h-8 text-xs max-w-[240px]" placeholder="Search locations…" value={search} onChange={handleSearchInputChange} />
-          </div>
+          <div className="min-w-0 max-w-[240px]">
+          <SearchInput placeholder="Search locations…" value={search} onValueChange={handleSearchInputChange} />
+        </div>
           {archived.length > 0 && (
             <Button variant="outline" size="sm" className="text-xs" onClick={handleToggleArchived}>
               <Archive className="h-4 w-4 mr-1.5" />

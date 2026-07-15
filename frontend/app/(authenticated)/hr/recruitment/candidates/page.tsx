@@ -18,12 +18,11 @@ import {
   useBulkRejectCandidates,
 } from "@/hooks/api/hr";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 import {
   Plus,
-  Search,
   XCircle,
   CheckSquare,
   GitCompare,
@@ -212,8 +211,8 @@ export default function CandidatesPage() {
   function handleOpenAddSheet() {
     setSheetOpen(true);
   }
-  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setSearchQueryLocal(e.target.value);
+  function handleSearchChange(value: string) {
+    setSearchQueryLocal(value);
   }
   function handleClearStatusFilter() {
     setFilter("status", null);
@@ -230,15 +229,9 @@ export default function CandidatesPage() {
         backHref="/hr/recruitment"
         filters={
           <div className="flex flex-col sm:flex-row gap-2 w-full">
-            <div className="relative flex-1 max-w-xs">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input
-                placeholder="Search candidates…"
-                value={searchQuery}
-                onChange={handleSearchChange}
-                className="pl-9 h-8 text-sm"
-              />
-            </div>
+            <div className="min-w-0 flex-1 max-w-xs">
+          <SearchInput placeholder="Search candidates…" value={searchQuery} onValueChange={handleSearchChange} />
+        </div>
             <div className="flex items-center gap-1.5 flex-wrap">
               <button
                 onClick={handleClearStatusFilter}

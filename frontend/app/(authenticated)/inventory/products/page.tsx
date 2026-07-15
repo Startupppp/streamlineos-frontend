@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import Link from "next/link";
-import { Package, Search } from "lucide-react";
+import { Package } from "lucide-react";
 import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
@@ -12,7 +12,7 @@ import { EmptyProductsIllustration, EmptySearchIllustration } from "@/components
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import {
   Select,
   SelectContent,
@@ -239,8 +239,8 @@ function ProductsPageInner() {
     }
   }, [debouncedSearch]);
 
-  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>): void {
-    setSearch(e.target.value);
+  function handleSearchChange(value: string) {
+    setSearch(value);
   }
 
   function handleStatusChange(value: string): void {
@@ -391,15 +391,9 @@ function ProductsPageInner() {
 
   const filtersRow = isFirstLoad ? undefined : (
     <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
-      <div className="relative min-w-0 flex-1 lg:max-w-md">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-        <Input
-          value={search}
-          onChange={handleSearchChange}
-          placeholder="Search products by name, SKU, or barcode..."
-          className="w-full min-w-0 pl-8 text-xs"
-        />
-      </div>
+      <div className="min-w-0 flex-1 lg:max-w-md w-full">
+          <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search products by name, SKU, or barcode..." />
+        </div>
       <div className="hidden min-w-0 flex-[2] flex-row flex-nowrap items-center gap-2 sm:flex">
         <Select value={statusParam || "all"} onValueChange={handleStatusChange}>
           <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "min-w-0 flex-1 text-xs")}>

@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback } from "react";
-import { Search, X } from "lucide-react";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
@@ -38,7 +38,7 @@ export function TasksToolbar({
   onClearFilters,
 }: TasksToolbarProps) {
   const handleSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => onSearchChange(e.target.value),
+    (value: string) => onSearchChange(value),
     [onSearchChange],
   );
   const handleTypeFilter = useCallback(
@@ -62,15 +62,9 @@ export function TasksToolbar({
 
   return (
     <div className="flex items-center gap-2 flex-wrap w-full">
-      <div className="relative flex-1 min-w-[140px] sm:flex-none sm:w-[180px] sm:max-w-xs">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-        <Input
-          placeholder="Search tasks..."
-          value={search}
-          onChange={handleSearchChange}
-          className="pl-8 h-8 text-xs"
-        />
-      </div>
+      <div className="min-w-0 flex-1 min-w-[140px] sm:flex-none sm:w-[180px] sm:max-w-xs">
+          <SearchInput placeholder="Search tasks..." value={search} onValueChange={handleSearchChange} />
+        </div>
 
       <Select value={typeFilter || "all"} onValueChange={handleTypeFilter}>
         <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[110px] text-[11px]")}>

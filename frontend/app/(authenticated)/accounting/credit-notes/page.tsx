@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -160,8 +160,8 @@ export default function CreditNotesPage() {
     setPage(1);
   }
 
-  function handleCustomerSearchChange(e: React.ChangeEvent<HTMLInputElement>): void {
-    setCustomerSearch(e.target.value);
+  function handleCustomerSearchChange(value: string): void {
+    setCustomerSearch(value);
   }
 
   function handlePageChange(p: number): void {
@@ -264,11 +264,11 @@ export default function CreditNotesPage() {
               ))}
             </SelectContent>
           </Select>
-          <Input
-            className="w-[180px] text-xs"
+          <SearchInput
+            className="w-[180px]"
             placeholder="Search customer…"
             value={customerSearch}
-            onChange={handleCustomerSearchChange}
+            onValueChange={handleCustomerSearchChange}
           />
         </div>
       }

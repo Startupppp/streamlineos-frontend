@@ -41,6 +41,7 @@ import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetBody } from "@/components/ui/sheet";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -290,8 +291,8 @@ function ListView({
     });
   }, [holidays, yearFilter, search, sortDir]);
 
-  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setSearch(e.target.value);
+  function handleSearchChange(value: string) {
+    setSearch(value);
   }
 
   function handleSortToggle() {
@@ -301,12 +302,12 @@ function ListView({
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2 flex-wrap">
-        <Input
+        <SearchInput
           placeholder="Search holidays..."
           value={search}
-          onChange={handleSearchChange}
-          className="text-sm max-w-xs"
-        />
+          onValueChange={handleSearchChange}
+           className="max-w-xs"
+         />
         <Button variant="outline" size="sm" className="text-xs" onClick={handleSortToggle}>
           Date {sortDir === "asc" ? "↑" : "↓"}
         </Button>

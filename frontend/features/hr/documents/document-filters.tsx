@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback } from "react";
-import { Search, FileCheck, FileBadge, Shield, FileText, Building2, File } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { FileCheck, FileBadge, Shield, FileText, Building2, File } from "lucide-react";
+import { SearchInput } from "@/components/ui/search-input";
 import {
   Select,
   SelectContent,
@@ -65,25 +65,19 @@ export function DocumentFilters({
   onCategoryChange,
   categoryTabs,
 }: DocumentFiltersProps) {
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onSearchChange(e.target.value);
+  const handleSearchChange = (value: string) => {
+    onSearchChange(value);
   };
 
   return (
     <div className="bg-muted/40 rounded-lg px-3 py-2 flex flex-wrap items-center gap-2 w-full">
-      <div className="relative">
-        <Search
-          className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground"
-          aria-hidden="true"
-        />
-        <Input
-          placeholder="Search documents..."
-          value={searchTerm}
-          onChange={handleSearchChange}
-          className="pl-8 h-8 text-xs w-48"
-          aria-label="Search documents"
-        />
-      </div>
+      <SearchInput
+        placeholder="Search documents..."
+        value={searchTerm}
+        onValueChange={handleSearchChange}
+        className="w-48"
+        aria-label="Search documents"
+      />
 
       <Select value={selectedType} onValueChange={onTypeChange}>
         <SelectTrigger className="text-xs w-36 border-border">

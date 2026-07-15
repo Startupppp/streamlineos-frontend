@@ -1,11 +1,11 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { ArrowLeftRight, Search, X, Plus, Minus, CheckSquare, AlertTriangle, PackageOpen } from "lucide-react";
+import { ArrowLeftRight, Plus, Minus, CheckSquare, AlertTriangle, PackageOpen, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
@@ -429,27 +429,13 @@ export function SprintPlanningPanel({
                 )}
               </div>
 
-              <div className="space-y-1.5">
-                <div className="relative">
-                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-                  <Input
-                    value={backlogFilters.search}
-                    onChange={(e) => backlogFilters.setSearch(e.target.value)}
-                    placeholder="Search title or ID…"
-                    className="pl-7 h-8 text-xs"
-                    aria-label="Search backlog tickets"
-                  />
-                  {backlogFilters.search && (
-                    <button
-                      type="button"
-                      onClick={() => backlogFilters.setSearch("")}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      aria-label="Clear search"
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                  )}
-                </div>
+                <div className="space-y-1.5">
+                <SearchInput
+                  value={backlogFilters.search}
+                  onValueChange={backlogFilters.setSearch}
+                  placeholder="Search title or ID…"
+                  aria-label="Search backlog tickets"
+                />
 
                 <div className="flex gap-1.5 flex-wrap">
                   <Select value={backlogFilters.filterPriority} onValueChange={backlogFilters.setFilterPriority}>

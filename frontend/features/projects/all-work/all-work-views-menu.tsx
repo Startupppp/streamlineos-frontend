@@ -285,7 +285,7 @@ export function AllWorkViewsMenu({
           <PopoverTrigger asChild>
             <Button
               variant="outline"
-              className="shrink-0 gap-1 bg-card border-border px-2.5 text-xs font-normal shadow-xs"
+              className="shrink-0 gap-1 px-2.5 text-xs font-normal"
             >
               <BookmarkCheck className="h-3.5 w-3.5 shrink-0" />
               <span>Views</span>
@@ -343,14 +343,17 @@ export function AllWorkViewsMenu({
         </Popover>
 
         {hasActiveFilters && (
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="icon"
             onClick={handleOpenSave}
             title="Save current filters as a view"
-            className="flex h-8 items-center gap-1 rounded-md border border-border bg-card px-2 text-xs text-muted-foreground shadow-xs hover:text-foreground transition-colors"
+            aria-label="Save current filters as a view"
+            className="shrink-0"
           >
             <Bookmark className="h-3.5 w-3.5" />
-          </button>
+          </Button>
         )}
       </div>
 

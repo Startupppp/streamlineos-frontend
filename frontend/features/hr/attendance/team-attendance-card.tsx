@@ -5,9 +5,9 @@ import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, Search, Wifi, WifiOff, Coffee, LogOut } from "lucide-react";
+import { Users, Wifi, WifiOff, Coffee, LogOut } from "lucide-react";
 import { useHrTeamAttendanceStatus } from "@/hooks/api/hr";
 import { resolveImageUrl } from "@/lib/utils";
 import { getInitials } from "@/lib/format-utils";
@@ -49,7 +49,7 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
 }) {
   const { data, isLoading } = useHrTeamAttendanceStatus();
   const [search, setSearch] = useState("");
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value), []);
+  const handleSearchChange = useCallback((value: string) => setSearch(value), []);
 
   const filtered = (data ?? []).filter(
     (e) =>
@@ -100,14 +100,8 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
       </CardHeader>
 
       <CardContent className="space-y-3 pb-5">
-        <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-          <Input
-            placeholder="Search employees or departments…"
-            value={search}
-            onChange={handleSearchChange}
-            className="pl-8 h-8 text-sm"
-          />
+        <div className="min-w-0">
+          <SearchInput placeholder="Search employees or departments…" value={search} onValueChange={handleSearchChange} />
         </div>
 
         {isLoading ? (

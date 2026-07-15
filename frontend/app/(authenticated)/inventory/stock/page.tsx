@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { AlertTriangle, TrendingDown, CheckCircle2, Search } from "lucide-react";
+import { AlertTriangle, TrendingDown, CheckCircle2 } from "lucide-react";
 import { EmptyWarehouseIllustration, EmptySearchIllustration } from "@/components/illustrations";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -108,13 +108,10 @@ export default function StockLevelsPage() {
     setAvailabilityOpen(true);
   }, []);
 
-  const handleSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setSearchInput(e.target.value);
-      setPage(1);
-    },
-    [],
-  );
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchInput(value);
+    setPage(1);
+  }, []);
 
   const handleWarehouseChange = useCallback(
     (val: string) => {
@@ -224,18 +221,12 @@ export default function StockLevelsPage() {
 
   const levelsFilters = (
     <div className="flex w-full min-w-0 flex-wrap items-center gap-2">
-      <div className="relative min-w-0 flex-1 lg:max-w-xs">
-        <Search
-          className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none"
-          aria-hidden="true"
-        />
-        <Input
-          placeholder="Search product or SKU…"
-          value={searchInput}
-          onChange={handleSearchChange}
-          className="w-full pl-8 text-xs"
-        />
-      </div>
+      <SearchInput
+        className="min-w-0 flex-1 lg:max-w-xs"
+        placeholder="Search product or SKU…"
+        value={searchInput}
+        onValueChange={handleSearchChange}
+      />
       <div className="flex min-w-0 flex-row flex-nowrap items-center gap-2">
         <Select value={warehouseParam} onValueChange={handleWarehouseChange}>
           <SelectTrigger className="text-xs w-[160px]">

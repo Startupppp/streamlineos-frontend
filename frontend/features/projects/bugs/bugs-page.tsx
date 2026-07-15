@@ -16,7 +16,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -145,8 +145,8 @@ export function BugsPage({ projectId }: BugsPageProps) {
   const { data: members = [] } = useProjectMembers(projectId);
   const deleteBug = useDeleteBug();
 
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
   }, []);
 
   const handleEdit = useCallback((bug: Bug) => { setEditBug(bug); setSheetOpen(true); }, []);
@@ -260,11 +260,11 @@ export function BugsPage({ projectId }: BugsPageProps) {
   const filtersBar = (
     <div className={cn(PM_TOOLBAR, "w-full")}>
       <div className="flex min-w-0 flex-wrap items-center gap-2">
-        <Input
+        <SearchInput
           placeholder="Search bugs..."
           value={search}
-          onChange={handleSearchChange}
-          className="w-44 text-[11px]"
+          onValueChange={handleSearchChange}
+          className="w-44"
         />
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-32 text-[11px]"><SelectValue placeholder="Status" /></SelectTrigger>

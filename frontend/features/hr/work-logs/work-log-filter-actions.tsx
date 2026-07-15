@@ -185,7 +185,7 @@ export function WorkLogFilterActions({
   return (
     <div className="flex flex-wrap gap-2 w-full sm:w-auto">
       <Select value={filters.year.toString()} onValueChange={handleYearChange}>
-        <SelectTrigger className="w-[84px] h-8 text-xs border-border" aria-label="Select year">
+        <SelectTrigger className="h-9 w-[84px] text-xs" aria-label="Select year">
           <SelectValue placeholder="Year" />
         </SelectTrigger>
         <SelectContent className="w-[var(--radix-select-trigger-width)]">
@@ -196,7 +196,7 @@ export function WorkLogFilterActions({
       </Select>
 
       <Select value={filters.quarter.toString()} onValueChange={handleQuarterChange}>
-        <SelectTrigger className="w-[130px] h-8 text-xs border-border" aria-label="Select quarter">
+        <SelectTrigger className="h-9 w-[130px] text-xs" aria-label="Select quarter">
           <SelectValue placeholder="Quarter" />
         </SelectTrigger>
         <SelectContent className="w-[var(--radix-select-trigger-width)]">
@@ -214,7 +214,7 @@ export function WorkLogFilterActions({
               variant="outline"
               role="combobox"
               aria-expanded={employeeSearchOpen}
-              className="w-[170px] justify-between font-normal text-xs border-border"
+              className="w-[170px] justify-between text-xs font-normal"
             >
               <span className="flex items-center gap-1.5 truncate">
                 <Users className="h-3 w-3 text-muted-foreground shrink-0" />
@@ -271,7 +271,7 @@ export function WorkLogFilterActions({
 
       <Sheet onOpenChange={handleSheetOpen}>
         <SheetTrigger asChild>
-          <Button variant="outline" size="sm" className="gap-1.5 text-xs border-border relative">
+          <Button variant="outline" size="sm" className="relative gap-1.5 text-xs">
             <SlidersHorizontal className="h-3 w-3" />
             <span className="hidden sm:inline">Filters</span>
             {activeFilterCount > 0 && (
@@ -437,7 +437,7 @@ export function WorkLogFilterActions({
       </Sheet>
 
       {isAdminOrCeo && (
-        <Button variant="outline" size="sm" className="gap-1.5 text-xs border-border" onClick={onExport}>
+        <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={onExport}>
           <Download className="h-3 w-3" />
           <span className="hidden sm:inline">Export</span>
         </Button>

@@ -10,7 +10,7 @@ import {
 } from "@/hooks/api/hr/recruitment";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import {
   Select,
   SelectContent,
@@ -21,7 +21,7 @@ import {
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ErrorState } from "@/components/shared/error-state";
 import { toast } from "sonner";
-import { Plus, Search } from "lucide-react";
+import { Plus } from "lucide-react";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 import { QuestionList } from "@/features/hr/recruitment/question-bank/question-list";
@@ -94,9 +94,8 @@ export default function QuestionBankPage() {
     if (!open) setDeleteTargetId(null);
   }, []);
 
-  const handleSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setSearch(e.target.value);
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
     },
     [],
   );
@@ -129,15 +128,9 @@ export default function QuestionBankPage() {
       }
       filters={
         <div className="flex items-center gap-2">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input
-              className="pl-8 h-8 w-[200px] text-sm"
-              placeholder="Search questions..."
-              value={search}
-              onChange={handleSearchChange}
-            />
-          </div>
+          <div className="min-w-0 w-[200px]">
+          <SearchInput placeholder="Search questions..." value={search} onValueChange={handleSearchChange} />
+        </div>
           <Select value={category} onValueChange={setCategory}>
             <SelectTrigger className="w-[150px] h-8 text-sm">
               <SelectValue />

@@ -13,7 +13,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -113,8 +113,8 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
   const handleNew = useCallback(() => { setEditCr(null); setSheetOpen(true); }, []);
   const handleEdit = useCallback((cr: ChangeRequest) => { setEditCr(cr); setSheetOpen(true); }, []);
   const handleAlertOpenChange = useCallback((open: boolean) => { if (!open) setDeleteTarget(null); }, []);
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
   }, []);
 
   const handleDelete = useCallback(() => {
@@ -216,11 +216,11 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
   const filtersBar = (
     <div className={cn(PM_TOOLBAR, "sm:justify-start")}>
       <div className="flex w-full min-w-0 flex-wrap items-center gap-2">
-        <Input
+        <SearchInput
           placeholder="Search..."
           value={search}
-          onChange={handleSearchChange}
-          className="w-44 text-[11px]"
+          onValueChange={handleSearchChange}
+          className="w-44"
         />
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-40 text-[11px]">

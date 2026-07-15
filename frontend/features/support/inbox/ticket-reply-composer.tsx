@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
-import { Loader2, Send, Paperclip, X, FileText, Image as ImageIcon, Wand2, Search } from "lucide-react";
+import { Loader2, Send, Paperclip, X, FileText, Image as ImageIcon, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -138,7 +138,7 @@ export function TicketReplyComposer({ ticketId }: TicketReplyComposerProps) {
   }, [replyText, isInternal, ticketId]);
 
   const handleMacroSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setMacroSearch(e.target.value),
+    (value: string) => setMacroSearch(value),
     [],
   );
 
@@ -286,16 +286,9 @@ export function TicketReplyComposer({ ticketId }: TicketReplyComposerProps) {
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-72 p-2" align="end">
-            <div className="relative mb-2">
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input
-                className="pl-7 h-8 text-xs"
-                placeholder="Search canned responses…"
-                value={macroSearch}
-                onChange={handleMacroSearchChange}
-                autoFocus
-              />
-            </div>
+            <div className="min-w-0 mb-2">
+          <SearchInput placeholder="Search canned responses…" value={macroSearch} onValueChange={handleMacroSearchChange} autoFocus />
+        </div>
             <div className="max-h-56 overflow-y-auto space-y-0.5">
               {filteredMacros.length === 0 ? (
                 <p className="text-xs text-muted-foreground text-center py-3">

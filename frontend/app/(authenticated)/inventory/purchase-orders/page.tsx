@@ -3,14 +3,14 @@
 import { memo, useState, useTransition, type ChangeEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Plus, Search, MoreHorizontal, Store } from "lucide-react";
+import { Plus, MoreHorizontal, Store } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
@@ -289,8 +289,8 @@ export default function PurchaseOrdersListPage() {
     updateParams({ vendor: value, page: "1" });
   }
 
-  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>): void {
-    setSearch(e.target.value);
+  function handleSearchChange(value: string) {
+    setSearch(value);
   }
 
   function handlePageChange(nextPage: number): void {
@@ -332,15 +332,9 @@ export default function PurchaseOrdersListPage() {
 
   const filterBar = (
     <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 lg:gap-3">
-      <div className="relative min-w-0 flex-1 lg:max-w-md">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-        <Input
-          value={search}
-          onChange={handleSearchChange}
-          placeholder="Search PO number or vendor…"
-          className="w-full min-w-0 pl-8 text-xs"
-        />
-      </div>
+      <div className="min-w-0 flex-1 lg:max-w-md w-full">
+          <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search PO number or vendor…" />
+        </div>
       <div className="hidden min-w-0 flex-[2] flex-row flex-nowrap items-center gap-2 sm:flex lg:gap-3">
         <Select value={statusParam} onValueChange={handleStatusChange}>
           <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "min-w-0 flex-1 text-xs")}>

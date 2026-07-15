@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { Search } from "lucide-react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -11,7 +10,7 @@ import { ErrorState } from "@/components/shared";
 import { EmptyOrdersIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { useSalesOrders } from "@/hooks/api/inventory/sales-orders";
 import { SO_STATUS_BADGE, SO_STATUS_LABEL } from "@/features/inventory/lib/inventory-status";
 import type { SalesOrderListItem, SalesOrderStatus } from "@/hooks/api/inventory/sales-orders";
@@ -108,8 +107,8 @@ export function SoQueuePage({ status, title, actionNoun, emptyTitle, emptyDescri
       )
     : allItems;
 
-  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>): void {
-    setSearch(e.target.value);
+  function handleSearchChange(value: string) {
+    setSearch(value);
   }
 
   function handleRetry(): void {
@@ -117,15 +116,9 @@ export function SoQueuePage({ status, title, actionNoun, emptyTitle, emptyDescri
   }
 
   const filterBar = (
-    <div className="relative min-w-0 flex-1 max-w-sm">
-      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-      <Input
-        value={search}
-        onChange={handleSearchChange}
-        placeholder="Search SO # or customer…"
-        className="w-full pl-8 text-xs"
-      />
-    </div>
+    <div className="min-w-0 flex-1 max-w-sm w-full">
+          <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search SO # or customer…" />
+        </div>
   );
 
   return (

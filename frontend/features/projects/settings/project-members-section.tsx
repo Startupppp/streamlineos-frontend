@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback, memo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -136,7 +136,7 @@ export function MembersSelector({
   );
 
   const handleSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value),
+    (value: string) => setSearchQuery(value),
     []
   );
 
@@ -164,13 +164,13 @@ export function MembersSelector({
                 className="w-[var(--radix-popover-trigger-width)] p-2"
                 align="start"
               >
-                <Input
+                <SearchInput
                   placeholder="Search by name or email..."
                   value={searchQuery}
-                  onChange={handleSearchChange}
-                  className="mb-2"
+                  onValueChange={handleSearchChange}
+                   className="mb-2"
                   aria-label="Search team members"
-                />
+                 />
                 <div className="max-h-[200px] overflow-y-auto space-y-0.5">
                   {filteredEmployees?.map((emp) => (
                     <MemberItem

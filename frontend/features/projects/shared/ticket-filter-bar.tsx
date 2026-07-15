@@ -377,14 +377,18 @@ export function TicketFilterBar({
                   size="icon"
                   onClick={handleHideDoneClick}
                   className={cn(
-                    "shrink-0 bg-card shadow-xs",
+                    "shrink-0",
                     hideCompleted && "border-primary bg-primary/10 text-primary",
                   )}
                   aria-label={doneCount > 0 ? `Hide done (${doneCount})` : "Hide done"}
                   aria-pressed={hideCompleted}
                   {...hideDoneHoverHandlers}
                 >
-                  <CircleCheckIcon ref={hideDoneIconRef} size={14} />
+                  <CircleCheckIcon
+                    ref={hideDoneIconRef}
+                    size={14}
+                    className={hideCompleted ? "text-primary" : undefined}
+                  />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-xs">

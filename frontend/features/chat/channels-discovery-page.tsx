@@ -2,10 +2,10 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, Plus, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -28,8 +28,8 @@ export function ChannelsDiscoveryPage() {
   const [leavingId, setLeavingId] = useState<number | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
 
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
     setPage(0);
   }, []);
 
@@ -106,14 +106,8 @@ export function ChannelsDiscoveryPage() {
             Create Channel
           </Button>
         </div>
-        <div className="relative mt-3 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
-          <Input
-            placeholder="Search channels..."
-            value={search}
-            onChange={handleSearchChange}
-            className="pl-9 h-8 bg-muted/30 border-border/30"
-          />
+        <div className="min-w-0 mt-3 max-w-sm bg-muted/30 border-border/30">
+          <SearchInput placeholder="Search channels..." value={search} onValueChange={handleSearchChange} />
         </div>
       </div>
 

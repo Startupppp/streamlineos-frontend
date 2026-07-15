@@ -4,7 +4,7 @@ import React, { useState, useCallback } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import {
   Select,
   SelectContent,
@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DataTable } from "@/components/ui/data-table";
-import { Plus, Search } from "lucide-react";
+import { Plus } from "lucide-react";
 import { StateIllustration } from "@/components/illustrations";
 import { useCan } from "@/hooks/api/access";
 import { useSafetyIncidents } from "@/hooks/api/hr/safety";
@@ -59,8 +59,8 @@ export function SafetyPageContent() {
   const [showReport, setShowReport] = useState(false);
   const [activeTab, setActiveTab] = useState<ActiveTab>("incidents");
 
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
     setPage(1);
   }, []);
 
@@ -113,15 +113,9 @@ export function SafetyPageContent() {
 
   const filters = (
     <div className="flex flex-wrap gap-2">
-      <div className="relative">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-        <Input
-          className="pl-8 w-44 text-sm"
-          placeholder="Search..."
-          value={search}
-          onChange={handleSearchChange}
-        />
-      </div>
+      <div className="min-w-0 w-44">
+          <SearchInput placeholder="Search..." value={search} onValueChange={handleSearchChange} />
+        </div>
       <Select
         value={status || SENTINEL}
         onValueChange={(v) => { setStatus(v === SENTINEL ? "" : (v as IncidentStatus)); setPage(1); }}

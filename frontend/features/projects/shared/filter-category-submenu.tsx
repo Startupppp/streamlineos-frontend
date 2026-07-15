@@ -158,17 +158,17 @@ export function StatusFilterDot({
   return <span className={cn(className, entry.dotColor)} />;
 }
 
-function SearchInput({
+function FilterMenuSearch({
   value,
-  onChange,
+  onValueChange,
   placeholder,
 }: {
   value: string;
-  onChange: (v: string) => void;
+  onValueChange: (v: string) => void;
   placeholder: string;
 }) {
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    onChange(e.target.value);
+    onValueChange(e.target.value);
   }
 
   return (
@@ -336,7 +336,7 @@ export function FilterCategorySubmenu({
         className="flex min-w-[180px] flex-col outline-none"
       >
         {needsSearch && (
-          <SearchInput value={search} onChange={setSearch} placeholder="Search assignees..." />
+          <FilterMenuSearch value={search} onValueChange={setSearch} placeholder="Search assignees..." />
         )}
         <div className="max-h-[200px] overflow-y-auto py-1">
           {filtered.map((m) => {
@@ -371,7 +371,7 @@ export function FilterCategorySubmenu({
         className="flex min-w-[180px] flex-col outline-none"
       >
         {needsSearch && (
-          <SearchInput value={search} onChange={setSearch} placeholder="Search labels..." />
+          <FilterMenuSearch value={search} onValueChange={setSearch} placeholder="Search labels..." />
         )}
         <div className="max-h-[200px] overflow-y-auto py-1">
           {filtered.map((l) => {
@@ -462,7 +462,7 @@ export function FilterCategorySubmenu({
         className="flex min-w-[200px] flex-col outline-none"
       >
         {needsSearch && (
-          <SearchInput value={search} onChange={setSearch} placeholder="Search projects..." />
+          <FilterMenuSearch value={search} onValueChange={setSearch} placeholder="Search projects..." />
         )}
         <div className="max-h-[200px] overflow-y-auto py-1">
           {filtered.map((p) => {

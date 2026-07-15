@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ChangeEvent } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { MoreHorizontal } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
@@ -21,7 +21,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import {
   Select,
   SelectContent,
@@ -138,8 +138,8 @@ export function PortfoliosPage() {
     });
   }
 
-  function handleSearchChange(e: ChangeEvent<HTMLInputElement>) {
-    setSearch(e.target.value);
+  function handleSearchChange(value: string) {
+    setSearch(value);
   }
 
   function handleClearFilters() {
@@ -271,11 +271,11 @@ export function PortfoliosPage() {
             ))}
           </SelectContent>
         </Select>
-        <Input
-          className="w-52 text-xs"
+        <SearchInput
+          className="w-52"
           placeholder="Search portfolios…"
           value={search}
-          onChange={handleSearchChange}
+          onValueChange={handleSearchChange}
         />
         {isFiltered ? (
           <Button size="sm" variant="ghost" className="text-xs" onClick={handleClearFilters}>

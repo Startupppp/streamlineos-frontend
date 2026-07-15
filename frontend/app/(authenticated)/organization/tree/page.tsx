@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useCallback, type ChangeEvent } from "react";
-import { ChevronRight, Building2, GitBranch, Briefcase, Users, Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { ChevronRight, Building2, GitBranch, Briefcase, Users } from "lucide-react";
+import { SearchInput } from "@/components/ui/search-input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -199,7 +199,7 @@ export default function OrgTreePage() {
   const filtered = filterTree(data ?? [], search);
 
   const handleSearchChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value),
+    (value: string) => setSearch(value),
     [],
   );
 
@@ -217,15 +217,9 @@ export default function OrgTreePage() {
       subtitle="Full hierarchy from business units down to teams"
       filters={
         <div className="flex items-center gap-2">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-            <Input
-              placeholder="Search nodes…"
-              value={search}
-              onChange={handleSearchChange}
-              className="pl-8 h-8 text-xs max-w-[240px]"
-            />
-          </div>
+          <div className="min-w-0 max-w-[240px]">
+          <SearchInput placeholder="Search nodes…" value={search} onValueChange={handleSearchChange} />
+        </div>
         </div>
       }
     >

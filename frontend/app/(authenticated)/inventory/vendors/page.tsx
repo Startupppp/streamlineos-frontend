@@ -2,8 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Search } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
@@ -11,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -110,8 +109,8 @@ export default function VendorsListPage() {
   const debouncedSearch = useDebouncedValue(search, 300);
   const activeParam = searchParams.get("isActive") ?? "all";
 
-  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>): void {
-    setSearch(e.target.value);
+  function handleSearchChange(value: string) {
+    setSearch(value);
     setPage(1);
   }
 
@@ -240,15 +239,9 @@ export default function VendorsListPage() {
 
   const filterBar = (
     <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 lg:gap-3">
-      <div className="relative min-w-0 flex-1 lg:max-w-md">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-        <Input
-          value={search}
-          onChange={handleSearchChange}
-          placeholder="Search vendors…"
-          className="w-full min-w-0 pl-8 text-xs"
-        />
-      </div>
+      <div className="min-w-0 flex-1 lg:max-w-md w-full">
+          <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search vendors…" />
+        </div>
       <Select value={activeParam} onValueChange={handleActiveChange}>
         <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[140px] text-xs")}>
           <SelectValue placeholder="All vendors" />

@@ -2,10 +2,9 @@
 
 import { useState, type ChangeEvent } from "react";
 import Link from "next/link";
-import { Search } from "lucide-react";
 import { motion } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyReportIllustration } from "@/components/illustrations";
@@ -109,8 +108,8 @@ export function ReportsHubClient() {
   const [search, setSearch] = useState("");
   const { data: catalog, isLoading, error, refetch } = useReportsCatalog();
 
-  function handleSearchChange(e: ChangeEvent<HTMLInputElement>): void {
-    setSearch(e.target.value);
+  function handleSearchChange(value: string) {
+    setSearch(value);
   }
 
   function handleRetry(): void {
@@ -137,14 +136,8 @@ export function ReportsHubClient() {
       title="Reports"
       subtitle="Financial reports, statements, and analytics for your organisation."
       filters={
-        <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-          <Input
-            placeholder="Search reports…"
-            value={search}
-            onChange={handleSearchChange}
-            className="pl-8 text-sm w-[220px]"
-          />
+        <div className="min-w-0 w-[220px]">
+          <SearchInput placeholder="Search reports…" value={search} onValueChange={handleSearchChange} />
         </div>
       }
     >

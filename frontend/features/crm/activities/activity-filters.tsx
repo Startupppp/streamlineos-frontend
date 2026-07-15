@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { Search, X } from "lucide-react";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import {
   Select,
   SelectContent,
@@ -75,7 +75,7 @@ export function ActivityFilters({
   }, [activityTypeOptions]);
 
   const handleSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => onSearchChange(e.target.value),
+    (value: string) => onSearchChange(value),
     [onSearchChange],
   );
 
@@ -96,15 +96,9 @@ export function ActivityFilters({
 
   return (
     <div className="flex items-center gap-2 flex-wrap w-full">
-      <div className="relative min-w-[140px] flex-1 max-w-[240px]">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-        <Input
-          placeholder="Search activities..."
-          value={search}
-          onChange={handleSearchChange}
-          className="pl-8 h-8 text-xs"
-        />
-      </div>
+      <div className="min-w-0 min-w-[140px] flex-1 max-w-[240px]">
+          <SearchInput placeholder="Search activities..." value={search} onValueChange={handleSearchChange} />
+        </div>
 
       <Select value={typeFilter || "all"} onValueChange={handleTypeChange}>
         <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[120px] text-xs")}>

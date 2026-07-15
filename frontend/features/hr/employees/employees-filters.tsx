@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Search, X } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { X } from "lucide-react";
+import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -40,21 +40,13 @@ export function EmployeesFilters({
   onStatusChange,
   onClear,
 }: EmployeesFiltersProps) {
-  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
-    onSearchChange(e.target.value);
-  }
+  function handleSearchChange(value: string) { onSearchChange(value); }
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <div className="relative">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-        <Input
-          value={search}
-          onChange={handleSearchChange}
-          placeholder="Search name, email, ID…"
-          className="pl-8 h-8 w-60 text-xs"
-        />
-      </div>
+      <div className="min-w-0 w-60">
+          <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search name, email, ID…" />
+        </div>
       <Select value={filterDept} onValueChange={onDeptChange}>
         <SelectTrigger className="w-44 text-xs">
           <SelectValue placeholder="Department" />

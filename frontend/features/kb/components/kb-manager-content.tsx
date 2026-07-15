@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type ChangeEvent } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import {
   Select,
   SelectContent,
@@ -159,8 +159,8 @@ export function KbManagerContent() {
     router.replace(`?${next.toString()}`);
   }
 
-  function handleSearchChange(event: ChangeEvent<HTMLInputElement>) {
-    setLocalSearch(event.target.value);
+  function handleSearchChange(value: string) {
+    setLocalSearch(value);
   }
 
   function handleStatusChange(v: string) {
@@ -263,11 +263,11 @@ export function KbManagerContent() {
 
   const filters = (
     <div className="flex w-full min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-      <Input
+      <SearchInput
         placeholder="Search…"
         value={localSearch}
-        onChange={handleSearchChange}
-        className={cn(filterControlClassName, "w-full sm:max-w-[200px]")}
+        onValueChange={handleSearchChange}
+        className="w-full sm:max-w-[200px]"
       />
       <div className="grid w-full grid-cols-3 gap-2 sm:contents">
         <Select value={statusParam} onValueChange={handleStatusChange}>

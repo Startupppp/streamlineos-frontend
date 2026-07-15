@@ -3,11 +3,10 @@
 import { useState } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import Link from "next/link";
-import { Search } from "lucide-react";
 import { EyeIcon } from "@animateicons/react/lucide";
 import { motion } from "framer-motion";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
@@ -147,8 +146,8 @@ export function SerialsClient() {
     void refetch();
   }
 
-  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>): void {
-    setSearch(e.target.value);
+  function handleSearchChange(value: string) {
+    setSearch(value);
     setPage(1);
   }
 
@@ -180,18 +179,12 @@ export function SerialsClient() {
       subtitle="Track individual serial numbers and their history."
       filters={
         <div className="flex w-full min-w-0 flex-wrap items-center gap-2">
-          <div className="relative min-w-0 flex-1 lg:max-w-xs">
-            <Search
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none"
-              aria-hidden="true"
-            />
-            <Input
-              placeholder="Search serial or product…"
-              value={search}
-              onChange={handleSearchChange}
-              className="w-full pl-8 text-xs"
-            />
-          </div>
+          <SearchInput
+            className="min-w-0 flex-1 lg:max-w-xs"
+            placeholder="Search serial or product…"
+            value={search}
+            onValueChange={handleSearchChange}
+          />
           <Select value={status} onValueChange={handleStatusChange}>
             <SelectTrigger className="text-xs w-[140px]">
               <SelectValue placeholder="All statuses" />

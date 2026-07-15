@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -53,8 +53,8 @@ export default function FindExpertPage() {
     role: activeParams.role || undefined,
   });
 
-  const handleQueryChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setQuery(e.target.value);
+  const handleQueryChange = useCallback((value: string) => {
+    setQuery(value);
   }, []);
 
   const handleSearch = useCallback((e: React.FormEvent) => {
@@ -108,9 +108,9 @@ export default function FindExpertPage() {
     >
       <div className="space-y-3">
         <form onSubmit={handleSearch} className="flex gap-2 max-w-lg">
-          <Input
+          <SearchInput
             value={query}
-            onChange={handleQueryChange}
+            onValueChange={handleQueryChange}
             placeholder="e.g. React, Financial Modelling, Python…"
             className="flex-1"
             aria-label="Skill search"

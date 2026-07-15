@@ -5,13 +5,13 @@ import { useHrOrgChart } from "@/hooks/api/hr";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn, resolveImageUrl } from "@/lib/utils";
-import { Users, Network, Building2, Search, Download } from "lucide-react";
+import { Users, Network, Building2, Download } from "lucide-react";
 import type { OrgChartNode } from "@/types/hr";
 import { toast } from "sonner";
 
@@ -214,7 +214,7 @@ export default function OrgChartPage() {
     return Array.from(groups.entries()).sort((a, b) => a[0].localeCompare(b[0]));
   }, [filteredEmployees]);
 
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value), []);
+  const handleSearchChange = useCallback((value: string) => setSearch(value), []);
 
   const handleViewTree = useCallback(() => setView("tree"), []);
   const handleViewDepartments = useCallback(() => setView("departments"), []);
@@ -265,15 +265,9 @@ export default function OrgChartPage() {
       }
       filters={
         <div className="flex items-center gap-2">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input
-              className="pl-8 text-xs w-48"
-              placeholder="Search members…"
-              value={search}
-              onChange={handleSearchChange}
-            />
-          </div>
+          <div className="min-w-0 w-48">
+          <SearchInput placeholder="Search members…" value={search} onValueChange={handleSearchChange} />
+        </div>
           <div className="flex items-center gap-1 rounded-lg border p-1">
             <button
               onClick={handleViewTree}

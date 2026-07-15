@@ -1,13 +1,12 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Search } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { ErrorState } from "@/components/shared/error-state";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import { ReviewTable, type EmployeeDocSummary } from "@/features/hr/document-review/review-table";
@@ -51,8 +50,8 @@ export default function DocumentReviewPage() {
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
 
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchQuery(value);
   }, []);
 
   const handleOpenReview = useCallback((emp: EmployeeDocSummary) => {
@@ -90,15 +89,9 @@ export default function DocumentReviewPage() {
       badge={`${list.length} employees`}
       filters={
         <div className="flex items-center gap-2 flex-wrap">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input
-              placeholder="Search employees..."
-              value={searchQuery}
-              onChange={handleSearchChange}
-              className="pl-8 h-8 w-[200px] text-sm"
-            />
-          </div>
+          <div className="min-w-0 w-[200px]">
+          <SearchInput placeholder="Search employees..." value={searchQuery} onValueChange={handleSearchChange} />
+        </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-[140px] text-xs">
               <SelectValue />

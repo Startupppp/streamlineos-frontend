@@ -1,9 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, User } from "lucide-react";
+import { User } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -20,8 +20,8 @@ export function StepTeam({ draft, updateDraft }: StepSharedProps) {
   const members = useMemo(() => membersData?.data ?? [], [membersData]);
   const [search, setSearch] = useState("");
 
-  function handleSearch(e: React.ChangeEvent<HTMLInputElement>) {
-    setSearch(e.target.value);
+  function handleSearch(value: string) {
+    setSearch(value);
   }
 
   function handleToggle(userId: string) {
@@ -67,15 +67,9 @@ export function StepTeam({ draft, updateDraft }: StepSharedProps) {
         )}
       </div>
 
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search by name or email…"
-          value={search}
-          onChange={handleSearch}
-          className="pl-9"
-        />
-      </div>
+      <div className="min-w-0">
+          <SearchInput placeholder="Search by name or email…" value={search} onValueChange={handleSearch} />
+        </div>
 
       <div className="space-y-1 max-h-72 overflow-y-auto">
         {filtered.length === 0 && (

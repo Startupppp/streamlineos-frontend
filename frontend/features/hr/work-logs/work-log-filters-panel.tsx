@@ -2,10 +2,11 @@
 
 import { useCallback } from "react";
 import { format } from "date-fns";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Badge } from "@/components/ui/badge";
-import { Search, X } from "lucide-react";
+import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
+
 import type {
   WorkLogFilters,
   WorkLogFilterEmployee,
@@ -38,14 +39,9 @@ export function WorkLogFiltersPanel({
   setSearchTerm,
 }: WorkLogFiltersPanelProps) {
   const handleSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setSearchTerm(e.target.value);
+    (value: string) => {
+      setSearchTerm(value);
     },
-    [setSearchTerm],
-  );
-
-  const handleClearSearch = useCallback(
-    () => setSearchTerm(""),
     [setSearchTerm],
   );
 
@@ -80,28 +76,14 @@ export function WorkLogFiltersPanel({
 
   return (
     <div className="flex flex-wrap items-center gap-2 w-full">
-      <div className="relative w-full sm:w-auto sm:max-w-xs">
-        <Search
-          className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground"
-          aria-hidden="true"
-        />
-        <Input
-          placeholder="Search by date or keyword..."
-          value={searchTerm}
-          onChange={handleSearchChange}
-          className="pl-8 pr-8 h-8 text-xs border-border bg-muted/50 focus-visible:bg-background"
-          aria-label="Search work logs"
-        />
-        {searchTerm && (
-          <button
-            onClick={handleClearSearch}
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors duration-200"
-            aria-label="Clear search"
-          >
-            <X className="h-3.5 w-3.5" />
-          </button>
-        )}
-      </div>
+      <SearchInput
+        className="w-full sm:w-auto sm:max-w-xs"
+        placeholder="Search by date or keyword..."
+        value={searchTerm}
+        onValueChange={handleSearchChange}
+        inputClassName="border-border bg-muted/50 focus-visible:bg-background"
+        aria-label="Search work logs"
+      />
 
       {activeFilterCount > 0 && (
         <div className="flex flex-wrap items-center gap-1.5">

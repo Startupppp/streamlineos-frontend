@@ -2,8 +2,8 @@
 
 import { useCallback } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Input } from "@/components/ui/input";
-import { Check, Search, X, Loader2 } from "lucide-react";
+import { SearchInput } from "@/components/ui/search-input";
+import { Check, X, Loader2 } from "lucide-react";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { getInitials } from "@/lib/format-utils";
 
@@ -112,7 +112,7 @@ export function MemberMultiSelect({
   emptyText = "No people found.",
 }: MemberMultiSelectProps) {
   const handleSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => onSearchChange(e.target.value),
+    (value: string) => onSearchChange(value),
     [onSearchChange],
   );
 
@@ -126,15 +126,11 @@ export function MemberMultiSelect({
         </div>
       )}
 
-      <div className="relative">
-        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          value={search}
-          onChange={handleSearchChange}
-          placeholder={placeholder}
-          className="pl-8 text-sm"
-        />
-      </div>
+      <SearchInput
+        value={search}
+        onValueChange={handleSearchChange}
+        placeholder={placeholder}
+      />
 
       <div className="max-h-48 space-y-0.5 overflow-y-auto overscroll-contain rounded-lg border bg-muted/30 p-1">
         {isLoading ? (

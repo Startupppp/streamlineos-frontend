@@ -3,12 +3,12 @@
 import React, { useState, useCallback } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { motion } from "framer-motion";
-import { Plus, Eye, Pencil, Search } from "lucide-react";
+import { Plus, Eye, Pencil } from "lucide-react";
 import { StateIllustration } from "@/components/illustrations";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import {
   Select,
   SelectContent,
@@ -64,8 +64,8 @@ export default function HrPoliciesPage() {
     status: statusFilter !== "all" ? statusFilter : undefined,
   });
 
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
     setPage(1);
   }, []);
 
@@ -215,15 +215,9 @@ export default function HrPoliciesPage() {
       }
       filters={
         <div className="flex flex-wrap items-center gap-2">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input
-              placeholder="Search policies..."
-              value={search}
-              onChange={handleSearchChange}
-              className="text-xs pl-8 w-52"
-            />
-          </div>
+          <div className="min-w-0 w-52">
+          <SearchInput placeholder="Search policies..." value={search} onValueChange={handleSearchChange} />
+        </div>
           <Select
             value={typeFilter}
             onValueChange={(v) => {

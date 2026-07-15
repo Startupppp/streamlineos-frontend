@@ -16,7 +16,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -202,11 +202,11 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
   const filtersBar = (
     <div className={cn(PM_TOOLBAR, "sm:justify-start")}>
       <div className="flex w-full min-w-0 flex-wrap items-center gap-2">
-        <Input
+        <SearchInput
           placeholder="Search incidents..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-44 text-[11px]"
+          onValueChange={setSearch}
+          className="w-44"
         />
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-36 text-[11px]">

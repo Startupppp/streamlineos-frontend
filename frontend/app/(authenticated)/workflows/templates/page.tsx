@@ -1,13 +1,12 @@
 "use client";
-import { useState, useMemo } from "react";
-import { Search } from "lucide-react";
+import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { LoadingState } from "@/components/shared/loading-state";
@@ -88,8 +87,8 @@ export default function WorkflowTemplatesPage() {
     });
   }, [templates, search, activeCategory]);
 
-  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setSearch(e.target.value);
+  function handleSearchChange(value: string) {
+    setSearch(value);
   }
 
   function handleCategoryChange(cat: string) {
@@ -119,15 +118,9 @@ export default function WorkflowTemplatesPage() {
 
   const filtersBar = (
     <div className="flex items-center gap-3 flex-wrap w-full">
-      <div className="relative flex-1 min-w-[200px] max-w-xs">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-        <Input
-          placeholder="Search templates..."
-          value={search}
-          onChange={handleSearchChange}
-          className="pl-8 h-8 text-sm"
-        />
-      </div>
+      <div className="min-w-0 flex-1 min-w-[200px] max-w-xs">
+          <SearchInput placeholder="Search templates..." value={search} onValueChange={handleSearchChange} />
+        </div>
       <div className="flex items-center gap-1">
         <button
           onClick={() => handleCategoryChange("all")}

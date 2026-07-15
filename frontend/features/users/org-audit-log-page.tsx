@@ -3,13 +3,14 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Badge } from "@/components/ui/badge";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { useOrgAuditLog } from "@/hooks/api/users";
-import { History, Search } from "lucide-react";
+import { History } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 type AuditEntry = {
@@ -98,8 +99,8 @@ export function OrgAuditLogPage() {
   const entries = data?.data ?? [];
   const pagination = data?.pagination;
 
-  function handleActorSearch(e: React.ChangeEvent<HTMLInputElement>) {
-    setActorSearch(e.target.value);
+  function handleActorSearch(value: string) {
+    setActorSearch(value);
     setPage(1);
   }
 
@@ -130,15 +131,12 @@ export function OrgAuditLogPage() {
       badge={pagination?.total !== undefined ? String(pagination.total) : undefined}
       filters={
         <div className="flex flex-wrap items-center gap-2">
-          <div className="relative min-w-[180px]">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input
-              placeholder="Filter by actor ID..."
-              value={actorSearch}
-              onChange={handleActorSearch}
-              className="pl-8 h-8 text-xs w-44"
-            />
-          </div>
+          <SearchInput
+            className="w-44"
+            placeholder="Filter by actor ID..."
+            value={actorSearch}
+            onValueChange={handleActorSearch}
+          />
           <Input
             placeholder="Action (e.g. user.invite)"
             value={actionFilter}

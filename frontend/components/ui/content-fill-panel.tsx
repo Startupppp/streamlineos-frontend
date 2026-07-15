@@ -5,7 +5,8 @@ import { cn } from "@/lib/utils";
 
 export const CONTENT_FILL_PANEL = "flex min-h-full w-full flex-1 flex-col";
 
-export const FILTER_SELECT_TRIGGER = "border-input bg-card";
+export const FILTER_SELECT_TRIGGER =
+  "border-input bg-card text-foreground [&_svg:not([class*='text-'])]:text-muted-foreground";
 
 export const CONTENT_PANEL_SOLID =
   "rounded-xl border border-border bg-card shadow-sm";

@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { Search, LayoutGrid, TableIcon, X, GitBranch } from "lucide-react";
+import { LayoutGrid, TableIcon, X, GitBranch } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { useCrmOptions } from "@/hooks/api/crm";
@@ -51,7 +51,7 @@ export function LeadsToolbar({
     }
   }, [searchQuery, inputValue]);
 
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setInputValue(e.target.value), []);
+  const handleSearchChange = useCallback((value: string) => setInputValue(value), []);
   const handleViewTable = useCallback(() => onViewChange("table"), [onViewChange]);
   const handleViewKanban = useCallback(() => onViewChange("kanban"), [onViewChange]);
   const handleViewFunnel = useCallback(() => onViewChange("funnel"), [onViewChange]);
@@ -64,29 +64,23 @@ export function LeadsToolbar({
   return (
     <div className="flex items-center gap-2 flex-wrap w-full">
 
-      <div className="relative flex-1 min-w-[140px] sm:flex-none sm:w-[180px] sm:max-w-xs">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-        <Input
-          placeholder="Search leads..."
-          value={inputValue}
-          onChange={handleSearchChange}
-          className="pl-8 h-8 text-xs"
-        />
-      </div>
+      <div className="min-w-0 flex-1 min-w-[140px] sm:flex-none sm:w-[180px] sm:max-w-xs">
+          <SearchInput placeholder="Search leads..." value={inputValue} onValueChange={handleSearchChange} />
+        </div>
 
-      <div className="flex items-center border border-border rounded-md">
+      <div className="flex h-9 items-center rounded-md border border-input bg-card">
         <Button variant={view === "table" ? "default" : "ghost"} size="sm"
-          className={cn("rounded-r-none h-8 px-2.5")}
+          className={cn("rounded-r-none h-9 px-2.5")}
           onClick={handleViewTable}>
           <TableIcon className="h-3.5 w-3.5" />
         </Button>
         <Button variant={view === "kanban" ? "default" : "ghost"} size="sm"
-          className={cn("rounded-none h-8 px-2.5 border-x border-border")}
+          className={cn("rounded-none h-9 px-2.5 border-x border-input")}
           onClick={handleViewKanban}>
           <LayoutGrid className="h-3.5 w-3.5" />
         </Button>
         <Button variant={view === "funnel" ? "default" : "ghost"} size="sm"
-          className={cn("rounded-l-none h-8 px-2.5")}
+          className={cn("rounded-l-none h-9 px-2.5")}
           onClick={handleViewFunnel}>
           <GitBranch className="h-3.5 w-3.5" />
         </Button>

@@ -13,7 +13,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import {
   Select,
   SelectTrigger,
@@ -145,8 +145,8 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
     );
   }, [deleteTarget, deleteCase, projectId]);
 
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
   }, []);
 
   const handleDeleteDialogChange = useCallback((open: boolean) => {
@@ -231,11 +231,11 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
   return (
     <div className="flex min-h-0 flex-1 flex-col space-y-3">
       <div className="flex flex-wrap items-center gap-2">
-        <Input
+        <SearchInput
           placeholder="Search cases..."
           value={search}
-          onChange={handleSearchChange}
-          className="w-48 text-[11px]"
+          onValueChange={handleSearchChange}
+          className="w-48"
         />
         <Select value={suiteFilter} onValueChange={setSuiteFilter}>
           <SelectTrigger className="w-36 text-[11px]">

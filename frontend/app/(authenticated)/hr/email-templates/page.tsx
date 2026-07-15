@@ -10,6 +10,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -21,7 +22,7 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { toast } from "sonner";
-import { Plus, Trash2, Copy, Pencil, AlertCircle, Search, Sparkles } from "lucide-react";
+import { Plus, Trash2, Copy, Pencil, AlertCircle, Sparkles } from "lucide-react";
 import { EmptyMailIllustration } from "@/components/illustrations";
 import { cn } from "@/lib/utils";
 
@@ -240,7 +241,7 @@ function EmailTemplatesContent() {
   const handleDeleteDialogOpenChange = useCallback((open: boolean) => { if (!open) setDeleteId(null); }, []);
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
   const handleDeleteTemplate = useCallback((id: number) => setDeleteId(id), []);
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value), []);
+  const handleSearchChange = useCallback((value: string) => setSearchQuery(value), []);
   const handleSetCategory = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
     setActiveCategory(e.currentTarget.dataset.category ?? "All");
   }, []);
@@ -307,15 +308,9 @@ function EmailTemplatesContent() {
       ) : (
         <div className="space-y-3">
           <div className="flex items-center gap-2 flex-wrap bg-muted/40 rounded-lg px-3 py-2">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input
-                placeholder="Search templates..."
-                value={searchQuery}
-                onChange={handleSearchChange}
-                className="pl-8 h-8 text-xs w-44"
-              />
-            </div>
+            <div className="min-w-0 w-44">
+          <SearchInput placeholder="Search templates..." value={searchQuery} onValueChange={handleSearchChange} />
+        </div>
             <div className="flex items-center gap-1 flex-wrap">
               <button
                 type="button"

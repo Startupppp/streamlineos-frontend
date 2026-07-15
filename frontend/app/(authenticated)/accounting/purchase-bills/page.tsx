@@ -3,10 +3,10 @@
 import { useState, type ChangeEvent } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import Link from "next/link";
-import { Plus, Search, MoreHorizontal } from "lucide-react";
+import { Plus, MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -266,8 +266,8 @@ export default function PurchaseBillsListPage() {
     status: status === "ALL" ? undefined : status,
   });
 
-  function handleSearchChange(event: ChangeEvent<HTMLInputElement>): void {
-    setSearch(event.target.value);
+  function handleSearchChange(value: string) {
+    setSearch(value);
   }
 
   function handleStatusChange(value: string): void {
@@ -297,15 +297,9 @@ export default function PurchaseBillsListPage() {
       }
       filters={
         <div className="flex flex-wrap items-center gap-2">
-          <div className="relative flex-1 max-w-[240px]">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-            <Input
-              value={search}
-              onChange={handleSearchChange}
-              placeholder="Search by bill number"
-              className="w-full pl-8 text-xs"
-            />
-          </div>
+          <div className="min-w-0 flex-1 max-w-[240px] w-full">
+          <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search by bill number" />
+        </div>
           <Select value={status} onValueChange={handleStatusChange}>
             <SelectTrigger className="w-[180px] text-xs">
               <SelectValue />

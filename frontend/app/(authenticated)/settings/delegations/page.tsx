@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -512,11 +513,10 @@ function GrantDelegationSheet({
             </Label>
             <div className="border rounded-md flex flex-col flex-1 min-h-0 overflow-hidden">
               <div className="p-2 border-b shrink-0">
-                <Input
+                <SearchInput
                   placeholder="Search permissions…"
                   value={permSearch}
-                  onChange={(e) => setPermSearch(e.target.value)}
-                  className="text-xs"
+                  onValueChange={setPermSearch}
                 />
               </div>
               <ScrollArea className="flex-1">

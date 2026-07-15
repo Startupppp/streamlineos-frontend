@@ -2,10 +2,9 @@
 
 import { useState, type ChangeEvent } from "react";
 import Link from "next/link";
-import { Search } from "lucide-react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared";
@@ -91,8 +90,8 @@ export default function CustomerLedgersPage() {
     onlyOutstanding,
   });
 
-  function handleSearchChange(event: ChangeEvent<HTMLInputElement>): void {
-    setSearch(event.target.value);
+  function handleSearchChange(value: string) {
+    setSearch(value);
   }
 
   function handleOnlyOutstandingToggle(checked: boolean | "indeterminate"): void {
@@ -117,15 +116,9 @@ export default function CustomerLedgersPage() {
       subtitle="Track outstanding receivables by customer."
       filters={
         <div className="flex flex-wrap items-center gap-2">
-          <div className="relative flex-1 max-w-[240px]">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-            <Input
-              value={search}
-              onChange={handleSearchChange}
-              placeholder="Search customers..."
-              className="w-full pl-8 text-xs"
-            />
-          </div>
+          <div className="min-w-0 flex-1 max-w-[240px] w-full">
+          <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search customers..." />
+        </div>
           <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer select-none">
             <Checkbox checked={onlyOutstanding} onCheckedChange={handleOnlyOutstandingToggle} />
             Only outstanding

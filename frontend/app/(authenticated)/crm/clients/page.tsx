@@ -4,10 +4,10 @@ import { useState, useCallback, useTransition, useEffect } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useReducedMotion, motion } from "framer-motion";
-import { Search, MoreHorizontal, ExternalLink } from "lucide-react";
+import { MoreHorizontal, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import {
   Select,
   SelectContent,
@@ -205,9 +205,8 @@ export default function ClientsPage() {
 
   const totalCount = data?.totalCount ?? 0;
 
-  const handleSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setRawSearch(e.target.value);
+  const handleSearchChange = useCallback((value: string) => {
+    setRawSearch(value);
     },
     [],
   );
@@ -267,15 +266,9 @@ export default function ClientsPage() {
       subtitle={isLoading ? undefined : `${totalCount} accounts`}
       filters={
         <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
-          <div className="relative min-w-0 flex-1 lg:max-w-[240px]">
-            <Search className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input
-              placeholder="Search clients..."
-              value={rawSearch}
-              onChange={handleSearchChange}
-              className="w-full min-w-0 pl-8 text-xs"
-            />
-          </div>
+          <div className="min-w-0 flex-1 lg:max-w-[240px] w-full">
+          <SearchInput placeholder="Search clients..." value={rawSearch} onValueChange={handleSearchChange} />
+        </div>
           <Select value={statusParam ?? "all"} onValueChange={handleStatusChange}>
             <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "text-xs w-[160px] min-w-0 shrink-0")}>
               <SelectValue placeholder="All statuses" />

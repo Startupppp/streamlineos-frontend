@@ -76,7 +76,7 @@ function NavIconButton({
     <Button
       variant="outline"
       size="icon"
-      className="shrink-0 border-input bg-card"
+      className="shrink-0"
       onClick={onClick}
       aria-label={ariaLabel}
       {...hoverHandlers}
@@ -256,7 +256,7 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
           <Button
             variant="outline"
             size="sm"
-            className="border-input bg-card px-2.5 text-xs"
+            className="px-2.5 text-xs"
             onClick={handleResetWeek}
           >
             Today

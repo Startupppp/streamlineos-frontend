@@ -2,9 +2,9 @@
 
 import { useState, useCallback, useTransition, useEffect } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Badge } from "@/components/ui/badge";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -74,9 +74,8 @@ export default function ProductCatalogPage() {
   const allProducts = data?.products ?? [];
   const total = data?.total ?? allProducts.length;
 
-  const handleSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setSearch(e.target.value);
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
     },
     [],
   );
@@ -263,15 +262,9 @@ export default function ProductCatalogPage() {
         }
         filters={
           <div className="flex w-full min-w-0 items-center gap-2">
-            <div className="relative min-w-0 flex-1 lg:max-w-sm">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-              <Input
-                placeholder="Search products..."
-                value={search}
-                onChange={handleSearchChange}
-                className="w-full pl-8 text-xs"
-              />
-            </div>
+            <div className="min-w-0 flex-1 lg:max-w-sm w-full">
+          <SearchInput placeholder="Search products..." value={search} onValueChange={handleSearchChange} />
+        </div>
           </div>
         }
       >

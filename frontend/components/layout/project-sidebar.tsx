@@ -14,10 +14,9 @@ import {
   PanelLeftOpen,
   ChevronsUpDown,
   Check,
-  Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import {
   Popover,
   PopoverContent,
@@ -206,8 +205,8 @@ function ProjectSwitcher({
     [currentProjectId, pathname, router],
   );
 
-  const handleSearchChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
   }, []);
 
   return (
@@ -226,16 +225,9 @@ function ProjectSwitcher({
       </PopoverTrigger>
       <PopoverContent className="w-64 p-0" align="start" sideOffset={8}>
         <div className="border-b p-2">
-          <div className="relative">
-            <Search className="absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={handleSearchChange}
-              placeholder="Search projects…"
-              className="pl-7 text-xs"
-              autoFocus
-            />
-          </div>
+          <div className="min-w-0">
+          <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search projects…" autoFocus />
+        </div>
         </div>
         <ScrollArea className="max-h-64">
           {filtered.length === 0 ? (

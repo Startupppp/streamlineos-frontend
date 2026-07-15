@@ -4,7 +4,7 @@ import { useState, useCallback, useTransition, useMemo, useEffect } from "react"
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useReducedMotion, motion } from "framer-motion";
 import Link from "next/link";
-import { Search, Download } from "lucide-react";
+import { Download } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -100,9 +100,8 @@ export default function QuotesPage() {
   const total = data?.total ?? 0;
   const hasActiveFilters = !!apiSearch || statusFilter !== "all";
 
-  const handleSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setSearch(e.target.value);
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
     },
     [],
   );
@@ -311,15 +310,9 @@ export default function QuotesPage() {
         contentClassName="flex flex-col"
         filters={
           <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
-            <div className="relative min-w-0 flex-1 lg:max-w-[240px]">
-              <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Search quotes..."
-                value={search}
-                onChange={handleSearchChange}
-                className="w-full min-w-0 pl-8 text-xs"
-              />
-            </div>
+            <div className="min-w-0 flex-1 lg:max-w-[240px] w-full">
+          <SearchInput placeholder="Search quotes..." value={search} onValueChange={handleSearchChange} />
+        </div>
             <Select value={statusFilter} onValueChange={handleStatusChange}>
               <SelectTrigger className="w-[140px] text-xs">
                 <SelectValue />

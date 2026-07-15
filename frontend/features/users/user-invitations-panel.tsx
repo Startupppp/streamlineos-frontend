@@ -4,12 +4,12 @@ import { useState, useCallback, useTransition, useEffect } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { format, isPast } from "date-fns";
-import { Search, Mail, RefreshCw, X } from "lucide-react";
+import { Mail, RefreshCw, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -93,7 +93,7 @@ export function UserInvitationsPanel() {
   }, [debouncedLocalSearch, q, updateParams]);
 
   const handleSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setLocalSearch(e.target.value),
+    (value: string) => setLocalSearch(value),
     [],
   );
 
@@ -258,10 +258,9 @@ export function UserInvitationsPanel() {
           </Button>
         }
         filters={<>
-          <div className="relative">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input value={localSearch} onChange={handleSearchChange} placeholder="Search by email…" className="h-8 pl-7 text-xs w-[200px]" />
-          </div>
+          <div className="min-w-0 w-[200px]">
+          <SearchInput value={localSearch} onValueChange={handleSearchChange} placeholder="Search by email…" />
+        </div>
           <Select value={status} onValueChange={handleStatusChange}>
             <SelectTrigger className="h-8 text-xs w-[140px]"><SelectValue /></SelectTrigger>
             <SelectContent>

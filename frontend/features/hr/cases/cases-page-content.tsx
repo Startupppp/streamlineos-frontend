@@ -4,7 +4,7 @@ import React, { useState, useCallback } from "react";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import {
   Select,
   SelectContent,
@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { DataTable } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, ShieldAlert, Search } from "lucide-react";
+import { Plus, ShieldAlert } from "lucide-react";
 import { useCan } from "@/hooks/api/access";
 import { useHrCases, useDisciplinaryActions } from "@/hooks/api/hr/cases";
 import type { HrCase, CaseCategory, CaseStatus, CaseSeverity } from "@/hooks/api/hr/cases";
@@ -77,8 +77,8 @@ export function CasesPageContent() {
 
   const { data: disciplinaryData, isLoading: discLoading } = useDisciplinaryActions({ page });
 
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
     setPage(1);
   }, []);
 
@@ -133,15 +133,9 @@ export function CasesPageContent() {
 
   const filters = (
     <div className="flex flex-wrap gap-2">
-      <div className="relative">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-        <Input
-          className="pl-8 w-48 text-sm"
-          placeholder="Search cases..."
-          value={search}
-          onChange={handleSearchChange}
-        />
-      </div>
+      <div className="min-w-0 w-48">
+          <SearchInput placeholder="Search cases..." value={search} onValueChange={handleSearchChange} />
+        </div>
       <Select
         value={status || SENTINEL}
         onValueChange={(v) => { setStatus(v === SENTINEL ? "" : (v as CaseStatus)); setPage(1); }}

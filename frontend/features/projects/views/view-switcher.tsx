@@ -71,7 +71,7 @@ export const ViewSwitcher = memo(function ViewSwitcher({
   return (
     <div className={cn("flex min-w-0 items-center", className)}>
       <div
-        className="relative hidden h-9 items-center gap-1 rounded-lg border border-border bg-card p-1 sm:inline-flex"
+        className="relative hidden h-9 items-center gap-1 rounded-lg border border-input bg-card p-1 sm:inline-flex"
         role="tablist"
         aria-label="Board view"
       >

@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
-import { Plus, Search } from "lucide-react";
+import { Plus } from "lucide-react";
 import { EmptyProductsIllustration, EmptySearchIllustration } from "@/components/illustrations";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
@@ -12,6 +12,7 @@ import { z } from "zod";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -289,8 +290,8 @@ function UomPageInner() {
     }
   }, [debouncedSearch]);
 
-  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>): void {
-    setSearch(e.target.value);
+  function handleSearchChange(value: string) {
+    setSearch(value);
   }
 
   function handleStatusChange(value: string): void {
@@ -309,15 +310,9 @@ function UomPageInner() {
 
   const filtersRow = (
     <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
-      <div className="relative min-w-0 flex-1 lg:max-w-sm">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-        <Input
-          value={search}
-          onChange={handleSearchChange}
-          placeholder="Search units..."
-          className="w-full min-w-0 pl-8 text-xs"
-        />
-      </div>
+      <div className="min-w-0 flex-1 lg:max-w-sm w-full">
+          <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search units..." />
+        </div>
       <div className="hidden min-w-0 items-center gap-2 sm:flex">
         <Select value={statusParam} onValueChange={handleStatusChange}>
           <SelectTrigger className="w-[140px] text-xs">

@@ -3,9 +3,9 @@
 import { useState, useCallback, useTransition, useMemo, useEffect } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { Download, GitMerge, LayoutGrid, Plus, Search, TableIcon } from "lucide-react";
+import { Download, GitMerge, LayoutGrid, Plus, TableIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { CrmOptionSelect } from "@/features/crm/shared/metadata";
 import { ErrorState } from "@/components/shared";
@@ -95,9 +95,8 @@ export default function ContactsPage() {
   );
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
 
-  const handleSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setSearch(e.target.value);
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
     },
     [],
   );
@@ -262,15 +261,9 @@ export default function ContactsPage() {
         }
         filters={
           <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 lg:gap-3">
-            <div className="relative min-w-0 flex-1 lg:max-w-md">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-              <Input
-                placeholder="Search contacts (min 3 chars)..."
-                value={search}
-                onChange={handleSearchChange}
-                className="w-full min-w-0 pl-8 text-xs"
-              />
-            </div>
+            <div className="min-w-0 flex-1 lg:max-w-md w-full">
+          <SearchInput placeholder="Search contacts (min 3 chars)..." value={search} onValueChange={handleSearchChange} />
+        </div>
             <div className="hidden min-w-0 items-center gap-2 sm:flex lg:gap-3">
               <CrmOptionSelect
                 type="source"

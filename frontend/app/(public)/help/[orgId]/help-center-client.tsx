@@ -3,7 +3,7 @@
 import { useMemo, useState, type ChangeEvent } from "react";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -11,7 +11,6 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyPublicDocsIllustration } from "@/components/illustrations";
 import {
   BookOpen,
-  Search,
   FileText,
   FolderTree,
   ArrowRight,
@@ -46,8 +45,8 @@ export function HelpCenterClient({ orgId }: HelpCenterClientProps) {
   const categories = data?.categories ?? [];
   const articles = data?.articles ?? [];
 
-  function handleSearchChange(event: ChangeEvent<HTMLInputElement>) {
-    setSearch(event.target.value);
+  function handleSearchChange(value: string) {
+    setSearch(value);
   }
 
   function handleSelectAllCategories() {
@@ -71,15 +70,9 @@ export function HelpCenterClient({ orgId }: HelpCenterClientProps) {
           <p className="text-white/80 text-sm mt-2">
             Search our help center or browse articles by category.
           </p>
-          <div className="relative mt-6 max-w-xl mx-auto">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={handleSearchChange}
-              placeholder="Search articles…"
-              className="pl-9 h-11 bg-white text-foreground"
-            />
-          </div>
+          <div className="min-w-0 mt-6 max-w-xl mx-auto h-11 bg-white">
+          <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search articles…" />
+        </div>
         </div>
       </section>
 

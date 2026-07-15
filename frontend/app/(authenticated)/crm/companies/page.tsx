@@ -4,9 +4,9 @@ import { useState, useCallback, useTransition, useMemo, useEffect } from "react"
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Building2, GitMerge, Globe, Plus, Search, Users } from "lucide-react";
+import { Building2, GitMerge, Globe, Plus, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Badge } from "@/components/ui/badge";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
@@ -84,9 +84,8 @@ export default function CompaniesPage() {
   const handleClearSelection = useCallback(() => setSelectedIds(new Set()), []);
   const handleBulkMerge = useCallback(() => setBulkMergeOpen(true), []);
 
-  const handleSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setSearch(e.target.value);
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
     },
     [],
   );
@@ -277,15 +276,9 @@ export default function CompaniesPage() {
         }
         filters={
           <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 lg:gap-3">
-            <div className="relative min-w-0 flex-1 lg:max-w-md">
-              <Search className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input
-                placeholder="Search companies..."
-                value={search}
-                onChange={handleSearchChange}
-                className="w-full min-w-0 pl-8 text-xs"
-              />
-            </div>
+            <div className="min-w-0 flex-1 lg:max-w-md w-full">
+          <SearchInput placeholder="Search companies..." value={search} onValueChange={handleSearchChange} />
+        </div>
           </div>
         }
       >

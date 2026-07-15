@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type ChangeEvent } from "react";
-import { Trash2, LogOut, Search } from "lucide-react";
+import { Trash2, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { useSessions, useRevokeSession, useRevokeAllSessions, type UserSession } from "@/hooks/api/hr/sessions";
@@ -9,7 +9,7 @@ import { getApiError } from "@/lib/api-client";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -39,8 +39,8 @@ export default function SessionsPage() {
       })
     : allSessions;
 
-  function handleSearchChange(e: ChangeEvent<HTMLInputElement>) {
-    setSearch(e.target.value);
+  function handleSearchChange(value: string) {
+    setSearch(value);
   }
 
   function makeRevokeHandler(session: UserSession) {
@@ -184,14 +184,8 @@ export default function SessionsPage() {
         </Button>
       }
       filters={
-        <div className="relative">
-          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-          <Input
-            className="pl-8 h-8 text-xs max-w-[240px]"
-            placeholder="Search by device or IP…"
-            value={search}
-            onChange={handleSearchChange}
-          />
+        <div className="min-w-0 max-w-[240px]">
+          <SearchInput placeholder="Search by device or IP…" value={search} onValueChange={handleSearchChange} />
         </div>
       }
     >

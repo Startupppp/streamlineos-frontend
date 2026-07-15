@@ -2,10 +2,10 @@
 
 import { useState, useCallback, useRef } from "react";
 import Link from "next/link";
-import { Search, Sparkles, ArrowRight, X } from "lucide-react";
+import { Sparkles, ArrowRight } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyLeadsIllustration } from "@/components/illustrations";
@@ -202,12 +202,9 @@ export default function SmartLeadSearchPage() {
     inputRef.current?.focus();
   }, [reset]);
 
-  const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setInputValue(e.target.value);
-    },
-    [],
-  );
+  const handleInputChange = useCallback((value: string) => {
+    setInputValue(value);
+  }, []);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -236,28 +233,16 @@ export default function SmartLeadSearchPage() {
       <div className="flex flex-1 min-h-0 flex-col space-y-6">
         <div className="space-y-3 rounded-lg bg-muted/40 p-3">
           <div className="flex flex-col sm:flex-row gap-2">
-            <div className="relative flex-1">
-              <Search className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input
-                ref={inputRef}
-                value={inputValue}
-                onChange={handleInputChange}
-                onKeyDown={handleKeyDown}
-                placeholder='Try: "hot leads from Mumbai with value above 5 lakhs"'
-                className="pl-8 pr-9 h-8 text-xs w-full"
-                aria-label="Natural language lead search"
-              />
-              {inputValue && (
-                <button
-                  type="button"
-                  onClick={handleClear}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                  aria-label="Clear search"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              )}
-            </div>
+            <SearchInput
+              ref={inputRef}
+              className="flex-1"
+              value={inputValue}
+              onValueChange={handleInputChange}
+              onClear={handleClear}
+              onKeyDown={handleKeyDown}
+              placeholder='Try: "hot leads from Mumbai with value above 5 lakhs"'
+              aria-label="Natural language lead search"
+            />
             <Button
               onClick={handleSearch}
               disabled={!inputValue.trim() || isPending}

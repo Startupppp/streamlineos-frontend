@@ -12,7 +12,7 @@ import { DataTableSkeleton } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCan } from "@/hooks/api/access";
 import { useForms, useCreateForm } from "@/hooks/api/projects";
@@ -77,8 +77,8 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
     );
   }
 
-  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setSearch(e.target.value);
+  function handleSearchChange(value: string) {
+    setSearch(value);
   }
 
   function handleClearFilters() {
@@ -161,11 +161,11 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
   const filtersBar = (
     <div className={cn(PM_TOOLBAR, "sm:justify-start")}>
       <div className="flex min-w-0 flex-wrap items-center gap-2">
-        <Input
+        <SearchInput
           value={search}
-          onChange={handleSearchChange}
+          onValueChange={handleSearchChange}
           placeholder="Search…"
-          className="w-36 text-xs"
+          className="w-36"
         />
         <Select value={typeFilter} onValueChange={setTypeFilter}>
           <SelectTrigger className="w-40 text-xs">
