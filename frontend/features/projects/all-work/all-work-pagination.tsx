@@ -23,7 +23,7 @@ export function PaginationFooter({ page, limit, total, onPageChange }: Paginatio
   }
 
   return (
-    <div className="flex shrink-0 items-center justify-between border-t border-border/60 bg-card/40 px-4 py-2 text-xs text-muted-foreground backdrop-blur-md supports-[backdrop-filter]:bg-card/30">
+    <div className="flex shrink-0 items-center justify-between border-t border-border/60 bg-card/40 py-2 text-xs text-muted-foreground backdrop-blur-md supports-[backdrop-filter]:bg-card/30">
       <span className="tabular-nums">
         Showing {from}–{to} of {total}
       </span>

@@ -1,5 +1,6 @@
 "use client";
 
+import { type ChangeEvent } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -197,19 +198,21 @@ export function ProductEditForm({ product, productId, onDone }: ProductEditFormP
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
             Basic Information
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-2">
             <FormField
               control={form.control}
               name="name"
               render={({ field }) => (
                 <FormItem className="min-w-0">
-                  <FormLabel>Name</FormLabel>
+                  <div className="flex h-5 items-center">
+                    <FormLabel>Name</FormLabel>
+                  </div>
                   <FormControl>
                     <Input maxLength={NAME_MAX} {...field} />
                   </FormControl>
-                  <div className="flex justify-between items-start">
+                  <div className="flex min-h-5 items-start justify-between gap-2">
                     <FormMessage />
-                    <span className="text-[10px] text-muted-foreground ml-auto shrink-0">
+                    <span className="ml-auto shrink-0 text-[10px] text-muted-foreground tabular-nums">
                       {(nameValue ?? "").length}/{NAME_MAX}
                     </span>
                   </div>
@@ -219,20 +222,30 @@ export function ProductEditForm({ product, productId, onDone }: ProductEditFormP
             <FormField
               control={form.control}
               name="sku"
-              render={({ field }) => (
-                <FormItem className="min-w-0">
-                  <FormLabel>SKU</FormLabel>
-                  <FormControl>
-                    <Input
-                      className="font-mono"
-                      maxLength={SKU_MAX}
-                      {...field}
-                      onChange={(e) => field.onChange(e.target.value.toUpperCase())}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              render={({ field }) => {
+                function onSkuInputChange(event: ChangeEvent<HTMLInputElement>): void {
+                  field.onChange(event.target.value.toUpperCase());
+                }
+
+                return (
+                  <FormItem className="min-w-0">
+                    <div className="flex h-5 items-center">
+                      <FormLabel>SKU</FormLabel>
+                    </div>
+                    <FormControl>
+                      <Input
+                        className="font-mono"
+                        maxLength={SKU_MAX}
+                        {...field}
+                        onChange={onSkuInputChange}
+                      />
+                    </FormControl>
+                    <div className="flex min-h-5 items-start">
+                      <FormMessage />
+                    </div>
+                  </FormItem>
+                );
+              }}
             />
             <FormField
               control={form.control}

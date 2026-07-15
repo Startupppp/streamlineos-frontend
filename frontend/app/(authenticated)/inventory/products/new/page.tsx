@@ -17,9 +17,10 @@ export default function NewProductPage() {
   const createMutation = useCreateProduct();
 
   async function onSubmit(values: ProductFormValues): Promise<void> {
-    await createMutation.mutateAsync({
+    const trimmedSku = values.sku.trim();
+    const product = await createMutation.mutateAsync({
       name: values.name,
-      sku: values.sku,
+      ...(trimmedSku ? { sku: trimmedSku } : {}),
       description: values.description || undefined,
       categoryId: values.categoryId ? Number(values.categoryId) : undefined,
       status: values.isActive !== "false" ? "ACTIVE" : "INACTIVE",
@@ -36,7 +37,7 @@ export default function NewProductPage() {
       reorderEnabled: values.reorderEnabled,
       reorderPoint: values.reorderPoint ? Number(values.reorderPoint) : undefined,
     });
-    toast.success("Product created successfully");
+    toast.success(`Product created (${product.sku})`);
     router.push("/inventory/products");
   }
 

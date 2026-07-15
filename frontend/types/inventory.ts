@@ -81,7 +81,7 @@ export interface InventoryProduct {
 
 export interface CreateProductInput {
   name: string;
-  sku: string;
+  sku?: string;
   barcode?: string;
   categoryId?: number;
   uomId?: number;

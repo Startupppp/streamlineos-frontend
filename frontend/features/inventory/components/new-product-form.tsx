@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, type ChangeEvent } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -31,6 +32,7 @@ import {
   CategorySelect,
   UomSelect,
 } from "@/features/inventory/components/product-field-selects";
+import { cn } from "@/lib/utils";
 
 export const SKU_PATTERN = /^[A-Z0-9][A-Z0-9_-]*$/;
 export const DECIMAL_PATTERN = /^\d+(\.\d{1,4})?$/;
@@ -63,6 +65,20 @@ export const productSkuSchema = z
       .regex(SKU_PATTERN, "SKU may only contain uppercase letters, digits, hyphens, or underscores"),
   );
 
+export const productSkuOptionalSchema = z
+  .string()
+  .transform((v) => v.trim().toUpperCase())
+  .pipe(
+    z.union([
+      z.literal(""),
+      z
+        .string()
+        .min(SKU_MIN, `SKU must be at least ${SKU_MIN} characters`)
+        .max(SKU_MAX, `SKU must be ${SKU_MAX} characters or fewer`)
+        .regex(SKU_PATTERN, "SKU may only contain uppercase letters, digits, hyphens, or underscores"),
+    ]),
+  );
+
 export const productDescriptionSchema = z
   .string()
   .transform((v) => v.trim())
@@ -71,7 +87,7 @@ export const productDescriptionSchema = z
 
 export const productSchema = z.object({
   name: productNameSchema,
-  sku: productSkuSchema,
+  sku: productSkuOptionalSchema,
   description: productDescriptionSchema,
   categoryId: z.string().optional(),
   isActive: z.string().optional(),
@@ -122,6 +138,8 @@ interface NewProductFormProps {
 }
 
 export function NewProductForm({ onSubmit, onCancel, isPending }: NewProductFormProps) {
+  const [skuAuto, setSkuAuto] = useState(true);
+
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
     defaultValues: {
@@ -151,13 +169,38 @@ export function NewProductForm({ onSubmit, onCancel, isPending }: NewProductForm
   const nameValue = useWatch({ control: form.control, name: "name" });
   const descriptionValue = useWatch({ control: form.control, name: "description" });
 
+  function handleCustomizeSku(): void {
+    setSkuAuto(false);
+    queueMicrotask(() => {
+      form.setFocus("sku");
+    });
+  }
+
+  function handleResetSkuAuto(): void {
+    setSkuAuto(true);
+    form.setValue("sku", "", { shouldValidate: true, shouldDirty: true });
+    form.clearErrors("sku");
+  }
+
+  function handleSkuChange(
+    event: ChangeEvent<HTMLInputElement>,
+    onChange: (value: string) => void,
+  ): void {
+    setSkuAuto(false);
+    onChange(event.target.value.toUpperCase());
+  }
+
   async function handleSubmit(values: ProductFormValues): Promise<void> {
     try {
-      await onSubmit(values);
+      await onSubmit({
+        ...values,
+        sku: skuAuto ? "" : values.sku,
+      });
     } catch (error) {
       if (isApiError(error)) {
         const msg = error.message.toLowerCase();
         if (error.status === 409 && msg.includes("sku")) {
+          setSkuAuto(false);
           form.setError("sku", { message: "A product with this SKU already exists." });
           form.setFocus("sku");
           return;
@@ -174,22 +217,24 @@ export function NewProductForm({ onSubmit, onCancel, isPending }: NewProductForm
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 pb-24">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 pb-4">
         <Card className="p-4">
           <h2 className="text-sm font-semibold text-foreground mb-4">Basic Information</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-2">
             <FormField
               control={form.control}
               name="name"
               render={({ field }) => (
                 <FormItem className="min-w-0">
-                  <FormLabel>Name</FormLabel>
+                  <div className="flex h-5 items-center">
+                    <FormLabel>Name</FormLabel>
+                  </div>
                   <FormControl>
                     <Input placeholder="Product name" maxLength={NAME_MAX} {...field} />
                   </FormControl>
-                  <div className="flex justify-between items-start">
+                  <div className="flex min-h-5 items-start justify-between gap-2">
                     <FormMessage />
-                    <span className="text-[10px] text-muted-foreground ml-auto shrink-0">
+                    <span className="ml-auto shrink-0 text-[10px] text-muted-foreground tabular-nums">
                       {(nameValue ?? "").length}/{NAME_MAX}
                     </span>
                   </div>
@@ -199,21 +244,56 @@ export function NewProductForm({ onSubmit, onCancel, isPending }: NewProductForm
             <FormField
               control={form.control}
               name="sku"
-              render={({ field }) => (
-                <FormItem className="min-w-0">
-                  <FormLabel>SKU</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="PROD-001"
-                      className="font-mono"
-                      maxLength={SKU_MAX}
-                      {...field}
-                      onChange={(e) => field.onChange(e.target.value.toUpperCase())}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              render={({ field }) => {
+                function onSkuInputChange(event: ChangeEvent<HTMLInputElement>): void {
+                  handleSkuChange(event, field.onChange);
+                }
+
+                return (
+                  <FormItem className="min-w-0">
+                    <div className="flex h-5 items-center justify-between gap-2">
+                      <FormLabel>SKU</FormLabel>
+                      {skuAuto ? (
+                        <button
+                          type="button"
+                          className="text-[11px] text-muted-foreground hover:text-foreground"
+                          onClick={handleCustomizeSku}
+                        >
+                          Customize
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          className="text-[11px] text-muted-foreground hover:text-foreground"
+                          onClick={handleResetSkuAuto}
+                        >
+                          Use auto
+                        </button>
+                      )}
+                    </div>
+                    <FormControl>
+                      <Input
+                        placeholder="PROD-001"
+                        className={cn("font-mono", skuAuto && "text-muted-foreground")}
+                        maxLength={SKU_MAX}
+                        {...field}
+                        value={skuAuto ? "" : field.value}
+                        disabled={skuAuto}
+                        readOnly={skuAuto}
+                        onChange={onSkuInputChange}
+                      />
+                    </FormControl>
+                    <div className="flex min-h-5 items-start justify-between gap-2">
+                      <FormMessage />
+                      {skuAuto ? (
+                        <span className="ml-auto shrink-0 text-[10px] text-muted-foreground">
+                          Auto-generated
+                        </span>
+                      ) : null}
+                    </div>
+                  </FormItem>
+                );
+              }}
             />
             <FormField
               control={form.control}

@@ -1,4 +1,5 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   PmPageShell,
@@ -15,7 +16,7 @@ export default function TimelineLoading() {
       noInternalScroll
       contentClassName="!p-0"
     >
-      <PmPageShell className="h-full min-h-0 px-4 pb-4 pt-0 sm:px-6">
+      <PmPageShell className={cn(PAGE_CHROME_X, "h-full min-h-0 pb-4 pt-0")}>
         <div className={cn(PM_TOOLBAR, "h-10 animate-pulse bg-muted/30")} />
         <PmPanel className="flex min-h-0 flex-1 flex-col p-3">
           <div className="mb-3 flex items-center gap-2 border-b border-border/50 pb-2">

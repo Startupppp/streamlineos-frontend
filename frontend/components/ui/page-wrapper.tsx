@@ -7,6 +7,7 @@ import Link from "next/link";
 import { ArrowLeft, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
 
 interface PageWrapperProps {
   title: string;
@@ -59,7 +60,8 @@ export function PageWrapper({
     <div className={cn("flex flex-col flex-1 min-h-0", className)}>
       <div
         className={cn(
-          "shrink-0 px-4 sm:px-6",
+          "shrink-0",
+          PAGE_CHROME_X,
           actionsInline ? "pt-3 pb-1.5" : "pt-4 pb-2",
         )}
       >
@@ -120,7 +122,7 @@ export function PageWrapper({
       {filters && (
         <div className="shrink-0">
           {!mobileFiltersInline && (
-            <div className={cn("px-4 sm:px-6 pb-2", mobileFiltersClass, filtersClassName)}>
+            <div className={cn(PAGE_CHROME_X, "pb-2", mobileFiltersClass, filtersClassName)}>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="text-xs gap-1.5">
@@ -138,7 +140,8 @@ export function PageWrapper({
           )}
           <div
             className={cn(
-              "w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0 px-4 sm:px-6 pb-2 sm:gap-3",
+              "w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0 pb-2 sm:gap-3",
+              PAGE_CHROME_X,
               mobileFiltersInline ? "flex" : desktopFiltersClass,
               filtersClassName,
             )}
@@ -152,7 +155,7 @@ export function PageWrapper({
         <div
           className={cn(
             "flex min-h-0 flex-1 flex-col overflow-hidden",
-            contentClassName ?? "px-4 sm:px-6",
+            contentClassName ?? PAGE_CHROME_X,
           )}
         >
           {children}
@@ -163,7 +166,12 @@ export function PageWrapper({
           hideScrollbar
           className={cn("flex-1 min-h-0", contentClassName)}
         >
-          <div className="flex min-h-0 flex-1 flex-col px-4 sm:px-6 overscroll-contain">
+          <div
+            className={cn(
+              "flex min-h-0 flex-1 flex-col overscroll-contain",
+              PAGE_CHROME_X,
+            )}
+          >
             {children}
           </div>
         </ScrollArea>

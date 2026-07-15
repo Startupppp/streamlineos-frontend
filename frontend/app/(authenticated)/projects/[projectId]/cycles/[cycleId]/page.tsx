@@ -10,11 +10,13 @@ import { ViewSwitcher, parseViewType, type ViewType } from "@/features/projects/
 import { DisplayOptionsPanel, DEFAULT_DISPLAY_OPTIONS } from "@/features/projects/views/display-options-panel";
 import type { DisplayOptions, KanbanTicket } from "@/features/projects/shared/types";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
 import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { buildTicketDetailUrl } from "@/features/projects/ticket-details/build-ticket-detail-url";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface PageProps {
   params: Promise<{ projectId: string; cycleId: string }>;
@@ -165,47 +167,47 @@ export default function CycleDetailPage({ params }: PageProps) {
         </div>
       }
     >
-      {cycleTickets.length === 0 ? (
-        <div className="flex min-h-0 flex-1 flex-col px-4 sm:px-6">
+      <div className={cn(PAGE_CHROME_X, "flex min-h-0 flex-1 flex-col")}>
+        {cycleTickets.length === 0 ? (
           <EmptyState
             illustrationPreset="ticket"
             title="No tickets in this cycle"
             description="Add tickets to this cycle to track progress here."
           />
-        </div>
-      ) : (
-        <>
-          {view === "board" && (
-            <div className="h-full w-full pb-1">
-              <KanbanBoard
-                tickets={cycleTickets}
-                projectId={projectId}
-                projectKey={projectData?.key}
-                statuses={statuses}
-                wipLimits={wipLimits}
-                onTicketSelect={handleTicketSelect}
-                displayOptions={displayOptions}
-              />
-            </div>
-          )}
-          {view === "list" && (
-            <div className="h-full min-h-0 overflow-y-auto pb-2 pt-0">
-              <ListView
-                tickets={cycleTickets}
-                onTicketClick={handleTicketSelect}
-                groupBy={displayOptions.groupBy !== "none" ? displayOptions.groupBy : undefined}
-                rowBy={displayOptions.rowBy !== "none" ? displayOptions.rowBy : undefined}
-                projectKey={projectData?.key}
-                projectStatuses={statuses}
-                displayOptions={displayOptions}
-                showEmptyColumns={displayOptions.showEmptyColumns}
-                showEmptyRows={displayOptions.showEmptyRows}
-                projectId={projectId}
-              />
-            </div>
-          )}
-        </>
-      )}
+        ) : (
+          <>
+            {view === "board" && (
+              <div className="h-full w-full pb-1">
+                <KanbanBoard
+                  tickets={cycleTickets}
+                  projectId={projectId}
+                  projectKey={projectData?.key}
+                  statuses={statuses}
+                  wipLimits={wipLimits}
+                  onTicketSelect={handleTicketSelect}
+                  displayOptions={displayOptions}
+                />
+              </div>
+            )}
+            {view === "list" && (
+              <div className="h-full min-h-0 overflow-y-auto pb-2 pt-0">
+                <ListView
+                  tickets={cycleTickets}
+                  onTicketClick={handleTicketSelect}
+                  groupBy={displayOptions.groupBy !== "none" ? displayOptions.groupBy : undefined}
+                  rowBy={displayOptions.rowBy !== "none" ? displayOptions.rowBy : undefined}
+                  projectKey={projectData?.key}
+                  projectStatuses={statuses}
+                  displayOptions={displayOptions}
+                  showEmptyColumns={displayOptions.showEmptyColumns}
+                  showEmptyRows={displayOptions.showEmptyRows}
+                  projectId={projectId}
+                />
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </PageWrapper>
   );
 }

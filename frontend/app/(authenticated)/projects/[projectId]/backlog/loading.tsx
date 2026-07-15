@@ -18,7 +18,7 @@ export default function BacklogLoading() {
       actions={<Skeleton className="h-8 w-28 rounded-md" />}
       filters={filterBar}
     >
-      <div className="border rounded-lg mx-4 mb-4 overflow-hidden">
+      <div className="mb-4 overflow-hidden rounded-lg border">
         <div className="flex items-center gap-4 px-4 py-2 border-b bg-muted/30">
           <Skeleton className="h-3.5 w-12" />
           <Skeleton className="h-3.5 w-24 flex-1" />

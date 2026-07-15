@@ -83,7 +83,7 @@ function DesktopHeader({
 
   return (
     <div className="flex items-center h-full w-full px-4 gap-3">
-      <div className="flex items-center gap-2 shrink-0 min-w-0">
+      <div className="flex items-center gap-2.5 shrink-0 min-w-0">
         <HeaderBrand showLabel={showLabels} />
         <ProductSwitcherMenu />
         {showSidebarToggle && onToggleSidebar && (

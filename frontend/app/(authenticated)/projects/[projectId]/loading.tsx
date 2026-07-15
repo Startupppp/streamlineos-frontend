@@ -1,6 +1,8 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
 import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
+import { cn } from "@/lib/utils";
 
 export default function ProjectBoardLoading() {
   const filterBar = (
@@ -30,7 +32,7 @@ export default function ProjectBoardLoading() {
       actions={<Skeleton className="h-8 w-28 rounded-md" />}
       filters={filterBar}
     >
-      <div className="h-full w-full overflow-hidden pb-1">
+      <div className={cn(PAGE_CHROME_X, "h-full w-full overflow-hidden pb-1")}>
         <KanbanBoardSkeleton />
       </div>
     </PageWrapper>

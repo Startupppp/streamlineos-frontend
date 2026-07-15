@@ -29,6 +29,7 @@ import { SaveViewDialog, type SaveViewMeta } from "@/features/projects/views/sav
 import { buildTicketDetailUrl } from "@/features/projects/ticket-details/build-ticket-detail-url";
 import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
 import { Button } from "@/components/ui/button";
@@ -637,7 +638,12 @@ export default function ProjectBoardPage({ params }: PageProps) {
       }
     >
       {showEmptyFilterState ? (
-        <div className="relative flex h-full flex-1 flex-col items-center justify-center px-4 py-12">
+        <div
+          className={cn(
+            PAGE_CHROME_X,
+            "relative flex h-full flex-1 flex-col items-center justify-center py-12",
+          )}
+        >
           <div
             aria-hidden
             className="pointer-events-none absolute -top-6 right-1/4 h-36 w-36 rounded-full bg-primary/[0.06] blur-3xl"
@@ -669,7 +675,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
           </div>
         </div>
       ) : (
-        <div className="flex min-h-0 flex-1 flex-col">
+        <div className={cn(PAGE_CHROME_X, "flex min-h-0 flex-1 flex-col")}>
           <AnimatePresence mode="wait" initial={false}>
             {view === "board" ? (
               <motion.div
@@ -760,7 +766,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
             {view === "calendar" ? (
               <motion.div
                 key="calendar"
-                className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pb-2 pt-0 sm:px-6"
+                className="flex min-h-0 flex-1 flex-col overflow-hidden pb-2 pt-0"
                 variants={viewVariants}
                 initial="initial"
                 animate="animate"
@@ -778,7 +784,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
             {view === "gantt" ? (
               <motion.div
                 key="gantt"
-                className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pb-2 pt-0 sm:px-6"
+                className="flex min-h-0 flex-1 flex-col overflow-hidden pb-2 pt-0"
                 variants={viewVariants}
                 initial="initial"
                 animate="animate"
@@ -795,7 +801,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
             {view === "workload" ? (
               <motion.div
                 key="workload"
-                className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pb-2 pt-0 sm:px-6"
+                className="flex min-h-0 flex-1 flex-col overflow-hidden pb-2 pt-0"
                 variants={viewVariants}
                 initial="initial"
                 animate="animate"

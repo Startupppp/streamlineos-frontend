@@ -5,6 +5,7 @@ import { useRouter, notFound } from "next/navigation";
 import { useProject, useProjectBoardTickets } from "@/hooks/api/projects";
 import { GanttView } from "@/features/projects/views/gantt-view";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { PAGE_CHROME_X } from "@/components/ui/content-fill-panel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { buildTicketDetailUrl } from "@/features/projects/ticket-details/build-ticket-detail-url";
 import {
@@ -64,7 +65,7 @@ export default function TimelinePage({ params }: PageProps) {
   if (isLoading) {
     return (
       <PageWrapper title="Timeline" noInternalScroll contentClassName="!p-0">
-        <PmPageShell className="px-4 pt-0 sm:px-6">
+        <PmPageShell className={cn(PAGE_CHROME_X, "pt-0")}>
           <div className={cn(PM_TOOLBAR, "h-10 animate-pulse bg-muted/40")} />
           <PmPanel className="flex min-h-0 flex-1 flex-col p-3">
             {Array.from({ length: 8 }).map((_, i) => (
@@ -94,7 +95,7 @@ export default function TimelinePage({ params }: PageProps) {
       noInternalScroll
       contentClassName="!p-0"
     >
-      <PmPageShell className="h-full min-h-0 px-4 pt-0 sm:px-6">
+      <PmPageShell className={cn(PAGE_CHROME_X, "h-full min-h-0 pt-0")}>
         <GanttView
           tickets={tickets}
           projectId={projectId}

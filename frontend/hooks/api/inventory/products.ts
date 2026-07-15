@@ -48,9 +48,11 @@ interface ProductVariantFilters {
 }
 
 function serializeProductWrite(data: CreateProductInput | UpdateProductInput) {
-  const { costPrice, sellingPrice, reorderPoint, ...rest } = data;
+  const { costPrice, sellingPrice, reorderPoint, sku, ...rest } = data;
+  const trimmedSku = typeof sku === "string" ? sku.trim() : sku;
   return {
     ...rest,
+    ...(trimmedSku ? { sku: trimmedSku } : {}),
     ...(costPrice !== undefined ? { costPrice: costPrice.toFixed(4) } : {}),
     ...(sellingPrice !== undefined ? { sellingPrice: sellingPrice.toFixed(4) } : {}),
     ...(reorderPoint !== undefined ? { reorderPoint: reorderPoint.toFixed(4) } : {}),
