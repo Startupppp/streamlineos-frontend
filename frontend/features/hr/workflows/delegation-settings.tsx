@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { UserCombobox } from "@/components/ui/user-combobox";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -119,9 +120,14 @@ export function DelegationSettings({ open, onOpenChange }: Props) {
               name="delegateUserId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs">Delegate User ID</FormLabel>
+                  <FormLabel className="text-xs">Delegate</FormLabel>
                   <FormControl>
-                    <Input placeholder="User ID" className="h-8 text-xs" {...field} />
+                    <UserCombobox
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Search for delegate…"
+                      className="h-8 text-xs"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

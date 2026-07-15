@@ -11,7 +11,7 @@ interface LoadingStateProps {
 function TableSkeleton({ rows = 12 }: { rows: number }) {
   return (
     <div className="space-y-2">
-      <div className="flex gap-4 px-3 py-2 border-b border-border/60">
+      <div className="flex gap-4 px-3 py-2 border-b border-border bg-muted/40">
         {[40, 25, 20, 15].map((w, i) => (
           <Skeleton key={i} className="h-3" style={{ width: `${w}%` }} />
         ))}

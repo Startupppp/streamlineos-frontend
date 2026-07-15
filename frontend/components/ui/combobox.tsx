@@ -94,10 +94,14 @@ export function Combobox({
         <Button
           type="button"
           variant="outline"
+          size="sm"
           role="combobox"
           aria-expanded={open}
           disabled={disabled}
-          className={cn("w-full justify-between font-normal", className)}
+          className={cn(
+            "h-8 w-full justify-between gap-2 rounded-md border border-input bg-card px-3 font-normal text-sm shadow-xs",
+            className,
+          )}
         >
           <span className="truncate text-left">
             {selected ? selected.label : (
@@ -118,7 +122,7 @@ export function Combobox({
             value={search}
             onValueChange={handleSearchInput}
           />
-          <CommandList className="max-h-52 overflow-y-auto overscroll-contain">
+          <CommandList className="max-h-52 overflow-y-auto overscroll-contain scrollbar-hide">
             <CommandEmpty>{emptyText}</CommandEmpty>
             <CommandGroup>
               {filtered.map((opt) => (

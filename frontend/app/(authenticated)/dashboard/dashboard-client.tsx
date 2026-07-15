@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useCallback, useEffect, useRef } from "react";
+import dynamic from "next/dynamic";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
@@ -46,12 +47,40 @@ import { RecentProjectsCard } from "@/features/dashboard/recent-projects-card";
 import { RecentActivityCard } from "@/features/dashboard/recent-activity-card";
 import { WidgetSkeleton } from "@/components/dashboard/widget-skeleton";
 import { useCan } from "@/hooks/api/access";
-import { CeoDashboard } from "@/features/dashboard/ceo-dashboard";
-import { HrDashboard } from "@/features/dashboard/hr-dashboard";
-import { SalesDashboard } from "@/features/dashboard/sales-dashboard";
-import { EmployeeDashboard } from "@/features/dashboard/employee-dashboard";
-import { useDashboardStatCards } from "@/features/dashboard/use-dashboard-stat-cards";
 import { ModuleSetupBanners } from "@/features/dashboard/module-setup-banners";
+import { useDashboardStatCards } from "@/features/dashboard/use-dashboard-stat-cards";
+
+const CeoDashboard = dynamic(
+  () =>
+    import("@/features/dashboard/ceo-dashboard").then((m) => ({
+      default: m.CeoDashboard,
+    })),
+  { loading: () => <WidgetSkeleton rows={5} /> },
+);
+
+const HrDashboard = dynamic(
+  () =>
+    import("@/features/dashboard/hr-dashboard").then((m) => ({
+      default: m.HrDashboard,
+    })),
+  { loading: () => <WidgetSkeleton rows={5} /> },
+);
+
+const SalesDashboard = dynamic(
+  () =>
+    import("@/features/dashboard/sales-dashboard").then((m) => ({
+      default: m.SalesDashboard,
+    })),
+  { loading: () => <WidgetSkeleton rows={5} /> },
+);
+
+const EmployeeDashboard = dynamic(
+  () =>
+    import("@/features/dashboard/employee-dashboard").then((m) => ({
+      default: m.EmployeeDashboard,
+    })),
+  { loading: () => <WidgetSkeleton rows={5} /> },
+);
 
 const SALES_ROLES = ["SALES"] as const;
 const HR_ROLES = ["HR", "BRANCH_HR"] as const;

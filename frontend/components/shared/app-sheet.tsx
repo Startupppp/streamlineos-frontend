@@ -66,7 +66,7 @@ export function AppSheet({
 
         <div
           className={cn(
-            "flex-1 min-h-0 overflow-y-auto overscroll-contain scrollbar-thin",
+            "flex-1 min-h-0 overflow-y-auto overscroll-contain scrollbar-hide",
             resolvedSide === "bottom" ? "px-5 py-4" : "px-6 py-4",
           )}
         >

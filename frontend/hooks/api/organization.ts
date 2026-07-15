@@ -44,6 +44,7 @@ export const useOrgMembers = (
         limit: String(limit),
         ...(search ? { search } : {}),
       }),
+    staleTime: 30_000,
     ...options,
   });
 };

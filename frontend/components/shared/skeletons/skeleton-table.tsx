@@ -12,7 +12,7 @@ interface SkeletonTableProps {
 export function SkeletonTable({ rows = 12, columns = 4, className }: SkeletonTableProps) {
   return (
     <div className={cn("rounded-lg border bg-card", className)}>
-      <div className="border-b px-4 py-3 flex gap-4">
+      <div className="border-b border-border bg-muted/40 px-4 py-3 flex gap-4">
         {Array.from({ length: columns }).map((_, i) => (
           <Skeleton key={i} className="h-4 flex-1" />
         ))}

@@ -1,3 +1,5 @@
+export { MemberPicker } from "../members/member-picker";
+export { ProjectMemberSelect } from "../members/project-member-select";
 export { AppSheet } from "./app-sheet";
 export { AppDialog } from "./app-dialog";
 export { LoadingState } from "./loading-state";

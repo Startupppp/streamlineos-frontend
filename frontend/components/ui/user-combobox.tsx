@@ -1,7 +1,6 @@
 "use client";
 
-import { useOrgMembers } from "@/hooks/api/organization";
-import { Combobox } from "@/components/ui/combobox";
+import { MemberPicker } from "@/components/members/member-picker";
 
 interface UserComboboxProps {
   value: string;
@@ -22,29 +21,18 @@ export function UserCombobox({
   excludeUserId,
   className,
 }: UserComboboxProps) {
-  const { data } = useOrgMembers(1, 200);
-
-  const memberOptions = (data?.data ?? [])
-    .filter((m) => !excludeUserId || m.userId !== excludeUserId)
-    .map((m) => ({
-      value: m.userId,
-      label: m.name ?? m.email,
-      sublabel: m.email,
-    }));
-
-  const options = allowUnassigned
-    ? [{ value: "", label: "Unassigned" }, ...memberOptions]
-    : memberOptions;
+  function handleChange(userId: string | null) {
+    onChange(userId ?? "");
+  }
 
   return (
-    <Combobox
-      options={options}
+    <MemberPicker
       value={value}
-      onChange={onChange}
+      onChange={handleChange}
       placeholder={placeholder}
-      searchPlaceholder="Search members…"
-      emptyText="No members found."
       disabled={disabled}
+      allowUnassigned={allowUnassigned}
+      excludeUserId={excludeUserId}
       className={className}
     />
   );

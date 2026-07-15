@@ -59,7 +59,7 @@ export function AppDialog({
             )}
           </SheetHeader>
 
-          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain scrollbar-thin px-5 py-4">
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain scrollbar-hide px-5 py-4">
             {children}
           </div>
 
@@ -90,7 +90,7 @@ export function AppDialog({
           )}
         </DialogHeader>
 
-        <div className="flex-1 min-h-0 overflow-y-auto scrollbar-thin px-6 py-4">
+        <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hide px-6 py-4">
           {children}
         </div>
 

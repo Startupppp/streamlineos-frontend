@@ -1,0 +1,276 @@
+"use client";
+
+import { useState, useMemo, useCallback } from "react";
+import { Check, User } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn, resolveImageUrl } from "@/lib/utils";
+import { useOrgMembers } from "@/hooks/api/organization";
+import { useProjectMembers } from "@/hooks/api/projects/projects";
+import {
+  getUserDisplayName,
+  getUserInitials,
+  type NamedUser,
+} from "@/features/projects/shared/resolve-user-name";
+
+interface MemberOption extends NamedUser {
+  id: string;
+  email: string;
+  image: string | null;
+}
+
+interface MemberPickerBaseProps {
+  projectId?: number;
+  placeholder?: string;
+  disabled?: boolean;
+  className?: string;
+  excludeUserId?: string;
+}
+
+interface MemberPickerSingleProps extends MemberPickerBaseProps {
+  mode?: "single";
+  value?: string;
+  onChange?: (userId: string | null) => void;
+  allowUnassigned?: boolean;
+  values?: never;
+  onToggle?: never;
+}
+
+interface MemberPickerMultiProps extends MemberPickerBaseProps {
+  mode: "multi";
+  values?: string[];
+  onToggle?: (userId: string) => void;
+  value?: never;
+  onChange?: never;
+  allowUnassigned?: never;
+}
+
+export type MemberPickerProps = MemberPickerSingleProps | MemberPickerMultiProps;
+
+function useMemberOptions(projectId?: number): MemberOption[] {
+  const { data: orgData } = useOrgMembers(1, 200, undefined, {
+    enabled: projectId === undefined,
+    staleTime: 30_000,
+  });
+  const { data: projectMembers = [] } = useProjectMembers(projectId ?? 0);
+
+  return useMemo(() => {
+    if (projectId !== undefined) {
+      return projectMembers.map((m) => ({
+        id: m.id,
+        name: m.name,
+        firstName: m.firstName,
+        lastName: m.lastName,
+        email: m.email,
+        image: m.image,
+      }));
+    }
+    return (orgData?.data ?? []).map((m) => ({
+      id: m.userId,
+      name: m.name,
+      firstName: null,
+      lastName: null,
+      email: m.email,
+      image: m.image,
+    }));
+  }, [projectId, orgData?.data, projectMembers]);
+}
+
+function filterMembers(members: MemberOption[], search: string, excludeUserId?: string) {
+  const eligible = excludeUserId
+    ? members.filter((m) => m.id !== excludeUserId)
+    : members;
+  if (!search.trim()) return eligible;
+  const q = search.toLowerCase();
+  return eligible.filter(
+    (m) =>
+      getUserDisplayName(m).toLowerCase().includes(q) ||
+      m.email.toLowerCase().includes(q),
+  );
+}
+
+const TRIGGER_CLASS =
+  "h-8 w-full justify-start gap-2 rounded-md border border-input bg-card px-3 text-sm font-medium shadow-xs";
+
+function MemberAvatar({ member, className }: { member: MemberOption; className?: string }) {
+  return (
+    <Avatar className={cn("h-5 w-5 shrink-0", className)}>
+      <AvatarImage src={resolveImageUrl(member.image)} />
+      <AvatarFallback className="text-[7px]">{getUserInitials(member)}</AvatarFallback>
+    </Avatar>
+  );
+}
+
+export function MemberPicker(props: MemberPickerProps) {
+  const {
+    projectId,
+    placeholder = "Select member…",
+    disabled,
+    className,
+    excludeUserId,
+  } = props;
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const members = useMemberOptions(projectId);
+  const filtered = useMemo(
+    () => filterMembers(members, search, excludeUserId),
+    [members, search, excludeUserId],
+  );
+
+  const handleSearchChange = useCallback((v: string) => {
+    setSearch(v);
+  }, []);
+
+  if (props.mode === "multi") {
+    const { values = [], onToggle } = props;
+    const selectedMembers = members.filter((m) => values.includes(m.id));
+
+    function handleToggle(userId: string) {
+      onToggle?.(userId);
+    }
+
+    return (
+      <div className={cn("space-y-1.5", className)}>
+        {selectedMembers.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {selectedMembers.map((m) => (
+              <Badge key={m.id} variant="secondary" className="gap-1.5 pl-0.5 pr-1.5 py-0.5">
+                <MemberAvatar member={m} className="h-4 w-4" />
+                <span className="text-[11px] truncate max-w-[120px]">
+                  {getUserDisplayName(m)}
+                </span>
+                <button
+                  type="button"
+                  className="text-muted-foreground/70 hover:text-destructive transition-colors leading-none"
+                  onClick={() => handleToggle(m.id)}
+                  aria-label={`Remove ${getUserDisplayName(m)}`}
+                >
+                  <span className="text-xs font-bold">&times;</span>
+                </button>
+              </Badge>
+            ))}
+          </div>
+        )}
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              type="button"
+              variant="outline"
+              role="combobox"
+              disabled={disabled}
+              className={cn(TRIGGER_CLASS, "text-muted-foreground font-normal")}
+            >
+              <User className="h-3.5 w-3.5 shrink-0" />
+              <span>{placeholder}</span>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-56 p-0" align="start">
+            <Command shouldFilter={false}>
+              <CommandInput
+                placeholder="Search members…"
+                className="h-8 text-xs"
+                value={search}
+                onValueChange={handleSearchChange}
+              />
+              <CommandList className="max-h-52 overflow-y-auto scrollbar-hide">
+                <CommandEmpty className="py-2 text-center text-xs text-muted-foreground">
+                  No members found.
+                </CommandEmpty>
+                <CommandGroup>
+                  {filtered.map((m) => (
+                    <CommandItem key={m.id} value={m.id} onSelect={() => handleToggle(m.id)}>
+                      <MemberAvatar member={m} className="mr-2" />
+                      <span className="truncate text-xs">{getUserDisplayName(m)}</span>
+                      {values.includes(m.id) && <Check className="ml-auto h-3 w-3" />}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+      </div>
+    );
+  }
+
+  const { value, onChange, allowUnassigned } = props;
+  const selected = value ? members.find((m) => m.id === value) : null;
+
+  function handleSelect(userId: string | null) {
+    onChange?.(userId);
+    setOpen(false);
+    setSearch("");
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          role="combobox"
+          disabled={disabled}
+          className={cn(
+            TRIGGER_CLASS,
+            "font-normal",
+            !selected && "text-muted-foreground",
+            className,
+          )}
+        >
+          {selected ? (
+            <>
+              <MemberAvatar member={selected} />
+              <span className="truncate">{getUserDisplayName(selected)}</span>
+            </>
+          ) : (
+            <>
+              <User className="h-3.5 w-3.5 shrink-0" />
+              <span>{placeholder}</span>
+            </>
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-56 p-0" align="start">
+        <Command shouldFilter={false}>
+          <CommandInput
+            placeholder="Search members…"
+            className="h-8 text-xs"
+            value={search}
+            onValueChange={handleSearchChange}
+          />
+          <CommandList className="max-h-52 overflow-y-auto scrollbar-hide">
+            <CommandEmpty className="py-2 text-center text-xs text-muted-foreground">
+              No members found.
+            </CommandEmpty>
+            <CommandGroup>
+              {allowUnassigned && (
+                <CommandItem value="__unassigned__" onSelect={() => handleSelect(null)}>
+                  <User className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <span className="text-xs">Unassigned</span>
+                  {!value && <Check className="ml-auto h-3 w-3" />}
+                </CommandItem>
+              )}
+              {filtered.map((m) => (
+                <CommandItem key={m.id} value={m.id} onSelect={() => handleSelect(m.id)}>
+                  <MemberAvatar member={m} className="mr-2" />
+                  <span className="truncate text-xs">{getUserDisplayName(m)}</span>
+                  {m.id === value && <Check className="ml-auto h-3 w-3" />}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}

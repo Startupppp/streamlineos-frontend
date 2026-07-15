@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export function WidgetSkeleton({ rows = 3 }: { rows?: number }) {
+export function WidgetSkeleton({ rows = 5 }: { rows?: number }) {
   return (
     <Card className="h-full">
       <CardHeader className="pb-2">

@@ -7,6 +7,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
+  SheetBody,
   SheetFooter,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { UserCombobox } from "@/components/ui/user-combobox";
 import {
   Select,
   SelectContent,
@@ -278,15 +279,15 @@ export function AutomationBuilderSheet({
 
   return (
     <Sheet open onOpenChange={(open) => !open && onClose()}>
-      <SheetContent side="right" className="w-full sm:max-w-xl p-0 gap-0">
-        <SheetHeader className="px-6 pt-6">
+      <SheetContent side="right" className="flex w-full flex-col overflow-hidden p-0 gap-0 sm:max-w-xl">
+        <SheetHeader className="shrink-0 border-b border-border px-6 py-4">
           <SheetTitle>{isEdit ? "Edit automation" : "New automation"}</SheetTitle>
           <SheetDescription>
             Configure a trigger, optional conditions, and the actions to run.
           </SheetDescription>
         </SheetHeader>
 
-        <ScrollArea className="flex-1 min-h-0">
+        <SheetBody>
           <div className="px-6 py-4 space-y-6">
             <div className="space-y-1.5">
               <Label>Name *</Label>
@@ -515,12 +516,15 @@ export function AutomationBuilderSheet({
                             value={action.config.title}
                             onChange={(e) => handleActionConfig(index, { title: e.target.value })}
                           />
-                          <Input
-                            placeholder="Assignee user ID (optional)"
+                          <UserCombobox
                             value={action.config.assigneeId ?? ""}
-                            onChange={(e) =>
-                              handleActionConfig(index, { assigneeId: e.target.value })
+                            onChange={(assigneeId) =>
+                              handleActionConfig(index, {
+                                assigneeId: assigneeId || undefined,
+                              })
                             }
+                            placeholder="Select assignee (optional)…"
+                            allowUnassigned
                           />
                           <Input
                             type="number"
@@ -550,10 +554,12 @@ export function AutomationBuilderSheet({
                       )}
 
                       {action.type === "support_assign_ticket" && (
-                        <Input
-                          placeholder="Assignee user ID"
+                        <UserCombobox
                           value={action.config.assigneeId}
-                          onChange={(e) => handleActionConfig(index, { assigneeId: e.target.value })}
+                          onChange={(assigneeId) =>
+                            handleActionConfig(index, { assigneeId })
+                          }
+                          placeholder="Select assignee…"
                         />
                       )}
 
@@ -640,9 +646,9 @@ export function AutomationBuilderSheet({
               </div>
             )}
           </div>
-        </ScrollArea>
+        </SheetBody>
 
-        <SheetFooter className="px-6 py-4 border-t border-border flex-row gap-2 sm:justify-between">
+        <SheetFooter className="shrink-0 border-t border-border px-6 py-4 flex-row gap-2 sm:justify-between">
           <Button
             type="button"
             variant="outline"

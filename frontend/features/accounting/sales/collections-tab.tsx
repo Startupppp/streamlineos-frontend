@@ -9,7 +9,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import { UserCombobox } from "@/components/ui/user-combobox";
 import {
   Select,
   SelectContent,
@@ -52,10 +52,6 @@ function CollectionOwnerPopover({
   const mutation = useUpdateInvoiceCollection();
   const canManage = useCan("accounting:collections:manage");
 
-  function handleValueChange(e: React.ChangeEvent<HTMLInputElement>): void {
-    setValue(e.target.value);
-  }
-
   function handleAssign(): void {
     if (!invoiceId) return;
     mutation.mutate(
@@ -86,23 +82,25 @@ function CollectionOwnerPopover({
           {currentOwner ?? "Assign…"}
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-52 p-3 space-y-2" align="start">
-        <Label className="text-xs">User ID</Label>
-        <Input
-          value={value}
-          onChange={handleValueChange}
-          className="h-7 text-xs"
-          placeholder="owner-user-id"
-        />
-        <LoadingButton
-          size="sm"
-          className="w-full h-7 text-xs"
-          isPending={mutation.isPending}
-          onClick={handleAssign}
-          loadingText="Saving…"
-        >
-          Assign
-        </LoadingButton>
+      <PopoverContent className="w-56 p-0" align="start">
+        <div className="p-3 space-y-2">
+          <Label className="text-xs">Collection owner</Label>
+          <UserCombobox
+            value={value}
+            onChange={setValue}
+            placeholder="Search for owner…"
+            className="h-8 text-xs"
+          />
+          <LoadingButton
+            size="sm"
+            className="w-full h-7 text-xs"
+            isPending={mutation.isPending}
+            onClick={handleAssign}
+            loadingText="Saving…"
+          >
+            Assign
+          </LoadingButton>
+        </div>
       </PopoverContent>
     </Popover>
   );
