@@ -141,7 +141,7 @@ export default function CyclesPage({ params }: { params: Promise<{ projectId: st
 
   if (isLoading) {
     return (
-      <PageWrapper title="Cycles" subtitle="Loading...">
+      <PageWrapper title="Cycles">
         <div className="space-y-6">
           <div className="space-y-2">
             <Skeleton className="h-3 w-12" />

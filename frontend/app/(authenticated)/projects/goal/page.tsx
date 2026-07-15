@@ -23,7 +23,6 @@ import { EmptyTargetIllustration } from "@/components/illustrations";
 import { ErrorState } from "@/components/shared/error-state";
 import {
   Target,
-  Plus,
   Search,
   Users,
   TrendingUp,
@@ -31,6 +30,8 @@ import {
   CalendarDays,
   ListChecks,
 } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { format } from "date-fns";
 import {
   useGoals,
@@ -51,6 +52,7 @@ import {
   PmPanel,
   PmSection,
   PmStaggerList,
+  PM_FILL_PANEL,
   PM_PANEL,
   PM_TOOLBAR,
 } from "@/features/projects/shared/pm-chrome";
@@ -64,6 +66,15 @@ import {
 } from "@/features/projects/shared/pm-motion";
 import { TEXT_ONE_LINE, TEXT_TWO_LINES } from "@/features/projects/shared/text-overflow";
 import { cn } from "@/lib/utils";
+
+function NewGoalButton({ onClick }: { onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button size="sm" onClick={onClick} {...hoverHandlers}>
+      <PlusIcon ref={iconRef} size={14} className="mr-1" /> New Goal
+    </Button>
+  );
+}
 
 const LEVEL_ORDER: GoalLevel[] = ["company", "team", "individual"];
 
@@ -219,11 +230,7 @@ export default function GoalsPage() {
         title="Goals & OKRs"
         eyebrow="Projects"
         subtitle="Track company, team, and individual objectives and their key results"
-        actions={
-          <Button size="sm" onClick={handleOpenCreate}>
-            <Plus className="mr-1 h-4 w-4" /> New Goal
-          </Button>
-        }
+        actions={<NewGoalButton onClick={handleOpenCreate} />}
         filters={
           <div className={PM_TOOLBAR}>
             <div className="relative min-w-[180px] max-w-sm flex-1">
@@ -267,7 +274,7 @@ export default function GoalsPage() {
         }
       >
         <PmPageShell>
-          <PmSection index={0}>
+          <PmSection index={0} className="shrink-0">
             <StatCardGrid cols={4}>
               <motion.div
                 variants={sectionVariants}
@@ -328,11 +335,11 @@ export default function GoalsPage() {
             </StatCardGrid>
           </PmSection>
 
-          <PmSection index={1}>
+          <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
             {isLoading ? (
               <GoalsGridSkeleton />
             ) : isError ? (
-              <PmPanel className="flex min-h-[14rem] items-center justify-center p-6">
+              <PmPanel className={cn(PM_FILL_PANEL, "items-center justify-center p-6")}>
                 <ErrorState
                   title="Failed to load goals"
                   description="We couldn't load your goals. Please try again."
@@ -340,9 +347,8 @@ export default function GoalsPage() {
                 />
               </PmPanel>
             ) : !hasGoals ? (
-              <PmPanel className="flex min-h-[50vh] items-center justify-center p-6">
+              <PmPanel className={cn(PM_FILL_PANEL, "p-6")}>
                 <EmptyState
-                  className="min-h-[12rem] w-full"
                   illustration={<EmptyTargetIllustration />}
                   title="No goals yet"
                   description="Create your first objective with measurable key results to start tracking progress."

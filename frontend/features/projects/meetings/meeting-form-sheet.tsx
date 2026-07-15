@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -18,15 +18,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Combobox } from "@/components/ui/combobox";
-import { Sparkles, ChevronDown } from "lucide-react";
-import { resolveImageUrl } from "@/lib/utils";
-import { getUserDisplayName, getUserInitials } from "@/features/projects/shared/resolve-user-name";
+import { SparklesIcon, ChevronDownIcon } from "@animateicons/react/lucide";
+import { MeetingAttendeePicker } from "./meeting-attendees-picker";
+import type { MeetingTemplate } from "./new-meeting-button";
 import type {
   Meeting,
-  MeetingType,
   CreateMeetingInput,
   UpdateMeetingInput,
   RecurrenceRule,
@@ -77,12 +73,6 @@ const meetingSchema = z
 
 type MeetingFormValues = z.infer<typeof meetingSchema>;
 
-interface MeetingTemplate {
-  type: MeetingType;
-  label: string;
-  duration: number;
-  agenda: string;
-}
 
 function getDefaultStart(): string {
   const d = new Date();
@@ -202,21 +192,6 @@ export function MeetingFormSheet({
       }
     }
   }, [watchScheduledAt, watchDuration, form]);
-
-  const availableMembers = useMemo(
-    () => projectMembers.filter((m) => !selectedAttendees.includes(m.id)),
-    [projectMembers, selectedAttendees],
-  );
-
-  const comboboxOptions = useMemo(
-    () =>
-      availableMembers.map((m) => ({
-        value: m.id,
-        label: getUserDisplayName(m),
-        sublabel: m.email,
-      })),
-    [availableMembers],
-  );
 
   const handleAddAttendee = useCallback(
     (userId: string) => {
@@ -429,9 +404,9 @@ export function MeetingFormSheet({
                               size="sm"
                               className="h-6 text-[11px] gap-1 text-primary hover:text-primary/80 px-2"
                             >
-                              <Sparkles className="h-3 w-3" />
+                              <SparklesIcon className="h-3 w-3" />
                               Generate
-                              <ChevronDown className="h-2.5 w-2.5" />
+                              <ChevronDownIcon className="h-2.5 w-2.5" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-52 text-xs">
@@ -538,50 +513,13 @@ export function MeetingFormSheet({
               </div>
 
               {mode === "create" && projectMembers.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">Attendees (optional)</p>
-
-                  {selectedAttendees.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
-                      {selectedAttendees.map((userId) => {
-                        const member = projectMembers.find((m) => m.id === userId);
-                        return (
-                          <Badge key={userId} variant="secondary" className="gap-1.5 pl-0.5 pr-1.5 py-0.5">
-                            <Avatar className="h-4 w-4 shrink-0">
-                              <AvatarImage src={resolveImageUrl(member?.image)} />
-                              <AvatarFallback className="text-[7px]">
-                                {getUserInitials(member)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span className="text-[11px] truncate max-w-[120px]">
-                              {getUserDisplayName(member)}
-                            </span>
-                            <button
-                              type="button"
-                              className="text-muted-foreground hover:text-destructive ml-0.5"
-                              onClick={() => handleRemoveAttendee(userId)}
-                              aria-label={`Remove ${getUserDisplayName(member)}`}
-                            >
-                              <span className="text-xs font-bold">&times;</span>
-                            </button>
-                          </Badge>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {availableMembers.length > 0 && (
-                    <Combobox
-                      options={comboboxOptions}
-                      value={attendeeComboValue}
-                      onChange={handleAddAttendee}
-                      placeholder="+ Add attendee…"
-                      searchPlaceholder="Search members…"
-                      emptyText="No members available."
-                      className="h-8 w-full text-xs bg-card border-border"
-                    />
-                  )}
-                </div>
+                <MeetingAttendeePicker
+                  projectMembers={projectMembers}
+                  selectedAttendees={selectedAttendees}
+                  comboValue={attendeeComboValue}
+                  onAdd={handleAddAttendee}
+                  onRemove={handleRemoveAttendee}
+                />
               )}
             </div>
             <SheetFooter className="px-6 py-4 border-t shrink-0">

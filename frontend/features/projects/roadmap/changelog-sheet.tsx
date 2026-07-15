@@ -124,12 +124,16 @@ export function ChangelogSheet({ entry, onClose }: ChangelogSheetProps) {
               <Input placeholder="e.g. v1.4.0" value={version} onChange={handleVersionChange} />
             </div>
           </div>
-          <div className="flex items-center justify-between rounded-lg border border-border/60 px-3 py-2.5">
+          <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-3 py-2.5">
             <div>
-              <p className="text-sm font-medium">Published</p>
+              <p className="text-sm font-medium text-foreground">Published</p>
               <p className="text-xs text-muted-foreground">Show this entry on the public changelog</p>
             </div>
-            <Switch checked={isPublished} onCheckedChange={setIsPublished} />
+            <Switch
+              checked={isPublished}
+              onCheckedChange={setIsPublished}
+              className="border border-border data-[state=unchecked]:bg-input"
+            />
           </div>
         </div>
         <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">

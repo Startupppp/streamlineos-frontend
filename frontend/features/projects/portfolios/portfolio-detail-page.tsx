@@ -3,7 +3,8 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Plus, X, MoreHorizontal } from "lucide-react";
+import { PlusIcon, XIcon, EllipsisIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import Link from "next/link";
 import {
   usePortfolio,
@@ -58,6 +59,70 @@ import {
 } from "@/features/projects/shared/pm-chrome";
 import { TEXT_ONE_LINE, TEXT_BODY } from "@/features/projects/shared/text-overflow";
 import { cn } from "@/lib/utils";
+
+function UnlinkProjectButton({
+  projectName,
+  projectId,
+  isPending,
+  onUnlink,
+}: {
+  projectName: string;
+  projectId: number;
+  isPending: boolean;
+  onUnlink: (id: number) => void;
+}) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  function handleClick() {
+    onUnlink(projectId);
+  }
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="h-7 w-7 shrink-0"
+      onClick={handleClick}
+      disabled={isPending}
+      aria-label={`Unlink ${projectName}`}
+      {...hoverHandlers}
+    >
+      <XIcon ref={iconRef} size={14} />
+    </Button>
+  );
+}
+
+function LinkProjectButton({
+  disabled,
+  isPending,
+  onClick,
+}: {
+  disabled: boolean;
+  isPending: boolean;
+  onClick: () => void;
+}) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <LoadingButton
+      size="sm"
+      className="h-7 gap-1 text-xs"
+      onClick={onClick}
+      disabled={disabled}
+      isPending={isPending}
+      loadingText="Linking…"
+      {...hoverHandlers}
+    >
+      <PlusIcon ref={iconRef} size={12} /> Link
+    </LoadingButton>
+  );
+}
+
+function PortfolioActionsButton() {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" {...hoverHandlers}>
+      <EllipsisIcon ref={iconRef} size={14} /> Actions
+    </Button>
+  );
+}
 
 interface Props {
   portfolioId: number;
@@ -183,9 +248,9 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
     return (
       <PageWrapper title="Portfolio" eyebrow="Portfolios" backHref="/projects/portfolios">
         <PmPageShell withGlow={false}>
-          <PmPanel className="flex min-h-[14rem] items-center justify-center p-6">
+          <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
             <ErrorState className="flex-1" onRetry={handleRetry} />
-          </PmPanel>
+          </PmSection>
         </PmPageShell>
       </PageWrapper>
     );
@@ -200,9 +265,7 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
         canManage ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
-                <MoreHorizontal className="h-3.5 w-3.5" /> Actions
-              </Button>
+              <PortfolioActionsButton />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={handleOpenEdit}>Edit Portfolio</DropdownMenuItem>
@@ -266,16 +329,11 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
                     ))}
                   </SelectContent>
                 </Select>
-                <LoadingButton
-                  size="sm"
-                  className="h-7 gap-1 text-xs"
-                  onClick={handleLink}
+                <LinkProjectButton
                   disabled={!linkProjectId}
                   isPending={linkProject.isPending}
-                  loadingText="Linking…"
-                >
-                  <Plus className="h-3 w-3" /> Link
-                </LoadingButton>
+                  onClick={handleLink}
+                />
               </div>
             ) : null}
           </div>
@@ -310,16 +368,12 @@ export function PortfolioDetailPage({ portfolioId }: Props) {
                     {proj.status}
                   </Badge>
                   {canManage ? (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 shrink-0"
-                      onClick={() => handleUnlinkClick(proj.id)}
-                      disabled={unlinkProject.isPending}
-                      aria-label={`Unlink ${proj.name}`}
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </Button>
+                    <UnlinkProjectButton
+                      projectName={proj.name}
+                      projectId={proj.id}
+                      isPending={unlinkProject.isPending}
+                      onUnlink={handleUnlinkClick}
+                    />
                   ) : null}
                 </div>
               ))}

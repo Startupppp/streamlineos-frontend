@@ -4,15 +4,6 @@ import { use, memo, useCallback, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -49,6 +40,7 @@ import {
 } from "@/hooks/api/projects";
 import { useCan } from "@/hooks/api/access";
 import { toast } from "sonner";
+import { CreateBoardDialog } from "@/features/projects/whiteboard/create-board-dialog";
 import { useWhiteboardAutosave } from "@/features/projects/whiteboard/use-whiteboard-autosave";
 import { WhiteboardToolbar } from "@/features/projects/whiteboard/whiteboard-toolbar";
 import { ShareDialog } from "@/features/projects/whiteboard/share-dialog";
@@ -77,63 +69,6 @@ const ExcalidrawCanvas = dynamic(
     ),
   },
 );
-
-function CreateBoardDialog({
-  open,
-  onOpenChange,
-  onCreate,
-  isPending,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onCreate: (name: string) => void;
-  isPending: boolean;
-}) {
-  const [name, setName] = useState("");
-
-  function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
-    setName(event.target.value);
-  }
-  function handleSubmit() {
-    if (!name.trim()) return;
-    onCreate(name.trim());
-  }
-  function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
-    if (event.key === "Enter") handleSubmit();
-  }
-  function handleOpenChange(nextOpen: boolean) {
-    if (!nextOpen) setName("");
-    onOpenChange(nextOpen);
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-sm">
-        <DialogHeader>
-          <DialogTitle>New Board</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-1.5 py-1">
-          <Label>Board name</Label>
-          <Input
-            autoFocus
-            placeholder="e.g. Sprint brainstorm"
-            value={name}
-            onChange={handleChange}
-            onKeyDown={handleKeyDown}
-          />
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => handleOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} disabled={isPending || !name.trim()}>
-            {isPending ? "Creating…" : "Create"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 interface BoardItemProps {
   board: WhiteboardSummary;
@@ -418,7 +353,7 @@ export default function WhiteboardPage({
             title="Create your first board"
             description="Whiteboards let your team brainstorm visually with sticky notes, shapes, arrows, and freehand drawing."
             action={canManage ? { label: "New Board", onClick: handleOpenCreate } : undefined}
-            className="min-h-[40vh] flex-1"
+            className="flex-1 min-h-0"
           />
         ) : (
           <div className="flex min-h-0 flex-1 gap-3">

@@ -38,7 +38,7 @@ function DialogOverlay({
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50",
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-[100] bg-black/50",
         className
       )}
       {...props}
@@ -60,7 +60,7 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "bg-background fixed z-50 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out",
+          "bg-background fixed z-[100] shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out",
           "inset-x-0 bottom-0 flex w-full flex-col gap-4 rounded-t-2xl border border-b-0 p-6 max-h-[92dvh] overflow-y-auto overscroll-contain pb-[max(1.5rem,env(safe-area-inset-bottom))]",
           "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
           "md:inset-auto md:top-[50%] md:left-[50%] md:translate-x-[-50%] md:translate-y-[-50%] md:grid md:w-full md:max-w-[calc(100%-2rem)] md:rounded-lg md:border-b md:max-h-[90dvh] md:pb-6 md:sm:max-w-lg",

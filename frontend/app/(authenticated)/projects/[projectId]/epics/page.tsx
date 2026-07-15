@@ -93,7 +93,7 @@ export default function EpicsPage({ params }: PageProps) {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Epics" subtitle="Loading...">
+      <PageWrapper title="Epics">
         <PmPageShell>
           <div className="space-y-4">
             <div className="mb-1 grid grid-cols-2 gap-2.5 md:grid-cols-4">

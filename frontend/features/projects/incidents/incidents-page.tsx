@@ -30,6 +30,7 @@ import {
   PmPageShell,
   PmPanel,
   PmSection,
+  PM_FILL_PANEL,
   PM_TOOLBAR,
 } from "@/features/projects/shared/pm-chrome";
 import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
@@ -252,7 +253,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
       }
     >
       <PmPageShell>
-        <PmSection index={0}>
+        <PmSection index={0} className="shrink-0">
           <StatCardGrid cols={3}>
             <StatCard label="Open" value={openCount} icon={Siren} tone="amber" isLoading={isLoading} />
             <StatCard label="SLA Breached" value={slaBreachedCount} tone="red" isLoading={isLoading} />
@@ -266,19 +267,20 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
           ) : isError ? (
             <ErrorState onRetry={refetch} />
           ) : filtered.length === 0 ? (
-            <EmptyState
-              illustrationPreset="ticket"
-              title="No incidents found"
-              description={
-                search || statusFilter !== "all" || severityFilter !== "all"
-                  ? "No incidents match the active filters."
-                  : "Create an incident to start tracking."
-              }
-              action={canManage ? { label: "New Incident", onClick: handleNew } : undefined}
-              className="min-h-[40vh]"
-            />
+            <PmPanel className={cn(PM_FILL_PANEL, "p-6")}>
+              <EmptyState
+                illustrationPreset="ticket"
+                title="No incidents found"
+                description={
+                  search || statusFilter !== "all" || severityFilter !== "all"
+                    ? "No incidents match the active filters."
+                    : "Create an incident to start tracking."
+                }
+                action={canManage ? { label: "New Incident", onClick: handleNew } : undefined}
+              />
+            </PmPanel>
           ) : (
-            <PmPanel className="flex min-h-0 flex-1 flex-col" solid>
+            <PmPanel className={PM_FILL_PANEL} solid>
               <DataTable<Incident>
                 data={filtered}
                 columns={columns}

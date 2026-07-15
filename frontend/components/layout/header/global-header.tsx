@@ -85,7 +85,7 @@ function DesktopHeader({
     <div className="flex items-center h-full w-full px-4 gap-3">
       <div className="flex items-center gap-2 shrink-0 min-w-0">
         <HeaderBrand showLabel={showLabels} />
-        <ProductSwitcherMenu hideLabel={!showLabels} />
+        <ProductSwitcherMenu />
         {showSidebarToggle && onToggleSidebar && (
           <SidebarCollapseToggle
             isCollapsed={isSidebarCollapsed}
@@ -93,7 +93,7 @@ function DesktopHeader({
           />
         )}
         <div className="w-px h-4 bg-sidebar-border" />
-        <WorkspaceSwitcher variant="header" hideLabel={!showLabels} />
+        <WorkspaceSwitcher variant="header" />
       </div>
 
       <div className="flex-1 flex justify-center min-w-0 px-4">

@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil } from "lucide-react";
+import { Trash2Icon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -44,6 +46,34 @@ interface IncidentDetailPageProps {
   incidentId: number;
 }
 
+function IncidentActions({
+  onEdit,
+  onDelete,
+}: {
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <div className="flex items-center gap-2">
+      <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={onEdit}>
+        <Pencil className="h-3.5 w-3.5 mr-1" />
+        Edit
+      </Button>
+      <Button
+        size="sm"
+        variant="outline"
+        className="h-7 text-[11px] text-destructive border-destructive/30 hover:bg-destructive/5"
+        onClick={onDelete}
+        {...hoverHandlers}
+      >
+        <Trash2Icon ref={iconRef} size={14} className="mr-1" />
+        Delete
+      </Button>
+    </div>
+  );
+}
+
 export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPageProps) {
   const canManage = useCan("projects:incidents:manage");
   const [editOpen, setEditOpen] = useState(false);
@@ -54,7 +84,11 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
   const deleteIncident = useDeleteIncident();
   const members = membersData?.data ?? [];
 
-  function handleDeleteConfirm() {
+  const handleOpenEdit = useCallback(() => setEditOpen(true), []);
+  const handleOpenDelete = useCallback(() => setDeleteOpen(true), []);
+  const handleDeleteDialogChange = useCallback((open: boolean) => setDeleteOpen(open), []);
+
+  const handleDeleteConfirm = useCallback(() => {
     deleteIncident.mutate(
       { projectId, id: incidentId },
       {
@@ -66,12 +100,12 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
         onError: () => toast.error("Failed to delete incident"),
       },
     );
-  }
+  }, [deleteIncident, projectId, incidentId]);
 
   if (isLoading) {
     return (
       <PageWrapper title="Incident" eyebrow="Project" backHref={`/projects/${projectId}/incidents`}>
-        <div className="flex flex-1 min-h-0 flex-col space-y-4">
+        <div className="flex min-h-0 flex-1 flex-col space-y-4">
           <div className="flex gap-2">
             <Skeleton className="h-5 w-20 rounded-full" />
             <Skeleton className="h-5 w-24 rounded-full" />
@@ -110,23 +144,14 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
       }
       actions={
         canManage ? (
-          <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => setEditOpen(true)}>
-              <Pencil className="h-3.5 w-3.5 mr-1" />
-              Edit
-            </Button>
-            <Button size="sm" variant="outline" className="h-7 text-[11px] text-destructive border-destructive/30 hover:bg-destructive/5" onClick={() => setDeleteOpen(true)}>
-              <Trash2 className="h-3.5 w-3.5 mr-1" />
-              Delete
-            </Button>
-          </div>
+          <IncidentActions onEdit={handleOpenEdit} onDelete={handleOpenDelete} />
         ) : undefined
       }
     >
       <div className="space-y-5">
         <IncidentSlaPanel incident={incident} />
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <InfoSection label="Impact" value={incident.impact} />
           <InfoSection label="Root Cause" value={incident.rootCause} />
           <InfoSection label="Customer Comms" value={incident.customerComms} />
@@ -134,12 +159,12 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
             <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Owner</p>
             <p className="text-[12px]">{owner ? (owner.name ?? owner.email) : "—"}</p>
           </div>
-          {incident.linkedTicketId && (
+          {incident.linkedTicketId ? (
             <div className="space-y-1">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Linked Ticket</p>
               <Badge variant="outline" className="text-[10px] font-mono">#{incident.linkedTicketId}</Badge>
             </div>
-          )}
+          ) : null}
         </div>
 
         <IncidentTimeline
@@ -157,7 +182,7 @@ export function IncidentDetailPage({ projectId, incidentId }: IncidentDetailPage
         editIncident={incident}
       />
 
-      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+      <AlertDialog open={deleteOpen} onOpenChange={handleDeleteDialogChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete incident?</AlertDialogTitle>
@@ -184,7 +209,7 @@ function InfoSection({ label, value }: { label: string; value: string | null }) 
   return (
     <div className="space-y-1">
       <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className="text-[12px] text-foreground whitespace-pre-wrap">
+      <p className="whitespace-pre-wrap text-[12px] text-foreground">
         {value ?? <span className="italic text-muted-foreground">Not set</span>}
       </p>
     </div>

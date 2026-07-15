@@ -295,7 +295,11 @@ interface CreateOrganizationResult {
 
 export const useCreateOrganization = () => {
   const queryClient = useQueryClient();
-  return useMutation<CreateOrganizationResult, Error, { name: string; slug: string }>({
+  return useMutation<
+    CreateOrganizationResult,
+    Error,
+    { name: string; slug: string; billingEmail?: string }
+  >({
     mutationKey: ["organization", "create"],
     mutationFn: (data) => apiClient.post<CreateOrganizationResult>("/organization", data),
     onSuccess: () => {

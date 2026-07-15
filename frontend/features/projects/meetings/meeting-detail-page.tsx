@@ -32,6 +32,21 @@ import {
 import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 import type { UpdateMeetingInput } from "@/types/projects";
 
+function DeleteMeetingButton({ onClick }: { onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button
+      size="sm"
+      variant="outline"
+      className="h-8 gap-1.5 text-xs text-destructive hover:text-destructive"
+      onClick={onClick}
+      {...hoverHandlers}
+    >
+      <Trash2Icon ref={iconRef} size={14} /> Delete
+    </Button>
+  );
+}
+
 interface MeetingDetailPageProps {
   projectId: number;
   meetingId: number;
@@ -122,14 +137,7 @@ export function MeetingDetailPage({ projectId, meetingId }: MeetingDetailPagePro
             <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={handleOpenEdit}>
               <Pencil className="h-3.5 w-3.5" /> Edit
             </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-8 gap-1.5 text-xs text-destructive hover:text-destructive"
-              onClick={handleOpenDelete}
-            >
-              <Trash2 className="h-3.5 w-3.5" /> Delete
-            </Button>
+            <DeleteMeetingButton onClick={handleOpenDelete} />
           </div>
         ) : undefined
       }

@@ -2,7 +2,8 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { MoreHorizontal, Plus } from "lucide-react";
+import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useProjectDecisions, useCreateDecision, useUpdateDecision, useDeleteDecision, useProjectMembers } from "@/hooks/api/projects";
 import { useCan } from "@/hooks/api/access";
 import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
@@ -37,11 +38,49 @@ const DEC_STATUS_LABEL: Record<DecisionStatus, string> = {
   proposed: "Proposed", accepted: "Accepted", superseded: "Superseded", revisit: "Revisit",
 };
 const DEC_STATUS_STYLE: Record<DecisionStatus, string> = {
-  proposed: "text-blue-600 border-blue-200",
-  accepted: "text-emerald-600 border-emerald-200",
+  proposed: "text-blue-600 border-blue-200 bg-blue-50 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30",
+  accepted: "text-emerald-600 border-emerald-200 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
   superseded: "text-muted-foreground border-border",
-  revisit: "text-amber-600 border-amber-200",
+  revisit: "text-amber-600 border-amber-200 bg-amber-50 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
 };
+
+function NewDecisionButton({ onClick }: { onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={onClick} {...hoverHandlers}>
+      <PlusIcon ref={iconRef} size={14} />
+      New Decision
+    </Button>
+  );
+}
+
+function DecisionRowActions({
+  decision,
+  onEdit,
+  onDelete,
+}: {
+  decision: Decision;
+  onEdit: (d: Decision) => void;
+  onDelete: (d: Decision) => void;
+}) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  const handleEdit = useCallback(() => onEdit(decision), [decision, onEdit]);
+  const handleDelete = useCallback(() => onDelete(decision), [decision, onDelete]);
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Decision actions" {...hoverHandlers}>
+          <EllipsisIcon ref={iconRef} size={14} />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onSelect={handleEdit}>Edit</DropdownMenuItem>
+        <DropdownMenuItem variant="destructive" onSelect={handleDelete}>Delete</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 const STATUS_OPTS = [
   { value: "all", label: "All statuses" },
   { value: "proposed", label: "Proposed" },
@@ -71,7 +110,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
   const deleteDecision = useDeleteDecision(projectId);
 
   const memberName = useCallback((userId: string | null): string => {
-    if (!userId) return "-";
+    if (!userId) return "—";
     const m = members.find((x) => x.id === userId);
     return getUserDisplayName(m) || userId;
   }, [members]);
@@ -108,6 +147,27 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
     });
   }
 
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+  }, []);
+
+  const handleNewDecision = useCallback(() => setSheetOpen(true), []);
+
+  const handleClearFilters = useCallback(() => {
+    setStatusFilter("all");
+    setSearch("");
+  }, []);
+
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+
+  const handleAlertOpenChange = useCallback((open: boolean) => {
+    if (!open) setDeleteTarget(null);
+  }, []);
+
+  const handleSheetOpenChange = useCallback((open: boolean) => {
+    if (!open) { setSheetOpen(false); setEditDecision(null); }
+  }, []);
+
   const columns = useMemo((): DataTableColumn<Decision>[] => [
     {
       key: "decisionNumber", header: "ID", className: "w-20",
@@ -134,42 +194,29 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
     },
     {
       key: "ownerId", header: "Owner",
-      cell: (row) => <span className="text-muted-foreground text-sm">{memberName(row.ownerId)}</span>,
+      cell: (row) => <span className="text-[11px] text-muted-foreground">{memberName(row.ownerId)}</span>,
     },
     {
       key: "decidedAt", header: "Decided", sortable: true, sortValue: (d) => d.decidedAt ?? "",
       cell: (row) => (
-        <span className="text-muted-foreground tabular-nums text-sm">
-          {row.decidedAt ? row.decidedAt.slice(0, 10) : "-"}
+        <span className="text-[11px] tabular-nums text-muted-foreground">
+          {row.decidedAt ? row.decidedAt.slice(0, 10) : "—"}
         </span>
       ),
     },
     {
       key: "revisitAt", header: "Revisit", sortable: true, sortValue: (d) => d.revisitAt ?? "",
       cell: (row) => (
-        <span className="text-muted-foreground tabular-nums text-sm">
-          {row.revisitAt ? row.revisitAt.slice(0, 10) : "-"}
+        <span className="text-[11px] tabular-nums text-muted-foreground">
+          {row.revisitAt ? row.revisitAt.slice(0, 10) : "—"}
         </span>
       ),
     },
     {
       key: "actions", header: "", className: "w-10",
-      cell: (row) => {
-        if (!canManage) return null;
-        return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-7 w-7">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setEditDecision(row)}>Edit</DropdownMenuItem>
-              <DropdownMenuItem variant="destructive" onClick={() => setDeleteTarget(row)}>Delete</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        );
-      },
+      cell: (row) => canManage ? (
+        <DecisionRowActions decision={row} onEdit={setEditDecision} onDelete={setDeleteTarget} />
+      ) : null,
     },
   ], [canManage, memberName]);
 
@@ -180,13 +227,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
       title="Decisions Log"
       eyebrow="Project"
       subtitle="Log and track key project decisions for accountability and audit"
-      actions={
-        canManage ? (
-          <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={() => setSheetOpen(true)}>
-            <Plus className="h-3.5 w-3.5" /> New Decision
-          </Button>
-        ) : undefined
-      }
+      actions={canManage ? <NewDecisionButton onClick={handleNewDecision} /> : undefined}
       filters={
         <div className={cn(PM_TOOLBAR, "sm:justify-start")}>
           <div className="flex min-w-0 flex-wrap items-center gap-2">
@@ -206,18 +247,10 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
               className="h-8 w-52 text-xs"
               placeholder="Search decisions..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={handleSearchChange}
             />
             {isFiltered ? (
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-8 text-xs"
-                onClick={() => {
-                  setStatusFilter("all");
-                  setSearch("");
-                }}
-              >
+              <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={handleClearFilters}>
                 Clear
               </Button>
             ) : null}
@@ -228,9 +261,9 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
           {isLoading ? (
-            <DataTableSkeleton rows={12} columns={7} className="flex-1" />
+            <DataTableSkeleton rows={5} columns={7} className="flex-1" />
           ) : isError ? (
-            <ErrorState className="flex-1" onRetry={() => void refetch()} />
+            <ErrorState className="flex-1" onRetry={handleRetry} />
           ) : displayed.length === 0 ? (
             <EmptyState
               illustrationPreset="documents"
@@ -242,15 +275,9 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
               }
               action={
                 isFiltered
-                  ? {
-                      label: "Clear filters",
-                      onClick: () => {
-                        setStatusFilter("all");
-                        setSearch("");
-                      },
-                    }
+                  ? { label: "Clear filters", onClick: handleClearFilters }
                   : canManage
-                    ? { label: "Log Decision", onClick: () => setSheetOpen(true) }
+                    ? { label: "Log Decision", onClick: handleNewDecision }
                     : undefined
               }
               className="min-h-[40vh]"
@@ -271,7 +298,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
 
       <DecisionFormSheet
         open={sheetOpen || !!editDecision}
-        onOpenChange={(open) => { if (!open) { setSheetOpen(false); setEditDecision(null); } }}
+        onOpenChange={handleSheetOpenChange}
         mode={editDecision ? "edit" : "create"}
         defaultValues={editDecision ?? undefined}
         onSubmitCreate={handleCreate}
@@ -280,7 +307,7 @@ export function DecisionsPage({ projectId }: DecisionsPageProps) {
         projectId={projectId}
       />
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+      <AlertDialog open={!!deleteTarget} onOpenChange={handleAlertOpenChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this decision?</AlertDialogTitle>

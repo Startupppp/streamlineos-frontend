@@ -184,8 +184,8 @@ export function PIPTab() {
   }
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col flex-1 min-h-0 gap-3">
+      <div className="flex items-center justify-between shrink-0">
         <p className="text-sm text-muted-foreground">{pipsList.length} performance improvement plans</p>
         <Button size="sm" onClick={handleOpenCreate}>
           <Plus className="h-3.5 w-3.5 mr-1" />New PIP
@@ -193,7 +193,12 @@ export function PIPTab() {
       </div>
 
       {pipsList.length === 0 ? (
-        <EmptyState illustration={<EmptyApprovalIllustration />} title="No PIPs issued yet" compact />
+        <EmptyState
+          illustration={<EmptyApprovalIllustration className="h-full w-full" />}
+          title="No PIPs issued yet"
+          description="Performance improvement plans help employees get back on track with clear objectives and timelines."
+          action={{ label: "New PIP", onClick: handleOpenCreate }}
+        />
       ) : (
         <div className="space-y-2">
           {pipsList.map((pip) => (

@@ -60,7 +60,7 @@ export default function RoadmapPage() {
 
   const filters = (
     <div className={PM_TOOLBAR}>
-      <TabsList className="h-8 w-fit shrink-0 rounded-lg border border-border/50 bg-muted/40 p-0.5">
+      <TabsList className="h-8 w-fit shrink-0 rounded-lg border border-border bg-muted/50 p-0.5 text-muted-foreground">
         <TabsTrigger value="roadmap" className="h-7 gap-1.5 rounded-md px-3 text-xs">
           <Sparkles className="h-3.5 w-3.5" />
           Roadmap
@@ -114,7 +114,7 @@ export default function RoadmapPage() {
 
   return (
     <RequireModule module="PROJECTS">
-      <Tabs value={activeTab} onValueChange={handleTabChange}>
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="flex min-h-0 flex-1 flex-col">
         <PageWrapper
           title="Roadmap"
           eyebrow="Projects"
@@ -123,18 +123,18 @@ export default function RoadmapPage() {
           actions={hasActions ? actions : undefined}
         >
           <PmPageShell>
-            <PmSection index={0}>
-              <TabsContent value="roadmap" className="mt-0">
+            <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
+              <TabsContent value="roadmap" className="mt-0 flex min-h-0 flex-1 flex-col">
                 <RoadmapTab
                   search={debouncedSearch}
                   createOpen={roadmapCreateOpen}
                   onCreateOpenChange={handleRoadmapCreateOpenChange}
                 />
               </TabsContent>
-              <TabsContent value="feedback" className="mt-0">
+              <TabsContent value="feedback" className="mt-0 flex min-h-0 flex-1 flex-col">
                 <FeedbackTab search={debouncedSearch} />
               </TabsContent>
-              <TabsContent value="changelog" className="mt-0">
+              <TabsContent value="changelog" className="mt-0 flex min-h-0 flex-1 flex-col">
                 <ChangelogTab
                   createOpen={changelogCreateOpen}
                   onCreateOpenChange={handleChangelogCreateOpenChange}

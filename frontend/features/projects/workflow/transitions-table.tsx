@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { MoreHorizontal, Plus } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
 import {
   useWorkflowTransitions,
@@ -37,6 +39,16 @@ import type { WorkflowTransition, CreateTransitionInput } from "@/types/projects
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 import { cn } from "@/lib/utils";
+
+function AddTransitionButton({ onClick }: { onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button size="sm" variant="outline" className="h-7 gap-1.5 text-xs" onClick={onClick} {...hoverHandlers}>
+      <PlusIcon ref={iconRef} size={14} />
+      Add
+    </Button>
+  );
+}
 
 interface TransitionsTableProps {
   projectId: number;
@@ -204,12 +216,7 @@ export function TransitionsTable({ projectId, statuses }: TransitionsTableProps)
     <>
       <div className="mb-3 flex min-w-0 items-center justify-between gap-2 px-4 pt-4">
         <h2 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>Transitions</h2>
-        {canManage ? (
-          <Button size="sm" variant="outline" className="h-7 gap-1.5 text-xs" onClick={handleAddClick}>
-            <Plus className="h-3.5 w-3.5" />
-            Add
-          </Button>
-        ) : null}
+        {canManage ? <AddTransitionButton onClick={handleAddClick} /> : null}
       </div>
 
       {isLoading ? (

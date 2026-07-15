@@ -88,7 +88,7 @@ export function KanbanSwimlaneBoard({
                 </div>
               </AccordionTrigger>
               <AccordionContent className="pb-0">
-                <div className="flex items-start gap-3 overflow-x-auto pb-2 pt-0.5">
+                <div className="kanban-scroll-container flex h-[min(480px,calc(100dvh-12rem))] max-h-[min(480px,calc(100dvh-12rem))] items-stretch gap-3 overflow-x-auto overflow-y-hidden pb-2 pt-0.5">
                   {visibleColumns.map((col) => {
                     const droppableId = `${encodeRowKey(rowKey)}||${col.id}`;
                     const columnTickets = rowTickets
@@ -101,7 +101,7 @@ export function KanbanSwimlaneBoard({
                       <div
                         key={col.id}
                         className={cn(
-                          "w-72 min-w-[280px] shrink-0 rounded-lg border bg-muted/20 flex flex-col",
+                          "flex h-full min-h-0 w-72 min-w-[280px] shrink-0 flex-col rounded-lg border bg-muted/20",
                           overWip && "border-destructive/60",
                         )}
                       >
@@ -120,7 +120,7 @@ export function KanbanSwimlaneBoard({
                           columnTickets={columnTickets}
                           droppableId={droppableId}
                           minHeight="min-h-[60px]"
-                          stretchColumn={false}
+                          stretchColumn={true}
                           projectId={projectId}
                           projectKey={projectKey}
                           handleSelect={handleSelect}

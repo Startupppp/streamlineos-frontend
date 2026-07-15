@@ -23,6 +23,7 @@ const MODULE_LABELS: Record<string, string> = {
   support: "Support",
   surveys: "Surveys",
   payroll: "Payroll",
+  sign: "SignOS",
 };
 
 function getModuleLabel(moduleKey: string): string {
@@ -78,9 +79,9 @@ function ModuleCard({
 
   return (
     <Card>
-      <CardContent className="flex items-center justify-between p-5">
-        <div className="min-w-0">
-          <p className="text-sm font-medium text-foreground">
+      <CardContent className="flex items-start justify-between gap-3 p-5">
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-foreground truncate">
             {getModuleLabel(moduleKey)}
           </p>
           <p className="text-xs text-muted-foreground mt-0.5">
@@ -92,6 +93,7 @@ function ModuleCard({
           onCheckedChange={handleToggle}
           disabled={isPending || !!core}
           aria-label={`Toggle ${getModuleLabel(moduleKey)}`}
+          className="flex-shrink-0 mt-0.5"
         />
       </CardContent>
     </Card>

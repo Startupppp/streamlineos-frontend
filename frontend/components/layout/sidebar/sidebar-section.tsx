@@ -185,10 +185,10 @@ interface ExpandedItemProps extends ItemProps {
 }
 
 function ExpandedItem({ route, depth, pathname, pendingLeaves, onNavigate, accent }: ExpandedItemProps) {
-  const isActive = routeIsActive(route, pathname);
   const hasChildren = !!route.children && route.children.length > 1;
   const singleChild = !!route.children && route.children.length === 1;
   const containsActive = (hasChildren || singleChild) && routeContainsActive(route, pathname);
+  const isActive = routeIsActive(route, pathname) && !containsActive;
   const [expanded, setExpanded] = useState<boolean>(isActive || containsActive);
 
   useEffect(() => {
@@ -228,7 +228,7 @@ function ExpandedItem({ route, depth, pathname, pendingLeaves, onNavigate, accen
             isActive && accent.text,
           )}
         />
-        <span className="flex-1 min-w-0 truncate text-[0.8125rem]">{route.label}</span>
+        <span className={cn("flex-1 min-w-0 truncate text-[0.8125rem]", isActive && "text-sidebar-foreground")}>{route.label}</span>
         {hasBadge && (
           <span className="inline-flex items-center justify-center h-[18px] min-w-[18px] px-1 rounded-full text-[10px] font-bold tabular-nums leading-none bg-amber-500 text-white">
             {count > 99 ? "99+" : count}

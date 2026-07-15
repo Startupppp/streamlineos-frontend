@@ -3,7 +3,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 
-export interface CommentPermalinkData {
+interface CommentPermalinkData {
   id: string;
   content: string;
   createdAt: string | Date | null;
@@ -19,7 +19,7 @@ export interface CommentPermalinkData {
   };
 }
 
-export interface TicketPermalinkData {
+interface TicketPermalinkData {
   id: number;
   title: string;
   status: string;

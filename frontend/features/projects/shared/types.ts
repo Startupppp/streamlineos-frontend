@@ -153,9 +153,9 @@ export const typeConfig: Record<
   string,
   { label: string; color: string }
 > = {
-  TASK: { label: "Task", color: "text-blue-500" },
-  BUG: { label: "Bug", color: "text-red-500" },
-  STORY: { label: "Story", color: "text-green-500" },
-  EPIC: { label: "Epic", color: "text-violet-600" },
+  TASK: { label: "Task", color: "text-blue-500 dark:text-blue-400" },
+  BUG: { label: "Bug", color: "text-red-500 dark:text-red-400" },
+  STORY: { label: "Story", color: "text-green-500 dark:text-green-400" },
+  EPIC: { label: "Epic", color: "text-violet-600 dark:text-violet-400" },
   SUBTASK: { label: "Subtask", color: "text-muted-foreground" },
 };

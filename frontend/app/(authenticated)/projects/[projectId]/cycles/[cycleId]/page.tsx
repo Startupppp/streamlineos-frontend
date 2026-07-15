@@ -130,7 +130,7 @@ export default function CycleDetailPage({ params }: PageProps) {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Loading..." noInternalScroll>
+      <PageWrapper title="Cycle" noInternalScroll>
         <KanbanBoardSkeleton />
       </PageWrapper>
     );

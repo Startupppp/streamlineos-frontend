@@ -37,8 +37,8 @@ function PerformanceContent() {
 
   return (
     <PageWrapper title="Performance" subtitle="Reviews, goals, and team development">
-      <Tabs value={activeTab} onValueChange={handleTabChange}>
-        <TabsList className="h-9 bg-transparent border-b border-border rounded-none p-0 gap-0 w-full justify-start">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-col flex-1 min-h-0 gap-0">
+        <TabsList className="h-9 bg-transparent border-b border-border rounded-none p-0 gap-0 w-full justify-start overflow-x-auto flex-nowrap scrollbar-none shrink-0">
           <TabsTrigger
             value="reviews"
             className="text-xs gap-1.5 px-3 h-9 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground text-muted-foreground hover:text-foreground transition-colors duration-200"
@@ -89,14 +89,14 @@ function PerformanceContent() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="reviews" className="mt-4"><ReviewsTab /></TabsContent>
-        <TabsContent value="goals" className="mt-4"><GoalsTab /></TabsContent>
-        <TabsContent value="one-on-ones" className="mt-4"><MeetingsTab /></TabsContent>
-        <TabsContent value="cycles" className="mt-4"><CyclesTab /></TabsContent>
-        <TabsContent value="pip" className="mt-4"><PIPTab /></TabsContent>
-        <TabsContent value="calibration" className="mt-4"><CalibrationTab /></TabsContent>
-        <TabsContent value="nine-box" className="mt-4"><NineBoxGrid /></TabsContent>
-        <TabsContent value="succession" className="mt-4"><SuccessionTab /></TabsContent>
+        <TabsContent value="reviews" className="mt-4 flex flex-col"><ReviewsTab /></TabsContent>
+        <TabsContent value="goals" className="mt-4 flex flex-col"><GoalsTab /></TabsContent>
+        <TabsContent value="one-on-ones" className="mt-4 flex flex-col"><MeetingsTab /></TabsContent>
+        <TabsContent value="cycles" className="mt-4 flex flex-col"><CyclesTab /></TabsContent>
+        <TabsContent value="pip" className="mt-4 flex flex-col"><PIPTab /></TabsContent>
+        <TabsContent value="calibration" className="mt-4 flex flex-col"><CalibrationTab /></TabsContent>
+        <TabsContent value="nine-box" className="mt-4 flex flex-col"><NineBoxGrid /></TabsContent>
+        <TabsContent value="succession" className="mt-4 flex flex-col"><SuccessionTab /></TabsContent>
       </Tabs>
     </PageWrapper>
   );

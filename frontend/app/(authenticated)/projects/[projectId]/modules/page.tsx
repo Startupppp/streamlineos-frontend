@@ -29,7 +29,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ProjectMemberSelect } from "@/components/members/project-member-select";
-import { Plus, Calendar, Package, Activity, CheckCircle2 } from "lucide-react";
+import { Calendar, Package, Activity, CheckCircle2 } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useForm, Controller } from "react-hook-form";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { z } from "zod";
@@ -118,6 +120,16 @@ const FORM_DEFAULTS: CreateModuleForm = {
   allowPastDates: false,
 };
 
+function NewModuleButton() {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button size="sm" {...hoverHandlers}>
+      <PlusIcon ref={iconRef} size={14} className="mr-1" />
+      New Module
+    </Button>
+  );
+}
+
 export default function ModulesPage({
   params,
 }: {
@@ -149,11 +161,11 @@ export default function ModulesPage({
 
   const handleSetStartDate = useCallback(
     (v: string) => form.setValue("startDate", v, { shouldValidate: true }),
-    [form]
+    [form],
   );
   const handleSetEndDate = useCallback(
     (v: string) => form.setValue("endDate", v, { shouldValidate: true }),
-    [form]
+    [form],
   );
   const handleOpenChange = useCallback(
     (open: boolean) => {
@@ -169,14 +181,14 @@ export default function ModulesPage({
 
   const handleLeadChange = useCallback(
     (userId: string | null) => form.setValue("leadId", userId ?? undefined),
-    [form]
+    [form],
   );
 
   const handleAllowPastDatesChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       form.setValue("allowPastDates", e.target.checked, { shouldValidate: true });
     },
-    [form]
+    [form],
   );
 
   const handleIconChange = useCallback(
@@ -186,46 +198,55 @@ export default function ModulesPage({
     [form],
   );
 
-  const onSubmit = useCallback((data: CreateModuleForm) => {
-    const { icon, allowPastDates: _allowPastDates, ...rest } = data;
-    createMutation.mutate(
-      {
-        ...rest,
-        name: formatModuleName(icon, data.name),
-        projectId,
-      },
-      {
-        onSuccess: () => {
-          form.reset(FORM_DEFAULTS);
-          setCreateOpen(false);
-          toast.success("Module created");
+  const onSubmit = useCallback(
+    (data: CreateModuleForm) => {
+      const { icon, allowPastDates: _allowPastDates, ...rest } = data;
+      createMutation.mutate(
+        {
+          ...rest,
+          name: formatModuleName(icon, data.name),
+          projectId,
         },
-        onError: (err) => toast.error(getErrorMessage(err)),
-      }
-    );
-  }, [createMutation, form, projectId]);
+        {
+          onSuccess: () => {
+            form.reset(FORM_DEFAULTS);
+            setCreateOpen(false);
+            toast.success("Module created");
+          },
+          onError: (err) => toast.error(getErrorMessage(err)),
+        },
+      );
+    },
+    [createMutation, form, projectId],
+  );
 
   const total = modules?.length ?? 0;
-  const inProgress = modules?.filter(m => m.status === "in-progress").length ?? 0;
-  const completed = modules?.filter(m => m.status === "completed").length ?? 0;
-  const planned = modules?.filter(m => m.status === "planned").length ?? 0;
+  const inProgress = modules?.filter((m) => m.status === "in-progress").length ?? 0;
+  const completed = modules?.filter((m) => m.status === "completed").length ?? 0;
+  const planned = modules?.filter((m) => m.status === "planned").length ?? 0;
 
   if (isLoading) {
     return (
-      <PageWrapper title="Modules" eyebrow="Project" subtitle="Organize work into feature groups and track module progress">
+      <PageWrapper
+        title="Modules"
+        eyebrow="Project"
+        subtitle="Organize work into feature groups and track module progress"
+      >
         <PmPageShell>
-          <div className="space-y-4">
+          <PmSection index={0}>
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
               {Array.from({ length: 4 }).map((_, i) => (
                 <Skeleton key={i} className="h-20 rounded-xl" />
               ))}
             </div>
+          </PmSection>
+          <PmSection index={1}>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
               {Array.from({ length: 6 }).map((_, i) => (
                 <ModuleCardSkeleton key={i} />
               ))}
             </div>
-          </div>
+          </PmSection>
         </PmPageShell>
       </PageWrapper>
     );
@@ -239,9 +260,7 @@ export default function ModulesPage({
       actions={
         <Sheet open={createOpen} onOpenChange={handleOpenChange}>
           <SheetTrigger asChild>
-            <Button size="sm">
-              <Plus className="h-4 w-4 mr-1" /> New Module
-            </Button>
+            <NewModuleButton />
           </SheetTrigger>
           <SheetContent side="right" className="sm:max-w-md p-0 flex flex-col gap-0">
             <SheetHeader className="shrink-0 px-6 py-4 border-b text-left gap-1">
@@ -275,7 +294,9 @@ export default function ModulesPage({
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="mod-desc">Description</Label>
-                    <span className={`text-xs ${descValue.length > DESC_MAX ? "text-destructive" : "text-muted-foreground"}`}>
+                    <span
+                      className={`text-xs ${descValue.length > DESC_MAX ? "text-destructive" : "text-muted-foreground"}`}
+                    >
                       {descValue.length}/{DESC_MAX}
                     </span>
                   </div>
@@ -397,13 +418,15 @@ export default function ModulesPage({
         </PmSection>
 
         {!modules?.length ? (
-          <EmptyState
-            illustration={<EmptyTasksIllustration />}
-            title="No modules yet"
-            description="Create your first module to organize work into feature areas."
-            action={{ label: "Create First Module", onClick: handleOpenCreate }}
-            className="min-h-[40vh]"
-          />
+          <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
+            <EmptyState
+              illustration={<EmptyTasksIllustration />}
+              title="No modules yet"
+              description="Create your first module to organize work into feature areas."
+              action={{ label: "Create First Module", onClick: handleOpenCreate }}
+              className="flex-1"
+            />
+          </PmSection>
         ) : (
           <PmSection index={1}>
             <PmStaggerList className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">

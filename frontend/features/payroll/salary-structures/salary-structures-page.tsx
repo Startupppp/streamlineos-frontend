@@ -233,11 +233,13 @@ export function SalaryStructuresPageContent() {
     >
       <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
         <ArrowRight className="h-3.5 w-3.5 shrink-0 text-accent" />
-        Per-employee salary structures and overrides are managed from the{" "}
-        <Link href="/payroll/employees" className="text-accent underline-offset-2 hover:underline font-medium">
-          Employees
-        </Link>{" "}
-        page.
+        <span>
+          Per-employee salary structures and overrides are managed from the{" "}
+          <Link href="/payroll/employees" className="text-accent underline-offset-2 hover:underline font-medium">
+            Employees
+          </Link>{" "}
+          page.
+        </span>
       </div>
 
       {isError ? (

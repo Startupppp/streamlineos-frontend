@@ -1,8 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { MoreHorizontal, Plus, ShieldAlert, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { ShieldAlert, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { useProjectRisks, useCreateRisk, useUpdateRisk, useDeleteRisk, useProjectMembers } from "@/hooks/api/projects";
 import { useCan } from "@/hooks/api/access";
 import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
@@ -31,6 +33,7 @@ import {
   PmPageShell,
   PmPanel,
   PmSection,
+  PM_FILL_PANEL,
   PM_TOOLBAR,
 } from "@/features/projects/shared/pm-chrome";
 import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
@@ -39,19 +42,57 @@ import { cn } from "@/lib/utils";
 const LEVEL_LABEL: Record<"low" | "medium" | "high", string> = { low: "Low", medium: "Medium", high: "High" };
 const LEVEL_STYLE: Record<"low" | "medium" | "high", string> = {
   low: "text-muted-foreground border-border",
-  medium: "text-amber-600 border-amber-200",
-  high: "text-red-600 border-red-200",
+  medium: "text-amber-600 border-amber-200 bg-amber-50 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  high: "text-red-600 border-red-200 bg-red-50 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/30",
 };
 const STATUS_LABEL: Record<RiskStatus, string> = {
   open: "Open", mitigating: "Mitigating", monitoring: "Monitoring", accepted: "Accepted", closed: "Closed",
 };
 const STATUS_STYLE: Record<RiskStatus, string> = {
-  open: "text-blue-600 border-blue-200",
-  mitigating: "text-amber-600 border-amber-200",
-  monitoring: "text-blue-600 border-blue-200",
+  open: "text-primary border-border bg-primary/5 dark:bg-primary/10",
+  mitigating: "text-amber-600 border-amber-200 bg-amber-50 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30",
+  monitoring: "text-primary border-border bg-primary/5 dark:bg-primary/10",
   accepted: "text-muted-foreground border-border",
-  closed: "text-emerald-600 border-emerald-200",
+  closed: "text-emerald-600 border-emerald-200 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30",
 };
+
+function NewRiskButton({ onClick }: { onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={onClick} {...hoverHandlers}>
+      <PlusIcon ref={iconRef} size={14} />
+      New Risk
+    </Button>
+  );
+}
+
+function RiskRowActions({
+  risk,
+  onEdit,
+  onDelete,
+}: {
+  risk: Risk;
+  onEdit: (r: Risk) => void;
+  onDelete: (r: Risk) => void;
+}) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  const handleEdit = useCallback(() => onEdit(risk), [risk, onEdit]);
+  const handleDelete = useCallback(() => onDelete(risk), [risk, onDelete]);
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Risk actions" {...hoverHandlers}>
+          <EllipsisIcon ref={iconRef} size={14} />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onSelect={handleEdit}>Edit</DropdownMenuItem>
+        <DropdownMenuItem variant="destructive" onSelect={handleDelete}>Delete</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 const STATUS_OPTS = [
   { value: "all", label: "All statuses" },
   { value: "open", label: "Open" },
@@ -82,11 +123,11 @@ export function RisksPage({ projectId }: RisksPageProps) {
   const updateRisk = useUpdateRisk(projectId);
   const deleteRisk = useDeleteRisk(projectId);
 
-  function memberName(userId: string | null): string {
+  const memberName = useCallback((userId: string | null): string => {
     if (!userId) return "—";
     const m = members.find((x) => x.id === userId);
     return getUserDisplayName(m) || userId;
-  }
+  }, [members]);
 
   const allRisks = useMemo(() => data ?? [], [data]);
   const openCount = allRisks.filter((r) => r.status === "open").length;
@@ -130,13 +171,28 @@ export function RisksPage({ projectId }: RisksPageProps) {
     });
   }
 
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+  }, []);
+  const handleNewRisk = useCallback(() => setSheetOpen(true), []);
+  const handleClearFilters = useCallback(() => {
+    setStatusFilter("all");
+    setSearch("");
+    setMatrixCell(null);
+  }, []);
+  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  const handleAlertOpenChange = useCallback((open: boolean) => { if (!open) setDeleteTarget(null); }, []);
+  const handleSheetOpenChange = useCallback((open: boolean) => {
+    if (!open) { setSheetOpen(false); setEditRisk(null); }
+  }, []);
+
   function handleCellClick(probability: RiskProbability, impact: RiskImpact) {
     setMatrixCell((prev) =>
       prev?.probability === probability && prev?.impact === impact ? null : { probability, impact },
     );
   }
 
-  const columns: DataTableColumn<Risk>[] = [
+  const columns = useMemo<DataTableColumn<Risk>[]>(() => [
     {
       key: "riskNumber", header: "ID", className: "w-20",
       cell: (row) => <span className="font-mono text-xs text-muted-foreground">RISK-{row.riskNumber}</span>,
@@ -177,7 +233,7 @@ export function RisksPage({ projectId }: RisksPageProps) {
     },
     {
       key: "ownerId", header: "Owner",
-      cell: (row) => <span className="text-muted-foreground text-sm">{memberName(row.ownerId)}</span>,
+      cell: (row) => <span className="text-[11px] text-muted-foreground">{memberName(row.ownerId)}</span>,
     },
     {
       key: "status", header: "Status",
@@ -189,24 +245,11 @@ export function RisksPage({ projectId }: RisksPageProps) {
     },
     {
       key: "actions", header: "", className: "w-10",
-      cell: (row) => {
-        if (!canManage) return null;
-        return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-7 w-7">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setEditRisk(row)}>Edit</DropdownMenuItem>
-              <DropdownMenuItem variant="destructive" onClick={() => setDeleteTarget(row)}>Delete</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        );
-      },
+      cell: (row) => canManage ? (
+        <RiskRowActions risk={row} onEdit={setEditRisk} onDelete={setDeleteTarget} />
+      ) : null,
     },
-  ];
+  ], [canManage, memberName]);
 
   const isFiltered = statusFilter !== "all" || !!search.trim() || !!matrixCell;
 
@@ -215,32 +258,26 @@ export function RisksPage({ projectId }: RisksPageProps) {
       title="Risk Register"
       eyebrow="Project"
       subtitle="Identify, assess, and mitigate project risks"
-      actions={
-        canManage ? (
-          <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={() => setSheetOpen(true)}>
-            <Plus className="h-3.5 w-3.5" /> New Risk
-          </Button>
-        ) : undefined
-      }
+      actions={canManage ? <NewRiskButton onClick={handleNewRisk} /> : undefined}
     >
       <PmPageShell>
-        <PmSection index={0}>
+        <PmSection index={0} className="shrink-0">
           <StatCardGrid cols={3}>
-            <StatCard label="Open" value={openCount} icon={ShieldAlert} tone="blue" isLoading={isLoading} />
+            <StatCard label="Open" value={openCount} icon={ShieldAlert} tone="default" isLoading={isLoading} />
             <StatCard label="High / Critical" value={highCritCount} icon={AlertTriangle} tone="red" isLoading={isLoading} />
             <StatCard label="Closed" value={closedCount} icon={CheckCircle2} tone="emerald" isLoading={isLoading} />
           </StatCardGrid>
         </PmSection>
 
         {!isLoading && !isError ? (
-          <PmSection index={1}>
+          <PmSection index={1} className="shrink-0">
             <PmPanel className="p-3" solid>
               <RiskMatrix risks={allRisks} onCellClick={handleCellClick} selectedCell={matrixCell} />
             </PmPanel>
           </PmSection>
         ) : null}
 
-        <PmSection index={2}>
+        <PmSection index={2} className="shrink-0">
           <div className={cn(PM_TOOLBAR, "sm:justify-start")}>
             <div className="flex min-w-0 flex-wrap items-center gap-2">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -259,19 +296,10 @@ export function RisksPage({ projectId }: RisksPageProps) {
                 className="h-8 w-52 text-xs"
                 placeholder="Search risks…"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={handleSearchChange}
               />
               {isFiltered ? (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-8 text-xs"
-                  onClick={() => {
-                    setStatusFilter("all");
-                    setSearch("");
-                    setMatrixCell(null);
-                  }}
-                >
+                <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={handleClearFilters}>
                   Clear
                 </Button>
               ) : null}
@@ -281,36 +309,30 @@ export function RisksPage({ projectId }: RisksPageProps) {
 
         <PmSection index={3} className="flex min-h-0 flex-1 flex-col">
           {isLoading ? (
-            <DataTableSkeleton rows={12} columns={8} className="flex-1" />
+            <DataTableSkeleton rows={5} columns={8} className="flex-1" />
           ) : isError ? (
-            <ErrorState className="flex-1" onRetry={() => void refetch()} />
+            <ErrorState className="flex-1" onRetry={handleRetry} />
           ) : displayed.length === 0 ? (
-            <EmptyState
-              illustrationPreset="alert"
-              title={isFiltered ? "No matching risks" : "No risks logged"}
-              description={
-                isFiltered
-                  ? "Try adjusting your filters or clearing the matrix selection."
-                  : "Log risks to track probability, impact, and mitigation plans."
-              }
-              action={
-                isFiltered
-                  ? {
-                      label: "Clear filters",
-                      onClick: () => {
-                        setStatusFilter("all");
-                        setSearch("");
-                        setMatrixCell(null);
-                      },
-                    }
-                  : canManage
-                    ? { label: "New Risk", onClick: () => setSheetOpen(true) }
-                    : undefined
-              }
-              className="min-h-[40vh]"
-            />
+            <PmPanel className={cn(PM_FILL_PANEL, "p-6")}>
+              <EmptyState
+                illustrationPreset="alert"
+                title={isFiltered ? "No matching risks" : "No risks logged"}
+                description={
+                  isFiltered
+                    ? "Try adjusting your filters or clearing the matrix selection."
+                    : "Log risks to track probability, impact, and mitigation plans."
+                }
+                action={
+                  isFiltered
+                    ? { label: "Clear filters", onClick: handleClearFilters }
+                    : canManage
+                      ? { label: "New Risk", onClick: handleNewRisk }
+                      : undefined
+                }
+              />
+            </PmPanel>
           ) : (
-            <PmPanel className="flex min-h-0 flex-1 flex-col" solid>
+            <PmPanel className={PM_FILL_PANEL} solid>
               <DataTable
                 data={displayed}
                 columns={columns}
@@ -325,7 +347,7 @@ export function RisksPage({ projectId }: RisksPageProps) {
 
       <RiskFormSheet
         open={sheetOpen || !!editRisk}
-        onOpenChange={(open) => { if (!open) { setSheetOpen(false); setEditRisk(null); } }}
+        onOpenChange={handleSheetOpenChange}
         mode={editRisk ? "edit" : "create"}
         defaultValues={editRisk ?? undefined}
         onSubmitCreate={handleCreate}
@@ -334,11 +356,13 @@ export function RisksPage({ projectId }: RisksPageProps) {
         projectId={projectId}
       />
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+      <AlertDialog open={!!deleteTarget} onOpenChange={handleAlertOpenChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete this risk?</AlertDialogTitle>
-            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+            <AlertDialogTitle>Delete risk?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteTarget ? `RISK-${deleteTarget.riskNumber} · ${deleteTarget.title}` : ""} will be permanently deleted. This action cannot be undone.
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>

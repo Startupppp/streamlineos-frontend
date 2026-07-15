@@ -134,12 +134,16 @@ export function RoadmapItemSheet({ item, onClose }: RoadmapItemSheetProps) {
             <Label>Category</Label>
             <Input placeholder="e.g. Integrations" value={category} onChange={handleCategoryChange} />
           </div>
-          <div className="flex items-center justify-between rounded-lg border border-border/60 px-3 py-2.5">
+          <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-3 py-2.5">
             <div>
-              <p className="text-sm font-medium">Public</p>
+              <p className="text-sm font-medium text-foreground">Public</p>
               <p className="text-xs text-muted-foreground">Show this item on the public board</p>
             </div>
-            <Switch checked={isPublic} onCheckedChange={setIsPublic} />
+            <Switch
+              checked={isPublic}
+              onCheckedChange={setIsPublic}
+              className="border border-border data-[state=unchecked]:bg-input"
+            />
           </div>
         </div>
         <SheetFooter className="shrink-0 px-6 py-4 border-t flex-row gap-2 justify-end">

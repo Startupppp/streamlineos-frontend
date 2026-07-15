@@ -51,7 +51,7 @@ export function WorkflowPage({ projectId }: WorkflowPageProps) {
             title="No statuses configured"
             description="Add custom statuses in project settings before setting up workflow transitions."
             action={{ label: "Go to Settings", href: `/projects/${projectId}/settings` }}
-            className="min-h-[40vh]"
+            className="flex-1"
           />
         ) : (
           <div className="space-y-4">

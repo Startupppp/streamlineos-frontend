@@ -71,11 +71,14 @@ export const useMyIssues = (
 export const useRoleStats = (
   options?: Omit<UseQueryOptions<Record<string, number>, Error>, "queryKey" | "queryFn">
 ) => {
+  const { data: session } = useSession();
+  const orgId = session?.orgId ?? "";
   return useQuery<Record<string, number>, Error>({
-    queryKey: [...queryKeys.dashboard.all, "roleStats"] as const,
+    queryKey: [...queryKeys.dashboard.all, "roleStats", orgId] as const,
     queryFn: () => apiClient.get<Record<string, number>>("/dashboard/role-stats"),
     staleTime: 5 * 60 * 1000,
     ...options,
+    enabled: !!orgId,
   });
 };
 
@@ -87,11 +90,14 @@ interface ScheduledActivity {
 export const useTodayActivities = (
   options?: Omit<UseQueryOptions<ScheduledActivity[], Error>, "queryKey" | "queryFn">
 ) => {
+  const { data: session } = useSession();
+  const orgId = session?.orgId ?? "";
   return useQuery<ScheduledActivity[], Error>({
-    queryKey: [...queryKeys.dashboard.all, "todayActivities"] as const,
+    queryKey: [...queryKeys.dashboard.all, "todayActivities", orgId] as const,
     queryFn: () => apiClient.get<ScheduledActivity[]>("/dashboard/today-activities"),
     staleTime: 5 * 60 * 1000,
     ...options,
+    enabled: !!orgId,
   });
 };
 
@@ -233,58 +239,82 @@ function hrWidgetKeys(orgId: string) {
 
 export const useLeavesToday = (
   options?: Omit<UseQueryOptions<LeaveToday[], Error>, "queryKey" | "queryFn">
-) =>
-  useQuery<LeaveToday[], Error>({
-    queryKey: hrWidgetKeys.leavesToday,
+) => {
+  const { data: session } = useSession();
+  const orgId = session?.orgId ?? "";
+  return useQuery<LeaveToday[], Error>({
+    queryKey: hrWidgetKeys(orgId).leavesToday,
     queryFn: () => apiClient.get<LeaveToday[]>("/dashboard/leaves-today"),
     staleTime: 60_000,
     refetchInterval: 60_000,
     ...options,
+    enabled: !!orgId,
   });
+};
 
-export const useUpcomingHolidays = () =>
-  useQuery<UpcomingHoliday[]>({
-    queryKey: hrWidgetKeys.upcomingHolidays,
+export const useUpcomingHolidays = () => {
+  const { data: session } = useSession();
+  const orgId = session?.orgId ?? "";
+  return useQuery<UpcomingHoliday[]>({
+    queryKey: hrWidgetKeys(orgId).upcomingHolidays,
     queryFn: () => apiClient.get<UpcomingHoliday[]>("/dashboard/upcoming-holidays"),
     staleTime: 5 * 60_000,
+    enabled: !!orgId,
   });
+};
 
-export const useMyLeaveBalance = () =>
-  useQuery<LeaveBalance[]>({
-    queryKey: hrWidgetKeys.myLeaveBalance,
+export const useMyLeaveBalance = () => {
+  const { data: session } = useSession();
+  const orgId = session?.orgId ?? "";
+  return useQuery<LeaveBalance[]>({
+    queryKey: hrWidgetKeys(orgId).myLeaveBalance,
     queryFn: () => apiClient.get<LeaveBalance[]>("/dashboard/my-leave-balance"),
     staleTime: 5 * 60_000,
+    enabled: !!orgId,
   });
+};
 
 export const useBirthdays = (
   options?: Omit<UseQueryOptions<BirthdayEntry[], Error>, "queryKey" | "queryFn">
-) =>
-  useQuery<BirthdayEntry[], Error>({
-    queryKey: hrWidgetKeys.birthdays,
+) => {
+  const { data: session } = useSession();
+  const orgId = session?.orgId ?? "";
+  return useQuery<BirthdayEntry[], Error>({
+    queryKey: hrWidgetKeys(orgId).birthdays,
     queryFn: () => apiClient.get<BirthdayEntry[]>("/dashboard/birthdays"),
     staleTime: 5 * 60_000,
     refetchInterval: 60_000,
     ...options,
+    enabled: !!orgId,
   });
+};
 
 export const usePendingApprovals = (
   options?: Omit<UseQueryOptions<PendingApprovalsCount, Error>, "queryKey" | "queryFn">
-) =>
-  useQuery<PendingApprovalsCount, Error>({
-    queryKey: hrWidgetKeys.pendingApprovals,
+) => {
+  const { data: session } = useSession();
+  const orgId = session?.orgId ?? "";
+  return useQuery<PendingApprovalsCount, Error>({
+    queryKey: hrWidgetKeys(orgId).pendingApprovals,
     queryFn: () => apiClient.get<PendingApprovalsCount>("/dashboard/pending-approvals"),
     staleTime: 60_000,
     refetchInterval: 60_000,
     ...options,
+    enabled: !!orgId,
   });
+};
 
-export const useTeamAttendance = () =>
-  useQuery<TeamAttendance>({
-    queryKey: hrWidgetKeys.teamAttendance,
+export const useTeamAttendance = () => {
+  const { data: session } = useSession();
+  const orgId = session?.orgId ?? "";
+  return useQuery<TeamAttendance>({
+    queryKey: hrWidgetKeys(orgId).teamAttendance,
     queryFn: () => apiClient.get<TeamAttendance>("/dashboard/team-attendance"),
     staleTime: 60_000,
     refetchInterval: 60_000,
+    enabled: !!orgId,
   });
+};
 
 export interface Announcement {
   id: number;
@@ -386,9 +416,13 @@ export const useExecutiveDashboard = (
   });
 };
 
-export const usePublicDocuments = (limit = 6) =>
-  useQuery<PublicDoc[]>({
-    queryKey: queryKeys.dashboard.publicDocuments(limit),
+export const usePublicDocuments = (limit = 6) => {
+  const { data: session } = useSession();
+  const orgId = session?.orgId ?? "";
+  return useQuery<PublicDoc[]>({
+    queryKey: queryKeys.dashboard.publicDocuments(orgId, limit),
     queryFn: () => apiClient.get<PublicDoc[]>("/hr/documents", { isPublic: true, limit }),
     staleTime: 5 * 60_000,
+    enabled: !!orgId,
   });
+};

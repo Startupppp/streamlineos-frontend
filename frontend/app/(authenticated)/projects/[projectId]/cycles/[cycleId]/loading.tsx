@@ -3,7 +3,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 
 export default function CycleDetailLoading() {
   return (
-    <PageWrapper title="Loading..." noInternalScroll>
+    <PageWrapper title="Cycle" noInternalScroll>
       <KanbanBoardSkeleton />
     </PageWrapper>
   );

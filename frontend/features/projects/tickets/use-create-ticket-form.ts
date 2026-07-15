@@ -32,12 +32,13 @@ function findActiveCycle(cycles: Cycle[]): Cycle | null {
 }
 
 export interface UseCreateTicketFormOptions {
-  projectId: number;
+  projectId: number | null;
   defaultStatus?: string;
   onCreated?: () => void;
+  onClose?: () => void;
 }
 
-export function useCreateTicketForm({ projectId, defaultStatus, onCreated }: UseCreateTicketFormOptions) {
+export function useCreateTicketForm({ projectId, defaultStatus, onCreated, onClose }: UseCreateTicketFormOptions) {
   const [open, setOpen] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [relatedLinks, setRelatedLinks] = useState<RelatedLinkDraft[]>([]);
@@ -46,19 +47,22 @@ export function useCreateTicketForm({ projectId, defaultStatus, onCreated }: Use
   const titleRef = useRef<HTMLInputElement | null>(null);
   const queryClient = useQueryClient();
   const pendingCycleDefaultRef = useRef(true);
+  const queryProjectId = projectId ?? 0;
 
-  const { data: projectData } = useProject(projectId);
-  const { data: cyclesRaw } = useCycles(projectId);
-  const { data: labelsRaw } = useProjectLabels(projectId);
-  const { data: membersRaw } = useProjectMembers(projectId);
+  const { data: projectData } = useProject(queryProjectId);
+  const { data: cyclesRaw } = useCycles(queryProjectId);
+  const { data: labelsRaw } = useProjectLabels(projectId ?? undefined, {
+    enabled: projectId != null,
+  });
+  const { data: membersRaw } = useProjectMembers(queryProjectId);
 
-  const cycles = useMemo<Cycle[]>(() => cyclesRaw ?? [], [cyclesRaw]);
-  const labels = useMemo<TicketLabel[]>(() => labelsRaw ?? [], [labelsRaw]);
-  const members = useMemo<ProjectMemberRecord[]>(() => membersRaw ?? [], [membersRaw]);
+  const cycles = useMemo<Cycle[]>(() => (projectId != null ? cyclesRaw ?? [] : []), [cyclesRaw, projectId]);
+  const labels = useMemo<TicketLabel[]>(() => (projectId != null ? labelsRaw ?? [] : []), [labelsRaw, projectId]);
+  const members = useMemo<ProjectMemberRecord[]>(() => (projectId != null ? membersRaw ?? [] : []), [membersRaw, projectId]);
 
   const projectStatuses = useMemo<ProjectStatusRecord[]>(
-    () => projectData?.statuses ?? [],
-    [projectData],
+    () => (projectId != null ? projectData?.statuses ?? [] : []),
+    [projectData, projectId],
   );
 
   const defaultStatusValue = useMemo<string>(() => {
@@ -96,6 +100,18 @@ export function useCreateTicketForm({ projectId, defaultStatus, onCreated }: Use
   }, []);
 
   useEffect(() => {
+    pendingCycleDefaultRef.current = true;
+    setProperties((prev) => ({
+      status: prev.status,
+      priority: null,
+      assigneeId: null,
+      points: null,
+      labelIds: [],
+      cycleId: null,
+    }));
+  }, [projectId]);
+
+  useEffect(() => {
     setProperties((prev) => ({ ...prev, status: defaultStatusValue }));
   }, [defaultStatusValue]);
 
@@ -127,20 +143,25 @@ export function useCreateTicketForm({ projectId, defaultStatus, onCreated }: Use
   }, [form, defaultStatusValue, activeCycle]);
 
   const finishCreation = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: queryKeys.projects.tickets({ projectId }) });
-    queryClient.invalidateQueries({ queryKey: queryKeys.projects.detail(projectId) });
-    queryClient.invalidateQueries({ queryKey: queryKeys.projects.sprints(projectId) });
+    if (projectId != null) {
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects.tickets({ projectId }) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects.detail(projectId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects.sprints(projectId) });
+    }
     onCreated?.();
     if (createMore) {
       resetForm(true);
     } else {
       setOpen(false);
+      onClose?.();
       resetForm(false);
     }
-  }, [queryClient, projectId, createMore, resetForm, onCreated]);
+  }, [queryClient, projectId, createMore, resetForm, onCreated, onClose]);
 
   const createTicketMutation = useCreateTicket({
     onSuccess: async (data) => {
+      if (projectId == null) return;
+
       const pendingLabels = properties.labelIds;
       const pendingFiles = files;
       const pendingLinks = relatedLinks;
@@ -207,6 +228,10 @@ export function useCreateTicketForm({ projectId, defaultStatus, onCreated }: Use
 
   const handleSubmit = useCallback(
     (values: CreateTicketFormValues) => {
+      if (projectId == null) {
+        toast.error("Select a project");
+        return;
+      }
       createTicketMutation.mutate({
         ...values,
         projectId,
@@ -268,5 +293,6 @@ export function useCreateTicketForm({ projectId, defaultStatus, onCreated }: Use
     members,
     labels,
     cycles,
+    project: projectData ?? null,
   };
 }

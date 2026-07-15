@@ -107,7 +107,7 @@ export function TiptapEditor({
     },
     editorProps: {
       attributes: {
-        class: `prose prose-sm dark:prose-invert max-w-none ${minHeightClassName} ${embedded ? "p-0 text-[13px] text-foreground/90" : "p-4"} focus:outline-none`,
+        class: `tiptap ProseMirror prose prose-sm dark:prose-invert max-w-none cursor-text ${minHeightClassName} ${embedded ? "p-0 text-[13px] text-foreground/90" : "p-4"} focus:outline-none`,
       },
       handlePaste(view, event) {
         const items = event.clipboardData?.items;
@@ -198,7 +198,7 @@ export function TiptapEditor({
   }
 
   return (
-    <div className={embedded ? undefined : "rounded-md border bg-background"}>
+    <div className={embedded ? minHeightClassName : "rounded-md border bg-background"}>
       {editable && menuMode === "static" && editor && (
         <div className="border-b">
           <TiptapToolbar editor={editor} onImageInsert={handleImageInsert} />

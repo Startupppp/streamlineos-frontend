@@ -129,8 +129,8 @@ export function CyclesTab() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col flex-1 min-h-0 gap-4">
+      <div className="flex items-center justify-between shrink-0">
         <div>
           <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Total Cycles</p>
           <p className="text-3xl font-bold tabular-nums text-foreground">{cycles?.length ?? 0}</p>
@@ -141,7 +141,12 @@ export function CyclesTab() {
       </div>
 
       {!cycles?.length ? (
-        <EmptyState illustrationPreset="calendar" title="No review cycles yet" description="Create a quarterly or annual cycle." compact />
+        <EmptyState
+          illustrationPreset="calendar"
+          title="No review cycles yet"
+          description="Create a quarterly or annual cycle to structure your performance reviews."
+          action={{ label: "New Cycle", onClick: openCreate }}
+        />
       ) : (
         <div className="space-y-2">
           {cycles.map((cycle: ReviewCycle) => {

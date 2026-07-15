@@ -20,13 +20,15 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Plus } from "lucide-react";
 import { toast } from "sonner";
+import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { ChangeRequestSheet } from "./change-request-sheet";
 import {
   PmPageShell,
   PmPanel,
   PmSection,
+  PM_FILL_PANEL,
   PM_TOOLBAR,
 } from "@/features/projects/shared/pm-chrome";
 import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
@@ -41,19 +43,52 @@ const CR_STATUS_LABELS: Record<ChangeRequestStatus, string> = {
 
 const CR_STATUS_STYLES: Record<ChangeRequestStatus, string> = {
   submitted: "text-muted-foreground border-border",
-  under_review: "text-blue-600 border-blue-200",
-  estimated: "text-amber-600 border-amber-200",
-  awaiting_approval: "text-orange-600 border-orange-200",
-  approved: "text-green-600 border-green-200",
-  rejected: "text-red-600 border-red-200",
-  in_progress: "text-blue-600 border-blue-200",
-  completed: "text-emerald-700 border-emerald-300",
+  under_review: "text-blue-600 border-blue-200 dark:text-blue-400 dark:border-blue-500/30",
+  estimated: "text-amber-600 border-amber-200 dark:text-amber-400 dark:border-amber-500/30",
+  awaiting_approval: "text-orange-600 border-orange-200 dark:text-orange-400 dark:border-orange-500/30",
+  approved: "text-green-600 border-green-200 dark:text-green-400 dark:border-green-500/30",
+  rejected: "text-red-600 border-red-200 dark:text-red-400 dark:border-red-500/30",
+  in_progress: "text-blue-600 border-blue-200 dark:text-blue-400 dark:border-blue-500/30",
+  completed: "text-emerald-700 border-emerald-300 dark:text-emerald-400 dark:border-emerald-500/30",
 };
 
 const CR_STATUSES: ChangeRequestStatus[] = [
   "submitted", "under_review", "estimated", "awaiting_approval",
   "approved", "rejected", "in_progress", "completed",
 ];
+
+function NewCrButton({ onClick }: { onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button size="sm" className="h-7 gap-1 text-[11px]" onClick={onClick} {...hoverHandlers}>
+      <PlusIcon ref={iconRef} size={14} />
+      New Change Request
+    </Button>
+  );
+}
+
+function CrRowActions({
+  onEdit,
+  onDelete,
+}: {
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="Change request actions" {...hoverHandlers}>
+          <EllipsisIcon ref={iconRef} size={14} />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onSelect={onEdit}>Edit</DropdownMenuItem>
+        <DropdownMenuItem variant="destructive" onSelect={onDelete}>Delete</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 interface ChangeRequestsPageProps { projectId: number }
 
@@ -77,6 +112,10 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
 
   const handleNew = useCallback(() => { setEditCr(null); setSheetOpen(true); }, []);
   const handleEdit = useCallback((cr: ChangeRequest) => { setEditCr(cr); setSheetOpen(true); }, []);
+  const handleAlertOpenChange = useCallback((open: boolean) => { if (!open) setDeleteTarget(null); }, []);
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+  }, []);
 
   const handleDelete = useCallback(() => {
     if (!deleteTarget) return;
@@ -164,19 +203,10 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
       header: "",
       cell: (row) =>
         canManage ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-6 w-6">
-                <MoreHorizontal className="h-3.5 w-3.5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onSelect={() => handleEdit(row)}>Edit</DropdownMenuItem>
-              <DropdownMenuItem variant="destructive" onSelect={() => setDeleteTarget(row)}>
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <CrRowActions
+            onEdit={() => handleEdit(row)}
+            onDelete={() => setDeleteTarget(row)}
+          />
         ) : null,
       className: "w-[40px]",
     },
@@ -188,7 +218,7 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
         <Input
           placeholder="Search..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={handleSearchChange}
           className="h-7 w-44 text-[11px]"
         />
         <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -214,35 +244,29 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
       title="Change Requests"
       subtitle="Track and manage change requests"
       filters={filtersBar}
-      actions={
-        canCreate ? (
-          <Button size="sm" className="h-7 text-[11px]" onClick={handleNew}>
-            <Plus className="h-3.5 w-3.5 mr-1" />
-            New Change Request
-          </Button>
-        ) : undefined
-      }
+      actions={canCreate ? <NewCrButton onClick={handleNew} /> : undefined}
     >
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
           {isLoading ? (
             <DataTableSkeleton rows={12} columns={7} className="flex-1" />
           ) : isError ? (
-            <ErrorState onRetry={refetch} />
+            <ErrorState onRetry={() => void refetch()} />
           ) : filtered.length === 0 ? (
-            <EmptyState
-              illustrationPreset="ticket"
-              title="No change requests"
-              description={
-                search || statusFilter !== "all"
-                  ? "No change requests match the active filters."
-                  : "Create a change request to get started."
-              }
-              action={canCreate ? { label: "New Change Request", onClick: handleNew } : undefined}
-              className="min-h-[40vh]"
-            />
+            <PmPanel className={cn(PM_FILL_PANEL, "p-6")}>
+              <EmptyState
+                illustrationPreset="ticket"
+                title="No change requests"
+                description={
+                  search || statusFilter !== "all"
+                    ? "No change requests match the active filters."
+                    : "Create a change request to get started."
+                }
+                action={canCreate ? { label: "New Change Request", onClick: handleNew } : undefined}
+              />
+            </PmPanel>
           ) : (
-            <PmPanel className="flex min-h-0 flex-1 flex-col" solid>
+            <PmPanel className={PM_FILL_PANEL} solid>
               <DataTable<ChangeRequest>
                 data={filtered}
                 columns={columns}
@@ -261,7 +285,7 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
         editCr={editCr}
       />
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => { if (!o) setDeleteTarget(null); }}>
+      <AlertDialog open={!!deleteTarget} onOpenChange={handleAlertOpenChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete change request?</AlertDialogTitle>

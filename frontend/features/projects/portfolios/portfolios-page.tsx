@@ -2,7 +2,9 @@
 
 import { useMemo, useState, type ChangeEvent } from "react";
 import { toast } from "sonner";
-import { Plus, MoreHorizontal } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import Link from "next/link";
 import {
   usePortfolios,
@@ -51,10 +53,20 @@ import {
   PmPageShell,
   PmPanel,
   PmSection,
+  PM_FILL_PANEL,
   PM_TOOLBAR,
 } from "@/features/projects/shared/pm-chrome";
 import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 import { cn } from "@/lib/utils";
+
+function NewPortfolioButton({ onClick }: { onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={onClick} {...hoverHandlers}>
+      <PlusIcon ref={iconRef} size={14} /> New Portfolio
+    </Button>
+  );
+}
 
 const STATUS_OPTS = [
   { value: "all", label: "All statuses" },
@@ -282,26 +294,20 @@ export function PortfoliosPage() {
       eyebrow="Projects"
       subtitle="Group related projects into portfolios"
       filters={filtersBar}
-      actions={
-        canManage ? (
-          <Button size="sm" className="h-8 gap-1.5 text-xs" onClick={handleOpenCreate}>
-            <Plus className="h-3.5 w-3.5" /> New Portfolio
-          </Button>
-        ) : undefined
-      }
+      actions={canManage ? <NewPortfolioButton onClick={handleOpenCreate} /> : undefined}
     >
       <PmPageShell>
-        <PmSection index={0}>
+        <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
           {isLoading ? (
-            <PmPanel className="p-2">
+            <PmPanel className={cn(PM_FILL_PANEL, "p-2")}>
               <DataTableSkeleton rows={12} columns={7} className="flex-1" />
             </PmPanel>
           ) : isError ? (
-            <PmPanel className="flex min-h-[14rem] items-center justify-center p-6">
+            <PmPanel className={cn(PM_FILL_PANEL, "items-center justify-center p-6")}>
               <ErrorState className="flex-1" onRetry={handleRetry} />
             </PmPanel>
           ) : displayed.length === 0 ? (
-            <PmPanel className="flex min-h-[14rem] items-center justify-center p-6">
+            <PmPanel className={cn(PM_FILL_PANEL, "p-6")}>
               <EmptyState
                 illustrationPreset="projects"
                 title={isFiltered ? "No matching portfolios" : "No portfolios yet"}
@@ -317,11 +323,10 @@ export function PortfoliosPage() {
                       ? { label: "New Portfolio", onClick: handleOpenCreate }
                       : undefined
                 }
-                className="min-h-[12rem]"
               />
             </PmPanel>
           ) : (
-            <PmPanel className="flex min-h-0 flex-1 flex-col">
+            <PmPanel className={PM_FILL_PANEL}>
               <DataTable
                 data={displayed}
                 columns={columns}

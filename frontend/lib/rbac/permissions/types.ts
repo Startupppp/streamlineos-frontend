@@ -319,6 +319,8 @@ export type PermissionKey =
   | "projects:meetings:manage"
   | "projects:incidents:view"
   | "projects:incidents:manage"
+  | "projects:releases:view"
+  | "projects:releases:manage"
   | "projects:forms:view"
   | "projects:forms:manage"
   | "projects:portfolios:view"

@@ -15,6 +15,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -22,13 +23,18 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { LoadingButton } from "@/components/ui/loading-button"
 import { useCreateOrganization } from "@/hooks/api/organization"
 import { useSwitchOrg } from "@/hooks/common/auth-hooks"
-import { getApiError } from "@/lib/api-client"
+import { getErrorMessage } from "@/lib/get-error-message"
 import { clearBackendTokenCache } from "@/lib/api-client"
 
 const schema = z.object({
   name: z.string().trim().min(1, "Workspace name is required").max(100),
+  billingEmail: z.string().max(255).refine(
+    (v) => v === "" || z.string().email().safeParse(v).success,
+    "Must be a valid email address",
+  ),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -56,20 +62,21 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDia
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { name: "" },
+    defaultValues: { name: "", billingEmail: "" },
   })
 
   const handleSubmit = useCallback(
     async (values: FormValues) => {
       const slug = toSlug(values.name)
+      const billingEmail = values.billingEmail.trim() || undefined
       try {
-        const org = await createOrg.mutateAsync({ name: values.name.trim(), slug })
+        const org = await createOrg.mutateAsync({ name: values.name.trim(), slug, billingEmail })
         clearBackendTokenCache()
         switchOrg.mutate(org.id)
         onOpenChange(false)
         form.reset()
       } catch (err) {
-        toast.error(getApiError(err) ?? "Failed to create workspace")
+        toast.error(getErrorMessage(err))
       }
     },
     [createOrg, switchOrg, onOpenChange, form],
@@ -106,6 +113,26 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDia
                 </FormItem>
               )}
             />
+            <FormField
+              control={form.control}
+              name="billingEmail"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Billing email{" "}
+                    <span className="font-normal text-muted-foreground">(optional)</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input placeholder="billing@company.com" type="email" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    Used for invoices and billing notifications. Defaults to your account email if
+                    left blank.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </form>
         </Form>
         <DialogFooter className="gap-2">
@@ -118,14 +145,15 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDia
           >
             Cancel
           </Button>
-          <Button
+          <LoadingButton
             type="submit"
             form={formId}
             className="flex-1"
-            disabled={isPending}
+            isPending={isPending}
+            loadingText="Creating…"
           >
-            {isPending ? "Creating…" : "Create"}
-          </Button>
+            Create
+          </LoadingButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

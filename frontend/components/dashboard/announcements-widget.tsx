@@ -14,6 +14,7 @@ import {
   useDeleteAnnouncement,
   type Announcement,
 } from "@/hooks/api/dashboard";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { Megaphone, X, Pin, Plus } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { toast } from "sonner";
@@ -201,9 +202,7 @@ export function AnnouncementsWidget() {
             ))}
           </div>
         ) : error ? (
-          <p className="text-sm text-destructive">
-            Failed to load announcements.
-          </p>
+          <p className="text-sm text-destructive">{getErrorMessage(error)}</p>
         ) : !data?.length ? (
           <EmptyState
             illustration={<EmptyMailIllustration className="h-20 w-20" />}

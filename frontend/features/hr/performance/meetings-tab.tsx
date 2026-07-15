@@ -123,8 +123,8 @@ export function MeetingsTab() {
   }
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col flex-1 min-h-0 gap-3">
+      <div className="flex items-center justify-between shrink-0">
         <p className="text-sm text-muted-foreground">{meetings?.length ?? 0} meetings</p>
         <Button size="sm" onClick={handleOpenSheet}>
           <Plus className="h-3.5 w-3.5 mr-1" />Schedule 1-on-1
@@ -132,7 +132,12 @@ export function MeetingsTab() {
       </div>
 
       {!meetings?.length ? (
-        <EmptyState illustration={<EmptyTeamIllustration />} title="No 1-on-1 meetings scheduled" compact />
+        <EmptyState
+          illustration={<EmptyTeamIllustration className="h-full w-full" />}
+          title="No 1-on-1 meetings scheduled"
+          description="Schedule regular check-ins to support your team's growth and alignment."
+          action={{ label: "Schedule 1-on-1", onClick: handleOpenSheet }}
+        />
       ) : (
         <div className="space-y-2">
           {meetings.map((m: OneOnOneMeeting) => (

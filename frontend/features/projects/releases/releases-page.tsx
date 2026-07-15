@@ -25,6 +25,7 @@ import {
   useDeleteRelease,
   type Release,
 } from "@/hooks/api/projects/releases";
+import { useCan } from "@/hooks/api/access";
 import { ReleaseFormSheet } from "./release-form-sheet";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -67,7 +68,7 @@ interface ReleasesPageProps {
 function NewReleaseButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
-    <Button size="sm" className="h-8 gap-1.5" onClick={onClick} {...hoverHandlers}>
+    <Button size="sm" className="h-7 gap-1 text-[11px]" onClick={onClick} {...hoverHandlers}>
       <PlusIcon ref={iconRef} size={14} />
       New Release
     </Button>
@@ -100,6 +101,7 @@ function DeleteReleaseButton({ onClick }: { onClick: () => void }) {
 export function ReleasesPage({ projectId }: ReleasesPageProps) {
   const { data: releases, isLoading, isError, refetch } = useReleases(projectId);
   const deleteRelease = useDeleteRelease(projectId);
+  const canManage = useCan("projects:releases:manage");
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Release | null>(null);
@@ -236,61 +238,59 @@ export function ReleasesPage({ projectId }: ReleasesPageProps) {
     <PageWrapper
       title="Releases"
       subtitle="Track versions and shipped features"
-      actions={<NewReleaseButton onClick={handleOpenCreate} />}
+      actions={canManage ? <NewReleaseButton onClick={handleOpenCreate} /> : undefined}
     >
       <PmPageShell>
-        <div className="flex min-h-0 flex-1 flex-col space-y-4">
-          <PmSection index={0}>
-            <StatCardGrid cols={4}>
-              <StatCard label="Total" value={stats.total} icon={Tag} tone="default" index={0} />
-              <StatCard
-                label="Released"
-                value={stats.released}
-                icon={CheckCircle2}
-                tone="emerald"
-                index={1}
-              />
-              <StatCard label="Draft" value={stats.draft} icon={Clock} tone="amber" index={2} />
-              <StatCard
-                label="Archived"
-                value={stats.archived}
-                icon={Archive}
-                tone="default"
-                index={3}
-              />
-            </StatCardGrid>
-          </PmSection>
+        <PmSection index={0}>
+          <StatCardGrid cols={4}>
+            <StatCard label="Total" value={stats.total} icon={Tag} tone="default" index={0} />
+            <StatCard
+              label="Released"
+              value={stats.released}
+              icon={CheckCircle2}
+              tone="emerald"
+              index={1}
+            />
+            <StatCard label="Draft" value={stats.draft} icon={Clock} tone="amber" index={2} />
+            <StatCard
+              label="Archived"
+              value={stats.archived}
+              icon={Archive}
+              tone="default"
+              index={3}
+            />
+          </StatCardGrid>
+        </PmSection>
 
-          <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
-            {isError ? (
-              <ErrorState
-                title="Failed to load releases"
-                description="Could not fetch release data. Please try again."
-                onRetry={handleRetry}
+        <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
+          {isError ? (
+            <ErrorState
+              title="Failed to load releases"
+              description="Could not fetch release data. Please try again."
+              onRetry={handleRetry}
+            />
+          ) : (
+            <PmPanel className="flex min-h-0 flex-1 flex-col">
+              <DataTable
+                className="min-h-0 flex-1 border-0 bg-transparent shadow-none"
+                data={releases ?? []}
+                columns={columns}
+                getRowKey={(r) => r.id}
+                isLoading={isLoading}
+                onRowClick={handleOpenEdit}
+                emptyState={
+                  <EmptyState
+                    illustrationPreset="projects"
+                    title="No releases yet"
+                    description="Create your first release to track shipped features and versions."
+                    action={{ label: "New Release", onClick: handleOpenCreate }}
+                    className="min-h-[36vh]"
+                  />
+                }
               />
-            ) : (
-              <PmPanel className="flex min-h-0 flex-1 flex-col">
-                <DataTable
-                  className="min-h-0 flex-1 border-0 bg-transparent shadow-none"
-                  data={releases ?? []}
-                  columns={columns}
-                  getRowKey={(r) => r.id}
-                  isLoading={isLoading}
-                  onRowClick={handleOpenEdit}
-                  emptyState={
-                    <EmptyState
-                      illustrationPreset="projects"
-                      title="No releases yet"
-                      description="Create your first release to track shipped features and versions."
-                      action={{ label: "New Release", onClick: handleOpenCreate }}
-                      className="min-h-[36vh]"
-                    />
-                  }
-                />
-              </PmPanel>
-            )}
-          </PmSection>
-        </div>
+            </PmPanel>
+          )}
+        </PmSection>
 
         {sheetOpen ? (
           <ReleaseFormSheet

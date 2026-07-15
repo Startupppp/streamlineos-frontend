@@ -214,7 +214,6 @@ export function CommandPalette() {
   );
 
   const handleCreateTicket = useCallback(() => {
-    if (projectId === null) return;
     setPaletteOpen(false);
     setQuery("");
     openCreateTicket(projectId);
@@ -373,49 +372,46 @@ export function CommandPalette() {
 
         {!query && (
           <>
-            {projectId !== null && (
-              <>
-                <CommandGroup
-                  heading="This project"
-                  className={COMMAND_GROUP_CLASS}
-                >
+            <CommandGroup
+              heading={projectId !== null ? "This project" : "Actions"}
+              className={COMMAND_GROUP_CLASS}
+            >
+              <CommandItem
+                value="create ticket issue"
+                onSelect={handleCreateTicket}
+                className={COMMAND_ITEM_CLASS}
+              >
+                <ItemIcon icon={Plus} />
+                <span className="flex-1 text-sm text-foreground">
+                  Create ticket
+                </span>
+                <CommandShortcut className={COMMAND_SHORTCUT_CLASS}>
+                  C
+                </CommandShortcut>
+              </CommandItem>
+              {projectId !== null &&
+                PROJECT_NAV_ITEMS.map((item) => (
                   <CommandItem
-                    value="create ticket issue"
-                    onSelect={handleCreateTicket}
+                    key={item.segment}
+                    value={`project ${item.label}`}
+                    onSelect={() =>
+                      handleSelect(`/projects/${projectId}${item.segment}`)
+                    }
                     className={COMMAND_ITEM_CLASS}
                   >
-                    <ItemIcon icon={Plus} />
+                    <ItemIcon icon={item.icon} />
                     <span className="flex-1 text-sm text-foreground">
-                      Create ticket
+                      {item.label}
                     </span>
-                    <CommandShortcut className={COMMAND_SHORTCUT_CLASS}>
-                      C
-                    </CommandShortcut>
+                    {item.shortcut && (
+                      <CommandShortcut className={COMMAND_SHORTCUT_CLASS}>
+                        {item.shortcut}
+                      </CommandShortcut>
+                    )}
                   </CommandItem>
-                  {PROJECT_NAV_ITEMS.map((item) => (
-                    <CommandItem
-                      key={item.segment}
-                      value={`project ${item.label}`}
-                      onSelect={() =>
-                        handleSelect(`/projects/${projectId}${item.segment}`)
-                      }
-                      className={COMMAND_ITEM_CLASS}
-                    >
-                      <ItemIcon icon={item.icon} />
-                      <span className="flex-1 text-sm text-foreground">
-                        {item.label}
-                      </span>
-                      {item.shortcut && (
-                        <CommandShortcut className={COMMAND_SHORTCUT_CLASS}>
-                          {item.shortcut}
-                        </CommandShortcut>
-                      )}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-                <CommandSeparator className="my-1" />
-              </>
-            )}
+                ))}
+            </CommandGroup>
+            <CommandSeparator className="my-1" />
 
             <CommandGroup heading="Navigation" className={COMMAND_GROUP_CLASS}>
               <CommandItem

@@ -9,9 +9,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -142,58 +139,38 @@ export function PinnedNav() {
 interface CreateIssueButtonProps {
   projects: ProjectListItem[];
   onCreateForProject: (projectId: number) => void;
+  onCreateIssue?: () => void;
   className?: string;
 }
 
 export function CreateIssueButton({
   projects,
   onCreateForProject,
+  onCreateIssue,
   className,
 }: CreateIssueButtonProps) {
   const canCreate = useCan("projects:tickets:create");
+
+  const handleClick = useCallback(() => {
+    if (onCreateIssue) {
+      onCreateIssue();
+      return;
+    }
+    const project = projects[0];
+    if (project) onCreateForProject(project.id);
+  }, [onCreateIssue, projects, onCreateForProject]);
+
   if (!canCreate || projects.length === 0) return null;
 
-  if (projects.length === 1) {
-    const project = projects[0];
-    if (!project) return null;
-    const handleClick = () => onCreateForProject(project.id);
-    return (
-      <Button
-        variant="ghost"
-        size="sm"
-        className={cn("h-7 gap-1 text-xs text-muted-foreground", className)}
-        onClick={handleClick}
-      >
-        New issue
-      </Button>
-    );
-  }
-
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          className={cn("h-7 gap-1 text-xs text-muted-foreground", className)}
-        >
-          New issue
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
-        {projects.map((project) => {
-          const handleSelect = () => onCreateForProject(project.id);
-          return (
-            <DropdownMenuItem key={project.id} onClick={handleSelect} className="cursor-pointer">
-              <span className="truncate">{project.name}</span>
-              <span className="ml-auto shrink-0 font-mono text-[10px] text-muted-foreground">
-                {project.key}
-              </span>
-            </DropdownMenuItem>
-          );
-        })}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Button
+      variant="ghost"
+      size="sm"
+      className={cn("h-7 gap-1 text-xs text-muted-foreground", className)}
+      onClick={handleClick}
+    >
+      New issue
+    </Button>
   );
 }
 
@@ -201,22 +178,28 @@ interface QuickCreateMenuProps {
   projects: ProjectListItem[];
   onCreateProject: () => void;
   onCreateForProject: (projectId: number) => void;
+  onCreateIssue?: () => void;
 }
 
 export function QuickCreateMenu({
   projects,
   onCreateProject,
   onCreateForProject,
+  onCreateIssue,
 }: QuickCreateMenuProps) {
   const canCreateIssue = useCan("projects:tickets:create");
   const canCreateProject = useCan("projects:create");
   const hasProjects = projects.length > 0;
   const { iconRef, hoverHandlers } = useAnimatedIcon();
 
-  const handleCreateIssueForSingleProject = useCallback(() => {
+  const handleCreateIssue = useCallback(() => {
+    if (onCreateIssue) {
+      onCreateIssue();
+      return;
+    }
     const project = projects[0];
     if (project) onCreateForProject(project.id);
-  }, [projects, onCreateForProject]);
+  }, [onCreateIssue, projects, onCreateForProject]);
 
   if (!canCreateProject && !(canCreateIssue && hasProjects)) {
     return (
@@ -245,41 +228,14 @@ export function QuickCreateMenu({
         {canCreateIssue && hasProjects ? (
           <>
             {canCreateProject ? <DropdownMenuSeparator /> : null}
-            {projects.length === 1 ? (
-              <DropdownMenuItem
-                onClick={handleCreateIssueForSingleProject}
-                className="cursor-pointer gap-2"
-              >
-                <ListPlus className="h-4 w-4 text-muted-foreground" />
-                <span>New issue</span>
-                <span className="ml-auto font-mono text-[10px] text-muted-foreground">C T</span>
-              </DropdownMenuItem>
-            ) : (
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger className="cursor-pointer gap-2">
-                  <ListPlus className="h-4 w-4 text-muted-foreground" />
-                  <span>New issue</span>
-                  <span className="ml-auto font-mono text-[10px] text-muted-foreground">C T</span>
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent className="w-56">
-                  {projects.map((project) => {
-                    const handleSelect = () => onCreateForProject(project.id);
-                    return (
-                      <DropdownMenuItem
-                        key={project.id}
-                        onClick={handleSelect}
-                        className="cursor-pointer"
-                      >
-                        <span className="truncate">{project.name}</span>
-                        <span className="ml-auto shrink-0 font-mono text-[10px] text-muted-foreground">
-                          {project.key}
-                        </span>
-                      </DropdownMenuItem>
-                    );
-                  })}
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-            )}
+            <DropdownMenuItem
+              onClick={handleCreateIssue}
+              className="cursor-pointer gap-2"
+            >
+              <ListPlus className="h-4 w-4 text-muted-foreground" />
+              <span>New issue</span>
+              <span className="ml-auto font-mono text-[10px] text-muted-foreground">C T</span>
+            </DropdownMenuItem>
           </>
         ) : null}
         <DropdownMenuSeparator />

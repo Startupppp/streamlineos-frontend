@@ -20,7 +20,7 @@ import { useRoadmapItems, useDeleteRoadmapItem } from "@/hooks/api/projects/road
 import type { RoadmapItem, RoadmapStatus } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
-import { PmPanel, PmStaggerList, PM_PANEL } from "@/features/projects/shared/pm-chrome";
+import { PmPanel, PmStaggerList, PM_FILL_PANEL, PM_PANEL } from "@/features/projects/shared/pm-chrome";
 import { ROADMAP_COLUMNS } from "./roadmap-constants";
 import { RoadmapItemCard } from "./roadmap-item-card";
 import { RoadmapItemSheet } from "./roadmap-item-sheet";
@@ -113,7 +113,7 @@ export function RoadmapTab({ search, createOpen, onCreateOpenChange }: RoadmapTa
 
   if (isError) {
     return (
-      <PmPanel className="flex min-h-[14rem] items-center justify-center p-6">
+      <PmPanel className={cn(PM_FILL_PANEL, "items-center justify-center p-6")}>
         <ErrorState onRetry={handleRetry} />
       </PmPanel>
     );
@@ -122,19 +122,18 @@ export function RoadmapTab({ search, createOpen, onCreateOpenChange }: RoadmapTa
   const total = data?.length ?? 0;
 
   return (
-    <div className="space-y-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
       {total === 0 ? (
-        <PmPanel className="flex min-h-[14rem] items-center justify-center p-6">
+        <PmPanel className={cn(PM_FILL_PANEL, "p-6")}>
           <EmptyState
             illustration={<EmptyProjectsIllustration />}
             title="No roadmap items yet"
             description="Plan what's coming and share it publicly with your users."
             action={{ label: "Add roadmap item", onClick: handleOpenSheet }}
-            className="min-h-[12rem]"
           />
         </PmPanel>
       ) : (
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid min-h-0 flex-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
           {ROADMAP_COLUMNS.map((col) => (
             <PmPanel key={col.status} className="flex min-h-[120px] flex-col p-2">
               <div className="mb-2 flex items-center justify-between px-1">

@@ -1,12 +1,7 @@
 "use client";
 
 import { useMemo, useState, useCallback } from "react";
-import Link from "next/link";
 import { toast } from "sonner";
-import {
-  ChevronDown, FileText, Zap, CalendarClock, Clock, Users, ClipboardList, Layers,
-} from "lucide-react";
-import { PlusIcon } from "@animateicons/react/lucide";
 import {
   useMeetings,
   useCreateMeeting,
@@ -15,37 +10,28 @@ import {
   useProjectBoardTickets,
 } from "@/hooks/api/projects";
 import { useCan } from "@/hooks/api/access";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { DataTable } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Combobox } from "@/components/ui/combobox";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { MeetingTypeBadge, MeetingStatusBadge } from "./meeting-badges";
 import { MeetingFormSheet } from "./meeting-form-sheet";
+import { NewMeetingButton, MEETING_TEMPLATES, type MeetingTemplate } from "./new-meeting-button";
+import { NextMeetingStrip } from "./next-meeting-strip";
+import { buildMeetingsColumns } from "./meetings-columns";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { generateAgenda, type AgendaSource } from "./generate-agenda";
-import type { Meeting, CreateMeetingInput, MeetingType } from "@/types/projects";
-import type { ProjectMemberRecord } from "@/types/projects";
+import type { Meeting, CreateMeetingInput } from "@/types/projects";
 import { cn } from "@/lib/utils";
 import {
   PmPageShell,
   PmPanel,
   PmSection,
+  PM_FILL_PANEL,
   PM_TOOLBAR,
-  PM_PANEL,
 } from "@/features/projects/shared/pm-chrome";
-import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 import { getUserDisplayName } from "@/features/projects/shared/resolve-user-name";
 
 const TYPE_OPTS = [
@@ -79,150 +65,8 @@ const ACTION_ITEM_OPTS = [
   { value: "unresolved", label: "Has unresolved items" },
 ];
 
-interface MeetingTemplate {
-  type: MeetingType;
-  label: string;
-  duration: number;
-  agenda: string;
-}
-
-const TEMPLATES: MeetingTemplate[] = [
-  {
-    type: "standup",
-    label: "Daily Standup",
-    duration: 15,
-    agenda: "1. What did you do yesterday?\n2. What will you do today?\n3. Any blockers?",
-  },
-  {
-    type: "planning",
-    label: "Sprint Planning",
-    duration: 60,
-    agenda: "1. Review sprint goal\n2. Review backlog items\n3. Estimate and commit to tickets\n4. Clarify acceptance criteria",
-  },
-  {
-    type: "review",
-    label: "Sprint Review",
-    duration: 60,
-    agenda: "1. Demo completed work\n2. Gather stakeholder feedback\n3. Review sprint metrics\n4. Update product backlog",
-  },
-  {
-    type: "retro",
-    label: "Retrospective",
-    duration: 60,
-    agenda: "1. What went well?\n2. What could be improved?\n3. Action items for next sprint",
-  },
-  {
-    type: "meeting",
-    label: "1:1",
-    duration: 30,
-    agenda: "1. Updates and progress\n2. Blockers and support needed\n3. Goals for next period",
-  },
-  {
-    type: "meeting",
-    label: "Ad-hoc Meeting",
-    duration: 30,
-    agenda: "",
-  },
-];
-
 interface MeetingsListPageProps {
   projectId: number;
-}
-
-interface NextMeetingStripProps {
-  meeting: Meeting;
-  projectId: number;
-  members: ProjectMemberRecord[];
-}
-
-function NextMeetingStrip({ meeting, projectId, members }: NextMeetingStripProps) {
-  const host = members.find((m) => m.id === meeting.createdBy);
-  const hostLabel = host ? getUserDisplayName(host) : null;
-  const scheduledDate = meeting.scheduledAt ? new Date(meeting.scheduledAt) : null;
-
-  return (
-    <div
-      className={cn(
-        PM_PANEL,
-        "mb-0 flex flex-wrap items-center gap-3 border-primary/20 bg-primary/[0.05] px-4 py-3 text-sm",
-      )}
-    >
-      <CalendarClock className="h-4 w-4 shrink-0 text-primary" />
-      <div className="flex min-w-0 items-center gap-1.5 font-medium text-foreground">
-        <span className="shrink-0 text-xs font-normal text-muted-foreground">Next meeting</span>
-        <Link
-          href={`/projects/${projectId}/meetings/${meeting.id}`}
-          className={cn(TEXT_ONE_LINE, "max-w-[min(100%,20rem)] font-semibold text-foreground hover:underline")}
-          title={meeting.title}
-        >
-          {meeting.title}
-        </Link>
-      </div>
-      <div className="ml-auto flex shrink-0 flex-wrap items-center gap-3 text-xs text-muted-foreground">
-        {scheduledDate ? (
-          <span className="tabular-nums">
-            {scheduledDate.toLocaleString(undefined, {
-              weekday: "short",
-              month: "short",
-              day: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </span>
-        ) : null}
-        {meeting.durationMinutes != null ? (
-          <span className="flex items-center gap-1">
-            <Clock className="h-3 w-3" />
-            {meeting.durationMinutes}m
-          </span>
-        ) : null}
-        {hostLabel ? (
-          <span className="flex max-w-[8rem] items-center gap-1">
-            <Users className="h-3 w-3 shrink-0" />
-            <span className={TEXT_ONE_LINE}>{hostLabel}</span>
-          </span>
-        ) : null}
-        {(meeting.attendeeCount ?? 0) > 0 ? (
-          <span>{meeting.attendeeCount} attendee{meeting.attendeeCount !== 1 ? "s" : ""}</span>
-        ) : null}
-        <MeetingTypeBadge type={meeting.type} />
-      </div>
-    </div>
-  );
-}
-
-function NewMeetingButton({
-  onBlank,
-  onTemplate,
-}: {
-  onBlank: () => void;
-  onTemplate: (tpl: MeetingTemplate) => void;
-}) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button size="sm" className="h-8 gap-1.5 text-xs" {...hoverHandlers}>
-          <PlusIcon ref={iconRef} size={14} />
-          New Meeting
-          <ChevronDown className="ml-0.5 h-3 w-3" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuItem onClick={onBlank}>
-          <Zap className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
-          Blank meeting
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        {TEMPLATES.map((tpl) => (
-          <DropdownMenuItem key={tpl.label} onClick={() => onTemplate(tpl)}>
-            <FileText className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
-            {tpl.label}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
 }
 
 export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
@@ -333,11 +177,11 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
   }
 
   function handleScheduleStandup() {
-    handleOpenTemplate(TEMPLATES[0]!);
+    handleOpenTemplate(MEETING_TEMPLATES[0]!);
   }
 
   function handleSchedulePlanning() {
-    handleOpenTemplate(TEMPLATES[1]!);
+    handleOpenTemplate(MEETING_TEMPLATES[1]!);
   }
 
   const handleGenerateAgenda = useCallback(
@@ -370,150 +214,8 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
     [sprints],
   );
 
-  const columns: DataTableColumn<Meeting>[] = useMemo(
-    () => [
-      {
-        key: "meetingNumber",
-        header: "ID",
-        className: "w-20",
-        cell: (row) => (
-          <Link
-            href={`/projects/${projectId}/meetings/${row.id}`}
-            className="font-mono text-xs text-primary hover:underline"
-          >
-            MTG-{row.meetingNumber}
-          </Link>
-        ),
-      },
-      {
-        key: "title",
-        header: "Title",
-        sortable: true,
-        sortValue: (row) => row.title,
-        cell: (row) => (
-          <div className="flex min-w-0 flex-col gap-0.5">
-            <Link
-              href={`/projects/${projectId}/meetings/${row.id}`}
-              className={cn(TEXT_ONE_LINE, "block max-w-[min(100%,24rem)] font-medium text-foreground hover:text-primary")}
-              title={row.title}
-            >
-              {row.title}
-            </Link>
-            {row.sprintId != null && sprintMap.has(row.sprintId) ? (
-              <span className={cn(TEXT_ONE_LINE, "flex max-w-[14rem] items-center gap-1 text-[11px] text-muted-foreground")}>
-                <Layers className="h-3 w-3 shrink-0" />
-                {sprintMap.get(row.sprintId)?.name}
-              </span>
-            ) : null}
-          </div>
-        ),
-      },
-      {
-        key: "type",
-        header: "Type",
-        className: "w-24",
-        cell: (row) => <MeetingTypeBadge type={row.type} />,
-      },
-      {
-        key: "status",
-        header: "Status",
-        className: "w-28",
-        cell: (row) => <MeetingStatusBadge status={row.status} />,
-      },
-      {
-        key: "scheduledAt",
-        header: "Date / Duration",
-        sortable: true,
-        sortValue: (row) => row.scheduledAt ?? "",
-        cell: (row) => (
-          <div className="flex flex-col gap-0.5">
-            {row.scheduledAt ? (
-              <span className="tabular-nums text-sm text-foreground">
-                {new Date(row.scheduledAt).toLocaleString(undefined, {
-                  month: "short",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </span>
-            ) : (
-              <span className="text-sm text-muted-foreground">—</span>
-            )}
-            {row.durationMinutes != null ? (
-              <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                <Clock className="h-3 w-3 shrink-0" />
-                {row.durationMinutes}m
-              </span>
-            ) : null}
-          </div>
-        ),
-      },
-      {
-        key: "host",
-        header: "Host",
-        className: "w-32",
-        cell: (row) => {
-          const host = row.createdBy ? memberMap.get(row.createdBy) : undefined;
-          if (!host) return <span className="text-sm text-muted-foreground">—</span>;
-          const label = getUserDisplayName(host);
-          return (
-            <span className={cn(TEXT_ONE_LINE, "block max-w-[120px] text-sm text-foreground")} title={host.email}>
-              {label}
-            </span>
-          );
-        },
-      },
-      {
-        key: "attendeeCount",
-        header: "Attendees",
-        className: "w-24",
-        cell: (row) => (
-          <span className="flex items-center gap-1 tabular-nums text-sm text-muted-foreground">
-            {(row.attendeeCount ?? 0) > 0 ? (
-              <>
-                <Users className="h-3 w-3 shrink-0" />
-                {row.attendeeCount}
-              </>
-            ) : (
-              "—"
-            )}
-          </span>
-        ),
-      },
-      {
-        key: "actionItemCount",
-        header: "Actions",
-        className: "w-28",
-        cell: (row) => (
-          <div className="flex items-center gap-1.5 tabular-nums text-sm text-muted-foreground">
-            {(row.actionItemCount ?? 0) > 0 ? (
-              <>
-                <ClipboardList className="h-3 w-3 shrink-0" />
-                {row.actionItemCount}
-                {(row.unresolvedActionItemCount ?? 0) > 0 ? (
-                  <Badge variant="outline" className="ml-0.5 px-1 py-0 text-[10px] text-amber-600 border-amber-200 dark:text-amber-400 dark:border-amber-500/30">
-                    {row.unresolvedActionItemCount} open
-                  </Badge>
-                ) : null}
-              </>
-            ) : (
-              "—"
-            )}
-          </div>
-        ),
-      },
-      {
-        key: "notes",
-        header: "Notes",
-        className: "w-16",
-        cell: (row) =>
-          row.notes ? (
-            <FileText className="h-3.5 w-3.5 text-primary" aria-label="Has notes" />
-          ) : (
-            <span className="text-sm text-muted-foreground">—</span>
-          ),
-      },
-    ],
+  const columns = useMemo(
+    () => buildMeetingsColumns(projectId, memberMap, sprintMap),
     [projectId, memberMap, sprintMap],
   );
 
@@ -604,7 +306,7 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
           ? { label: "Sprint Planning", onClick: handleSchedulePlanning }
           : undefined
       }
-      className="min-h-[28vh]"
+      className="flex-1 min-h-0"
     />
   ) : (
     <EmptyState
@@ -612,7 +314,7 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
       title="No meetings match your filters"
       description={search ? `No meetings found for "${search}".` : "Try adjusting your filters."}
       action={{ label: "Clear filters", onClick: handleClearFilters }}
-      className="min-h-[28vh]"
+      className="flex-1 min-h-0"
     />
   );
 
@@ -630,7 +332,7 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
     >
       <PmPageShell>
         {nextMeeting ? (
-          <PmSection index={0}>
+          <PmSection index={0} className="shrink-0">
             <NextMeetingStrip
               meeting={nextMeeting}
               projectId={projectId}
@@ -641,11 +343,11 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
 
         <PmSection index={nextMeeting ? 1 : 0} className="flex min-h-0 flex-1 flex-col">
           {isError ? (
-            <PmPanel className="flex flex-1 items-center justify-center p-6">
+            <PmPanel className={cn(PM_FILL_PANEL, "items-center justify-center p-6")}>
               <ErrorState className="flex-1" onRetry={handleRetry} />
             </PmPanel>
           ) : (
-            <PmPanel className="min-h-0 flex-1">
+            <PmPanel className={PM_FILL_PANEL}>
               <DataTable
                 className="min-h-0 flex-1"
                 data={displayed}

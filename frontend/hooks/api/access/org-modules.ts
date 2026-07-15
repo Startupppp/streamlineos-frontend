@@ -22,6 +22,7 @@ const BACKEND_MODULE_NAMES: Record<string, string> = {
   kb: "KB",
   surveys: "SURVEYS",
   payroll: "PAYROLL",
+  sign: "SIGN",
 };
 
 export function useEnabledModules(): string[] {

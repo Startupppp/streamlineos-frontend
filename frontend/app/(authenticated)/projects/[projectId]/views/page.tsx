@@ -79,7 +79,7 @@ export default function ViewsPage({
 
   if (isLoading) {
     return (
-      <PageWrapper title="Views" subtitle="Loading...">
+      <PageWrapper title="Views">
         <PmPageShell>
           <div className="space-y-2">
             {Array.from({ length: 4 }).map((_, i) => (

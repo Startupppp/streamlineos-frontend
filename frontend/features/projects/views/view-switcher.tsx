@@ -25,6 +25,7 @@ export function parseViewType(value: string | null): ViewType {
 interface ViewSwitcherProps {
   activeView: ViewType;
   onViewChange: (view: ViewType) => void;
+  className?: string;
 }
 
 const views = [
@@ -39,6 +40,7 @@ const views = [
 export const ViewSwitcher = memo(function ViewSwitcher({
   activeView,
   onViewChange,
+  className,
 }: ViewSwitcherProps) {
   const shouldReduceMotion = useReducedMotion();
 
@@ -59,7 +61,7 @@ export const ViewSwitcher = memo(function ViewSwitcher({
   );
 
   return (
-    <>
+    <div className={cn("flex min-w-0 items-center", className)}>
       <div
         className="relative hidden h-8 items-center gap-0.5 rounded-lg border border-border/50 bg-background/50 p-0.5 shadow-inner backdrop-blur-md sm:inline-flex"
         role="tablist"
@@ -116,6 +118,6 @@ export const ViewSwitcher = memo(function ViewSwitcher({
           ))}
         </SelectContent>
       </Select>
-    </>
+    </div>
   );
 });

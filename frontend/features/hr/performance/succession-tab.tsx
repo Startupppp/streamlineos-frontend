@@ -17,6 +17,8 @@ import {
   useDeleteSuccessionPlan,
   type SuccessionReadiness,
 } from "@/hooks/api/hr/succession";
+import { EmptyState } from "@/components/ui/empty-state";
+import { EmptyPersonIllustration } from "@/components/illustrations";
 
 const READINESS_CONFIG: Record<SuccessionReadiness, { label: string; className: string }> = {
   ready_now: { label: "Ready Now", className: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30" },
@@ -90,8 +92,8 @@ export function SuccessionTab() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col flex-1 min-h-0 gap-4">
+      <div className="flex items-center justify-between shrink-0">
         <p className="text-sm text-muted-foreground">
           {plans.length} succession plan{plans.length !== 1 ? "s" : ""}
         </p>
@@ -101,12 +103,12 @@ export function SuccessionTab() {
       </div>
 
       {plans.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-40 text-sm text-muted-foreground gap-2">
-          <span>No succession plans yet</span>
-          <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
-            Create first plan
-          </Button>
-        </div>
+        <EmptyState
+          illustration={<EmptyPersonIllustration className="h-full w-full" />}
+          title="No succession plans yet"
+          description="Map successors to key roles to ensure leadership continuity."
+          action={{ label: "Add Plan", onClick: () => setOpen(true) }}
+        />
       ) : (
         <div className="space-y-2">
           {plans.map((plan) => {

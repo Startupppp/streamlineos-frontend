@@ -19,7 +19,6 @@ import { CreateWorkspaceDialog } from "@/features/workspace/create-workspace-dia
 interface WorkspaceSwitcherProps {
   variant?: "header" | "sidebar"
   iconOnly?: boolean
-  hideLabel?: boolean
   className?: string
   open?: boolean
   onOpenChange?: (open: boolean) => void
@@ -151,7 +150,6 @@ function WorkspaceSwitcherPanel({
 export function WorkspaceSwitcher({
   variant = "header",
   iconOnly = false,
-  hideLabel = false,
   className,
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
@@ -206,7 +204,7 @@ export function WorkspaceSwitcher({
   }, [triggerOnly, onRequestOpen, handleOpenChange])
 
   const isSidebar = variant === "sidebar"
-  const isLabelHidden = isSidebar ? iconOnly : hideLabel
+  const isLabelHidden = isSidebar && iconOnly
   const workspaceName = activeOrg?.name ?? "Workspace"
 
   const panelProps = {
@@ -230,7 +228,7 @@ export function WorkspaceSwitcher({
           ? "h-8 w-8 justify-center rounded-lg text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
           : isSidebar
             ? "gap-1.5 h-8 w-full min-w-0 px-2 rounded-lg text-sm font-medium text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-            : "gap-1.5 h-8 px-2 rounded-lg text-sm font-medium text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent",
+            : "gap-1.5 h-8 min-w-0 max-w-[12rem] px-2 rounded-lg text-sm font-medium text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent",
         className,
       )}
       disabled={switchOrg.isPending}
@@ -244,12 +242,7 @@ export function WorkspaceSwitcher({
       />
       {!isLabelHidden && (
         <>
-          <span
-            className={cn(
-              "min-w-0 truncate text-left text-sm font-medium text-sidebar-foreground",
-              isSidebar ? "flex-1" : "max-w-[8rem]",
-            )}
-          >
+          <span className="min-w-0 flex-1 truncate text-left text-sm font-medium text-sidebar-foreground">
             {workspaceName}
           </span>
           <ChevronsUpDown className="h-3 w-3 shrink-0 text-sidebar-foreground/50" />

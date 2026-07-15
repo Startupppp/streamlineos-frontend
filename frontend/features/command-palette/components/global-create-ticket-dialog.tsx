@@ -23,11 +23,12 @@ export function GlobalCreateTicketDialog() {
     [closeCreateTicket],
   );
 
-  if (createTicketProjectId === null) return null;
+  if (!createTicketOpen) return null;
 
   return (
     <CreateTicketDialogDynamic
-      projectId={createTicketProjectId}
+      projectId={createTicketProjectId ?? undefined}
+      hideTrigger
       externalOpen={createTicketOpen}
       onExternalOpenChange={handleOpenChange}
     />

@@ -56,6 +56,7 @@ import {
   PmPageShell,
   PmPanel,
   PmSection,
+  PM_FILL_PANEL,
   PM_TOOLBAR,
 } from "@/features/projects/shared/pm-chrome";
 import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
@@ -398,11 +399,11 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
               <DataTableSkeleton rows={12} columns={7} className="flex-1" />
             </PmPanel>
           ) : isError ? (
-            <PmPanel className="flex flex-1 items-center justify-center p-6">
+            <PmPanel className={cn(PM_FILL_PANEL, "items-center justify-center p-6")}>
               <ErrorState className="flex-1" onRetry={handleRetry} />
             </PmPanel>
           ) : items.length === 0 ? (
-            <PmPanel className="flex flex-1 flex-col items-center justify-center gap-3 p-6">
+            <PmPanel className={cn(PM_FILL_PANEL, "items-center justify-center gap-3 p-6")}>
               <EmptyState
                 illustrationPreset="approval"
                 title={isFiltered ? "No matching approvals" : "No approvals yet"}
@@ -423,7 +424,6 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
                     ? { label: "Request release approval", onClick: () => handleOpenRequest("release") }
                     : undefined
                 }
-                className="min-h-[28vh]"
               />
               {!isFiltered && canRequest ? (
                 <Button
@@ -437,7 +437,7 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
               ) : null}
             </PmPanel>
           ) : (
-            <PmPanel className="min-h-0 flex-1">
+            <PmPanel className={PM_FILL_PANEL}>
               <DataTable data={items} columns={columns} getRowKey={(row) => row.id} minWidth="720px" className="min-h-0 flex-1" />
             </PmPanel>
           )}

@@ -13,7 +13,12 @@ import { HrSheet } from "@/features/hr/hr-sheet";
 import type { SalaryStructureTemplate, CreateSalaryTemplateInput } from "@/hooks/api/hr/salary-structures";
 
 const templateSchema = z.object({
-  name: z.string().min(1, "Name is required"),
+  name: z
+    .string()
+    .trim()
+    .min(1, "Name is required")
+    .max(100, "Name must be at most 100 characters")
+    .refine((v) => /[a-zA-Z0-9]/.test(v), "Name must contain at least one letter or digit"),
   basicSalary: z.string().min(1, "Basic salary is required"),
   hraPercent: z.string().min(1, "HRA % is required"),
   specialAllowance: z.string().nullable(),
@@ -172,7 +177,7 @@ export function SalaryStructureTemplateSheet({
 
   function handleFormSubmit(values: TemplateFormValues) {
     onSubmit({
-      name: values.name,
+      name: values.name.replace(/\s+/g, " ").trim(),
       basicSalary: values.basicSalary,
       hraPercent: values.hraPercent,
       specialAllowance: values.specialAllowance,

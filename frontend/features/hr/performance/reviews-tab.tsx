@@ -181,8 +181,8 @@ export function ReviewsTab() {
     : reviewsList.filter((r: PerformanceReview) => (r.status ?? "DRAFT") === statusFilter);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-2 flex-wrap">
+    <div className="flex flex-col flex-1 min-h-0 gap-4">
+      <div className="flex items-center justify-between gap-2 flex-wrap shrink-0">
         <Tabs value={statusFilter} onValueChange={setStatusFilter}>
           <TabsList className="h-7 bg-muted/50">
             <TabsTrigger value="all" className="text-[11px] px-3 h-6">All ({reviewsList.length})</TabsTrigger>
@@ -198,10 +198,10 @@ export function ReviewsTab() {
 
       {filteredReviews.length === 0 ? (
         <EmptyState
-          illustration={<EmptyLeaderboardIllustration className="h-32 w-32 opacity-95" />}
+          illustration={<EmptyLeaderboardIllustration className="h-full w-full" />}
           title={statusFilter === "all" ? "No reviews yet" : `No ${statusFilter.toLowerCase().replace("_", " ")} reviews`}
-          description={statusFilter === "all" ? "Create your first one." : "Change the filter to see other reviews."}
-          compact
+          description={statusFilter === "all" ? "Create your first performance review to start tracking employee growth." : "Try a different filter to see other reviews."}
+          action={statusFilter === "all" ? { label: "New Review", onClick: handleOpenSheet } : undefined}
         />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

@@ -11,8 +11,13 @@ export const PM_PANEL =
 export const PM_PANEL_SOLID =
   "rounded-xl border border-border/60 bg-card shadow-sm";
 
+export const PM_FILL_PANEL =
+  "flex min-h-0 w-full flex-1 flex-col";
+
 export const PM_TOOLBAR =
-  "flex w-full min-w-0 flex-col gap-2 rounded-xl border border-border/60 bg-card/40 p-1.5 shadow-sm backdrop-blur-md supports-[backdrop-filter]:bg-card/30 sm:flex-row sm:items-center sm:justify-between";
+  "flex w-full min-w-0 flex-col gap-2 rounded-xl border border-border bg-card p-1.5 shadow-sm sm:flex-row sm:items-center sm:justify-between";
+
+export const PM_CONTROL = "border-border/60 bg-card/60";
 
 export const PM_ROW =
   "group flex min-w-0 items-center gap-2.5 border-b border-border/50 px-3 py-2 last:border-b-0 transition-colors duration-150 hover:bg-primary/[0.035]";

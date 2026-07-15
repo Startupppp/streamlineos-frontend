@@ -110,7 +110,7 @@ const CHECKLIST_ITEMS: ChecklistItem[] = [
   { id: "record", label: "Create your first record", href: "/crm/leads", Icon: Database },
   { id: "email", label: "Connect your calendar", href: "/calendar", Icon: Mail },
   { id: "profile", label: "Complete your profile", href: "/settings", Icon: UserCircle },
-  { id: "ai", label: "Try the AI Assistant", href: "/ai", Icon: Sparkles },
+  { id: "ai", label: "Try the AI Assistant", href: "/dashboard", Icon: Sparkles },
 ];
 
 interface ChecklistRowProps {

@@ -22,8 +22,6 @@ import { useProjects } from "@/hooks/api/projects/projects";
 import { useMyWork } from "@/hooks/api/projects/my-work";
 import { useCommandPalette } from "@/features/command-palette/hooks/use-command-palette";
 import { ProjectCreateWizard } from "@/features/projects/project-create/project-create-wizard";
-import type { MyWorkItem } from "@/types/projects/my-work";
-import type { ProjectListItem } from "@/types/projects";
 import {
   CreateIssueButton,
   PinnedNav,
@@ -39,18 +37,6 @@ import {
 } from "@/features/projects/shared/pm-chrome";
 import { pmSnappy } from "@/features/projects/shared/pm-motion";
 import { cn } from "@/lib/utils";
-
-function resolveDefaultCreateProjectId(
-  projects: ProjectListItem[],
-  work: MyWorkItem[],
-): number | null {
-  const recentWork = work.find(
-    (item) => item.status !== "DONE" && item.status !== "CANCELLED",
-  );
-  if (recentWork) return recentWork.projectId;
-  const firstProject = projects[0];
-  return firstProject ? firstProject.id : null;
-}
 
 function useKeyboardShortcuts(
   onCreateProject: () => void,
@@ -207,7 +193,6 @@ export function CommandCenterPage() {
   }, [canCreateProject]);
 
   const projects = useMemo(() => projectsData?.data ?? [], [projectsData]);
-  const workItems = useMemo(() => myWork ?? [], [myWork]);
 
   const handleCreateForProject = useCallback(
     (projectId: number) => {
@@ -218,9 +203,9 @@ export function CommandCenterPage() {
 
   const handleCreateIssueShortcut = useCallback(() => {
     if (!canCreateIssue) return;
-    const projectId = resolveDefaultCreateProjectId(projects, workItems);
-    if (projectId !== null) openCreateTicket(projectId);
-  }, [canCreateIssue, projects, workItems, openCreateTicket]);
+    if (projects.length === 0) return;
+    openCreateTicket();
+  }, [canCreateIssue, projects.length, openCreateTicket]);
 
   useKeyboardShortcuts(handleOpenWizard, handleCreateIssueShortcut);
 
@@ -311,6 +296,7 @@ export function CommandCenterPage() {
             projects={projects}
             onCreateProject={handleOpenWizard}
             onCreateForProject={handleCreateForProject}
+            onCreateIssue={handleCreateIssueShortcut}
           />
         }
       >
@@ -386,6 +372,7 @@ export function CommandCenterPage() {
                       <CreateIssueButton
                         projects={projects}
                         onCreateForProject={handleCreateForProject}
+                        onCreateIssue={handleCreateIssueShortcut}
                       />
                       <Button
                         variant="ghost"

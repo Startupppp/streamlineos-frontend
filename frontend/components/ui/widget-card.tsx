@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "./card";
 import { Skeleton } from "./skeleton";
 import { Badge } from "./badge";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/get-error-message";
 
 interface WidgetCardProps {
   icon?: LucideIcon;
@@ -35,7 +36,7 @@ export function WidgetCard({
   action,
   isLoading,
   error,
-  errorMessage = "Failed to load.",
+  errorMessage,
   isEmpty,
   empty,
   loadingRows = 3,
@@ -81,7 +82,7 @@ export function WidgetCard({
             ))}
           </div>
         ) : error ? (
-          <p className="text-sm text-destructive">{errorMessage}</p>
+          <p className="text-sm text-destructive">{errorMessage ?? getErrorMessage(error)}</p>
         ) : isEmpty ? (
           empty
         ) : (

@@ -30,6 +30,7 @@ import { InlineStatus, InlinePriority, InlineAssignee, InlineEstimate } from "./
 import { InlineType, InlineLabels } from "./card-inline-extra-fields";
 import { InlineDueDate } from "./card-inline-date-fields";
 import { useCreateTicket, useUpdateTicket, useUpdateTicketOrder } from "@/hooks/api";
+import type { UpdateTicketInput } from "@/types/projects";
 import { queryKeys } from "@/lib/query-keys";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
@@ -37,7 +38,7 @@ import type { DisplayOptions } from "../shared/types";
 import { pmSnappy } from "@/features/projects/shared/pm-motion";
 import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
 
-interface Ticket {
+export interface Ticket {
   id: number;
   title: string;
   status: string;
@@ -319,19 +320,34 @@ function encodeNestedAccordionValue(outerKey: string, innerKey: string): string 
 
 const DROPPABLE_MODES = new Set(["status", "priority", "assignee"]);
 
+type GroupFieldPatch = Pick<UpdateTicketInput, "status" | "priority" | "assigneeId" | "assigneeIds">;
+
+const VALID_PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
+type ValidPriority = typeof VALID_PRIORITIES[number];
+
+function isValidPriority(v: string): v is ValidPriority {
+  return (VALID_PRIORITIES as readonly string[]).includes(v);
+}
+
 function buildGroupFieldPatch(
   groupBy: string,
   newGroupKey: string,
   tickets: Ticket[],
   ticketId: number,
-): Partial<{ status: string; priority: string; assigneeId: string | null }> | null {
+): GroupFieldPatch | null {
   if (groupBy === "status") return { status: newGroupKey };
-  if (groupBy === "priority") return newGroupKey === "None" ? { priority: undefined } : { priority: newGroupKey };
+  if (groupBy === "priority") {
+    if (newGroupKey === "None") return { priority: undefined };
+    const upper = newGroupKey.toUpperCase();
+    if (!isValidPriority(upper)) return null;
+    return { priority: upper };
+  }
   if (groupBy === "assignee") {
-    if (newGroupKey === "Unassigned") return { assigneeId: null };
-    const match = tickets.find((t) => t.id !== ticketId && getUserDisplayName(t.assignee ?? {}) === newGroupKey);
-    if (!match?.assigneeId && !match?.assignee?.id) return null;
-    return { assigneeId: match?.assigneeId ?? match?.assignee?.id ?? null };
+    if (newGroupKey === "Unassigned") return { assigneeIds: [] };
+    const match = tickets.find((t) => t.id !== ticketId && getUserDisplayName(t.assignee) === newGroupKey);
+    const id = match?.assigneeId ?? match?.assignee?.id;
+    if (!id) return null;
+    return { assigneeId: id };
   }
   return null;
 }
@@ -828,17 +844,19 @@ export const ListView = memo(function ListView({
   );
 });
 
-function applyLocalPatch(
-  ticket: Ticket,
-  patch: Partial<{ status: string; priority: string | undefined; assigneeId: string | null }>,
-  groupBy: string,
-): Ticket {
+function applyLocalPatch(ticket: Ticket, patch: GroupFieldPatch, groupBy: string): Ticket {
   const next = { ...ticket };
   if (groupBy === "status" && patch.status !== undefined) next.status = patch.status;
   if (groupBy === "priority") {
-    if (patch.priority !== undefined) next.priority = patch.priority;
-    else next.priority = null;
+    next.priority = patch.priority ?? null;
   }
-  if (groupBy === "assignee" && "assigneeId" in patch) next.assigneeId = patch.assigneeId ?? null;
+  if (groupBy === "assignee") {
+    if (patch.assigneeIds !== undefined) {
+      next.assigneeId = patch.assigneeIds[0] ?? null;
+      next.assignee = null;
+    } else if (patch.assigneeId !== undefined) {
+      next.assigneeId = patch.assigneeId ?? null;
+    }
+  }
   return next;
 }

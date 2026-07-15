@@ -129,6 +129,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Dashboard",
         icon: Workflow,
         href: "/workflows",
+        exact: true,
         requiredPermission: "workflows:workflows:view",
       },
       {
@@ -231,6 +232,7 @@ export const NAV_GROUPS: NavGroup[] = [
             label: "Onboarding",
             icon: ClipboardList,
             href: "/hr/onboarding",
+            exact: true,
             requiredPermission: "hr:employees:create",
           },
           {
@@ -370,6 +372,7 @@ export const NAV_GROUPS: NavGroup[] = [
             label: "Travel",
             icon: Globe,
             href: "/hr/travel",
+            exact: true,
             requiredPermission: "hr:expenses:view",
           },
           {
@@ -861,6 +864,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Command Center",
         icon: LayoutDashboard,
         href: "/payroll",
+        exact: true,
         requiredPermission: "payroll:runs:view",
       },
       {
@@ -957,6 +961,7 @@ export const NAV_GROUPS: NavGroup[] = [
             label: "Policy",
             icon: SlidersHorizontal,
             href: "/payroll/settings",
+            exact: true,
             requiredPermission: "payroll:settings:manage",
           },
           {
@@ -978,6 +983,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Overview",
         icon: LayoutDashboard,
         href: "/crm",
+        exact: true,
         requiredPermission: "crm:leads:view",
       },
       {
@@ -1169,6 +1175,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Overview",
         icon: Calculator,
         href: "/accounting",
+        exact: true,
         requiredPermission: "accounting:view",
       },
       {
@@ -1281,6 +1288,7 @@ export const NAV_GROUPS: NavGroup[] = [
             label: "Bank accounts",
             icon: Landmark,
             href: "/accounting/banking",
+            exact: true,
             requiredPermission: "accounting:view",
           },
           {
@@ -1313,6 +1321,7 @@ export const NAV_GROUPS: NavGroup[] = [
             label: "Expenses",
             icon: Wallet,
             href: "/accounting/expenses",
+            exact: true,
             requiredPermission: "accounting:view",
           },
           {
@@ -1389,6 +1398,7 @@ export const NAV_GROUPS: NavGroup[] = [
             label: "Tax dashboard",
             icon: Percent,
             href: "/accounting/taxes",
+            exact: true,
             requiredPermission: "accounting:view",
           },
           {
@@ -1786,6 +1796,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "My Time",
         icon: Timer,
         href: "/timesheets",
+        exact: true,
         requiredPermission: "timesheets:entries:view",
       },
       {
@@ -1996,6 +2007,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Dashboard",
         icon: PenTool,
         href: "/sign",
+        exact: true,
         requiredPermission: "sign:envelope:view",
       },
       {
@@ -2071,6 +2083,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Overview",
         icon: Building2,
         href: "/organization",
+        exact: true,
         requiredPermission: "settings:view",
       },
       {
@@ -2125,6 +2138,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Users",
         icon: UserCog,
         href: "/users",
+        exact: true,
         requiredPermission: "settings:view",
       },
       {
@@ -2203,6 +2217,7 @@ export const NAV_GROUPS: NavGroup[] = [
         label: "Billing",
         icon: Wallet,
         href: "/billing",
+        exact: true,
         requiredPermission: "settings:manage",
       },
       {

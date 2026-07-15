@@ -24,7 +24,7 @@ export default function ProjectBoardLoading() {
 
   return (
     <PageWrapper
-      title="Loading project..."
+      title="Board"
       noInternalScroll
       contentClassName="!p-0"
       actions={<Skeleton className="h-8 w-28 rounded-md" />}

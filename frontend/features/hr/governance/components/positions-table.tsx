@@ -131,7 +131,7 @@ export function PositionsTable() {
             <SelectItem value="future">Future</SelectItem>
           </SelectContent>
         </Select>
-        <p className="text-sm text-muted-foreground">{data?.total ?? 0} positions</p>
+        <p className="text-sm text-muted-foreground whitespace-nowrap">{data?.total ?? 0} positions</p>
       </div>
       <DataTable
         className="flex-1 min-h-0"

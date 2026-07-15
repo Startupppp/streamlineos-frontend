@@ -4,14 +4,14 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 
-export interface UpdateCommentInput {
+interface UpdateCommentInput {
   commentId: number;
   ticketId: number;
   projectId: number;
   content: string;
 }
 
-export interface DeleteCommentInput {
+interface DeleteCommentInput {
   commentId: number;
   ticketId: number;
   projectId: number;

@@ -17,11 +17,7 @@ export function RouteErrorBoundary({
   fallbackMessage = "An unexpected error occurred. Please try again.",
   layout = "inline",
 }: RouteErrorBoundaryProps) {
-  const displayMessage = error.digest
-    ? fallbackMessage
-    : typeof error.message === "string" && error.message.length > 0
-      ? error.message
-      : fallbackMessage;
+  const displayMessage = fallbackMessage;
 
   const content = (
     <div
@@ -51,7 +47,15 @@ export function RouteErrorBoundary({
     );
 
   if (layout === "centered")
-    return <div className="max-w-4xl mx-auto py-10">{content}</div>;
+    return (
+      <div className="mx-auto flex w-full max-w-4xl flex-1 items-center justify-center py-10">
+        {content}
+      </div>
+    );
 
-  return <div className="space-y-8 py-12">{content}</div>;
+  return (
+    <div className="flex min-h-0 flex-1 flex-col items-center justify-center py-12">
+      {content}
+    </div>
+  );
 }

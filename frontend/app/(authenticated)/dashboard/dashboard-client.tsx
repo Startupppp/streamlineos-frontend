@@ -19,6 +19,7 @@ import {
 } from "@/hooks/api/notifications";
 import { RefreshCw, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { ClockInWidget } from "@/components/attendance/clock-in-widget";
 import { DashboardStatsSkeleton } from "@/components/ui/dashboard-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -265,9 +266,7 @@ export function DashboardClient() {
             <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
             <div className="flex-1 space-y-3">
               <p className="text-sm text-foreground">
-                {error instanceof Error
-                  ? error.message
-                  : "Failed to load dashboard stats"}
+                {getErrorMessage(error)}
               </p>
               <Button onClick={() => refetch()} size="sm">
                 <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />

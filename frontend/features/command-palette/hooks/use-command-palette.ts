@@ -9,7 +9,7 @@ interface CommandPaletteContextValue {
   setHelpOpen: (open: boolean) => void;
   createTicketOpen: boolean;
   createTicketProjectId: number | null;
-  openCreateTicket: (projectId: number) => void;
+  openCreateTicket: (projectId?: number | null) => void;
   closeCreateTicket: () => void;
 }
 
@@ -27,8 +27,8 @@ export function useCommandPaletteState(): CommandPaletteContextValue {
   const [createTicketOpen, setCreateTicketOpen] = useState(false);
   const [createTicketProjectId, setCreateTicketProjectId] = useState<number | null>(null);
 
-  const openCreateTicket = useCallback((projectId: number) => {
-    setCreateTicketProjectId(projectId);
+  const openCreateTicket = useCallback((projectId?: number | null) => {
+    setCreateTicketProjectId(projectId ?? null);
     setCreateTicketOpen(true);
   }, []);
 

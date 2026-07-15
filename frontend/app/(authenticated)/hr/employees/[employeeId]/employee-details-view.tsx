@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useHydrated } from "@/hooks/common/use-hydrated";
 import dynamic from "next/dynamic";
 import { EditEmployeeForm, type EmployeeData } from "./edit-employee-form";
 import { EmployeeAttendanceHistory } from "@/components/hr/employee-attendance-history";
@@ -305,6 +306,7 @@ function ManagerScorecardSection({ employeeId }: { employeeId: string }) {
 }
 
 export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
+  const hydrated = useHydrated();
   const { data: stats, isLoading: statsLoading } = useHrEmployeeStats(
     employee.id,
   );
@@ -319,7 +321,9 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
   const searchParams = useSearchParams();
   const defaultTab = searchParams.get("tab") ?? "overview";
 
-  const isSelf = session?.user?.id === employee.id;
+  const isSelf = hydrated && session?.user?.id === employee.id;
+  const showManageActions = hydrated && canManageEmployees;
+  const showSensitiveTab = hydrated && canViewSensitive;
   const employeeName =
     `${employee.firstName ?? ""} ${employee.lastName ?? ""}`.trim() ||
     "Employee";
@@ -353,6 +357,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
   const isAlreadyTerminated =
     employee.isActive === false || employmentStatus === "TERMINATED";
   const canTerminate =
+    hydrated &&
     !isAlreadyTerminated &&
     canDeleteEmployee(
       employeeAsEmployee.role ?? "",
@@ -378,7 +383,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
               <ArrowLeft className="h-3.5 w-3.5" />
               Back
             </Button>
-            {canManageEmployees && (
+            {showManageActions && (
               <Button
                 variant="outline"
                 size="sm"
@@ -593,24 +598,22 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
               <Clock className="h-3 w-3" />
               Timeline
             </TabsTrigger>
-            {canViewSensitive && (
-              <TabsTrigger
-                value="sensitive"
-                className="text-xs gap-1.5 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-              >
-                <Shield className="h-3 w-3" />
-                Sensitive
-              </TabsTrigger>
-            )}
-            {isSelf && (
-              <TabsTrigger
-                value="my-profile"
-                className="text-xs gap-1.5 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-              >
-                <UserCircle className="h-3 w-3" />
-                My Profile
-              </TabsTrigger>
-            )}
+            <TabsTrigger
+              value="sensitive"
+              hidden={!showSensitiveTab}
+              className="text-xs gap-1.5 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              <Shield className="h-3 w-3" />
+              Sensitive
+            </TabsTrigger>
+            <TabsTrigger
+              value="my-profile"
+              hidden={!isSelf}
+              className="text-xs gap-1.5 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              <UserCircle className="h-3 w-3" />
+              My Profile
+            </TabsTrigger>
             <TabsTrigger
               value="profile"
               className="text-xs gap-1.5 rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
@@ -713,7 +716,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
             </div>
           </TabsContent>
 
-          {canViewSensitive && (
+          {showSensitiveTab && (
             <TabsContent value="sensitive" className="flex-1 min-h-0 overflow-y-auto mt-3">
               <div className="pb-4">
                 <EmployeeSensitiveTab userId={employee.id} />

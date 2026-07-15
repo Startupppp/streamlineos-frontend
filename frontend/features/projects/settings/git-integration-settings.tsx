@@ -57,6 +57,7 @@ import {
   PmPanel,
   PmSection,
   PmStaggerList,
+  PM_FILL_PANEL,
   PM_PANEL,
 } from "@/features/projects/shared/pm-chrome";
 import { ProviderIcon, ConnectionRow } from "./git-connection-row";
@@ -68,6 +69,16 @@ const PROVIDERS: { value: GitProvider; label: string }[] = [
   { value: "gitlab", label: "GitLab" },
   { value: "bitbucket", label: "Bitbucket" },
 ];
+
+function AddConnectionButton({ onClick }: { onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button size="sm" onClick={onClick} {...hoverHandlers}>
+      <PlusIcon ref={iconRef} size={14} className="mr-1" />
+      Add connection
+    </Button>
+  );
+}
 
 export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode }) {
   const {
@@ -191,18 +202,13 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
         title="Integrations"
         eyebrow="Projects"
         subtitle="Connect Git repositories to link commits and pull requests to tickets"
-        actions={
-          <Button size="sm" onClick={handleOpenDialog}>
-            <Plus className="mr-1 h-4 w-4" />
-            Add connection
-          </Button>
-        }
+        actions={<AddConnectionButton onClick={handleOpenDialog} />}
       >
         <PmPageShell>
           <PmSection index={0}>
             {isLoading ? (
               <div className="space-y-3">
-                {Array.from({ length: 8 }).map((_, i) => (
+                {Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className={cn(PM_PANEL, "space-y-3 p-4")}>
                     <div className="flex items-center gap-3">
                       <Skeleton className="h-9 w-9 rounded-lg" />
@@ -216,7 +222,7 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
                 ))}
               </div>
             ) : isError ? (
-              <PmPanel className="flex min-h-[14rem] items-center justify-center p-6">
+              <PmPanel className={cn(PM_FILL_PANEL, "items-center justify-center p-6")}>
                 <ErrorState
                   title="Could not load connections"
                   description="There was a problem loading your Git connections."
@@ -224,17 +230,18 @@ export function ProjectsGitIntegrationSettings({ footer }: { footer?: ReactNode 
                 />
               </PmPanel>
             ) : !connections || connections.length === 0 ? (
-              <div className="flex flex-1 flex-col gap-4">
-                <PmPanel className="flex min-h-[14rem] items-center justify-center p-6">
+              <div className="flex min-h-0 flex-1 flex-col gap-4">
+                <PmPanel className={cn(PM_FILL_PANEL, "p-6")}>
                   <EmptyState
                     illustration={<EmptyDevicesIllustration />}
                     title="No repositories connected"
                     description="Connect GitHub, GitLab, or Bitbucket to link commits and PRs to your tickets."
                     action={{ label: "Add connection", onClick: handleOpenDialog }}
-                    className="min-h-[12rem]"
                   />
                 </PmPanel>
-                <SetupInstructions />
+                <div className="shrink-0">
+                  <SetupInstructions />
+                </div>
               </div>
             ) : (
               <div className="space-y-4">

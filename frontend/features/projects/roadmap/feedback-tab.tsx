@@ -24,7 +24,7 @@ import {
 import type { FeedbackPost } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
-import { PmPanel, PmStaggerList, PM_PANEL } from "@/features/projects/shared/pm-chrome";
+import { PmPanel, PmStaggerList, PM_FILL_PANEL, PM_PANEL } from "@/features/projects/shared/pm-chrome";
 import { FeedbackRow } from "./feedback-row";
 
 interface FeedbackTabProps {
@@ -83,7 +83,7 @@ export function FeedbackTab({ search }: FeedbackTabProps) {
 
   if (isError) {
     return (
-      <PmPanel className="flex min-h-[14rem] items-center justify-center p-6">
+      <PmPanel className={cn(PM_FILL_PANEL, "items-center justify-center p-6")}>
         <ErrorState onRetry={handleRetry} />
       </PmPanel>
     );
@@ -91,12 +91,11 @@ export function FeedbackTab({ search }: FeedbackTabProps) {
 
   if (!data || data.length === 0) {
     return (
-      <PmPanel className="flex min-h-[14rem] items-center justify-center p-6">
+      <PmPanel className={cn(PM_FILL_PANEL, "p-6")}>
         <EmptyState
           illustration={<EmptyMailIllustration />}
           title="No feedback yet"
           description="Feedback submitted from your public board will appear here, sorted by votes."
-          className="min-h-[12rem]"
         />
       </PmPanel>
     );

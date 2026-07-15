@@ -54,5 +54,6 @@ export {
   InvitationIllustration,
   AutomationsIllustration,
   EmptyChartIllustration,
+  EmptyGoalsIllustration,
 } from "./illustration-image";
 export { StateIllustration, type StateIllustrationPreset } from "./state-illustration";

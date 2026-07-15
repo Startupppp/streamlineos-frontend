@@ -24,7 +24,7 @@ import {
 import type { ChangelogEntry } from "@/types/projects";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
-import { PmPanel, PmStaggerList, PM_PANEL } from "@/features/projects/shared/pm-chrome";
+import { PmPanel, PmStaggerList, PM_FILL_PANEL, PM_PANEL } from "@/features/projects/shared/pm-chrome";
 import { ChangelogEntryCard } from "./changelog-entry-card";
 import { ChangelogSheet } from "./changelog-sheet";
 
@@ -117,22 +117,21 @@ export function ChangelogTab({ createOpen, onCreateOpenChange }: ChangelogTabPro
 
   if (isError) {
     return (
-      <PmPanel className="flex min-h-[14rem] items-center justify-center p-6">
+      <PmPanel className={cn(PM_FILL_PANEL, "items-center justify-center p-6")}>
         <ErrorState onRetry={handleRetry} />
       </PmPanel>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
       {!data || data.length === 0 ? (
-        <PmPanel className="flex min-h-[14rem] items-center justify-center p-6">
+        <PmPanel className={cn(PM_FILL_PANEL, "p-6")}>
           <EmptyState
             illustration={<EmptyTicketIllustration />}
             title="No changelog entries yet"
             description="Announce shipped features, improvements and fixes to your users."
             action={{ label: "Add entry", onClick: handleOpenSheet }}
-            className="min-h-[12rem]"
           />
         </PmPanel>
       ) : (

@@ -2,7 +2,9 @@
 
 import { memo, useCallback } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { ListChecks, ListTodo, Play, Trash2 } from "lucide-react";
+import { ListChecks, ListTodo } from "lucide-react";
+import { PlayIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getColorSafe } from "@/lib/theme-constants";
@@ -26,6 +28,37 @@ interface TemplateCardProps {
   template: ProjectTemplate;
   onApply: (template: ProjectTemplate) => void;
   onDelete: (template: ProjectTemplate) => void;
+}
+
+function TemplateCardActions({
+  templateName,
+  onApply,
+  onDelete,
+}: {
+  templateName: string;
+  onApply: () => void;
+  onDelete: () => void;
+}) {
+  const { iconRef: playRef, hoverHandlers: playHandlers } = useAnimatedIcon();
+  const { iconRef: trashRef, hoverHandlers: trashHandlers } = useAnimatedIcon();
+  return (
+    <div className="flex gap-2">
+      <Button size="sm" className="flex-1" onClick={onApply} {...playHandlers}>
+        <PlayIcon ref={playRef} size={14} className="mr-1" aria-hidden="true" />
+        Use Template
+      </Button>
+      <Button
+        size="sm"
+        variant="outline"
+        className="shrink-0 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+        onClick={onDelete}
+        aria-label={`Delete ${templateName} template`}
+        {...trashHandlers}
+      >
+        <Trash2Icon ref={trashRef} size={14} aria-hidden="true" />
+      </Button>
+    </div>
+  );
 }
 
 interface TaskPreviewRowProps {
@@ -189,21 +222,11 @@ export const TemplateCard = memo(function TemplateCard({
             </div>
           )}
 
-          <div className="flex gap-2">
-            <Button size="sm" className="flex-1" onClick={handleApply}>
-              <Play className="mr-1 h-3.5 w-3.5" aria-hidden="true" />
-              Use Template
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="shrink-0 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
-              onClick={handleDelete}
-              aria-label={`Delete ${template.name} template`}
-            >
-              <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-            </Button>
-          </div>
+          <TemplateCardActions
+            templateName={template.name}
+            onApply={handleApply}
+            onDelete={handleDelete}
+          />
         </div>
       </div>
     </motion.div>

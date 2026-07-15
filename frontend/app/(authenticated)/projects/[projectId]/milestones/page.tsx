@@ -89,7 +89,6 @@ export default function MilestonesPage({ params }: { params: Promise<{ projectId
     return (
       <PageWrapper
         title="Milestones"
-        subtitle="Loading..."
         actions={<Skeleton className="h-8 w-36 rounded-md" />}
       >
         <PmPageShell>

@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import type { Release, CreateReleaseInput, UpdateReleaseInput } from "@/types/projects";
-export type { Release, CreateReleaseInput, UpdateReleaseInput } from "@/types/projects";
+export type { Release } from "@/types/projects";
 
 function releaseKey(projectId: number) {
   return ["streamlineos", "projects", projectId, "releases"] as const;

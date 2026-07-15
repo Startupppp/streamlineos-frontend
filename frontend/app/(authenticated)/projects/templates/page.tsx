@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Plus } from "lucide-react";
 import { toast } from "sonner";
+import { PlusIcon } from "@animateicons/react/lucide";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyProjectsIllustration } from "@/components/illustrations";
@@ -37,6 +38,15 @@ import {
   PM_PANEL,
 } from "@/features/projects/shared/pm-chrome";
 import { cn } from "@/lib/utils";
+
+function NewTemplateButton({ onClick }: { onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+  return (
+    <Button size="sm" onClick={onClick} {...hoverHandlers}>
+      <PlusIcon ref={iconRef} size={14} className="mr-1" /> New Template
+    </Button>
+  );
+}
 
 function TemplatesGridSkeleton() {
   return (
@@ -101,18 +111,14 @@ export default function ProjectTemplatesPage() {
         title="Templates"
         eyebrow="Projects"
         subtitle="Reusable project structures to bootstrap new work"
-        actions={
-          <Button size="sm" onClick={handleOpenCreate}>
-            <Plus className="mr-1 h-3.5 w-3.5" /> New Template
-          </Button>
-        }
+        actions={<NewTemplateButton onClick={handleOpenCreate} />}
       >
         <PmPageShell>
-          <PmSection index={0}>
+          <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
             {isLoading ? (
               <TemplatesGridSkeleton />
             ) : isError ? (
-              <PmPanel className="flex min-h-[14rem] items-center justify-center p-6">
+              <PmPanel className="flex flex-1 items-center justify-center p-6">
                 <ErrorState onRetry={handleRetry} className="flex-1" />
               </PmPanel>
             ) : templates && templates.length > 0 ? (
@@ -131,13 +137,12 @@ export default function ProjectTemplatesPage() {
                 ))}
               </PmStaggerList>
             ) : (
-              <PmPanel className="flex min-h-[14rem] items-center justify-center p-6">
+              <PmPanel className="flex flex-1 items-center justify-center p-6">
                 <EmptyState
                   illustration={<EmptyProjectsIllustration className="h-32 w-32" />}
                   title="No templates yet"
                   description="Create a reusable project structure to bootstrap new projects quickly."
                   action={{ label: "Create your first template", onClick: handleOpenCreate }}
-                  className="min-h-[12rem]"
                 />
               </PmPanel>
             )}

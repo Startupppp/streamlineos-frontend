@@ -325,7 +325,7 @@ export const queryKeys = {
     personal: (orgId: string) => [...base, "dashboard", "personal", orgId] as const,
     executive: (orgId: string) => [...base, "dashboard", "executive", orgId] as const,
     manager: (orgId: string) => [...base, "dashboard", "manager", orgId] as const,
-    publicDocuments: (limit: number) => [...base, "dashboard", "publicDocuments", limit] as const,
+    publicDocuments: (orgId: string, limit: number) => [...base, "dashboard", "publicDocuments", orgId, limit] as const,
   },
 
   reports: {

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import type { Variants } from "framer-motion";
-import { ChevronDown, Lock, Check, LayoutGrid } from "lucide-react";
+import { ChevronDown, Lock, Check } from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -33,14 +33,12 @@ const ICON_STROKE = 1.75;
 const HOVER_CLOSE_DELAY_MS = 175;
 
 interface ProductSwitcherMenuProps {
-  mobile?: boolean;
   variant?: "header" | "sidebar";
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   triggerOnly?: boolean;
   onRequestOpen?: () => void;
   sheetOnly?: boolean;
-  hideLabel?: boolean;
 }
 
 const PRODUCT_DESCRIPTIONS: Record<ProductKey, string> = {
@@ -229,11 +227,9 @@ function ProductGrid({
 
 export function ProductSwitcherMenu({
   onRequestOpen,
-  mobile = false,
   sheetOnly = false,
   variant = "header",
   triggerOnly = false,
-  hideLabel = false,
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
 }: ProductSwitcherMenuProps) {
@@ -329,7 +325,7 @@ export function ProductSwitcherMenu({
       };
 
   const isSidebarVariant = variant === "sidebar";
-  const iconOnlyTrigger = mobile && !isSidebarVariant;
+  const activeLabel = activeDefinition?.label ?? "Products";
 
   const triggerButton = (
     <button
@@ -340,51 +336,37 @@ export function ProductSwitcherMenu({
       onMouseLeave={enableHoverOpen ? handleHoverLeave : undefined}
       className={cn(
         "flex items-center rounded-lg text-sm font-medium transition-colors outline-none focus-visible:ring-2",
-        iconOnlyTrigger
-          ? "h-11 w-11 justify-center gap-0 shrink-0 text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-ring"
-          : cn(
-              "text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent focus-visible:ring-sidebar-ring",
-              isSidebarVariant
-                ? "gap-2 h-9 w-full min-w-0 px-2.5"
-                : "gap-1.5 h-8 px-2 shrink-0 max-w-[7rem]",
-            ),
+        "text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent focus-visible:ring-sidebar-ring",
+        isSidebarVariant
+          ? "gap-2 h-9 w-full min-w-0 px-2.5"
+          : "gap-1.5 h-8 px-2 shrink-0 max-w-[10rem]",
       )}
     >
-      {iconOnlyTrigger ? (
-        <LayoutGrid className="h-5 w-5 shrink-0" strokeWidth={ICON_STROKE} />
-      ) : (
-        <>
-          {ActiveIcon && (
-            <span
-              className={cn(
-                "h-5 w-5 rounded-md flex items-center justify-center shrink-0",
-                activeAccent.bg,
-                activeAccent.text,
-              )}
-            >
-              <ActiveIcon className="h-3 w-3" strokeWidth={ICON_STROKE} />
-            </span>
+      {ActiveIcon && (
+        <span
+          className={cn(
+            "h-5 w-5 rounded-md flex items-center justify-center shrink-0",
+            activeAccent.bg,
+            activeAccent.text,
           )}
-          {!hideLabel && (
-            <span
-              className="min-w-0 flex-1 truncate text-left text-xs font-medium text-sidebar-foreground"
-            >
-              {activeDefinition?.label}
-            </span>
-          )}
-          <ChevronDown
-            className={cn(
-              "h-3 w-3 shrink-0",
-              iconOnlyTrigger
-                ? "text-muted-foreground"
-                : "text-sidebar-foreground/50",
-              !shouldReduceMotion && "transition-transform duration-150",
-              !shouldReduceMotion && open && "rotate-180",
-            )}
-            strokeWidth={ICON_STROKE}
-          />
-        </>
+        >
+          <ActiveIcon className="h-3 w-3" strokeWidth={ICON_STROKE} />
+        </span>
       )}
+      <span
+        className="min-w-0 flex-1 truncate text-left text-xs font-medium text-sidebar-foreground"
+        title={activeLabel}
+      >
+        {activeLabel}
+      </span>
+      <ChevronDown
+        className={cn(
+          "h-3 w-3 shrink-0 text-sidebar-foreground/50",
+          !shouldReduceMotion && "transition-transform duration-150",
+          !shouldReduceMotion && open && "rotate-180",
+        )}
+        strokeWidth={ICON_STROKE}
+      />
     </button>
   );
 

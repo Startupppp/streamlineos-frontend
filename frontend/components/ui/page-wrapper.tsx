@@ -131,12 +131,17 @@ export function PageWrapper({
       )}
 
       {noInternalScroll ? (
-        <div className={cn("flex-1 min-h-0 overflow-hidden", contentClassName ?? "px-4 sm:px-6 pb-3")}>
+        <div
+          className={cn(
+            "flex min-h-0 flex-1 flex-col overflow-hidden",
+            contentClassName ?? "px-4 sm:px-6",
+          )}
+        >
           {children}
         </div>
       ) : (
         <div className={cn("flex-1 min-h-0 overflow-y-auto scrollbar-thin", contentClassName)}>
-          <div className="flex min-h-full flex-col px-4 sm:px-6 pb-3">
+          <div className="flex min-h-full flex-col px-4 sm:px-6">
             {children}
           </div>
         </div>

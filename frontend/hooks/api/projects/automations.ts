@@ -13,14 +13,6 @@ export const TRIGGER_EVENTS = [
   { value: "sprint.completed", label: "Sprint Completed" },
 ] as const;
 
-export const CONDITION_OPERATORS = [
-  { value: "equals", label: "equals" },
-  { value: "not_equals", label: "doesn't equal" },
-  { value: "contains", label: "contains" },
-  { value: "is_empty", label: "is empty" },
-  { value: "is_not_empty", label: "is not empty" },
-] as const;
-
 export const ACTION_TYPES = [
   { value: "set_status", label: "Set Status" },
   { value: "set_assignee", label: "Assign To" },

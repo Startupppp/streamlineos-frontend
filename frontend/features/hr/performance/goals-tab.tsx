@@ -39,7 +39,6 @@ import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   Plus,
-  Target,
   Calendar,
   MoreHorizontal,
   Trash2,
@@ -47,6 +46,7 @@ import {
   ChevronsUpDown,
   Check,
 } from "lucide-react";
+import { EmptyGoalsIllustration } from "@/components/illustrations";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -284,8 +284,8 @@ export function GoalsTab() {
   const goalsList = Array.isArray(goals) ? goals : [];
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col flex-1 min-h-0 gap-4">
+      <div className="flex items-center justify-between shrink-0">
         <div>
           <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
             Total Goals
@@ -302,11 +302,10 @@ export function GoalsTab() {
 
       {goalsList.length === 0 ? (
         <EmptyState
-          illustration={
-            <Target className="h-10 w-10 text-muted-foreground/40" />
-          }
+          illustration={<EmptyGoalsIllustration className="h-full w-full" />}
           title="No goals set yet"
-          compact
+          description="Set a goal to track progress and keep your team aligned."
+          action={{ label: "New Goal", onClick: handleOpenSheet }}
         />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

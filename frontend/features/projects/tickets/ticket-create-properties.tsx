@@ -55,21 +55,18 @@ interface TicketCreatePropertiesProps {
 
 const PillButton = forwardRef<
   HTMLButtonElement,
-  {
-    children: React.ReactNode;
-    className?: string;
-    label: string;
-  }
->(function PillButton({ children, className, label }, ref) {
+  React.ComponentPropsWithoutRef<"button"> & { label: string }
+>(function PillButton({ children, className, label, ...props }, ref) {
   return (
     <button
       ref={ref}
       type="button"
       aria-label={label}
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2 py-1 text-xs font-medium text-foreground hover:bg-muted/60 transition-colors shrink-0",
+        "inline-flex shrink-0 items-center gap-1.5 rounded-md border border-border bg-card px-2 py-1 text-xs font-medium text-foreground shadow-sm transition-colors hover:bg-muted/80",
         className,
       )}
+      {...props}
     >
       {children}
     </button>
@@ -184,7 +181,7 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
             {currentStatus.label}
           </PillButton>
         </PopoverTrigger>
-        <PopoverContent className="z-[60] w-44 p-1" align="start">
+        <PopoverContent className="z-[110] w-44 p-1" align="start">
           {statusList.map((s) => {
             const entry = getStatusEntry(statusConfig, s);
             return (
@@ -213,7 +210,7 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
             {selectedPriorityDef?.label ?? "Priority"}
           </PillButton>
         </PopoverTrigger>
-        <PopoverContent className="z-[60] w-36 p-1" align="start">
+        <PopoverContent className="z-[110] w-36 p-1" align="start">
           {PRIORITIES.map(({ value: pVal, label, Icon }) => (
             <button
               key={pVal}
@@ -251,7 +248,7 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
             )}
           </PillButton>
         </PopoverTrigger>
-        <PopoverContent className="z-[60] w-52 p-0" align="start">
+        <PopoverContent className="z-[110] w-52 p-0" align="start">
           <Command>
             <CommandInput placeholder="Search members…" className="h-8 text-xs" />
             <CommandList className="max-h-48">
@@ -293,7 +290,7 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
             )}
           </PillButton>
         </PopoverTrigger>
-        <PopoverContent className="z-[60] w-36 p-3" align="start">
+        <PopoverContent className="z-[110] w-36 p-3" align="start">
           <p className="mb-2 text-xs font-medium text-muted-foreground">Story points</p>
           <div className="flex gap-2">
             <Input
@@ -329,7 +326,7 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
             )}
           </PillButton>
         </PopoverTrigger>
-        <PopoverContent className="z-[60] w-48 p-1" align="start">
+        <PopoverContent className="z-[110] w-48 p-1" align="start">
           {labels.length === 0 ? (
             <p className="py-2 text-center text-xs text-muted-foreground">No labels available.</p>
           ) : (
@@ -370,7 +367,7 @@ export const TicketCreateProperties = memo(function TicketCreateProperties({
             )}
           </PillButton>
         </PopoverTrigger>
-        <PopoverContent className="z-[60] w-56 p-1" align="start">
+        <PopoverContent className="z-[110] w-56 p-1" align="start">
           <button
             type="button"
             onClick={makeCycleHandler(null)}

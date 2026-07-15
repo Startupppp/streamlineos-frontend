@@ -156,7 +156,7 @@ export default function SprintsPage({ params }: PageProps) {
 
   if (isLoading) {
     return (
-      <PageWrapper title="Sprints" subtitle="Loading..." actions={<CreateSprintDialog projectId={projectId} />}>
+      <PageWrapper title="Sprints" actions={<CreateSprintDialog projectId={projectId} />}>
         <PmPageShell>
           <div className="space-y-5">
             <div className="space-y-2">

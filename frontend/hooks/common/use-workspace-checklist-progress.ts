@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useSyncExternalStore } from "react";
-import { usePathname } from "next/navigation";
+import { useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { useUserStats } from "@/hooks/api/users";
 import { useDashboardStats } from "@/hooks/api/dashboard";
@@ -19,42 +18,8 @@ export const CHECKLIST_ITEM_IDS = [
 
 export type ChecklistItemId = (typeof CHECKLIST_ITEM_IDS)[number];
 
-const AI_VISITED_KEY = "ws_checklist_ai_visited";
-
-const aiVisitedListeners = new Set<() => void>();
-
-function readAiVisited(): boolean {
-  try {
-    return localStorage.getItem(AI_VISITED_KEY) === "true";
-  } catch {
-    return false;
-  }
-}
-
-function subscribeAiVisited(callback: () => void): () => void {
-  aiVisitedListeners.add(callback);
-  return () => {
-    aiVisitedListeners.delete(callback);
-  };
-}
-
-function markAiVisited(): void {
-  try {
-    localStorage.setItem(AI_VISITED_KEY, "true");
-  } catch {
-    return;
-  }
-  aiVisitedListeners.forEach((listener) => listener());
-}
-
 export function useWorkspaceChecklistProgress() {
-  const pathname = usePathname();
   const { data: session } = useSession();
-  const aiVisited = useSyncExternalStore(
-    subscribeAiVisited,
-    readAiVisited,
-    () => false,
-  );
 
   const { data: dashboardStats, isLoading: dashboardLoading } =
     useDashboardStats();
@@ -66,10 +31,6 @@ export function useWorkspaceChecklistProgress() {
     { enabled: true },
   );
   const { data: userStats, isLoading: userStatsLoading } = useUserStats();
-
-  useEffect(() => {
-    if (pathname?.startsWith("/ai")) markAiVisited();
-  }, [pathname]);
 
   const completed = useMemo(() => {
     const done = new Set<ChecklistItemId>();
@@ -97,7 +58,7 @@ export function useWorkspaceChecklistProgress() {
     }
 
     const aiRequests = aiUsage?.totals?.requestCount ?? 0;
-    if (aiRequests > 0 || aiVisited) {
+    if (aiRequests > 0) {
       done.add("ai");
     }
 
@@ -109,7 +70,6 @@ export function useWorkspaceChecklistProgress() {
     leadsData,
     session?.user?.name,
     aiUsage,
-    aiVisited,
   ]);
 
   const isLoading =

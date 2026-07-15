@@ -1,9 +1,19 @@
 "use client";
 
 import { useRef, useState, useCallback, useEffect, useLayoutEffect } from "react";
-import { serializeAsJSON, getSceneVersion } from "@excalidraw/excalidraw";
 import type { ExcalidrawProps } from "@excalidraw/excalidraw/types";
 import type { WhiteboardAccess, ExcalidrawSceneData } from "@/hooks/api/projects";
+
+type ExcalidrawModule = typeof import("@excalidraw/excalidraw");
+
+let excalidrawModule: ExcalidrawModule | null = null;
+
+async function loadExcalidraw(): Promise<ExcalidrawModule> {
+  if (!excalidrawModule) {
+    excalidrawModule = await import("@excalidraw/excalidraw");
+  }
+  return excalidrawModule;
+}
 
 export type SaveStatus = "clean" | "dirty" | "saving" | "saved";
 
@@ -55,6 +65,7 @@ export function useWhiteboardAutosave({
     const pending = pendingRef.current;
     if (!pending || accessRef.current === "view") return;
 
+    const { serializeAsJSON, getSceneVersion } = await loadExcalidraw();
     const currentVersion = getSceneVersion(pending.elements);
     if (
       pending.boardId === boardIdRef.current &&
@@ -118,8 +129,8 @@ export function useWhiteboardAutosave({
     (elements, appState, files) => {
       const activeBoardId = boardIdRef.current;
       if (accessRef.current === "view" || activeBoardId === null) return;
-      const version = getSceneVersion(elements);
-      if (version === lastSavedVersionRef.current) return;
+      const version = excalidrawModule ? excalidrawModule.getSceneVersion(elements) : null;
+      if (version !== null && version === lastSavedVersionRef.current) return;
       pendingRef.current = { boardId: activeBoardId, elements, appState, files };
       setStatus("dirty");
       scheduleDebounce();
@@ -136,6 +147,7 @@ export function useWhiteboardAutosave({
   }, [performSave]);
 
   useEffect(() => {
+    void loadExcalidraw();
     return () => {
       if (timerRef.current) {
         clearTimeout(timerRef.current);

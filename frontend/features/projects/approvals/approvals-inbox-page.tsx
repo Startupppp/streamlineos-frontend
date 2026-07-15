@@ -25,6 +25,7 @@ import {
   PmPageShell,
   PmPanel,
   PmSection,
+  PM_FILL_PANEL,
   PM_PANEL,
 } from "@/features/projects/shared/pm-chrome";
 import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
@@ -229,7 +230,7 @@ export function ApprovalsInboxPage() {
 
         <PmSection index={1} className="flex min-h-0 flex-1 flex-col">
           {items.length === 0 ? (
-            <PmPanel className="flex flex-1 items-center justify-center p-6">
+            <PmPanel className={cn(PM_FILL_PANEL, "p-6")}>
               <EmptyState
                 illustrationPreset="approval"
                 title="No approvals waiting"

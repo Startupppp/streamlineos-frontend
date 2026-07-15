@@ -31,6 +31,7 @@ import {
   PmPageShell,
   PmPanel,
   PmSection,
+  PM_FILL_PANEL,
   PM_TOOLBAR,
 } from "@/features/projects/shared/pm-chrome";
 import { TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
@@ -144,9 +145,9 @@ export function BugsPage({ projectId }: BugsPageProps) {
   const { data: members = [] } = useProjectMembers(projectId);
   const deleteBug = useDeleteBug();
 
-  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
-  }
+  }, []);
 
   const handleEdit = useCallback((bug: Bug) => { setEditBug(bug); setSheetOpen(true); }, []);
   const handleNewBug = useCallback(() => { setEditBug(null); setSheetOpen(true); }, []);
@@ -165,6 +166,10 @@ export function BugsPage({ projectId }: BugsPageProps) {
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  const handleDeleteDialogChange = useCallback((open: boolean) => {
+    if (!open) setDeleteTarget(null);
+  }, []);
 
   const columns = useMemo<DataTableColumn<Bug>[]>(() => [
     {
@@ -302,15 +307,11 @@ export function BugsPage({ projectId }: BugsPageProps) {
       <PmPageShell>
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col">
           {isLoading ? (
-            <PmPanel className="p-2">
-              <DataTableSkeleton rows={12} columns={6} className="flex-1" />
-            </PmPanel>
+            <DataTableSkeleton rows={8} columns={6} className="flex-1" />
           ) : isError ? (
-            <PmPanel className="flex flex-1 items-center justify-center p-6">
-              <ErrorState onRetry={handleRetry} />
-            </PmPanel>
+            <ErrorState onRetry={handleRetry} />
           ) : (bugs ?? []).length === 0 ? (
-            <PmPanel className="flex flex-1 items-center justify-center p-6">
+            <PmPanel className={cn(PM_FILL_PANEL, "p-6")}>
               <EmptyState
                 illustrationPreset="ticket"
                 title="No bugs found"
@@ -320,16 +321,15 @@ export function BugsPage({ projectId }: BugsPageProps) {
                     : "Report a bug to get started."
                 }
                 action={canCreate ? { label: "Report Bug", onClick: handleNewBug } : undefined}
-                className="min-h-[32vh]"
               />
             </PmPanel>
           ) : (
-            <PmPanel className="min-h-0 flex-1">
+            <PmPanel className={PM_FILL_PANEL} solid>
               <DataTable<Bug>
                 data={bugs ?? []}
                 columns={columns}
                 getRowKey={(row) => row.id}
-                className="min-h-0 flex-1"
+                className="min-h-0 flex-1 border-0"
               />
             </PmPanel>
           )}
@@ -343,7 +343,7 @@ export function BugsPage({ projectId }: BugsPageProps) {
         editBug={editBug}
       />
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => { if (!o) setDeleteTarget(null); }}>
+      <AlertDialog open={!!deleteTarget} onOpenChange={handleDeleteDialogChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete bug?</AlertDialogTitle>
