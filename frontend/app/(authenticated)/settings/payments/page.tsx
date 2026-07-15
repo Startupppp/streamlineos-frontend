@@ -72,7 +72,7 @@ export default function PaymentsSettingsPage() {
         <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {isLoading
-              ? Array.from({ length: 9 }).map((_, i) => (
+              ? Array.from({ length: 12 }).map((_, i) => (
                   <Skeleton key={i} className="h-28 rounded-xl border border-border bg-card" />
                 ))
               : catalog?.map((entry) => (

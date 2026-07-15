@@ -1,10 +1,11 @@
 "use client";
 
+import { memo } from "react";
 import { Users, UserCheck, UserX, Mail } from "lucide-react";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { useUserStats } from "@/hooks/api/users";
 
-export function UserStatsCards() {
+export const UserStatsCards = memo(function UserStatsCards() {
   const { data, isLoading } = useUserStats();
 
   return (
@@ -39,4 +40,4 @@ export function UserStatsCards() {
       />
     </StatCardGrid>
   );
-}
+});

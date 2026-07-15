@@ -131,7 +131,7 @@ function ModulesContent() {
     >
       {isLoading ? (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 8 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <ModuleCardSkeleton key={i} />
           ))}
         </div>

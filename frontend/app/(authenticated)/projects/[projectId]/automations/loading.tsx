@@ -17,7 +17,7 @@ export default function AutomationsLoading() {
           </div>
         </PmSection>
         <PmSection index={1} className="flex min-h-0 flex-1 flex-col gap-3">
-          {Array.from({ length: 9 }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <Skeleton key={i} className="h-28 w-full rounded-lg" />
           ))}
         </PmSection>

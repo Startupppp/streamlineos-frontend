@@ -181,8 +181,8 @@ function StarterCard({ template, onUse, isCreating }: StarterCardProps) {
 function TemplatesSkeleton() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <Skeleton key={i} className="h-20 w-full rounded-lg" />
+      {Array.from({ length: 12 }).map((_, i) => (
+        <Skeleton key={i} className="h-20 w-full rounded-lg border border-border bg-card" />
       ))}
     </div>
   );

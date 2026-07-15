@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { type ComponentType } from "react";
 import {
   AlertTriangle,
   ArrowUpRight,
@@ -50,7 +51,7 @@ function isTabId(value: string): value is TabId {
 interface BillingMetricProps {
   label: string;
   value: string;
-  icon: React.ElementType;
+  icon: ComponentType<{ className?: string }>;
   tone?: "default" | "blue" | "emerald" | "amber" | "red";
 }
 
@@ -149,11 +150,10 @@ export default function RevenueAnalyticsPage() {
           ))}
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {isLoading ? (
-            <StatCardGridSkeleton cols={3} count={12} />
-          ) : (
-            <StatCardGrid cols={3} className="col-span-full">
+        {isLoading ? (
+          <StatCardGridSkeleton cols={3} count={12} />
+        ) : (
+          <StatCardGrid cols={3}>
               <BillingMetric
                 label="MRR"
                 value={fmt(metrics?.mrr ?? 0)}
@@ -207,9 +207,8 @@ export default function RevenueAnalyticsPage() {
                 icon={RefreshCw}
                 tone="amber"
               />
-            </StatCardGrid>
-          )}
-        </div>
+          </StatCardGrid>
+        )}
 
         <div>
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
@@ -238,26 +237,26 @@ export default function RevenueAnalyticsPage() {
           </TabsList>
 
           <TabsContent value="executive" className="space-y-3 mt-3">
-            <div className="grid gap-3 sm:grid-cols-3">
-              <MetricCard
+            <StatCardGrid cols={3}>
+              <BillingMetric
                 label="ARR"
                 value={fmt(metrics?.arr ?? 0)}
                 icon={TrendingUp}
-                variant="highlight"
+                tone="emerald"
               />
-              <MetricCard
+              <BillingMetric
                 label="Active Subscriptions"
                 value={String(metrics?.activeSubscriptions ?? 0)}
                 icon={Users}
-                variant="highlight"
+                tone="blue"
               />
-              <MetricCard
+              <BillingMetric
                 label="LTV"
                 value={fmt(metrics?.ltv ?? 0)}
                 icon={TrendingUp}
-                variant="highlight"
+                tone="emerald"
               />
-            </div>
+            </StatCardGrid>
             <MrrChart
               timeSeries={timeSeries}
               isLoading={isLoading}
@@ -266,26 +265,26 @@ export default function RevenueAnalyticsPage() {
           </TabsContent>
 
           <TabsContent value="finance" className="space-y-3 mt-3">
-            <div className="grid gap-3 sm:grid-cols-3">
-              <MetricCard
+            <StatCardGrid cols={3}>
+              <BillingMetric
                 label="Churn Rate"
                 value={`${metrics?.churnRate ?? 0}%`}
                 icon={Percent}
-                variant="danger"
+                tone="red"
               />
-              <MetricCard
+              <BillingMetric
                 label="Refund Rate"
                 value={`${metrics?.refundRate ?? 0}%`}
                 icon={AlertTriangle}
-                variant="danger"
+                tone="red"
               />
-              <MetricCard
+              <BillingMetric
                 label="Expansion Revenue"
                 value={fmt(metrics?.expansionRevenue ?? 0)}
                 icon={ArrowUpRight}
-                variant="highlight"
+                tone="blue"
               />
-            </div>
+            </StatCardGrid>
             <MrrChart
               timeSeries={timeSeries}
               isLoading={isLoading}
@@ -294,25 +293,26 @@ export default function RevenueAnalyticsPage() {
           </TabsContent>
 
           <TabsContent value="growth" className="space-y-3 mt-3">
-            <div className="grid gap-3 sm:grid-cols-3">
-              <MetricCard
+            <StatCardGrid cols={3}>
+              <BillingMetric
                 label="Trial Conversion Rate"
                 value={`${metrics?.trialConversionRate ?? 0}%`}
                 icon={RefreshCw}
-                variant="highlight"
+                tone="emerald"
               />
-              <MetricCard
+              <BillingMetric
                 label="Trial Subscriptions"
                 value={String(metrics?.trialSubscriptions ?? 0)}
                 icon={Users}
+                tone="amber"
               />
-              <MetricCard
+              <BillingMetric
                 label="Expansion Revenue"
                 value={fmt(metrics?.expansionRevenue ?? 0)}
                 icon={ArrowUpRight}
-                variant="highlight"
+                tone="blue"
               />
-            </div>
+            </StatCardGrid>
             <MrrChart
               timeSeries={timeSeries}
               isLoading={isLoading}
@@ -321,20 +321,20 @@ export default function RevenueAnalyticsPage() {
           </TabsContent>
 
           <TabsContent value="sales" className="space-y-3 mt-3">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <MetricCard
+            <StatCardGrid cols={2}>
+              <BillingMetric
                 label="ARPU"
                 value={fmt(metrics?.arpu ?? 0)}
                 icon={DollarSign}
-                variant="highlight"
+                tone="blue"
               />
-              <MetricCard
+              <BillingMetric
                 label="Active Subscriptions"
                 value={String(metrics?.activeSubscriptions ?? 0)}
                 icon={Users}
-                variant="highlight"
+                tone="blue"
               />
-            </div>
+            </StatCardGrid>
             <MrrChart
               timeSeries={timeSeries}
               isLoading={isLoading}

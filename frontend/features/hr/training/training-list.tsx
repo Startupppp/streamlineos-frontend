@@ -85,8 +85,8 @@ export function TrainingList({ canManage, onSelectProgram, selectedProgramId }: 
           ))}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({ length: 9 }).map((_, i) => (
-            <Skeleton key={i} className="h-52 rounded-2xl" />
+          {Array.from({ length: 12 }).map((_, i) => (
+            <Skeleton key={i} className="h-52 rounded-2xl border border-border bg-card" />
           ))}
         </div>
       </div>
