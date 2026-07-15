@@ -10,6 +10,7 @@ import { TicketActivityLog } from "@/features/projects/tickets/ticket-activity-l
 import { TicketChecklists } from "./ticket-checklists";
 import { TicketCustomFields } from "./ticket-custom-fields";
 import { AttachmentImage } from "./attachment-image";
+import { TicketAiSection } from "./ticket-ai-section";
 import {
   DropdownMenu,
   DropdownMenuContent,

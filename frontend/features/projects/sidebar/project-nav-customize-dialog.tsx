@@ -1,10 +1,15 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import {
   Dialog,
   DialogContent,
@@ -48,14 +53,32 @@ export function ProjectNavCustomizeDialog({
     reset();
   }, [reset]);
 
-  const sections: ProjectNavGroup[] = [
-    { id: "navigate", label: "Navigate", items: primary },
-    ...groups,
-  ].filter((section) => section.items.length > 0);
+  const handleDone = useCallback(() => {
+    onOpenChange(false);
+  }, [onOpenChange]);
+
+  const sections: ProjectNavGroup[] = useMemo(
+    () =>
+      [
+        { id: "navigate", label: "Navigate", items: primary },
+        ...groups,
+      ].filter((section) => section.items.length > 0),
+    [groups, primary],
+  );
+
+  const defaultOpen = useMemo(
+    () => sections.map((section) => section.id),
+    [sections],
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[min(640px,92dvh)] flex-col gap-0 overflow-hidden p-0 md:max-w-md">
+      <DialogContent
+        className={cn(
+          "!flex max-h-[min(85dvh,640px)] flex-col gap-0 overflow-hidden overflow-y-hidden p-0",
+          "md:!flex md:grid-cols-none md:max-h-[min(85dvh,640px)] md:max-w-md md:overflow-hidden md:overflow-y-hidden md:p-0 md:pb-0",
+        )}
+      >
         <DialogHeader className="shrink-0 border-b border-border/60 px-5 pb-3 pt-5 text-left">
           <DialogTitle>Customize sidebar</DialogTitle>
           <DialogDescription>
@@ -63,28 +86,40 @@ export function ProjectNavCustomizeDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="min-h-0 flex-1">
-          <div className="space-y-4 px-3 py-3">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-thin">
+          <Accordion
+            type="multiple"
+            defaultValue={defaultOpen}
+            className="px-3 py-2"
+          >
             {sections.map((section) => (
-              <div key={section.id}>
-                <p className="px-2 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/60">
-                  {section.label}
-                </p>
-                <div className="space-y-0.5">
-                  {section.items.map((item) => (
-                    <CustomizeRow
-                      key={item.id}
-                      item={item}
-                      checked={isVisible(item.id)}
-                      pinned={isProjectNavPinned(item.id)}
-                      onCheckedChange={setVisible}
-                    />
-                  ))}
-                </div>
-              </div>
+              <AccordionItem
+                key={section.id}
+                value={section.id}
+                className="border-border/50"
+              >
+                <AccordionTrigger className="px-2 py-2.5 hover:no-underline [&[data-state=open]>svg]:rotate-180">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">
+                    {section.label}
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent className="px-0 pb-2 pt-0">
+                  <div className="space-y-0.5">
+                    {section.items.map((item) => (
+                      <CustomizeRow
+                        key={item.id}
+                        item={item}
+                        checked={isVisible(item.id)}
+                        pinned={isProjectNavPinned(item.id)}
+                        onCheckedChange={setVisible}
+                      />
+                    ))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
             ))}
-          </div>
-        </ScrollArea>
+          </Accordion>
+        </div>
 
         <DialogFooter className="shrink-0 border-t border-border/60 bg-background/40 px-5 py-3 sm:justify-between">
           <Button
@@ -97,7 +132,7 @@ export function ProjectNavCustomizeDialog({
           >
             Reset to default
           </Button>
-          <Button type="button" size="sm" onClick={() => onOpenChange(false)}>
+          <Button type="button" size="sm" onClick={handleDone}>
             Done
           </Button>
         </DialogFooter>

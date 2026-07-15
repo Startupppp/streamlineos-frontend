@@ -6,6 +6,7 @@ import type { InboundMessage } from "ably";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { MessageSquare, AtSign } from "lucide-react";
+import { safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
 
 interface NotificationPayload {
   channelId: number;
@@ -15,6 +16,13 @@ interface NotificationPayload {
   senderName: string;
   channelType?: string;
 }
+
+type NotificationEvent = "notification:mention" | "notification:message";
+
+const NOTIFICATION_EVENTS: NotificationEvent[] = [
+  "notification:mention",
+  "notification:message",
+];
 
 export function ChatNotificationsProvider({
   onSelectChannel,
@@ -60,12 +68,45 @@ export function ChatNotificationsProvider({
 
   useEffect(() => {
     if (!userId || !orgId) return;
+    if (ably.connection.state === "closed" || ably.connection.state === "failed") return;
+
     const ch = ably.channels.get(`notifications:${orgId}:${userId}`);
-    ch.subscribe("notification:mention", handleMention);
-    ch.subscribe("notification:message", handleMessage);
+    let cancelled = false;
+    const subscribed: NotificationEvent[] = [];
+    const handlers: Record<NotificationEvent, (msg: InboundMessage) => void> = {
+      "notification:mention": handleMention,
+      "notification:message": handleMessage,
+    };
+
+    async function setup() {
+      try {
+        if (ably.connection.state !== "connected") {
+          await ably.connection.whenState("connected");
+        }
+        if (cancelled) return;
+
+        for (const event of NOTIFICATION_EVENTS) {
+          if (cancelled) return;
+          const listener = handlers[event];
+          const ok = await safeSubscribe(ch, event, listener);
+          if (cancelled) {
+            if (ok) safeUnsubscribe(ch, event, listener);
+            return;
+          }
+          if (ok) subscribed.push(event);
+        }
+      } catch {
+        return;
+      }
+    }
+
+    void setup();
+
     return () => {
-      ch.unsubscribe("notification:mention", handleMention);
-      ch.unsubscribe("notification:message", handleMessage);
+      cancelled = true;
+      for (const event of subscribed) {
+        safeUnsubscribe(ch, event, handlers[event]);
+      }
     };
   }, [ably, userId, orgId, handleMention, handleMessage]);
 

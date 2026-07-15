@@ -6,6 +6,7 @@ import type { InboundMessage } from "ably";
 import { useSession } from "next-auth/react";
 import { MessageSquare, Send, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
 
 interface HuddleChatMessage {
   id: string;
@@ -40,18 +41,57 @@ export function HuddleChatPanel({
 
   useEffect(() => {
     if (!orgId) return;
+    if (
+      ably.connection.state === "closed" ||
+      ably.connection.state === "failed"
+    )
+      return;
+
     const ch = ably.channels.get(`huddle:${orgId}:${channelId}`);
-    const handler = (msg: InboundMessage) => {
+    let cancelled = false;
+    let didSubscribe = false;
+
+    const handleChatMessage = (msg: InboundMessage) => {
       const data = msg.data as HuddleChatMessageData;
       setMessages((prev) => [
         ...prev,
-        { id: msg.id ?? `${Date.now()}`, userId: data.userId, name: data.name, content: data.content, sentAt: new Date() },
+        {
+          id: msg.id ?? `${Date.now()}`,
+          userId: data.userId,
+          name: data.name,
+          content: data.content,
+          sentAt: new Date(),
+        },
       ]);
-      setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
+      setTimeout(
+        () => bottomRef.current?.scrollIntoView({ behavior: "smooth" }),
+        50,
+      );
     };
-    ch.subscribe("huddle:chat", handler);
+
+    async function setup() {
+      try {
+        if (ably.connection.state !== "connected") {
+          await ably.connection.whenState("connected");
+        }
+        if (cancelled) return;
+        const ok = await safeSubscribe(ch, "huddle:chat", handleChatMessage);
+        if (cancelled) {
+          if (ok) safeUnsubscribe(ch, "huddle:chat", handleChatMessage);
+          return;
+        }
+        if (ok) didSubscribe = true;
+      } catch {
+        return;
+      }
+    }
+
+    void setup();
+
     return () => {
-      ch.unsubscribe("huddle:chat", handler);
+      cancelled = true;
+      if (!didSubscribe) return;
+      safeUnsubscribe(ch, "huddle:chat", handleChatMessage);
     };
   }, [ably, channelId, orgId]);
 
@@ -60,7 +100,11 @@ export function HuddleChatPanel({
     if (!content || !orgId) return;
     setInput("");
     const ch = ably.channels.get(`huddle:${orgId}:${channelId}`);
-    await ch.publish("huddle:chat", { userId: currentUserId, name: userName, content });
+    await ch.publish("huddle:chat", {
+      userId: currentUserId,
+      name: userName,
+      content,
+    });
   }, [input, ably, channelId, orgId, currentUserId, userName]);
 
   const handleKeyDown = useCallback(
@@ -80,14 +124,24 @@ export function HuddleChatPanel({
           <MessageSquare className="h-4 w-4 text-white/60" />
           <h3 className="text-[13px] font-semibold text-white">Huddle Chat</h3>
         </div>
-        <button onClick={onClose} className="p-1 hover:bg-white/10 rounded-lg" aria-label="Close">
+        <button
+          onClick={onClose}
+          className="p-1 hover:bg-white/10 rounded-lg"
+          aria-label="Close"
+        >
           <X className="h-3.5 w-3.5 text-white/60" />
         </button>
       </div>
 
       <div className="flex-1 overflow-y-auto py-3 px-3 space-y-2">
         {messages.map((msg) => (
-          <div key={msg.id} className={cn("flex flex-col", msg.userId === currentUserId ? "items-end" : "items-start")}>
+          <div
+            key={msg.id}
+            className={cn(
+              "flex flex-col",
+              msg.userId === currentUserId ? "items-end" : "items-start",
+            )}
+          >
             <span className="text-[10px] text-white/40 mb-0.5">{msg.name}</span>
             <div
               className={cn(

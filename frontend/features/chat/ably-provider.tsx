@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { AblyProvider } from "ably/react";
 import { getAblyClient } from "@/lib/ably";
+import { safeClose, safeConnect } from "@/lib/ably-safe-subscribe";
 
 export function ChatAblyProvider({ children }: { children: React.ReactNode }) {
   const client = getAblyClient();
@@ -11,21 +12,17 @@ export function ChatAblyProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (status !== "authenticated") {
-      if (client.connection.state !== "closed") {
-        client.close();
-      }
+      safeClose(client);
       return;
     }
 
     const state = client.connection.state;
     if (state === "initialized" || state === "closed" || state === "failed") {
-      client.connect();
+      safeConnect(client);
     }
 
     return () => {
-      if (client.connection.state !== "closed") {
-        client.close();
-      }
+      safeClose(client);
     };
   }, [client, status]);
 

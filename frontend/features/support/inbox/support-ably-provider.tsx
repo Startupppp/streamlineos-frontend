@@ -3,19 +3,18 @@
 import { useEffect } from "react";
 import { AblyProvider } from "ably/react";
 import { getSupportAblyClient } from "@/lib/ably";
+import { safeClose, safeConnect } from "@/lib/ably-safe-subscribe";
 
 export function SupportAblyProvider({ children }: { children: React.ReactNode }) {
   const client = getSupportAblyClient();
 
   useEffect(() => {
     if (client.connection.state === "initialized" || client.connection.state === "closed") {
-      client.connect();
+      safeConnect(client);
     }
 
     return () => {
-      if (client.connection.state !== "closed") {
-        client.close();
-      }
+      safeClose(client);
     };
   }, [client]);
 

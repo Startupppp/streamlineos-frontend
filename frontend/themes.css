@@ -291,16 +291,16 @@
 
 /* Whole-surface tinting — selected accent tints all neutral chrome, light mode */
 :root:not(.dark)[class*="theme-"] {
-  --background: color-mix(in srgb, var(--brand-core) 4%, #f4f6fa);
+  --background: color-mix(in srgb, var(--brand-core) 4%, #f8fafc);
   --card: color-mix(in srgb, var(--brand-core) 2%, #ffffff);
   --popover: color-mix(in srgb, var(--brand-core) 2%, #ffffff);
   --muted: color-mix(in srgb, var(--brand-core) 7%, #f1f5f9);
   --secondary: color-mix(in srgb, var(--brand-core) 7%, #f1f5f9);
   --accent: color-mix(in srgb, var(--brand-core) 7%, #f1f5f9);
-  --border: color-mix(in srgb, var(--brand-core) 14%, #d7dee8);
-  --input: color-mix(in srgb, var(--brand-core) 14%, #d7dee8);
+  --border: color-mix(in srgb, var(--brand-core) 14%, #e2e8f0);
+  --input: color-mix(in srgb, var(--brand-core) 14%, #e2e8f0);
   --sidebar: color-mix(in srgb, var(--brand-core) 3%, #ffffff);
-  --sidebar-border: color-mix(in srgb, var(--brand-core) 12%, #d7dee8);
+  --sidebar-border: color-mix(in srgb, var(--brand-core) 12%, #e2e8f0);
 }
 
 /* Whole-surface tinting — dark mode */

@@ -1,12 +1,11 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Trash2 } from "lucide-react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { LabelColorPicker, LabelCreateForm } from "@/components/labels";
-import { DEFAULT_LABEL_COLOR } from "@/components/labels/label-colors";
+import { LabelCreateForm } from "@/components/labels";
+import { DEFAULT_LABEL_COLOR, resolveLabelColor } from "@/components/labels/label-colors";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertDialog,
@@ -21,6 +20,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import {
   useOrgLabels,
   useCreateLabel,
@@ -28,8 +28,160 @@ import {
   useDeleteLabel,
   type TicketLabel,
 } from "@/hooks/api/projects/labels";
+import { LabelEditRow } from "./label-edit-row";
+import { TEXT_BODY, TEXT_ONE_LINE } from "@/features/projects/shared/text-overflow";
+import { cn } from "@/lib/utils";
+
+function DeleteLabelButton({ onConfirm }: { onConfirm: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+
+  function handleConfirm() {
+    onConfirm();
+  }
+
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <button
+          type="button"
+          className={cn(
+            "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100",
+            "h-7 w-7 flex items-center justify-center rounded-md",
+            "text-muted-foreground hover:text-red-600 hover:bg-red-50",
+            "dark:hover:text-red-400 dark:hover:bg-red-500/10 transition-all",
+          )}
+          aria-label="Delete label"
+          {...hoverHandlers}
+        >
+          <Trash2Icon ref={iconRef} size={14} />
+        </button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete label?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This removes the label from all tickets.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleConfirm}
+            className="bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-500"
+          >
+            Delete
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
+function AddLabelButton({ onClick }: { onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={onClick}
+      className="h-8 shrink-0 gap-1.5 text-xs"
+      {...hoverHandlers}
+    >
+      <PlusIcon ref={iconRef} size={14} />
+      Add Label
+    </Button>
+  );
+}
+
+function LabelsHeader({
+  showAdd,
+  onAdd,
+}: {
+  showAdd: boolean;
+  onAdd: () => void;
+}) {
+  return (
+    <div className="mb-3 flex items-start justify-between gap-3 border-b border-border pb-3">
+      <div className="min-w-0">
+        <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>Labels</h3>
+        <p className={cn("mt-0.5 text-xs text-muted-foreground", TEXT_BODY)}>
+          Manage labels for organizing tickets across this organization.
+        </p>
+      </div>
+      {showAdd ? <AddLabelButton onClick={onAdd} /> : null}
+    </div>
+  );
+}
+
+function LabelListRow({
+  label,
+  index,
+  onEdit,
+  onDelete,
+}: {
+  label: TicketLabel;
+  index: number;
+  onEdit: (label: TicketLabel) => void;
+  onDelete: (id: number) => void;
+}) {
+  const reduceMotion = useReducedMotion();
+  const color = resolveLabelColor(label.color);
+
+  function handleEdit() {
+    onEdit(label);
+  }
+
+  function handleDelete() {
+    onDelete(label.id);
+  }
+
+  function handleKeyDown(event: React.KeyboardEvent<HTMLButtonElement>) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      onEdit(label);
+    }
+  }
+
+  return (
+    <motion.div
+      layout={!reduceMotion}
+      initial={reduceMotion ? false : { opacity: 0, y: -4 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={reduceMotion ? undefined : { opacity: 0, height: 0 }}
+      transition={{ delay: reduceMotion ? 0 : index * 0.03, duration: 0.18 }}
+      className="flex items-center gap-3 rounded-xl border border-border bg-card p-2.5 shadow-sm hover:bg-muted/40 transition-colors group"
+    >
+      <button
+        type="button"
+        onClick={handleEdit}
+        onKeyDown={handleKeyDown}
+        className="flex min-w-0 flex-1 items-center gap-2.5 text-left rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        aria-label={`Edit label ${label.name}`}
+      >
+        <span
+          className={cn(
+            "inline-flex max-w-full items-center gap-1.5 rounded-md border px-2 py-0.5 text-xs font-medium",
+            "bg-primary/5 border-primary/15",
+          )}
+        >
+          <span
+            className="h-2 w-2 shrink-0 rounded-full shadow-sm ring-1 ring-background"
+            style={{ backgroundColor: color }}
+          />
+          <span className="truncate">{label.name}</span>
+        </span>
+        <span className="font-mono text-[10px] uppercase text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+          {color}
+        </span>
+      </button>
+      <DeleteLabelButton onConfirm={handleDelete} />
+    </motion.div>
+  );
+}
 
 export function LabelsSettings() {
+  const reduceMotion = useReducedMotion();
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState("");
   const [color, setColor] = useState<string>(DEFAULT_LABEL_COLOR);
@@ -45,7 +197,7 @@ export function LabelsSettings() {
   const handleCreate = useCallback(() => {
     if (!name.trim()) return;
     createLabel.mutate(
-      { name: name.trim(), color },
+      { name: name.trim(), color: resolveLabelColor(color) },
       {
         onSuccess: () => {
           setName("");
@@ -53,21 +205,22 @@ export function LabelsSettings() {
           setShowForm(false);
           toast.success("Label created");
         },
-        onError: (e) => toast.error(getErrorMessage(e)),
+        onError: (error) => toast.error(getErrorMessage(error)),
       },
     );
   }, [name, color, createLabel]);
 
   const handleUpdate = useCallback(
     (label: TicketLabel) => {
+      const nextName = editName.trim() || label.name;
       updateLabel.mutate(
-        { id: label.id, name: editName.trim() || label.name, color: editColor },
+        { id: label.id, name: nextName, color: resolveLabelColor(editColor) },
         {
           onSuccess: () => {
             setEditingId(null);
             toast.success("Label updated");
           },
-          onError: (e) => toast.error(getErrorMessage(e)),
+          onError: (error) => toast.error(getErrorMessage(error)),
         },
       );
     },
@@ -78,16 +231,17 @@ export function LabelsSettings() {
     (id: number) => {
       deleteLabel.mutate(id, {
         onSuccess: () => toast.success("Label deleted"),
-        onError: (e) => toast.error(getErrorMessage(e)),
+        onError: (error) => toast.error(getErrorMessage(error)),
       });
     },
     [deleteLabel],
   );
 
   const handleStartEdit = useCallback((label: TicketLabel) => {
+    setShowForm(false);
     setEditingId(label.id);
     setEditName(label.name);
-    setEditColor(label.color);
+    setEditColor(resolveLabelColor(label.color));
   }, []);
 
   const handleCancelEdit = useCallback(() => setEditingId(null), []);
@@ -95,159 +249,93 @@ export function LabelsSettings() {
   const handleCancelForm = useCallback(() => {
     setShowForm(false);
     setName("");
+    setColor(DEFAULT_LABEL_COLOR);
   }, []);
 
-  const handleShowForm = useCallback(() => setShowForm(true), []);
+  const handleShowForm = useCallback(() => {
+    setEditingId(null);
+    setShowForm(true);
+  }, []);
 
   if (isLoading) {
     return (
-      <div className="space-y-2">
-        {Array.from({ length: 8 }).map((_, i) => (
-          <Skeleton key={i} className="h-10 rounded-lg" />
-        ))}
+      <div>
+        <LabelsHeader showAdd={false} onAdd={handleShowForm} />
+        <div className="space-y-2">
+          {Array.from({ length: 8 }).map((_, index) => (
+            <Skeleton key={index} className="h-11 rounded-xl" />
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-2">
-      <AnimatePresence initial={false}>
-        {labels.map((label, idx) => (
-          <motion.div
-            key={label.id}
-            initial={{ opacity: 0, y: -4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ delay: idx * 0.03 }}
-            className="flex items-center gap-3 p-2.5 rounded-lg border border-border bg-card hover:bg-muted/40 transition-colors group"
-          >
-            {editingId === label.id ? (
-              <>
-                <div
-                  className="h-5 w-5 rounded-full shrink-0 border-2 border-card shadow-sm"
-                  style={{ background: editColor }}
+    <div>
+      <LabelsHeader showAdd={!showForm} onAdd={handleShowForm} />
+      <div className="space-y-2">
+        <AnimatePresence initial={false} mode="popLayout">
+          {labels.map((label, index) => {
+            if (editingId === label.id) {
+              function handleSaveEdit() {
+                handleUpdate(label);
+              }
+
+              return (
+                <LabelEditRow
+                  key={label.id}
+                  name={editName}
+                  color={editColor}
+                  isPending={updateLabel.isPending}
+                  onNameChange={setEditName}
+                  onColorChange={setEditColor}
+                  onSave={handleSaveEdit}
+                  onCancel={handleCancelEdit}
                 />
-                <Input
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  className="h-7 text-sm flex-1 max-w-[200px]"
+              );
+            }
+
+            return (
+              <LabelListRow
+                key={label.id}
+                label={label}
+                index={index}
+                onEdit={handleStartEdit}
+                onDelete={handleDelete}
+              />
+            );
+          })}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {showForm ? (
+            <motion.div
+              initial={reduceMotion ? false : { opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={reduceMotion ? undefined : { opacity: 0, height: 0 }}
+              transition={{ duration: 0.18, ease: "easeOut" }}
+              className="overflow-hidden"
+            >
+              <div className="rounded-xl border border-border bg-card p-3 shadow-sm">
+                <LabelCreateForm
+                  name={name}
+                  color={color}
+                  onNameChange={setName}
+                  onColorChange={setColor}
+                  onSubmit={handleCreate}
+                  onCancel={handleCancelForm}
+                  isPending={createLabel.isPending}
+                  submitLabel="Create"
+                  loadingText="Creating…"
+                  showPreview
+                  fullWidthSubmit={false}
                   autoFocus
                 />
-                <LabelColorPicker
-                  value={editColor}
-                  onChange={setEditColor}
-                  showLabel={false}
-                  swatchSize="md"
-                />
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-7 text-xs text-primary"
-                  onClick={() => handleUpdate(label)}
-                >
-                  Save
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-7 text-xs"
-                  onClick={handleCancelEdit}
-                >
-                  Cancel
-                </Button>
-              </>
-            ) : (
-              <>
-                <div
-                  className="h-5 w-5 rounded-full shrink-0 border-2 border-card shadow-sm"
-                  style={{ background: label.color }}
-                />
-                <span
-                  className="text-sm font-medium flex-1 truncate cursor-pointer"
-                  onClick={() => handleStartEdit(label)}
-                >
-                  {label.name}
-                </span>
-                <span className="text-[10px] text-muted-foreground font-mono opacity-0 group-hover:opacity-100">
-                  {label.color}
-                </span>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <button
-                      type="button"
-                      className="opacity-0 group-hover:opacity-100 h-6 w-6 flex items-center justify-center rounded text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Delete label?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This removes the label from all tickets.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={() => handleDelete(label.id)}
-                        className="bg-red-600 hover:bg-red-700"
-                      >
-                        Delete
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </>
-            )}
-          </motion.div>
-        ))}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {showForm && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="rounded-lg border border-border bg-muted/30 p-3"
-          >
-            <LabelCreateForm
-              name={name}
-              color={color}
-              onNameChange={setName}
-              onColorChange={setColor}
-              onSubmit={handleCreate}
-              isPending={createLabel.isPending}
-              submitLabel="Create"
-              loadingText="Creating…"
-              showPreview={false}
-              fullWidthSubmit={false}
-              autoFocus
-            />
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={handleCancelForm}
-              className="mt-2 h-7 text-xs"
-            >
-              Cancel
-            </Button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {!showForm && (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleShowForm}
-          className="h-7 text-xs gap-1.5 mt-1"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          Add Label
-        </Button>
-      )}
+              </div>
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

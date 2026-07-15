@@ -7,6 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { queryKeys } from "@/lib/query-keys";
+import { safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
 import type { Channel } from "@/types/chat";
 
 interface NotificationPayload {
@@ -44,51 +45,64 @@ export function useChatGlobalNotifications(
   useEffect(() => {
     if (!orgId || !channels?.length) return;
 
+    const channelList = channels;
+    let cancelled = false;
     const subs: Array<{
       ch: ReturnType<typeof ably.channels.get>;
       h: (msg: InboundMessage) => void;
     }> = [];
 
-    for (const channel of channels) {
-      const ablyChannel = ably.channels.get(`chat:${orgId}:${channel.id}`);
-      const channelId = channel.id;
-      const channelType = channel.type;
-      const channelDisplayName = channel.name;
+    async function setup() {
+      for (const channel of channelList) {
+        if (cancelled) return;
 
-      const handler = (msg: InboundMessage) => {
-        const payload = msg.data as NotificationPayload;
-        if (!payload?.id || payload.senderId === currentUserIdRef.current) return;
+        const ablyChannel = ably.channels.get(`chat:${orgId}:${channel.id}`);
+        const channelId = channel.id;
+        const channelType = channel.type;
+        const channelDisplayName = channel.name;
 
-        queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
-        queryClient.invalidateQueries({ queryKey: queryKeys.chat.unreadTotal() });
+        const handler = (msg: InboundMessage) => {
+          const payload = msg.data as NotificationPayload;
+          if (!payload?.id || payload.senderId === currentUserIdRef.current) return;
 
-        if (channelId === activeChannelIdRef.current) return;
+          queryClient.invalidateQueries({ queryKey: queryKeys.chat.myChannels() });
+          queryClient.invalidateQueries({ queryKey: queryKeys.chat.unreadTotal() });
 
-        const senderName = payload.senderName ?? "Someone";
-        const title =
-          channelType === "DIRECT"
-            ? senderName
-            : `#${channelDisplayName ?? "channel"}`;
-        const body = payload.content?.slice(0, 80) ?? "Sent an attachment";
+          if (channelId === activeChannelIdRef.current) return;
 
-        toast(title, { description: body, duration: 5_000 });
+          const senderName = payload.senderName ?? "Someone";
+          const title =
+            channelType === "DIRECT"
+              ? senderName
+              : `#${channelDisplayName ?? "channel"}`;
+          const body = payload.content?.slice(0, 80) ?? "Sent an attachment";
 
-        if (
-          typeof window !== "undefined" &&
-          "Notification" in window &&
-          Notification.permission === "granted"
-        ) {
-          new Notification(title, { body, icon: "/favicon.ico" });
+          toast(title, { description: body, duration: 5_000 });
+
+          if (
+            typeof window !== "undefined" &&
+            "Notification" in window &&
+            Notification.permission === "granted"
+          ) {
+            new Notification(title, { body, icon: "/favicon.ico" });
+          }
+        };
+
+        const ok = await safeSubscribe(ablyChannel, "message", handler);
+        if (cancelled) {
+          if (ok) safeUnsubscribe(ablyChannel, "message", handler);
+          return;
         }
-      };
-
-      ablyChannel.subscribe("message", handler);
-      subs.push({ ch: ablyChannel, h: handler });
+        if (ok) subs.push({ ch: ablyChannel, h: handler });
+      }
     }
 
+    void setup();
+
     return () => {
+      cancelled = true;
       for (const { ch, h } of subs) {
-        ch.unsubscribe("message", h);
+        safeUnsubscribe(ch, "message", h);
       }
     };
   }, [orgId, channels, ably, queryClient]);

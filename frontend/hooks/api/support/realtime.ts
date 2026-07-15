@@ -6,6 +6,7 @@ import type { InboundMessage } from "ably";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { queryKeys } from "@/lib/query-keys";
+import { safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
 
 interface TicketUpdatedPayload {
   ticketId: number;
@@ -64,12 +65,33 @@ export function useSupportRealtime(ticketId: number | null): { isConnected: bool
       queryClient.invalidateQueries({ queryKey: queryKeys.support.detail(payload.ticketId) });
     };
 
-    channel.subscribe("ticket-updated", ticketUpdatedHandler);
-    channel.subscribe("message", messageHandler);
+    let cancelled = false;
+    const subscribed: Array<"ticket-updated" | "message"> = [];
+
+    async function setup() {
+      const ticketOk = await safeSubscribe(channel, "ticket-updated", ticketUpdatedHandler);
+      if (cancelled) {
+        if (ticketOk) safeUnsubscribe(channel, "ticket-updated", ticketUpdatedHandler);
+        return;
+      }
+      if (ticketOk) subscribed.push("ticket-updated");
+
+      const messageOk = await safeSubscribe(channel, "message", messageHandler);
+      if (cancelled) {
+        if (messageOk) safeUnsubscribe(channel, "message", messageHandler);
+        return;
+      }
+      if (messageOk) subscribed.push("message");
+    }
+
+    void setup();
 
     return () => {
-      channel.unsubscribe("ticket-updated", ticketUpdatedHandler);
-      channel.unsubscribe("message", messageHandler);
+      cancelled = true;
+      for (const event of subscribed) {
+        const handler = event === "ticket-updated" ? ticketUpdatedHandler : messageHandler;
+        safeUnsubscribe(channel, event, handler);
+      }
     };
   }, [ably, ticketId, orgId, queryClient]);
 

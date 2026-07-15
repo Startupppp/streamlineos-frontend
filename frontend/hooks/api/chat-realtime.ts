@@ -6,7 +6,14 @@ import type { InboundMessage } from "ably";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { queryKeys } from "@/lib/query-keys";
-import type { Message, MessageMetadata, MessageType, MessagesPage, TypingIndicator } from "@/types/chat";
+import { safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
+import type {
+  Message,
+  MessageMetadata,
+  MessageType,
+  MessagesPage,
+  TypingIndicator,
+} from "@/types/chat";
 import type { InfiniteData } from "@tanstack/react-query";
 
 interface AblyMessagePayload {
@@ -27,6 +34,9 @@ interface AblyTypingPayload {
 }
 
 const TYPING_TIMEOUT_MS = 5_000;
+
+const CHAT_EVENTS = ["message", "typing"] as const;
+type ChatEvent = (typeof CHAT_EVENTS)[number];
 
 function payloadToMessage(payload: AblyMessagePayload): Message {
   return {
@@ -62,10 +72,12 @@ export function useChatRealtime(channelId: number | null): {
   const orgId = session?.orgId;
 
   const [isConnected, setIsConnected] = useState(
-    () => ably.connection.state === "connected"
+    () => ably.connection.state === "connected",
   );
   const [typingUsers, setTypingUsers] = useState<TypingIndicator[]>([]);
-  const typingTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const typingTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(
+    new Map(),
+  );
 
   useEffect(() => {
     const handleConnected = () => setIsConnected(true);
@@ -92,6 +104,8 @@ export function useChatRealtime(channelId: number | null): {
 
     const channelName = `chat:${orgId}:${channelId}`;
     const channel = ably.channels.get(channelName);
+    let cancelled = false;
+    const subscribed: ChatEvent[] = [];
 
     const messageHandler = (msg: InboundMessage) => {
       const payload = msg.data as AblyMessagePayload;
@@ -143,18 +157,39 @@ export function useChatRealtime(channelId: number | null): {
       const existing = typingTimers.current.get(payload.userId);
       if (existing) clearTimeout(existing);
       const timer = setTimeout(() => {
-        setTypingUsers((prev) => prev.filter((t) => t.userId !== payload.userId));
+        setTypingUsers((prev) =>
+          prev.filter((t) => t.userId !== payload.userId),
+        );
         typingTimers.current.delete(payload.userId);
       }, TYPING_TIMEOUT_MS);
       typingTimers.current.set(payload.userId, timer);
     };
 
-    channel.subscribe("message", messageHandler);
-    channel.subscribe("typing", typingHandler);
+    const handlers: Record<ChatEvent, (msg: InboundMessage) => void> = {
+      message: messageHandler,
+      typing: typingHandler,
+    };
+
+    async function setup() {
+      for (const event of CHAT_EVENTS) {
+        if (cancelled) return;
+        const handler = handlers[event];
+        const ok = await safeSubscribe(channel, event, handler);
+        if (cancelled) {
+          if (ok) safeUnsubscribe(channel, event, handler);
+          return;
+        }
+        if (ok) subscribed.push(event);
+      }
+    }
+
+    void setup();
 
     return () => {
-      channel.unsubscribe("message", messageHandler);
-      channel.unsubscribe("typing", typingHandler);
+      cancelled = true;
+      for (const event of subscribed) {
+        safeUnsubscribe(channel, event, handlers[event]);
+      }
     };
   }, [ably, channelId, orgId, queryClient, currentUserId]);
 
@@ -167,13 +202,22 @@ export function useChatRealtime(channelId: number | null): {
   }, []);
 
   const publishTyping = useCallback(() => {
-    if (!orgId || !channelId || channelId <= 0 || !currentUserId || !isConnected) return;
+    if (
+      !orgId ||
+      !channelId ||
+      channelId <= 0 ||
+      !currentUserId ||
+      !isConnected
+    )
+      return;
     const channelName = `chat:${orgId}:${channelId}`;
     const channel = ably.channels.get(channelName);
-    channel.publish("typing", {
-      userId: currentUserId,
-      name: session?.user?.name ?? "Someone",
-    }).catch(() => {});
+    channel
+      .publish("typing", {
+        userId: currentUserId,
+        name: session?.user?.name ?? "Someone",
+      })
+      .catch(() => {});
   }, [ably, channelId, orgId, currentUserId, isConnected, session?.user?.name]);
 
   return { isConnected, typingUsers, publishTyping };

@@ -35,6 +35,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import type { CustomFieldType } from "@/types/projects/tasks";
 import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
+import { TEXT_ONE_LINE, TEXT_BODY } from "@/features/projects/shared/text-overflow";
 
 const FIELD_TYPES: Array<{ value: CustomFieldType; label: string }> = [
   { value: "text", label: "Text" },
@@ -221,132 +223,142 @@ export function CustomFieldsSettings({ projectId }: CustomFieldsSettingsProps) {
 
   return (
     <div className="space-y-3">
+      <div className="flex items-start justify-between gap-3 border-b border-border pb-3">
+        <div className="min-w-0">
+          <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>
+            Custom Fields
+          </h3>
+          <p className={cn("mt-0.5 text-xs text-muted-foreground", TEXT_BODY)}>
+            Define additional data fields for tickets in this project.
+          </p>
+        </div>
+        {!showForm ? (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleShowForm}
+            className="h-7 shrink-0 text-xs gap-1.5"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Add Custom Field
+          </Button>
+        ) : null}
+      </div>
+
       {isLoading ? (
-          <div className="space-y-2">
-            <Skeleton className="h-9 w-full" />
-            <Skeleton className="h-9 w-full" />
-          </div>
-        ) : (
-          <div className="space-y-3">
-            <AnimatePresence initial={false}>
-              {fields.length === 0 && !showForm && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="flex flex-col items-center gap-2 py-8 text-center"
-                >
-                  <Sliders className="h-8 w-8 text-muted-foreground/30" />
-                  <p className="text-sm text-muted-foreground">
-                    No custom fields yet
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Add fields to capture additional ticket data
-                  </p>
-                </motion.div>
-              )}
-
-              {fields.map((field, idx) => (
-                <CustomFieldRow
-                  key={field.id}
-                  field={field}
-                  index={idx}
-                  onDelete={handleDelete}
-                />
-              ))}
-            </AnimatePresence>
-
-            <AnimatePresence>
-              {showForm && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="p-4 rounded-lg border border-border bg-muted/30 space-y-3 overflow-hidden"
-                >
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <Label className="text-xs">Field Name</Label>
-                      <Input
-                        value={fieldName}
-                        onChange={handleFieldNameChange}
-                        placeholder="e.g. Story Points"
-                        className="h-8 text-sm"
-                        autoFocus
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs">Type</Label>
-                      <Select
-                        value={fieldType}
-                        onValueChange={handleFieldTypeChange}
-                      >
-                        <SelectTrigger className="h-8 text-sm">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {FIELD_TYPES.map((t) => (
-                            <SelectItem
-                              key={t.value}
-                              value={t.value}
-                              className="text-sm"
-                            >
-                              {t.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  {(fieldType === "select" || fieldType === "multi_select") && (
-                    <div className="space-y-1">
-                      <Label className="text-xs">
-                        Options (comma-separated)
-                      </Label>
-                      <Input
-                        value={options}
-                        onChange={handleOptionsChange}
-                        placeholder="Option 1, Option 2, Option 3"
-                        className="h-8 text-sm"
-                      />
-                    </div>
-                  )}
-                  <div className="flex gap-2">
-                    <LoadingButton
-                      size="sm"
-                      onClick={handleCreate}
-                      disabled={!fieldName.trim()}
-                      isPending={createField.isPending}
-                      loadingText="Creating…"
-                      className="h-7 text-xs"
-                    >
-                      Create Field
-                    </LoadingButton>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={handleCancelForm}
-                      className="h-7 text-xs"
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {!showForm && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleShowForm}
-                className="h-7 text-xs gap-1.5"
+        <div className="space-y-2">
+          <Skeleton className="h-9 w-full" />
+          <Skeleton className="h-9 w-full" />
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <AnimatePresence initial={false}>
+            {fields.length === 0 && !showForm && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex flex-col items-center gap-2 py-8 text-center"
               >
-                <Plus className="h-3.5 w-3.5" />
-                Add Custom Field
-              </Button>
+                <Sliders className="h-8 w-8 text-muted-foreground/30" />
+                <p className="text-sm text-muted-foreground">
+                  No custom fields yet
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Add fields to capture additional ticket data
+                </p>
+              </motion.div>
             )}
-          </div>
-        )}
+
+            {fields.map((field, idx) => (
+              <CustomFieldRow
+                key={field.id}
+                field={field}
+                index={idx}
+                onDelete={handleDelete}
+              />
+            ))}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {showForm && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="p-4 rounded-lg border border-border bg-muted/30 space-y-3 overflow-hidden"
+              >
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Field Name</Label>
+                    <Input
+                      value={fieldName}
+                      onChange={handleFieldNameChange}
+                      placeholder="e.g. Story Points"
+                      className="h-8 text-sm"
+                      autoFocus
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Type</Label>
+                    <Select
+                      value={fieldType}
+                      onValueChange={handleFieldTypeChange}
+                    >
+                      <SelectTrigger className="h-8 text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {FIELD_TYPES.map((t) => (
+                          <SelectItem
+                            key={t.value}
+                            value={t.value}
+                            className="text-sm"
+                          >
+                            {t.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                {(fieldType === "select" || fieldType === "multi_select") && (
+                  <div className="space-y-1">
+                    <Label className="text-xs">
+                      Options (comma-separated)
+                    </Label>
+                    <Input
+                      value={options}
+                      onChange={handleOptionsChange}
+                      placeholder="Option 1, Option 2, Option 3"
+                      className="h-8 text-sm"
+                    />
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <LoadingButton
+                    size="sm"
+                    onClick={handleCreate}
+                    disabled={!fieldName.trim()}
+                    isPending={createField.isPending}
+                    loadingText="Creating…"
+                    className="h-7 text-xs"
+                  >
+                    Create Field
+                  </LoadingButton>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleCancelForm}
+                    className="h-7 text-xs"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
     </div>
   );
 }

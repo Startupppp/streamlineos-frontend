@@ -7,6 +7,7 @@ import type { InboundMessage } from "ably";
 import { useSendHuddleSignal } from "@/hooks/api/chat-huddles";
 import type { HuddleParticipant } from "@/types/chat";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
 import { useAblyConnection } from "./use-ably-connection";
 
 function getIceServers(): RTCIceServer[] {
@@ -241,12 +242,40 @@ export function useWebRTCHuddle(
       } catch {}
     };
 
-    void ablyChannel.subscribe("signal", handleSignal).catch((err: unknown) => {
-      setRealtimeError(getErrorMessage(err));
-    });
+    let cancelled = false;
+    let didSubscribe = false;
+
+    async function setup() {
+      try {
+        if (ably.connection.state !== "connected") {
+          await ably.connection.whenState("connected");
+        }
+        if (cancelled) return;
+        const ok = await safeSubscribe(ablyChannel, "signal", handleSignal);
+        if (cancelled) {
+          if (ok) safeUnsubscribe(ablyChannel, "signal", handleSignal);
+          return;
+        }
+        if (ok) {
+          didSubscribe = true;
+          return;
+        }
+        if (!cancelled) {
+          setRealtimeError("Real-time connection unavailable");
+        }
+      } catch (err: unknown) {
+        if (!cancelled) {
+          setRealtimeError(getErrorMessage(err));
+        }
+      }
+    }
+
+    void setup();
 
     return () => {
-      ablyChannel.unsubscribe("signal", handleSignal);
+      cancelled = true;
+      if (!didSubscribe) return;
+      safeUnsubscribe(ablyChannel, "signal", handleSignal);
     };
   }, [
     ably,

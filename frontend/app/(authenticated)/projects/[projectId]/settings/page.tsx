@@ -297,40 +297,18 @@ export default function ProjectSettingsPage({ params }: PageProps) {
 
             {activeSection === "labels" ? (
               <PmPanel className="p-4" solid>
-                <div className="mb-3 border-b border-border pb-3">
-                  <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>Labels</h3>
-                  <p className={cn("mt-0.5 text-xs text-muted-foreground", TEXT_BODY)}>
-                    Manage labels for organizing tickets across this organization.
-                  </p>
-                </div>
                 <LabelsSettings />
               </PmPanel>
             ) : null}
 
             {activeSection === "statuses" ? (
               <PmPanel className="p-4" solid>
-                <div className="mb-3 border-b border-border pb-3">
-                  <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>
-                    Workflow Statuses
-                  </h3>
-                  <p className={cn("mt-0.5 text-xs text-muted-foreground", TEXT_BODY)}>
-                    Define custom workflow statuses for this project.
-                  </p>
-                </div>
                 <StatusesSettings projectId={projectId} />
               </PmPanel>
             ) : null}
 
             {activeSection === "custom-fields" ? (
               <PmPanel className="p-4" solid>
-                <div className="mb-3 border-b border-border pb-3">
-                  <h3 className={cn("text-sm font-semibold", TEXT_ONE_LINE)}>
-                    Custom Fields
-                  </h3>
-                  <p className={cn("mt-0.5 text-xs text-muted-foreground", TEXT_BODY)}>
-                    Define additional data fields for tickets in this project.
-                  </p>
-                </div>
                 <CustomFieldsSettings projectId={projectId} />
               </PmPanel>
             ) : null}

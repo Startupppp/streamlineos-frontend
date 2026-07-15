@@ -1,23 +1,19 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import {
+  useState,
+  useCallback,
+  useRef,
+  useEffect,
+  type KeyboardEvent,
+  type MouseEvent,
+  type ReactNode,
+} from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandInput } from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
-import {
-  ListFilter,
-  ChevronRight,
-  ChevronDown,
-  CircleDot,
-  AlertTriangle,
-  Tag,
-  User,
-  Layers,
-  RefreshCw,
-  Zap,
-  CalendarRange,
-  FolderKanban,
-} from "lucide-react";
+import { ListFilter } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   FilterCategorySubmenu,
@@ -25,9 +21,16 @@ import {
   type FilterCategory,
   type StatusFilterOption,
 } from "./filter-category-submenu";
+import { FilterCategoryRow } from "./filter-category-row";
 import { FilterFlatSearch } from "./filter-flat-search";
 import { FilterAssigneeLeading } from "./filter-option-leading";
 import type { StatusConfigEntry } from "@/features/projects/shared/types";
+import {
+  listContainer,
+  listItem,
+  listItemReduced,
+  pmSnappy,
+} from "@/features/projects/shared/pm-motion";
 
 interface Member {
   id: string;
@@ -101,64 +104,9 @@ export interface FilterCommandMenuProps {
 interface CategoryDefinition {
   key: FilterCategory;
   label: string;
-  icon: React.ReactNode;
+  leading?: ReactNode;
   visible: boolean;
   activeCount: number;
-}
-
-interface CategoryRowProps {
-  icon: React.ReactNode;
-  label: string;
-  activeCount: number;
-  hovered: boolean;
-  inlineExpand?: boolean;
-  onMouseEnter: () => void;
-  onFocus: () => void;
-  onKeyDown: (e: React.KeyboardEvent) => void;
-}
-
-function CategoryRow({
-  icon,
-  label,
-  activeCount,
-  hovered,
-  inlineExpand = false,
-  onMouseEnter,
-  onFocus,
-  onKeyDown,
-}: CategoryRowProps) {
-  const ChevronIcon = inlineExpand ? ChevronDown : ChevronRight;
-  return (
-    <div
-      role="menuitem"
-      tabIndex={0}
-      aria-haspopup={inlineExpand ? undefined : "true"}
-      aria-expanded={hovered}
-      onMouseEnter={onMouseEnter}
-      onFocus={onFocus}
-      onKeyDown={onKeyDown}
-      className={cn(
-        "flex cursor-default select-none items-center gap-1.5 rounded-sm px-1.5 py-1 text-xs outline-none transition-colors motion-reduce:transition-none",
-        hovered
-          ? "bg-accent text-accent-foreground"
-          : "hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent",
-      )}
-    >
-      <span className="shrink-0 text-muted-foreground">{icon}</span>
-      <span className="flex-1 truncate">{label}</span>
-      {activeCount > 0 && (
-        <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
-          {activeCount}
-        </span>
-      )}
-      <ChevronIcon
-        className={cn(
-          "h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none",
-          inlineExpand && hovered && "rotate-180",
-        )}
-      />
-    </div>
-  );
 }
 
 export function FilterCommandMenu({
@@ -191,6 +139,7 @@ export function FilterCommandMenu({
   const submenuRef = useRef<HTMLDivElement>(null);
   const categoryListRef = useRef<HTMLDivElement>(null);
   const datesInlineRef = useRef<HTMLDivElement>(null);
+  const shouldReduceMotion = useReducedMotion();
   const datesExpanded = hoveredCategory === "dates";
 
   useEffect(() => {
@@ -214,81 +163,71 @@ export function FilterCommandMenu({
 
   const isSearching = search.trim().length > 0;
 
-  function resolveAssigneeCategoryIcon(): React.ReactNode {
-    if (selectedAssignees.length === 1) {
-      const id = selectedAssignees[0];
-      if (id === "@me" || id === "__unassigned__") {
-        return <FilterAssigneeLeading assigneeId={id} />;
-      }
-      const member = members.find((m) => m.id === id);
-      if (member) {
-        return <FilterAssigneeLeading assigneeId={id} member={member} />;
-      }
+  function resolveAssigneeLeading(): ReactNode | undefined {
+    if (selectedAssignees.length !== 1) return undefined;
+    const id = selectedAssignees[0];
+    if (!id) return undefined;
+    if (id === "@me" || id === "__unassigned__") {
+      return <FilterAssigneeLeading assigneeId={id} />;
     }
-    return <User className="h-3.5 w-3.5" />;
+    const member = members.find((m) => m.id === id);
+    if (!member) return undefined;
+    return <FilterAssigneeLeading assigneeId={id} member={member} />;
   }
 
   const categories: CategoryDefinition[] = [
     {
       key: "status",
       label: "Status",
-      icon: <CircleDot className="h-3.5 w-3.5" />,
       visible: true,
       activeCount: selectedStatuses.length,
     },
     {
       key: "priority",
       label: "Priority",
-      icon: <AlertTriangle className="h-3.5 w-3.5" />,
       visible: true,
       activeCount: selectedPriorities.length,
     },
     {
       key: "type",
       label: "Type",
-      icon: <Layers className="h-3.5 w-3.5" />,
       visible: showTypeFilter,
       activeCount: selectedTypes.length,
     },
     {
       key: "assignee",
       label: "Assignee",
-      icon: resolveAssigneeCategoryIcon(),
+      leading: resolveAssigneeLeading(),
       visible: showAssigneeFilter,
       activeCount: selectedAssignees.length,
     },
     {
       key: "label",
       label: "Label",
-      icon: <Tag className="h-3.5 w-3.5" />,
       visible: labels.length > 0,
       activeCount: selectedLabels.length,
     },
     {
       key: "cycle",
       label: "Cycle",
-      icon: <RefreshCw className="h-3.5 w-3.5" />,
       visible: cycles.length > 0,
       activeCount: selectedCycles.length,
     },
     {
       key: "sprint",
       label: "Sprint",
-      icon: <Zap className="h-3.5 w-3.5" />,
       visible: showSprintFilter && sprints.length > 0,
       activeCount: sprintParam ? 1 : 0,
     },
     {
       key: "dates",
       label: "Due Dates",
-      icon: <CalendarRange className="h-3.5 w-3.5" />,
       visible: true,
       activeCount: dueDateFrom || dueDateTo ? 1 : 0,
     },
     {
       key: "project",
       label: "Project",
-      icon: <FolderKanban className="h-3.5 w-3.5" />,
       visible: (projectOptions?.length ?? 0) > 0,
       activeCount: selectedProjectIds.length,
     },
@@ -323,7 +262,7 @@ export function FilterCommandMenu({
     setHoveredCategory(key);
   }
 
-  function handleCategoryKeyDown(key: FilterCategory, e: React.KeyboardEvent) {
+  function handleCategoryKeyDown(key: FilterCategory, e: KeyboardEvent) {
     if (e.key === "ArrowRight" || e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       setHoveredCategory(key);
@@ -340,7 +279,7 @@ export function FilterCommandMenu({
     categoryListRef.current?.focus();
   }
 
-  function handleMenuMouseLeave(e: React.MouseEvent<HTMLDivElement>) {
+  function handleMenuMouseLeave(e: MouseEvent<HTMLDivElement>) {
     const next = e.relatedTarget;
     if (next instanceof Node && e.currentTarget.contains(next)) {
       return;
@@ -389,6 +328,8 @@ export function FilterCommandMenu({
     onDueDateToChange: handleDueDateToChange,
   };
 
+  const showSubmenu = hoveredCategory !== null && hoveredCategory !== "dates";
+
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
@@ -428,7 +369,9 @@ export function FilterCommandMenu({
             className="flex max-h-[min(480px,var(--radix-popover-content-available-height))]"
             onMouseLeave={handleMenuMouseLeave}
           >
-            <div
+            <motion.div
+              layout={!shouldReduceMotion}
+              transition={pmSnappy}
               className={cn(
                 "flex w-fit shrink-0 flex-col",
                 datesExpanded ? "min-w-[240px]" : "min-w-[148px]",
@@ -436,7 +379,14 @@ export function FilterCommandMenu({
             >
               <Command
                 shouldFilter={false}
-                className="h-auto shrink-0 [&_[cmdk-input-wrapper]]:h-8 [&_[cmdk-input-wrapper]]:px-2"
+                className={cn(
+                  "h-auto shrink-0",
+                  "[&_[cmdk-input-wrapper]]:h-8 [&_[cmdk-input-wrapper]]:gap-1.5 [&_[cmdk-input-wrapper]]:border-border [&_[cmdk-input-wrapper]]:px-2",
+                  "[&_[cmdk-input-wrapper]]:transition-[background-color,box-shadow] [&_[cmdk-input-wrapper]]:duration-150 [&_[cmdk-input-wrapper]]:ease-out",
+                  "[&_[cmdk-input-wrapper]:focus-within]:bg-primary/[0.04]",
+                  "[&_[cmdk-input-wrapper]:focus-within]:shadow-[inset_0_-1px_0_0] [&_[cmdk-input-wrapper]:focus-within]:shadow-primary/40",
+                  "motion-reduce:[&_[cmdk-input-wrapper]]:transition-none",
+                )}
               >
                 <CommandInput
                   placeholder="Filter by..."
@@ -445,23 +395,32 @@ export function FilterCommandMenu({
                   onValueChange={handleSearchChange}
                 />
               </Command>
-              <div
+              <motion.div
                 ref={categoryListRef}
                 role="menu"
                 aria-label="Filter categories"
-                className="overflow-y-auto px-0.5 py-0.5"
+                tabIndex={-1}
+                className="overflow-y-auto px-0.5 py-0.5 outline-none"
+                variants={listContainer}
+                initial="hidden"
+                animate="show"
               >
                 {visibleCategories.map((cat) => {
                   const isHovered = hoveredCategory === cat.key;
                   const isDates = cat.key === "dates";
                   function onMouseEnter() { handleCategoryMouseEnter(cat.key); }
                   function onFocus() { handleCategoryFocus(cat.key); }
-                  function onKeyDown(e: React.KeyboardEvent) { handleCategoryKeyDown(cat.key, e); }
+                  function onKeyDown(e: KeyboardEvent) { handleCategoryKeyDown(cat.key, e); }
                   return (
-                    <div key={cat.key}>
-                      <CategoryRow
-                        icon={cat.icon}
+                    <motion.div
+                      key={cat.key}
+                      variants={shouldReduceMotion ? listItemReduced : listItem}
+                      transition={pmSnappy}
+                    >
+                      <FilterCategoryRow
+                        category={cat.key}
                         label={cat.label}
+                        leading={cat.leading}
                         activeCount={cat.activeCount}
                         hovered={isHovered}
                         inlineExpand={isDates}
@@ -469,34 +428,76 @@ export function FilterCommandMenu({
                         onFocus={onFocus}
                         onKeyDown={onKeyDown}
                       />
-                      {isDates && isHovered && (
-                        <div ref={datesInlineRef}>
-                          <FilterDatesInline
-                            dueDateFrom={dueDateFrom}
-                            dueDateTo={dueDateTo}
-                            onDueDateFromChange={handleDueDateFromChange}
-                            onDueDateToChange={handleDueDateToChange}
-                          />
-                        </div>
-                      )}
-                    </div>
+                      <AnimatePresence initial={false}>
+                        {isDates && isHovered && (
+                          <motion.div
+                            ref={datesInlineRef}
+                            key="dates-inline"
+                            initial={
+                              shouldReduceMotion
+                                ? { opacity: 0 }
+                                : { opacity: 0, height: 0 }
+                            }
+                            animate={
+                              shouldReduceMotion
+                                ? { opacity: 1 }
+                                : { opacity: 1, height: "auto" }
+                            }
+                            exit={
+                              shouldReduceMotion
+                                ? { opacity: 0 }
+                                : { opacity: 0, height: 0 }
+                            }
+                            transition={pmSnappy}
+                            className="overflow-hidden"
+                          >
+                            <FilterDatesInline
+                              dueDateFrom={dueDateFrom}
+                              dueDateTo={dueDateTo}
+                              onDueDateFromChange={handleDueDateFromChange}
+                              onDueDateToChange={handleDueDateToChange}
+                            />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
                   );
                 })}
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
 
-            {hoveredCategory !== null && hoveredCategory !== "dates" && (
-              <div
-                ref={submenuRef}
-                className="max-w-[220px] overflow-y-auto border-l border-border bg-popover"
-              >
-                <FilterCategorySubmenu
-                  category={hoveredCategory}
-                  onClose={handleSubmenuClose}
-                  {...sharedProps}
-                />
-              </div>
-            )}
+            <AnimatePresence initial={false}>
+              {showSubmenu && hoveredCategory && (
+                <motion.div
+                  key={hoveredCategory}
+                  ref={submenuRef}
+                  tabIndex={-1}
+                  initial={
+                    shouldReduceMotion
+                      ? { opacity: 0 }
+                      : { opacity: 0, x: -8 }
+                  }
+                  animate={
+                    shouldReduceMotion
+                      ? { opacity: 1 }
+                      : { opacity: 1, x: 0 }
+                  }
+                  exit={
+                    shouldReduceMotion
+                      ? { opacity: 0 }
+                      : { opacity: 0, x: -6 }
+                  }
+                  transition={pmSnappy}
+                  className="max-w-[220px] overflow-y-auto border-l border-border bg-popover outline-none"
+                >
+                  <FilterCategorySubmenu
+                    category={hoveredCategory}
+                    onClose={handleSubmenuClose}
+                    {...sharedProps}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         )}
       </PopoverContent>

@@ -1,10 +1,14 @@
 "use client";
 
 import { useCallback } from "react";
+import { CheckIcon, XIcon } from "@animateicons/react/lucide";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
+import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { cn } from "@/lib/utils";
 import { LabelColorPicker } from "./label-color-picker";
+import { resolveLabelColor } from "./label-colors";
 
 export interface LabelCreateFormProps {
   name: string;
@@ -12,6 +16,7 @@ export interface LabelCreateFormProps {
   onNameChange: (name: string) => void;
   onColorChange: (color: string) => void;
   onSubmit: () => void;
+  onCancel?: () => void;
   isPending?: boolean;
   submitLabel?: string;
   loadingText?: string;
@@ -22,12 +27,65 @@ export interface LabelCreateFormProps {
   autoFocus?: boolean;
 }
 
+function SubmitLabelButton({
+  disabled,
+  isPending,
+  loadingText,
+  submitLabel,
+  fullWidth,
+  onClick,
+}: {
+  disabled: boolean;
+  isPending: boolean;
+  loadingText: string;
+  submitLabel: string;
+  fullWidth: boolean;
+  onClick: () => void;
+}) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+
+  return (
+    <LoadingButton
+      type="button"
+      size="sm"
+      onClick={onClick}
+      disabled={disabled}
+      isPending={isPending}
+      loadingText={loadingText}
+      className={cn("h-8 gap-1.5 text-xs", fullWidth && "w-full")}
+      {...hoverHandlers}
+    >
+      <CheckIcon ref={iconRef} size={14} />
+      {submitLabel}
+    </LoadingButton>
+  );
+}
+
+function CancelCreateButton({ onClick }: { onClick: () => void }) {
+  const { iconRef, hoverHandlers } = useAnimatedIcon();
+
+  return (
+    <Button
+      type="button"
+      size="sm"
+      variant="outline"
+      className="h-8 gap-1.5 text-xs"
+      onClick={onClick}
+      {...hoverHandlers}
+    >
+      <XIcon ref={iconRef} size={14} />
+      Cancel
+    </Button>
+  );
+}
+
 export function LabelCreateForm({
   name,
   color,
   onNameChange,
   onColorChange,
   onSubmit,
+  onCancel,
   isPending = false,
   submitLabel = "Create",
   loadingText = "Creating…",
@@ -38,6 +96,7 @@ export function LabelCreateForm({
   autoFocus = false,
 }: LabelCreateFormProps) {
   const trimmedName = name.trim();
+  const resolvedColor = resolveLabelColor(color);
   const canSubmit = trimmedName.length > 0 && !isPending;
 
   const handleNameChange = useCallback(
@@ -49,11 +108,14 @@ export function LabelCreateForm({
 
   const handleNameKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
-      if (event.key === "Enter" && trimmedName) {
+      if (event.key === "Enter" && canSubmit) {
         onSubmit();
       }
+      if (event.key === "Escape" && onCancel) {
+        onCancel();
+      }
     },
-    [onSubmit, trimmedName],
+    [canSubmit, onSubmit, onCancel],
   );
 
   const handleSubmit = useCallback(() => {
@@ -69,51 +131,61 @@ export function LabelCreateForm({
       ) : null}
 
       {showPreview ? (
-        <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/30 px-2.5 py-1.5">
-          <span
-            className="h-2.5 w-2.5 shrink-0 rounded-full"
-            style={{ backgroundColor: color }}
-          />
+        <div className="flex items-center gap-2.5">
           <span
             className={cn(
-              "truncate text-sm font-medium",
-              trimmedName ? "text-foreground" : "text-muted-foreground",
+              "inline-flex max-w-full items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium",
+              "bg-primary/5 border-primary/15 text-foreground",
             )}
           >
-            {trimmedName || "Label preview"}
+            <span
+              className="h-2 w-2 shrink-0 rounded-full shadow-sm ring-1 ring-background"
+              style={{ backgroundColor: resolvedColor }}
+            />
+            <span className={cn("truncate", !trimmedName && "text-muted-foreground")}>
+              {trimmedName || "Label preview"}
+            </span>
+          </span>
+          <span className="font-mono text-[10px] uppercase text-muted-foreground">
+            {resolvedColor}
           </span>
         </div>
       ) : null}
 
-      <div className="flex items-center gap-2">
-        <div
-          className="h-6 w-6 shrink-0 rounded-full border-2 border-background shadow-sm"
-          style={{ backgroundColor: color }}
-          aria-hidden
-        />
+      <div className="space-y-1.5">
+        <label htmlFor="label-create-name" className="text-xs text-muted-foreground">
+          Name
+        </label>
         <Input
+          id="label-create-name"
           value={name}
           onChange={handleNameChange}
           onKeyDown={handleNameKeyDown}
           placeholder="Label name"
-          className="h-8 flex-1 text-sm"
+          className="h-8 text-sm"
           autoFocus={autoFocus}
+          aria-label="Label name"
         />
       </div>
 
-      <LabelColorPicker value={color} onChange={onColorChange} />
+      <LabelColorPicker value={resolvedColor} onChange={onColorChange} swatchSize="md" />
 
-      <LoadingButton
-        type="button"
-        size="sm"
-        onClick={handleSubmit}
-        disabled={!trimmedName}
-        isPending={isPending}
-        loadingText={loadingText}
-        className={cn("h-8 text-xs", fullWidthSubmit && "w-full")}
+      <div
+        className={cn(
+          "flex items-center gap-2 pt-0.5",
+          onCancel || !fullWidthSubmit ? "justify-end" : "",
+        )}
       >
-        {submitLabel}
-      </LoadingButton>
+        {onCancel ? <CancelCreateButton onClick={onCancel} /> : null}
+        <SubmitLabelButton
+          disabled={!trimmedName}
+          isPending={isPending}
+          loadingText={loadingText}
+          submitLabel={submitLabel}
+          fullWidth={fullWidthSubmit && !onCancel}
+          onClick={handleSubmit}
+        />
+      </div>
     </div>
   );
 }
