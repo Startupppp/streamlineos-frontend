@@ -162,7 +162,7 @@ export function TemplatesPageContent() {
   const hasActiveFilters = !!(search || category !== "all" || complexity !== "all");
 
   const filters = (
-    <div className="flex items-center gap-2 flex-wrap">
+    <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
       <div className="min-w-0 w-48">
           <SearchInput value={searchInput} onValueChange={handleSearchChange} placeholder="Search templates…" />
         </div>

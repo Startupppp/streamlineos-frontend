@@ -4,7 +4,6 @@ import type { KeyboardEvent, ReactNode, RefObject } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import {
   CalendarRange,
-  ChevronDown,
   ChevronRight,
   RefreshCw,
   Tag,
@@ -46,43 +45,43 @@ function CategoryLeading({
     case "status":
       return (
         <span className={cn("shrink-0", tone)}>
-          <CircleCheckIcon ref={iconRef} size={14} />
+          <CircleCheckIcon ref={iconRef} size={16} />
         </span>
       );
     case "priority":
       return (
         <span className={cn("shrink-0", tone)}>
-          <TriangleAlertIcon ref={iconRef} size={14} />
+          <TriangleAlertIcon ref={iconRef} size={16} />
         </span>
       );
     case "type":
       return (
         <span className={cn("shrink-0", tone)}>
-          <LayersIcon ref={iconRef} size={14} />
+          <LayersIcon ref={iconRef} size={16} />
         </span>
       );
     case "assignee":
       return (
         <span className={cn("shrink-0", tone)}>
-          <UserIcon ref={iconRef} size={14} />
+          <UserIcon ref={iconRef} size={16} />
         </span>
       );
     case "label":
-      return <Tag className={cn("h-3.5 w-3.5 shrink-0", tone)} />;
+      return <Tag className={cn("h-4 w-4 shrink-0", tone)} />;
     case "cycle":
-      return <RefreshCw className={cn("h-3.5 w-3.5 shrink-0", tone)} />;
+      return <RefreshCw className={cn("h-4 w-4 shrink-0", tone)} />;
     case "sprint":
       return (
         <span className={cn("shrink-0", tone)}>
-          <ZapIcon ref={iconRef} size={14} />
+          <ZapIcon ref={iconRef} size={16} />
         </span>
       );
     case "dates":
-      return <CalendarRange className={cn("h-3.5 w-3.5 shrink-0", tone)} />;
+      return <CalendarRange className={cn("h-4 w-4 shrink-0", tone)} />;
     case "project":
       return (
         <span className={cn("shrink-0", tone)}>
-          <FolderIcon ref={iconRef} size={14} />
+          <FolderIcon ref={iconRef} size={16} />
         </span>
       );
     default:
@@ -96,7 +95,6 @@ export interface FilterCategoryRowProps {
   activeCount: number;
   hovered: boolean;
   leading?: ReactNode;
-  inlineExpand?: boolean;
   onMouseEnter: () => void;
   onFocus: () => void;
   onKeyDown: (e: KeyboardEvent) => void;
@@ -108,7 +106,6 @@ export function FilterCategoryRow({
   activeCount,
   hovered,
   leading,
-  inlineExpand = false,
   onMouseEnter,
   onFocus,
   onKeyDown,
@@ -129,19 +126,19 @@ export function FilterCategoryRow({
     <div
       role="menuitem"
       tabIndex={0}
-      aria-haspopup={inlineExpand ? undefined : "true"}
+      aria-haspopup="true"
       aria-expanded={hovered}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onFocus={onFocus}
       onKeyDown={onKeyDown}
       className={cn(
-        "relative flex cursor-default select-none items-center gap-1.5 rounded-md py-1 pr-1.5 text-xs outline-none",
+        "relative flex h-9 cursor-default select-none items-center gap-2.5 rounded-md px-3 text-sm outline-none",
         "border-l-2 transition-[background-color,color,border-color] duration-150 ease-out motion-reduce:transition-none",
         "focus-visible:bg-primary/10 focus-visible:text-foreground focus-visible:border-l-primary",
         hovered
-          ? "border-l-primary bg-primary/10 pl-[6px] text-foreground"
-          : "border-l-transparent pl-2 text-foreground/90 hover:bg-muted/70",
+          ? "border-l-primary bg-primary/10 text-foreground"
+          : "border-l-transparent text-foreground/90 hover:bg-muted/70",
       )}
     >
       <CategoryLeading
@@ -152,7 +149,7 @@ export function FilterCategoryRow({
       />
       <span className="flex-1 truncate font-medium tracking-tight">{label}</span>
       {activeCount > 0 && (
-        <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
+        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground">
           {activeCount}
         </span>
       )}
@@ -162,17 +159,11 @@ export function FilterCategoryRow({
         animate={
           shouldReduceMotion
             ? undefined
-            : inlineExpand
-              ? { rotate: hovered ? 180 : 0 }
-              : { x: hovered ? 2 : 0 }
+            : { x: hovered ? 2 : 0 }
         }
         transition={pmSnappy}
       >
-        {inlineExpand ? (
-          <ChevronDown className="h-3.5 w-3.5" />
-        ) : (
-          <ChevronRight className="h-3.5 w-3.5" />
-        )}
+        <ChevronRight className="h-4 w-4" />
       </motion.span>
     </div>
   );

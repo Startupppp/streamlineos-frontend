@@ -5,6 +5,7 @@ import { LayoutGrid, TableIcon, X, GitBranch } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 import { useCrmOptions } from "@/hooks/api/crm";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
@@ -62,9 +63,8 @@ export function LeadsToolbar({
   const hasFilters = !!(statusFilter || priorityFilter || sourceFilter);
 
   return (
-    <div className="flex items-center gap-2 flex-wrap w-full">
-
-      <div className="min-w-0 flex-1 min-w-[140px] sm:flex-none sm:w-[180px] sm:max-w-xs">
+    <div className={FILTER_TOOLBAR_ROW}>
+      <div className="w-[180px] max-w-[min(180px,70vw)]">
           <SearchInput placeholder="Search leads..." value={inputValue} onValueChange={handleSearchChange} />
         </div>
 

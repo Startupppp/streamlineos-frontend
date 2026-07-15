@@ -118,7 +118,7 @@ const WorkflowCard = memo(function WorkflowCard({
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
               <p className="font-semibold text-sm text-foreground truncate">
                 {workflow.name}
               </p>

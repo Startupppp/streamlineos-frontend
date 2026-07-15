@@ -267,7 +267,7 @@ export function MeetingsFilterBar({
           </PopoverContent>
         </Popover>
 
-        <div className="hidden min-w-0 flex-1 items-center gap-2 overflow-x-auto sm:flex sm:flex-nowrap">
+        <div className="hidden min-w-0 flex-1 items-center gap-2 overflow-x-auto scrollbar-hide sm:flex sm:flex-nowrap [&>*]:shrink-0">
           <FilterSelects {...selectProps} />
           {isFiltered ? (
             <Button

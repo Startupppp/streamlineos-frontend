@@ -301,7 +301,7 @@ function ListView({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
         <SearchInput
           placeholder="Search holidays..."
           value={search}

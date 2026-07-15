@@ -198,7 +198,7 @@ export function CustomerStatementReport() {
       subtitle="Chronological AR activity for a customer with running balance."
       onExport={clientId ? handleExport : undefined}
       filters={
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex min-w-0 flex-nowrap items-center gap-3 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
           <div className="flex flex-col gap-1">
             <label htmlFor="cs-client" className="text-[11px] font-medium text-muted-foreground leading-none">
               Customer

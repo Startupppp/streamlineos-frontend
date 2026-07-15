@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 
 export interface Department {
   id: number;
@@ -43,8 +44,8 @@ export function EmployeesFilters({
   function handleSearchChange(value: string) { onSearchChange(value); }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <div className="min-w-0 w-60">
+    <div className={FILTER_TOOLBAR_ROW}>
+      <div className="w-60 max-w-[min(15rem,70vw)]">
           <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search name, email, ID…" />
         </div>
       <Select value={filterDept} onValueChange={onDeptChange}>

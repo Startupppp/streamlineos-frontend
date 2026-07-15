@@ -221,7 +221,7 @@ export function MeetingsListPage({ projectId }: MeetingsListPageProps) {
 
   const filtersBar = (
     <div className={cn(PM_TOOLBAR, "w-full")}>
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
         <Select value={typeFilter} onValueChange={setTypeFilter}>
           <SelectTrigger className="w-36 text-xs">
             <SelectValue />

@@ -195,7 +195,7 @@ export default function CertificationsPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          <div className="bg-muted/40 rounded-lg px-3 py-2 flex items-center gap-2 flex-wrap">
+          <div className="bg-muted/40 rounded-lg px-3 py-2 flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
             <div className="min-w-0 w-48">
           <SearchInput placeholder="Search certifications..." value={searchQuery} onValueChange={handleSearchChange} />
         </div>

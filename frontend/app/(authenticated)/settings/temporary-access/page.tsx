@@ -235,7 +235,7 @@ function AssignmentRow({
   return (
     <div className="flex items-center gap-3 px-4 py-2.5">
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
           <span className="text-sm font-medium leading-none">
             {assignment.userName ?? assignment.userId.slice(0, 12)}
           </span>

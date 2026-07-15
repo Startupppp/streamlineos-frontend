@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 import { useCrmOptions } from "@/hooks/api/crm/metadata";
 import type {
@@ -95,8 +95,8 @@ export function ActivityFilters({
   );
 
   return (
-    <div className="flex items-center gap-2 flex-wrap w-full">
-      <div className="min-w-0 min-w-[140px] flex-1 max-w-[240px]">
+    <div className={FILTER_TOOLBAR_ROW}>
+      <div className="w-[200px] max-w-[min(200px,70vw)]">
           <SearchInput placeholder="Search activities..." value={search} onValueChange={handleSearchChange} />
         </div>
 

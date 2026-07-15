@@ -549,7 +549,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
       }
       filters={
         <div className={cn(PM_TOOLBAR)}>
-          <div className="flex min-w-0 flex-wrap items-center gap-2 sm:flex-nowrap">
+          <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
             <ViewSwitcher activeView={view} onViewChange={handleViewChange} />
             <DisplayOptionsPanel viewType={view} options={displayOptions} onChange={setDisplayOptions} />
             <div className="flex items-center gap-1.5">
@@ -674,7 +674,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
             {view === "board" ? (
               <motion.div
                 key="board"
-                className="flex h-full min-h-0 w-full flex-1 flex-col px-3 pb-1"
+                className="flex h-full min-h-0 w-full flex-1 flex-col pb-1"
                 variants={viewVariants}
                 initial="initial"
                 animate="animate"
@@ -696,7 +696,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
             {view === "list" ? (
               <motion.div
                 key="list"
-                className="min-h-0 flex-1 flex flex-col overflow-hidden px-3 pb-1"
+                className="min-h-0 flex-1 flex flex-col overflow-hidden pb-1"
                 variants={viewVariants}
                 initial="initial"
                 animate="animate"
@@ -724,7 +724,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
             {view === "table" ? (
               <motion.div
                 key="table"
-                className="min-h-0 flex-1 flex flex-col overflow-hidden px-3 pb-1"
+                className="min-h-0 flex-1 flex flex-col overflow-hidden pb-1"
                 variants={viewVariants}
                 initial="initial"
                 animate="animate"
@@ -760,7 +760,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
             {view === "calendar" ? (
               <motion.div
                 key="calendar"
-                className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pb-2 pt-0"
+                className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pb-2 pt-0 sm:px-6"
                 variants={viewVariants}
                 initial="initial"
                 animate="animate"
@@ -778,7 +778,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
             {view === "gantt" ? (
               <motion.div
                 key="gantt"
-                className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pb-2 pt-0"
+                className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pb-2 pt-0 sm:px-6"
                 variants={viewVariants}
                 initial="initial"
                 animate="animate"
@@ -795,7 +795,7 @@ export default function ProjectBoardPage({ params }: PageProps) {
             {view === "workload" ? (
               <motion.div
                 key="workload"
-                className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pb-2 pt-0"
+                className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pb-2 pt-0 sm:px-6"
                 variants={viewVariants}
                 initial="initial"
                 animate="animate"

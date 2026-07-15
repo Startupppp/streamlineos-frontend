@@ -217,7 +217,7 @@ function ExpiryReportContent() {
       title="Expiry Report"
       subtitle="Lots approaching or past their expiry date within the selected window"
       filters={
-        <div className="flex w-full min-w-0 flex-wrap items-center gap-2">
+        <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
           <Select value={withinDaysParam} onValueChange={handleWithinDaysChange}>
             <SelectTrigger className="w-[160px] min-w-0 text-xs shrink-0">
               <SelectValue />

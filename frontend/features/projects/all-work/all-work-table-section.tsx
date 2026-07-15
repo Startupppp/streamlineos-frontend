@@ -101,7 +101,7 @@ export function AllWorkTableSection({
   const tableRows = useMemo(() => tickets.map(toTableTicket), [tickets]);
 
   return (
-    <div className="px-3 pb-2 pt-2 sm:px-4">
+    <div className="pb-2 pt-2">
       <DataTable
         data={tableRows}
         columns={tableColumns}

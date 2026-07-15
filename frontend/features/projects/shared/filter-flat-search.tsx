@@ -98,7 +98,7 @@ function CheckMark({ active }: { active: boolean }) {
   return (
     <Check
       className={cn(
-        "mr-2 h-3.5 w-3.5 shrink-0 transition-opacity motion-reduce:transition-none",
+        "mr-2 h-4 w-4 shrink-0 transition-opacity motion-reduce:transition-none",
         active ? "opacity-100" : "opacity-0",
       )}
     />
@@ -148,15 +148,22 @@ export function FilterFlatSearch({
     q.includes("date");
 
   return (
-    <Command shouldFilter={false}>
+    <Command
+      shouldFilter={false}
+      className={cn(
+        "[&_[cmdk-input-wrapper]]:h-10 [&_[cmdk-input-wrapper]]:px-3",
+        "[&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-2 [&_[cmdk-group-heading]]:text-xs",
+        "[&_[cmdk-item]]:h-9 [&_[cmdk-item]]:px-3 [&_[cmdk-item]]:text-sm",
+      )}
+    >
       <CommandInput
-        placeholder="Filter by..."
-        className="h-9 text-xs"
+        placeholder="Filter by…"
+        className="h-10 text-sm"
         value={search}
         onValueChange={onSearchChange}
       />
-      <CommandList className="max-h-[min(360px,var(--radix-popover-content-available-height))]">
-        <CommandEmpty className="py-4 text-center text-xs text-muted-foreground">
+      <CommandList className="max-h-[min(360px,var(--radix-popover-content-available-height))] scrollbar-hide">
+        <CommandEmpty className="py-6 text-center text-sm text-muted-foreground">
           No matching filters.
         </CommandEmpty>
 
@@ -179,8 +186,8 @@ export function FilterFlatSearch({
                   onSelect={onSelectStatus}
                 >
                   <CheckMark active={active} />
-                  <StatusFilterDot status={s} config={statusConfig} className="mr-1.5 h-2 w-2 shrink-0 rounded-full" />
-                  <span className="text-xs">{label}</span>
+                  <StatusFilterDot status={s} config={statusConfig} className="mr-1.5 h-2.5 w-2.5 shrink-0 rounded-full" />
+                  <span className="text-sm">{label}</span>
                 </CommandItem>
               );
             })}
@@ -207,7 +214,7 @@ export function FilterFlatSearch({
                 >
                   <CheckMark active={active} />
                   <FilterPriorityLeading priority={p} />
-                  <span className="text-xs">{label}</span>
+                  <span className="text-sm">{label}</span>
                 </CommandItem>
               );
             })}
@@ -235,7 +242,7 @@ export function FilterFlatSearch({
                     >
                       <CheckMark active={active} />
                       <FilterTypeLeading type={t} />
-                      <span className="text-xs">{label}</span>
+                      <span className="text-sm">{label}</span>
                     </CommandItem>
                   );
                 })}
@@ -267,7 +274,7 @@ export function FilterFlatSearch({
                     >
                       <CheckMark active={active} />
                       <FilterAssigneeLeading assigneeId={id} member={member} />
-                      <span className="text-xs">{displayName}</span>
+                      <span className="text-sm">{displayName}</span>
                     </CommandItem>
                   );
                 })}
@@ -294,7 +301,7 @@ export function FilterFlatSearch({
                     >
                       <CheckMark active={active} />
                       <FilterLabelDot color={l.color} />
-                      <span className="text-xs">{l.name}</span>
+                      <span className="text-sm">{l.name}</span>
                     </CommandItem>
                   );
                 })}
@@ -320,7 +327,7 @@ export function FilterFlatSearch({
                       onSelect={onSelectCycle}
                     >
                       <CheckMark active={active} />
-                      <span className="text-xs">{c.name}</span>
+                      <span className="text-sm">{c.name}</span>
                     </CommandItem>
                   );
                 })}
@@ -346,7 +353,7 @@ export function FilterFlatSearch({
                       onSelect={onSelectSprint}
                     >
                       <CheckMark active={active} />
-                      <span className="text-xs">{s.name}</span>
+                      <span className="text-sm">{s.name}</span>
                     </CommandItem>
                   );
                 })}
@@ -377,8 +384,8 @@ export function FilterFlatSearch({
                       onSelect={onSelectProject}
                     >
                       <CheckMark active={active} />
-                      <span className="mr-1 font-mono text-[10px] text-muted-foreground">{p.key}</span>
-                      <span className="text-xs">{p.name}</span>
+                      <span className="mr-1.5 font-mono text-xs text-muted-foreground">{p.key}</span>
+                      <span className="text-sm">{p.name}</span>
                     </CommandItem>
                   );
                 })}
@@ -390,27 +397,27 @@ export function FilterFlatSearch({
           <>
             <CommandSeparator />
             <CommandGroup heading="Due Date">
-              <div className="px-2 py-2">
-                <div className="mb-1.5 flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                  <CalendarRange className="h-3 w-3" />
+              <div className="px-3 py-3">
+                <div className="mb-2.5 flex items-center gap-2 text-xs text-muted-foreground">
+                  <CalendarRange className="h-3.5 w-3.5" />
                   {hasDateFilter ? (
                     <span className="font-medium text-foreground">Range active</span>
                   ) : (
                     <span>Select a date range</span>
                   )}
                 </div>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2.5">
                   <DatePicker
                     value={dueDateFrom}
                     onChange={onDueDateFromChange}
                     placeholder="From"
-                    className="w-full text-xs"
+                    className="w-full text-sm"
                   />
                   <DatePicker
                     value={dueDateTo}
                     onChange={onDueDateToChange}
                     placeholder="To"
-                    className="w-full text-xs"
+                    className="w-full text-sm"
                   />
                 </div>
               </div>

@@ -100,7 +100,7 @@ export default function ProfitLossPage() {
       title="Profit & Loss"
       subtitle="Income minus expense for the selected range."
       filters={
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
           <div className="flex flex-col gap-1">
             <label
               htmlFor="pnl-from"

@@ -234,7 +234,7 @@ export default function GoalsPage() {
                 onValueChange={handleSearchChange}
               />
             </div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
               <Select value={levelFilter} onValueChange={handleLevelFilterChange}>
                 <SelectTrigger className="w-[130px] text-sm">
                   <SelectValue placeholder="Level" />

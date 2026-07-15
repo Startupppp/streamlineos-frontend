@@ -413,7 +413,7 @@ export function TicketFilterBar({
       {hasFilterChips && (
         <div
           className={cn(
-            "flex min-w-0 flex-wrap items-center gap-1",
+            "flex min-w-0 flex-nowrap items-center gap-1 overflow-x-auto scrollbar-hide [&>*]:shrink-0",
             align === "end" && "sm:justify-end",
           )}
         >

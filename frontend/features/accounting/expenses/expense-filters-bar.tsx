@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, type ChangeEvent } from "react";
+import { useCallback, type ChangeEvent } from "react";
 import { Input } from "@/components/ui/input";
 import { SearchInput } from "@/components/ui/search-input";
 import {
@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import type { ExpenseStatus } from "@/features/accounting/shared";
 
 export type StatusFilter = "ALL" | ExpenseStatus;
@@ -78,8 +79,8 @@ export function ExpenseFiltersBar({
   );
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <div className="min-w-0 flex-1 max-w-[220px] w-full">
+    <div className={FILTER_TOOLBAR_ROW}>
+      <div className="w-[220px] max-w-[min(220px,70vw)]">
           <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search merchant or description" />
         </div>
       <Select value={status} onValueChange={handleStatusChange}>

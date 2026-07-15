@@ -258,7 +258,7 @@ export function PortfoliosPage() {
   const isFiltered = statusFilter !== "all" || !!search.trim();
   const filtersBar = (
     <div className={PM_TOOLBAR}>
-      <div className="flex min-w-0 flex-wrap items-center gap-2">
+      <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-40 text-xs">
             <SelectValue />

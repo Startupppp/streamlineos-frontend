@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PlusIcon, EllipsisIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { toast } from "sonner";
@@ -238,8 +238,8 @@ export default function VendorsListPage() {
   ];
 
   const filterBar = (
-    <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 lg:gap-3">
-      <div className="min-w-0 flex-1 lg:max-w-md w-full">
+    <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide lg:gap-3 [&>*]:shrink-0">
+      <div className="w-full max-w-md min-w-[200px]">
           <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search vendors…" />
         </div>
       <Select value={activeParam} onValueChange={handleActiveChange}>

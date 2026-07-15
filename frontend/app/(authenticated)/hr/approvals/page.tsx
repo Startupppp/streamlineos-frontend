@@ -53,7 +53,7 @@ function InstanceRow({ instance, onOpen, showActions }: { instance: HrWorkflowIn
       onClick={() => onOpen(instance.id)}
     >
       <div className="flex-1 min-w-0 space-y-1">
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
           <span className="text-sm font-medium">{HR_WORKFLOW_OBJECT_TYPE_LABELS[instance.objectType]}</span>
           <Badge
             variant="outline"

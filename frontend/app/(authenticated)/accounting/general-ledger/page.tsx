@@ -224,7 +224,7 @@ export default function GeneralLedgerPage() {
       }
       filters={
         <div className="space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
             <div className="flex items-center gap-1.5">
               <label htmlFor="gl-from" className="text-xs text-muted-foreground whitespace-nowrap">From</label>
               <DatePicker id="gl-from" value={from} onChange={handleFromChange} placeholder="Start" className="text-xs w-[150px]" />
@@ -251,7 +251,7 @@ export default function GeneralLedgerPage() {
             </Button>
           </div>
           {showMoreFilters && (
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
               <Select value={clientId || "__none__"} onValueChange={handleClientChange}>
                 <SelectTrigger className="text-xs w-[180px]">
                   <SelectValue placeholder="All clients" />

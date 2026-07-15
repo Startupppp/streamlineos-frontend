@@ -121,7 +121,7 @@ export default function FindExpertPage() {
           </Button>
         </form>
 
-        <div className="flex flex-wrap gap-2 items-center">
+        <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
           <Select value={department} onValueChange={setDepartment}>
             <SelectTrigger className="w-[160px] h-8 text-xs">
               <SelectValue placeholder="All Departments" />

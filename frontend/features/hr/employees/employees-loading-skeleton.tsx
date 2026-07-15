@@ -35,7 +35,7 @@ export function EmployeesLoadingSkeleton() {
         </div>
       }
       filters={
-        <div className="flex items-center gap-2 w-full flex-wrap">
+        <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
           <Skeleton className="h-8 w-[200px] rounded-md" />{" "}
           <Skeleton className="h-8 w-[130px] rounded-md" />{" "}
           <Skeleton className="h-8 w-[120px] rounded-md" />{" "}

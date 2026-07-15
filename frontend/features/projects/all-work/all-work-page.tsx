@@ -140,11 +140,12 @@ export function AllWorkPage() {
       contentClassName="!p-0"
     >
       <PmPageShell className="min-h-0 flex-1 gap-0 overflow-hidden" withGlow>
-        <PmSection index={0} className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden px-3 pt-2 sm:px-4">
+        <PmSection index={0} className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden pt-2">
           <PageTabsToolbar
+            className="px-4 sm:px-6"
             tabsDensity="icons"
             tabs={
-              <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
+              <div className="flex min-w-0 flex-nowrap items-center gap-1.5 overflow-x-auto scrollbar-hide sm:gap-2 [&>*]:shrink-0">
                 <AllWorkViewSwitcher activeView={view} onViewChange={handleViewChangeWithReset} />
                 <AllWorkViewsMenu activeView={view} hasActiveFilters={hasActiveFilters} />
                 <Button
@@ -186,21 +187,21 @@ export function AllWorkPage() {
           />
 
           {isLoading ? (
-            <PmPanel solid className="mx-3 mb-2 mt-2 flex-1 overflow-auto sm:mx-4">
+            <PmPanel solid className="mx-4 mb-2 mt-2 flex-1 overflow-auto sm:mx-6">
               <div className="py-2">
                 <AllWorkSkeleton view={view} />
               </div>
             </PmPanel>
           ) : isError ? (
             <ErrorState
-                  className={cn(PM_FILL_PANEL, "mx-3 mb-0 mt-2 sm:mx-4")}
+                  className={cn(PM_FILL_PANEL, "mx-4 mb-0 mt-2 sm:mx-6")}
                   title="Failed to load work items"
                   description="An error occurred while fetching tickets. Please try again."
                   onRetry={handleRetry}
                 />
           ) : tickets.length === 0 ? (
             <EmptyState
-                className={cn(PM_FILL_PANEL, "mx-3 mb-0 mt-2 sm:mx-4")}
+                className={cn(PM_FILL_PANEL, "mx-4 mb-0 mt-2 sm:mx-6")}
                 illustrationPreset="projects"
                 title={hasActiveFilters ? "No tickets match your filters" : "No tickets yet"}
                 description={

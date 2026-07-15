@@ -127,15 +127,15 @@ export function KpiLibraryTab() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-3 items-center justify-between">
-        <div className="flex gap-3 flex-wrap">
+      <div className="flex min-w-0 flex-nowrap items-center justify-between gap-3 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+        <div className="flex min-w-0 flex-nowrap items-center gap-3 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
           <SearchInput
             className="w-60"
             placeholder="Search KPIs…"
             value={search}
             onValueChange={setSearch}
           />
-          <div className="flex gap-1.5 flex-wrap">
+          <div className="flex min-w-0 flex-nowrap items-center gap-1.5 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
             {categories.map((cat) => (
               <button
                 key={cat}

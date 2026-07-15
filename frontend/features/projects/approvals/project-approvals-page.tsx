@@ -383,7 +383,7 @@ export function ProjectApprovalsPage({ projectId }: ProjectApprovalsPageProps) {
 
   const filtersBar = (
     <div className={cn(PM_TOOLBAR, "w-full")}>
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
         <Select value={status} onValueChange={setStatus}>
           <SelectTrigger className="w-40 text-xs">
             <SelectValue />

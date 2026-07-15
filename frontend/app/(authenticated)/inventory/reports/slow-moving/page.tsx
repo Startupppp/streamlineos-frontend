@@ -163,7 +163,7 @@ function SlowMovingReportContent() {
       title="Slow-Moving Inventory"
       subtitle="Products with stock on hand but no outbound activity within the selected window"
       filters={
-        <div className="flex w-full min-w-0 flex-wrap items-center gap-2">
+        <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
           <Select value={daysParam} onValueChange={handleDaysChange}>
             <SelectTrigger className="w-[180px] min-w-0 text-xs shrink-0">
               <SelectValue />

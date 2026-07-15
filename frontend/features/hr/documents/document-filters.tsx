@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 
 export const DOCUMENT_TYPES = [
@@ -70,7 +71,7 @@ export function DocumentFilters({
   };
 
   return (
-    <div className="bg-muted/40 rounded-lg px-3 py-2 flex flex-wrap items-center gap-2 w-full">
+    <div className={cn("bg-muted/40 rounded-lg px-3 py-2", FILTER_TOOLBAR_ROW)}>
       <SearchInput
         placeholder="Search documents..."
         value={searchTerm}

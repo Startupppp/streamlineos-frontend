@@ -103,7 +103,7 @@ export function TrainingList({ canManage, onSelectProgram, selectedProgramId }: 
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-2">
+      <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
         <Select value={typeFilter} onValueChange={setTypeFilter}>
           <SelectTrigger className="w-36 text-xs">
             <SelectValue placeholder="Type" />

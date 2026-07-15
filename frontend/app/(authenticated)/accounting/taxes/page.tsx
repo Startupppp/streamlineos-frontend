@@ -201,7 +201,7 @@ export default function TaxPage() {
       title="Tax"
       subtitle="GST compliance and tax liability overview"
       filters={
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
           <div className="flex flex-col gap-1">
             <label
               htmlFor="tax-from"

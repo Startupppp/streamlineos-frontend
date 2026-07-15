@@ -307,7 +307,7 @@ function EmailTemplatesContent() {
         />
       ) : (
         <div className="space-y-3">
-          <div className="flex items-center gap-2 flex-wrap bg-muted/40 rounded-lg px-3 py-2">
+          <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0 bg-muted/40 rounded-lg px-3 py-2">
             <div className="min-w-0 w-44">
           <SearchInput placeholder="Search templates..." value={searchQuery} onValueChange={handleSearchChange} />
         </div>

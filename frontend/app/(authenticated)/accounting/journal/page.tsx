@@ -210,7 +210,7 @@ function EntriesTab() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
         <div className="flex items-center gap-1.5">
           <label
             htmlFor="journal-from"

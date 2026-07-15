@@ -130,7 +130,7 @@ export function OrgAuditLogPage() {
       subtitle="Organization-wide audit trail of user management actions."
       badge={pagination?.total !== undefined ? String(pagination.total) : undefined}
       filters={
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
           <SearchInput
             className="w-44"
             placeholder="Filter by actor ID..."

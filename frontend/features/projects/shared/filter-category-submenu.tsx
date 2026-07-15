@@ -1,6 +1,15 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import {
+  useState,
+  useCallback,
+  useRef,
+  useEffect,
+  type ChangeEvent,
+  type KeyboardEvent,
+  type ReactNode,
+  type RefObject,
+} from "react";
 import { Check, Search, CalendarRange } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { cn } from "@/lib/utils";
@@ -82,6 +91,8 @@ interface FilterCategorySubmenuProps {
   selectedCycles: string[];
   selectedProjectIds: string[];
   sprintParam: string;
+  dueDateFrom: string;
+  dueDateTo: string;
   onToggleStatus: (v: string) => void;
   onTogglePriority: (v: string) => void;
   onToggleType: (v: string) => void;
@@ -90,11 +101,25 @@ interface FilterCategorySubmenuProps {
   onToggleCycle: (v: string) => void;
   onToggleSprint: (v: string) => void;
   onToggleProject: (v: string) => void;
+  onDueDateFromChange: (v: string) => void;
+  onDueDateToChange: (v: string) => void;
   onClose: () => void;
 }
 
 const PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
 const TYPES = ["TASK", "BUG", "STORY", "EPIC", "SUBTASK"] as const;
+
+const CATEGORY_TITLES: Record<FilterCategory, string> = {
+  status: "Status",
+  priority: "Priority",
+  type: "Type",
+  assignee: "Assignee",
+  label: "Label",
+  cycle: "Cycle",
+  sprint: "Sprint",
+  dates: "Due Dates",
+  project: "Project",
+};
 
 function OptionRow({
   active,
@@ -108,29 +133,34 @@ function OptionRow({
   label: string;
   color?: string | null;
   dotClassName?: string;
-  leading?: React.ReactNode;
+  leading?: ReactNode;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-xs hover:bg-accent hover:text-accent-foreground transition-colors motion-reduce:transition-none focus-visible:outline-none focus-visible:bg-accent"
+      className={cn(
+        "flex h-9 w-full items-center gap-2.5 rounded-md px-3 text-sm",
+        "transition-colors motion-reduce:transition-none",
+        "hover:bg-accent hover:text-accent-foreground",
+        "focus-visible:outline-none focus-visible:bg-accent",
+      )}
     >
       <Check
         className={cn(
-          "h-3.5 w-3.5 shrink-0 transition-opacity motion-reduce:transition-none",
+          "h-4 w-4 shrink-0 transition-opacity motion-reduce:transition-none",
           active ? "opacity-100" : "opacity-0",
         )}
       />
       {leading}
       {!leading && color ? (
         <span
-          className="h-2 w-2 shrink-0 rounded-full"
+          className="h-2.5 w-2.5 shrink-0 rounded-full"
           style={{ backgroundColor: color }}
         />
       ) : !leading && dotClassName ? (
-        <span className={cn("h-2 w-2 shrink-0 rounded-full", dotClassName)} />
+        <span className={cn("h-2.5 w-2.5 shrink-0 rounded-full", dotClassName)} />
       ) : null}
       <span className="truncate">{label}</span>
     </button>
@@ -140,7 +170,7 @@ function OptionRow({
 export function StatusFilterDot({
   status,
   config,
-  className = "h-2 w-2 shrink-0 rounded-full",
+  className = "h-2.5 w-2.5 shrink-0 rounded-full",
 }: {
   status: StatusFilterOption;
   config: Record<string, StatusConfigEntry>;
@@ -167,22 +197,60 @@ function FilterMenuSearch({
   onValueChange: (v: string) => void;
   placeholder: string;
 }) {
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleChange(e: ChangeEvent<HTMLInputElement>) {
     onValueChange(e.target.value);
   }
 
   return (
-    <div className="flex items-center gap-1.5 border-b border-border px-2 py-1.5">
-      <Search className="h-3 w-3 shrink-0 text-muted-foreground" />
+    <div className="flex h-10 items-center gap-2 border-b border-border px-3">
+      <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
       <input
         autoFocus
         type="text"
         value={value}
         onChange={handleChange}
         placeholder={placeholder}
-        className="flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground"
+        className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
       />
     </div>
+  );
+}
+
+function PanelShell({
+  category,
+  children,
+  onKeyDown,
+  containerRef,
+  withSearch = false,
+}: {
+  category: FilterCategory;
+  children: ReactNode;
+  onKeyDown: (e: KeyboardEvent) => void;
+  containerRef: RefObject<HTMLDivElement | null>;
+  withSearch?: boolean;
+}) {
+  return (
+    <div
+      ref={containerRef}
+      tabIndex={-1}
+      onKeyDown={onKeyDown}
+      className="flex w-[240px] flex-col outline-none"
+    >
+      {!withSearch ? (
+        <div className="flex h-10 shrink-0 items-center border-b border-border px-3">
+          <span className="text-sm font-medium text-foreground">
+            {CATEGORY_TITLES[category]}
+          </span>
+        </div>
+      ) : null}
+      {children}
+    </div>
+  );
+}
+
+function EmptyHint({ message }: { message: string }) {
+  return (
+    <p className="px-3 py-6 text-center text-sm text-muted-foreground">{message}</p>
   );
 }
 
@@ -203,6 +271,8 @@ export function FilterCategorySubmenu({
   selectedCycles,
   selectedProjectIds,
   sprintParam,
+  dueDateFrom,
+  dueDateTo,
   onToggleStatus,
   onTogglePriority,
   onToggleType,
@@ -211,13 +281,15 @@ export function FilterCategorySubmenu({
   onToggleCycle,
   onToggleSprint,
   onToggleProject,
+  onDueDateFromChange,
+  onDueDateToChange,
   onClose,
 }: FilterCategorySubmenuProps) {
   const [search, setSearch] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
 
   const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
+    (e: KeyboardEvent) => {
       if (e.key === "Escape" || e.key === "ArrowLeft") {
         e.preventDefault();
         e.stopPropagation();
@@ -229,93 +301,106 @@ export function FilterCategorySubmenu({
 
   useEffect(() => {
     containerRef.current?.focus();
-  }, []);
+  }, [category]);
+
+  useEffect(() => {
+    setSearch("");
+  }, [category]);
 
   const needsSearch = category === "assignee" || category === "label" || category === "project";
   const q = search.toLowerCase();
 
+  if (category === "dates") {
+    return (
+      <PanelShell category={category} containerRef={containerRef} onKeyDown={handleKeyDown}>
+        <FilterDatesPanel
+          dueDateFrom={dueDateFrom}
+          dueDateTo={dueDateTo}
+          onDueDateFromChange={onDueDateFromChange}
+          onDueDateToChange={onDueDateToChange}
+        />
+      </PanelShell>
+    );
+  }
+
   if (category === "status") {
-    const filtered = statusItems.filter((s) =>
-      !q ||
-      s.name.toLowerCase().includes(q) ||
-      s.name.replace(/_/g, " ").toLowerCase().includes(q),
+    const filtered = statusItems.filter(
+      (s) =>
+        !q ||
+        s.name.toLowerCase().includes(q) ||
+        s.name.replace(/_/g, " ").toLowerCase().includes(q),
     );
     return (
-      <div
-        ref={containerRef}
-        tabIndex={-1}
-        onKeyDown={handleKeyDown}
-        className="flex min-w-[160px] flex-col py-1 outline-none"
-      >
-        {filtered.map((s) => {
-          const label = s.name.replace(/_/g, " ");
-          const entry = getStatusEntry(statusConfig, s.name);
-          function handleClick() { onToggleStatus(s.name); }
-          return (
-            <OptionRow
-              key={s.name}
-              active={selectedStatuses.includes(s.name)}
-              label={label}
-              color={s.color ? resolveColumnColor(s.color) : undefined}
-              dotClassName={s.color ? undefined : entry.dotColor}
-              onClick={handleClick}
-            />
-          );
-        })}
-        {filtered.length === 0 && (
-          <p className="px-2 py-3 text-center text-xs text-muted-foreground">No options</p>
-        )}
-      </div>
+      <PanelShell category={category} containerRef={containerRef} onKeyDown={handleKeyDown}>
+        <div className="max-h-[280px] overflow-y-auto scrollbar-hide p-1">
+          {filtered.map((s) => {
+            const label = s.name.replace(/_/g, " ");
+            const entry = getStatusEntry(statusConfig, s.name);
+            function handleClick() {
+              onToggleStatus(s.name);
+            }
+            return (
+              <OptionRow
+                key={s.name}
+                active={selectedStatuses.includes(s.name)}
+                label={label}
+                color={s.color ? resolveColumnColor(s.color) : undefined}
+                dotClassName={s.color ? undefined : entry.dotColor}
+                onClick={handleClick}
+              />
+            );
+          })}
+          {filtered.length === 0 ? <EmptyHint message="No options" /> : null}
+        </div>
+      </PanelShell>
     );
   }
 
   if (category === "priority") {
     return (
-      <div
-        ref={containerRef}
-        tabIndex={-1}
-        onKeyDown={handleKeyDown}
-        className="flex min-w-[160px] flex-col py-1 outline-none"
-      >
-        {PRIORITIES.map((p) => {
-          const label = p.charAt(0) + p.slice(1).toLowerCase();
-          function handleClick() { onTogglePriority(p); }
-          return (
-            <OptionRow
-              key={p}
-              active={selectedPriorities.includes(p)}
-              label={label}
-              leading={<FilterPriorityLeading priority={p} />}
-              onClick={handleClick}
-            />
-          );
-        })}
-      </div>
+      <PanelShell category={category} containerRef={containerRef} onKeyDown={handleKeyDown}>
+        <div className="max-h-[280px] overflow-y-auto scrollbar-hide p-1">
+          {PRIORITIES.map((p) => {
+            const label = p.charAt(0) + p.slice(1).toLowerCase();
+            function handleClick() {
+              onTogglePriority(p);
+            }
+            return (
+              <OptionRow
+                key={p}
+                active={selectedPriorities.includes(p)}
+                label={label}
+                leading={<FilterPriorityLeading priority={p} />}
+                onClick={handleClick}
+              />
+            );
+          })}
+        </div>
+      </PanelShell>
     );
   }
 
   if (category === "type") {
     return (
-      <div
-        ref={containerRef}
-        tabIndex={-1}
-        onKeyDown={handleKeyDown}
-        className="flex min-w-[160px] flex-col py-1 outline-none"
-      >
-        {TYPES.map((t) => {
-          const label = t.charAt(0) + t.slice(1).toLowerCase();
-          function handleClick() { onToggleType(t); }
-          return (
-            <OptionRow
-              key={t}
-              active={selectedTypes.includes(t)}
-              label={label}
-              leading={<FilterTypeLeading type={t} />}
-              onClick={handleClick}
-            />
-          );
-        })}
-      </div>
+      <PanelShell category={category} containerRef={containerRef} onKeyDown={handleKeyDown}>
+        <div className="max-h-[280px] overflow-y-auto scrollbar-hide p-1">
+          {TYPES.map((t) => {
+            const label = t.charAt(0) + t.slice(1).toLowerCase();
+            function handleClick() {
+              onToggleType(t);
+            }
+            return (
+              <OptionRow
+                key={t}
+                active={selectedTypes.includes(t)}
+                label={label}
+                leading={<FilterTypeLeading type={t} />}
+                onClick={handleClick}
+              />
+            );
+          })}
+        </div>
+      </PanelShell>
     );
   }
 
@@ -329,18 +414,24 @@ export function FilterCategorySubmenu({
       (m) => !q || m.displayName.toLowerCase().includes(q),
     );
     return (
-      <div
-        ref={containerRef}
-        tabIndex={-1}
+      <PanelShell
+        category={category}
+        containerRef={containerRef}
         onKeyDown={handleKeyDown}
-        className="flex min-w-[180px] flex-col outline-none"
+        withSearch
       >
-        {needsSearch && (
-          <FilterMenuSearch value={search} onValueChange={setSearch} placeholder="Search assignees..." />
-        )}
-        <div className="max-h-[200px] overflow-y-auto py-1">
+        {needsSearch ? (
+          <FilterMenuSearch
+            value={search}
+            onValueChange={setSearch}
+            placeholder="Search assignees…"
+          />
+        ) : null}
+        <div className="max-h-[280px] overflow-y-auto scrollbar-hide p-1">
           {filtered.map((m) => {
-            function handleClick() { onToggleAssignee(m.id); }
+            function handleClick() {
+              onToggleAssignee(m.id);
+            }
             return (
               <OptionRow
                 key={m.id}
@@ -351,11 +442,9 @@ export function FilterCategorySubmenu({
               />
             );
           })}
-          {filtered.length === 0 && (
-            <p className="px-2 py-3 text-center text-xs text-muted-foreground">No members</p>
-          )}
+          {filtered.length === 0 ? <EmptyHint message="No members" /> : null}
         </div>
-      </div>
+      </PanelShell>
     );
   }
 
@@ -364,19 +453,25 @@ export function FilterCategorySubmenu({
       (l) => !q || l.name.toLowerCase().includes(q),
     );
     return (
-      <div
-        ref={containerRef}
-        tabIndex={-1}
+      <PanelShell
+        category={category}
+        containerRef={containerRef}
         onKeyDown={handleKeyDown}
-        className="flex min-w-[180px] flex-col outline-none"
+        withSearch
       >
-        {needsSearch && (
-          <FilterMenuSearch value={search} onValueChange={setSearch} placeholder="Search labels..." />
-        )}
-        <div className="max-h-[200px] overflow-y-auto py-1">
+        {needsSearch ? (
+          <FilterMenuSearch
+            value={search}
+            onValueChange={setSearch}
+            placeholder="Search labels…"
+          />
+        ) : null}
+        <div className="max-h-[280px] overflow-y-auto scrollbar-hide p-1">
           {filtered.map((l) => {
             const labelId = String(l.id);
-            function handleClick() { onToggleLabel(labelId); }
+            function handleClick() {
+              onToggleLabel(labelId);
+            }
             return (
               <OptionRow
                 key={l.id}
@@ -387,87 +482,88 @@ export function FilterCategorySubmenu({
               />
             );
           })}
-          {filtered.length === 0 && (
-            <p className="px-2 py-3 text-center text-xs text-muted-foreground">No labels</p>
-          )}
+          {filtered.length === 0 ? <EmptyHint message="No labels" /> : null}
         </div>
-      </div>
+      </PanelShell>
     );
   }
 
   if (category === "cycle") {
     return (
-      <div
-        ref={containerRef}
-        tabIndex={-1}
-        onKeyDown={handleKeyDown}
-        className="flex min-w-[160px] flex-col py-1 outline-none"
-      >
-        {cycles.map((c) => {
-          const cycleId = String(c.id);
-          function handleClick() { onToggleCycle(cycleId); }
-          return (
-            <OptionRow
-              key={c.id}
-              active={selectedCycles.includes(cycleId)}
-              label={c.name}
-              onClick={handleClick}
-            />
-          );
-        })}
-        {cycles.length === 0 && (
-          <p className="px-2 py-3 text-center text-xs text-muted-foreground">No cycles</p>
-        )}
-      </div>
+      <PanelShell category={category} containerRef={containerRef} onKeyDown={handleKeyDown}>
+        <div className="max-h-[280px] overflow-y-auto scrollbar-hide p-1">
+          {cycles.map((c) => {
+            const cycleId = String(c.id);
+            function handleClick() {
+              onToggleCycle(cycleId);
+            }
+            return (
+              <OptionRow
+                key={c.id}
+                active={selectedCycles.includes(cycleId)}
+                label={c.name}
+                onClick={handleClick}
+              />
+            );
+          })}
+          {cycles.length === 0 ? <EmptyHint message="No cycles" /> : null}
+        </div>
+      </PanelShell>
     );
   }
 
   if (category === "sprint") {
     return (
-      <div
-        ref={containerRef}
-        tabIndex={-1}
-        onKeyDown={handleKeyDown}
-        className="flex min-w-[160px] flex-col py-1 outline-none"
-      >
-        {sprints.map((s) => {
-          const sprintId = String(s.id);
-          function handleClick() { onToggleSprint(sprintId); }
-          return (
-            <OptionRow
-              key={s.id}
-              active={sprintParam === sprintId}
-              label={s.name}
-              onClick={handleClick}
-            />
-          );
-        })}
-        {sprints.length === 0 && (
-          <p className="px-2 py-3 text-center text-xs text-muted-foreground">No sprints</p>
-        )}
-      </div>
+      <PanelShell category={category} containerRef={containerRef} onKeyDown={handleKeyDown}>
+        <div className="max-h-[280px] overflow-y-auto scrollbar-hide p-1">
+          {sprints.map((s) => {
+            const sprintId = String(s.id);
+            function handleClick() {
+              onToggleSprint(sprintId);
+            }
+            return (
+              <OptionRow
+                key={s.id}
+                active={sprintParam === sprintId}
+                label={s.name}
+                onClick={handleClick}
+              />
+            );
+          })}
+          {sprints.length === 0 ? <EmptyHint message="No sprints" /> : null}
+        </div>
+      </PanelShell>
     );
   }
 
   if (category === "project") {
     const projects = projectOptions ?? [];
     const filtered = projects.filter(
-      (p) => !q || p.name.toLowerCase().includes(q) || p.key.toLowerCase().includes(q),
+      (p) =>
+        !q ||
+        p.name.toLowerCase().includes(q) ||
+        p.key.toLowerCase().includes(q),
     );
     return (
-      <div
-        ref={containerRef}
-        tabIndex={-1}
+      <PanelShell
+        category={category}
+        containerRef={containerRef}
         onKeyDown={handleKeyDown}
-        className="flex min-w-[200px] flex-col outline-none"
+        withSearch
       >
-        {needsSearch && (
-          <FilterMenuSearch value={search} onValueChange={setSearch} placeholder="Search projects..." />
-        )}
-        <div className="max-h-[200px] overflow-y-auto py-1">
+        {needsSearch ? (
+          <FilterMenuSearch
+            value={search}
+            onValueChange={setSearch}
+            placeholder="Search projects…"
+          />
+        ) : null}
+        <div className="max-h-[280px] overflow-y-auto scrollbar-hide p-1">
           {filtered.map((p) => {
             const projectId = String(p.id);
-            function handleClick() { onToggleProject(projectId); }
+            function handleClick() {
+              onToggleProject(projectId);
+            }
             return (
               <OptionRow
                 key={p.id}
@@ -477,53 +573,51 @@ export function FilterCategorySubmenu({
               />
             );
           })}
-          {filtered.length === 0 && (
-            <p className="px-2 py-3 text-center text-xs text-muted-foreground">No projects</p>
-          )}
+          {filtered.length === 0 ? <EmptyHint message="No projects" /> : null}
         </div>
-      </div>
+      </PanelShell>
     );
   }
 
   return null;
 }
 
-interface FilterDatesInlineProps {
+interface FilterDatesPanelProps {
   dueDateFrom: string;
   dueDateTo: string;
   onDueDateFromChange: (v: string) => void;
   onDueDateToChange: (v: string) => void;
 }
 
-export function FilterDatesInline({
+export function FilterDatesPanel({
   dueDateFrom,
   dueDateTo,
   onDueDateFromChange,
   onDueDateToChange,
-}: FilterDatesInlineProps) {
+}: FilterDatesPanelProps) {
   const hasDate = Boolean(dueDateFrom || dueDateTo);
   return (
-    <div className="px-2 pb-2 pt-0.5">
-      <div className="mb-1.5 flex items-center gap-1.5 text-[10px] text-muted-foreground">
-        <CalendarRange className="h-3 w-3" />
+    <div className="px-3 py-3">
+      <div className="mb-2.5 flex items-center gap-2 text-xs text-muted-foreground">
+        <CalendarRange className="h-3.5 w-3.5 shrink-0" />
         {hasDate ? (
           <span className="font-medium text-foreground">Range active</span>
         ) : (
           <span>Select a date range</span>
         )}
       </div>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-2.5">
         <DatePicker
           value={dueDateFrom}
           onChange={onDueDateFromChange}
           placeholder="From"
-          className="w-full text-xs"
+          className="w-full text-sm"
         />
         <DatePicker
           value={dueDateTo}
           onChange={onDueDateToChange}
           placeholder="To"
-          className="w-full text-xs"
+          className="w-full text-sm"
         />
       </div>
     </div>

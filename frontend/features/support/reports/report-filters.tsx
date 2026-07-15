@@ -61,7 +61,7 @@ export function ReportFiltersBar({ filters, onChange }: ReportFiltersBarProps) {
   );
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
       <DateRangePicker
         from={filters.dateFrom}
         to={filters.dateTo}

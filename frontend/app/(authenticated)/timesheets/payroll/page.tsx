@@ -218,7 +218,7 @@ export default function TimesheetPayrollPage() {
           </TabsList>
 
           {pageFilters ? (
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex min-w-0 flex-nowrap items-center gap-3 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
               {pageFilters}
             </div>
           ) : null}

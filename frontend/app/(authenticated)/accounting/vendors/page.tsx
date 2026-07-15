@@ -107,7 +107,7 @@ export default function VendorsListPage() {
       title="Vendor ledgers"
       subtitle="Outstanding payables by vendor."
       filters={
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
           <div className="min-w-0 flex-1 max-w-[240px] w-full">
           <SearchInput value={search} onValueChange={handleSearchChange} placeholder="Search vendors..." />
         </div>

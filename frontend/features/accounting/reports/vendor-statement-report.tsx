@@ -198,7 +198,7 @@ export function VendorStatementReport() {
       subtitle="Chronological AP activity for a vendor with running balance."
       onExport={vendorId ? handleExport : undefined}
       filters={
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex min-w-0 flex-nowrap items-center gap-3 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
           <div className="flex flex-col gap-1">
             <label htmlFor="vs-vendor" className="text-[11px] font-medium text-muted-foreground leading-none">
               Vendor

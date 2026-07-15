@@ -222,7 +222,7 @@ export default function TransfersPage() {
       title="Stock Transfers"
       subtitle="Move stock between warehouse locations"
       filters={
-        <div className="flex w-full min-w-0 flex-wrap items-center gap-2">
+        <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
           <Select value={statusParam} onValueChange={handleStatusChange}>
             <SelectTrigger className="w-[140px] text-xs">
               <SelectValue placeholder="All statuses" />

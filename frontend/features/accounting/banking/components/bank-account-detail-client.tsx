@@ -198,7 +198,7 @@ export function BankAccountDetailClient({ bankAccountId }: Props) {
         </>
       }
       filters={
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
           <Select value={statusFilter} onValueChange={handleStatusChange}>
             <SelectTrigger className="w-[160px] text-xs">
               <SelectValue placeholder="All statuses" />

@@ -196,7 +196,7 @@ export default function HrTemplatesPage() {
           ) : undefined
         }
         filters={
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
             <div className="relative">
               <SearchInput
                 placeholder="Search templates..."

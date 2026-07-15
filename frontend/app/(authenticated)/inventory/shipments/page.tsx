@@ -194,7 +194,7 @@ function ShipmentsPageInner() {
   ];
 
   const filtersRow = (
-    <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
+    <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
       <Select value={statusParam || "all"} onValueChange={handleStatusChange}>
         <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "min-w-0 w-[180px] text-xs")}>
           <SelectValue placeholder="All statuses" />

@@ -4,7 +4,6 @@ import {
   useState,
   useCallback,
   useRef,
-  useEffect,
   type KeyboardEvent,
   type MouseEvent,
   type ReactNode,
@@ -17,7 +16,6 @@ import { ListFilter } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   FilterCategorySubmenu,
-  FilterDatesInline,
   type FilterCategory,
   type StatusFilterOption,
 } from "./filter-category-submenu";
@@ -138,15 +136,7 @@ export function FilterCommandMenu({
   const [hoveredCategory, setHoveredCategory] = useState<FilterCategory | null>(null);
   const submenuRef = useRef<HTMLDivElement>(null);
   const categoryListRef = useRef<HTMLDivElement>(null);
-  const datesInlineRef = useRef<HTMLDivElement>(null);
   const shouldReduceMotion = useReducedMotion();
-  const datesExpanded = hoveredCategory === "dates";
-
-  useEffect(() => {
-    if (datesExpanded) {
-      datesInlineRef.current?.scrollIntoView({ block: "nearest" });
-    }
-  }, [datesExpanded]);
 
   const {
     selectedStatuses,
@@ -266,11 +256,9 @@ export function FilterCommandMenu({
     if (e.key === "ArrowRight" || e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       setHoveredCategory(key);
-      if (key !== "dates") {
-        setTimeout(() => {
-          submenuRef.current?.focus();
-        }, 0);
-      }
+      setTimeout(() => {
+        submenuRef.current?.focus();
+      }, 0);
     }
   }
 
@@ -328,7 +316,7 @@ export function FilterCommandMenu({
     onDueDateToChange: handleDueDateToChange,
   };
 
-  const showSubmenu = hoveredCategory !== null && hoveredCategory !== "dates";
+  const showSubmenu = hoveredCategory !== null;
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
@@ -349,10 +337,7 @@ export function FilterCommandMenu({
       </PopoverTrigger>
       <PopoverContent
         align="start"
-        className={cn(
-          "w-auto max-w-[min(520px,var(--radix-popover-content-available-width))] overflow-hidden p-0",
-          datesExpanded ? "min-w-[240px]" : "min-w-0",
-        )}
+        className="w-auto max-w-[min(520px,var(--radix-popover-content-available-width))] overflow-hidden p-0"
         onInteractOutside={handleInteractOutside}
       >
         {isSearching ? (
@@ -369,19 +354,12 @@ export function FilterCommandMenu({
             className="flex max-h-[min(480px,var(--radix-popover-content-available-height))]"
             onMouseLeave={handleMenuMouseLeave}
           >
-            <motion.div
-              layout={!shouldReduceMotion}
-              transition={pmSnappy}
-              className={cn(
-                "flex w-fit shrink-0 flex-col",
-                datesExpanded ? "min-w-[240px]" : "min-w-[148px]",
-              )}
-            >
+            <div className="flex w-[200px] shrink-0 flex-col">
               <Command
                 shouldFilter={false}
                 className={cn(
                   "h-auto shrink-0",
-                  "[&_[cmdk-input-wrapper]]:h-9 [&_[cmdk-input-wrapper]]:gap-1.5 [&_[cmdk-input-wrapper]]:border-border [&_[cmdk-input-wrapper]]:px-2",
+                  "[&_[cmdk-input-wrapper]]:h-10 [&_[cmdk-input-wrapper]]:gap-2 [&_[cmdk-input-wrapper]]:border-border [&_[cmdk-input-wrapper]]:px-3",
                   "[&_[cmdk-input-wrapper]]:transition-[background-color,box-shadow] [&_[cmdk-input-wrapper]]:duration-150 [&_[cmdk-input-wrapper]]:ease-out",
                   "[&_[cmdk-input-wrapper]:focus-within]:bg-primary/[0.04]",
                   "[&_[cmdk-input-wrapper]:focus-within]:shadow-[inset_0_-1px_0_0] [&_[cmdk-input-wrapper]:focus-within]:shadow-primary/40",
@@ -389,8 +367,8 @@ export function FilterCommandMenu({
                 )}
               >
                 <CommandInput
-                  placeholder="Filter by..."
-                  className="text-xs"
+                  placeholder="Filter by…"
+                  className="h-10 text-sm"
                   value={search}
                   onValueChange={handleSearchChange}
                 />
@@ -400,74 +378,52 @@ export function FilterCommandMenu({
                 role="menu"
                 aria-label="Filter categories"
                 tabIndex={-1}
-                className="overflow-y-auto px-0.5 py-0.5 outline-none"
+                className="overflow-y-auto scrollbar-hide p-1 outline-none"
                 variants={listContainer}
                 initial="hidden"
                 animate="show"
               >
-                {visibleCategories.map((cat) => {
-                  const isHovered = hoveredCategory === cat.key;
-                  const isDates = cat.key === "dates";
-                  function onMouseEnter() { handleCategoryMouseEnter(cat.key); }
-                  function onFocus() { handleCategoryFocus(cat.key); }
-                  function onKeyDown(e: KeyboardEvent) { handleCategoryKeyDown(cat.key, e); }
-                  return (
-                    <motion.div
-                      key={cat.key}
-                      variants={shouldReduceMotion ? listItemReduced : listItem}
-                      transition={pmSnappy}
-                    >
-                      <FilterCategoryRow
-                        category={cat.key}
-                        label={cat.label}
-                        leading={cat.leading}
-                        activeCount={cat.activeCount}
-                        hovered={isHovered}
-                        inlineExpand={isDates}
-                        onMouseEnter={onMouseEnter}
-                        onFocus={onFocus}
-                        onKeyDown={onKeyDown}
-                      />
-                      <AnimatePresence initial={false}>
-                        {isDates && isHovered && (
-                          <motion.div
-                            ref={datesInlineRef}
-                            key="dates-inline"
-                            initial={
-                              shouldReduceMotion
-                                ? { opacity: 0 }
-                                : { opacity: 0, height: 0 }
-                            }
-                            animate={
-                              shouldReduceMotion
-                                ? { opacity: 1 }
-                                : { opacity: 1, height: "auto" }
-                            }
-                            exit={
-                              shouldReduceMotion
-                                ? { opacity: 0 }
-                                : { opacity: 0, height: 0 }
-                            }
-                            transition={pmSnappy}
-                            className="overflow-hidden"
-                          >
-                            <FilterDatesInline
-                              dueDateFrom={dueDateFrom}
-                              dueDateTo={dueDateTo}
-                              onDueDateFromChange={handleDueDateFromChange}
-                              onDueDateToChange={handleDueDateToChange}
-                            />
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </motion.div>
-                  );
-                })}
+                {visibleCategories.length === 0 ? (
+                  <p className="px-3 py-6 text-center text-sm text-muted-foreground">
+                    No filters available.
+                  </p>
+                ) : (
+                  visibleCategories.map((cat) => {
+                    const isHovered = hoveredCategory === cat.key;
+                    function onMouseEnter() {
+                      handleCategoryMouseEnter(cat.key);
+                    }
+                    function onFocus() {
+                      handleCategoryFocus(cat.key);
+                    }
+                    function onKeyDown(e: KeyboardEvent) {
+                      handleCategoryKeyDown(cat.key, e);
+                    }
+                    return (
+                      <motion.div
+                        key={cat.key}
+                        variants={shouldReduceMotion ? listItemReduced : listItem}
+                        transition={pmSnappy}
+                      >
+                        <FilterCategoryRow
+                          category={cat.key}
+                          label={cat.label}
+                          leading={cat.leading}
+                          activeCount={cat.activeCount}
+                          hovered={isHovered}
+                          onMouseEnter={onMouseEnter}
+                          onFocus={onFocus}
+                          onKeyDown={onKeyDown}
+                        />
+                      </motion.div>
+                    );
+                  })
+                )}
               </motion.div>
-            </motion.div>
+            </div>
 
             <AnimatePresence initial={false}>
-              {showSubmenu && hoveredCategory && (
+              {showSubmenu && hoveredCategory ? (
                 <motion.div
                   key={hoveredCategory}
                   ref={submenuRef}
@@ -488,7 +444,7 @@ export function FilterCommandMenu({
                       : { opacity: 0, x: -6 }
                   }
                   transition={pmSnappy}
-                  className="max-w-[220px] overflow-y-auto border-l border-border bg-popover outline-none"
+                  className="overflow-y-auto border-l border-border bg-muted/20 outline-none"
                 >
                   <FilterCategorySubmenu
                     category={hoveredCategory}
@@ -496,7 +452,7 @@ export function FilterCommandMenu({
                     {...sharedProps}
                   />
                 </motion.div>
-              )}
+              ) : null}
             </AnimatePresence>
           </div>
         )}

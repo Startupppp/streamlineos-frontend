@@ -176,7 +176,7 @@ export default function CycleDetailPage({ params }: PageProps) {
       ) : (
         <>
           {view === "board" && (
-            <div className="h-full w-full px-3 pb-1">
+            <div className="h-full w-full pb-1">
               <KanbanBoard
                 tickets={cycleTickets}
                 projectId={projectId}
@@ -189,7 +189,7 @@ export default function CycleDetailPage({ params }: PageProps) {
             </div>
           )}
           {view === "list" && (
-            <div className="h-full min-h-0 overflow-y-auto px-4 pb-2 pt-0">
+            <div className="h-full min-h-0 overflow-y-auto pb-2 pt-0">
               <ListView
                 tickets={cycleTickets}
                 onTicketClick={handleTicketSelect}

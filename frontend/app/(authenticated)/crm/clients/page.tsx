@@ -265,8 +265,8 @@ export default function ClientsPage() {
       title="Clients"
       subtitle={isLoading ? undefined : `${totalCount} accounts`}
       filters={
-        <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
-          <div className="min-w-0 flex-1 lg:max-w-[240px] w-full">
+        <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+          <div className="w-[240px] max-w-[min(240px,70vw)]">
           <SearchInput placeholder="Search clients..." value={rawSearch} onValueChange={handleSearchChange} />
         </div>
           <Select value={statusParam ?? "all"} onValueChange={handleStatusChange}>

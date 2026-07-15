@@ -220,7 +220,7 @@ export default function StockLevelsPage() {
   );
 
   const levelsFilters = (
-    <div className="flex w-full min-w-0 flex-wrap items-center gap-2">
+    <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
       <SearchInput
         className="min-w-0 flex-1 lg:max-w-xs"
         placeholder="Search product or SKU…"

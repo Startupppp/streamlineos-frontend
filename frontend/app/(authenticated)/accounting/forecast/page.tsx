@@ -219,7 +219,7 @@ export default function ForecastPage() {
   const totalOutflows = parseFloat(forecastQuery.data?.totalOutflows ?? "0");
 
   const filtersNode = (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
       <Select
         value={selectedScenarioId !== undefined ? String(selectedScenarioId) : ""}
         onValueChange={handleScenarioChange}

@@ -103,7 +103,7 @@ function RequisitionCardSkeleton() {
         </div>
         <Skeleton className="h-6 w-20 rounded-full" />
       </div>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
         <Skeleton className="h-5 w-16 rounded-full" />
         <Skeleton className="h-5 w-20 rounded-full" />
         <Skeleton className="h-5 w-14 rounded-full" />

@@ -279,7 +279,7 @@ export function RisksPage({ projectId }: RisksPageProps) {
 
         <PmSection index={2} className="shrink-0">
           <div className={cn(PM_TOOLBAR, "sm:justify-start")}>
-            <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-40 text-xs">
                   <SelectValue />

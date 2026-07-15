@@ -11,6 +11,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ViewToggle, type ViewOption } from "@/components/ui/view-toggle";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import { cn } from "@/lib/utils";
 
 type ViewMode = "grid" | "list";
 type StatusFilter = "ALL" | "ACTIVE" | "COMPLETED" | "ARCHIVED";
@@ -52,8 +54,8 @@ export function ProjectFilterBar({
   );
 
   return (
-    <div className="flex w-full min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
-      <div className="min-w-0 flex-1 sm:max-w-[240px]">
+    <div className={cn(FILTER_TOOLBAR_ROW, "gap-1.5 sm:gap-2")}>
+      <div className="w-[200px] max-w-[min(240px,70vw)] sm:w-[240px]">
         <SearchInput
           placeholder="Search projects…"
           value={search}
@@ -63,7 +65,7 @@ export function ProjectFilterBar({
       </div>
 
       <Select value={status} onValueChange={handleStatusValueChange}>
-        <SelectTrigger className="w-full text-xs sm:w-[132px]">
+        <SelectTrigger className="w-[132px] text-xs">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

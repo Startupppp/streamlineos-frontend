@@ -5,7 +5,7 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 
 interface TasksToolbarProps {
@@ -61,8 +61,8 @@ export function TasksToolbar({
   const hasFilters = !!(typeFilter || statusFilter || entityTypeFilter || assigneeFilter || search);
 
   return (
-    <div className="flex items-center gap-2 flex-wrap w-full">
-      <div className="min-w-0 flex-1 min-w-[140px] sm:flex-none sm:w-[180px] sm:max-w-xs">
+    <div className={FILTER_TOOLBAR_ROW}>
+      <div className="w-[180px] max-w-[min(180px,70vw)]">
           <SearchInput placeholder="Search tasks..." value={search} onValueChange={handleSearchChange} />
         </div>
 

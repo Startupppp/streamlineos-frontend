@@ -214,7 +214,7 @@ export default function HrPoliciesPage() {
         ) : undefined
       }
       filters={
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
           <div className="min-w-0 w-52">
           <SearchInput placeholder="Search policies..." value={search} onValueChange={handleSearchChange} />
         </div>

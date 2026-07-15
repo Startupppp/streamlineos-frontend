@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { SearchInput } from "@/components/ui/search-input";
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 
 import type {
@@ -75,9 +76,9 @@ export function WorkLogFiltersPanel({
   }, [currentYear, currentQuarter, setFilters, setDraftFilters]);
 
   return (
-    <div className="flex flex-wrap items-center gap-2 w-full">
+    <div className={FILTER_TOOLBAR_ROW}>
       <SearchInput
-        className="w-full sm:w-auto sm:max-w-xs"
+        className="w-[220px] max-w-[min(220px,70vw)]"
         placeholder="Search by date or keyword..."
         value={searchTerm}
         onValueChange={handleSearchChange}
@@ -86,7 +87,7 @@ export function WorkLogFiltersPanel({
       />
 
       {activeFilterCount > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className={cn(FILTER_TOOLBAR_ROW, "w-auto gap-1.5")}>
           <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
             Filters:
           </span>

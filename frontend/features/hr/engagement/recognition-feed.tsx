@@ -98,7 +98,7 @@ const RecognitionCard = memo(function RecognitionCard({
           {displayName(r.fromUser).slice(0, 2).toUpperCase()}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
             <span className="text-xs font-semibold text-foreground">{displayName(r.fromUser)}</span>
             <span className="text-xs text-muted-foreground">recognized</span>
             <span className="text-xs font-semibold text-foreground">{displayName(r.toUser)}</span>

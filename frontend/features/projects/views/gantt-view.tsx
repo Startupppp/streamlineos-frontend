@@ -225,7 +225,7 @@ export function GanttView({ tickets, projectId, onTicketClick, onCreateTicket }:
   return (
     <div className="flex h-full min-h-0 flex-col gap-3">
       <div className={cn(PM_TOOLBAR, "gap-2")}>
-        <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+        <div className="flex min-w-0 flex-nowrap items-center gap-1.5 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
           <Select value={String(displayMonth)} onValueChange={handleMonthChange}>
             <SelectTrigger className="w-[120px] shrink-0 text-xs">
               <SelectValue />

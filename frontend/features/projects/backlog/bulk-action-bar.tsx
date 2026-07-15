@@ -65,7 +65,7 @@ export const BulkActionBar = memo(function BulkActionBar({
       <span className="shrink-0 rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-primary">
         {selectedCount} selected
       </span>
-      <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:ml-auto">
+      <div className="flex min-w-0 flex-nowrap items-center gap-1.5 overflow-x-auto scrollbar-hide sm:ml-auto [&>*]:shrink-0">
         <Select onValueChange={onBulkStatus}>
           <SelectTrigger className="w-[8.5rem] border-input bg-card text-xs">
             <SelectValue placeholder="Set Status" />

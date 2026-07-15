@@ -88,7 +88,7 @@ export default function DocumentReviewPage() {
       subtitle="Review employee onboarding documents"
       badge={`${list.length} employees`}
       filters={
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
           <div className="min-w-0 w-[200px]">
           <SearchInput placeholder="Search employees..." value={searchQuery} onValueChange={handleSearchChange} />
         </div>

@@ -31,7 +31,7 @@ export function parseView(raw: string | null): AllWorkView {
 export function AllWorkSkeleton({ view }: { view: AllWorkView }) {
   if (view === "board") {
     return (
-      <div className="flex gap-3 px-3 pb-3 sm:px-4">
+      <div className="flex gap-3 pb-3">
         {Array.from({ length: 8 }).map((_, i) => (
           <div key={i} className="w-64 flex-shrink-0 space-y-2">
             <Skeleton className="h-10 w-full rounded-lg" />
@@ -44,7 +44,7 @@ export function AllWorkSkeleton({ view }: { view: AllWorkView }) {
     );
   }
   return (
-    <div className="space-y-1.5 px-3 pb-3 sm:px-4">
+    <div className="space-y-1.5 pb-3">
       <Skeleton className="h-9 w-full rounded-lg" />
       {Array.from({ length: 12 }).map((_, i) => (
         <Skeleton key={i} className="h-9 w-full rounded-md" />

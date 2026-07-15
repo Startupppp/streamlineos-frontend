@@ -102,20 +102,20 @@ function CategoryRow({
       onFocus={onFocus}
       onKeyDown={onKeyDown}
       className={cn(
-        "flex cursor-default select-none items-center gap-1.5 rounded-sm px-1.5 py-1 text-xs outline-none transition-colors motion-reduce:transition-none",
+        "flex h-9 cursor-default select-none items-center gap-2.5 rounded-md px-3 text-sm outline-none transition-colors motion-reduce:transition-none",
         hovered
-          ? "bg-accent text-accent-foreground"
-          : "hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent",
+          ? "bg-primary/10 text-foreground"
+          : "text-foreground/90 hover:bg-muted/70 focus-visible:bg-primary/10",
       )}
     >
-      <span className="shrink-0 text-muted-foreground">{icon}</span>
-      <span className="flex-1 truncate">{label}</span>
+      <span className="shrink-0 text-muted-foreground [&_svg]:h-4 [&_svg]:w-4">{icon}</span>
+      <span className="flex-1 truncate font-medium tracking-tight">{label}</span>
       {activeCount > 0 ? (
-        <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
+        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground">
           {activeCount}
         </span>
       ) : null}
-      <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
     </div>
   );
 }
@@ -133,18 +133,18 @@ function OptionRow({ active, label, leading, color, onClick }: OptionRowProps) {
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-xs transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:outline-none motion-reduce:transition-none"
+      className="flex h-9 w-full items-center gap-2.5 rounded-md px-3 text-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:outline-none motion-reduce:transition-none"
     >
       <Check
         className={cn(
-          "h-3.5 w-3.5 shrink-0 transition-opacity motion-reduce:transition-none",
+          "h-4 w-4 shrink-0 transition-opacity motion-reduce:transition-none",
           active ? "opacity-100" : "opacity-0",
         )}
       />
       {leading}
       {!leading && color ? (
         <span
-          className="h-2 w-2 shrink-0 rounded-full"
+          className="h-2.5 w-2.5 shrink-0 rounded-full"
           style={{ backgroundColor: color }}
         />
       ) : null}
@@ -356,13 +356,13 @@ export function WorkloadFilterMenu({
           className="flex max-h-[min(480px,var(--radix-popover-content-available-height))]"
           onMouseLeave={handleMenuMouseLeave}
         >
-          <div className="flex w-fit min-w-[148px] shrink-0 flex-col">
+          <div className="flex w-[200px] shrink-0 flex-col">
             <div
               ref={categoryListRef}
               role="menu"
               aria-label="Workload filter categories"
               tabIndex={-1}
-              className="overflow-y-auto px-0.5 py-0.5 outline-none"
+              className="overflow-y-auto scrollbar-hide p-1 outline-none"
             >
               {categories.map((cat) => {
                 const isHovered = hoveredCategory === cat.key;
@@ -396,7 +396,7 @@ export function WorkloadFilterMenu({
               ref={submenuRef}
               tabIndex={-1}
               onKeyDown={handleSubmenuKeyDown}
-              className="max-h-[280px] max-w-[220px] overflow-y-auto border-l border-border bg-popover py-1 outline-none"
+              className="max-h-[280px] w-[240px] overflow-y-auto scrollbar-hide border-l border-border bg-muted/20 p-1 outline-none"
             >
               {hoveredCategory === "sprint"
                 ? sprints.map((s) => {

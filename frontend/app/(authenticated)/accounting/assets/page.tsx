@@ -322,7 +322,7 @@ export default function FixedAssetsPage() {
           </TabsList>
 
           <TabsContent value="assets">
-            <div className="flex flex-wrap items-center gap-2 mb-4">
+            <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0 mb-4">
               <Select value={statusFilter} onValueChange={handleStatusChange}>
                 <SelectTrigger className="w-[180px] text-xs">
                   <SelectValue />

@@ -292,7 +292,7 @@ export default function WarehousesPage() {
   );
 
   const filterBar = (
-    <div className="flex w-full min-w-0 flex-wrap items-center gap-2">
+    <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
       <SearchInput
         className="min-w-0 flex-1 lg:max-w-md"
         placeholder="Search by name, code, city, country…"
@@ -375,7 +375,7 @@ export default function WarehousesPage() {
       }
     >
       {showFilters && (
-        <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border bg-muted/30 p-3">
+        <div className="mb-4 flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0 rounded-lg border bg-muted/30 p-3">
           <Select
             value={isDefaultFilter ?? "all"}
             onValueChange={handleIsDefaultChange}

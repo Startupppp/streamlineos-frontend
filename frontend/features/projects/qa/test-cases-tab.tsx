@@ -230,7 +230,7 @@ export function TestCasesTab({ projectId }: TestCasesTabProps) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col space-y-3">
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
         <SearchInput
           placeholder="Search cases..."
           value={search}

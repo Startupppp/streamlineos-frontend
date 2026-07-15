@@ -259,7 +259,7 @@ export function BugsPage({ projectId }: BugsPageProps) {
 
   const filtersBar = (
     <div className={cn(PM_TOOLBAR, "w-full")}>
-      <div className="flex min-w-0 flex-wrap items-center gap-2">
+      <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
         <SearchInput
           placeholder="Search bugs..."
           value={search}

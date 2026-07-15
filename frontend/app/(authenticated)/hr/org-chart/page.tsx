@@ -298,7 +298,7 @@ export default function OrgChartPage() {
           <CardContent className="p-4 space-y-3">
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <p className="text-xs text-muted-foreground">Reporting hierarchy with direct reports.</p>
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
                 {LEGEND_ITEMS.map((item) => (
                   <span key={item.label} className="inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full border bg-muted/40 text-muted-foreground">
                     <span className={cn("h-2 w-2 rounded-full", item.cls)} />

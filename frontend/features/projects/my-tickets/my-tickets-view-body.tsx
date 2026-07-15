@@ -46,7 +46,7 @@ export function MyTicketsViewBody({
       {view === "board" ? (
         <motion.div
           key="board"
-          className="flex h-full min-h-0 w-full flex-1 flex-col px-3 pb-1"
+          className="flex h-full min-h-0 w-full flex-1 flex-col pb-1"
           variants={swapVariants}
           initial="initial"
           animate="animate"
@@ -75,7 +75,7 @@ export function MyTicketsViewBody({
           transition={pmSnappy}
         >
           <ScrollArea fill hideScrollbar className="h-full min-h-0">
-            <div className="overscroll-contain px-3 pb-1">
+            <div className="overscroll-contain pb-1">
               <ListView
                 tickets={tickets}
                 onTicketClick={onTicketSelect}
@@ -99,7 +99,7 @@ export function MyTicketsViewBody({
           transition={pmSnappy}
         >
           <ScrollArea fill hideScrollbar className="h-full min-h-0">
-            <div className="overscroll-contain px-3 pb-1">
+            <div className="overscroll-contain pb-1">
               <TableView
                 tickets={tickets}
                 onTicketClick={onTicketSelect}

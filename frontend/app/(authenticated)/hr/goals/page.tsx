@@ -400,7 +400,7 @@ export default function GoalsPage() {
           <TabsTrigger value="completed" className="text-sm font-medium">Completed ({completed.length})</TabsTrigger>
         </TabsList>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex min-w-0 flex-nowrap items-center gap-3 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-44 text-xs")}>
               <SelectValue placeholder="Filter by status" />

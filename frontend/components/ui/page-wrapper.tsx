@@ -138,7 +138,7 @@ export function PageWrapper({
           )}
           <div
             className={cn(
-              "px-4 sm:px-6 pb-2 flex-wrap items-center gap-2 sm:gap-3",
+              "w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0 px-4 sm:px-6 pb-2 sm:gap-3",
               mobileFiltersInline ? "flex" : desktopFiltersClass,
               filtersClassName,
             )}

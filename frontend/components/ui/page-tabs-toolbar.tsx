@@ -81,7 +81,7 @@ export function PageTabsToolbar({
 
         {hasFilters ? (
           <>
-            <div className="hidden min-w-0 items-center gap-2 md:flex">
+            <div className="hidden min-w-0 max-w-full flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide md:flex [&>*]:shrink-0">
               {resolveSlot(filters)}
             </div>
             <Popover>

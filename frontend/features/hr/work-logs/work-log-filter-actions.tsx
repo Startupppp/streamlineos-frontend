@@ -183,7 +183,7 @@ export function WorkLogFilterActions({
   })();
 
   return (
-    <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+    <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0 w-full sm:w-auto">
       <Select value={filters.year.toString()} onValueChange={handleYearChange}>
         <SelectTrigger className="h-9 w-[84px] text-xs" aria-label="Select year">
           <SelectValue placeholder="Year" />

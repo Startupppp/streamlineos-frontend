@@ -72,7 +72,7 @@ const ProjectSection = memo(function ProjectSection({
   );
 
   return (
-    <PmPanel className="mx-3 sm:mx-4">
+    <PmPanel>
       <div className="flex min-w-0 items-center gap-2 border-b border-border/50 bg-muted/20 px-3 py-2">
         <ProjectChip
           projectId={group.projectId}

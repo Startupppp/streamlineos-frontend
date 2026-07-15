@@ -308,7 +308,7 @@ export default function VendorCreditsPage() {
         </Button>
       }
       filters={
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
           <Select value={vendorFilter} onValueChange={handleVendorFilterChange}>
             <SelectTrigger className="w-[180px] text-xs">
               <SelectValue placeholder="All vendors" />

@@ -88,7 +88,7 @@ export function OverviewClient() {
       title="Finance Overview"
       subtitle="Real-time cash, revenue, and liquidity metrics."
       filters={
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
           <div className="flex flex-col gap-1">
             <label htmlFor="ov-from" className="text-[11px] font-medium text-muted-foreground leading-none">
               From

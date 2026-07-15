@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { SearchInput } from "@/components/ui/search-input";
+import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 
 interface ListToolbarProps {
@@ -28,9 +29,9 @@ export function ListToolbar({
         className,
       )}
     >
-      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+      <div className={cn(FILTER_TOOLBAR_ROW, "flex-1")}>
         {onSearchChange !== undefined ? (
-          <div className="min-w-[200px] max-w-md flex-1">
+          <div className="min-w-[200px] max-w-md">
             <SearchInput
               value={search ?? ""}
               onValueChange={onSearchChange}
@@ -39,7 +40,7 @@ export function ListToolbar({
           </div>
         ) : null}
         {filters ? (
-          <div className="flex flex-wrap items-center gap-2">{filters}</div>
+          <div className={FILTER_TOOLBAR_ROW}>{filters}</div>
         ) : null}
       </div>
 

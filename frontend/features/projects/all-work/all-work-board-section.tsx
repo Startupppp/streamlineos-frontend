@@ -69,7 +69,7 @@ interface AllWorkBoardSectionProps {
 
 export function AllWorkBoardSection({ groups }: AllWorkBoardSectionProps) {
   return (
-    <div className="flex flex-col gap-3 px-3 pb-4 sm:px-4">
+    <div className="flex flex-col gap-3 pb-4">
       {groups.map((group) => (
         <BoardProjectSection key={group.projectId} group={group} />
       ))}

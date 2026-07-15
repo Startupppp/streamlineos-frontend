@@ -74,7 +74,7 @@ function RuleCard({
       <CardContent className="pt-4">
         <div className="flex items-start gap-3">
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
               <p className="font-medium text-sm truncate">{rule.name}</p>
               <Badge variant="secondary" className="text-[10px]">{rule.triggerEvent}</Badge>
               {!rule.isEnabled && <Badge variant="outline" className="text-[10px]">Disabled</Badge>}

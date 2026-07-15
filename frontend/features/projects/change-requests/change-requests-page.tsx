@@ -215,7 +215,7 @@ export function ChangeRequestsPage({ projectId }: ChangeRequestsPageProps) {
 
   const filtersBar = (
     <div className={cn(PM_TOOLBAR, "sm:justify-start")}>
-      <div className="flex w-full min-w-0 flex-wrap items-center gap-2">
+      <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
         <SearchInput
           placeholder="Search..."
           value={search}

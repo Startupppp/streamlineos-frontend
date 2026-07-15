@@ -160,7 +160,7 @@ export function FormsListPage({ projectId }: FormsListPageProps) {
 
   const filtersBar = (
     <div className={cn(PM_TOOLBAR, "sm:justify-start")}>
-      <div className="flex min-w-0 flex-wrap items-center gap-2">
+      <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
         <SearchInput
           value={search}
           onValueChange={handleSearchChange}

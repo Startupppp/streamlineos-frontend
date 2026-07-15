@@ -76,7 +76,7 @@ function FilterBadges({ filters }: { filters: Record<string, unknown> }) {
   };
 
   return (
-    <div className="flex flex-wrap gap-2 items-center">
+    <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
       <span className="text-[11px] text-muted-foreground font-medium">Interpreted as:</span>
       {entries.map(([key, val]) => (
         <Badge key={key} variant="outline" className="text-[10px] gap-1 h-5 px-2">
@@ -262,7 +262,7 @@ export default function SmartLeadSearchPage() {
             </Button>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
             {EXAMPLE_QUERIES.map((q) => (
               <button
                 key={q}

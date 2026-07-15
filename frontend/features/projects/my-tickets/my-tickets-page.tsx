@@ -169,7 +169,7 @@ export function MyTicketsPage({ params }: PageProps) {
         contentClassName="!p-0"
       >
         <PmPageShell className="min-h-0 flex-1 gap-0 overflow-hidden" withGlow>
-          <PmPanel solid className={cn(PM_FILL_PANEL, "mx-3 mb-2 mt-2 overflow-auto sm:mx-4")}>
+          <PmPanel solid className={cn(PM_FILL_PANEL, "mx-4 mb-2 mt-2 overflow-auto sm:mx-6")}>
             <MyTicketsSkeleton view={view} />
           </PmPanel>
         </PmPageShell>
@@ -187,7 +187,7 @@ export function MyTicketsPage({ params }: PageProps) {
       >
         <PmPageShell className="min-h-0 flex-1 gap-0 overflow-hidden" withGlow>
           <ErrorState
-            className={cn(PM_FILL_PANEL, "mx-3 mb-0 mt-2 sm:mx-4")}
+            className={cn(PM_FILL_PANEL, "mx-4 mb-0 mt-2 sm:mx-6")}
             title="Failed to load tickets"
             description="An error occurred while fetching your tickets. Please try again."
             onRetry={handleRetry}
@@ -223,7 +223,7 @@ export function MyTicketsPage({ params }: PageProps) {
         <PmSection index={0} className="flex min-h-0 flex-1 flex-col overflow-hidden">
           {filteredTickets.length === 0 ? (
             <EmptyState
-                className={cn(PM_FILL_PANEL, "mx-3 mb-0 mt-2 sm:mx-4")}
+                className={cn(PM_FILL_PANEL, "mx-4 mb-0 mt-2 sm:mx-6")}
                 illustrationPreset="ticket"
                 title={
                   myTickets.length === 0

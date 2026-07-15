@@ -112,7 +112,7 @@ export function SafetyPageContent() {
   ];
 
   const filters = (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
       <div className="min-w-0 w-44">
           <SearchInput placeholder="Search..." value={search} onValueChange={handleSearchChange} />
         </div>

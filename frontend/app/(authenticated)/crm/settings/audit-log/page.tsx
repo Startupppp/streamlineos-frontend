@@ -120,7 +120,7 @@ export default function CrmAuditLogPage() {
       title="Audit Log"
       subtitle={isLoading ? "Loading..." : `${total.toLocaleString()} entr${total !== 1 ? "ies" : "y"}`}
       filters={
-        <div className="flex w-full min-w-0 flex-wrap items-center gap-2">
+        <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
           <Select value={entityType} onValueChange={handleEntityTypeChange}>
             <SelectTrigger className="w-36 text-xs">
               <SelectValue placeholder="Entity Type" />

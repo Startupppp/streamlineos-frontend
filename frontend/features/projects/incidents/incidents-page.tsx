@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
@@ -165,7 +165,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
       header: "Owner",
       cell: (row) => {
         const member = members.find((m) => m.userId === row.ownerId);
-        return <span className="text-[11px] text-muted-foreground">{member ? (member.name ?? member.email) : "â€”"}</span>;
+        return <span className="text-[11px] text-muted-foreground">{member ? (member.name ?? member.email) : "—"}</span>;
       },
       className: "w-[120px]",
     },
@@ -174,7 +174,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
       header: "Detected",
       cell: (row) => (
         <span className="text-[11px] text-muted-foreground">
-          {row.detectedAt ? new Date(row.detectedAt).toLocaleDateString() : "â€”"}
+          {row.detectedAt ? new Date(row.detectedAt).toLocaleDateString() : "—"}
         </span>
       ),
       className: "w-[100px]",
@@ -201,7 +201,7 @@ export function IncidentsPage({ projectId }: IncidentsPageProps) {
 
   const filtersBar = (
     <div className={cn(PM_TOOLBAR, "sm:justify-start")}>
-      <div className="flex w-full min-w-0 flex-wrap items-center gap-2">
+      <div className="flex w-full min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
         <SearchInput
           placeholder="Search incidents..."
           value={search}
